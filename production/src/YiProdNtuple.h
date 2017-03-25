@@ -78,7 +78,7 @@ class RecEvent {
 		void init();
 		bool rebuild(AMSEventR * event);
 		
-		inline Float_t time() { return timer.time(); }
+		inline float time() { return timer.time(); }
 
 	public :
 		int iBeta;
@@ -124,7 +124,7 @@ class EventBase {
 		virtual bool selectEvent(AMSEventR * event = 0) = 0;
 		inline void fill();
 
-		inline Float_t time() { return timer.time(); }
+		inline float time() { return timer.time(); }
 
 	protected :
 		inline void setTree(const char * name, const char * title);
@@ -347,8 +347,8 @@ class DataSelection {
 };
 
 TRandom3 DataSelection::gRandom(0);
-Float_t  DataSelection::gScaleFact = 0.02;
-TF1      DataSelection::gScaleFunc("gScaleFunc", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.0)))*(x>0)+(x<=0)", -2000, 2000);
+Float_t  DataSelection::gScaleFact = 0.01;
+TF1      DataSelection::gScaleFunc("gScaleFunc", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
 
 
 //---- RunTagOperator ----//
@@ -383,8 +383,8 @@ class YiNtuple {
 		~YiNtuple();
 
 		inline void init();
-		inline void setOutputFile(const char * file_name = "YiNtuple.root", const char * path = ".", bool isMultiTree = false);
-		void readDataFrom(const char * file_list = "fileList.txt", Long64_t group_th = 0, Long64_t group_size = -1);
+		inline void setOutputFile(const std::string& file_name = "YiNtuple.root", const std::string& path = ".", bool isMultiTree = false);
+		void readDataFrom(const std::string& file_list = "fileList.txt", Long64_t group_th = 0, Long64_t group_size = -1);
     void saveInputFileList(TFile * file);
 		void loopEventChain();
 
@@ -392,10 +392,10 @@ class YiNtuple {
 		std::pair<Long64_t, Long64_t> fGroup;
 		std::vector<std::string> fFileList;
 
-		AMSChain * fChain;
-		DataSelection * fData;
+		std::string      fFileName;
+		AMSChain       * fChain;
+		DataSelection  * fData;
 		RunTagOperator * fRunTagOp; 
-		TString fFileName;
 
 	protected :
 		MgntClock::HrsTimer fTimer;

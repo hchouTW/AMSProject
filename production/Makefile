@@ -2,7 +2,6 @@ DEFS = -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__
 PARA = -D_X8664__ -D_AMSPARALLEL__
 #IOPT = -axsse4.2,ssse3 # Only for Intel Core
 IOPT =
-#CXX  = $(shell ${ROOTSYS}/bin/root-config --cxx) $(IOPT) -std=c++11 $(PARA) -O2 -D_DEBUG -Wall
 CXX  = icpc $(IOPT) -std=c++11 $(PARA) -O2 -D_DEBUG -Wall
 FLGS = -I$(ROOTSYS)/include -isystem$(ROOTSYS)/include -I$(AMSSRC)/include -isystem$(AMSSRC)/include
 
@@ -27,6 +26,7 @@ LIBP += $(LIBD)
 TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
 
 all :
+	@mkdir -p $(TagetDir)
 	@mkdir -p $(TagetDir)/lib
 	@mkdir -p $(TagetDir)/src
 	@mkdir -p $(TagetDir)/obj

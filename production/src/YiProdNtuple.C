@@ -71,8 +71,8 @@ int main(int argc, const char ** argv) {
 
 	bool isMultiTree = false;
 	YiNtuple * ntuple = new YiNtuple();
-	ntuple->setOutputFile(outputFile.c_str(), path.c_str(), isMultiTree);
-	ntuple->readDataFrom(file_list.c_str(), group_th, group_size);
+	ntuple->setOutputFile(outputFile, path, isMultiTree);
+	ntuple->readDataFrom(file_list, group_th, group_size);
 	ntuple->loopEventChain();
 	if (ntuple != 0) delete ntuple;
 	ntuple = 0;

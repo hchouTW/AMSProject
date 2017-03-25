@@ -5,6 +5,7 @@ YiDataSet=/afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/dataset/produc
 RunFile=${YiBinDir}/vdev/YiProdNtuple
 #RunFile=${YiBinDir}/V.2016Aug26/YiProdNtuple
 DataType=ISS
+#DataType=MC
 Stream=${YiDataSet}/iss.B950.pass6
 #Stream=${YiDataSet}/mc.ap.pl1.0_510.B1042
 #Stream=${YiDataSet}/mc.ap.pl1.1800.B1042
@@ -19,7 +20,7 @@ Stream=${YiDataSet}/iss.B950.pass6
 #Stream=${YiDataSet}/mc.ph.pl1.0_050_25.B1069
 #Stream=${YiDataSet}/mc.ph.pl1.0_2510.B1069
 #Stream=${YiDataSet}/mc.ph.pl1.101000.B1069
-GroupId=29599
+GroupId=29600
 GroupSize=1
 OutputDir=.
 

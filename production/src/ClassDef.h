@@ -27,32 +27,22 @@ class RunTagInfo : public TObject {
 			numOfTrgEvent = 0;
 			file.clear();
 			
-			UTCyr = 0;
-			UTCyd = 0;
-			UTCmo = 0;
-			UTCmd = 0;
-			UTChr = 0;
-			UTCmn = 0;
-			UTCsc = 0;
+			dateUTC = 0;
+			timeUTC = 0;
 		}
 
 	public :
 		UInt_t runID;
-		UInt_t eventFT; // first trigger event
-		UInt_t eventLT; // last trigger event
-		UInt_t numOfSelEvent; // number of select  events
-		UInt_t numOfTrgEvent; // number of trigger events
-		std::vector<std::string> file; // file list
+		UInt_t eventFT;                 // first trigger event
+		UInt_t eventLT;                 // last trigger event
+		UInt_t numOfSelEvent;           // number of select  events
+		UInt_t numOfTrgEvent;           // number of trigger events
+		std::vector<std::string> file;  // file list
 
-		UInt_t UTCyr; // UTC year
-		UInt_t UTCyd; // UTC year day
-		UInt_t UTCmo; // UTC month
-		UInt_t UTCmd; // UTC month day
-		UInt_t UTChr; // UTC hour
-		UInt_t UTCmn; // UTC min
-		UInt_t UTCsc; // UTC second
+		UInt_t  dateUTC;                // UTC date
+		UInt_t  timeUTC;                // UTC time
 
-	ClassDef(RunTagInfo, 4)
+	ClassDef(RunTagInfo, 5)
 };
 
 
@@ -142,7 +132,6 @@ class PartMCInfo : public TObject {
 
 		void init() {
 			trackID  = 0;
-			parentID = 0;
 			partID   = 0;
 			chrg     = 0;
 			mass     = 0;
@@ -155,7 +144,6 @@ class PartMCInfo : public TObject {
 
 	public :
 		Short_t trackID;
-		Short_t parentID;
 		Short_t partID;
 		Float_t chrg;
 		Float_t mass;
@@ -165,9 +153,8 @@ class PartMCInfo : public TObject {
 		Float_t dir[3];
 
 		std::vector<HitTRKMCInfo> hits;
-		//std::vector<HitTRDMCInfo> hits;
 
-	ClassDef(PartMCInfo, 3)
+	ClassDef(PartMCInfo, 4)
 };
 
 struct PartMCInfo_sort {
@@ -194,17 +181,15 @@ class VertexMCInfo : public TObject {
 		~VertexMCInfo() {}
 
 		void init() {
-			type = 0;
+			status = false;
 			std::fill_n(coo, 3, 0.0);
-			partID.clear();
 		}
 
 	public :
-		Int_t              type;
+		Bool_t             status;
 		Float_t            coo[3];
-		std::vector<Int_t> partID;
 	
-	ClassDef(VertexMCInfo, 2)
+	ClassDef(VertexMCInfo, 3)
 };
 
 
@@ -342,12 +327,11 @@ class TrackInfo : public TObject {
 			bitPatt = 0;
 			Qinner = -1;
 			
-			std::fill_n(status[0], 3 * 6, false);
-			std::fill_n(rigidity[0], 3 * 6, 0);
-			std::fill_n(chisq[0][0], 3 * 6 * 2, -1);
-			std::fill_n(state[0][0], 3 * 6 * 6, 0);
-			std::fill_n(stateL1[0][0], 3 * 6 * 6, 0);
-			std::fill_n(stateL9[0][0], 3 * 6 * 6, 0);
+			std::fill_n(status[0], 2 * 4, false);
+			std::fill_n(rigidity[0], 2 * 4, 0);
+			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
+			std::fill_n(state[0][0], 2 * 4 * 6, 0);
+			std::fill_n(stateLJ[0][0][0], 2 * 4 * 9 * 6, 0);
 			
 			hits.clear();
 		}
@@ -367,14 +351,13 @@ class TrackInfo : public TObject {
 		UShort_t bitPatt;
 		Float_t  Qinner;
 
-		// Algorithm     (CHOUTKO, ALCARAZ, CHIKANIANF)
-		// Track Pattern (InnU, InnL, Inn, InnL1, InnL9, FS)
-		Bool_t  status[3][6];
-		Float_t rigidity[3][6];
-		Float_t chisq[3][6][2];
-		Float_t state[3][6][6];
-		Float_t stateL1[3][6][6];
-		Float_t stateL9[3][6][6];
+		// Algorithm     (CHOUTKO, CHIKANIANF)
+		// Track Pattern (Inn, InnL1, InnL9, FS)
+		Bool_t  status[2][4];
+		Float_t rigidity[2][4];
+		Float_t chisq[2][4][2];
+		Float_t state[2][4][6];
+		Float_t stateLJ[2][4][9][6];
 		
 		std::vector<HitTRKInfo> hits;
 
@@ -480,7 +463,7 @@ class G4MC : public TObject {
 		std::vector<PartMCInfo>    secParts;
 		VertexMCInfo               primVtx;
 
-	ClassDef(G4MC, 5)
+	ClassDef(G4MC, 6)
 };
 
 
@@ -508,14 +491,8 @@ class RTI : public TObject {
 			std::fill_n(yprISS, 3, 0);
 			isInSAA = false;
 			uTime = 0;
-			xTime = 0;
-			UTCyr = 0;
-			UTCyd = 0;
-			UTCmo = 0;
-			UTCmd = 0;
-			UTChr = 0;
-			UTCmn = 0;
-			UTCsc = 0;
+			dateUTC = 0;
+			timeUTC = 0;
 			liveTime = -1;
 			std::fill_n(trackerAlign[0], 4, 0);
 			isInShadow  = -1;
@@ -541,14 +518,8 @@ class RTI : public TObject {
 		Float_t yprISS[3];           // ISS attitude (Yaw, Pitch, Roll)
 		Bool_t  isInSAA;             // true, if ams in south atlantic anomaly
 		UInt_t  uTime;               // unix time
-		Float_t xTime;               // unix time + frac
-		UInt_t  UTCyr;               // UTC year
-		UInt_t  UTCyd;               // UTC year day
-		UInt_t  UTCmo;               // UTC month
-		UInt_t  UTCmd;               // UTC month day
-		UInt_t  UTChr;               // UTC hour
-		UInt_t  UTCmn;               // UTC min
-		UInt_t  UTCsc;               // UTC second
+		UInt_t  dateUTC;             // UTC date
+		UInt_t  timeUTC;             // UTC time
 		Float_t liveTime;            // fraction of "non-busy" time
 		Float_t trackerAlign[2][2];  // L1 x,y L9 x,y
 		
@@ -571,7 +542,7 @@ class RTI : public TObject {
 													       //   2, trapped, 
 													       //  -1, error
 
-	ClassDef(RTI, 5)
+	ClassDef(RTI, 6)
 };
 
 
@@ -603,8 +574,6 @@ class TOF : public TObject {
 		~TOF() {}
 
 		void init() {
-			numOfRawCluster = 0;
-			numOfRawSide = 0;
 			numOfCluster = 0;
 			numOfClusterH = 0;
 			numOfBeta = 0;
@@ -625,21 +594,24 @@ class TOF : public TObject {
 			std::fill_n(Q, 4, 0);
 			Qall = -1;
 
-			statusBetaHs = false;
-			betaHBits = 0;
-			betaHPatts = 0;
-			betaHGoodTimes = 0;
-			betaHs = 0;
-			normChisqTs = -1;
-			normChisqCs = -1;
-			std::fill_n(Qs, 4, 0);
-			Qalls = -1;
-			std::fill_n(betaHStates, 6, 0);
+			std::fill_n(statusExtCls, 2, false);
+			std::fill_n(extClsL, 2, -1);
+			std::fill_n(extClsQ, 2, -1);
+			std::fill_n(extClsT, 2,  0);
+
+			//statusBetaHs = false;
+			//betaHBits = 0;
+			//betaHPatts = 0;
+			//betaHGoodTimes = 0;
+			//betaHs = 0;
+			//normChisqTs = -1;
+			//normChisqCs = -1;
+			//std::fill_n(Qs, 4, 0);
+			//Qalls = -1;
+			//std::fill_n(betaHStates, 6, 0);
 		}
 
 	public :
-		Short_t numOfRawCluster;
-		Short_t numOfRawSide;
 		Short_t numOfCluster;
 		Short_t numOfClusterH;
 		Short_t numOfBeta;
@@ -660,19 +632,25 @@ class TOF : public TObject {
 		Float_t Q[4];
 		Float_t Qall;
 
-		// TRK Track independent
-		Bool_t  statusBetaHs;
-		Short_t betaHBits;
-		Short_t betaHPatts;
-		Short_t betaHGoodTimes;
-		Float_t betaHs;
-		Float_t normChisqTs;
-		Float_t normChisqCs;
-		Float_t Qs[4];
-		Float_t Qalls;
-		Float_t betaHStates[6];
+		// extern clusters (near betaH hit by time)
+		Bool_t 	statusExtCls[2];
+		Short_t extClsL[2];
+		Float_t	extClsQ[2];
+		Float_t extClsT[2];
 
-	ClassDef(TOF, 2)
+		// TRK Track independent
+		//Bool_t  statusBetaHs;
+		//Short_t betaHBits;
+		//Short_t betaHPatts;
+		//Short_t betaHGoodTimes;
+		//Float_t betaHs;
+		//Float_t normChisqTs;
+		//Float_t normChisqCs;
+		//Float_t Qs[4];
+		//Float_t Qalls;
+		//Float_t betaHStates[6];
+
+	ClassDef(TOF, 3)
 };
 
 
@@ -733,14 +711,10 @@ class TRD : public TObject {
 		~TRD() {}
 
 		void init() {
-			numOfRawHit = 0;
-			numOfCluster = 0;
-			numOfSegment = 0;
 			numOfTrack = 0;
-			numOfHSegment = 0;
 			numOfHTrack = 0;
 
-			numOfVertexWithTrTrack = -1;
+			std::fill_n(numOfHSegVtx, 2, 0);
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(Q, 2, -1);
@@ -752,14 +726,11 @@ class TRD : public TObject {
 		}
 
 	public :
-		Short_t numOfRawHit;
-		Short_t numOfCluster;
-		Short_t numOfSegment;
 		Short_t numOfTrack;
-		Short_t numOfHSegment;
 		Short_t numOfHTrack;
 
-		Short_t numOfVertexWithTrTrack;
+		// (TrTrack, TrdHSegment) Vertex
+		Short_t numOfHSegVtx[2];
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
@@ -771,7 +742,7 @@ class TRD : public TObject {
 		Bool_t  trackStatus;
 		Float_t trackState[6]; // coo, dir
 
-	ClassDef(TRD, 3)
+	ClassDef(TRD, 4)
 };
 
 
@@ -782,8 +753,8 @@ class RICH : public TObject {
 		~RICH() {}
 
 		void init() {
-			numOfRing = 0;
-			numOfHit = 0;
+			//numOfRing = 0;
+			//numOfHit = 0;
 
 			kindOfRad = -1;
 			tileOfRad = -1;
@@ -798,13 +769,19 @@ class RICH : public TObject {
 			isGoodRecon = false;
 			beta = -1;
 			Q = -1;
+
+			std::fill_n(numOfPrimHit, 2, 0);
+			std::fill_n(numOfPrimPE,  2, 0);
+			
+			std::fill_n(numOfOthHit, 2, 0);
+			std::fill_n(numOfOthPE,  2, 0);
 		}
 
 	public :
-		// official RichRingR
-		Short_t numOfRing;
-		Short_t numOfHit;
+		//Short_t numOfRing;
+		//Short_t numOfHit;
 
+		// Rich Veto
 		Short_t kindOfRad;     // -1, None, 0, Aerogel 1, NaF
 		Short_t tileOfRad;     // tile id
 		Float_t rfrIndex;      // refractive index
@@ -819,12 +796,19 @@ class RICH : public TObject {
 		Bool_t isGoodTile;
 		Bool_t isInFiducialVolume;
 
+		// Official RichRingR
 		Bool_t  status;
 		Bool_t  isGoodRecon;
 		Float_t beta;
 		Float_t Q;
 
-	ClassDef(RICH, 3)
+		// Rich Hits (primary others) [0] cross  [1] no-cross
+		Short_t numOfPrimHit[2];
+		Float_t numOfPrimPE[2]; 
+		Short_t numOfOthHit[2];
+		Float_t numOfOthPE[2]; 
+
+	ClassDef(RICH, 4)
 };
 
 
@@ -835,7 +819,7 @@ class ECAL : public TObject {
 		~ECAL() {}
 
 		void init() {
-			numOfShower = 0;
+			//numOfShower = 0;
 
 			showers.clear();
 
@@ -843,13 +827,13 @@ class ECAL : public TObject {
 		}
 
 	public :
-		Short_t numOfShower;
+		//Short_t numOfShower;
 		
 		std::vector<ShowerInfo> showers;
 
 		//std::vector<HitECALInfo> rawHits;
 
-	ClassDef(ECAL, 3)
+	ClassDef(ECAL, 4)
 };
 
 #endif // __ClassDef_H__
