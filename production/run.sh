@@ -20,7 +20,7 @@ Stream=${YiDataSet}/iss.B950.pass6
 #Stream=${YiDataSet}/mc.ph.pl1.0_050_25.B1069
 #Stream=${YiDataSet}/mc.ph.pl1.0_2510.B1069
 #Stream=${YiDataSet}/mc.ph.pl1.101000.B1069
-GroupId=29600
+GroupId=23000
 GroupSize=1
 OutputDir=.
 

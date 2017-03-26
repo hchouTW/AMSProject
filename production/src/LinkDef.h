@@ -7,6 +7,7 @@
  * *******************************************************/
 
 #pragma link C++ class std::vector<std::string>+;
+#pragma link C++ class std::vector<Float_t>+;
 
 #pragma link C++ class RunTagInfo;
 #pragma link C++ class std::vector<RunTagInfo>+;

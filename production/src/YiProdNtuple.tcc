@@ -145,7 +145,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	}
 
 	if (isParticle) {
-    MgntTrHit::Load(event);
 		timer.stop();
 		return true;
 	}
@@ -570,6 +569,13 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	fRti.trackerAlign[1][0] = pd9.x();
 	fRti.trackerAlign[1][1] = pd9.y();
 
+	// Inner Tracker Temperature (Sensor A)
+	std::vector<float> tempSensA;
+	if (!setup->fSlowControl.GetData("Sensor A", event->Run(), 0, tempSensA) && 
+	    tempSensA.size() > 0) {
+		fRti.trackerTemp = tempSensA.at(0);
+	}
+	
 	timer.stop();
 	return selectEvent(event);
 }
@@ -960,170 +966,192 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	else if (recEv.iBeta  >= 0) Beta = event->pBeta(recEv.iBeta)->Beta;
 	else                        Beta = 1;
 
-	fTrk.numOfTrack = event->NTrTrack();
-
-	Float_t expLJ[9][6] = {0};
 	const Int_t qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP;
 	std::map<Int_t, Int_t> trackIDMap;
-	while (recEv.iTrTrack >= 0) {
-		for (Int_t itr = 0; itr <= event->NTrTrack(); ++itr) {
-			Int_t jtr = itr - 1;
-			if (jtr == recEv.iTrTrack) continue;
-			TrTrackR * trtk = event->pTrTrack( ((jtr==-1)?recEv.iTrTrack:jtr) );
-			if (trtk == 0) continue;
-			
-			if (jtr == -1) {
-				Double_t BTdist = 0;
-				fTrk.beamID = event->GetBeamPos(BTdist, trtk);
-				fTrk.beamDist = BTdist;
-			}
-			
-			TrackInfo track;
-
-			const UShort_t _hasL1  =   1;
-			const UShort_t _hasL2  =   2;
-			const UShort_t _hasL34 =  12;
-			const UShort_t _hasL56 =  48;
-			const UShort_t _hasL78 = 192;
-			const UShort_t _hasL9  = 256;
-			track.bitPattJ = trtk->GetBitPatternJ();
-			track.bitPattXYJ = trtk->GetBitPatternXYJ();
-	
-			Short_t isInner   = ((track.bitPattJ&_hasL34) > 0 &&
-			                     (track.bitPattJ&_hasL56) > 0 &&
-													 (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
-			Short_t isInnerXY = ((track.bitPattXYJ&_hasL34) > 0 &&
-			                     (track.bitPattXYJ&_hasL56) > 0 &&
-													 (track.bitPattXYJ&_hasL78) > 0) ? 2 : 0;
-			Short_t isL2    = ((track.bitPattJ  &_hasL2) > 0) ?   4 : 0;
-			Short_t isL2XY  = ((track.bitPattXYJ&_hasL2) > 0) ?   8 : 0;
-			Short_t isL1    = ((track.bitPattJ  &_hasL1) > 0) ?  16 : 0;
-			Short_t isL1XY  = ((track.bitPattXYJ&_hasL1) > 0) ?  32 : 0;
-			Short_t isL9    = ((track.bitPattJ  &_hasL9) > 0) ?  64 : 0;
-			Short_t isL9XY  = ((track.bitPattXYJ&_hasL9) > 0) ? 128 : 0;
-			Short_t bitPatt = isInner + isInnerXY + isL2 + isL2XY + isL1 + isL1XY + isL9 + isL9XY;
-	
-			Short_t fitidInn = trtk->iTrTrackPar(1, 3, 21);
-			if (fitidInn < 0) continue;
-			track.bitPatt = bitPatt; 
-			track.Qinner  = trtk->GetInnerQ_all(Beta, fitidInn).Mean; 
-
-			const Short_t _nalgo = 2;
-			const Short_t _algo[_nalgo] = { 1, 3 };
-			const Short_t _npatt = 4;
-			const Short_t _patt[_npatt] = { 3, 5, 6, 7 };
-			for (Int_t algo = 0; algo < _nalgo; algo++) {
-				for (Int_t patt = 0; patt < _npatt; patt++) {
-					Int_t fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 21);
-					if (fitid < 0) continue;
-					AMSPoint coo = trtk->GetP0(fitid);
-					AMSDir   dir = trtk->GetDir(fitid);
-	
-					track.status[algo][patt] = true;
-					track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
-					track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
-					track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
-					track.state[algo][patt][0] = coo[0];
-					track.state[algo][patt][1] = coo[1];
-					track.state[algo][patt][2] = coo[2];
-					track.state[algo][patt][3] = -dir[0];
-					track.state[algo][patt][4] = -dir[1];
-					track.state[algo][patt][5] = -dir[2];
-				
-					for (Int_t il = 0; il < 9; ++il) {
-						AMSPoint pntLJ;
-						AMSDir   dirLJ;
-						trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
-						track.stateLJ[algo][patt][il][0] = pntLJ[0];
-						track.stateLJ[algo][patt][il][1] = pntLJ[1];
-						track.stateLJ[algo][patt][il][2] = pntLJ[2];
-						track.stateLJ[algo][patt][il][3] = -dirLJ[0];
-						track.stateLJ[algo][patt][il][4] = -dirLJ[1];
-						track.stateLJ[algo][patt][il][5] = -dirLJ[2];
-					}
-				} // for loop - pattern
-			}
-
-			for (Int_t layJ = 1; layJ <= 9; layJ++) {
-				AMSPoint pnt;
-				AMSDir   dir;
-				trtk->InterpolateLayerJ(layJ, pnt, dir, fitidInn);
-				expLJ[layJ-1][0] = pnt[0];
-				expLJ[layJ-1][1] = pnt[1];
-				expLJ[layJ-1][2] = pnt[2];
-				expLJ[layJ-1][3] = -dir[0];
-				expLJ[layJ-1][4] = -dir[1];
-				expLJ[layJ-1][5] = -dir[2];
-			}
-
-			Bool_t hasHitLJ[9] = {false};
-			Int_t hitClsIDx[9]; std::fill_n(hitClsIDx, 9, -1);
-			Int_t hitClsIDy[9]; std::fill_n(hitClsIDy, 9, -1);
-			HitTRKInfo * trackHit[9] = {0};
-			Bool_t isDeadChanX[9] = {false};
-			for (UInt_t ilay = 0; ilay < 9; ++ilay) {
-				if (!trtk->TestHitLayerJ(ilay+1)) continue;
-				TrRecHitR * recHit = trtk->GetHitLJ(ilay+1);
-				if (recHit == 0) continue;
-
-				Int_t tkid = recHit->GetTkId();
-				
-				TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : 0;
-				TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : 0;
-
-				Short_t clsIdX = (xcls) ? recHit->GetXClusterIndex() : -1;
-				Short_t clsIdY = (ycls) ? recHit->GetYClusterIndex() : -1;
-
-				Int_t   side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
-				Int_t   mult = recHit->GetResolvedMultiplicity(); // -1  resolved multiplicty coordinates
-				                                                  // > 0 requested multiplicty coordinates
-				Float_t xloc = (xcls) ? (xcls->GetXCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
-				Float_t yloc = (ycls->GetXCofG() + ycls->GetSeedAddress());
-  			
-				Float_t xchrg = (xcls) ? TMath::Sqrt(recHit->GetSignalCombination(0, qopt, 1)) : -1.;
-  			Float_t ychrg = TMath::Sqrt(recHit->GetSignalCombination(1, qopt, 1));
-				
-				AMSPoint coo = recHit->GetCoord(mult, 3); // (CIEMAT+PG)/2
-
-    		TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
-				Int_t sens = (tksens.GetLadTkID() != 0) ? tksens.GetSensor() : -1;
-
-				hasHitLJ[ilay] = true;
-				hitClsIDx[ilay] = (xcls) ? recHit->GetXClusterIndex() : -1;
-				hitClsIDy[ilay] = (ycls) ? recHit->GetYClusterIndex() : -1;
-				isDeadChanX[ilay] = (tksens.GetLadTkID() != 0 && tksens.ReadChanX == -1); 
-
-				HitTRKInfo hit;
-				hit.clsId[0] = clsIdX;
-				hit.clsId[1] = clsIdY;
-				hit.layJ     = ilay+1;
-				hit.tkid     = tkid;
-				hit.sens     = sens;
-				hit.mult     = mult; 
-				hit.side     = side;
-				hit.cofg[0]  = xloc;
-				hit.cofg[1]  = yloc;
-				hit.chrg[0]  = xchrg;
-				hit.chrg[1]  = ychrg;
-				hit.coo[0]   = coo[0];
-				hit.coo[1]   = coo[1];
-				hit.coo[2]   = coo[2];
-				
-				trackHit[ilay] = &hit;
-
-				track.hits.push_back(hit);
-			} // for loop - layer
-			if (track.hits.size() > 1) std::sort(track.hits.begin(), track.hits.end(), HitTRKInfo_sort());
+	for (Int_t itr = 0; (itr <= event->NTrTrack() && recEv.iTrTrack >= 0); ++itr) {
+		Int_t jtr = itr - 1;
+		if (jtr == recEv.iTrTrack) continue;
+		TrTrackR * trtk = event->pTrTrack( ((jtr==-1)?recEv.iTrTrack:jtr) );
+		if (trtk == 0) continue;
 		
-			Int_t offTrID = ((jtr==-1)?recEv.iTrTrack:jtr);
-			Int_t selTrID = fTrk.tracks.size();
-			trackIDMap[offTrID] = selTrID;
+		if (jtr == -1) {
+			Double_t BTdist = 0;
+			fTrk.beamID = event->GetBeamPos(BTdist, trtk);
+			fTrk.beamDist = BTdist;
+		}
+		
+		TrackInfo track;
+
+		const UShort_t _hasL1  =   1;
+		const UShort_t _hasL2  =   2;
+		const UShort_t _hasL34 =  12;
+		const UShort_t _hasL56 =  48;
+		const UShort_t _hasL78 = 192;
+		const UShort_t _hasL9  = 256;
+		track.bitPattJ = trtk->GetBitPatternJ();
+		track.bitPattXYJ = trtk->GetBitPatternXYJ();
+	
+		Short_t isInner   = ((track.bitPattJ&_hasL34) > 0 &&
+		                     (track.bitPattJ&_hasL56) > 0 &&
+												 (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
+		Short_t isInnerXY = ((track.bitPattXYJ&_hasL34) > 0 &&
+		                     (track.bitPattXYJ&_hasL56) > 0 &&
+												 (track.bitPattXYJ&_hasL78) > 0) ? 2 : 0;
+		Short_t isL2    = ((track.bitPattJ  &_hasL2) > 0) ?   4 : 0;
+		Short_t isL2XY  = ((track.bitPattXYJ&_hasL2) > 0) ?   8 : 0;
+		Short_t isL1    = ((track.bitPattJ  &_hasL1) > 0) ?  16 : 0;
+		Short_t isL1XY  = ((track.bitPattXYJ&_hasL1) > 0) ?  32 : 0;
+		Short_t isL9    = ((track.bitPattJ  &_hasL9) > 0) ?  64 : 0;
+		Short_t isL9XY  = ((track.bitPattXYJ&_hasL9) > 0) ? 128 : 0;
+		Short_t bitPatt = isInner + isInnerXY + isL2 + isL2XY + isL1 + isL1XY + isL9 + isL9XY;
+	
+		Short_t fitidInn = trtk->iTrTrackPar(1, 3, 21);
+		if (fitidInn < 0) continue;
+		track.bitPatt = bitPatt; 
+		track.QIn = trtk->GetInnerQ_all(Beta, fitidInn).Mean; 
+		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
+		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
+		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
+
+		const Short_t _nalgo = 2;
+		const Short_t _algo[_nalgo] = { 1, 3 };
+		const Short_t _npatt = 4;
+		const Short_t _patt[_npatt] = { 3, 5, 6, 7 };
+		for (Int_t algo = 0; algo < _nalgo; algo++) {
+			for (Int_t patt = 0; patt < _npatt; patt++) {
+				Int_t fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 21);
+				if (fitid < 0) continue;
+				AMSPoint coo = trtk->GetP0(fitid);
+				AMSDir   dir = trtk->GetDir(fitid);
+	
+				track.status[algo][patt] = true;
+				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
+				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
+				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
+				track.state[algo][patt][0] = coo[0];
+				track.state[algo][patt][1] = coo[1];
+				track.state[algo][patt][2] = coo[2];
+				track.state[algo][patt][3] = -dir[0];
+				track.state[algo][patt][4] = -dir[1];
+				track.state[algo][patt][5] = -dir[2];
 			
-			fTrk.tracks.push_back(track);
+				for (Int_t il = 0; il < 9; ++il) {
+					AMSPoint pntLJ;
+					AMSDir   dirLJ;
+					trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
+					
+					track.stateLJ[algo][patt][il][0] = pntLJ[0];
+					track.stateLJ[algo][patt][il][1] = pntLJ[1];
+					track.stateLJ[algo][patt][il][2] = pntLJ[2];
+					track.stateLJ[algo][patt][il][3] = -dirLJ[0];
+					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
+					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
+
+					TkSens tksens(pntLJ, EventBase::checkEventMode(EventBase::MC));
+					if (tksens.LadFound()) {
+						Short_t tkid = tksens.GetLadTkID();
+						Short_t sens = tksens.GetSensor();
+						Short_t mult = tksens.GetMultIndex();
+						Float_t xloc = (tksens.GetStripX() + tksens.GetImpactPointX() + 640);
+						Float_t yloc = (tksens.GetStripY() + tksens.GetImpactPointY());
+						
+						track.localID[algo][patt][il][0] = tkid;
+						track.localID[algo][patt][il][1] = sens;
+						track.localID[algo][patt][il][2] = mult;
+						track.localLJ[algo][patt][il][0] = xloc;
+						track.localLJ[algo][patt][il][1] = yloc;
+					}
+				}
+			} // for loop - pattern
 		}
 
-		break;
+		for (UInt_t ilay = 0; ilay < 9; ++ilay) {
+			if (!trtk->TestHitLayerJ(ilay+1)) continue;
+			TrRecHitR * recHit = trtk->GetHitLJ(ilay+1);
+			if (recHit == 0) continue;
+
+			Int_t tkid = recHit->GetTkId();
+			Int_t mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
+			                                             // > 0 requested multiplicty coordinates
+			AMSPoint coo = recHit->GetCoord(mult, 3); // (CIEMAT+PG)/2
+  		
+			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
+			Int_t sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
+		
+			TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
+			TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
+
+			Short_t clsIdX = (xcls) ? recHit->GetXClusterIndex() : -1;
+			Short_t clsIdY = (ycls) ? recHit->GetYClusterIndex() : -1;
+
+			Short_t side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
+
+			Float_t xchrg = (xcls) ? TMath::Sqrt(recHit->GetSignalCombination(0, qopt, 1)) : -1.;
+  		Float_t ychrg = TMath::Sqrt(recHit->GetSignalCombination(1, qopt, 1));
+
+			Float_t xloc = (xcls) ? (xcls->GetCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
+			Float_t yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
+  		
+			// origin info
+			Short_t xseedAddr = (xcls) ? xcls->GetSeedAddress() : -1;
+			Short_t yseedAddr = (ycls) ? ycls->GetSeedAddress() : -1;
+
+			Short_t xseedIndx = (xcls) ? xcls->GetSeedIndex() : -1;
+			Short_t yseedIndx = (ycls) ? ycls->GetSeedIndex() : -1;
+
+			std::vector<Float_t> xstripSig;
+			std::vector<Float_t> xstripSgm;
+			for (Int_t it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
+				xstripSig.push_back(xcls->GetSignal(it));
+				xstripSgm.push_back(xcls->GetNoise(it));
+			}
+			
+			std::vector<Float_t> ystripSig;
+			std::vector<Float_t> ystripSgm;
+			for (Int_t it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
+				ystripSig.push_back(ycls->GetSignal(it));
+				ystripSgm.push_back(ycls->GetNoise(it));
+			}
+			
+			HitTRKInfo hit;
+			hit.clsId[0] = clsIdX;
+			hit.clsId[1] = clsIdY;
+			hit.layJ     = ilay+1;
+			hit.tkid     = tkid;
+			hit.sens     = sens;
+			hit.mult     = mult; 
+			hit.side     = side;
+			hit.coo[0]   = coo[0];
+			hit.coo[1]   = coo[1];
+			hit.coo[2]   = coo[2];
+			hit.chrg[0]  = xchrg;
+			hit.chrg[1]  = ychrg;
+			
+			hit.cofgX     = xloc;
+			hit.seedAddrX = xseedAddr;
+			hit.seedIndxX = xseedIndx;
+			hit.stripSigX = xstripSig;
+			hit.stripSgmX = xstripSgm;
+			
+			hit.cofgY     = yloc;
+			hit.seedAddrY = yseedAddr;
+			hit.seedIndxY = yseedIndx;
+			hit.stripSigY = ystripSig;
+			hit.stripSgmY = ystripSgm;
+	
+			track.hits.push_back(hit);
+		} // for loop - layer
+		if (track.hits.size() > 1) std::sort(track.hits.begin(), track.hits.end(), HitTRKInfo_sort());
+	
+		Int_t offTrID = ((jtr==-1)?recEv.iTrTrack:jtr);
+		Int_t selTrID = fTrk.tracks.size();
+		trackIDMap[offTrID] = selTrID;
+		
+		fTrk.tracks.push_back(track);
 	}
+
+	// It isnot match with official one.
+	if (fTrk.tracks.size() != event->NTrTrack()) return false;
 
 	// Vertex
 	TrReconQ reconQ(event);
@@ -1163,78 +1191,187 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 	}
 
-	Int_t   mapL[9] = {0, 1, 2, 2, 2, 2, 2, 2, 3};
-	Float_t qMax[4] = { -1, -1, -1, -1 };
-	Bool_t  onlyY[4] = { false, false, false, false };
-	TrRecHitR * mapH[8] = {0};
-
-	for (Int_t il = 0; il < 9; il++) {
-		if (MgntTrHit::MapHits.find(il+1) == MgntTrHit::MapHits.end()) continue;
-		std::vector<TrHit *> & itHits = MgntTrHit::MapHits[il+1];
-		for (std::vector<TrHit *>::iterator ht = itHits.begin(); ht != itHits.end(); ++ht) {
-			TrRecHitR * recHit = (*ht)->Hit();
-			Float_t chrg = (*ht)->Chrg();
- 			if (chrg <= qMax[mapL[il]]) continue;
-			qMax[mapL[il]] = chrg;
-			mapH[mapL[il]] = recHit;
-			onlyY[mapL[il]] = recHit->OnlyY();
-		} // for loop --- hit
-	}	// for loop --- layerJ
-
-	for (Int_t it = 0; it < 4; it++) {
-		Float_t chrg = qMax[it];
-		if (chrg < 0) continue;
-
-		TrRecHitR * recHit = mapH[it];
-		Short_t layJ = recHit->GetLayerJ();
-
-		Int_t mult = -1;
-		AMSPoint coo;
-		Float_t distLJ = 500;
-		for (Int_t im = 0; im < recHit->GetMultiplicity(); im++) {
-			AMSPoint refcoo = recHit->GetCoord(im, 3);
-			Float_t dx = (refcoo[0] - expLJ[layJ-1][0]);
-			Float_t dy = (refcoo[1] - expLJ[layJ-1][1]);
-			Float_t dist = (onlyY[it]) ? std::fabs(dy) : std::sqrt(dx * dx + dy * dy);
-			if (dist > distLJ) continue;
-			mult = im;
-			distLJ = dist;
-			coo = refcoo;
+	//---- Find External Hits ----//
+	struct CandHit {
+		Int_t   hitId;
+		Short_t xcls, ycls;
+		Float_t xchg, ychg;
+		Float_t mtch;
+	};
+	struct CandHit_sort {
+		bool operator() (const CandHit & hit1, const CandHit & hit2) {
+			return (hit1.mtch < hit2.mtch);
 		}
-			
-		TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : 0;
-		TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : 0;
-		Short_t clsIdX = (xcls) ? recHit->GetXClusterIndex() : -1;
-		Short_t clsIdY = (ycls) ? recHit->GetYClusterIndex() : -1;
+	};
 
-		Int_t   side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
-		Float_t xloc = (xcls) ? (xcls->GetXCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
-		Float_t yloc = (ycls->GetXCofG() + ycls->GetSeedAddress());
-				
-		Float_t xchrg = (xcls) ? TMath::Sqrt(recHit->GetSignalCombination(0, qopt, 1)) : -1.;
+	std::map<Short_t, std::vector<CandHit> > candHits;
+
+	for (Int_t ih = 0; ih < event->NTrRecHit(); ++ih) {
+		TrRecHitR * recHit = event->pTrRecHit(ih);
+		if (recHit == nullptr) continue;
+		
+		TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
+		TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
+		if (xcls == nullptr || ycls == nullptr) continue;
+		if (xcls->Used() || ycls->Used()) continue;
+		
+		Bool_t isNoise = (xcls->GetSeedSN() < 4.5 || ycls->GetSeedSN() < 4.5); // now, 4.5 is best
+		if (isNoise) continue;
+		
+		Float_t xchrg = TMath::Sqrt(recHit->GetSignalCombination(0, qopt, 1));
   	Float_t ychrg = TMath::Sqrt(recHit->GetSignalCombination(1, qopt, 1));
-					
-		TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
-		Int_t sens = (tksens.GetLadTkID() != 0 && xcls) ? tksens.GetSensor() : -1;
+		Float_t dchrg = std::fabs(xchrg - ychrg) / (xchrg + ychrg);
+		if (xchrg < 0.7 || ychrg < 0.7) continue;
+		
+		const Float_t NSfluc = 0.08;
+		Float_t xseedNS = std::sqrt(xcls->GetSeedNoise()) / xcls->GetSeedSignal();
+		Float_t yseedNS = std::sqrt(ycls->GetSeedNoise()) / ycls->GetSeedSignal();
+		Float_t seedNS = std::sqrt(2.0 * (xseedNS*xseedNS + yseedNS*yseedNS) );
+		Float_t chrgNS = std::sqrt(seedNS*seedNS + NSfluc*NSfluc);
+		if (dchrg > chrgNS) continue;
 
-		HitTRKInfo hit;
-		hit.clsId[0] = clsIdX;
-		hit.clsId[1] = clsIdY;
-		hit.layJ     = layJ;
-		hit.tkid     = recHit->GetTkId();
-		hit.sens     = sens;
-		hit.mult     = mult; 
-		hit.side     = side;
-		hit.cofg[0]  = xloc;
-		hit.cofg[1]  = yloc;
-		hit.chrg[0]  = xchrg;
-		hit.chrg[1]  = ychrg;
-		hit.coo[0]   = ((hit.side&1)==1) ? coo[0] : 0;
-		hit.coo[1]   = coo[1];
-		hit.coo[2]   = coo[2];
+		CandHit candh;
+		candh.hitId = ih;
+		candh.xcls = recHit->GetXClusterIndex();
+		candh.ycls = recHit->GetYClusterIndex();
+		candh.xchg = xchrg;
+		candh.ychg = ychrg;
+		candh.mtch = dchrg;
 
-		fTrk.maxQHit[it] = hit; 
+		candHits[recHit->GetTkId()].push_back(candh);
 	}
+
+	for(auto &elmap : candHits) {
+		std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
+		std::vector<CandHit> & hits = elmap.second;
+		if (hits.size() < 2) continue;
+		Float_t              fineScore = 0;
+		std::vector<Short_t> fineCand;
+		for (Int_t ih = 0; ih < hits.size(); ++ih) {
+			Float_t sumscore = 0;
+			std::vector<Short_t> cand;
+			std::set<Short_t> xset;
+			std::set<Short_t> yset;
+			for (Int_t jh = ih; jh < hits.size(); ++jh) {
+				CandHit & hit = hits.at(jh);
+				if (xset.find(hit.xcls) != xset.end()) continue;
+				else xset.insert(hit.xcls);
+				if (yset.find(hit.ycls) != yset.end()) continue;
+				else yset.insert(hit.ycls);
+				sumscore += hit.mtch;
+				cand.push_back(jh);
+			}
+			Float_t score = sumscore / cand.size();
+			Bool_t change = false;
+			if (cand.size() < fineCand.size()) continue;
+			else if (cand.size() > fineCand.size()) change = true;
+			else if (score < fineScore) change = true;
+			if (!change) continue;
+			fineScore = score;
+			fineCand = cand;
+		}
+		std::vector<CandHit> fineHits;
+		for (Int_t it = 0; it < fineCand.size(); ++it) {
+			fineHits.push_back( hits.at( fineCand.at(it) ) );
+		}
+		elmap.second = fineHits;
+	}
+
+	for(auto &elmap : candHits) {
+		std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
+		for(auto &candHit : elmap.second) {
+			TrRecHitR * recHit = event->pTrRecHit(candHit.hitId);
+			if (recHit == nullptr) continue;
+			TrClusterR * xcls = recHit->GetXCluster();
+			TrClusterR * ycls = recHit->GetYCluster();
+
+			Short_t clsIdX = candHit.xcls;
+			Short_t clsIdY = candHit.ycls;
+			Short_t layJ   = recHit->GetLayerJ();
+			Short_t tkid   = recHit->GetTkId();  	
+			Short_t side = 3;
+		
+			Float_t xchrg = candHit.xchg;
+			Float_t ychrg = candHit.ychg;
+
+			Float_t xloc = (xcls->GetCofG() + xcls->GetSeedAddress());
+			Float_t yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
+			
+			Short_t xseedAddr = xcls->GetSeedAddress();
+			Short_t yseedAddr = ycls->GetSeedAddress();
+
+			Short_t xseedIndx = xcls->GetSeedIndex();
+			Short_t yseedIndx = ycls->GetSeedIndex();
+
+			std::vector<Float_t> xstripSig;
+			std::vector<Float_t> xstripSgm;
+			for (Int_t it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
+				xstripSig.push_back(xcls->GetSignal(it));
+				xstripSgm.push_back(xcls->GetNoise(it));
+			}
+			
+			std::vector<Float_t> ystripSig;
+			std::vector<Float_t> ystripSgm;
+			for (Int_t it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
+				ystripSig.push_back(ycls->GetSignal(it));
+				ystripSgm.push_back(ycls->GetNoise(it));
+			}
+			
+			AMSPoint coo;
+			Int_t mult = -1;
+			Float_t distLJ = 500;
+			if (fTrk.tracks.size() > 0 && fTrk.tracks.at(0).status[0][0]) {
+				TrackInfo & track = fTrk.tracks.at(0);
+				for (Int_t im = 0; im < recHit->GetMultiplicity(); im++) {
+					AMSPoint refcoo = recHit->GetCoord(im, 3);
+					Float_t dx = (refcoo[0] - track.stateLJ[0][0][layJ-1][0]);
+					Float_t dy = (refcoo[1] - track.stateLJ[0][0][layJ-1][1]);
+					Float_t dist = std::sqrt(dx * dx + dy * dy);
+					if (dist > distLJ) continue;
+					distLJ = dist;
+					coo = refcoo;
+					mult = im;
+				}
+			}
+			else {
+				mult = 0;
+				coo = recHit->GetCoord(0, 3);
+			}
+  		
+			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
+			Int_t sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
+			
+			HitTRKInfo hit;
+			hit.clsId[0] = clsIdX;
+			hit.clsId[1] = clsIdY;
+			hit.layJ     = layJ;
+			hit.tkid     = tkid;
+			hit.sens     = sens;
+			hit.mult     = mult; 
+			hit.side     = side;
+			hit.coo[0]   = coo[0];
+			hit.coo[1]   = coo[1];
+			hit.coo[2]   = coo[2];
+			hit.chrg[0]  = xchrg;
+			hit.chrg[1]  = ychrg;
+			
+			hit.cofgX     = xloc;
+			hit.seedAddrX = xseedAddr;
+			hit.seedIndxX = xseedIndx;
+			hit.stripSigX = xstripSig;
+			hit.stripSgmX = xstripSgm;
+			
+			hit.cofgY     = yloc;
+			hit.seedAddrY = yseedAddr;
+			hit.seedIndxY = yseedIndx;
+			hit.stripSigY = ystripSig;
+			hit.stripSgmY = ystripSgm;
+	
+			fTrk.otherHits.push_back(hit);
+		}
+	}
+	if (fTrk.otherHits.size() > 1) 
+		std::sort(fTrk.otherHits.begin(), fTrk.otherHits.end(), HitTRKInfo_sort());
 
 	timer.stop();
 	return selectEvent(event);
@@ -2098,7 +2235,15 @@ int DataSelection::preselectEvent(AMSEventR * event) {
 
 	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
 	Bool_t isAppStudy = true;
-	if (EventBase::checkEventMode(EventBase::ISS) && isAppStudy) {
+	if (isAppStudy) {
+		//isAppStudy = EventBase::checkEventMode(EventBase::ISS);
+		isAppStudy = (EventBase::checkEventMode(EventBase::ISS) ||
+		              (YiNtuple::FileDir.find("pr.pl1.flux.l1a9.2016000") != std::string::npos) ||
+									(YiNtuple::FileDir.find("pr.pl1.flux.l1o9.2016000") != std::string::npos)
+								 );
+	}
+
+	if (isAppStudy) {
 		Bool_t hasTr    = false;
 		Bool_t isScale  = true;
 		Double_t sclRig = 0.0;
@@ -2317,6 +2462,11 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_th, Lon
 	std::cout << Form("Group : %ld th   [%ld files/group],    Total of Load Files : %ld \n", fGroup.first, fGroup.second, fFileList.size());
 	for (Long64_t  it = 0; it < fFileList.size(); it++) {
 		std::cout << Form("    Number : %ld,   %s\n", it, fFileList.at(it).c_str());
+	}
+
+	if (fFileList.size() != 0) {
+		std::vector<std::string> && strs = MgntRegex::Split(fFileList.at(0), "(/+)");
+		if (strs.size() > 2) YiNtuple::FileDir = strs.at(strs.size()-2);
 	}
 	// end load data with group
 

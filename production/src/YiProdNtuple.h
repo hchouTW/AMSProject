@@ -390,7 +390,7 @@ class YiNtuple {
 
 	protected :
 		std::pair<Long64_t, Long64_t> fGroup;
-		std::vector<std::string> fFileList;
+		std::vector<std::string>      fFileList;
 
 		std::string      fFileName;
 		AMSChain       * fChain;
@@ -399,7 +399,12 @@ class YiNtuple {
 
 	protected :
 		MgntClock::HrsTimer fTimer;
+		
+	public :
+		static std::string FileDir;
 };
+
+std::string YiNtuple::FileDir = "";
 
 
 #endif // __YiProdNtuple_H__

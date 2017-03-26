@@ -206,9 +206,20 @@ class HitTRKInfo : public TObject {
 			sens = -1;
 			mult = -1;
 			side =  0;
-			std::fill_n(cofg, 2, -1);
-			std::fill_n(chrg, 2, -1);
 			std::fill_n(coo,  3, 0);
+			std::fill_n(chrg, 2, -1);
+
+			cofgX = 0;
+			seedAddrX = -1;
+			seedIndxX = -1;
+			stripSigX.clear();
+			stripSgmX.clear();
+
+			cofgY = 0;
+			seedAddrY = -1;
+			seedIndxY = -1;
+			stripSigY.clear();
+			stripSgmY.clear();
 		}
 
 	public :
@@ -218,11 +229,22 @@ class HitTRKInfo : public TObject {
 		Short_t sens;     // sensor
 		Short_t mult;     // multiplicity
 		Short_t side;     // side, 1 x, 2 y, 3 xy
-		Float_t cofg[2];  // (elc) strip index
-		Float_t chrg[2];  // (elc) charge
-		Float_t coo[3];
+		Float_t coo[3];   // coordinate
+		Float_t chrg[2];  // charge
+		
+		Float_t              cofgX;     // (elc) cofg	
+		Float_t              seedAddrX; // (elc) seed strip address
+		Float_t              seedIndxX; // (elc) seed strip index
+		std::vector<Float_t> stripSigX; // (elc) strip signal (value)
+		std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
+		
+		Float_t              cofgY;     // (elc) cofg	
+		Float_t              seedAddrY; // (elc) seed strip address
+		Float_t              seedIndxY; // (elc) seed strip index
+		std::vector<Float_t> stripSigY; // (elc) strip signal (value)
+		std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
 
-	ClassDef(HitTRKInfo, 4)
+	ClassDef(HitTRKInfo, 6)
 };
 
 struct HitTRKInfo_sort {
@@ -323,14 +345,19 @@ class TrackInfo : public TObject {
 		void init() {
 			bitPattJ = 0;
 			bitPattXYJ = 0;
-
 			bitPatt = 0;
-			Qinner = -1;
+			QIn = -1;
+			QL2 = -1;
+			QL1 = -1;
+			QL9 = -1;
 			
 			std::fill_n(status[0], 2 * 4, false);
 			std::fill_n(rigidity[0], 2 * 4, 0);
 			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
 			std::fill_n(state[0][0], 2 * 4 * 6, 0);
+			
+			std::fill_n(localID[0][0][0], 2 * 4 * 9 * 3, 0);
+			std::fill_n(localLJ[0][0][0], 2 * 4 * 9 * 2, -1);
 			std::fill_n(stateLJ[0][0][0], 2 * 4 * 9 * 6, 0);
 			
 			hits.clear();
@@ -349,7 +376,12 @@ class TrackInfo : public TObject {
 		// InnerL9  (XY) := ((bitPatt& 130)==130)
 		// FullSpan (XY) := ((bitPatt& 162)==162)
 		UShort_t bitPatt;
-		Float_t  Qinner;
+
+		// Track Charge
+		Float_t QIn;
+		Float_t QL1;
+		Float_t QL2;
+		Float_t QL9;
 
 		// Algorithm     (CHOUTKO, CHIKANIANF)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
@@ -357,11 +389,15 @@ class TrackInfo : public TObject {
 		Float_t rigidity[2][4];
 		Float_t chisq[2][4][2];
 		Float_t state[2][4][6];
-		Float_t stateLJ[2][4][9][6];
 		
+		Short_t localID[2][4][9][3]; // (tkid sens mult)
+		Float_t localLJ[2][4][9][2]; // (xloc yloc)
+		Float_t stateLJ[2][4][9][6]; // (x y z dirx diry dirz)
+	
+		// Track Hits
 		std::vector<HitTRKInfo> hits;
 
-	ClassDef(TrackInfo, 4)
+	ClassDef(TrackInfo, 5)
 };
 
 
@@ -495,6 +531,7 @@ class RTI : public TObject {
 			timeUTC = 0;
 			liveTime = -1;
 			std::fill_n(trackerAlign[0], 4, 0);
+			trackerTemp = 0;
 			isInShadow  = -1;
 			isFromSpace = -1;
 			std::fill_n(backtrace[0], 2*3, -1);
@@ -509,8 +546,8 @@ class RTI : public TObject {
 		Float_t radiusGTOD;          // distance from earth to ams [cm]
 		Float_t thetaGTOD;           // earth coordinate [rad]
 		Float_t phiGTOD;             // earth coordinate [rad]
-  	Float_t thetaMAG;            // geomagnetic latitude [rad]
-  	Float_t phiMAG;              // geomagnetic longitude [rad]
+		Float_t thetaMAG;            // geomagnetic latitude [rad]
+		Float_t phiMAG;              // geomagnetic longitude [rad]
 		Float_t latGXY;              // ams pointing galatic latitude [rad]
 		Float_t longGXY;             // ams pointing galatic longitude [rad]
 		Float_t rptISS[3];           // ISS coordinates (R, Phi, Theta) (GTOD)
@@ -522,6 +559,7 @@ class RTI : public TObject {
 		UInt_t  timeUTC;             // UTC time
 		Float_t liveTime;            // fraction of "non-busy" time
 		Float_t trackerAlign[2][2];  // L1 x,y L9 x,y
+		Float_t trackerTemp;         // tracker temperature (Sensor A)
 		
 		Short_t isInShadow;          // particle pass through the ISS Solar Array
 		                             // return
@@ -681,26 +719,22 @@ class TRK : public TObject {
 			beamID = -1;
 			beamDist = -1;
 
-			numOfTrack = 0;
-
 			tracks.clear();
 			vertices.clear();
 
-			for (UInt_t it = 0; it < 4; ++it)
-				maxQHit[it].init();
+			otherHits.clear();
 		}
 
 	public :
 		Short_t beamID;
 		Float_t beamDist;
 
-		Short_t  numOfTrack;
 		std::vector<TrackInfo> tracks;
 		std::vector<VertexInfo> vertices;
 
-		HitTRKInfo maxQHit[4]; // L1, L2, L3-8, L9
+		std::vector<HitTRKInfo> otherHits;
 
-	ClassDef(TRK, 3)
+	ClassDef(TRK, 4)
 };
 
 
