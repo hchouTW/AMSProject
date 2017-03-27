@@ -33,6 +33,9 @@
 #pragma link C++ class HitECALInfo;
 #pragma link C++ class std::vector<HitECALInfo>+;
 
+#pragma link C++ class ClsACCInfo;
+#pragma link C++ class std::vector<ClsACCInfo>+;
+
 #pragma link C++ class TrackInfo;
 #pragma link C++ class std::vector<TrackInfo>+;
 

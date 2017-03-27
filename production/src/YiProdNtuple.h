@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <cstdio>
 
-// Root library
+// ROOT library
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -30,6 +30,8 @@
 #include "TRandom3.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
+#include "TF1.h"
+#include "TF2.h"
 
 // AMS library
 #include "root.h"
@@ -55,12 +57,10 @@
 #include "TrReconQ.h"
 
 // User defination library
-#include "/afs/cern.ch/user/h/hchou/libraries/CPlusPlus/ROOT/selflib.h"
+#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/CPPLibs/CPPLibs.h"
 
-#include "/afs/cern.ch/user/h/hchou/private/YiService/src/EcalHadron/EcalHadron.h"
-#include "/afs/cern.ch/user/h/hchou/private/YiService/src/EcalHadron/EcalHadron.cpp"
-
-#include "/afs/cern.ch/user/h/hchou/private/YiService/src/MgntFit/Include.h"
+#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/AMSLibs/EcalHadron/EcalHadron.h"
+#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/AMSLibs/EcalHadron/EcalHadron.C"
 
 #include "ClassDef.h"
 #include "ClassDef.C"
@@ -78,7 +78,7 @@ class RecEvent {
 		void init();
 		bool rebuild(AMSEventR * event);
 		
-		inline float time() { return timer.time(); }
+		inline float time() { return fStopwatch.time(); }
 
 	public :
 		int iBeta;
@@ -88,9 +88,12 @@ class RecEvent {
 		int iTrdTrack;
 		int iTrdHTrack;
 		int iRichRing;
-	
+
+	public :
+		double trackerZJ[9];
+
 	protected :
-		MgntClock::HrsTimer timer;
+		MgntClock::HrsStopwatch fStopwatch;
 };
 
 static RecEvent recEv;
@@ -124,7 +127,7 @@ class EventBase {
 		virtual bool selectEvent(AMSEventR * event = 0) = 0;
 		inline void fill();
 
-		inline float time() { return timer.time(); }
+		inline float time() { return fStopwatch.time(); }
 
 	protected :
 		inline void setTree(const char * name, const char * title);
@@ -135,7 +138,7 @@ class EventBase {
 		TTree * tree;
 
 	protected :
-		MgntClock::HrsTimer timer;
+		MgntClock::HrsStopwatch fStopwatch;
 };
 
 
@@ -343,12 +346,16 @@ class DataSelection {
 	public :
 		static TRandom3 gRandom;
 		static Float_t  gScaleFact;
-		static TF1      gScaleFunc;
+		static TF1      gScaleFunc1D; // (rig)
+		//static TF1      gScaleFunc1D; // (chrg)
+		static TF2      gScaleFunc2D; // (rig, chrg)
 };
 
 TRandom3 DataSelection::gRandom(0);
 Float_t  DataSelection::gScaleFact = 0.01;
-TF1      DataSelection::gScaleFunc("gScaleFunc", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
+TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
+//TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
+TF2      DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
 
 
 //---- RunTagOperator ----//
@@ -384,7 +391,7 @@ class YiNtuple {
 
 		inline void init();
 		inline void setOutputFile(const std::string& file_name = "YiNtuple.root", const std::string& path = ".", bool isMultiTree = false);
-		void readDataFrom(const std::string& file_list = "fileList.txt", Long64_t group_th = 0, Long64_t group_size = -1);
+		void readDataFrom(const std::string& file_list = "fileList.txt", Long64_t group_id = 0, Long64_t group_size = -1);
     void saveInputFileList(TFile * file);
 		void loopEventChain();
 
@@ -398,7 +405,7 @@ class YiNtuple {
 		RunTagOperator * fRunTagOp; 
 
 	protected :
-		MgntClock::HrsTimer fTimer;
+		MgntClock::HrsStopwatch fStopwatch;
 		
 	public :
 		static std::string FileDir;

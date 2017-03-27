@@ -20,7 +20,7 @@ class RunTagInfo : public TObject {
 		~RunTagInfo() {}
 
 		void init() {
-			runID = 0;
+			run = 0;
 			eventFT = 0;
 			eventLT = 0;
 			numOfSelEvent = 0;
@@ -32,7 +32,7 @@ class RunTagInfo : public TObject {
 		}
 
 	public :
-		UInt_t runID;
+		UInt_t run;
 		UInt_t eventFT;                 // first trigger event
 		UInt_t eventLT;                 // last trigger event
 		UInt_t numOfSelEvent;           // number of select  events
@@ -55,8 +55,8 @@ class HitTRKMCInfo : public TObject {
 		void init() {
 			layJ    = 0;
 			tkid    = 0;
-			edep    = 0;
-			mom     = 0;
+			edep    = -1;
+			mom     = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
 		}
@@ -64,8 +64,8 @@ class HitTRKMCInfo : public TObject {
 	public :
 		Short_t layJ;    // layerJ
 		Short_t tkid;    // tkID
-		Float_t edep;    // (elc) edep
-		Float_t mom;     // (phy) momentum
+		Float_t edep;    // edep
+		Float_t mom;     // momentum
 		Float_t coo[3];
 		Float_t dir[3];
 
@@ -94,7 +94,7 @@ class HitTRDMCInfo : public TObject {
 		void init() {
 			lay     = 0;
 			sub     = 0;
-			edep    = 0;
+			edep    = -1;
 			std::fill_n(coo, 3, 0);
 		}
 
@@ -131,7 +131,6 @@ class PartMCInfo : public TObject {
 		~PartMCInfo() {}
 
 		void init() {
-			trackID  = 0;
 			partID   = 0;
 			chrg     = 0;
 			mass     = 0;
@@ -143,7 +142,6 @@ class PartMCInfo : public TObject {
 		}
 
 	public :
-		Short_t trackID;
 		Short_t partID;
 		Float_t chrg;
 		Float_t mass;
@@ -154,7 +152,7 @@ class PartMCInfo : public TObject {
 
 		std::vector<HitTRKMCInfo> hits;
 
-	ClassDef(PartMCInfo, 4)
+	ClassDef(PartMCInfo, 5)
 };
 
 struct PartMCInfo_sort {
@@ -274,7 +272,7 @@ class HitTRDInfo : public TObject {
 			lay  = 0;
 			sub  = 0;
 			side = 0;
-			amp  = 0;
+			amp  = -1;
 			std::fill_n(coo, 3, 0);
 		}
 
@@ -314,7 +312,7 @@ class HitECALInfo : public TObject {
 		void init() {
 			id   = 0;
 			side = 0;
-			edep = 0;
+			edep = -1;
 			std::fill_n(coo, 3, 0);
 		}
 
@@ -332,6 +330,35 @@ struct HitECALInfo_sort {
 		if      (hit1.id < hit2.id) return true;
 		else if (hit1.id > hit2.id) return false;
 		return false;
+	}
+};
+
+
+// ClsACCInfo
+class ClsACCInfo : public TObject {
+	public :
+		ClsACCInfo() { init(); }
+		~ClsACCInfo() {}
+
+		void init() {
+			sector = 0;
+			time = 0;
+			rawQ = -1;
+			std::fill_n(coo, 3, 0);
+		}
+
+	public :
+		Short_t sector; // sector (1~8)
+		Float_t time;   // time
+		Float_t rawQ;   // raw Charge
+		Float_t coo[3]; // x, y, z
+
+	ClassDef(ClsACCInfo, 1)
+};
+
+struct ClsACCInfo_sort {
+	bool operator() (const ClsACCInfo & cls1, const ClsACCInfo & cls2) {
+		return (cls1.time < cls2.time);
 	}
 };
 
@@ -463,16 +490,16 @@ class LIST : public TObject {
 		~LIST() {}
 
 		void init() {
-			runID   = 0;
-			eventID = 0;
-			entryID = 0;
-			weight  = 1;
+			run    = 0;
+			event  = 0;
+			entry  = 0;
+			weight = 1;
 		}
 
 	public :
-		UInt_t   runID;
-		UInt_t   eventID;
-		UInt_t   entryID;
+		UInt_t   run;
+		UInt_t   event;
+		UInt_t   entry;
 		Float_t  weight;
 
 	ClassDef(LIST, 2)
@@ -533,8 +560,8 @@ class RTI : public TObject {
 			std::fill_n(trackerAlign[0], 4, 0);
 			trackerTemp = 0;
 			isInShadow  = -1;
-			isFromSpace = -1;
-			std::fill_n(backtrace[0], 2*3, -1);
+			//isFromSpace = -1;
+			//std::fill_n(backtrace[0], 2*3, -1);
 		}
 
 	public :
@@ -566,21 +593,21 @@ class RTI : public TObject {
 																 //  -1, no particle information
 																 //   0, false
 																 //   1, true
-		Short_t isFromSpace;         // particle coming from space
+		//Short_t isFromSpace;         // particle coming from space
 		                             // return
 																 //  -1, no particle information
 																 //   0, particle isnot coming from space
 																 //   1, particle is coming from space (weak)
 																 //   2, particle is coming from space (middle)
 																 //   3, particle is coming from space (strong)
-		Short_t backtrace[2][3];     // charge { 1, -1 }  (stable fact 1.00, 1.15, 1.30)
+		//Short_t backtrace[2][3];     // charge { 1, -1 }  (stable fact 1.00, 1.15, 1.30)
 		                             // return
 		                             //   0, unercutoff (i.e. atmospheric origin), 
 													       //   1, over cutoff (i.e. coming from space), 
 													       //   2, trapped, 
 													       //  -1, error
 
-	ClassDef(RTI, 6)
+	ClassDef(RTI, 7)
 };
 
 
@@ -629,10 +656,10 @@ class TOF : public TObject {
 			betaH = 0;
 			normChisqT = -1;
 			normChisqC = -1;
-			std::fill_n(Q, 4, 0);
+			std::fill_n(T, 4,  0);
+			std::fill_n(Q, 4, -1);
 			Qall = -1;
 
-			std::fill_n(statusExtCls, 2, false);
 			std::fill_n(extClsL, 2, -1);
 			std::fill_n(extClsQ, 2, -1);
 			std::fill_n(extClsT, 2,  0);
@@ -644,7 +671,8 @@ class TOF : public TObject {
 			//betaHs = 0;
 			//normChisqTs = -1;
 			//normChisqCs = -1;
-			//std::fill_n(Qs, 4, 0);
+			//std::fill_n(Ts, 4,  0);
+			//std::fill_n(Qs, 4, -1);
 			//Qalls = -1;
 			//std::fill_n(betaHStates, 6, 0);
 		}
@@ -667,11 +695,11 @@ class TOF : public TObject {
 		Float_t betaH;
 		Float_t normChisqT;
 		Float_t normChisqC;
+		Float_t T[4];
 		Float_t Q[4];
 		Float_t Qall;
 
 		// extern clusters (near betaH hit by time)
-		Bool_t 	statusExtCls[2];
 		Short_t extClsL[2];
 		Float_t	extClsQ[2];
 		Float_t extClsT[2];
@@ -684,6 +712,7 @@ class TOF : public TObject {
 		//Float_t betaHs;
 		//Float_t normChisqTs;
 		//Float_t normChisqCs;
+		//Float_t Ts[4];
 		//Float_t Qs[4];
 		//Float_t Qalls;
 		//Float_t betaHStates[6];
@@ -700,12 +729,15 @@ class ACC : public TObject {
 
 		void init() {
 			numOfCluster = 0;
+			clusters.clear();
 		}
 
 	public :
 		Short_t numOfCluster;
 
-	ClassDef(ACC, 1)
+		std::vector<ClsACCInfo> clusters;
+
+	ClassDef(ACC, 2)
 };
 
 
@@ -853,7 +885,7 @@ class ECAL : public TObject {
 		~ECAL() {}
 
 		void init() {
-			//numOfShower = 0;
+			numOfShower = 0;
 
 			showers.clear();
 
@@ -861,7 +893,7 @@ class ECAL : public TObject {
 		}
 
 	public :
-		//Short_t numOfShower;
+		Short_t numOfShower;
 		
 		std::vector<ShowerInfo> showers;
 

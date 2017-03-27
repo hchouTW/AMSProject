@@ -32,11 +32,11 @@ int main(int argc, const char ** argv) {
 	EventBase::setEventVersion(EventBase::B950);
 
 	std::cout << std::endl << std::endl;
-	std::cout << "Usage : YiProdNtuple event_mode file_list group_th group_size (path)\n";
+	std::cout << "Usage : YiProdNtuple event_mode file_list group_id group_size (path)\n";
 	std::cout << "    Parameters : \n";
 	std::cout << "    event_mode [ISS BT MC]\n";
 	std::cout << "    file_list\n";
-	std::cout << "    group_th\n";
+	std::cout << "    group_id\n";
 	std::cout << "    group_size\n";
 	std::cout << "    (path)\n";
 	std::cout << std::endl << std::endl;
@@ -48,7 +48,7 @@ int main(int argc, const char ** argv) {
 
 	std::string event_mode = argv[1];
 	std::string file_list = argv[2];
-	Long64_t group_th = atol(argv[3]);
+	Long64_t group_id = atol(argv[3]);
 	Long64_t group_size = atol(argv[4]);
 
 	std::use_facet<std::ctype<char> >(std::locale()).toupper(&event_mode[0], &event_mode[0] + event_mode.size());
@@ -62,9 +62,9 @@ int main(int argc, const char ** argv) {
 
 	std::string outputFile = "";
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM))
-		outputFile = Form("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_th);
+		outputFile = CStrFmt("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_id);
 	else if (YiNtuple::checkSelectionMode(YiNtuple::COPY))
-		outputFile = Form("YiMirror_%s.%07ld.root", event_mode.c_str(), group_th);
+		outputFile = CStrFmt("YiMirror_%s.%07ld.root", event_mode.c_str(), group_id);
 
 	std::string path = ".";
 	if (argc == 6) path = argv[5];
@@ -72,7 +72,7 @@ int main(int argc, const char ** argv) {
 	bool isMultiTree = false;
 	YiNtuple * ntuple = new YiNtuple();
 	ntuple->setOutputFile(outputFile, path, isMultiTree);
-	ntuple->readDataFrom(file_list, group_th, group_size);
+	ntuple->readDataFrom(file_list, group_id, group_size);
 	ntuple->loopEventChain();
 	if (ntuple != 0) delete ntuple;
 	ntuple = 0;

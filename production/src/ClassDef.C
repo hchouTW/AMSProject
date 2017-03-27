@@ -7,13 +7,17 @@
  * *******************************************************/
 
 ClassImp(RunTagInfo)
+
 ClassImp(HitTRKMCInfo)
 ClassImp(HitTRDMCInfo)
 ClassImp(PartMCInfo)
 ClassImp(VertexMCInfo)
+
 ClassImp(HitTRKInfo)
 ClassImp(HitTRDInfo)
 ClassImp(HitECALInfo)
+ClassImp(ClsACCInfo)
+
 ClassImp(TrackInfo)
 ClassImp(VertexInfo)
 ClassImp(ShowerInfo)

@@ -19,11 +19,13 @@ void RecEvent::init() {
 	iTrdTrack   = -1;
 	iTrdHTrack  = -1;
 	iRichRing   = -1;
+
+	std::fill_n(trackerZJ, 9, 0);
 }
 
 bool RecEvent::rebuild(AMSEventR * event) {
-	if (event == 0) return false;
-	timer.start();
+	if (event == nullptr) return false;
+	fStopwatch.start();
 	init();
 
 	Int_t npar    = event->NParticle();
@@ -35,14 +37,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	Int_t ntrdhtk = event->NTrdHTrack();
 	Int_t nring   = event->NRichRing();
 
-
-	// Known feature of the current track finding and new developments (works by Z.Qu)
-	// By default all the TrTrack parameters are refitted
-	//for (UInt_t i = 0; i < event->NTrTrack(); ++i) {
-	//	TrTrackR * trtk = event->pTrTrack(i);
-	//	if (trtk == 0) continue;
-	//	trtk->AddLostHits();
-	//}
 
 	/** Particle **/
 	Bool_t isParticle = false;
@@ -63,7 +57,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
 		isParticle = true;
 	}
-	if (!isParticle) { init(); timer.stop(); return false; }
+	if (!isParticle) { init(); fStopwatch.stop(); return false; }
 
 	// Beta Information
 	Float_t Beta = 0;
@@ -72,7 +66,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	else                  Beta = 1;
 
 	// Tracker Information
-	Float_t trackerZJ[9];
 	if (EventBase::checkEventMode(EventBase::ISS))
 		for (Int_t layJ = 1; layJ <= 9; layJ++)
 			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerAJ(layJ);
@@ -85,7 +78,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	AMSPoint TkStCoo;
 	AMSDir   TkStDir;
 	Float_t  TkStRig = 0;
-	Float_t  TkStQ = 0;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
 		TkStID = TkStPar->iTrTrackPar(1, 3, 21);
@@ -93,9 +85,8 @@ bool RecEvent::rebuild(AMSEventR * event) {
 			TkStCoo = TkStPar->GetP0(TkStID);
 			TkStDir = TkStPar->GetDir(TkStID);
 			TkStRig = TkStPar->GetRigidity(TkStID);
-			TkStQ   = TkStPar->GetInnerQ_all(Beta, TkStID).Mean;
 		}
-		else { timer.stop(); return false; }
+		else { fStopwatch.stop(); return false; }
 	}
 		
 	// ECAL Information
@@ -145,12 +136,12 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	}
 
 	if (isParticle) {
-		timer.stop();
+		fStopwatch.stop();
 		return true;
 	}
 	else init();
 	
-	timer.stop();
+	fStopwatch.stop();
 	return false;
 }
 
@@ -169,7 +160,7 @@ EventBase::~EventBase() {
 }
 
 inline void EventBase::fill() {
-	if (isTreeSelf == false || tree == 0) return;
+	if (isTreeSelf == false || tree == nullptr) return;
 	tree->Fill();
 }
 
@@ -201,7 +192,7 @@ void EventList::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventList::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventList", "AMS-02 Event List");
+	if (evTree == nullptr) setTree("EventList", "AMS-02 Event List");
 	else tree = evTree;
 
 	tree->Branch("list", &fList);
@@ -224,27 +215,21 @@ void EventList::setEnvironment() {
 
 bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
 	// LIST
-	fList.runID   = event->Run();
-	fList.eventID = event->Event();
-	fList.entryID = chain->Entry();
-	fList.weight  = EventList::gWeight;
+	fList.run    = event->Run();
+	fList.event  = event->Event();
+	fList.entry  = chain->Entry();
+	fList.weight = EventList::gWeight;
 
 	// G4MC
 	if (checkEventMode(EventBase::MC)) {
 		MCEventgR * primary = event->GetPrimaryMC();
-		if (primary == 0) return false;
-
-		// Tracker Information
-		Float_t trackerZJ[9] = {0};
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
+		if (primary == nullptr) return false;
 
 		fG4mc.beamID = primary->TBl + 1;
-		fG4mc.primPart.trackID  = primary->trkID;
 		fG4mc.primPart.partID   = primary->Particle;
 		fG4mc.primPart.chrg     = primary->Charge;
 		fG4mc.primPart.mass     = primary->Mass;
@@ -260,7 +245,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		std::set<Int_t> PrimSET;
 		for (Int_t it = 0; it < event->NMCEventg(); it++) {
 			MCEventgR * mcev = event->pMCEventg(it);
-			if (mcev == 0) continue;
+			if (mcev == nullptr) continue;
 			if (mcev->parentID != 1) continue; // ONLY SAVE PRIM PART
 			if (mcev->Momentum < 5.0e-2) continue;
 			Double_t momRat = (mcev->Momentum / fG4mc.primPart.mom);
@@ -271,15 +256,16 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		std::set<Int_t> TrSET;
 		TrSET.insert(primary->trkID);
+		std::vector<Short_t> SecTrkID;
 		for (Int_t iev = 0; iev < event->NMCEventg(); iev++) {
 			MCEventgR * mcev = event->pMCEventg(iev);
-			if (mcev == 0) continue;
+			if (mcev == nullptr) continue;
 			if (mcev->Momentum < 5.0e-2) continue;
 			if (PrimSET.find(mcev->parentID) == PrimSET.end()) continue;
 			TrSET.insert(mcev->trkID);
+			SecTrkID.push_back(mcev->trkID);
 			
 			PartMCInfo part;
-			part.trackID  = mcev->trkID;
 			part.partID   = mcev->Particle;
 			part.chrg     = mcev->Charge;
 			part.mass     = mcev->Mass;
@@ -291,13 +277,13 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			part.dir[0]   = mcev->Dir[0];
 			part.dir[1]   = mcev->Dir[1];
 			part.dir[2]   = mcev->Dir[2];
+			
 			fG4mc.secParts.push_back(part);
 		}
-		std::sort(fG4mc.secParts.begin(), fG4mc.secParts.end(), PartMCInfo_sort());
 		
 		for (Int_t icls = 0; icls < event->NTrMCCluster(); icls++) {
 			TrMCClusterR * cluster = event->pTrMCCluster(icls);
-			if (cluster == 0) continue;
+			if (cluster == nullptr) continue;
 			if (cluster->GetMomentum() < 5.0e-2) continue;
 			if (TrSET.find(cluster->GetGtrkID()) == TrSET.end()) continue;
 			
@@ -322,7 +308,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			if (cluster->GetGtrkID() == primary->trkID) fG4mc.primPart.hits.push_back(hit);
 			else {
 				for (Int_t ipart = 0; ipart < fG4mc.secParts.size(); ++ipart) {
-					if (fG4mc.secParts.at(ipart).trackID != cluster->GetGtrkID()) continue;
+					if (SecTrkID.at(ipart) != cluster->GetGtrkID()) continue;
 					fG4mc.secParts.at(ipart).hits.push_back(hit);
 					break;
 				}
@@ -330,8 +316,10 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 
 		std::sort(fG4mc.primPart.hits.begin(), fG4mc.primPart.hits.end(), HitTRKMCInfo_sort());
-		for (Int_t ipart = 0; ipart < fG4mc.secParts.size(); ++ipart)
-			std::sort(fG4mc.secParts.at(ipart).hits.begin(), fG4mc.secParts.at(ipart).hits.end(), HitTRKMCInfo_sort());
+		
+		std::sort(fG4mc.secParts.begin(), fG4mc.secParts.end(), PartMCInfo_sort());
+		for (auto && secPart : fG4mc.secParts)
+			std::sort(secPart.hits.begin(), secPart.hits.end(), HitTRKMCInfo_sort());
 
 		if (fG4mc.secParts.size() >= 2) {
 			VertexMCInfo vertex;
@@ -343,7 +331,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 	}
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -370,7 +358,7 @@ void EventRti::setEventTree(TTree * evTree) {
 
 	if (!checkEventMode(EventBase::ISS)) return;
 
-	if (evTree == 0) setTree("EventRti", "Run time information");
+	if (evTree == nullptr) setTree("EventRti", "Run time information");
 	else tree = evTree;
 
 	tree->Branch("rti", &fRti);
@@ -387,7 +375,7 @@ void EventRti::setEnvironment() {
 
 bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (!checkEventMode(EventBase::ISS)) return true;
-	if (event == 0)	return false;
+	if (event == nullptr)	return false;
 
 	AMSSetupR::RTI rti;
 	event->GetRTI(rti);
@@ -431,7 +419,7 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	}
 	fRti.isInShadow = isInShadow;
 
-	// Backtracing (based on particle)
+	/* Backtracing (based on particle)
 	Int_t isFromSpace = -1;
 	Int_t backtrace[2][3] = { {-1, -1, -1}, {-1, -1, -1} };
 	Bool_t isOpenBacktrace = false;
@@ -505,20 +493,21 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	fRti.backtrace[1][0] = backtrace[1][0];
 	fRti.backtrace[1][1] = backtrace[1][1];
 	fRti.backtrace[1][2] = backtrace[1][2];
+	*/
 
 	if (!rebuildRTI) return selectEvent(event);
 
 	initEvent();
-	timer.start();
+	fStopwatch.start();
 
 	fRti.isInShadow      = isInShadow;
-	fRti.isFromSpace     = isFromSpace;
-	fRti.backtrace[0][0] = backtrace[0][0];
-	fRti.backtrace[0][1] = backtrace[0][1];
-	fRti.backtrace[0][2] = backtrace[0][2];
-	fRti.backtrace[1][0] = backtrace[1][0];
-	fRti.backtrace[1][1] = backtrace[1][1];
-	fRti.backtrace[1][2] = backtrace[1][2];
+	//fRti.isFromSpace     = isFromSpace;
+	//fRti.backtrace[0][0] = backtrace[0][0];
+	//fRti.backtrace[0][1] = backtrace[0][1];
+	//fRti.backtrace[0][2] = backtrace[0][2];
+	//fRti.backtrace[1][0] = backtrace[1][0];
+	//fRti.backtrace[1][1] = backtrace[1][1];
+	//fRti.backtrace[1][2] = backtrace[1][2];
 
 	fRti.flagRun = true;
 	if (event->GetRTIStat() != 0) fRti.flagRun = false;
@@ -576,7 +565,7 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 		fRti.trackerTemp = tempSensA.at(0);
 	}
 	
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -611,7 +600,7 @@ void EventTrg::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventTrg::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventTrg", "Anti-Coincidence Counter");
+	if (evTree == nullptr) setTree("EventTrg", "Anti-Coincidence Counter");
 	else tree = evTree;
 
 	tree->Branch("trg", &fTrg);
@@ -625,11 +614,11 @@ void EventTrg::setEnvironment() {
 
 bool EventTrg::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
 	Level1R * lvl1 = event->pLevel1(0);
-	if (lvl1 == 0) return false;
+	if (lvl1 == nullptr) return false;
 	if (checkEventMode(EventBase::MC)) {
 		// Rebuild according to Flight tr.setup
 		lvl1->RebuildTrigPatt(fTrg.logicPatt, fTrg.physicalPatt);
@@ -647,7 +636,7 @@ bool EventTrg::processEvent(AMSEventR * event, AMSChain * chain) {
 	Bool_t physTrg       = ((fTrg.physicalPatt&0x3e) > 0);
 	fTrg.bit = extTrg * 1 + unBiasTrgTOF * 2 + unBiasTrgECAL * 4 + physTrg * 8;
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -674,7 +663,7 @@ void EventTof::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventTof::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventTof", "Time of Flight");
+	if (evTree == nullptr) setTree("EventTof", "Time of Flight");
 	else tree = evTree;
 
 	tree->Branch("tof", &fTof);
@@ -688,8 +677,8 @@ void EventTof::setEnvironment() {
 
 bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
 	fTof.numOfCluster = event->NTofCluster();
 	fTof.numOfClusterH = event->NTofClusterH();
@@ -698,18 +687,9 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	Int_t tofLayerProj[4] = {0, 1, 1, 0}; // 0,1 := x,y
 		
-	// Tracker Information
-	Float_t trackerZJ[9] = {0};
-	if (checkEventMode(EventBase::ISS))
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerAJ(layJ);
-	else
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
-
 	while (recEv.iBeta >= 0) {
 		BetaR * beta = event->pBeta(recEv.iBeta);
-		if (beta == 0) break;
+		if (beta == nullptr) break;
 		fTof.statusBeta = true;
 		fTof.beta = beta->Beta;
 		Short_t betaPatt = beta->Pattern;
@@ -719,9 +699,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	TofRecH::BuildOpt = 0; // normal
 	const Short_t pattIdx[4] = { 1, 2, 4, 8 };
-	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != 0) {
+	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
 		BetaHR * betaH = event->pBetaH(recEv.iBetaH);
-		if (betaH == 0) break;
 
 		Int_t ncls[4] = {0};
 		fTof.numOfInTimeCluster = event->GetNTofClustersInTime(betaH, ncls);
@@ -738,11 +717,17 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (Int_t il = 0; il < 4; il++) {
 			if (!betaH->TestExistHL(il)) continue;
 			TofClusterHR * cls = betaH->GetClusterHL(il);
-			if (cls == 0) continue;
+			if (cls == nullptr) continue;
+			fTof.T[il] = cls->Time;
 			fTof.Q[il] = betaH->GetQL(il);
 			fTof.betaHPatt += pattIdx[il];
 			if (cls->IsGoodTime())
 				fTof.betaHGoodTime += pattIdx[il];
+		}
+		Float_t minTime = (*std::min_element(fTof.T, fTof.T+4));
+		for (Int_t il = 0; il < 4; il++) {
+			if (fTof.Q[il] < 0) continue;
+			fTof.T[il] -= minTime; 
 		}
 
 		Int_t nlay = 0;
@@ -773,7 +758,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	}
 
 	Bool_t   isHasTime[2] = { false, false };
-	Double_t avgTime[2][2] = { {0, 0}, {0, 0} };
+	Double_t avgTime[2] = {0, 0};
 	Double_t avgChrg[2] = {0, 0};
 	for (Int_t it = 0; it < 2; ++it) {
 		isHasTime[it] = (betaHClsId.at(2*it+0) >= 0 || betaHClsId.at(2*it+1) >= 0);
@@ -784,10 +769,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			Double_t wgval = ((ucls) ? (ucls->Time/ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (lcls->Time/lcls->ETime/lcls->ETime) : 0.);
 			Double_t sumwg = ((ucls) ? (1./ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (1./lcls->ETime/lcls->ETime) : 0.);
 			Double_t value = wgval / sumwg;
-			Double_t sigma = 1./std::sqrt(sumwg);
-			avgChrg[it]    = chrg;
-			avgTime[it][0] = value;
-			avgTime[it][1] = sigma;
+			avgChrg[it] = chrg;
+			avgTime[it] = value;
 		}
 	}
 	
@@ -799,22 +782,20 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (betaHClsId.at(cls->Layer) < 0) continue;
 		if (betaHClsId.at(cls->Layer) == it) continue;
 		Int_t    slay = (cls->Layer / 2);
-		Double_t dltT = std::fabs(cls->Time - avgTime[slay][0]) / cls->ETime;
+		Double_t dltT = std::fabs(cls->Time - avgTime[slay]) / cls->ETime;
 		if (nearHitId[slay] < 0 || dltT < nearHitDt[slay]) {
 			nearHitId[slay] = it;
 			nearHitDt[slay] = dltT;
 		} 
 	}
 
-	const Double_t TimeOneM = 3.335640e+00; // (speed of light)
 	for (Int_t it = 0; it < 2; ++it) {
 		if (nearHitId[it] < 0) continue;
 		TofClusterHR * cls = event->pTofClusterH(nearHitId[it]);
 		Int_t    lay  = cls->Layer;
 		Double_t chrg = cls->GetQSignal();
-		Double_t time = (cls->Time - avgTime[it][0]) / TimeOneM;
+		Double_t time = (cls->Time - avgTime[it]);
 		
-		fTof.statusExtCls[it] = true;
 		fTof.extClsL[it] = lay;
 		fTof.extClsQ[it] = chrg;
 		fTof.extClsT[it] = time;
@@ -826,7 +807,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	TofRecH::ReBuild(0);
 	while (event->NBetaH() > 0) {
 		BetaHR * betaHs = event->pBetaH(0);
-		if (betaHs == 0) break;
+		if (betaHs == nullptr) break;
 
 		fTof.statusBetaHs = true;
 		fTof.betaHs = betaHs->GetBeta();
@@ -840,11 +821,17 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (Int_t il = 0; il < 4; il++) {
 			if (!betaHs->TestExistHL(il)) continue;
 			TofClusterHR * cls = betaHs->GetClusterHL(il);
-			if (cls == 0) continue;
+			if (cls == nullptr) continue;
+			fTof.Ts[il] = cls->Time;
 			fTof.Qs[il] = betaHs->GetQL(il);
 			fTof.betaHPatts += pattIdx[il];
 			if (cls->IsGoodTime())
 				fTof.betaHGoodTimes += pattIdx[il];
+		}
+		Float_t minTime = (*std::min_element(fTof.Ts, fTof.Ts+4));
+		for (Int_t il = 0; il < 4; il++) {
+			if (fTof.Qs[il] < 0) continue;
+			fTof.Ts[il] -= minTime; 
 		}
 
 		Int_t nlays = 0;
@@ -864,7 +851,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	TofRecH::BuildOpt = 0; // normal
 	*/
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -889,7 +876,7 @@ void EventAcc::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventAcc::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventAcc", "Anti-Coincidence Counter");
+	if (evTree == nullptr) setTree("EventAcc", "Anti-Coincidence Counter");
 	else tree = evTree;
 
 	tree->Branch("acc", &fAcc);
@@ -903,12 +890,48 @@ void EventAcc::setEnvironment() {
 
 bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
-
+	if (event == nullptr)	return false;
+	fStopwatch.start();
+	
+	event->RebuildAntiClusters();
 	fAcc.numOfCluster = event->NAntiCluster();
 
-	timer.stop();
+	const Double_t TimeOfOneM = 3.335640e+00; // (speed of light)
+	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
+		BetaHR * betaH = event->pBetaH(recEv.iBetaH);
+		std::vector<Float_t> time;
+		for (Int_t il = 0; il < 4; il++) {
+			if (!betaH->TestExistHL(il)) continue;
+			TofClusterHR * cls = betaH->GetClusterHL(il);
+			if (cls == nullptr) continue;
+			time.push_back(cls->Time);
+		}
+		if (time.size() == 0) break;
+		std::sort(time.begin(), time.end());
+		Float_t timeRange[2] = { (time.front() - 5. * TimeOfOneM), (time.back()  + 10. * TimeOfOneM) };
+		Float_t minTimeOfTOF = time.front();
+
+		for (Int_t icls = 0; icls < event->NAntiCluster(); ++icls) {
+			AntiClusterR * cls = event->pAntiCluster(icls);
+			if (cls == nullptr) continue;
+			if (cls->time < timeRange[0] || cls->time > timeRange[1]) continue;
+			ClsACCInfo clsACC;
+			clsACC.sector = cls->Sector;
+			clsACC.time   = cls->time - minTimeOfTOF;
+			clsACC.rawQ   = (MgntNum::EqualToZero(cls->rawq) ? -1 : cls->rawq);
+			clsACC.coo[0] = cls->AntiCoo[0];
+			clsACC.coo[1] = cls->AntiCoo[1];
+			clsACC.coo[2] = cls->AntiCoo[2];
+			fAcc.clusters.push_back(clsACC);
+		}
+		if (fAcc.clusters.size() >= 2)
+			std::sort(fAcc.clusters.begin(), fAcc.clusters.end(), ClsACCInfo_sort());
+
+		break;
+	}
+
+
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -933,7 +956,7 @@ void EventTrk::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventTrk::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventTrk", "Silicon Tracker");
+	if (evTree == nullptr) setTree("EventTrk", "Silicon Tracker");
 	else tree = evTree;
 
 	tree->Branch("trk", &fTrk);
@@ -957,8 +980,8 @@ void EventTrk::setEnvironment() {
 
 bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
 	// Beta Info
 	Float_t Beta = 0;
@@ -972,7 +995,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		Int_t jtr = itr - 1;
 		if (jtr == recEv.iTrTrack) continue;
 		TrTrackR * trtk = event->pTrTrack( ((jtr==-1)?recEv.iTrTrack:jtr) );
-		if (trtk == 0) continue;
+		if (trtk == nullptr) continue;
 		
 		if (jtr == -1) {
 			Double_t BTdist = 0;
@@ -1068,7 +1091,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (UInt_t ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
 			TrRecHitR * recHit = trtk->GetHitLJ(ilay+1);
-			if (recHit == 0) continue;
+			if (recHit == nullptr) continue;
 
 			Int_t tkid = recHit->GetTkId();
 			Int_t mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
@@ -1271,8 +1294,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			fineCand = cand;
 		}
 		std::vector<CandHit> fineHits;
-		for (Int_t it = 0; it < fineCand.size(); ++it) {
-			fineHits.push_back( hits.at( fineCand.at(it) ) );
+		for (auto && it : fineCand) {
+			fineHits.push_back( hits.at(it) );
 		}
 		elmap.second = fineHits;
 	}
@@ -1373,7 +1396,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (fTrk.otherHits.size() > 1) 
 		std::sort(fTrk.otherHits.begin(), fTrk.otherHits.end(), HitTRKInfo_sort());
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -1398,7 +1421,7 @@ void EventTrd::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventTrd::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventTrd", "Transition Radiation");
+	if (evTree == nullptr) setTree("EventTrd", "Transition Radiation");
 	else tree = evTree;
 
 	tree->Branch("trd", &fTrd);
@@ -1420,8 +1443,8 @@ void EventTrd::setEnvironment() {
 
 bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
 	fTrd.numOfTrack = event->NTrdTrack();
 	fTrd.numOfHTrack = event->NTrdHTrack();
@@ -1578,15 +1601,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTrd.LLR_nhit[kindOfFit]   = numberOfHit;
 	}
 
-	// Tracker Information
-	Float_t trackerZJ[9] = {0};
-	if (checkEventMode(EventBase::ISS))
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerAJ(layJ);
-	else
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
-
 	Short_t trdIdx = -1;
 	if      (recEv.iTrdHTrack >= 0) trdIdx = 1;
 	else if (recEv.iTrdTrack  >= 0) trdIdx = 0;
@@ -1626,7 +1640,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		break;
 	} // while loop --- trd track
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -1651,7 +1665,7 @@ void EventRich::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventRich::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventRich", "Ring Imaging Cherenkov");
+	if (evTree == nullptr) setTree("EventRich", "Ring Imaging Cherenkov");
 	else tree = evTree;
 
 	tree->Branch("rich", &fRich);
@@ -1675,8 +1689,8 @@ void EventRich::setEnvironment() {
 
 bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 		
 	// Rich cuts from Javie/Jorge
   const Float_t richRadZ[2] = {-73.65, -74.65};          // aerogel / NaF
@@ -1704,7 +1718,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	// RichVeto - start
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-		if (trtk == 0) break;
+		if (trtk == nullptr) break;
 		Int_t fitid = trtk->iTrTrackPar(1, 3, 21);
 		if (fitid < 0) break;
 
@@ -1860,7 +1874,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	fRich.numOfOthPE[0]  = numOfOthPE[0];
 	fRich.numOfOthPE[1]  = numOfOthPE[1];
 
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -1884,7 +1898,7 @@ void EventEcal::setEventTree(TTree * evTree) {
 	std::cerr << "Debug : Now, EventEcal::setEventTree()\n";
 #endif
 
-	if (evTree == 0) setTree("EventEcal", "Electromagnetic Calorimeter");
+	if (evTree == nullptr) setTree("EventEcal", "Electromagnetic Calorimeter");
 	else tree = evTree;
 
 	tree->Branch("ecal", &fEcal);
@@ -1902,23 +1916,14 @@ void EventEcal::setEnvironment() {
 
 bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == 0)	return false;
-	timer.start();
+	if (event == nullptr)	return false;
+	fStopwatch.start();
 
-	// Tracker Information
-	Float_t trackerZJ[9] = {0};
-	if (checkEventMode(EventBase::ISS))
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerAJ(layJ);
-	else
-		for (Int_t layJ = 1; layJ <= 9; layJ++)
-			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
-	
 	// threshold : remove MIPs and low energy particles (lepton study 0.250)
 	// threshold : remove very low energy particles (proton study 0.050)
 	Float_t threshold = 0.050;
 
-	//fEcal.numOfShower = event->NEcalShower();
+	fEcal.numOfShower = event->NEcalShower();
 	
 	while (recEv.iEcalShower >= 0) {
 		
@@ -1926,7 +1931,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 			Int_t jsh = ish - 1;
 			if (jsh == recEv.iEcalShower) continue;
 			EcalShowerR * ecal = event->pEcalShower( ((jsh==-1)?recEv.iEcalShower:jsh) );
-			if (ecal == 0) continue;
+			if (ecal == nullptr) continue;
 		
 			ShowerInfo shower;
 		
@@ -1985,7 +1990,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	/* Raw Hits
 	for (UInt_t ih = 0; ih < event->NEcalHit(); ++ih) {
 		EcalHitR * ecalHit = event->pEcalHit(ih);
-		if (ecalHit == 0) continue;
+		if (ecalHit == nullptr) continue;
 
 		HitECALInfo hit;
 		hit.id = ecalHit->Plane * 100 + ecalHit->Cell;
@@ -1999,7 +2004,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	std::sort(fEcal.rawHits.begin(), fEcal.rawHits.end(), HitECALInfo_sort());
 	*/
 	
-	timer.stop();
+	fStopwatch.stop();
 	return selectEvent(event);
 }
 
@@ -2075,7 +2080,8 @@ void DataSelection::setEnvironment() {
 
   // set scale function
   DataSelection::gScaleFact = 0.01;
-  DataSelection::gScaleFunc.SetParameter(0, DataSelection::gScaleFact);
+  DataSelection::gScaleFunc1D.SetParameter(0, DataSelection::gScaleFact);
+  DataSelection::gScaleFunc2D.SetParameter(0, DataSelection::gScaleFact);
 }
 
 int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -2083,7 +2089,7 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	//std::cerr << "Debug : Now, DataSelection::processEvent()\n";
 #endif
 
-	if (event == 0) return -1;
+	if (event == nullptr) return -1;
 
 	bool statusList = true;
 	//bool statusRti = true;
@@ -2095,8 +2101,8 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	bool statusRich = true;
 	bool statusEcal = true;
 
-	MgntClock::HrsTimer timer;
-	timer.start();
+	MgntClock::HrsStopwatch fStopwatch;
+	fStopwatch.start();
 
 	if (checkOption(DataSelection::LIST)) statusList = list.processEvent(event, chain);
 	if (!statusList) return -101;
@@ -2126,34 +2132,34 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (checkOption(DataSelection::TOF)) statusTof = tof.processEvent(event);
 	if (!statusTof) return -104;
 
-	timer.stop();
+	fStopwatch.stop();
 
 #if Debug == true
-	const Float_t limitTimer = 5.0;
-	Float_t totTimer = timer.time() + recEv.time() + rti.time();
-	if (totTimer > limitTimer) {
-		std::cout << Form("\nRUN %u  EVENT %u\n", event->Run(), event->Event());
-		std::cout << Form("REAL TIME : %14.8f (SEC)   100.00%\n", totTimer);
-		std::cout << Form("    RECON   %14.8f (SEC)   %6.2f%\n",
-		                  recEv.time(), recEv.time() / totTimer * 100);
-		std::cout << Form("     LIST   %14.8f (SEC)   %6.2f%\n",
-		                   list.time(),  list.time() / totTimer * 100);
-		std::cout << Form("      RTI   %14.8f (SEC)   %6.2f%\n",
-		                    rti.time(),   rti.time() / totTimer * 100);
-		std::cout << Form("      TRG   %14.8f (SEC)   %6.2f%\n",
-		                    trg.time(),   trg.time() / totTimer * 100);
-		std::cout << Form("      TOF   %14.8f (SEC)   %6.2f%\n",
-		                    tof.time(),   tof.time() / totTimer * 100);
-		std::cout << Form("      ACC   %14.8f (SEC)   %6.2f%\n",
-		                    acc.time(),   acc.time() / totTimer * 100);
-		std::cout << Form("      TRK   %14.8f (SEC)   %6.2f%\n",
-		                    trk.time(),   trk.time() / totTimer * 100);
-		std::cout << Form("      TRD   %14.8f (SEC)   %6.2f%\n",
-		                    trd.time(),   trd.time() / totTimer * 100);
-		std::cout << Form("     RICH   %14.8f (SEC)   %6.2f%\n",
-		                   rich.time(),  rich.time() / totTimer * 100);
-		std::cout << Form("     ECAL   %14.8f (SEC)   %6.2f%\n",
-		                   ecal.time(),  ecal.time() / totTimer * 100);
+	const Float_t limitfStopwatch = 5.0;
+	Float_t totlTime = fStopwatch.time() + recEv.time() + rti.time();
+	if (totlTime > limitfStopwatch) {
+		std::cout << CStrFmt("\nRUN %u  EVENT %u\n", event->Run(), event->Event());
+		std::cout << CStrFmt("REAL TIME : %14.8f (SEC)   100.00%\n", totlTime);
+		std::cout << CStrFmt("    RECON   %14.8f (SEC)   %6.2f%\n", 
+		                     recEv.time(), recEv.time() / totlTime * 100);
+		std::cout << CStrFmt("     LIST   %14.8f (SEC)   %6.2f%\n",
+		                     list.time(),  list.time() / totlTime * 100);
+		std::cout << CStrFmt("      RTI   %14.8f (SEC)   %6.2f%\n",
+		                     rti.time(),   rti.time() / totlTime * 100);
+		std::cout << CStrFmt("      TRG   %14.8f (SEC)   %6.2f%\n",
+		                     trg.time(),   trg.time() / totlTime * 100);
+		std::cout << CStrFmt("      TOF   %14.8f (SEC)   %6.2f%\n",
+		                     tof.time(),   tof.time() / totlTime * 100);
+		std::cout << CStrFmt("      ACC   %14.8f (SEC)   %6.2f%\n",
+		                     acc.time(),   acc.time() / totlTime * 100);
+		std::cout << CStrFmt("      TRK   %14.8f (SEC)   %6.2f%\n",
+		                     trk.time(),   trk.time() / totlTime * 100);
+		std::cout << CStrFmt("      TRD   %14.8f (SEC)   %6.2f%\n",
+		                     trd.time(),   trd.time() / totlTime * 100);
+		std::cout << CStrFmt("     RICH   %14.8f (SEC)   %6.2f%\n",
+		                     rich.time(),  rich.time() / totlTime * 100);
+		std::cout << CStrFmt("     ECAL   %14.8f (SEC)   %6.2f%\n",
+		                     ecal.time(),  ecal.time() / totlTime * 100);
 	}
 #endif
 
@@ -2176,7 +2182,7 @@ void DataSelection::fill() {
 }
 
 int DataSelection::preselectEvent(AMSEventR * event) {
-	if (event == 0)	return -1;
+	if (event == nullptr)	return -1;
 	EventList::gWeight = 1.;
 
 	// Resolution tuning
@@ -2189,7 +2195,7 @@ int DataSelection::preselectEvent(AMSEventR * event) {
 	//-----------------------------//
 	//----  Fast Preselection  ----//
 	//-----------------------------//
-  //std::cout << Form("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
+	//std::cout << CStrFmt("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
 
 	// ~1~ (Based on BetaH(Beta))
 	Bool_t isDownBeta = false;
@@ -2256,8 +2262,13 @@ int DataSelection::preselectEvent(AMSEventR * event) {
 			sclRig = trtkSIG->GetRigidity(fitid);
 			if (sclRig < 0.0) { isScale = false; break; }
 		}
+		
+		Int_t fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
+		Double_t trQIn = (fitidInn>=0) ? trtkSIG->GetInnerQ_all(1.0, fitidInn).Mean : 1.0;
+
 		if (hasTr && isScale) {
-			Double_t scaleProb = gScaleFunc.Eval(sclRig);
+			//Double_t scaleProb = gScaleFunc1D.Eval(sclRig); // (by Rigidity)
+			Double_t scaleProb = gScaleFunc2D.Eval(sclRig, trQIn); // (by Rigidity & Charge)
     	if (MgntNum::Compare(gRandom.Uniform(0, 1), scaleProb) > 0) return -7001;
     	else EventList::gWeight *= (1. / scaleProb);
 		}
@@ -2295,7 +2306,7 @@ int DataSelection::preselectEvent(AMSEventR * event) {
 }
 
 int DataSelection::selectEvent(AMSEventR * event) {
-	if (event == 0) return -1;
+	if (event == nullptr) return -1;
 
 	// User Define
 
@@ -2303,7 +2314,7 @@ int DataSelection::selectEvent(AMSEventR * event) {
 }
 
 int DataSelection::analysisEvent(AMSEventR * event) {
-	if (event == 0) return -1;
+	if (event == nullptr) return -1;
 
 	// User Define
 
@@ -2321,17 +2332,17 @@ void RunTagOperator::init() {
 }
 
 bool RunTagOperator::processEvent(AMSEventR * event, AMSChain * chain) {
-	if (chain == 0) return false;
+	if (chain == nullptr) return false;
 	TFile * file = chain->GetFile();
 	std::string filePath = file->GetName();
-	if (event == 0) return false;
+	if (event == nullptr) return false;
 	UInt_t runID   = event->Run();
 	UInt_t eventID = event->Event();
 		
 	std::map<UInt_t, RunTagInfo>::iterator it = fRunTag.find(runID);
 	if (it == fRunTag.end()) {
 		RunTagInfo info;
-		info.runID = runID;
+		info.run = runID;
 		info.eventFT = eventID;
 		info.eventLT = eventID;
 		info.numOfSelEvent = 1;
@@ -2356,7 +2367,7 @@ bool RunTagOperator::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 void RunTagOperator::save(TFile * file) {
-	if (file == 0) return;
+	if (file == nullptr) return;
 	file->cd();
 	TTree * tree = new TTree("runTag", "RunTag information");
 	RunTagInfo info;
@@ -2383,7 +2394,7 @@ YiNtuple::YiNtuple() {
 #if Debug == true
 	std::cerr << "Debug : Now, YiNtuple::YiNtuple()\n";
 #endif
-	fTimer.start();
+	fStopwatch.start();
 }
 
 YiNtuple::~YiNtuple() {
@@ -2392,8 +2403,8 @@ YiNtuple::~YiNtuple() {
 #endif
 	init();
 
-	fTimer.stop();
-	fTimer.print();
+	fStopwatch.stop();
+	fStopwatch.print();
 }
 
 inline void YiNtuple::init() {
@@ -2420,7 +2431,7 @@ void YiNtuple::setOutputFile(const std::string& file_name, const std::string& pa
 	fRunTagOp = new RunTagOperator;
 }
 
-void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_th, Long64_t group_size) {
+void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Long64_t group_size) {
 #if Debug == true
 	std::cerr << "Debug : Now, YiNtuple::readDataFrom()\n";
 #endif
@@ -2438,13 +2449,13 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_th, Lon
 	// end check sourceFileList.txt
 
 	// start load data with group
-	if (group_th == 0 && group_size == -1) group_size = flist.size();
-	if (group_size <= 0 || group_size > flist.size() || group_th < 0 || group_th >= flist.size()) {
+	if (group_id == 0 && group_size == -1) group_size = flist.size();
+	if (group_size <= 0 || group_size > flist.size() || group_id < 0 || group_id >= flist.size()) {
 		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("Group format has error(1)! Exiting ..."));
 		MgntSys::Exit(EXIT_FAILURE);
 	}
-	Long64_t begin = group_th * group_size;
-	Long64_t end   = (group_th + 1) * group_size;
+	Long64_t begin = group_id * group_size;
+	Long64_t end   = (group_id + 1) * group_size;
 	if (begin >= 0 && begin < flist.size() && end > flist.size()) {
 		end = flist.size();
 	}
@@ -2453,15 +2464,15 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_th, Lon
 		MgntSys::Exit(EXIT_FAILURE);
 	}
 
-	fGroup = std::make_pair(group_th, group_size);
+	fGroup = std::make_pair(group_id, group_size);
 	for (int it = begin; it < end; it++) {
 		fFileList.push_back(flist.at(it));
 	}
 
 	std::cout << "\n---- Loading Root Files ----\n";
-	std::cout << Form("Group : %ld th   [%ld files/group],    Total of Load Files : %ld \n", fGroup.first, fGroup.second, fFileList.size());
+	std::cout << CStrFmt("Group : %ld th   [%ld files/group],    Total of Load Files : %ld \n", fGroup.first, fGroup.second, fFileList.size());
 	for (Long64_t  it = 0; it < fFileList.size(); it++) {
-		std::cout << Form("    Number : %ld,   %s\n", it, fFileList.at(it).c_str());
+		std::cout << CStrFmt("    Number : %ld,   %s\n", it, fFileList.at(it).c_str());
 	}
 
 	if (fFileList.size() != 0) {
@@ -2490,7 +2501,7 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_th, Lon
 }
 
 void YiNtuple::saveInputFileList(TFile * file) {
-	if (file == 0 || fFileList.size() == 0) return;
+	if (file == nullptr || fFileList.size() == 0) return;
 	file->cd();
 	TTree * tree = new TTree("fileList", "List Of Input File Info");
 	std::string filePath;
@@ -2553,7 +2564,7 @@ void YiNtuple::loopEventChain() {
 	if (printRate > printLimit * 5) printRate = printLimit * 5;
 	for (Long64_t ientry = first_entry; ientry < last_entry; ++ientry){
 		if (nprocessed%printRate == 0) {
-			fTimer.stop();
+			fStopwatch.stop();
 
 			const UInt_t MemSize = 1024;
 			ProcInfo_t procinfo;
@@ -2561,16 +2572,16 @@ void YiNtuple::loopEventChain() {
 			Long64_t memRes = procinfo.fMemResident / MemSize;
 			Long64_t memVrl = procinfo.fMemVirtual  / MemSize;
 			
-			std::cout << Form("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
-			std::cout << Form("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
-			std::cout << Form("        Passed          : %ld / %ld\n", npassed, nprocessed);
-			std::cout << Form("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
-			std::cout << Form("        Real Time       : %9.2f (second)\n", fTimer.time());
-			std::cout << Form("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fTimer.time());
-			std::cout << Form("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
-			std::cout << Form("               User     : %4.1f %\n", procinfo.fCpuUser);
-			std::cout << Form("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
-			std::cout << Form("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
+			std::cout << CStrFmt("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
+			std::cout << CStrFmt("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
+			std::cout << CStrFmt("        Passed          : %ld / %ld\n", npassed, nprocessed);
+			std::cout << CStrFmt("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
+			std::cout << CStrFmt("        Real Time       : %9.2f (second)\n", fStopwatch.time());
+			std::cout << CStrFmt("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
+			std::cout << CStrFmt("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
+			std::cout << CStrFmt("               User     : %4.1f %\n", procinfo.fCpuUser);
+			std::cout << CStrFmt("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
+			std::cout << CStrFmt("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
 		}
 		nprocessed++;
 
@@ -2603,28 +2614,28 @@ void YiNtuple::loopEventChain() {
 	}
 
 	if (nprocessed == loop_entries) {
-		fTimer.stop();
+		fStopwatch.stop();
 		const UInt_t MemSize = 1024;
 		ProcInfo_t procinfo;
 		gSystem->GetProcInfo(&procinfo);
 		Long64_t memRes = procinfo.fMemResident / MemSize;
 		Long64_t memVrl = procinfo.fMemVirtual  / MemSize;
 		
-		std::cout << Form("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
-		std::cout << Form("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
-		std::cout << Form("        Passed          : %ld / %ld\n", npassed, nprocessed);
-		std::cout << Form("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
-		std::cout << Form("        Real Time       : %9.2f (second)\n", fTimer.time());
-		std::cout << Form("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fTimer.time());
-		std::cout << Form("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
-		std::cout << Form("               User     : %4.1f %\n", procinfo.fCpuUser);
-		std::cout << Form("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
-		std::cout << Form("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
-		std::cout << Form("Info :: AMSRoot Files Processed Successfully Finished.\n");
+		std::cout << CStrFmt("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
+		std::cout << CStrFmt("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
+		std::cout << CStrFmt("        Passed          : %ld / %ld\n", npassed, nprocessed);
+		std::cout << CStrFmt("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
+		std::cout << CStrFmt("        Real Time       : %9.2f (second)\n", fStopwatch.time());
+		std::cout << CStrFmt("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
+		std::cout << CStrFmt("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
+		std::cout << CStrFmt("               User     : %4.1f %\n", procinfo.fCpuUser);
+		std::cout << CStrFmt("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
+		std::cout << CStrFmt("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
+		std::cout << CStrFmt("Info :: AMSRoot Files Processed Successfully Finished.\n");
 	}
 	else {
-		std::cout << Form("Info :: AMSRoot Files Processed Seems Failed.\n");
-		std::cout << Form("        Processed %ld in %ld\n", nprocessed, loop_entries);
+		std::cout << CStrFmt("Info :: AMSRoot Files Processed Seems Failed.\n");
+		std::cout << CStrFmt("        Processed %ld in %ld\n", nprocessed, loop_entries);
 	}
 
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
