@@ -386,7 +386,7 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 	fRti.uTime = event->UTime();
 	
-	MgntClock::TTime * ttime = MgntClock::ConvertFromUTimeToTTime(event->UTime(), MgntClock::ClockType::UTC);
+	MGClock::TTime * ttime = MGClock::ConvertFromUTimeToTTime(event->UTime(), MGClock::ClockType::UTC);
 	fRti.dateUTC = (ttime->tm_year + 1900) * 10000 + (ttime->tm_mon+1) * 100 + (ttime->tm_mday);
 	fRti.timeUTC = (ttime->tm_hour) * 10000 + (ttime->tm_min) * 100 + (ttime->tm_sec);
 
@@ -918,7 +918,7 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 			ClsACCInfo clsACC;
 			clsACC.sector = cls->Sector;
 			clsACC.time   = cls->time - minTimeOfTOF;
-			clsACC.rawQ   = (MgntNum::EqualToZero(cls->rawq) ? -1 : cls->rawq);
+			clsACC.rawQ   = (MGNumc::EqualToZero(cls->rawq) ? -1 : cls->rawq);
 			clsACC.coo[0] = cls->AntiCoo[0];
 			clsACC.coo[1] = cls->AntiCoo[1];
 			clsACC.coo[2] = cls->AntiCoo[2];
@@ -1088,7 +1088,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			} // for loop - pattern
 		}
 
-		for (UInt_t ilay = 0; ilay < 9; ++ilay) {
+		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
 			TrRecHitR * recHit = trtk->GetHitLJ(ilay+1);
 			if (recHit == nullptr) continue;
@@ -1529,7 +1529,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		bool isOK = false;
 		switch(kindOfFit) {
 			case 0 :
-        {
+				{
 				  if      (recEv.iTrdHTrack < 0 && recEv.iTrdTrack  < 0) break;
 				  else if (recEv.iTrdHTrack >= 0) {
 				  	TrdHTrackR * trdh = event->pTrdHTrack(recEv.iTrdHTrack);
@@ -1541,21 +1541,20 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				  }
 					else break;
 				  isOK = true;
-        }
+				}
 				break;
 			case 1 :
-        {
+				{
 				  if (recEv.iTrTrack < 0) break;
 				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
 				  int fitid_max = trtk->iTrTrackPar(1, 0, 21);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
 				  isOK = true;
-        }
+				}
 				break;
 			default :
-				MgntSys::Error(LocAddr(), MgntSys::MESSAGE("TrdKCluster failed Building! Exiting ..."));
-				MgntSys::Exit(EXIT_FAILURE);
+				break;
 		}
 		if (!isOK) continue;
 
@@ -1776,7 +1775,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		float numOfExpPE[npart] = {0};
 		std::fill_n(numOfExpPE, npart, -1);
 		double rigAbs = std::fabs(trtk->GetRigidity(fitid));
-		for (UInt_t i = 0; i < npart; ++i) {
+		for (int i = 0; i < npart; ++i) {
 			if (!openCal[i]) continue;
 			double massChrg = mass[i] / chrg[i];
 			double beta = 1. / std::sqrt((massChrg * massChrg / rigAbs / rigAbs) + 1); 
@@ -1987,7 +1986,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	} // while loop --- iEcalShower
 
 	/* Raw Hits
-	for (UInt_t ih = 0; ih < event->NEcalHit(); ++ih) {
+	for (int ih = 0; ih < event->NEcalHit(); ++ih) {
 		EcalHitR * ecalHit = event->pEcalHit(ih);
 		if (ecalHit == nullptr) continue;
 
@@ -2100,7 +2099,7 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	bool statusRich = true;
 	bool statusEcal = true;
 
-	MgntClock::HrsStopwatch fStopwatch;
+	MGClock::HrsStopwatch fStopwatch;
 	fStopwatch.start();
 
 	if (checkOption(DataSelection::LIST)) statusList = list.processEvent(event, chain);
@@ -2137,28 +2136,18 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	const float limitfStopwatch = 5.0;
 	float totlTime = fStopwatch.time() + recEv.time() + rti.time();
 	if (totlTime > limitfStopwatch) {
-		std::cout << CStrFmt("\nRUN %u  EVENT %u\n", event->Run(), event->Event());
-		std::cout << CStrFmt("REAL TIME : %14.8f (SEC)   100.00%\n", totlTime);
-		std::cout << CStrFmt("    RECON   %14.8f (SEC)   %6.2f%\n", 
-		                     recEv.time(), recEv.time() / totlTime * 100);
-		std::cout << CStrFmt("     LIST   %14.8f (SEC)   %6.2f%\n",
-		                     list.time(),  list.time() / totlTime * 100);
-		std::cout << CStrFmt("      RTI   %14.8f (SEC)   %6.2f%\n",
-		                     rti.time(),   rti.time() / totlTime * 100);
-		std::cout << CStrFmt("      TRG   %14.8f (SEC)   %6.2f%\n",
-		                     trg.time(),   trg.time() / totlTime * 100);
-		std::cout << CStrFmt("      TOF   %14.8f (SEC)   %6.2f%\n",
-		                     tof.time(),   tof.time() / totlTime * 100);
-		std::cout << CStrFmt("      ACC   %14.8f (SEC)   %6.2f%\n",
-		                     acc.time(),   acc.time() / totlTime * 100);
-		std::cout << CStrFmt("      TRK   %14.8f (SEC)   %6.2f%\n",
-		                     trk.time(),   trk.time() / totlTime * 100);
-		std::cout << CStrFmt("      TRD   %14.8f (SEC)   %6.2f%\n",
-		                     trd.time(),   trd.time() / totlTime * 100);
-		std::cout << CStrFmt("     RICH   %14.8f (SEC)   %6.2f%\n",
-		                     rich.time(),  rich.time() / totlTime * 100);
-		std::cout << CStrFmt("     ECAL   %14.8f (SEC)   %6.2f%\n",
-		                     ecal.time(),  ecal.time() / totlTime * 100);
+		COUT("\nRUN %u  EVENT %u\n", event->Run(), event->Event());
+		COUT("REAL TIME : %14.8f (SEC)   100.00%\n", totlTime);
+		COUT("    RECON   %14.8f (SEC)   %6.2f%\n", recEv.time(), recEv.time() / totlTime * 100);
+		COUT("     LIST   %14.8f (SEC)   %6.2f%\n", list.time(),  list.time() / totlTime * 100);
+		COUT("      RTI   %14.8f (SEC)   %6.2f%\n", rti.time(),   rti.time() / totlTime * 100);
+		COUT("      TRG   %14.8f (SEC)   %6.2f%\n", trg.time(),   trg.time() / totlTime * 100);
+		COUT("      TOF   %14.8f (SEC)   %6.2f%\n", tof.time(),   tof.time() / totlTime * 100);
+		COUT("      ACC   %14.8f (SEC)   %6.2f%\n", acc.time(),   acc.time() / totlTime * 100);
+		COUT("      TRK   %14.8f (SEC)   %6.2f%\n", trk.time(),   trk.time() / totlTime * 100);
+		COUT("      TRD   %14.8f (SEC)   %6.2f%\n", trd.time(),   trd.time() / totlTime * 100);
+		COUT("     RICH   %14.8f (SEC)   %6.2f%\n", rich.time(),  rich.time() / totlTime * 100);
+		COUT("     ECAL   %14.8f (SEC)   %6.2f%\n", ecal.time(),  ecal.time() / totlTime * 100);
 	}
 #endif
 
@@ -2194,7 +2183,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	//-----------------------------//
 	//----  Fast Preselection  ----//
 	//-----------------------------//
-	//std::cout << CStrFmt("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
+	//COUT("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
 
 	// ~1~ (Based on BetaH(Beta))
 	bool isDownBeta = false;
@@ -2271,7 +2260,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		if (hasTr && isScale) {
 			//double scaleProb = gScaleFunc1D.Eval(sclRig); // (by Rigidity)
 			double scaleProb = gScaleFunc2D.Eval(sclRig, trQIn); // (by Rigidity & Charge)
-    	if (MgntNum::Compare(gRandom.Uniform(0, 1), scaleProb) > 0) return -7001;
+    	if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7001;
     	else EventList::Weight *= (1. / scaleProb);
 		}
 	}
@@ -2351,7 +2340,7 @@ bool RunTagOperator::processEvent(AMSEventR * event, AMSChain * chain) {
 		info.file.push_back(filePath);
 		
 		if (EventBase::checkEventMode(EventBase::ISS)) {
-			MgntClock::TTime * ttime = MgntClock::ConvertFromUTimeToTTime(runID, MgntClock::ClockType::UTC);
+			MGClock::TTime * ttime = MGClock::ConvertFromUTimeToTTime(runID, MGClock::ClockType::UTC);
 			info.dateUTC = (ttime->tm_year + 1900) * 10000 + (ttime->tm_mon+1) * 100 + (ttime->tm_mday);
 			info.timeUTC = (ttime->tm_hour) * 10000 + (ttime->tm_min) * 100 + (ttime->tm_sec);
 		}
@@ -2434,47 +2423,42 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 	std::cerr << "Debug : Now, YiNtuple::readDataFrom()\n";
 #endif
 
-	std::cout << "\n**--------------------------------------------**\n";
-	std::cout << "\n**    Read Data Form Source File List Info    **\n";
-	std::cout << "\n**--------------------------------------------**\n";
+	COUT("\n**--------------------------------------------**\n");
+	COUT("\n**    Read Data Form Source File List Info    **\n");
+	COUT("\n**--------------------------------------------**\n");
 
 	// start check sourceFileList.txt
-	std::vector<std::string>&& flist = MgntIO::ReadFileContent(file_list);
-	if (flist.size() == 0) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("ROOT file list cannot be opend! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	std::vector<std::string>&& flist = MGIO::ReadFileContent(file_list);
+	if (flist.size() == 0)
+		MGSys::ShowErrorAndExit(LocAddr(), "ROOT file list cannot be opend! Exiting ...");
 	// end check sourceFileList.txt
 
 	// start load data with group
 	if (group_id == 0 && group_size == -1) group_size = flist.size();
-	if (group_size <= 0 || group_size > flist.size() || group_id < 0 || group_id >= flist.size()) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("Group format has error(1)! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	if (group_size <= 0 || group_size > flist.size() || group_id < 0 || group_id >= flist.size())
+		MGSys::ShowErrorAndExit(LocAddr(), "Group format has error(1)! Exiting ...");
+	
 	Long64_t begin = group_id * group_size;
 	Long64_t end   = (group_id + 1) * group_size;
 	if (begin >= 0 && begin < flist.size() && end > flist.size()) {
 		end = flist.size();
 	}
-	else if (begin < 0 || begin >= flist.size() || end < 1 || end > flist.size()) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("ERROR : Group format has error(2)! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	else if (begin < 0 || begin >= flist.size() || end < 1 || end > flist.size())
+		MGSys::ShowErrorAndExit(LocAddr(), "ERROR : Group format has error(2)! Exiting ...");
 
 	fGroup = std::make_pair(group_id, group_size);
 	for (int it = begin; it < end; it++) {
 		fFileList.push_back(flist.at(it));
 	}
 
-	std::cout << "\n---- Loading Root Files ----\n";
-	std::cout << CStrFmt("Group : %ld th   [%ld files/group],    Total of Load Files : %ld \n", fGroup.first, fGroup.second, fFileList.size());
+	COUT("\n---- Loading Root Files ----\n");
+	COUT("Group : %ld th   [%ld files/group],    Total of Load Files : %ld \n", fGroup.first, fGroup.second, fFileList.size());
 	for (Long64_t  it = 0; it < fFileList.size(); it++) {
-		std::cout << CStrFmt("    Number : %ld,   %s\n", it, fFileList.at(it).c_str());
+		COUT("    Number : %ld,   %s\n", it, fFileList.at(it).c_str());
 	}
 
 	if (fFileList.size() != 0) {
-		std::vector<std::string> && strs = MgntRegex::Split(fFileList.at(0), "(/+)");
+		std::vector<std::string> && strs = MGRegex::Split(fFileList.at(0), MGRegex::Formula::Slash);
 		if (strs.size() > 2) fFileDir = strs.at(strs.size()-2);
 	}
 	// end load data with group
@@ -2484,18 +2468,16 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 	unsigned int timeout = 10;
 	fChain = new AMSChain("AMSRoot");
 	int fileStatus = fChain->AddFromFile(file_list.c_str(), begin, end, stagedonly, timeout);
-	if (fileStatus == -1) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("ROOT file list cannot be opend! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	if (fileStatus == -1)
+		MGSys::ShowErrorAndExit(LocAddr(), "ROOT file list cannot be opend! Exiting ...");
 
-	std::cout << "FileStatus : "<< fileStatus << std::endl ;
-	std::cout << "Totally : " << fChain->GetEntries() << " data events.\n";
+	COUT("FileStatus : %d\n", fileStatus);
+	COUT("Totally : %ld data events.\n", fChain->GetEntries());
 	// end read source file list
 
-	std::cout << "\n**-------------------------------------------**\n";
-	std::cout << "\n**    Read Data Form Source File List End    **\n";
-	std::cout << "\n**-------------------------------------------**\n";
+	COUT("\n**-------------------------------------------**\n");
+	COUT("\n**    Read Data Form Source File List End    **\n");
+	COUT("\n**-------------------------------------------**\n");
 }
 
 void YiNtuple::saveInputFileList(TFile * file) {
@@ -2512,9 +2494,9 @@ void YiNtuple::saveInputFileList(TFile * file) {
 }
 
 void YiNtuple::loopEventChain() {
-	std::cout << "\n**-----------------------------**\n";
-	std::cout << "\n**    Loop Event Chain Info    **\n";
-	std::cout << "\n**-----------------------------**\n";
+	COUT("\n**-----------------------------**\n");
+	COUT("\n**    Loop Event Chain Info    **\n");
+	COUT("\n**-----------------------------**\n");
 
 	TFile * file = 0;
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
@@ -2528,10 +2510,8 @@ void YiNtuple::loopEventChain() {
 	fData->setEnvironment(); // it must be before event loop. (before get event !)
 
 	// check event type
-	if (fChain->GetEntries() <= 0) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("ERROR : Don't have event! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	if (fChain->GetEntries() <= 0)
+		MGSys::ShowErrorAndExit(LocAddr(), "ERROR : Don't have event! Exiting ...");
 
 	AMSEventR * ev = fChain->GetEvent(0);
 
@@ -2544,10 +2524,8 @@ void YiNtuple::loopEventChain() {
 		bool isISS = (ev->nMCEventg() <= 0) &&
 			(ev->Run() > 1305795600) &&
 			EventBase::checkEventMode(EventBase::ISS);
-		if (!isMC && !isBT && !isISS) {
-			MgntSys::Error(LocAddr(), MgntSys::MESSAGE("Event type (ISS, BT, MC) is failed! Exiting ..."));
-			MgntSys::Exit(EXIT_FAILURE);
-		}
+		if (!isMC && !isBT && !isISS)
+			MGSys::ShowErrorAndExit(LocAddr(), "Event type (ISS, BT, MC) is failed! Exiting ...");
 	}
 
 	Long64_t loop_entries = fChain->GetEntries();
@@ -2556,7 +2534,7 @@ void YiNtuple::loopEventChain() {
 
 	Long64_t npassed = 0;
 	Long64_t nprocessed = 0;
-  const Long64_t printLimit = 25000;
+	const Long64_t printLimit = 25000;
 	Long64_t printRate = loop_entries / 100;
 	if (printRate < printLimit) printRate = printLimit;
 	if (printRate > printLimit * 5) printRate = printLimit * 5;
@@ -2564,22 +2542,22 @@ void YiNtuple::loopEventChain() {
 		if (nprocessed%printRate == 0) {
 			fStopwatch.stop();
 
-			const UInt_t MemSize = 1024;
+			const unsigned int MemSize = 1024;
 			ProcInfo_t procinfo;
 			gSystem->GetProcInfo(&procinfo);
 			Long64_t memRes = procinfo.fMemResident / MemSize;
 			Long64_t memVrl = procinfo.fMemVirtual  / MemSize;
 			
-			std::cout << CStrFmt("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
-			std::cout << CStrFmt("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
-			std::cout << CStrFmt("        Passed          : %ld / %ld\n", npassed, nprocessed);
-			std::cout << CStrFmt("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
-			std::cout << CStrFmt("        Real Time       : %9.2f (second)\n", fStopwatch.time());
-			std::cout << CStrFmt("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
-			std::cout << CStrFmt("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
-			std::cout << CStrFmt("               User     : %4.1f %\n", procinfo.fCpuUser);
-			std::cout << CStrFmt("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
-			std::cout << CStrFmt("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
+			COUT("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
+			COUT("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
+			COUT("        Passed          : %ld / %ld\n", npassed, nprocessed);
+			COUT("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
+			COUT("        Real Time       : %9.2f (second)\n", fStopwatch.time());
+			COUT("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
+			COUT("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
+			COUT("               User     : %4.1f %\n", procinfo.fCpuUser);
+			COUT("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
+			COUT("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
 		}
 		nprocessed++;
 
@@ -2613,27 +2591,27 @@ void YiNtuple::loopEventChain() {
 
 	if (nprocessed == loop_entries) {
 		fStopwatch.stop();
-		const UInt_t MemSize = 1024;
+		const unsigned int MemSize = 1024;
 		ProcInfo_t procinfo;
 		gSystem->GetProcInfo(&procinfo);
 		Long64_t memRes = procinfo.fMemResident / MemSize;
 		Long64_t memVrl = procinfo.fMemVirtual  / MemSize;
 		
-		std::cout << CStrFmt("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
-		std::cout << CStrFmt("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
-		std::cout << CStrFmt("        Passed          : %ld / %ld\n", npassed, nprocessed);
-		std::cout << CStrFmt("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
-		std::cout << CStrFmt("        Real Time       : %9.2f (second)\n", fStopwatch.time());
-		std::cout << CStrFmt("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
-		std::cout << CStrFmt("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
-		std::cout << CStrFmt("               User     : %4.1f %\n", procinfo.fCpuUser);
-		std::cout << CStrFmt("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
-		std::cout << CStrFmt("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
-		std::cout << CStrFmt("Info :: AMSRoot Files Processed Successfully Finished.\n");
+		COUT("Info :: %lf %\n", 100. * float(nprocessed)/float(loop_entries));
+		COUT("        Processed       : %ld / %ld\n", nprocessed, loop_entries);
+		COUT("        Passed          : %ld / %ld\n", npassed, nprocessed);
+		COUT("        Passed Ratio    : %lf %\n", ((nprocessed == 0) ? 0. : (100. * float(npassed)/float(nprocessed))));
+		COUT("        Real Time       : %9.2f (second)\n", fStopwatch.time());
+		COUT("        Processed Rate  : %8.2f (Hz)\n", nprocessed / fStopwatch.time());
+		COUT("        Cpu    System   : %4.1f %\n", procinfo.fCpuSys);
+		COUT("               User     : %4.1f %\n", procinfo.fCpuUser);
+		COUT("        Memory Resident : %2ld GB %4ld MB\n", memRes / MemSize, memRes % MemSize);
+		COUT("               Virtual  : %2ld GB %4ld MB\n", memVrl / MemSize, memVrl % MemSize);
+		COUT("Info :: AMSRoot Files Processed Successfully Finished.\n");
 	}
 	else {
-		std::cout << CStrFmt("Info :: AMSRoot Files Processed Seems Failed.\n");
-		std::cout << CStrFmt("        Processed %ld in %ld\n", nprocessed, loop_entries);
+		COUT("Info :: AMSRoot Files Processed Seems Failed.\n");
+		COUT("        Processed %ld in %ld\n", nprocessed, loop_entries);
 	}
 
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
@@ -2649,8 +2627,8 @@ void YiNtuple::loopEventChain() {
 		fChain->CloseOutputFile();
 	}
 
-	std::cout << "\n**----------------------------**\n";
-	std::cout << "\n**    Loop Event Chain End    **\n";
-	std::cout << "\n**----------------------------**\n";
+	COUT("\n**----------------------------**\n");
+	COUT("\n**    Loop Event Chain End    **\n");
+	COUT("\n**----------------------------**\n");
 }
 #endif // __YiProdNtuple_TCC__

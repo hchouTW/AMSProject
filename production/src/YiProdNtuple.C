@@ -31,20 +31,18 @@ int main(int argc, const char ** argv) {
 
 	EventBase::setEventVersion(EventBase::B950);
 
-	std::cout << std::endl << std::endl;
-	std::cout << "Usage : YiProdNtuple event_mode file_list group_id group_size (path)\n";
-	std::cout << "    Parameters : \n";
-	std::cout << "    event_mode [ISS BT MC]\n";
-	std::cout << "    file_list\n";
-	std::cout << "    group_id\n";
-	std::cout << "    group_size\n";
-	std::cout << "    (path)\n";
-	std::cout << std::endl << std::endl;
+	COUT("\n\n");
+	COUT("Usage : YiProdNtuple event_mode file_list group_id group_size (path)\n");
+	COUT("    Parameters : \n");
+	COUT("    event_mode [ISS BT MC]\n");
+	COUT("    file_list\n");
+	COUT("    group_id\n");
+	COUT("    group_size\n");
+	COUT("    (path)\n");
+	COUT("\n\n");
 
-	if (argc != 5 && argc != 6) {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("Number of argument is not conform! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	if (argc != 5 && argc != 6)
+		MGSys::ShowErrorAndExit(LocAddr(), "Number of argument is not conform! Exiting ...");
 
 	std::string event_mode = argv[1];
 	std::string file_list = argv[2];
@@ -55,10 +53,7 @@ int main(int argc, const char ** argv) {
 	if (event_mode == "ISS") EventBase::setEventMode(EventBase::ISS);
 	else if (event_mode == "BT") EventBase::setEventMode(EventBase::BT);
 	else if (event_mode == "MC") EventBase::setEventMode(EventBase::MC);
-	else {
-		MgntSys::Error(LocAddr(), MgntSys::MESSAGE("Can't find event mode (ISS, BT, MC)! Exiting ..."));
-		MgntSys::Exit(EXIT_FAILURE);
-	}
+	else MGSys::ShowErrorAndExit(LocAddr(), "Can't find event mode (ISS, BT, MC)! Exiting ...");
 
 	std::string outputFile = "";
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM))

@@ -5,12 +5,25 @@
 #include <map>
 #include <vector>
 
-#include "MgntSys.h"
-#include "MgntClock.h"
-#include "MgntRegex.h"
-#include "MgntRndm.h"
-#include "MgntNum.h"
-#include "MgntIO.h"
-#include "MgntConfig.h"
+#include "MGSys.h"
+#include "MGSys.C"
+
+#include "MGRndm.h"
+#include "MGRndm.C"
+
+#include "MGNumc.h"
+#include "MGNumc.C"
+
+#include "MGClock.h"
+#include "MGClock.C"
+
+#include "MGRegex.h"
+#include "MGRegex.C"
+
+#include "MGIO.h"
+#include "MGIO.C"
+
+#include "MGConfig.h"
+#include "MGConfig.C"
 
 #endif // __CPPLibs_H__

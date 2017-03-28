@@ -1,5 +1,5 @@
-#ifndef __MgntConfig_H__
-#define __MgntConfig_H__
+#ifndef __MGConfig_H__
+#define __MGConfig_H__
 /*
 
 // 4-> : Title variable type value
@@ -54,4 +54,4 @@ class MgntConfig::Config {
 };
 
 */
-#endif // __MgntConfig_H__
+#endif // __MGConfig_H__

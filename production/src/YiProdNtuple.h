@@ -93,7 +93,7 @@ class RecEvent {
 		double trackerZJ[9];
 
 	protected :
-		MgntClock::HrsStopwatch fStopwatch;
+		MGClock::HrsStopwatch fStopwatch;
 };
 
 static RecEvent recEv;
@@ -138,7 +138,7 @@ class EventBase {
 		TTree * tree;
 
 	protected :
-		MgntClock::HrsStopwatch fStopwatch;
+		MGClock::HrsStopwatch fStopwatch;
 };
 
 
@@ -344,14 +344,12 @@ class DataSelection {
 		EventEcal ecal;
 
 	public :
-		static TRandom3 gRandom;
 		static Float_t  gScaleFact;
 		static TF1      gScaleFunc1D; // (rig)
 		//static TF1      gScaleFunc1D; // (chrg)
 		static TF2      gScaleFunc2D; // (rig, chrg)
 };
 
-TRandom3 DataSelection::gRandom(0);
 Float_t  DataSelection::gScaleFact = 0.01;
 TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
 //TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
@@ -406,7 +404,7 @@ class YiNtuple {
 		RunTagOperator * fRunTagOp; 
 
 	protected :
-		MgntClock::HrsStopwatch fStopwatch;
+		MGClock::HrsStopwatch fStopwatch;
 };
 
 
