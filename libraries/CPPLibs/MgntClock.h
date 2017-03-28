@@ -165,7 +165,7 @@ class MgntClock::Stopwatch {
 		std::ostream& print(std::ostream& out = std::cout, MgntClock::ClockType type = MgntClock::ClockType::LOCAL) {
 			//int status = -4;
 			//std::string className = abi::__cxa_demangle(typeid(decltype(this)).name(), nullptr, nullptr, &status);
-			out << "============================= MgntClock::Stopwatch =============================\n";
+			out << "=========================== MgntClock::Stopwatch ===========================\n";
 			out << "==  START TIME : "; Print(fTime.first,  out, type) << "  ==\n";
 			out << "==  STOP  TIME : "; Print(fTime.second, out, type) << "  ==\n";
 			out << CStrFmt("==  Duration   : %-30s     (%18.9f)  ==\n", ctime().c_str(), time());

@@ -22,45 +22,45 @@
 #include <cstdio>
 
 // ROOT library
-#include "TROOT.h"
-#include "TFile.h"
-#include "TTree.h"
-#include "TList.h"
-#include "TH2D.h"
-#include "TRandom3.h"
-#include "TStopwatch.h"
-#include "TSystem.h"
-#include "TF1.h"
-#include "TF2.h"
+#include <TROOT.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <TList.h>
+#include <TH2D.h>
+#include <TRandom3.h>
+#include <TStopwatch.h>
+#include <TSystem.h>
+#include <TF1.h>
+#include <TF2.h>
 
 // AMS library
-#include "root.h"
-#include "amschain.h"
-#include "root_setup.h"
-#include "Tofrec02_ihep.h"
-#include "TrdKCluster.h"
-#include "TrExtAlignDB.h"
-#include "TrTrack.h"
-#include "tkdcards.h"
-#include "root_RVSP.h"
-#include "TofTrack.h"
-#include "TrFit.h"
-#include "bcorr.h"
-#include "EcalChi2CY.h"
-#include "TkDBc.h"
-#include "TkSens.h"
-#include "TrCharge.h"
-#include "richradidOff.h"
-#include "richtrrecOff.h"
-#include "GeoMagField.h"
-#include "GeoMagTrace.h"
-#include "TrReconQ.h"
+#include <root.h>
+#include <amschain.h>
+#include <root_setup.h>
+#include <Tofrec02_ihep.h>
+#include <TrdKCluster.h>
+#include <TrExtAlignDB.h>
+#include <TrTrack.h>
+#include <tkdcards.h>
+#include <root_RVSP.h>
+#include <TofTrack.h>
+#include <TrFit.h>
+#include <bcorr.h>
+#include <EcalChi2CY.h>
+#include <TkDBc.h>
+#include <TkSens.h>
+#include <TrCharge.h>
+#include <richradidOff.h>
+#include <richtrrecOff.h>
+#include <GeoMagField.h>
+#include <GeoMagTrace.h>
+#include <TrReconQ.h>
 
 // User defination library
-#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/CPPLibs/CPPLibs.h"
+#include <CPPLibs/CPPLibs.h>
 
-#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/AMSLibs/EcalHadron/EcalHadron.h"
-#include "/afs/cern.ch/user/h/hchou/private/AMSProject/libraries/AMSLibs/EcalHadron/EcalHadron.C"
+#include <AMSLibs/EcalHadron/EcalHadron.h>
+#include <AMSLibs/EcalHadron/EcalHadron.C>
 
 #include "ClassDef.h"
 #include "ClassDef.C"
@@ -121,16 +121,16 @@ class EventBase {
 		~EventBase();
 
 		virtual void initEvent() = 0;
-		virtual void setEventTree(TTree * evTree = 0) = 0;
+		virtual void setEventTree(TTree * evTree = nullptr) = 0;
 		virtual void setEnvironment() = 0;
-		virtual bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0) = 0;
-		virtual bool selectEvent(AMSEventR * event = 0) = 0;
+		virtual bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr) = 0;
+		virtual bool selectEvent(AMSEventR * event = nullptr) = 0;
 		inline void fill();
 
 		inline float time() { return fStopwatch.time(); }
 
 	protected :
-		inline void setTree(const char * name, const char * title);
+		inline void setTree(const std::string& name, const std::string& title);
 		inline void deleteTree();
 
 	protected :
@@ -149,18 +149,18 @@ class EventList : virtual public EventBase {
 		~EventList();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		LIST fList;
 		G4MC fG4mc;
 
-		static Float_t gWeight;
+		static Float_t Weight;
 };
-Float_t EventList::gWeight = 1;
+Float_t EventList::Weight = 1;
 
 
 //---- EventRti ----//
@@ -170,10 +170,10 @@ class EventRti : virtual public EventBase {
 		~EventRti();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		RTI fRti;
@@ -192,10 +192,10 @@ class EventTrg : virtual public EventBase {
 		~EventTrg();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		TRG fTrg;
@@ -209,10 +209,10 @@ class EventTof : virtual public EventBase {
 		~EventTof();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		TOF fTof;
@@ -226,10 +226,10 @@ class EventAcc : virtual public EventBase {
 		~EventAcc();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 	ACC fAcc;
@@ -243,10 +243,10 @@ class EventTrk : virtual public EventBase {
 		~EventTrk();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		TRK fTrk;
@@ -260,10 +260,10 @@ class EventTrd : virtual public EventBase {
 		~EventTrd();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		TRD fTrd;
@@ -277,10 +277,10 @@ class EventRich : virtual public EventBase {
 		~EventRich();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		RICH fRich;
@@ -293,10 +293,10 @@ class EventEcal : virtual public EventBase {
 		~EventEcal();
 
 		void initEvent();
-		void setEventTree(TTree * evTree = 0);
+		void setEventTree(TTree * evTree = nullptr);
 		void setEnvironment();
-		bool processEvent(AMSEventR * event = 0, AMSChain * chain = 0);
-		bool selectEvent(AMSEventR * event = 0);
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
 
 	public :
 		ECAL fEcal;
@@ -326,7 +326,7 @@ class DataSelection {
 		void fill();
 
 		int processEvent(AMSEventR * event, AMSChain * chain);
-		int preselectEvent(AMSEventR * event);
+		int preselectEvent(AMSEventR * event, const std::string& officialDir = "");
 		int selectEvent(AMSEventR * event);
 		int analysisEvent(AMSEventR * event);
 
@@ -398,6 +398,7 @@ class YiNtuple {
 	protected :
 		std::pair<Long64_t, Long64_t> fGroup;
 		std::vector<std::string>      fFileList;
+		std::string                   fFileDir;
 
 		std::string      fFileName;
 		AMSChain       * fChain;
@@ -406,12 +407,7 @@ class YiNtuple {
 
 	protected :
 		MgntClock::HrsStopwatch fStopwatch;
-		
-	public :
-		static std::string FileDir;
 };
-
-std::string YiNtuple::FileDir = "";
 
 
 #endif // __YiProdNtuple_H__

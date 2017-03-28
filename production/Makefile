@@ -1,9 +1,11 @@
+AMSProjLibs="/afs/cern.ch/user/h/hchou/private/AMSProject/libraries"
+
 DEFS = -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__
 PARA = -D_X8664__ -D_AMSPARALLEL__
 #IOPT = -axsse4.2,ssse3 # Only for Intel Core
 IOPT =
 CXX  = icpc $(IOPT) -std=c++11 $(PARA) -O2 -D_DEBUG -Wall
-FLGS = -I$(ROOTSYS)/include -isystem$(ROOTSYS)/include -I$(AMSSRC)/include -isystem$(AMSSRC)/include
+FLGS = -I$(ROOTSYS)/include -isystem$(ROOTSYS)/include -I$(AMSSRC)/include -isystem$(AMSSRC)/include -I$(AMSProjLibs) -isystem$(AMSProjLibs)
 
 OPTS = -g
 STAT = -static-intel
