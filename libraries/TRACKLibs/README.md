@@ -37,7 +37,7 @@ Layer02 : (0 0 -62)
 ## Magnetic Field B (unit : 1 T = 10000 Gauss) (Only have X-Component)
 ### Uniform Model
 
-Bx = 0.10T  <\br>
+Bx = 0.10T  
 
 ### Gaussian Model
 
