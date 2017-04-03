@@ -22,12 +22,11 @@ Layer 11 : (0 0 -140)      (Test on 2 extenal layers)
 
 Layer01 : (0 0  157.5)  
 Layer02 : (0 0   70.0)  
-Layer03 : (0 0   57.5)  
-Layer04 : (0 0   27.5)  
-Layer05 : (0 0    0.0)  
-Layer06 : (0 0  -27.5)  
-Layer07 : (0 0  -70.0)  
-Layer08 : (0 0 -137.5)  
+Layer03 : (0 0   27.5)  
+Layer04 : (0 0    0.0)  
+Layer05 : (0 0  -27.5)  
+Layer06 : (0 0  -70.0)  
+Layer07 : (0 0 -137.5)  
 
 ## Carbon (x * y * z := 150cm * 150cm * 10cm)
 ### Central Position
