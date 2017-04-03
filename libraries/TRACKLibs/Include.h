@@ -1,5 +1,3 @@
-#include "/afs/cern.ch/user/h/hchou/libraries/CPlusPlus/STL/stl.h"
-#include "/afs/cern.ch/user/h/hchou/libraries/CPlusPlus/ROOT/selflib.h"
 using namespace MgntROOT;
 
 #include "MgntTrHit.h"

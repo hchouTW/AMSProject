@@ -1,11 +1,8 @@
 #ifndef __MGIO_H__
 #define __MGIO_H__
 
-
-
 #include <fstream>
 #include <cstdio>
-#include "MGSys.h"
 
 
 namespace MGIO {
@@ -27,7 +24,7 @@ class MGIO::File {
 		static constexpr OpenMode Binary    = std::ios::binary;           // binary file
 
 	public :
-		File(const std::string& filename = std::string(), OpenMode mode = File::ReadWrite) { open(filename, mode); }
+		File(const std::string& filename = std::string(), OpenMode mode = File::Read) { open(filename, mode); }
 		~File() { close(); }
 
 		void open(const std::string& filename, OpenMode mode = File::ReadWrite);

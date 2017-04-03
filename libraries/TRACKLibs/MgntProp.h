@@ -33,14 +33,14 @@ class MatPropParam {
 
 		void setMscat(Double_t mscatDV = 0, Double_t mscatDW = 0) {
 			if (!fOptMscat) return;
-			fMscatDV = (!MgntNum::Valid(mscatDV)) ? ZERO : mscatDV;
-			fMscatDW = (!MgntNum::Valid(mscatDW)) ? ZERO : mscatDW;
+			fMscatDV = (!NGNumc::Valid(mscatDV)) ? ZERO : mscatDV;
+			fMscatDW = (!NGNumc::Valid(mscatDW)) ? ZERO : mscatDW;
 		}
 		
 		void setEngls(Double_t englsIN = 0, Double_t englsBR = 0) {
 			if (!fOptEngls) return;
-			fEnglsIN  = (!MgntNum::Valid(englsIN)) ? ZERO : englsIN;
-			fEnglsBR  = (!MgntNum::Valid(englsBR) || MgntNum::Compare(englsBR) <= 0) ? ZERO : englsBR;
+			fEnglsIN  = (!NGNumc::Valid(englsIN)) ? ZERO : englsIN;
+			fEnglsBR  = (!NGNumc::Valid(englsBR) || NGNumc::Compare(englsBR) <= 0) ? ZERO : englsBR;
 		}
 
 		void random(MatPhyCalParam & matCal, Bool_t optMscat = false, Bool_t optEngls = false) {
@@ -48,13 +48,13 @@ class MatPropParam {
 			else setOption(optMscat, optEngls);
 
 			if (fOptMscat) {
-				fMscatDV = MgntRndm::Normal(0.0, 1.0)();
-				fMscatDW = MgntRndm::Normal(0.0, 1.0)();
+				fMscatDV = MGRndm::NormalGaussian();
+				fMscatDW = MGRndm::NormalGaussian();
 			}
 
 			if (fOptEngls) {
 				Double_t englsINLMT = (NEG * matCal.fEnglsIMPV / matCal.fEnglsISGM);
-				if (!MgntNum::Valid(englsINLMT)) fEnglsIN = 0.;
+				if (!NGNumc::Valid(englsINLMT)) fEnglsIN = 0.;
 				else {
 					constexpr Short_t niter = 3;
 					Short_t iter = 0;
@@ -62,13 +62,13 @@ class MatPropParam {
 					while (fEnglsIN < englsINLMT && iter < niter) { fEnglsIN = MgntROOT::Random::Landau(0.0, 1.0); iter++; }
 					if (iter == niter) fEnglsIN = englsINLMT;
 					//--- Testing Gaus ----//
-					//fEnglsIN = MgntRndm::Normal(0.0, 1.0)();
-					//while (fEnglsIN < englsINLMT && iter < niter) { fEnglsIN = MgntRndm::Normal(0.0, 1.0)(); iter++; }
+					//fEnglsIN = MGRndm::NormalGaussian();
+					//while (fEnglsIN < englsINLMT && iter < niter) { fEnglsIN = MGRndm::NormalGaussian(); iter++; }
 					//if (iter == niter) fEnglsIN = englsINLMT;
 					//--------//
 				}
 				Double_t bremslen = matCal.fNumRadLen * Bremsstrahlung_1oln2;
-				fEnglsBR = (MgntNum::Compare(bremslen)<=0) ? ZERO : MgntRndm::Gamma(bremslen, 1./bremslen)();
+				fEnglsBR = (NGNumc::Compare(bremslen)<=0) ? ZERO : MGRndm::Gamma(bremslen, 1./bremslen)();
 			}
 		}
 		
@@ -114,7 +114,7 @@ class MatPropParam {
 			}
 			if (fOptEngls) {
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (MgntNum::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				chisq(2) = (fEnglsIN + std::exp(-fEnglsIN) - ONE);
 				chisq(3) = ((englsBR) * bremslen + (ONE - bremslen) * (std::log(englsBR) - std::log(LIMIT)));
 			}
@@ -122,7 +122,7 @@ class MatPropParam {
 		}
 
 		MtxLB::SVecD<4> Grad(Double_t numRadLen = ZERO) {
-			if (numRadLen < ZERO || !MgntNum::Valid(numRadLen)) numRadLen = ZERO;
+			if (numRadLen < ZERO || !NGNumc::Valid(numRadLen)) numRadLen = ZERO;
 			MtxLB::SVecD<4> grad;
 			if (fVacuum) return grad;
 			if (fOptMscat) { 
@@ -131,7 +131,7 @@ class MatPropParam {
 			}
 			if (fOptEngls) { 
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (MgntNum::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				grad(2) = HALF * (ONE - std::exp(-fEnglsIN)); 
 				//--- Testing Gaus ----//
 				//grad(2) = fEnglsIN; 
@@ -142,7 +142,7 @@ class MatPropParam {
 		}
 		
 		MtxLB::SMtxSymD<4> Cov(Double_t numRadLen = ZERO) {
-			if (numRadLen < ZERO || !MgntNum::Valid(numRadLen)) numRadLen = ZERO;
+			if (numRadLen < ZERO || !NGNumc::Valid(numRadLen)) numRadLen = ZERO;
 			MtxLB::SMtxSymD<4> cov;
 			if (fVacuum) return cov;
 			if (fOptMscat) { 
@@ -151,7 +151,7 @@ class MatPropParam {
 			}
 			if (fOptEngls) { 
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (MgntNum::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				cov(2, 2) = HALF * std::exp(-fEnglsIN); 
 				//--- Testing Gaus ----//
 				//cov(2, 2) = ONE; 

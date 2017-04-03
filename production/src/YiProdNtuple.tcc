@@ -386,9 +386,9 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 	fRti.uTime = event->UTime();
 	
-	MGClock::TTime * ttime = MGClock::ConvertFromUTimeToTTime(event->UTime(), MGClock::ClockType::UTC);
-	fRti.dateUTC = (ttime->tm_year + 1900) * 10000 + (ttime->tm_mon+1) * 100 + (ttime->tm_mday);
-	fRti.timeUTC = (ttime->tm_hour) * 10000 + (ttime->tm_min) * 100 + (ttime->tm_sec);
+	MGClock::MTime * mtime = MGClock::ConvertFromUTimeToMTime(event->UTime(), MGClock::ClockType::UTC);
+	fRti.dateUTC = (mtime->tm_year + 1900) * 10000 + (mtime->tm_mon+1) * 100 + (mtime->tm_mday);
+	fRti.timeUTC = (mtime->tm_hour) * 10000 + (mtime->tm_min) * 100 + (mtime->tm_sec);
 
 	// ISS information
 	AMSSetupR * setup = AMSSetupR::gethead();
@@ -1247,9 +1247,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (xchrg < 0.7 || ychrg < 0.7) continue;
 		
 		const float NSfluc = 0.08;
-		float chrgNS = std::sqrt(2.0 * (xcls->GetSeedNoise()/xcls->GetSeedSignal()/xcls->GetSeedSignal() + 
-		                                  ycls->GetSeedNoise()/ycls->GetSeedSignal()/ycls->GetSeedSignal()) +
-															 NSfluc * NSfluc);
+		float chrgNS = std::sqrt(2.0 * (xcls->GetSeedNoise()/xcls->GetSeedSignal()/xcls->GetSeedSignal() + ycls->GetSeedNoise()/ycls->GetSeedSignal()/ycls->GetSeedSignal()) + NSfluc * NSfluc);
 		if (dchrg > chrgNS) continue;
 
 		CandHit candh;
@@ -1757,9 +1755,13 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		// geometry cut
 		bool isStruct = false;
-		if ((kindOfRad == 1 && (std::max(std::fabs(richems[0]), std::fabs(richems[1])) > cut_aerogelNafBorder[0])) ||
-				(kindOfRad == 0 && (std::max(std::fabs(richems[0]), std::fabs(richems[1])) < cut_aerogelNafBorder[1] ||
-					(richems[0]*richems[0]+richems[1]*richems[1]) > cut_aerogelExternalBorder))) isStruct = true;
+		if (kindOfRad == 1) {
+			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) > cut_aerogelNafBorder[0]) isStruct = false;
+		}
+		if (kindOfRad == 0) {
+			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) < cut_aerogelNafBorder[1]) isStruct = false;
+			if ((richems[0]*richems[0]+richems[1]*richems[1]) > cut_aerogelExternalBorder)        isStruct = true;
+		}
 		//if (distToBorder < cut_distToTileBorder[kindOfRad] * std::fabs(1./ems[5])) isStruct = true;
 		bool isInFiducialVolume = !isStruct;
 	
@@ -1767,20 +1769,21 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		const int    npart = 5;
 		const bool   openCal[npart] = { 1, 0, 0, 1, 0 };
 		const double chrg[npart] = { 1., 1., 1., 1., 1. };
-		const double mass[npart] = { 0.000510999,   // electron
-		                               0.1395701835,  // pion
-																	 0.493667,      // kaon
-																	 0.938272297,   // proton
-																	 1.876123915 }; // deuterium
-		float numOfExpPE[npart] = {0};
+		const double mass[npart] = 
+		  { 0.000510999,   // electron
+		    0.1395701835,  // pion
+		    0.493667,      // kaon
+		    0.938272297,   // proton
+		    1.876123915 }; // deuterium
+		float numOfExpPE[npart] = {0, 0, 0, 0, 0 };
 		std::fill_n(numOfExpPE, npart, -1);
 		double rigAbs = std::fabs(trtk->GetRigidity(fitid));
-		for (int i = 0; i < npart; ++i) {
-			if (!openCal[i]) continue;
-			double massChrg = mass[i] / chrg[i];
+		for (int it = 0; it < npart; ++it) {
+			if (!openCal[it]) continue;
+			double massChrg = mass[it] / chrg[it];
 			double beta = 1. / std::sqrt((massChrg * massChrg / rigAbs / rigAbs) + 1); 
-			double exppe = RichRingR::ComputeNpExp(trtk, beta, chrg[i]);
-			numOfExpPE[i] = exppe;
+			double exppe = RichRingR::ComputeNpExp(trtk, beta, chrg[it]);
+			numOfExpPE[it] = exppe;
 		}
 	
 		fRich.kindOfRad = kindOfRad;
@@ -1922,68 +1925,64 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	float threshold = 0.050;
 
 	fEcal.numOfShower = event->NEcalShower();
+
+	for (int ish = 0; (recEv.iEcalShower >= 0) && (ish < event->NEcalShower()+1); ++ish) {
+		int jsh = ish - 1;
+		if (jsh == recEv.iEcalShower) continue;
+		EcalShowerR * ecal = event->pEcalShower( ((jsh==-1)?recEv.iEcalShower:jsh) );
+		if (ecal == nullptr) continue;
 	
-	while (recEv.iEcalShower >= 0) {
+		ShowerInfo shower;
+	
+		shower.energyD = 1.e-3 * ecal->EnergyD;
+		float energyA = ecal->EnergyA;
+		shower.energyE = ecal->EnergyE;
+		float energyC = ecal->EnergyC;
+		shower.energyP = ecal->EnergyP(2);
+		if (energyC > 1.0e10 || shower.energyP < 0) {
+			shower.energyP = -1;
+		}
 		
-		for (int ish = 0; ish < event->NEcalShower()+1; ++ish) {
-			int jsh = ish - 1;
-			if (jsh == recEv.iEcalShower) continue;
-			EcalShowerR * ecal = event->pEcalShower( ((jsh==-1)?recEv.iEcalShower:jsh) );
-			if (ecal == nullptr) continue;
+		shower.PisaBDT = ecal->GetEcalBDT();
 		
-			ShowerInfo shower;
-		
-			shower.energyD = 1.e-3 * ecal->EnergyD;
-			float energyA = ecal->EnergyA;
-			shower.energyE = ecal->EnergyE;
-			float energyC = ecal->EnergyC;
-			shower.energyP = ecal->EnergyP(2);
-			if (energyC > 1.0e10 || shower.energyP < 0) {
-				shower.energyP = -1;
+		// Charge estimator based on ECAl-only;
+		// it is advised to discard low-rigidity events
+		// and to use events having only one EcalShower.
+		shower.Q = ecal->EcalChargeEstimator();
+		if (shower.Q < 1e-3) shower.Q = -1;
+
+		shower.showerAxis[0] = ecal->CofG[0];
+		shower.showerAxis[1] = ecal->CofG[1];
+		shower.showerAxis[2] = ecal->CofG[2];
+		shower.showerAxis[3] = ecal->Dir[0];
+		shower.showerAxis[4] = ecal->Dir[1];
+		shower.showerAxis[5] = ecal->Dir[2];
+
+		// hadron shower
+		int zeh = 1;
+		if (jsh == -1) {
+			if (recEv.iTrTrack >= 0) {
+				TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
+				std::vector<like_t> probLvl;
+				trtk->GetInnerZ(probLvl);
+    	  if (probLvl.size() != 0)
+    	    zeh = probLvl.at(0).Z;
 			}
-			
-			shower.PisaBDT = ecal->GetEcalBDT();
-			
-			// Charge estimator based on ECAl-only;
-			// it is advised to discard low-rigidity events
-			// and to use events having only one EcalShower.
-			shower.Q = ecal->EcalChargeEstimator();
-			if (shower.Q < 1e-3) shower.Q = -1;
-
-			shower.showerAxis[0] = ecal->CofG[0];
-			shower.showerAxis[1] = ecal->CofG[1];
-			shower.showerAxis[2] = ecal->CofG[2];
-			shower.showerAxis[3] = ecal->Dir[0];
-			shower.showerAxis[4] = ecal->Dir[1];
-			shower.showerAxis[5] = ecal->Dir[2];
-
-			// hadron shower
-			int zeh = 1;
-			if (jsh == -1) {
-				if (recEv.iTrTrack >= 0) {
-					TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-					std::vector<like_t> probLvl;
-					trtk->GetInnerZ(probLvl);
-    		  if (probLvl.size() != 0)
-    		    zeh = probLvl.at(0).Z;
-				}
-				else if (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != 0) {
-					BetaHR * betaH = event->pBetaH(recEv.iBetaH);
-					int nlay = 0; float prob = 0;
-					TofChargeHR tofQH = betaH->gTofCharge();
-					zeh = tofQH.GetZ(nlay, prob, 0);
-				}
+			else if (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != 0) {
+				BetaHR * betaH = event->pBetaH(recEv.iBetaH);
+				int nlay = 0; float prob = 0;
+				TofChargeHR tofQH = betaH->gTofCharge();
+				zeh = tofQH.GetZ(nlay, prob, 0);
 			}
-
-			EcalHadron::Build(ecal, zeh);
-			shower.hadronApex = EcalHadron::EcalApex;
-			shower.hadronEnergy = EcalHadron::EcalRigidity;
-
-			fEcal.showers.push_back(shower);
 		}
 
-		break;
-	} // while loop --- iEcalShower
+		EcalHadron::Build(ecal, zeh);
+		shower.hadronApex = EcalHadron::EcalApex;
+		shower.hadronEnergy = EcalHadron::EcalRigidity;
+
+		fEcal.showers.push_back(shower);
+	}
+
 
 	/* Raw Hits
 	for (int ih = 0; ih < event->NEcalHit(); ++ih) {
@@ -2224,13 +2223,12 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	unsigned short trBitPattJ = trtkSIG->GetBitPatternJ();
 	bool     isTrInner  = ((trBitPattJ&_hasTrL34) > 0 && 
 	                       (trBitPattJ&_hasTrL56) > 0 && 
-												 (trBitPattJ&_hasTrL78) > 0);
+						   (trBitPattJ&_hasTrL78) > 0);
 	if (!isTrInner) return -6001;
 	//unsigned short trBitPattXYJ = trtkSIG->GetBitPatternXYJ();
 	//bool     isTrInnerXY  = ((trBitPattXYJ&_hasTrL34) > 0 && 
 	//                         (trBitPattXYJ&_hasTrL56) > 0 && 
-	//											   (trBitPattXYJ&_hasTrL78) > 0);
-
+	//                         (trBitPattXYJ&_hasTrL78) > 0);
 	//if (!isTrInnerXY) return -6001;
 
 	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
@@ -2340,9 +2338,9 @@ bool RunTagOperator::processEvent(AMSEventR * event, AMSChain * chain) {
 		info.file.push_back(filePath);
 		
 		if (EventBase::checkEventMode(EventBase::ISS)) {
-			MGClock::TTime * ttime = MGClock::ConvertFromUTimeToTTime(runID, MGClock::ClockType::UTC);
-			info.dateUTC = (ttime->tm_year + 1900) * 10000 + (ttime->tm_mon+1) * 100 + (ttime->tm_mday);
-			info.timeUTC = (ttime->tm_hour) * 10000 + (ttime->tm_min) * 100 + (ttime->tm_sec);
+			MGClock::MTime * mtime = MGClock::ConvertFromUTimeToMTime(runID, MGClock::ClockType::UTC);
+			info.dateUTC = (mtime->tm_year + 1900) * 10000 + (mtime->tm_mon+1) * 100 + (mtime->tm_mday);
+			info.timeUTC = (mtime->tm_hour) * 10000 + (mtime->tm_min) * 100 + (mtime->tm_sec);
 		}
 		
 		fRunTag[runID] = info;

@@ -59,6 +59,8 @@
 // User defination library
 #include <CPPLibs/CPPLibs.h>
 
+//#include <ROOTLibs/ROOTLibs.h>
+
 #include <AMSLibs/EcalHadron/EcalHadron.h>
 #include <AMSLibs/EcalHadron/EcalHadron.C>
 
@@ -351,9 +353,11 @@ class DataSelection {
 };
 
 Float_t  DataSelection::gScaleFact = 0.01;
-TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
+//TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
+TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-5.0)))*(x>0)+(x<=0)", -2000, 2000);
 //TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
-TF2      DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
+//TF2      DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
+TF2      DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-5.0)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
 
 
 //---- RunTagOperator ----//

@@ -1,7 +1,6 @@
 #ifndef __MGClock_H__
 #define __MGClock_H__
 
-
 #include <iostream>
 #include <ctime>
 #include <ratio>
@@ -15,14 +14,11 @@
 #include <algorithm>
 
 
-#include "MGSys.h"
-
-
 namespace MGClock {
 	enum class ClockType { UTC = 0, LOCAL = 1 };
 	
 	typedef std::time_t                                    UTime;
-	typedef struct std::tm                                 TTime;
+	typedef struct std::tm                                 MTime;
 	typedef std::string                                    CTime;
 	typedef std::chrono::duration<double>                  FloatSeconds;
 	typedef std::chrono::nanoseconds                       Nanoseconds;
@@ -41,31 +37,31 @@ namespace MGClock {
 	typedef std::chrono::high_resolution_clock             HrsClock;
 	typedef std::chrono::high_resolution_clock::time_point HrsTime;
 	typedef std::chrono::high_resolution_clock::duration   HrsDuration;
-	
+
 	template <class Clock, class Time, class Duration> 
 	class Stopwatch;
 	typedef Stopwatch<SysClock, SysTime, SysDuration> SysStopwatch;
 	typedef Stopwatch<StdClock, StdTime, StdDuration> StdStopwatch;
 	typedef Stopwatch<HrsClock, HrsTime, HrsDuration> HrsStopwatch;
 
-	inline UTime   ConvertFromTTimeToUTime(TTime * ttime) { return std::mktime(ttime); }
-	inline TTime * ConvertFromUTimeToTTime(UTime utime, ClockType type = ClockType::UTC); 
-	inline CTime   ConvertFromTTimeToCTime(TTime * ttime, const std::string& fmt = "");
-	inline CTime   ConvertFromUTimeToCTime(UTime utime, const std::string& fmt = "", ClockType type = ClockType::UTC) { return ConvertFromTTimeToCTime(ConvertFromUTimeToTTime(utime, type), fmt); }
+	inline UTime   ConvertFromMTimeToUTime(MTime * mtime) { return std::mktime(mtime); }
+	inline MTime * ConvertFromUTimeToMTime(UTime utime, ClockType type = ClockType::UTC); 
+	inline CTime   ConvertFromMTimeToCTime(MTime * mtime, const std::string& fmt = "");
+	inline CTime   ConvertFromUTimeToCTime(UTime utime, ClockType type = ClockType::UTC, const std::string& fmt = "") { return ConvertFromMTimeToCTime(ConvertFromUTimeToMTime(utime, type), fmt); }
 
 	inline SysTime ConvertFromUTime(UTime timpnt)  { return SysClock::from_time_t(timpnt); }
-	inline SysTime ConvertFromTTime(TTime * ttime) { return ConvertFromUTime(ConvertFromTTimeToUTime(ttime)); }
+	inline SysTime ConvertFromMTime(MTime * mtime) { return ConvertFromUTime(ConvertFromMTimeToUTime(mtime)); }
 	inline UTime   ConvertToUTime(SysTime timpnt) { return SysClock::to_time_t(timpnt); }
 	inline UTime   ConvertToUTime(StdTime timpnt) { return SysClock::to_time_t( (SysClock::now() + (timpnt - StdClock::now())) ); }
 
-	inline TTime * ConvertToTTime(SysTime timpnt, ClockType type = ClockType::UTC) { return ConvertFromUTimeToTTime(ConvertToUTime(timpnt), type); }
-	inline TTime * ConvertToTTime(StdTime timpnt, ClockType type = ClockType::UTC) { return ConvertFromUTimeToTTime(ConvertToUTime(timpnt), type); }
+	inline MTime * ConvertToMTime(SysTime timpnt, ClockType type = ClockType::UTC) { return ConvertFromUTimeToMTime(ConvertToUTime(timpnt), type); }
+	inline MTime * ConvertToMTime(StdTime timpnt, ClockType type = ClockType::UTC) { return ConvertFromUTimeToMTime(ConvertToUTime(timpnt), type); }
 
-	inline CTime   ConvertToCTime(SysTime timpnt, const std::string& fmt = "", ClockType type = ClockType::UTC) { return ConvertFromUTimeToCTime(ConvertToUTime(timpnt), fmt, type); }
-	inline CTime   ConvertToCTime(StdTime timpnt, const std::string& fmt = "", ClockType type = ClockType::UTC) { return ConvertFromUTimeToCTime(ConvertToUTime(timpnt), fmt, type); }
+	inline CTime   ConvertToCTime(SysTime timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "") { return ConvertFromUTimeToCTime(ConvertToUTime(timpnt), type, fmt); }
+	inline CTime   ConvertToCTime(StdTime timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "") { return ConvertFromUTimeToCTime(ConvertToUTime(timpnt), type, fmt); }
 
 	template<class Time>
-	std::ostream& Print(Time timpnt, const std::string& fmt = "", ClockType type = ClockType::UTC, std::ostream& out = std::cout);
+	std::ostream& Print(Time timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "", std::ostream& out = std::cout);
 }
 
 
@@ -81,7 +77,7 @@ class MGClock::Stopwatch {
 		Duration duration() { return (fTime.second - fTime.first); }
 		double   time()     { return std::chrono::duration<double>( (fTime.second - fTime.first) ).count(); }
 
-		std::ostream& print(std::ostream& out = std::cout, MGClock::ClockType type = MGClock::ClockType::UTC);
+		std::ostream& print(MGClock::ClockType type = MGClock::ClockType::UTC, std::ostream& out = std::cout);
 
 	protected :
 		std::pair<Time, Time> fTime;

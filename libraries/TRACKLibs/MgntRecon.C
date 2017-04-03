@@ -78,10 +78,10 @@ Bool_t Track::analyticFit() {
 	mtxY.Invert();
 	MtxLB::SVecD<2>&& rslX = mtxX * resX;
 	MtxLB::SVecD<2>&& rslY = mtxY * resY;
-	if (!MgntNum::Valid(rslX(0))) rslX(0) = fHits.at(0).CX();
-	if (!MgntNum::Valid(rslY(0))) rslY(0) = fHits.at(0).CY();
-	if (!MgntNum::Valid(rslX(1))) rslX(1) = ZERO;
-	if (!MgntNum::Valid(rslY(1))) rslY(1) = ZERO;
+	if (!NGNumc::Valid(rslX(0))) rslX(0) = fHits.at(0).CX();
+	if (!NGNumc::Valid(rslY(0))) rslY(0) = fHits.at(0).CY();
+	if (!NGNumc::Valid(rslX(1))) rslX(1) = ZERO;
+	if (!NGNumc::Valid(rslY(1))) rslY(1) = ZERO;
 
 	// analytics fitting for curve
 	const Double_t MIN_STEP = 20.;
@@ -94,7 +94,7 @@ Bool_t Track::analyticFit() {
 		Double_t dz  = hit.CZ() - refZCoo;
 		Int_t    magNSTP = Int_t(std::ceil(std::fabs(dz / MIN_STEP)));
 		Double_t magSTPZ = dz / Double_t(magNSTP);
-		Double_t magSIGN = MgntNum::Compare(dz);
+		Double_t magSIGN = NGNumc::Compare(dz);
 		Double_t magINT1_POS = 0.;
 		for (Int_t is = 0; is < magNSTP; ++is)
 			magINT1_POS += (MgntMag::GetMagFuncINT1(refZCoo + (Double_t(is) + 0.5) * magSTPZ) - magBasedINT1);
@@ -108,7 +108,7 @@ Bool_t Track::analyticFit() {
 	Double_t mtxCur = MgntProp::PROP_FACT * std::fabs(fPartSt.ChrgMass()) * mtxCurFact * mtxMag; 
 
 	Double_t rslInvEta = NEG * resCur / mtxCur;
-	if (!MgntNum::Valid(rslInvEta)) rslInvEta = 1e-6;
+	if (!NGNumc::Valid(rslInvEta)) rslInvEta = 1e-6;
 	
 	fPartSt.setSpatialWithTan(rslX(0), rslY(0), refZCoo, rslX(1), rslY(1), ((fDirOpt) ? NEG : ONE));
 	fPartSt.setInvEta(rslInvEta);
@@ -156,7 +156,7 @@ Bool_t Track::analyticFit() {
 			if (hit.SideY()) { ndf++; chisq += detRes(1) * (propSt.Y() - hit.CY()); }
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MgntNum::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 
 		Int_t  lmCurIter    = 1;
@@ -170,7 +170,7 @@ Bool_t Track::analyticFit() {
 			if (!lmCovAna.Invert()) break;
 			MtxLB::SVecD<5> && rslAna = lmCovAna * gradAna;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
-				if (!MgntNum::Valid(rslAna(ipar))) 
+				if (!NGNumc::Valid(rslAna(ipar))) 
 					rslAna(ipar) = ZERO;
 
 			PhySt predSt(fPartSt.Part());
@@ -202,7 +202,7 @@ Bool_t Track::analyticFit() {
 				if (hit.SideY()) { predNdf++; predChisq += detRes(1) * detRes(1); }
 				predHitCnt++;
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (MgntNum::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 		
 			if (!lmIsFinePath) break;
@@ -221,7 +221,7 @@ Bool_t Track::analyticFit() {
 			}
 			else {
 				Double_t width = (LM_LAMBDA_UP - LM_LAMBDA_DN) / LM_NUM_MAX_ITER;
-				lmLambda = MgntRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
+				lmLambda = MGRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
 				lmCurIter++;
 			}
 		}
@@ -285,7 +285,7 @@ Bool_t Track::simpleFit() {
 			if (hit.SideY()) { ndf++; chisq += detRes(1) * (propSt.Y() - hit.CY()); }
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MgntNum::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 		
 		Int_t  lmCurIter    = 1;
@@ -299,7 +299,7 @@ Bool_t Track::simpleFit() {
 			if (!lmCovGG.Invert()) break;
 			MtxLB::SVecD<5> && rslG = lmCovGG * gradG;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
-				if (!MgntNum::Valid(rslG(ipar))) 
+				if (!NGNumc::Valid(rslG(ipar))) 
 					rslG(ipar) = ZERO;
 			
 			PhySt predSt(fPartSt.Part());
@@ -332,7 +332,7 @@ Bool_t Track::simpleFit() {
 				if (hit.SideY()) { predNdf++; predChisq += detRes(1) * detRes(1); }
 				predHitCnt++;
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (MgntNum::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 	
 			if (!lmIsFinePath) break;
@@ -351,7 +351,7 @@ Bool_t Track::simpleFit() {
 			}
 			else {
 				Double_t width = (LM_LAMBDA_UP - LM_LAMBDA_DN) / LM_NUM_MAX_ITER;
-				lmLambda = MgntRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
+				lmLambda = MGRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
 				lmCurIter++;
 			}
 		}
@@ -434,7 +434,7 @@ Bool_t Track::physicalFit() {
 			nrl.at(ih) = curJb.NumRadLen();	
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MgntNum::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 		
 		//------------ SAT ---------------//
@@ -528,10 +528,10 @@ Bool_t Track::physicalFit() {
 			
 			Double_t det = 0;
 			lmCovFF.Invert(&det);
-			if (!MgntNum::Valid(det) || MgntNum::EqualToZero(det)) break;
+			if (!NGNumc::Valid(det) || NGNumc::EqualToZero(det)) break;
 			MtxLB::TVecD rslF = lmCovFF * gradF;
 			for (Int_t ipar = 0; ipar < sizeF; ++ipar)
-				if (!MgntNum::Valid(rslF(ipar))) 
+				if (!NGNumc::Valid(rslF(ipar))) 
 					rslF(ipar) = ZERO;
 
 			//------TEST--------//
@@ -605,7 +605,7 @@ Bool_t Track::physicalFit() {
 				_nlly += detRes(1) * detRes(1) + intchi(0);
 				//////////////////////////
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (MgntNum::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 			
 			if (!lmIsFinePath) break;
@@ -641,7 +641,7 @@ Bool_t Track::physicalFit() {
 			}
 			else {
 				Double_t width = (LM_LAMBDA_UP - LM_LAMBDA_DN) / LM_NUM_MAX_ITER;
-				lmLambda = MgntRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
+				lmLambda = MGRndm::Uniform(LM_LAMBDA_UP - lmCurIter * width, LM_LAMBDA_UP)(); 
 				lmCurIter++; 
 			}
 		}
@@ -752,11 +752,11 @@ Bool_t Track::physicalFit() {
 		}
 
 		// landau distribution (ion-loss)
-		if (MgntNum::Compare(propSt.Mom(), 1e-4) <= 0 && curIH != fHits.size()-1) {
+		if (NGNumc::Compare(propSt.Mom(), 1e-4) <= 0 && curIH != fHits.size()-1) {
 			Double_t rat = 0.85;  // best 0.85
 			Int_t type = 0;
-			if (curIH <= 1) { fPartSt.setInvEta(MgntNum::Compare(fPartSt.InvEta())); type = 1; }
-			if (std::fabs(fPartSt.Eta()) < 4. * numRadLen) { fPartSt.setInvEta(MgntNum::Compare(fPartSt.InvEta()) / (4. * numRadLen)); type = 2; }
+			if (curIH <= 1) { fPartSt.setInvEta(NGNumc::Compare(fPartSt.InvEta())); type = 1; }
+			if (std::fabs(fPartSt.Eta()) < 4. * numRadLen) { fPartSt.setInvEta(NGNumc::Compare(fPartSt.InvEta()) / (4. * numRadLen)); type = 2; }
 			else { fPartSt.setInvEta(fPartSt.InvEta() * rat); type = 3; }
 			for (Int_t im = 0; im < matPars.size(); ++im) {
 				if (dimL >= 1) matPars.at(im).setMscat(0., 0.);
@@ -778,7 +778,7 @@ Bool_t Track::physicalFit() {
 			chisqDW += (matPars.at(im).MscatDW() * matPars.at(im).MscatDW());
 			chisqIN += (matPars.at(im).EnglsIN() + std::exp(-matPars.at(im).EnglsIN()) - 1.0);
 			Double_t bremslen = jacb.at(im).NumRadLen() * 1.44269504088896339e+00;
-			Double_t englsBR = (MgntNum::Compare(matPars.at(im).EnglsBR(), 1.0e-7) > 0) ? matPars.at(im).EnglsBR() : 1.0e-7;
+			Double_t englsBR = (NGNumc::Compare(matPars.at(im).EnglsBR(), 1.0e-7) > 0) ? matPars.at(im).EnglsBR() : 1.0e-7;
 			chisqBR += ((englsBR) * bremslen + (ONE - bremslen) * (std::log(englsBR) - std::log(1.0e-7)));
 		}
 		Double_t normChisq    = (chisqHX+chisqHY+chisqDV+chisqDW)/(ndfx+ndfy);
@@ -878,7 +878,7 @@ Bool_t Track::physicalFit() {
 
 		Double_t det = 0;
 		covFF.Invert(&det);
-		if (!MgntNum::Valid(det) || MgntNum::EqualToZero(det)) { std::cout << "INVERSE FAIL.\n"; break; }
+		if (!NGNumc::Valid(det) || NGNumc::EqualToZero(det)) { std::cout << "INVERSE FAIL.\n"; break; }
 		MtxLB::TVecD rslF = covFF * gradF;
 	
 		Double_t decayFT = std::exp(-1. * Double_t(decayIter) / decayStep);
@@ -907,7 +907,7 @@ Bool_t Track::physicalFit() {
 		//if (!covGG.Invert()) break;
 		//MtxLB::SVecD<dimG> && rslG = covGG * gradG;
 		for (Int_t ipar = 0; ipar < dimG; ++ipar)
-			if (!MgntNum::Valid(rslG(ipar))) 
+			if (!NGNumc::Valid(rslG(ipar))) 
 				rslG(ipar) = 0.;
 		
 		fPartSt.setSpatialWithCos(

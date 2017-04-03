@@ -215,7 +215,7 @@ Long64_t MgntMat::GetEntry(Double_t x, Double_t y, Double_t z, Bool_t isUsedTree
 		while ((range[1] - range[0]) != 1) {
 			Int_t mid = (range[0] + range[1]) / 2;
 			if (z > MgntMat::MatBoundRange[mid] || 
-			    MgntNum::Equal(z, MgntMat::MatBoundRange[mid])) range[1] = mid;
+			    NGNumc::Equal(z, MgntMat::MatBoundRange[mid])) range[1] = mid;
 			else                                                range[0] = mid;
 		}
 		Int_t    ibin = range[0];
@@ -553,7 +553,7 @@ Double_t MgntMatPhyCal::GetNumRadLen(MtxLB::SVecD<3> & sat, MtxLB::SVecD<3> & en
 	Double_t length = MtxLB::Mag(end - sat);
 	Double_t invRadLen = GetInverseRadiationLength(mat);
 	Double_t numRadLen = length * invRadLen;
-	if (!MgntNum::Valid(numRadLen) || numRadLen < 0) return 0;
+	if (!NGNumc::Valid(numRadLen) || numRadLen < 0) return 0;
 	return numRadLen;
 }
 
@@ -565,7 +565,7 @@ Double_t MgntMatPhyCal::GetInverseRadiationLength(Material & mat) {
 		if (!mat.fElm[ie]) continue;
 		invRadLen += (mat.fDen[ie] * Material::AtomMass[ie] / MgntMatPhyCal::AtomRadLen[ie]);
 	}
-	if (!MgntNum::Valid(invRadLen) || invRadLen < 0) return 0;
+	if (!NGNumc::Valid(invRadLen) || invRadLen < 0) return 0;
 	return invRadLen;
 }
 
@@ -573,13 +573,13 @@ Double_t MgntMatPhyCal::GetInverseRadiationLength(Material & mat) {
 Double_t MgntMatPhyCal::GetMultipleScatteringLength(PhySt & phySt, Material & mat, Double_t invRadLen, Double_t length) {
 	if (mat.fVac) return 0;
 	if (phySt.IsChrgLess() || phySt.IsMassLess()) return 0;
-	if (MgntNum::Compare(invRadLen) <= 0) return 0;
+	if (NGNumc::Compare(invRadLen) <= 0) return 0;
 	Double_t numRadLen = length * invRadLen;
 	if (numRadLen < MgntMatPhyCal::LimitLenL || numRadLen > MgntMatPhyCal::LimitLenU) return 0;
 	Double_t parfact = MgntMatPhyCal::RygConst * std::fabs(phySt.ChrgMass());
 	Double_t radfact = std::sqrt(numRadLen) * (1. + MgntMatPhyCal::CmsCorrFact * std::log(numRadLen));
 	Double_t mscatL = parfact * radfact;
-	if (!MgntNum::Valid(mscatL) || mscatL < 0) return 0;
+	if (!NGNumc::Valid(mscatL) || mscatL < 0) return 0;
 	return mscatL;
 }
 
@@ -587,22 +587,22 @@ Double_t MgntMatPhyCal::GetMultipleScatteringLength(PhySt & phySt, Material & ma
 Double_t MgntMatPhyCal::GetMultipleScatteringDirection(PhySt & phySt, Material & mat, Double_t invRadLen, Double_t length) {
 	if (mat.fVac) return 0;
 	if (phySt.IsChrgLess() || phySt.IsMassLess()) return 0;
-	if (MgntNum::Compare(invRadLen) <= 0) return 0;
+	if (NGNumc::Compare(invRadLen) <= 0) return 0;
 	Double_t numRadLen = length * invRadLen;
 	if (numRadLen < MgntMatPhyCal::LimitLenL || numRadLen > MgntMatPhyCal::LimitLenU) return 0;
 	Double_t parfact = MgntMatPhyCal::RygConst * std::fabs(phySt.ChrgMass());
 	Double_t radfact = (std::sqrt(numRadLen) * (1. + MgntMatPhyCal::CmsCorrFact * std::log(numRadLen))) / length;
 	Double_t mscatD = parfact * radfact;
-	if (!MgntNum::Valid(mscatD) || mscatD < 0) return 0;
+	if (!NGNumc::Valid(mscatD) || mscatD < 0) return 0;
 	return mscatD;
 }
 
 Double_t MgntMatPhyCal::GetMultipleScatteringDirection(Material & mat, Double_t mscatL, Double_t length) {
 	if (mat.fVac) return 0;
-	if (MgntNum::Compare(length) <= 0) return 0;
-	if (MgntNum::Compare(mscatL) <= 0) return 0;
+	if (NGNumc::Compare(length) <= 0) return 0;
+	if (NGNumc::Compare(mscatL) <= 0) return 0;
 	Double_t mscatD = mscatL / length;
-	if (!MgntNum::Valid(mscatD)) return 0;
+	if (!NGNumc::Valid(mscatD)) return 0;
 	return mscatD;
 }
 
@@ -610,7 +610,7 @@ Double_t MgntMatPhyCal::GetMultipleScatteringDirection(Material & mat, Double_t 
 void MgntMatPhyCal::GetDensityEffectCorrection(PhySt & phySt, Material & mat, Double_t * delta) {
 	if (delta == 0) return;
 	std::fill_n(delta, Material::NumOfElm, 0.);
-	if (mat.fVac || MgntNum::EqualToZero(phySt.GammaBeta())) return;
+	if (mat.fVac || NGNumc::EqualToZero(phySt.GammaBeta())) return;
 	
 	Double_t gammabeta = (phySt.GammaBeta() < MgntMatPhyCal::EtaLimit) ? MgntMatPhyCal::EtaLimit : phySt.GammaBeta();
 	Double_t logGB = std::log10(gammabeta);
@@ -624,7 +624,7 @@ void MgntMatPhyCal::GetDensityEffectCorrection(PhySt & phySt, Material & mat, Do
 	}
 	
 	for (Int_t ie = 0; ie < Material::NumOfElm; ++ie)
-		if (!MgntNum::Valid(delta[ie]) || delta[ie] < 0) delta[ie] = 0;
+		if (!NGNumc::Valid(delta[ie]) || delta[ie] < 0) delta[ie] = 0;
 }
 
 // Ionization Energy Loss [cm^-1] // (Normalized by Incident Particle Mass)
@@ -656,9 +656,9 @@ void MgntMatPhyCal::GetIonizationEnergyLoss(PhySt & phySt, Material & mat, Doubl
 	}
 	mexeng /= elmwgt;
 	avgdlt /= elmwgt;
-	if (!MgntNum::Valid(elmwgt) || elmwgt < 0) elmwgt = 0;
-	if (!MgntNum::Valid(mexeng) || mexeng < 0) mexeng = 0;
-	if (!MgntNum::Valid(avgdlt) || avgdlt < 0) avgdlt = 0;
+	if (!NGNumc::Valid(elmwgt) || elmwgt < 0) elmwgt = 0;
+	if (!NGNumc::Valid(mexeng) || mexeng < 0) mexeng = 0;
+	if (!NGNumc::Valid(avgdlt) || avgdlt < 0) avgdlt = 0;
 
 	Double_t sgm = sgmfact * elmwgt * length;
 	//sgm *= (1.327457e-01*TMath::Erf((1.32475e+00*TMath::Log(gammabeta)-1.99679e+00))+5.052637e-01); // New Tuning by H.Y.Chou (Oct 28, 2016)
@@ -676,18 +676,18 @@ void MgntMatPhyCal::GetIonizationEnergyLoss(PhySt & phySt, Material & mat, Doubl
 
 	englsSGM = (sgm / length / mass);
 	englsMPV = (mpv / length / mass);
-	if (!MgntNum::Valid(englsSGM) || englsSGM < 0) englsSGM = 0;
-	if (!MgntNum::Valid(englsMPV) || englsMPV < 0) englsMPV = 0;
+	if (!NGNumc::Valid(englsSGM) || englsSGM < 0) englsSGM = 0;
+	if (!NGNumc::Valid(englsMPV) || englsMPV < 0) englsMPV = 0;
 }
 
 // Bremsstrahlung Energy Loss [cm^-1]
 Double_t MgntMatPhyCal::GetBremsstrahlungEnergyLoss(PhySt & phySt, Material & mat, Double_t invRadLen) {
 	if (mat.fVac) return 0;	
 	if (phySt.IsChrgLess() || phySt.IsMassLess()) return 0;
-	if (MgntNum::Compare(invRadLen) <= 0) return 0;
+	if (NGNumc::Compare(invRadLen) <= 0) return 0;
 	Double_t frac = (phySt.ChrgMass() * phySt.ChrgMass() * MgntMatPhyCal::MassElInGeV * MgntMatPhyCal::MassElInGeV);
 	Double_t englsMEN = frac * MgntMatPhyCal::Bremsstrahlung_1oln2 * invRadLen; 
-	if (!MgntNum::Valid(englsMEN) || englsMEN < 0) englsMEN = 0;
+	if (!NGNumc::Valid(englsMEN) || englsMEN < 0) englsMEN = 0;
 	return englsMEN;
 }
 
@@ -695,8 +695,8 @@ Double_t MgntMatPhyCal::GetBremsstrahlungEnergyLoss(PhySt & phySt, Material & ma
 MtxLB::SMtxSymD<2> MgntMatPhyCal::GetMscatCov(PhySt & phySt, Double_t zcoo, Bool_t varType) { // varType := (0 tan) (1 cos)
 	MtxLB::SMtxSymD<2> mscat;
 	Double_t dlenz = (zcoo - phySt.Z());
-	if (phySt.IsChrgLess() || MgntNum::EqualToZero(dlenz)) return mscat;
-	Int_t sdir = ((MgntNum::Compare(dlenz) <= 0) ? 1 : -1); // (1 down-going) (-1 up-going)
+	if (phySt.IsChrgLess() || NGNumc::EqualToZero(dlenz)) return mscat;
+	Int_t sdir = ((NGNumc::Compare(dlenz) <= 0) ? 1 : -1); // (1 down-going) (-1 up-going)
 	Int_t ssat = GetSimplicityEntry(phySt.Z(), (sdir==1?0:1));
 	Int_t send = GetSimplicityEntry(zcoo,      (sdir==1?1:0));
 	if (ssat == -1 || send == -1) return mscat;
@@ -746,9 +746,9 @@ MtxLB::SMtxSymD<2> MgntMatPhyCal::GetMscatCov(PhySt & phySt, Double_t zcoo, Bool
 	}
 	if (vacuum) return mscat;
 
-	if (!MgntNum::Valid(mscat(0, 0)) || 
-			!MgntNum::Valid(mscat(1, 1)) ||
-			!MgntNum::Valid(mscat(0, 1))) mscat = MtxLB::SMtxSymD<2>();
+	if (!NGNumc::Valid(mscat(0, 0)) || 
+			!NGNumc::Valid(mscat(1, 1)) ||
+			!NGNumc::Valid(mscat(0, 1))) mscat = MtxLB::SMtxSymD<2>();
 
 	return mscat;
 }
@@ -757,8 +757,8 @@ Double_t MgntMatPhyCal::GetSimplicityNumRadLen(MtxLB::SVecD<3> & sat, MtxLB::SVe
 	Double_t NRL = 0.;
 	MtxLB::SVecD<3> len = end - sat;
 	Double_t dsz = MtxLB::Mag(len) / std::fabs(len(2));
-	if (MgntNum::EqualToZero(len(2))) return NRL;
-	Int_t sdir = ((MgntNum::Compare(len(2)) <= 0) ? 1 : -1); // (1 down-going) (-1 up-going)
+	if (NGNumc::EqualToZero(len(2))) return NRL;
+	Int_t sdir = ((NGNumc::Compare(len(2)) <= 0) ? 1 : -1); // (1 down-going) (-1 up-going)
 	Int_t ssat = GetSimplicityEntry(sat(2), (sdir==1?0:1));
 	Int_t send = GetSimplicityEntry(end(2), (sdir==1?1:0));
 	if (ssat == -1 || send == -1) return NRL;
@@ -783,7 +783,7 @@ Double_t MgntMatPhyCal::GetSimplicityNumRadLen(MtxLB::SVecD<3> & sat, MtxLB::SVe
 		}
 		NRL += nrl;
 	}
-	if (!MgntNum::Valid(NRL)) NRL = 0.; 
+	if (!NGNumc::Valid(NRL)) NRL = 0.; 
 
 	return NRL;
 }
@@ -791,16 +791,16 @@ Double_t MgntMatPhyCal::GetSimplicityNumRadLen(MtxLB::SVecD<3> & sat, MtxLB::SVe
 Int_t MgntMatPhyCal::GetSimplicityEntry(Double_t zcoo, Bool_t ulEqOpt) { // ulEqOpt := (0 up) (1 low)
 	Int_t entry = -1;
 	if      ((zcoo > MgntMatPhyCal::RegOfSec[0]) || 
-	         ( ulEqOpt && MgntNum::Equal(zcoo, MgntMatPhyCal::RegOfSec[0]))
+	         ( ulEqOpt && NGNumc::Equal(zcoo, MgntMatPhyCal::RegOfSec[0]))
 					) entry = 0;
 	else if ((zcoo < MgntMatPhyCal::RegOfSec[MgntMatPhyCal::NumOfSec]) ||
-	         (!ulEqOpt && MgntNum::Equal(zcoo, MgntMatPhyCal::RegOfSec[MgntMatPhyCal::NumOfSec]))
+	         (!ulEqOpt && NGNumc::Equal(zcoo, MgntMatPhyCal::RegOfSec[MgntMatPhyCal::NumOfSec]))
 					) entry = MgntMatPhyCal::NumOfSec+1;
 	else {
 		Int_t range[2] = { 0, MgntMatPhyCal::NumOfSec };
 		while ((range[1] - range[0]) != 1) {
 			Int_t mid = (range[0] + range[1]) / 2;
-			Bool_t eq = MgntNum::Equal(zcoo, MgntMatPhyCal::RegOfSec[mid]);
+			Bool_t eq = NGNumc::Equal(zcoo, MgntMatPhyCal::RegOfSec[mid]);
 			if ((zcoo > MgntMatPhyCal::RegOfSec[mid] && !eq) || (ulEqOpt && eq)) range[1] = mid;
 			else                                                                 range[0] = mid;
 		}

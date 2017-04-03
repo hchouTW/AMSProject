@@ -1,7 +1,6 @@
 #ifndef __MGRegex_C__
 #define __MGRegex_C__
 
-
 #include "MGRegex.h"
 
 

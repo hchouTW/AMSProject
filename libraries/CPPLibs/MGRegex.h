@@ -1,11 +1,8 @@
 #ifndef __MGRegex_H__
 #define __MGRegex_H__
 
-
 #include <string>
 #include <regex>
-
-#include "MGSys.h"
 
 
 namespace MGRegex {

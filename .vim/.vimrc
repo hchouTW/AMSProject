@@ -23,6 +23,7 @@ else
 endif
 colorscheme solarized
 
+set t_Co=256
 syntax on " enable syntas processing
 
 
@@ -78,3 +79,14 @@ nnoremap $ <nop>
 
 " Backups
 set backup
+
+
+" in normal mode F2 will save the file
+nmap <F2> :w<CR>
+" in insert mode F2 will exit insert, save, enters insert again
+imap <F2> <ESC>:w<CR>i
+" switch between header/source with F4
+map <F4> :e %:p:s,.h$,.X123X,:s,.C$,.h,:s,.X123X$,.C,<CR>
+
+" Enhanced keyboard mappings
+nmap <f4> :e %:r.h<cr>

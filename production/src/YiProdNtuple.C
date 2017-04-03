@@ -12,9 +12,9 @@
 #include <string.h>
 
 int main(int argc, const char ** argv) {
-	std::cout << "\n**--------------------------**\n";
-	std::cout << "\n**    YiProdNtuple START    **\n";
-	std::cout << "\n**--------------------------**\n";
+	COUT("\n**--------------------------**\n");
+	COUT("\n**    YiProdNtuple START    **\n");
+	COUT("\n**--------------------------**\n");
 
 	YiNtuple::setSelectionMode(YiNtuple::NORM);
 	//YiNtuple::setSelectionMode(YiNtuple::COPY);
@@ -57,9 +57,9 @@ int main(int argc, const char ** argv) {
 
 	std::string outputFile = "";
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM))
-		outputFile = CStrFmt("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_id);
+		outputFile = StrFmt("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_id);
 	else if (YiNtuple::checkSelectionMode(YiNtuple::COPY))
-		outputFile = CStrFmt("YiMirror_%s.%07ld.root", event_mode.c_str(), group_id);
+		outputFile = StrFmt("YiMirror_%s.%07ld.root", event_mode.c_str(), group_id);
 
 	std::string path = ".";
 	if (argc == 6) path = argv[5];

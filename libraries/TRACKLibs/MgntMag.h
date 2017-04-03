@@ -109,7 +109,7 @@ Bool_t MgntMag::Load() {
 		bool isWork = true;
 		static int magerr = 0;
 		if (!MagFld->GetMap() && !magerr) {
-			std::string filePath = StrFmt("%s/v5.00/MagneticFieldMapPermanent_NEW.bin", MgntSys::GetEnv("AMSDataDir").c_str());
+			std::string filePath = StrFmt("%s/v5.00/MagneticFieldMapPermanent_NEW.bin", MGSys::GetEnv("AMSDataDir").c_str());
 			//std::string filePath = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/MagneticFieldMapPermanent_NEW.bin";
 			if ((MagFld->Read(filePath.c_str())) < 0) {
 				std::cerr << "Magnetic Field map not found : " << filePath.c_str() << std::endl;
@@ -140,7 +140,7 @@ Magnetic & MgntMag::GetMag(Float_t coo[3], Bool_t isWithDev) {
 		MagVec.fMagDir(idir) = magVec[idir];
 	}
 	MagVec.fMagVal = MtxLB::Mag(MagVec.fMagDir);
-	Bool_t vacuum = MgntNum::EqualToZero(MagVec.fMagVal);
+	Bool_t vacuum = NGNumc::EqualToZero(MagVec.fMagVal);
 	if (!vacuum) MagVec.fMagDir.Unit();
 
 	if (isWithDev && !vacuum) {
