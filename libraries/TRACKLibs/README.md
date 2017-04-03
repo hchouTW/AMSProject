@@ -51,7 +51,7 @@ Bx(unit : T) = 0.15 * Exp(-0.5 * (z/50cm)^2 )
 ## Particle Generator
 ### Initial particles position and direction
 
-Position (x y z) = (-150~150 -150~150 200) cm  
+Position (x y z) = ((-150 to 150) (-150 to 150) 200) cm  
 Direction (theta phi) = (0~-PI Uniform)  
 
 #### Electron
