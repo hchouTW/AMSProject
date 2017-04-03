@@ -37,11 +37,11 @@ Layer02 : (0 0 -62)
 ## Magnetic Field B (unit : 1 T = 10000 Gauss) (Only have X-Component)
 ### Uniform Model
 
-Bx = 0.10T  
+Bx(unit : T) = 0.10  
 
 ### Gaussian Model
 
-Bx = 0.15 * Exp(-0.5 * (z/50cm)^2 )  
+Bx(unit : T) = 0.15 * Exp(-0.5 * (z/50cm)^2 )
 
 ## Trigger
 ### Hits are in (Silicon L04 or L05) and (Silicon L08 or L09)
