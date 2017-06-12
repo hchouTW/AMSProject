@@ -9,13 +9,20 @@
 #include <algorithm>
 #include <thread>
 #include <dirent.h>
+#include <tuple>
 
-#define StrFmt(fmt, ...)  (MGSys::StringFormat(fmt, ##__VA_ARGS__))
-#define CStrFmt(fmt, ...) ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())
 
-#define COUT(fmt, ...) (std::cout << ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))
-#define CLOG(fmt, ...) (std::clog << ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))
-#define CERR(fmt, ...) (std::cerr << ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))
+#define VarName(var) (std::string(#var))
+
+#define StrFmt(fmt, ...)  ( \
+        ((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)? \
+        (MGSys::StringFormat(fmt)        ): \
+        ((MGSys::StringFormat(fmt, ##__VA_ARGS__))        ))
+#define CStrFmt(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt).c_str()) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))
+
+#define COUT(fmt, ...) (std::cout << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
+#define CLOG(fmt, ...) (std::clog << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
+#define CERR(fmt, ...) (std::cerr << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
 
 #define LocAddr() (MGSys::StringFormat("(LINE %d)  [FUNC  %s]  {FILE  %s} :  ", __LINE__, __func__, __FILE__))
 
@@ -36,6 +43,8 @@ namespace MGSys {
 	inline void SleepFor(const std::chrono::duration<Rep, Period>& sleep_duration) { std::this_thread::sleep_for(sleep_duration); } 
 	template< class Clock, class Duration >
 	inline void SleepUntil(const std::chrono::time_point<Clock, Duration>& sleep_time) { std::this_thread::sleep_until(sleep_time); } 
+	
+	inline std::string StringFormat(const std::string& str) { return str; }
 	
 	template <typename... Args>
 	std::string StringFormat(const std::string& fmt, Args... args);
@@ -63,7 +72,7 @@ namespace MGSys {
 	inline void ShowErrorAndExit(const MESSAGE& mainInfo = MESSAGE(), const MGSys::MESSAGE& message = MGSys::MESSAGE(), std::ostream& out = std::cerr) { ShowInfo(mainInfo, message, "ERROR", out); Exit(EXIT_FAILURE); }
 	inline void ShowErrorAndExit(const MESSAGE& mainInfo, const MGSys::MESSAGES& messages, std::ostream& out = std::cerr) { ShowInfo(mainInfo, messages, "ERROR", out); Exit(EXIT_FAILURE); }
 
-	// TODO : update by C++17 (filesystem)
+	// TODO (Hsin-Yi Chou): update by C++17 (filesystem)
 	inline bool TestFile(const std::string& file, char opt = 'e') { return (MGSys::System(StrFmt("test -%c \"%s\"", opt, file.c_str())) == 0); }
 	
 	// TODO : update by C++17 (filesystem)
@@ -88,8 +97,8 @@ namespace MGSys {
 		return list;
 	}
 
-	// TODO : This is only for testing.
-	//        1) std::cin timeout ?!  -> condition_variable::wait_for
+	// TODO (Hsin-Yi Chou): This is only for testing.
+	// 1) std::cin timeout ?!  -> condition_variable::wait_for
 	void Console() {
 		long int count = 1;
 		std::string cmdin = std::string();

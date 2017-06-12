@@ -378,6 +378,9 @@ class TrackInfo : public TObject {
 			QL1 = -1;
 			QL9 = -1;
 			
+			std::fill_n(stateUBD, 6, 0);
+			std::fill_n(stateLBD, 6, 0);
+			
 			std::fill_n(status[0], 2 * 4, false);
 			std::fill_n(rigidity[0], 2 * 4, 0);
 			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
@@ -410,6 +413,10 @@ class TrackInfo : public TObject {
 		Float_t QL2;
 		Float_t QL9;
 
+		// Boundary Status at |Z| = 50cm (based on inner track)
+		Float_t stateUBD[6]; // upper
+		Float_t stateLBD[6]; // lower
+
 		// Algorithm     (CHOUTKO, CHIKANIANF)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
 		Bool_t  status[2][4];
@@ -424,7 +431,7 @@ class TrackInfo : public TObject {
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
 
-	ClassDef(TrackInfo, 5)
+	ClassDef(TrackInfo, 6)
 };
 
 
@@ -590,22 +597,22 @@ class RTI : public TObject {
 		
 		Short_t isInShadow;          // particle pass through the ISS Solar Array
 		                             // return
-																 //  -1, no particle information
-																 //   0, false
-																 //   1, true
-		//Short_t isFromSpace;         // particle coming from space
+									 //  -1, no particle information
+									 //   0, not in shadow
+									 //   1, in shadow
+		//Short_t isFromSpace;     // particle coming from space
 		                             // return
-																 //  -1, no particle information
-																 //   0, particle isnot coming from space
-																 //   1, particle is coming from space (weak)
-																 //   2, particle is coming from space (middle)
-																 //   3, particle is coming from space (strong)
-		//Short_t backtrace[2][3];     // charge { 1, -1 }  (stable fact 1.00, 1.15, 1.30)
+									 //  -1, no particle information
+									 //   0, particle isnot coming from space
+									 //   1, particle is coming from space (weak)
+									 //   2, particle is coming from space (middle)
+									 //   3, particle is coming from space (strong)
+		//Short_t backtrace[2][3];   // charge { 1, -1 }  (stable fact 1.00, 1.15, 1.30)
 		                             // return
 		                             //   0, unercutoff (i.e. atmospheric origin), 
-													       //   1, over cutoff (i.e. coming from space), 
-													       //   2, trapped, 
-													       //  -1, error
+							       //   1, over cutoff (i.e. coming from space), 
+							       //   2, trapped, 
+							       //  -1, error
 
 	ClassDef(RTI, 7)
 };
@@ -660,9 +667,10 @@ class TOF : public TObject {
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
 
-			std::fill_n(extClsL, 2, -1);
-			std::fill_n(extClsQ, 2, -1);
-			std::fill_n(extClsT, 2,  0);
+			std::fill_n(extClsN, 2, 0);
+			std::fill_n(extClsL[0], 2*2, -1);
+			std::fill_n(extClsQ[0], 2*2, -1);
+			std::fill_n(extClsT[0], 2*2,  0);
 
 			//statusBetaHs = false;
 			//betaHBits = 0;
@@ -700,9 +708,10 @@ class TOF : public TObject {
 		Float_t Qall;
 
 		// extern clusters (near betaH hit by time)
-		Short_t extClsL[2];
-		Float_t	extClsQ[2];
-		Float_t extClsT[2];
+		Short_t extClsN[2];
+		Short_t extClsL[2][2];
+		Float_t	extClsQ[2][2];
+		Float_t extClsT[2][2];
 
 		// TRK Track independent
 		//Bool_t  statusBetaHs;
@@ -717,7 +726,7 @@ class TOF : public TObject {
 		//Float_t Qalls;
 		//Float_t betaHStates[6];
 
-	ClassDef(TOF, 3)
+	ClassDef(TOF, 4)
 };
 
 
@@ -779,8 +788,11 @@ class TRD : public TObject {
 		void init() {
 			numOfTrack = 0;
 			numOfHTrack = 0;
-
-			std::fill_n(numOfHSegVtx, 2, 0);
+			std::fill_n(numOfHSeg, 2, 0);
+			
+			vtxSide = 0;
+			std::fill_n(vtxCoo, 3, 0);
+			std::fill_n(vtxTrCoo, 3, 0);
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(Q, 2, -1);
@@ -794,9 +806,12 @@ class TRD : public TObject {
 	public :
 		Short_t numOfTrack;
 		Short_t numOfHTrack;
+		Short_t numOfHSeg[2];
 
-		// (TrTrack, TrdHSegment) Vertex
-		Short_t numOfHSegVtx[2];
+		// (TrTrack, TrdSegment) Vertex
+		Short_t vtxSide;
+		Float_t vtxCoo[3];
+		Float_t vtxTrCoo[3];
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
@@ -808,7 +823,7 @@ class TRD : public TObject {
 		Bool_t  trackStatus;
 		Float_t trackState[6]; // coo, dir
 
-	ClassDef(TRD, 4)
+	ClassDef(TRD, 5)
 };
 
 
@@ -819,9 +834,6 @@ class RICH : public TObject {
 		~RICH() {}
 
 		void init() {
-			//numOfRing = 0;
-			//numOfHit = 0;
-
 			kindOfRad = -1;
 			tileOfRad = -1;
 			rfrIndex  = -1;
@@ -830,7 +842,10 @@ class RICH : public TObject {
 			std::fill_n(numOfExpPE, 5, -1);
 			isGoodTile = false;
 			isInFiducialVolume = false;
-			
+		
+			std::fill_n(numOfCrossHit, 2, 0);
+			std::fill_n(numOfRingHit[0], 5*3, 0);
+
 			status = false;
 			isGoodRecon = false;
 			beta = -1;
@@ -844,9 +859,6 @@ class RICH : public TObject {
 		}
 
 	public :
-		//Short_t numOfRing;
-		//Short_t numOfHit;
-
 		// Rich Veto
 		Short_t kindOfRad;     // -1, None, 0, Aerogel 1, NaF
 		Short_t tileOfRad;     // tile id
@@ -855,12 +867,21 @@ class RICH : public TObject {
 		Float_t distToBorder;  // dist To Border Edge
 		Float_t numOfExpPE[5]; // number of photoelectrons expected for a given track, beta and charge.
 		                       // [0] electron
-													 // [1] pion
-													 // [2] kaon
-													 // [3] proton
-													 // [4] deuterium
+							   // [1] pion
+							   // [2] kaon
+							   // [3] proton
+							   // [4] deuterium
 		Bool_t isGoodTile;
 		Bool_t isInFiducialVolume;
+		
+		// Rich Hits
+		Short_t numOfCrossHit[2];   // CrossHit[selected, others]
+		Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
+                                    // [0] electron
+                                    // [1] pion
+                                    // [2] kaon
+                                    // [3] proton
+                                    // [4] deuterium
 
 		// Official RichRingR
 		Bool_t  status;

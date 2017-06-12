@@ -25,6 +25,7 @@ LIBP += -lQtCore -L${QTDIR_STATIC}/lib
 LIBP += $(LIBD)
 
 
+#TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Apr03
 TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
 
 all :

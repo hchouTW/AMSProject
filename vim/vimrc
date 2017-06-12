@@ -12,14 +12,23 @@
 " https://dougblack.io/words/a-good-vimrc.html 
 
 
+" Backups
+" TODO (Hsin-Yi Chou) : save backup file in backupdir=./.bck
+let g:locbakdir=resolve(expand('%:p:h') . "/.bak")
+autocmd BufEnter    * let g:locbakdir=resolve(expand('%:p:h') . "/.bak")
+autocmd BufWritePre * execute '!mkdir -p ' . g:locbakdir 
+autocmd BufWritePre * :let &backupdir=g:locbakdir
+set backup
+
+
 " Color Scheme (Solarized)
 " http://ethanschoonover.com/solarized
 " https://github.com/altercation/Vim-colors-solarized
 " move solarized.vim to ~/.vim/colors/
 if has ('gui_running')
-	set background=light
+    set background=light
 else
-	set background=light
+    set background=light
 endif
 colorscheme solarized
 
@@ -27,19 +36,31 @@ set t_Co=256
 syntax on " enable syntas processing
 
 
+" 80 Column Layout
+set textwidth=80
+if exists('+colorcolumn')
+    set colorcolumn=80
+else
+    au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
+endif
+
+
 " Spaces & Tabs
 set tabstop=4     " number of visual spaces per TAB
 set softtabstop=4 " number of spaces in tab when editing
 set shiftwidth=4  " number of spaces when indenting
-"set expandtab     " tabs are spaces 
+set expandtab     " tabs are spaces 
+set autoindent    " copy indent from current line when starting a new line 
+set smartindent   " do smart autoindenting when starting a new line
 
 
 " UI Config
-set number     " show line numbers
-set showcmd    " show command in bottom bar
-set cursorline " highlight current line
-set wildmenu   " visual autocomplete
-set showmatch  " highlight matching {[()]}
+set number      " show line numbers
+set showcmd     " show command in bottom bar
+set cursorline  " highlight current line
+set wildmenu    " visual autocomplete
+set showmatch   " highlight matching {[()]}
+set scrolloff=5 " minimal number of screen lines to keep above and below the cursor
 
 filetype indent on " load filetype-specific files
 
@@ -72,19 +93,15 @@ nnoremap E $
 nnoremap ^ <nop>
 nnoremap $ <nop>
 
-
-" Mouse
-"set mouse=nv
-
-
-" Backups
-set backup
-
+" in normal mode F8 will use internal formatting
+nmap <F8> ggVG=
 
 " in normal mode F2 will save the file
 nmap <F2> :w<CR>
+
 " in insert mode F2 will exit insert, save, enters insert again
 imap <F2> <ESC>:w<CR>i
+
 " switch between header/source with F4
 map <F4> :e %:p:s,.h$,.X123X,:s,.C$,.h,:s,.X123X$,.C,<CR>
 

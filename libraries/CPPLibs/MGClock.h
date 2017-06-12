@@ -74,10 +74,10 @@ class MGClock::Stopwatch {
 		Time & start() { fTime.first  = Clock::now(); return fTime.first;  }
 		Time & stop()  { fTime.second = Clock::now(); return fTime.second; }
 		
-		Duration duration() { return (fTime.second - fTime.first); }
-		double   time()     { return std::chrono::duration<double>( (fTime.second - fTime.first) ).count(); }
+		Duration duration() const { return (fTime.second - fTime.first); }
+		double   time()     const { return std::chrono::duration<double>( (fTime.second - fTime.first) ).count(); }
 
-		std::ostream& print(MGClock::ClockType type = MGClock::ClockType::UTC, std::ostream& out = std::cout);
+		std::ostream& print(MGClock::ClockType type = MGClock::ClockType::UTC, std::ostream& out = std::cout) const;
 
 	protected :
 		std::pair<Time, Time> fTime;

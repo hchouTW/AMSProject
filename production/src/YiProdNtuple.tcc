@@ -43,13 +43,13 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	if (event->NParticle() > 0 && event->pParticle(0) != 0) {
 		ParticleR * par = event->pParticle(0);
 
-		iBeta = par->iBeta();
-		iBetaH = par->iBetaH();
-		iTrTrack = par->iTrTrack();
-		iEcalShower = par->iEcalShower();
-		iTrdTrack = par->iTrdTrack();
-		iTrdHTrack = par->iTrdHTrack();
-		iRichRing = par->iRichRing();
+		iBeta       = (par->iBeta()       < 0) ? -1 : par->iBeta()      ;
+		iBetaH      = (par->iBetaH()      < 0) ? -1 : par->iBetaH()     ;
+		iTrTrack    = (par->iTrTrack()    < 0) ? -1 : par->iTrTrack()   ;
+		iEcalShower = (par->iEcalShower() < 0) ? -1 : par->iEcalShower();
+		iTrdTrack   = (par->iTrdTrack()   < 0) ? -1 : par->iTrdTrack()  ;
+		iTrdHTrack  = (par->iTrdHTrack()  < 0) ? -1 : par->iTrdHTrack() ;
+		iRichRing   = (par->iRichRing()   < 0) ? -1 : par->iRichRing()  ;
 
 		if (!EventBase::checkEventMode(EventBase::MC))
 			for (int it = 0; it < event->NBetaH() && iTrTrack>=0; ++it)
@@ -414,8 +414,8 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event->NParticle() > 0) {
 		AMSPoint ic;
 		int idx = event->isInShadow(ic, 0);
-		if (idx == 1) isInShadow = 1;
-		else          isInShadow = 0;
+		if      (idx == 0) isInShadow = 0;
+		else if (idx == 1) isInShadow = 1;
 	}
 	fRti.isInShadow = isInShadow;
 
@@ -579,7 +579,9 @@ bool EventRti::selectEvent(AMSEventR * event) {
 	if (fRti.isInSAA) return false;
 	if (fRti.liveTime < 0.5) return false;
 	if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
-	
+
+	if (fRti.isInShadow == 1) return false;
+
 	return true;
 }
 
@@ -740,7 +742,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		//TofChargeHR tofQH = betaH->gTofCharge();
 		//float Z[2], Zupper, Zlower, Z_prob[2], Zupper_prob, Zlower_prob;
-	  //Z[0] = tofQH.GetZ(nlay, Z_prob[0], 0); // max prob charge (int)
+		//Z[0] = tofQH.GetZ(nlay, Z_prob[0], 0); // max prob charge (int)
 		//Z[1] = tofQH.GetZ(nlay, Z_prob[1], 1); // next to max prob charge (int)
 		//Zupper = tofQH.GetZ(nlay, Zupper_prob, 0, 1100);
 		//Zlower = tofQH.GetZ(nlay, Zlower_prob, 0, 11);
@@ -773,32 +775,49 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			avgTime[it] = value;
 		}
 	}
-	
-	int    nearHitId[2] = { -1, -1 };
-	double nearHitDt[2] = { 0, 0 };
+
+	const double ChrgLimit = 0.8;
+	int    nearHitNm[2] = { 0, 0 };
+	int    nearHitId[2][2] = { { -1, -1 }, { -1, -1 } };
+	double nearHitDt[2][2] = { { 0, 0 }, { 0, 0 } };
 	for (int it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
 		if (cls == nullptr) continue;
 		if (betaHClsId.at(cls->Layer) < 0) continue;
 		if (betaHClsId.at(cls->Layer) == it) continue;
 		int    slay = (cls->Layer / 2);
-		double dltT = std::fabs(cls->Time - avgTime[slay]) / cls->ETime;
-		if (nearHitId[slay] < 0 || dltT < nearHitDt[slay]) {
-			nearHitId[slay] = it;
-			nearHitDt[slay] = dltT;
-		} 
+		double chrg = cls->GetQSignal();
+		double dltT = (cls->Time - avgTime[slay]);
+		double absT = std::fabs(dltT) / cls->ETime;
+		if (chrg > ChrgLimit) nearHitNm[slay]++;
+		if (nearHitId[slay][0] < 0) { // first
+			nearHitId[slay][0] = it;
+			nearHitDt[slay][0] = absT;
+		}
+		else if (absT <= nearHitDt[slay][0]) { // minimum T
+			nearHitId[slay][1] = nearHitId[slay][0];
+			nearHitDt[slay][1] = nearHitDt[slay][0];
+			nearHitId[slay][0] = it;
+			nearHitDt[slay][0] = absT;
+		}
+		else if (nearHitId[slay][1] < 0 || absT < nearHitDt[slay][1]) {
+			nearHitId[slay][1] = it;
+			nearHitDt[slay][1] = absT;
+		}
 	}
 
 	for (int it = 0; it < 2; ++it) {
-		if (nearHitId[it] < 0) continue;
-		TofClusterHR * cls = event->pTofClusterH(nearHitId[it]);
-		int    lay  = cls->Layer;
-		double chrg = cls->GetQSignal();
-		double time = (cls->Time - avgTime[it]);
-		
-		fTof.extClsL[it] = lay;
-		fTof.extClsQ[it] = chrg;
-		fTof.extClsT[it] = time;
+		for (int jt = 0; jt < 2; ++jt) {
+			if (nearHitId[it][jt] < 0) continue;
+			TofClusterHR * cls = event->pTofClusterH(nearHitId[it][jt]);
+			int    lay  = cls->Layer + 1; // form 1 ~ 4
+			double chrg = cls->GetQSignal();
+			double time = (cls->Time - avgTime[it]);
+			fTof.extClsL[it][jt] = lay;
+			fTof.extClsQ[it][jt] = chrg;
+			fTof.extClsT[it][jt] = time;
+		}
+		fTof.extClsN[it] = nearHitNm[it];
 	}
 
 
@@ -1016,10 +1035,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 		short isInner   = ((track.bitPattJ&_hasL34) > 0 &&
 		                   (track.bitPattJ&_hasL56) > 0 &&
-											 (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
+						   (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
 		short isInnerXY = ((track.bitPattXYJ&_hasL34) > 0 &&
 		                   (track.bitPattXYJ&_hasL56) > 0 &&
-											 (track.bitPattXYJ&_hasL78) > 0) ? 2 : 0;
+						   (track.bitPattXYJ&_hasL78) > 0) ? 2 : 0;
 		short isL2    = ((track.bitPattJ  &_hasL2) > 0) ?   4 : 0;
 		short isL2XY  = ((track.bitPattXYJ&_hasL2) > 0) ?   8 : 0;
 		short isL1    = ((track.bitPattJ  &_hasL1) > 0) ?  16 : 0;
@@ -1035,6 +1054,25 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
+
+		{
+			AMSPoint coo;
+			AMSDir   dir;
+			trtk->Interpolate( 50., coo, dir, fitidInn);
+			track.stateUBD[0] = coo[0];
+			track.stateUBD[1] = coo[1];
+			track.stateUBD[2] = coo[2];
+			track.stateUBD[3] = dir[0];
+			track.stateUBD[4] = dir[1];
+			track.stateUBD[5] = dir[2];
+			trtk->Interpolate(-50., coo, dir, fitidInn);
+			track.stateLBD[0] = coo[0];
+			track.stateLBD[1] = coo[1];
+			track.stateLBD[2] = coo[2];
+			track.stateLBD[3] = dir[0];
+			track.stateLBD[4] = dir[1];
+			track.stateLBD[5] = dir[2];
+		}
 
 		const short _nalgo = 2;
 		const short _algo[_nalgo] = { 1, 3 };
@@ -1440,81 +1478,241 @@ void EventTrd::setEnvironment() {
 
 bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == nullptr)	return false;
+	if (event == nullptr) return false;
 	fStopwatch.start();
 
 	fTrd.numOfTrack = event->NTrdTrack();
 	fTrd.numOfHTrack = event->NTrdHTrack();
 		
+	std::vector< std::vector<TrdHSegmentR *> > HSegMap(2, std::vector<TrdHSegmentR *>());
+	for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
+		TrdHSegmentR * seg = event->pTrdHSegment(iseg);
+		HSegMap.at(seg->d).push_back(seg); 
+	}
+	int nsegx = HSegMap.at(0).size();
+	int nsegy = HSegMap.at(1).size();
+	fTrd.numOfHSeg[0] = nsegx;
+	fTrd.numOfHSeg[1] = nsegy;
+
 	// numOfHSegVtx (by HY.Chou)
 	// number of TRDH segments that make a vertex with TrTrack
-	// between Z = 80 cm and 200 cm
+	// between Z = 60 cm and 200 cm
 	int nseg = event->nTrdHSegment();
 	TrTrackR * trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
 	int        trId = (trtk) ? trtk->iTrTrackPar(1, 3, 21) : -1;
 	if (trtk && trId >= 0) {
+		/* Under testing
+		if (event->NTrdHTrack() != 1) return false;
+		if (nsegx != 1 || nsegy != 1) return false;	
 		const double trCooZ = 120.;
-		AMSPoint trPnt; AMSDir trDir;
-		trtk->Interpolate(trCooZ, trPnt, trDir);
-		double trX = trPnt[0];
-		double trY = trPnt[1];
-		double trTanX = trDir[0] / trDir[2];
-		double trTanY = trDir[1] / trDir[2];
-		double trX0   = trX - trTanX * trCooZ;
-		double trY0   = trY - trTanY * trCooZ;
+		AMSPoint trPntC; AMSDir trDirC;
+		trtk->Interpolate(trCooZ, trPntC, trDirC);
 		double trNRig = std::fabs(trtk->GetRigidity(trId));
-		if (trNRig < 0.8) trNRig = 0.8;
-
-		const double MsCooSgmFact = 2.843291e-01;
-		const double MsDirSgmFact = 7.108227e-03;
-		double msSgmC = MsCooSgmFact / trNRig;
-		double msSgmM = MsDirSgmFact / trNRig;
-		double msSgmR = std::sqrt(msSgmC*msSgmC + msSgmM*msSgmM*trCooZ*trCooZ);
-
-		short numOfVtx[2] = { 0, 0 };
-		std::vector<std::pair<double, double> > vtxCooXZ;
-		std::vector<std::pair<double, double> > vtxCooYZ;
-
-		const double SgmLimit = 7.;
-		const double ZLimit[2] = { 200., 60. };
+		if (trNRig < 0.3) trNRig = 0.3;
+		
+		double trR[2] = { trPntC[0], trPntC[1] };
+		double trM[2] = { trDirC[0]/trDirC[2],  trDirC[1]/trDirC[2] };
+		
+		const double MsCooSgmFact = 2.00;
+		const double MsDirSgmFact = 0.02;
+		double msSgmR = (MsCooSgmFact / trNRig + 0.50);
+		double msSgmM = (MsDirSgmFact / trNRig + 0.02);
+		
 		for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
 			TrdHSegmentR * seg = event->pTrdHSegment(iseg);
 			if (seg == nullptr) continue;
-			double segR0 = (seg->r - seg->m * seg->z);
-			double trR   = ((seg->d==0) ? (trX + trTanX * (seg->z - trCooZ)) : (trY + trTanY * (seg->z - trCooZ)));
-			double trM   = ((seg->d==0) ? trTanX : trTanY);
-			double dr    = std::fabs((trR - seg->r) / std::sqrt(seg->er*seg->er + msSgmC*msSgmC));
-			double dm    = std::fabs((trM - seg->m) / std::sqrt(seg->em*seg->em + msSgmM*msSgmM));
-			bool isTrSeg = (dr < SgmLimit && dm < SgmLimit);
-			if (isTrSeg) continue;
+			float tm = trM[seg->d];
+			float tr = (trM[seg->d] * (seg->z - trCooZ) + trR[seg->d]);
+			float dr = std::fabs(seg->r - tr);
+			float dm = std::fabs(seg->m - tm);
+			//if (dr > msSgmR) continue;
+			//if (dm > msSgmM) continue;
+			//std::cout << Form("D%d DR %8.2f (%8.2f) DM %8.2f (%8.2f)\n", seg->d, dr, msSgmR, dm, msSgmM);
+		}
+		*/
+		
+		// Vertex based on TrdHSegment (Old Codes)	
+		//const double trCooZ = 120.;
+		//AMSPoint trPnt; AMSDir trDir;
+		//trtk->Interpolate(trCooZ, trPnt, trDir);
+		//double trX = trPnt[0];
+		//double trY = trPnt[1];
+		//double trTanX = trDir[0] / trDir[2];
+		//double trTanY = trDir[1] / trDir[2];
+		//double trX0   = trX - trTanX * trCooZ;
+		//double trY0   = trY - trTanY * trCooZ;
+		//double trNRig = std::fabs(trtk->GetRigidity(trId));
+		//if (trNRig < 0.8) trNRig = 0.8;
 
-			double sgmSegR = std::sqrt(seg->er*seg->er+seg->em*seg->em*seg->z*seg->z);
-			double sgmSegM = seg->em;
-			double sgmVtxR = std::sqrt(msSgmR*msSgmR+sgmSegR*sgmSegR);
-			double sgmVtxM = std::sqrt(msSgmM*msSgmM+sgmSegM*sgmSegM);
+		//const double MsCooSgmFact = 2.843291e-01;
+		//const double MsDirSgmFact = 7.108227e-03;
+		//double msSgmC = MsCooSgmFact / trNRig;
+		//double msSgmM = MsDirSgmFact / trNRig;
+		//double msSgmR = std::sqrt(msSgmC*msSgmC + msSgmM*msSgmM*trCooZ*trCooZ);
+		//
+		//const double SgmLimit = 5.;
+		//const double ZLimit[2] = { 200., 60. };
 
-			double vtxDR = (segR0  - ((seg->d==0) ? trX0   : trY0));
-			double vtxDM = (seg->m - ((seg->d==0) ? trTanX : trTanY));
+		//short numOfVtx[2] = { 0, 0 };
+		//std::vector<std::pair<double, double> > vtxCooXZ;
+		//std::vector<std::pair<double, double> > vtxCooYZ;
+		//for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
+		//	TrdHSegmentR * seg = event->pTrdHSegment(iseg);
+		//	if (seg == nullptr) continue;
+		//	double segR0 = (seg->r - seg->m * seg->z);
+		//	double trR   = ((seg->d==0) ? (trX + trTanX * (seg->z - trCooZ)) : (trY + trTanY * (seg->z - trCooZ)));
+		//	double trM   = ((seg->d==0) ? trTanX : trTanY);
+		//	double dr    = std::fabs((trR - seg->r) / std::sqrt(seg->er*seg->er + msSgmC*msSgmC));
+		//	double dm    = std::fabs((trM - seg->m) / std::sqrt(seg->em*seg->em + msSgmM*msSgmM));
+		//	bool isTrSeg = (dr < SgmLimit && dm < SgmLimit);
+		//	if (isTrSeg) continue;
+		//	
+		//	double sgmSegR = std::sqrt(seg->er*seg->er+seg->em*seg->em*seg->z*seg->z);
+		//	double sgmSegM = seg->em;
+		//	double sgmVtxR = std::sqrt(msSgmR*msSgmR+sgmSegR*sgmSegR);
+		//	double sgmVtxM = std::sqrt(msSgmM*msSgmM+sgmSegM*sgmSegM);
 
-			double vtxZ    = -(vtxDR / vtxDM);
-			double sgmVtxZ = std::fabs(vtxZ) * std::sqrt((sgmVtxR*sgmVtxR)/(vtxDR*vtxDR) + (sgmVtxM*sgmVtxM)/(vtxDM*vtxDM+1e-4));
-			if (sgmVtxZ > 10.) sgmVtxZ = 10.;
+		//	double vtxDR = (segR0  - ((seg->d==0) ? trX0   : trY0));
+		//	double vtxDM = (seg->m - ((seg->d==0) ? trTanX : trTanY));
 
-			double lmtZu = (ZLimit[0] + sgmVtxZ * SgmLimit);
-			double lmtZl = (ZLimit[1] - sgmVtxZ * SgmLimit);
+		//	double vtxZ    = -(vtxDR / vtxDM);
+		//	double sgmVtxZ = std::fabs(vtxZ) * std::sqrt((sgmVtxR*sgmVtxR)/(vtxDR*vtxDR) + (sgmVtxM*sgmVtxM)/(vtxDM*vtxDM+1e-4));
+		//	if (sgmVtxZ > 10.) sgmVtxZ = 10.;
 
-			if (vtxZ > lmtZu || vtxZ < lmtZl) continue;
+		//	double lmtZu = (ZLimit[0] + sgmVtxZ * SgmLimit);
+		//	double lmtZl = (ZLimit[1] - sgmVtxZ * SgmLimit);
 
-			numOfVtx[seg->d]++;
-			if (seg->d==0) vtxCooXZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
-			else           vtxCooYZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
+		//	if (vtxZ > lmtZu || vtxZ < lmtZl) continue;
+
+		//	numOfVtx[seg->d]++;
+		//	if (seg->d==0) vtxCooXZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
+		//	else           vtxCooYZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
+		//}
+		//fTrd.numOfHSegVtx[0] = numOfVtx[0];
+		//fTrd.numOfHSegVtx[1] = numOfVtx[1];
+	
+		
+		// Vertex based on TrdHSegment (New Codes)
+		short vtxSide = 0;
+		MGROOT::LA::SVecD<3> vtxCoo;
+
+		// full
+		if (nsegx >= 2 && nsegy >= 2) {
+			AMSPoint trPnt; AMSDir trDir;
+			trtk->Interpolate(120., trPnt, trDir);
+			vtxCoo(0) = trPnt[0];
+			vtxCoo(1) = trPnt[1];
+			vtxCoo(2) = trPnt[2];
+
+			int iter = 1;
+			const int maxIter = 8;
+			while (iter <= maxIter) {
+				MGROOT::LA::SVecD<3> grad;
+				MGROOT::LA::SMtxD<3> icov;
+				for (int d = 0; d <= 1; ++d) {
+					MGROOT::LA::SVecD<3> dgrad;
+					MGROOT::LA::SMtxD<3> dicov;
+					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
+						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
+						float dz = (vtxCoo[2] - seg->z);
+						float  m = seg->m;
+						float  r = (seg->m * dz + seg->r);
+						float er  = (seg->em * seg->em * dz * dz + seg->er * seg->er);
+						float er2 = er * er;
+						float dr = (vtxCoo[d] - r);
+						grad(d)    += dr / er2;
+						grad(2)    += -m * dr / er2;
+						icov(d, d) +=  1 / er2;
+						icov(d, 2) += -m / er2;
+						icov(2, d) += -m / er2;
+						icov(2, 2) += m * m / er2;
+					}
+				}
+				bool ret = icov.Invert();
+				MGROOT::LA::SVecD<3> rsl = icov * grad;
+				vtxCoo = vtxCoo - rsl;
+				iter++;
+			}
+			vtxSide = 15;	
+		}
+		// part
+		else if (nsegx >= 2 || nsegy >= 2) {
+			MGROOT::LA::SVecD<2> dvtx[2];
+			AMSPoint trPnt; AMSDir trDir;
+			trtk->Interpolate(120., trPnt, trDir);
+			dvtx[0](0) = trPnt[0];
+			dvtx[0](1) = trPnt[2];
+			dvtx[1](0) = trPnt[1];
+			dvtx[1](1) = trPnt[2];
+
+			for (int d = 0; d <= 1; ++d) {
+				if (HSegMap.at(d).size() < 2) continue;
+				for (int iter = 1; iter <= 5; ++iter) {
+					MGROOT::LA::SVecD<2> dgrad;
+					MGROOT::LA::SMtxD<2> dicov;
+					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
+						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
+						float dz = (dvtx[d](1) - seg->z);
+						float  m = seg->m;
+						float  r = (seg->m * dz + seg->r);
+						float er  = (seg->em * seg->em * dz * dz + seg->er * seg->er);
+						float er2 = er * er;
+						float dr = (dvtx[d](0) - r);
+						dgrad(0)    += dr / er2;
+						dgrad(1)    += -m * dr / er2;
+						dicov(0, 0) +=  1 / er2;
+						dicov(0, 1) += -m / er2;
+						dicov(1, 0) += -m / er2;
+						dicov(1, 1) += m * m / er2;
+					}
+					bool ret = dicov.Invert();
+					if (!ret) break;
+					MGROOT::LA::SVecD<2> drsl = dicov * dgrad;
+					dvtx[d] = dvtx[d] - drsl;
+				}
+			}
+
+			short dd = (nsegx >= 2) ? 0 : 1;
+			AMSPoint dtrPnt; AMSDir dtrDir;
+			trtk->Interpolate(dvtx[dd](1), dtrPnt, dtrDir);
+			
+			vtxCoo(dd) = dvtx[dd](0);
+			vtxCoo(2)  = dvtx[dd](1);
+			if (dd == 0) {
+				vtxSide += 2;
+				if (nsegy == 1) {
+					vtxSide += 4;
+					TrdHSegmentR * seg = HSegMap.at(1).at(0);
+					vtxCoo(1) = (seg->m * (dvtx[dd](1) - seg->z) + seg->r);
+				}
+				else vtxCoo(1) = trPnt[1];
+			}
+			if (dd == 1) {
+				vtxSide += 8;
+				if (nsegx == 1) {
+					vtxSide += 1;
+					TrdHSegmentR * seg = HSegMap.at(0).at(0);
+					vtxCoo(0) = (seg->m * (dvtx[dd](1) - seg->z) + seg->r);
+				}
+				else vtxCoo(0) = trPnt[0];
+			}
 		}
 
-		fTrd.numOfHSegVtx[0] = numOfVtx[0];
-		fTrd.numOfHSegVtx[1] = numOfVtx[1];
+		if (vtxSide != 0) {
+			fTrd.vtxSide = vtxSide;
+			fTrd.vtxCoo[0] = vtxCoo(0);	
+			fTrd.vtxCoo[1] = vtxCoo(1);	
+			fTrd.vtxCoo[2] = vtxCoo(2);	
+			
+			AMSPoint trPnt; AMSDir trDir;
+			trtk->Interpolate(fTrd.vtxCoo[2], trPnt, trDir);
+			fTrd.vtxTrCoo[0] = trPnt[0];
+			fTrd.vtxTrCoo[1] = trPnt[1];
+			fTrd.vtxTrCoo[2] = trPnt[2];
+		}
 	}
 
-
+	
 	// TrdKCluster
 	float TOF_Beta = 1;
 	if      (recEv.iBetaH >= 0) TOF_Beta = std::fabs(event->pBetaH(recEv.iBetaH)->GetBeta());
@@ -1522,8 +1720,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 	TrdKCluster * trdkcls = TrdKCluster::gethead();
 	for (int kindOfFit = 0; kindOfFit <= 1; ++kindOfFit) {
-		if (!(checkEventMode(EventBase::BT) ||
-					(trdkcls->IsReadAlignmentOK == 2 && trdkcls->IsReadCalibOK == 1))) break;
+		if (!(checkEventMode(EventBase::BT) || (trdkcls->IsReadAlignmentOK == 2 && trdkcls->IsReadCalibOK == 1))) break;
 		bool isOK = false;
 		switch(kindOfFit) {
 			case 0 :
@@ -1689,7 +1886,8 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	fStopwatch.start();
 		
 	// Rich cuts from Javie/Jorge
-  const float richRadZ[2] = {-73.65, -74.65};          // aerogel / NaF
+	const float richRadZ[2] = {-73.65, -74.65};          // aerogel / NaF
+	const float richPMTZ = -121.89;                      // pmt z-axis
 	const float cut_prob = 0.01;                         // Kolmogorov test prob
 	const float cut_pmt = 3;                             // number of PMTs
 	const float cut_collPhe[2] = {0.6, 0.4};             // ring phe / total phe (NaF, Aerogel)
@@ -1702,15 +1900,12 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	const float cut_PMTExternalBorder = 4050;             // PMT external border (r**2) (by HY.Chou)
 	const float cut_aerogelNafBorder[2] = {17.25, 17.75}; // aerogel/NaF border (NaF, Aerogel)
 	// modify (17, 18) -> (17.25, 17.75) (by HY.Chou)
-	const float cut_distToTileBorder[2] = {0.08, 0.05};   // distance to tile border 
+	//const float cut_distToTileBorder[2] = {0.08, 0.05};   // distance to tile border 
 	
 	const int nBadTile = 5;
 	const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
 	const int kBadTile_MgntTile[nBadTile] = { 13, 23, 58, 86, 91 }; // tiles with bad beta reconstruction
 	
-	//fRich.numOfRing = event->NRichRing();
-	//fRich.numOfHit = event->NRichHit();
-
 	// RichVeto - start
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
@@ -1720,32 +1915,39 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		AMSPoint ems_coo;
 		AMSDir   ems_dir;
-		int    tmp_kindOfRad = 0;
-		for (int it = 0; it < 2; ++it) {
-			trtk->Interpolate(richRadZ[tmp_kindOfRad], ems_coo, ems_dir, fitid);
-			RichOffline::TrTrack tmp_track(ems_coo, ems_dir);
-			RichOffline::RichRadiatorTileManager tmp_mgntTile(&tmp_track);
-			tmp_kindOfRad = tmp_mgntTile.getkind() - 1;
-			if (tmp_kindOfRad < 0 || tmp_kindOfRad > 1) break;
+		short    tmp_kind = -1;
+		short    tmp_tile = -1;
+		trtk->Interpolate(richRadZ[0], ems_coo, ems_dir, fitid);
+		for (Int_t it = 0; it < 3; ++it) {
+			RichOffline::TrTrack tmp_richTrack(ems_coo, ems_dir);
+			RichOffline::RichRadiatorTileManager tmp_mgntTile(&tmp_richTrack);
+			trtk->Interpolate(tmp_mgntTile.getemissionpoint()[2], ems_coo, ems_dir, fitid);
+			tmp_kind = tmp_mgntTile.getkind();
+			tmp_tile = tmp_mgntTile.getcurrenttile();
 		}
-		if (tmp_kindOfRad < 0 || tmp_kindOfRad > 1) break;
 		
-		float ems[6] = {0};
-		ems[0] =  ems_coo[0]; ems[1] =  ems_coo[1]; ems[2] =  ems_coo[2];
-		ems[3] = -ems_dir[0]; ems[4] = -ems_dir[1]; ems[5] = -ems_dir[2];
-
 		// Radiator tile manager
-		RichOffline::TrTrack track(ems_coo, ems_dir);
-		RichOffline::RichRadiatorTileManager mgntTile(&track);
-	
+		RichOffline::TrTrack richTrack(ems_coo, ems_dir);
+		RichOffline::RichRadiatorTileManager mgntTile(&richTrack);
 		if (mgntTile.getkind() < 1 || mgntTile.getkind() > 2) break;
+		if (tmp_kind != mgntTile.getkind()) break;
+		if (tmp_tile != mgntTile.getcurrenttile()) break;
+
+		float ems[6] = {0};
+		ems_dir = ems_dir * -1.0;
+		ems[0] = ems_coo[0]; ems[1] = ems_coo[1]; ems[2] = ems_coo[2];
+		ems[3] = ems_dir[0]; ems[4] = ems_dir[1]; ems[5] = ems_dir[2];
+
+		AMSPoint pmt_coo;
+		AMSDir   pmt_dir;
+		trtk->Interpolate(richPMTZ, pmt_coo, pmt_dir, fitid);
 
 		short kindOfRad    = mgntTile.getkind() - 1;
 		short tileOfRad    = mgntTile.getcurrenttile();
 		float rfrIndex     = mgntTile.getindex();
 		AMSPoint richems   = mgntTile.getemissionpoint();
 		float distToBorder = mgntTile.getdistance();
-			
+		
 		int countKB = 0;
 		for (int kb = 0; kb < nBadTile; kb++) {
 			if (tileOfRad == kBadTile_MgntTile[kb]) break;
@@ -1762,7 +1964,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) < cut_aerogelNafBorder[1]) isStruct = false;
 			if ((richems[0]*richems[0]+richems[1]*richems[1]) > cut_aerogelExternalBorder)        isStruct = true;
 		}
-		//if (distToBorder < cut_distToTileBorder[kindOfRad] * std::fabs(1./ems[5])) isStruct = true;
 		bool isInFiducialVolume = !isStruct;
 	
 		// Number of photoelectrons expected for a given track, beta and charge.
@@ -1775,13 +1976,18 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		    0.493667,      // kaon
 		    0.938272297,   // proton
 		    1.876123915 }; // deuterium
+		float betas[npart] = {0, 0, 0, 0, 0 };
+		float thetas[npart] = { -1, -1, -1, -1, -1 };
 		float numOfExpPE[npart] = {0, 0, 0, 0, 0 };
 		std::fill_n(numOfExpPE, npart, -1);
 		double rigAbs = std::fabs(trtk->GetRigidity(fitid));
 		for (int it = 0; it < npart; ++it) {
-			if (!openCal[it]) continue;
 			double massChrg = mass[it] / chrg[it];
 			double beta = 1. / std::sqrt((massChrg * massChrg / rigAbs / rigAbs) + 1); 
+			double cos  = 1. / (rfrIndex * beta);
+			thetas[it] = (MGNumc::Compare(cos, 1.0) <= 0) ? std::acos(cos) : -1.0;
+			betas[it] = beta;
+			if (!openCal[it]) continue;
 			double exppe = RichRingR::ComputeNpExp(trtk, beta, chrg[it]);
 			numOfExpPE[it] = exppe;
 		}
@@ -1795,6 +2001,170 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		fRich.isGoodTile = isGoodTile; 
 		fRich.isInFiducialVolume = isInFiducialVolume;
 
+		// RICH Hits
+		const double thetaLimit   = std::acos(1./rfrIndex) * 1.05;
+		double       linedist     = ems_coo.dist(pmt_coo);
+		double       mscatDirFluc = 0.0136 / ((rigAbs>0.3)?rigAbs:0.3);
+		double       mscatCooFluc = mscatDirFluc * linedist;
+		const double measDirFluc  = 0.01;
+		const double measCooFluc  = 1.0;
+		double       dirSgm       = 3.5 * std::sqrt(mscatDirFluc * mscatDirFluc + measDirFluc * measDirFluc);
+		double       cooSgm       = 5.0 * std::sqrt(mscatCooFluc * mscatCooFluc + measCooFluc * measCooFluc);
+
+		int countCross[2] = { 0, 0 };
+		int countCKV[5][3];
+		std::fill_n(countCKV[0], 5*3, 0);
+		for (int it = 0; it < event->NRichHit(); ++it) {
+			RichHitR * hit = event->pRichHit(it);
+			if (hit == nullptr) continue;
+			AMSPoint hitCoo(hit->Coo);
+
+			if (hit->IsCrossed()) {
+				double dist = pmt_coo.dist(hitCoo);
+				if (dist < cooSgm) countCross[0]++;
+				else               countCross[1]++;
+			}
+			else {
+				double phDIR = -1.;
+				{
+					AMSDir vacphDIR(hitCoo - richems);
+					double theta = TMath::Pi() - std::asin(std::sin(TMath::Pi() - vacphDIR.gettheta()) / rfrIndex);
+					double phi   = vacphDIR.getphi();
+					AMSDir emsphDIR(theta, phi);
+					phDIR = 2.0*std::asin(0.5*ems_dir.dist(emsphDIR));
+				}
+				double phRFL = -1.;
+				{
+					// Calculate reflective point
+					// Iterator Mothod :
+					// emission point : e{x, y, z}
+					// hit      point : h{x, y, z}
+					// bisector point : b{x, y, z}
+					// bisector coord : (parameter 0 <= bt <= 1)
+					//     b{x, y, z} = (1 - bt) * e{x, y, z} + (bt) * h{x, y, z}
+					//     br = sqrt(bx^2 + by^2)
+					//
+					// =============mirror=============
+					//                /|\
+					//               / | \
+					//              /  |  \
+					//             /   |   \
+					//            /    |    \
+					//           /     |     \
+					//          /      |      \
+					//         /       |       \
+					//        /        |        \
+					//       /         |         \
+					//     "e"---(t)--"b"-(1-t)--"h"
+					//
+					// Angle bisector theorem :
+					// mirror eq : (mz*z + mr*r + m0 = 0)
+					//     mz = -1.489637e-01
+					//     mr = -1.00
+					//     m0 =  4.891730e+01
+					// reflective point :
+					//     fz = ( mr*(mr*bz - mz*br) - mz*m0) / (mz*mz + mr*mr)
+					//     fr = (-mz*(mr*bz - mz*br) - mr*m0) / (mz*mz + mr*mr)
+					//     fx = fr * (bx / sqrt(bx^2 + by^2))
+					//     fy = fr * (by / sqrt(bx^2 + by^2))
+					// length of emission to reflective : elen
+					//     elen = sqrt((fx-ex)^2 + (fy-ey)^2 + (fz-ez)^2)
+					// length of hit      to reflective : hlen
+					//     hlen = sqrt((fx-hx)^2 + (fy-hy)^2 + (fz-hz)^2)
+					// bisector parameter : bt (initial value 0.5)
+					//     bt = elen / (elen + hlen)
+					//
+					const double mParZ = -1.489637e-01;
+					const double mParR = -1.00;
+					const double mPar0 = 4.891730e+01;
+					double epnt[3] = { richems[0], richems[1], richems[2] };
+					double hpnt[3] = { hitCoo[0], hitCoo[1], hitCoo[2] };
+					double initbt = 0.5;
+					{
+						double ez = epnt[2];
+						double er = std::sqrt(epnt[0]*epnt[0] + epnt[1]*epnt[1]);
+						double distbe = std::fabs(mParZ * ez + mParR * er + mPar0) / std::sqrt(ez*ez + er*er); 
+						double hz = hpnt[2];
+						double hr = std::sqrt(hpnt[0]*hpnt[0] + hpnt[1]*hpnt[1]);
+						double distbh = std::fabs(mParZ * hz + mParR * hr + mPar0) / std::sqrt(hz*hz + hr*hr);
+						initbt = distbe/(distbe+distbh);
+					}
+					double rflz = 0;
+					double bt = initbt;
+					double fineph[3] = { 0, 0, 0 };
+
+					const int MaxIter = 30;
+					const double ToleranceLimit = 0.005;
+					int iter = 1;
+					double tolerance = 1.0;
+					while (iter <= MaxIter && tolerance > ToleranceLimit) {
+						double bpnt[3] = {
+							(1 - bt) * epnt[0] + bt * hpnt[0],
+							(1 - bt) * epnt[1] + bt * hpnt[1],
+							(1 - bt) * epnt[2] + bt * hpnt[2],
+						};
+						double bz = bpnt[2];
+						double br = std::sqrt(bpnt[0]*bpnt[0] + bpnt[1]*bpnt[1]);
+						if (MGNumc::EqualToZero(br)) break;
+
+						double fz = ( mParR*(mParR*bz - mParZ*br) - mParZ*mPar0) / (mParZ*mParZ + mParR*mParR);
+						double fr = (-mParZ*(mParR*bz - mParZ*br) - mParR*mPar0) / (mParZ*mParZ + mParR*mParR);
+						double fpnt[3] = {
+							fr * bpnt[0] / br,
+							fr * bpnt[1] / br,
+							fz
+						};
+
+						double edlen[3] = { (fpnt[0]-epnt[0]), (fpnt[1]-epnt[1]), (fpnt[2]-epnt[2]) };
+						double elen = std::sqrt(edlen[0]*edlen[0] + edlen[1]*edlen[1] + edlen[2]*edlen[2]);
+						
+						double hdlen[3] = { (fpnt[0]-hpnt[0]), (fpnt[1]-hpnt[1]), (fpnt[2]-hpnt[2]) };
+						double hlen = std::sqrt(hdlen[0]*hdlen[0] + hdlen[1]*hdlen[1] + hdlen[2]*hdlen[2]);
+
+						double predbt = elen / (elen + hlen);
+						tolerance = std::fabs(predbt - bt);
+						iter++;
+						
+						if (tolerance < ToleranceLimit) {
+							rflz = fz;
+							fineph[0] = (fpnt[0] - epnt[0]);
+							fineph[1] = (fpnt[1] - epnt[1]);
+							fineph[2] = (fpnt[2] - epnt[2]);
+						}
+						else bt = predbt;
+					}
+					bool success = (tolerance < ToleranceLimit && rflz < epnt[2] && rflz > hpnt[2]);
+					if (success) {
+						AMSDir vacphDIR(fineph[0], fineph[1], fineph[2]);
+						double theta = TMath::Pi() - std::asin(std::sin(TMath::Pi() - vacphDIR.gettheta()) / rfrIndex);
+						double phi   = vacphDIR.getphi();
+						AMSDir emsphDIR(theta, phi);
+						phRFL = 2.0*std::asin(0.5*ems_dir.dist(emsphDIR));
+					}
+				}
+				bool isInsideDIR = (phDIR < thetaLimit);
+				bool isInsideRFL = (phRFL < thetaLimit);
+				bool isOutside = (!isInsideDIR && !isInsideRFL);
+
+				for (int it = 0; it < npart; ++it) {
+					bool isThetaDIR = (std::fabs(phDIR-thetas[it]) < dirSgm);
+					bool isThetaRFL = (std::fabs(phRFL-thetas[it]) < dirSgm);
+					bool isTheta = (isThetaDIR || isThetaRFL);
+					if      (isTheta)   countCKV[it][0]++;
+					else if (isOutside) countCKV[it][2]++;
+					else                countCKV[it][1]++;
+				}
+			}
+		} // for-loop : hits
+
+		fRich.numOfCrossHit[0] = countCross[0];
+		fRich.numOfCrossHit[1] = countCross[1];
+		for (int it = 0; it < npart; ++it) {
+			fRich.numOfRingHit[it][0] = countCKV[it][0];
+			fRich.numOfRingHit[it][1] = countCKV[it][1];
+			fRich.numOfRingHit[it][2] = countCKV[it][2];
+		}
+		
 		break;
 	}
 	// RichVeto - end
@@ -1806,9 +2176,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		RichRingR * rich = event->pRichRing(recEv.iRichRing);
 		int kindOfRad = rich->IsNaF() ? 1 : 0;
 		int tileOfRad = rich->getTileIndex();
-		//float diffDist = std::fabs(rich->DistanceTileBorder() - fRich.distToBorder);
 		if (fRich.kindOfRad != kindOfRad) break;
-		//if (diffDist > cut_distToTileBorder[kindOfRad]) break;
 
 		fRich.status = true;
 		fRich.beta = rich->getBeta();
@@ -2200,7 +2568,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	if (event->NTrTrack() != 1) return -2001;
 	
 	// ~3~ (Based on TrdTrack)
-	if (event->NTrdTrack() == 0 && event->NTrdHTrack() == 0) return -3001;
+	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
 	// ~4~ (Based on Particle)
 	ParticleR  * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
@@ -2213,23 +2581,42 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	if ( trdSIG == nullptr && trdhSIG == nullptr) return -4003;
 
 	// ~5~ (Based on BetaH)
-	if (btahSIG->GetBetaPattern() != 4444) return -5001;
-	if (btahSIG->GetBeta() < 0) return -5002;
+	if (event->NBetaH() != 1) return -5001;
+	if (btahSIG->GetBetaPattern() != 4444) return -5002;
+	if (btahSIG->GetBeta() < 0.3 || btahSIG->GetBeta() > 1.3) return -5003;
+	double betah = btahSIG->GetBeta();
 
 	// ~6~ (Based on Track Hits)
-	const unsigned short _hasTrL34 =  12;
-	const unsigned short _hasTrL56 =  48;
-	const unsigned short _hasTrL78 = 192;
-	unsigned short trBitPattJ = trtkSIG->GetBitPatternJ();
-	bool     isTrInner  = ((trBitPattJ&_hasTrL34) > 0 && 
-	                       (trBitPattJ&_hasTrL56) > 0 && 
-						   (trBitPattJ&_hasTrL78) > 0);
+	const unsigned short TrPtL34 =  12;
+	const unsigned short TrPtL56 =  48;
+	const unsigned short TrPtL78 = 192;
+	unsigned short trBitPattJ   = trtkSIG->GetBitPatternJ();
+	unsigned short trBitPattXYJ = trtkSIG->GetBitPatternXYJ();
+	
+	bool isTrInner  = ((trBitPattJ&TrPtL34) > 0 && 
+	                   (trBitPattJ&TrPtL56) > 0 && 
+					   (trBitPattJ&TrPtL78) > 0);
 	if (!isTrInner) return -6001;
-	//unsigned short trBitPattXYJ = trtkSIG->GetBitPatternXYJ();
-	//bool     isTrInnerXY  = ((trBitPattXYJ&_hasTrL34) > 0 && 
-	//                         (trBitPattXYJ&_hasTrL56) > 0 && 
-	//                         (trBitPattXYJ&_hasTrL78) > 0);
-	//if (!isTrInnerXY) return -6001;
+	
+	Int_t numOfTrInX = 0;
+	Int_t numOfTrInY = 0;
+	for (Int_t ilay = 2; ilay <= 7; ilay++) {
+		bool hasY  = ((trBitPattJ&(1<<ilay)) > 0);
+		bool hasXY = ((trBitPattXYJ&(1<<ilay)) > 0);
+		if (hasY)  numOfTrInY++;
+		if (hasXY) numOfTrInX++;
+	}
+	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
+	
+	const unsigned short TrPtL1  =   1;
+	const unsigned short TrPtL2  =   2;
+	const unsigned short TrPtL9  = 256;
+	bool isTrIn = ((trBitPattJ&TrPtL2)==TrPtL2);
+	bool isTrL1 = ((trBitPattJ&TrPtL2)==TrPtL2 && (trBitPattXYJ&TrPtL1)==TrPtL1);
+	bool isTrL9 = ((trBitPattJ&TrPtL2)==TrPtL2 && (trBitPattXYJ&TrPtL9)==TrPtL9);
+	bool isTrFs = ((trBitPattXYJ&TrPtL1)==TrPtL1 && (trBitPattXYJ&TrPtL9)==TrPtL9);
+	bool isTrPt = (isTrIn || isTrL1 || isTrL9 || isTrFs);
+	if (!isTrPt) return -6003;
 
 	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
 	bool isAppStudy = true;
@@ -2237,10 +2624,10 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		//isAppStudy = EventBase::checkEventMode(EventBase::ISS);
 		isAppStudy = ( EventBase::checkEventMode(EventBase::ISS) || (officialDir.find("pr.pl1.flux.l1a9.2016000") != std::string::npos) || (officialDir.find("pr.pl1.flux.l1o9.2016000") != std::string::npos) );
 	}
-
+		
 	if (isAppStudy) {
-		bool   hasTr    = false;
-		bool   isScale  = true;
+		bool   hasTr   = false;
+		bool   isScale = true;
 		double sclRig = 0.0;
 		const int npatt = 4;
 		const int spatt[npatt] = { 3, 5, 6, 7 };
@@ -2253,13 +2640,15 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		}
 		
 		int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
-		double trQIn = (fitidInn>=0) ? trtkSIG->GetInnerQ_all(1.0, fitidInn).Mean : 1.0;
+		if (fitidInn < 0) return -7001;
+		double trQIn = trtkSIG->GetInnerQ_all(betah, fitidInn).Mean;
+		if (MGNumc::Compare(trQIn) <= 0) return -7002;
 
 		if (hasTr && isScale) {
 			//double scaleProb = gScaleFunc1D.Eval(sclRig); // (by Rigidity)
 			double scaleProb = gScaleFunc2D.Eval(sclRig, trQIn); // (by Rigidity & Charge)
-    	if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7001;
-    	else EventList::Weight *= (1. / scaleProb);
+			if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7003;
+			else EventList::Weight *= (1. / scaleProb);
 		}
 	}
 	
@@ -2285,7 +2674,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		const double minFact = 1.2;
 		if ( hasTr && (maxRig < (minFact * minCf)) ) return -8002;
 	}
-
+	
 	//--------------------------//
 	//----  Reconstruction  ----//
 	//--------------------------//

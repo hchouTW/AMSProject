@@ -59,7 +59,7 @@
 // User defination library
 #include <CPPLibs/CPPLibs.h>
 
-//#include <ROOTLibs/ROOTLibs.h>
+#include <ROOTLibs/ROOTLibs.h>
 
 #include <AMSLibs/EcalHadron/EcalHadron.h>
 #include <AMSLibs/EcalHadron/EcalHadron.C>

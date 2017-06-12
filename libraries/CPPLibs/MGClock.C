@@ -49,7 +49,7 @@ std::ostream& MGClock::Print(Time timpnt, ClockType type, const std::string& fmt
 
 
 template <class Clock, class Time, class Duration>
-std::ostream& MGClock::Stopwatch<Clock, Time, Duration>::print(MGClock::ClockType type, std::ostream& out) {
+std::ostream& MGClock::Stopwatch<Clock, Time, Duration>::print(MGClock::ClockType type, std::ostream& out) const {
 	Duration&& durt = duration();
 	double time = std::chrono::duration<double>(durt).count();
 	

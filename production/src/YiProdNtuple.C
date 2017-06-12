@@ -72,9 +72,9 @@ int main(int argc, const char ** argv) {
 	if (ntuple != 0) delete ntuple;
 	ntuple = 0;
 
-	std::cout << "\n**------------------------**\n";
-	std::cout << "\n**    YiProdNtuple END    **\n";
-	std::cout << "\n**------------------------**\n";
+	COUT("\n**------------------------**\n");
+	COUT("\n**    YiProdNtuple END    **\n");
+	COUT("\n**------------------------**\n");
 	return 0;
 }
 #endif // __YiProdNtuple_C__
