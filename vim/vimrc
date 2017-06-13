@@ -13,7 +13,7 @@
 
 
 " Backups
-" TODO (Hsin-Yi Chou) : save backup file in backupdir=./.bck
+" save backup file in backupdir=./.bck
 let g:locbakdir=resolve(expand('%:p:h') . "/.bak")
 autocmd BufEnter    * let g:locbakdir=resolve(expand('%:p:h') . "/.bak")
 autocmd BufWritePre * execute '!mkdir -p ' . g:locbakdir 
