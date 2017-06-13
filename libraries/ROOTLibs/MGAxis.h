@@ -16,6 +16,8 @@ namespace MGROOT {
 enum class AxisScale : Int_t { kLinear = 0, kLog = 1 };
 enum class AxisDim : Int_t { kX = 1, kY = 2, kZ = 3 };
 
+using BinList = std::vector<Double_t>;
+
 /******************/
 /****  BinSet  ****/
 /******************/
@@ -66,6 +68,7 @@ class Axis {
 		Axis() {}
 		Axis(const Axis& axis, UInt_t mergeFT = 1, Bool_t invert = false);
 		Axis(std::initializer_list<Double_t> list) { binset_ = BinSet(list); }
+		Axis(const std::string& title, const Axis& axis, UInt_t mergeFT = 1, Bool_t invert = false);
 		Axis(const std::string& title, const std::vector<Double_t>& list, UInt_t mergeFT = 1, Bool_t invert = false);
 		Axis(const std::string& title, UInt_t nbin, Double_t lw, Double_t up, AxisScale scl = AxisScale::kLinear);
 

@@ -36,13 +36,13 @@ inline std::vector<std::string> Match(const std::string& str, const std::string&
 inline std::string StringIntegral(const std::string& str); 
 inline bool IsIntegral(const std::string& str) { return !(StringIntegral(str).empty()); }
 
-template <class IntType = long long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
+template <class IntType, typename std::enable_if<std::is_integral<IntType>::value, int>::type>
 inline std::pair<bool, IntType> ConvertFromStringToIntegral(const std::string& str);
 
 inline std::string StringFloat(const std::string& str); 
 inline bool IsFloat(const std::string& str) { return !(StringFloat(str).empty()); }
 
-template <class RealType = long double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
+template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
 inline std::pair<bool, RealType> ConvertFromStringToFloat(const std::string& str);
 
 } // namespace MGRegex

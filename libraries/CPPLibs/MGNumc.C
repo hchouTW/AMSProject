@@ -5,7 +5,7 @@
 
 namespace MGNumc {
 
-template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
+template <class IntType, typename std::enable_if<std::is_integral<IntType>::value, int>::type>
 short Compare(IntType a, IntType b) {
 	if (a == b)     return  0;
 	else if (a > b) return  1;
@@ -13,7 +13,7 @@ short Compare(IntType a, IntType b) {
 }
 
 
-template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
+template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
 short Compare(RealType a, RealType b) {
 	RealType diff = std::fabs(a - b);
 	if (std::isfinite(diff) && diff < std::numeric_limits<RealType>::epsilon() * 5.0e3) return  0;

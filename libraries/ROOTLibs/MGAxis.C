@@ -118,6 +118,13 @@ Axis::Axis(const std::string& title, const std::vector<Double_t>& list, UInt_t m
 }
 
 
+Axis::Axis(const std::string& title, const Axis& axis, UInt_t mergeFT, Bool_t invert) {
+	binset_ = BinSet(axis(), mergeFT, invert);
+	if (binset_().size() != 0)
+		set_name_and_title(VAR_NAME(this), title);
+}
+
+
 Axis::Axis(const std::string& title, UInt_t nbin, Double_t lw, Double_t up, AxisScale scl) {
 	if (nbin < 1) return;
 	if (MGNumc::Compare(lw, up) >= 0) return;
