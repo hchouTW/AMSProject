@@ -1,5 +1,5 @@
-#ifndef __MGNumc_H__
-#define __MGNumc_H__
+#ifndef __CPPLibs_MGNumc_H__
+#define __CPPLibs_MGNumc_H__
 
 #include <numeric>
 
@@ -46,4 +46,4 @@ inline RealType Square(RealType val) { return (val * val); }
 } // namespace MGNumc
 
 
-#endif // __MGNumc_H__
+#endif // __CPPLibs_MGNumc_H__
