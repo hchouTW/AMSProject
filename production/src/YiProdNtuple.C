@@ -42,7 +42,7 @@ int main(int argc, const char ** argv) {
 	COUT("\n\n");
 
 	if (argc != 5 && argc != 6)
-		MGSys::ShowErrorAndExit(LocAddr(), "Number of argument is not conform! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "Number of argument is not conform! Exiting ...");
 
 	std::string event_mode = argv[1];
 	std::string file_list = argv[2];
@@ -53,13 +53,13 @@ int main(int argc, const char ** argv) {
 	if (event_mode == "ISS") EventBase::setEventMode(EventBase::ISS);
 	else if (event_mode == "BT") EventBase::setEventMode(EventBase::BT);
 	else if (event_mode == "MC") EventBase::setEventMode(EventBase::MC);
-	else MGSys::ShowErrorAndExit(LocAddr(), "Can't find event mode (ISS, BT, MC)! Exiting ...");
+	else MGSys::ShowErrorAndExit(LOC_ADDR(), "Can't find event mode (ISS, BT, MC)! Exiting ...");
 
 	std::string outputFile = "";
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM))
-		outputFile = StrFmt("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_id);
+		outputFile = STR_FMT("YiNtuple_%s.%07ld.root", event_mode.c_str(), group_id);
 	else if (YiNtuple::checkSelectionMode(YiNtuple::COPY))
-		outputFile = StrFmt("YiMirror_%s.%07ld.root", event_mode.c_str(), group_id);
+		outputFile = STR_FMT("YiMirror_%s.%07ld.root", event_mode.c_str(), group_id);
 
 	std::string path = ".";
 	if (argc == 6) path = argv[5];

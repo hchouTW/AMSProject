@@ -1,5 +1,5 @@
-#ifndef __MGConfig_H__
-#define __MGConfig_H__
+#ifndef __CPPLibs_MGConfig_H__
+#define __CPPLibs_MGConfig_H__
 /*
 
 // 4-> : Title variable type value
@@ -54,4 +54,4 @@ class MgntConfig::Config {
 };
 
 */
-#endif // __MGConfig_H__
+#endif // __CPPLibs_MGConfig_H__

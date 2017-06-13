@@ -2817,13 +2817,13 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 	// start check sourceFileList.txt
 	std::vector<std::string>&& flist = MGIO::ReadFileContent(file_list);
 	if (flist.size() == 0)
-		MGSys::ShowErrorAndExit(LocAddr(), "ROOT file list cannot be opend! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "ROOT file list cannot be opend! Exiting ...");
 	// end check sourceFileList.txt
 
 	// start load data with group
 	if (group_id == 0 && group_size == -1) group_size = flist.size();
 	if (group_size <= 0 || group_size > flist.size() || group_id < 0 || group_id >= flist.size())
-		MGSys::ShowErrorAndExit(LocAddr(), "Group format has error(1)! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "Group format has error(1)! Exiting ...");
 	
 	Long64_t begin = group_id * group_size;
 	Long64_t end   = (group_id + 1) * group_size;
@@ -2831,7 +2831,7 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 		end = flist.size();
 	}
 	else if (begin < 0 || begin >= flist.size() || end < 1 || end > flist.size())
-		MGSys::ShowErrorAndExit(LocAddr(), "ERROR : Group format has error(2)! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "ERROR : Group format has error(2)! Exiting ...");
 
 	fGroup = std::make_pair(group_id, group_size);
 	for (int it = begin; it < end; it++) {
@@ -2845,7 +2845,7 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 	}
 
 	if (fFileList.size() != 0) {
-		std::vector<std::string> && strs = MGRegex::Split(fFileList.at(0), MGRegex::Formula::Slash);
+		std::vector<std::string> && strs = MGRegex::Split(fFileList.at(0), MGRegex::Formula::kSlash);
 		if (strs.size() > 2) fFileDir = strs.at(strs.size()-2);
 	}
 	// end load data with group
@@ -2856,7 +2856,7 @@ void YiNtuple::readDataFrom(const std::string& file_list, Long64_t group_id, Lon
 	fChain = new AMSChain("AMSRoot");
 	int fileStatus = fChain->AddFromFile(file_list.c_str(), begin, end, stagedonly, timeout);
 	if (fileStatus == -1)
-		MGSys::ShowErrorAndExit(LocAddr(), "ROOT file list cannot be opend! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "ROOT file list cannot be opend! Exiting ...");
 
 	COUT("FileStatus : %d\n", fileStatus);
 	COUT("Totally : %ld data events.\n", fChain->GetEntries());
@@ -2898,7 +2898,7 @@ void YiNtuple::loopEventChain() {
 
 	// check event type
 	if (fChain->GetEntries() <= 0)
-		MGSys::ShowErrorAndExit(LocAddr(), "ERROR : Don't have event! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "ERROR : Don't have event! Exiting ...");
 
 	AMSEventR * ev = fChain->GetEvent(0);
 
@@ -2912,7 +2912,7 @@ void YiNtuple::loopEventChain() {
 			(ev->Run() > 1305795600) &&
 			EventBase::checkEventMode(EventBase::ISS);
 		if (!isMC && !isBT && !isISS)
-			MGSys::ShowErrorAndExit(LocAddr(), "Event type (ISS, BT, MC) is failed! Exiting ...");
+			MGSys::ShowErrorAndExit(LOC_ADDR(), "Event type (ISS, BT, MC) is failed! Exiting ...");
 	}
 
 	Long64_t loop_entries = fChain->GetEntries();

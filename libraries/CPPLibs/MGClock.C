@@ -1,10 +1,11 @@
-#ifndef __MGClock_C__
-#define __MGClock_C__
+#ifndef __CPPLibs_MGClock_C__
+#define __CPPLibs_MGClock_C__
 
 #include "MGClock.h"
 
+namespace MGClock {
 
-MGClock::MTime * MGClock::ConvertFromUTimeToMTime(UTime utime, ClockType type) { 
+MTime * ConvertFromUTimeToMTime(UTime utime, ClockType type) { 
 	MTime * mtime = nullptr;
 	switch(type) {
 		case ClockType::UTC   : mtime = std::gmtime(&utime);    break;
@@ -15,7 +16,7 @@ MGClock::MTime * MGClock::ConvertFromUTimeToMTime(UTime utime, ClockType type) {
 }
 
 
-MGClock::CTime MGClock::ConvertFromMTimeToCTime(MTime * mtime, const std::string& fmt) {
+CTime ConvertFromMTimeToCTime(MTime * mtime, const std::string& fmt) {
 	if (fmt == "") {
 		CTime ctime = std::asctime(mtime);
 		ctime.erase(ctime.begin()+ctime.find_last_of('\n'));
@@ -34,7 +35,7 @@ MGClock::CTime MGClock::ConvertFromMTimeToCTime(MTime * mtime, const std::string
 
 
 template<class Time>
-std::ostream& MGClock::Print(Time timpnt, ClockType type, const std::string& fmt, std::ostream& out) {
+std::ostream& Print(Time timpnt, ClockType type, const std::string& fmt, std::ostream& out) {
 	std::string timetype = "";
 	switch(type) {
 		case ClockType::UTC   : timetype = "  UTC"; break;
@@ -43,31 +44,34 @@ std::ostream& MGClock::Print(Time timpnt, ClockType type, const std::string& fmt
 	}
 	UTime utime = ConvertToUTime(timpnt);
 	CTime ctime = ConvertFromUTimeToCTime(utime, type, fmt);
-	out << CStrFmt("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
+	out << CSTR_FMT("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
 	return out;
 }
 
 
 template <class Clock, class Time, class Duration>
-std::ostream& MGClock::Stopwatch<Clock, Time, Duration>::print(MGClock::ClockType type, std::ostream& out) const {
+std::ostream& Stopwatch<Clock, Time, Duration>::print(ClockType type, std::ostream& out) const {
 	Duration&& durt = duration();
 	double time = std::chrono::duration<double>(durt).count();
 	
-	MGClock::Hours        hours   = std::chrono::duration_cast<MGClock::Hours>(durt);   durt -= hours;
-	MGClock::Minutes      minutes = std::chrono::duration_cast<MGClock::Minutes>(durt); durt -= minutes;
-	MGClock::FloatSeconds seconds = std::chrono::duration_cast<MGClock::FloatSeconds>(durt);
+	Hours        hours   = std::chrono::duration_cast<Hours>(durt);   durt -= hours;
+	Minutes      minutes = std::chrono::duration_cast<Minutes>(durt); durt -= minutes;
+	FloatSeconds seconds = std::chrono::duration_cast<FloatSeconds>(durt);
 	int      hr = hours.count();
 	int      mn = minutes.count();
 	double   sc = seconds.count();
-	MGClock::CTime ctime = StrFmt("%-3d HR %-2d MIN %12.9f SEC", hr, mn, sc);
+	CTime ctime = STR_FMT("%-3d HR %-2d MIN %12.9f SEC", hr, mn, sc);
 
-	out << "===========================  MGClock::Stopwatch  ===========================\n";
-	out << "==  START TIME : "; MGClock::Print(fTime.first , type, "", out) << "    ==\n";
-	out << "==  STOP  TIME : "; MGClock::Print(fTime.second, type, "", out) << "    ==\n";
-	out << CStrFmt("==  Duration   : %-30s     (%18.9f)  ==\n", ctime.c_str(), time);
-	out << "============================================================================\n";
+    std::string outstr;
+	outstr += "===========================  Stopwatch  ===========================\n";
+	outstr += "==  START TIME : "; Print(times_.first , type, "", out) << "    ==\n";
+	outstr += "==  STOP  TIME : "; Print(times_.second, type, "", out) << "    ==\n";
+	outstr += STR_FMT("==  Duration   : %-30s     (%18.9f)  ==\n", ctime.c_str(), time);
+	outstr += "============================================================================\n";
+    out << outstr.c_str();
 	return out;
 }
 
+} // namespace MGClock
 
-#endif // __MGClock_C__
+#endif // __CPPLibs_MGClock_C__
