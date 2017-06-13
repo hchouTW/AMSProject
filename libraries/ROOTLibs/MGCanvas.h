@@ -74,7 +74,7 @@ class PdfEditor {
 
 		inline TVirtualPad * cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return ((exist_) ? canvas_.cd(idx, axis) : nullptr); }
 		
-		inline void create(const std::string& title, const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
+		inline void create(const std::string& title = "", const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 		inline void create(const std::string& title, UInt_t ndivx, UInt_t ndivy, const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 		
 		void close();

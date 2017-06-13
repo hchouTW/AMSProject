@@ -397,7 +397,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 		return nullptr;
 	}
 
-	Int_t  ndim  = static_cast<Int_t>(hMom->dim());
+	Int_t  dim   = static_cast<Int_t>(hMom->dim());
 	Int_t  vProj = static_cast<Int_t>(proj);
 	Bool_t optProj = (vProj <= 3);
 	if (optProj && vProj > static_cast<Int_t>(hMom->dim())) {

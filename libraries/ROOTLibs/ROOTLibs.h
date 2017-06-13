@@ -1,6 +1,12 @@
 #ifndef __ROOTLibs_H__
 #define __ROOTLibs_H__
 
+#include <TTree.h>
+#include <TGraph.h>
+#include <TF1.h>
+#include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
+
 #include "MGMath.h"
 
 #include "MGStyle.h"

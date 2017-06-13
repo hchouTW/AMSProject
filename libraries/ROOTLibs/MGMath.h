@@ -29,6 +29,9 @@ namespace MGROOT {
 
 
 #include <TArray.h>
+#include <TArrayI.h>
+#include <TArrayF.h>
+#include <TArrayD.h>
 #include <TVector.h>
 #include <TMatrix.h>
 #include <Math/SVector.h>

@@ -74,6 +74,7 @@ class Hist {
 
 	public :
 		Hist(const TH1 * hist, Bool_t reset = false) : Hist("", "", hist, reset) {}
+		Hist(const std::string& name, const TH1 * hist, Bool_t reset = false) : Hist(name, "", hist, reset) {}
 		Hist(const std::string& name, const std::string& title, const TH1 * hist, Bool_t reset = false);
 		Hist(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist);
 		~Hist() { clear(); }
@@ -117,6 +118,7 @@ class Hist {
 		static Hist * Head(const std::string& name, Bool_t show = true);
 		
 		static Hist * New(const TH1 * hist, Bool_t reset = false) { return (new Hist("", "", hist, reset)); }
+		static Hist * New(const std::string& name, const TH1 * hist, Bool_t reset = false) { return (new Hist(name, "", hist, reset)); }
 		static Hist * New(const std::string& name, const std::string& title, const TH1 * hist, Bool_t reset = false) { return (new Hist(name, title, hist, reset)); }
 		static Hist * New(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, title, axis, type)); }
 		
