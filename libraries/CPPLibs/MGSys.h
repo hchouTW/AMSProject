@@ -11,8 +11,6 @@
 #include <dirent.h>
 #include <tuple>
 
-#define LOC_ADDR() (MGSys::StringFormat("(LINE %d)  [FUNC  %s]  {FILE  %s} :  ", __LINE__, __func__, __FILE__))
-
 #define VAR_NAME(var) (std::string(#var))
 
 #define STR_FMT(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt)        ) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__))        ))
@@ -21,6 +19,10 @@
 #define COUT(fmt, ...) (std::cout << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
 #define CLOG(fmt, ...) (std::clog << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
 #define CERR(fmt, ...) (std::cerr << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
+
+#define LOC_ADDR() (MGSys::StringFormat("(LINE %d)  [FUNC  %s]  {FILE  %s} :  ", __LINE__, __func__, __FILE__))
+
+#define DEBUG() (std::cerr << CSTR_FMT("==DEBUG==  %s\n", LOC_ADDR().c_str()))
 
 namespace MGSys {
 
@@ -70,10 +72,12 @@ inline void ShowError(const Message& mainInfo, const MGSys::Messages& messages, 
 inline void ShowErrorAndExit(const Message& mainInfo = Message(), const MGSys::Message& message = MGSys::Message(), std::ostream& out = std::cerr) { ShowInfo(mainInfo, message, "ERROR", out); Exit(EXIT_FAILURE); }
 inline void ShowErrorAndExit(const Message& mainInfo, const MGSys::Messages& messages, std::ostream& out = std::cerr) { ShowInfo(mainInfo, messages, "ERROR", out); Exit(EXIT_FAILURE); }
 
-// TODO (Hsin-Yi Chou): update by C++17 (filesystem)
+// TODO (hchou): Debug
+
+// TODO (hchou): update by C++17 (filesystem)
 inline bool TestFile(const std::string& file, char opt = 'e') { return (MGSys::System(STR_FMT("test -%c \"%s\"", opt, file.c_str())) == 0); }
 
-// TODO : update by C++17 (filesystem)
+// TODO (hchou): update by C++17 (filesystem)
 std::vector<std::string> ReadDirectory(const std::string& path = std::string("."), const std::string& patt = std::string("")) {
     bool searchOpt = (patt != "");
     std::vector<std::string> list;
@@ -95,7 +99,7 @@ std::vector<std::string> ReadDirectory(const std::string& path = std::string("."
     return list;
 }
 
-// TODO (Hsin-Yi Chou): This is only for testing.
+// TODO (hchou): This is only for testing.
 // 1) std::cin timeout ?!  -> condition_variable::wait_for
 void Console() {
     long int count = 1;

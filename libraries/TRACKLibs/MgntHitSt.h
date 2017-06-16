@@ -13,7 +13,7 @@ class HitSt {
 
     void init() { 
 			fId = -1; fSide = 0; fChrg = 1.; 
-			fCoo = MtxLB::SVecD<3>(); fErr = HitSt::DEF_ERR;
+			fCoo = SVecD<3>(); fErr = HitSt::DEF_ERR;
 			fDetCov(0, 0) = fErr(0) * fErr(0); fDetCov(1, 1) = fErr(1) * fErr(1);
 		}
 
@@ -22,10 +22,10 @@ class HitSt {
 		void setIdWithSide(Int_t id, Bool_t sx, Bool_t sy, Bool_t sz) { fId = id; fSide = (sx * 1 + sy * 2 + sz * 4); }
 		void setChrg(Double_t chrg = 1.) { fChrg = chrg; }
 
-    void setSpatialCoo(MtxLB::SVecD<3> & coo) { fCoo = coo; }
+    void setSpatialCoo(SVecD<3> & coo) { fCoo = coo; }
     void setSpatialCoo(Double_t x, Double_t y, Double_t z) { fCoo(0) = x; fCoo(1) = y; fCoo(2) = z; }
 
-    void setSpatialErr(MtxLB::SVecD<3> & err) { 
+    void setSpatialErr(SVecD<3> & err) { 
 			fErr = err; 
 			fDetCov(0, 0) = fErr(0) * fErr(0); fDetCov(1, 1) = fErr(1) * fErr(1);
 		}
@@ -34,7 +34,7 @@ class HitSt {
 			fDetCov(0, 0) = fErr(0) * fErr(0); fDetCov(1, 1) = fErr(1) * fErr(1);
 		}
     
-		void setSpatial(MtxLB::SVecD<3> & coo, MtxLB::SVecD<3> & err) { 
+		void setSpatial(SVecD<3> & coo, SVecD<3> & err) { 
 			fCoo = coo; fErr = err; 
 			fDetCov(0, 0) = fErr(0) * fErr(0); fDetCov(1, 1) = fErr(1) * fErr(1);
 		}
@@ -73,30 +73,30 @@ class HitSt {
 		Bool_t  SideY() { return ((fSide&2) == 2); }
 		Bool_t  SideZ() { return ((fSide&4) == 4); }
 
-		inline MtxLB::SVecD<3> & Coo() { return fCoo; }
+		inline SVecD<3> & Coo() { return fCoo; }
 		inline Double_t & Coo(Short_t idx) { return fCoo(idx); }
 		Double_t CX() { return fCoo(0); }
 		Double_t CY() { return fCoo(1); }
 		Double_t CZ() { return fCoo(2); }
 
-		inline MtxLB::SVecD<3> & Err() { return fErr; }
+		inline SVecD<3> & Err() { return fErr; }
 		Double_t & Err(Short_t idx) { return fErr(idx); }
 		Double_t EX() { return fErr(0); }
 		Double_t EY() { return fErr(1); }
 		Double_t EZ() { return fErr(2); }
 
-		inline MtxLB::SMtxSymD<2> & DetCov() { return fDetCov; }
+		inline SMtxSymD<2> & DetCov() { return fDetCov; }
 		inline Double_t & DetCov(Int_t i, Int_t j) { return fDetCov(i, j); }
 
   protected :
 		Int_t              fId;     // hit Id
 		Short_t            fSide;   // side := (x * 1 + y * 2 + z * 4)
 		Double_t           fChrg;   // chrg
-    MtxLB::SVecD<3>    fCoo;    // coord
-		MtxLB::SVecD<3>    fErr;    // error
-		MtxLB::SMtxSymD<2> fDetCov; // error matrix
+    SVecD<3>    fCoo;    // coord
+		SVecD<3>    fErr;    // error
+		SMtxSymD<2> fDetCov; // error matrix
 		
-		static const MtxLB::SVecD<3> DEF_ERR; // default error
+		static const SVecD<3> DEF_ERR; // default error
 
 	public :
 		static void SortHits(std::vector<HitSt> & hits, Bool_t dirType = true) {
@@ -129,6 +129,6 @@ class HitSt {
 		};
 };
 
-const MtxLB::SVecD<3> HitSt::DEF_ERR(24.0e-4, 10.0e-4, 300.0e-4);
+const SVecD<3> HitSt::DEF_ERR(24.0e-4, 10.0e-4, 300.0e-4);
 
 #endif // __MgntHitSt_H__

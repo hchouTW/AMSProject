@@ -31,10 +31,10 @@ class Magnetic {
 		}
 
 	public :
-		MtxLB::SVecD<3> fCoo;    // coord [cm]
+		SVecD<3> fCoo;    // coord [cm]
 		Double_t        fMagVal; // magnetic field [10^3Gauss = 0.1Tesla]
-		MtxLB::SVecD<3> fMagDir; // magnetic field unit vector [1]
-		MtxLB::SMtxD<3> fDevMag; // derivative magnetic field [x, y, z][derivative x, y, z]
+		SVecD<3> fMagDir; // magnetic field unit vector [1]
+		SMtxD<3> fDevMag; // derivative magnetic field [x, y, z][derivative x, y, z]
 };
 
 
@@ -49,15 +49,15 @@ class MgntMag {
 
     static Magnetic & GetMag() { return MagVec; }
     static Magnetic & GetMag(Float_t coo[3], Bool_t isWithDev = false);
-		static Magnetic & GetMag(MtxLB::SVecD<3> & coo, Bool_t isWithDev = false);
+		static Magnetic & GetMag(SVecD<3> & coo, Bool_t isWithDev = false);
 	
-		static MtxLB::SVecD<3> & GetMagFast() { return MagVecFast; }
-		static MtxLB::SVecD<3> & GetMagFast(Float_t coo[3]);
-		static MtxLB::SVecD<3> & GetMagFast(MtxLB::SVecD<3> & coo);
+		static SVecD<3> & GetMagFast() { return MagVecFast; }
+		static SVecD<3> & GetMagFast(Float_t coo[3]);
+		static SVecD<3> & GetMagFast(SVecD<3> & coo);
 
-		static MtxLB::SVecD<3> & Coo() { return MagVec.fCoo; }
-		static MtxLB::SVecD<3> & MagDir() { return MagVec.fMagDir; }
-		static MtxLB::SMtxD<3> & DevMag() { return MagVec.fDevMag; }
+		static SVecD<3> & Coo() { return MagVec.fCoo; }
+		static SVecD<3> & MagDir() { return MagVec.fMagDir; }
+		static SMtxD<3> & DevMag() { return MagVec.fDevMag; }
 		static Double_t Coo(Short_t i) { return MagVec.fCoo(i); }
 		static Double_t MagDir(Short_t i) { return MagVec.fMagDir(i); }
 		static Double_t DevMag(Short_t i, Short_t j) { return MagVec.fDevMag(i, j); }
@@ -93,13 +93,13 @@ class MgntMag {
     static Bool_t          LoadStatus;
 		static MagField *      MagFld;
 		static Magnetic        MagVec;
-		static MtxLB::SVecD<3> MagVecFast;
+		static SVecD<3> MagVecFast;
 };
 
 Bool_t          MgntMag::LoadStatus = false;
 MagField *      MgntMag::MagFld = 0;
 Magnetic        MgntMag::MagVec;
-MtxLB::SVecD<3> MgntMag::MagVecFast;
+SVecD<3> MgntMag::MagVecFast;
 
 
 Bool_t MgntMag::Load() {
@@ -109,7 +109,7 @@ Bool_t MgntMag::Load() {
 		bool isWork = true;
 		static int magerr = 0;
 		if (!MagFld->GetMap() && !magerr) {
-			std::string filePath = StrFmt("%s/v5.00/MagneticFieldMapPermanent_NEW.bin", MGSys::GetEnv("AMSDataDir").c_str());
+			std::string filePath = STR_FMT("%s/v5.00/MagneticFieldMapPermanent_NEW.bin", MGSys::GetEnv("AMSDataDir").c_str());
 			//std::string filePath = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/MagneticFieldMapPermanent_NEW.bin";
 			if ((MagFld->Read(filePath.c_str())) < 0) {
 				std::cerr << "Magnetic Field map not found : " << filePath.c_str() << std::endl;
@@ -139,8 +139,8 @@ Magnetic & MgntMag::GetMag(Float_t coo[3], Bool_t isWithDev) {
 		MagVec.fCoo(idir) = coo[idir];	
 		MagVec.fMagDir(idir) = magVec[idir];
 	}
-	MagVec.fMagVal = MtxLB::Mag(MagVec.fMagDir);
-	Bool_t vacuum = NGNumc::EqualToZero(MagVec.fMagVal);
+	MagVec.fMagVal = LA::Mag(MagVec.fMagDir);
+	Bool_t vacuum = MGNumc::EqualToZero(MagVec.fMagVal);
 	if (!vacuum) MagVec.fMagDir.Unit();
 
 	if (isWithDev && !vacuum) {
@@ -155,12 +155,12 @@ Magnetic & MgntMag::GetMag(Float_t coo[3], Bool_t isWithDev) {
 	return MagVec;
 }
 
-Magnetic & MgntMag::GetMag(MtxLB::SVecD<3> & coo, Bool_t isWithDev) {
+Magnetic & MgntMag::GetMag(SVecD<3> & coo, Bool_t isWithDev) {
 	Float_t _coo[3] = { Float_t(coo(0)), Float_t(coo(1)), Float_t(coo(2)) };
 	return MgntMag::GetMag(_coo, isWithDev);
 }
 
-MtxLB::SVecD<3> & MgntMag::GetMagFast(Float_t coo[3]) {
+SVecD<3> & MgntMag::GetMagFast(Float_t coo[3]) {
   if (!Load()) return MagVecFast;
 	Float_t magVecFast[3] = {0, 0, 0};
 	MagFld->GuFld(coo, magVecFast);
@@ -170,7 +170,7 @@ MtxLB::SVecD<3> & MgntMag::GetMagFast(Float_t coo[3]) {
 	return MagVecFast;
 }
 
-MtxLB::SVecD<3> & MgntMag::GetMagFast(MtxLB::SVecD<3> & coo) {
+SVecD<3> & MgntMag::GetMagFast(SVecD<3> & coo) {
 	Float_t _coo[3] = { Float_t(coo(0)), Float_t(coo(1)), Float_t(coo(2)) };
 	return MgntMag::GetMagFast(_coo);
 }

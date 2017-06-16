@@ -37,59 +37,59 @@ namespace MGROOT {
 #include <Math/SVector.h>
 #include <Math/SMatrix.h>
 namespace MGROOT {
+	// TArray 
+	using TArrI = TArrayI;
+	using TArrF = TArrayF;
+	using TArrD = TArrayD;
+	
+	// TVector TMatrix Package
+	using TVecI = TVectorT<Int_t>;
+	using TVecF = TVectorT<Float_t>;
+	using TVecD = TVectorT<Double_t>;
+	
+	using TMtxI = TMatrixT<Int_t>;
+	using TMtxF = TMatrixT<Float_t>;
+	using TMtxD = TMatrixT<Double_t>;
+			
+	using TMtxSymI = TMatrixTSym<Int_t>;
+	using TMtxSymF = TMatrixTSym<Float_t>;
+	using TMtxSymD = TMatrixTSym<Double_t>;
+	using TMtxSparseI = TMatrixTSparse<Int_t>;
+	using TMtxSparseI = TMatrixTSparse<Int_t>;
+	using TMtxSparseF = TMatrixTSparse<Float_t>;
+	using TMtxSparseD = TMatrixTSparse<Double_t>;
+	
+	// SVector SMatrix Package
+	template <unsigned int D>
+	using SVecI = ROOT::Math::SVector<Int_t, D>;
+	
+	template <unsigned int D>
+	using SVecF = ROOT::Math::SVector<Float_t, D>;
+	
+	template <unsigned int D>
+	using SVecD = ROOT::Math::SVector<Double_t, D>;
+	
+	template <unsigned int D1, unsigned int D2 = D1>
+	using SMtxI = ROOT::Math::SMatrix<Int_t, D1, D2, ROOT::Math::MatRepStd<Int_t, D1, D2>>;
+	
+	template <unsigned int D1, unsigned int D2 = D1>
+	using SMtxF = ROOT::Math::SMatrix<Float_t, D1, D2, ROOT::Math::MatRepStd<Float_t, D1, D2>>;
+	
+	template <unsigned int D1, unsigned int D2 = D1>
+	using SMtxD = ROOT::Math::SMatrix<Double_t, D1, D2, ROOT::Math::MatRepStd<Double_t, D1, D2>>;
+	
+	template <unsigned int D>
+	using SMtxSymI = ROOT::Math::SMatrix<Int_t, D, D, ROOT::Math::MatRepSym<Int_t, D>>;
+	
+	template <unsigned int D>
+	using SMtxSymF = ROOT::Math::SMatrix<Float_t, D, D, ROOT::Math::MatRepSym<Float_t, D>>;
+	
+	template <unsigned int D>
+	using SMtxSymD = ROOT::Math::SMatrix<Double_t, D, D, ROOT::Math::MatRepSym<Double_t, D>>;
+	
+	using SMtxId = ROOT::Math::SMatrixIdentity;
+	
 	namespace LA { // Linear Algebra
-		// TArray 
-		using TArrI = TArrayI;
-		using TArrF = TArrayF;
-		using TArrD = TArrayD;
-		
-		// TVector TMatrix Package
-		using TVecI = TVectorT<Int_t>;
-		using TVecF = TVectorT<Float_t>;
-		using TVecD = TVectorT<Double_t>;
-		
-		using TMtxI = TMatrixT<Int_t>;
-		using TMtxF = TMatrixT<Float_t>;
-		using TMtxD = TMatrixT<Double_t>;
-				
-		using TMtxSymI = TMatrixTSym<Int_t>;
-		using TMtxSymF = TMatrixTSym<Float_t>;
-		using TMtxSymD = TMatrixTSym<Double_t>;
-		using TMtxSparseI = TMatrixTSparse<Int_t>;
-		using TMtxSparseI = TMatrixTSparse<Int_t>;
-		using TMtxSparseF = TMatrixTSparse<Float_t>;
-		using TMtxSparseD = TMatrixTSparse<Double_t>;
-		
-		// SVector SMatrix Package
-		template <unsigned int D>
-		using SVecI = ROOT::Math::SVector<Int_t, D>;
-		
-		template <unsigned int D>
-		using SVecF = ROOT::Math::SVector<Float_t, D>;
-		
-		template <unsigned int D>
-		using SVecD = ROOT::Math::SVector<Double_t, D>;
-		
-		template <unsigned int D1, unsigned int D2 = D1>
-		using SMtxI = ROOT::Math::SMatrix<Int_t, D1, D2, ROOT::Math::MatRepStd<Int_t, D1, D2>>;
-		
-		template <unsigned int D1, unsigned int D2 = D1>
-		using SMtxF = ROOT::Math::SMatrix<Float_t, D1, D2, ROOT::Math::MatRepStd<Float_t, D1, D2>>;
-		
-		template <unsigned int D1, unsigned int D2 = D1>
-		using SMtxD = ROOT::Math::SMatrix<Double_t, D1, D2, ROOT::Math::MatRepStd<Double_t, D1, D2>>;
-		
-		template <unsigned int D>
-		using SMtxSymI = ROOT::Math::SMatrix<Int_t, D, D, ROOT::Math::MatRepSym<Int_t, D>>;
-		
-		template <unsigned int D>
-		using SMtxSymF = ROOT::Math::SMatrix<Float_t, D, D, ROOT::Math::MatRepSym<Float_t, D>>;
-		
-		template <unsigned int D>
-		using SMtxSymD = ROOT::Math::SMatrix<Double_t, D, D, ROOT::Math::MatRepSym<Double_t, D>>;
-		
-		using SMtxId = ROOT::Math::SMatrixIdentity;
-		
 		// SVector Template Function 
 		using ROOT::Math::Cross;
 		using ROOT::Math::Dot;

@@ -21,8 +21,8 @@
 #include "MGHist.h"
 #include "MGHist.C"
 
-//#include "MGFit.h"
-//#include "MGFit.C"
+#include "MGFit.h"
+#include "MGFit.C"
 
 
 #endif // __ROOTLibs_H__

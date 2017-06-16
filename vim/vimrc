@@ -36,13 +36,13 @@ set t_Co=256
 syntax on " enable syntas processing
 
 
-" 80 Column Layout
-set textwidth=80
-if exists('+colorcolumn')
-    set colorcolumn=80
-else
-    au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>80v.\+', -1)
-endif
+"" 120 Column Layout
+"set textwidth=120
+"if exists('+colorcolumn')
+"    set colorcolumn=120
+"else
+"    au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>120v.\+', -1)
+"endif
 
 
 " Spaces & Tabs

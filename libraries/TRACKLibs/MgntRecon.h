@@ -39,10 +39,10 @@ class Track {
 		Bool_t fit(MethodOption method = Track::SIMPLE, PhyOption phyOpt = Track::MSCAT_ENGLS);
 		
 		void print() {
-			std::cout << CStrFmt("******************************** Track ********************************\n");
+			COUT("******************************** Track ********************************\n");
 			fPartSt.print();
 			for (Int_t ih = 0; ih < fHits.size(); ++ih) fHits.at(ih).print();
-			std::cout << CStrFmt("***********************************************************************\n");
+			COUT("***********************************************************************\n");
 		}
 
 		PhySt PartStatus() { return fPartSt; }
@@ -76,10 +76,10 @@ class Track {
 		Double_t fChisqBR;
 
 		// Physical algorithm (Negative Log-Likelihood)
-		MtxLB::SVecI<2> fNPMHit; // (HitX, HitY)
-		MtxLB::SVecD<2> fNLLHit; // (HitX, HitY) 
-		MtxLB::SVecI<4> fNPMInt; // (MscatV, MscatW, EnglsI, EnglsB)
-		MtxLB::SVecD<4> fNLLInt; // (MscatV, MscatW, EnglsI, EnglsB)
+		SVecI<2> fNPMHit; // (HitX, HitY)
+		SVecD<2> fNLLHit; // (HitX, HitY) 
+		SVecI<4> fNPMInt; // (MscatV, MscatW, EnglsI, EnglsB)
+		SVecD<4> fNLLInt; // (MscatV, MscatW, EnglsI, EnglsB)
 		
 		Int_t           fNDF;     // (fNPMHit + fNPMInt - 5)
 		Double_t        fNLL;     // (fNLLHit + fNLLInt)
@@ -94,10 +94,10 @@ class Track {
 		Double_t        fNormNLLY; // (NLLY / NDFY)
 
 		void NLLZero() {
-			fNPMHit = MtxLB::SVecI<2>();
-			fNLLHit = MtxLB::SVecD<2>();
-			fNPMInt = MtxLB::SVecI<4>();
-			fNLLInt = MtxLB::SVecD<4>();
+			fNPMHit = SVecI<2>();
+			fNLLHit = SVecD<2>();
+			fNPMInt = SVecI<4>();
+			fNLLInt = SVecD<4>();
 			fNDF     = 0;
 			fNLL     = ZERO;
 			fNormNLL = ZERO;

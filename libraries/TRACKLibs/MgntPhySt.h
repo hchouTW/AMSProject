@@ -13,31 +13,31 @@ class PhyStSpace {
     PhyStSpace() { init(); }
     ~PhyStSpace() {}
 
-    void init() { fPos = MtxLB::SVecD<3>(); fDir = MtxLB::SVecD<3>(); }
+    void init() { fPos = SVecD<3>(); fDir = SVecD<3>(); }
 
-    void setSpatialPos(MtxLB::SVecD<3> & pos) { fPos = pos; }
+    void setSpatialPos(SVecD<3> & pos) { fPos = pos; }
     void setSpatialPos(Double_t x, Double_t y, Double_t z) { fPos(0) = x; fPos(1) = y; fPos(2) = z; }
 
-    void setSpatialCos(MtxLB::SVecD<3> & dir) { fDir = dir; fDir.Unit(); }
+    void setSpatialCos(SVecD<3> & dir) { fDir = dir; fDir.Unit(); }
     void setSpatialCos(Double_t ux, Double_t uy, Double_t uz, Bool_t isNorm = true) { 
       if (isNorm) {
 				fDir(0) = ux; fDir(1) = uy; fDir(2) = uz;
 			}
 			else {
-      	Double_t signz = NGNumc::Compare(uz);
+      	Double_t signz = MGNumc::Compare(uz);
 				Double_t uz_Val = signz * std::sqrt(1. - ux * ux - uy * uy);
-				if (!NGNumc::Valid(uz_Val)) uz_Val = uz;
+				if (!MGNumc::Valid(uz_Val)) uz_Val = uz;
 				fDir(0) = ux; fDir(1) = uy; fDir(2) = uz_Val;
 			}
       fDir.Unit();
 		}
     
 		void setSpatialTan(Double_t tx, Double_t ty, Double_t signz = -1) {
-      Double_t norm = NGNumc::Compare(signz) / std::sqrt(tx * tx + ty * ty + 1.);
+      Double_t norm = MGNumc::Compare(signz) / std::sqrt(tx * tx + ty * ty + 1.);
       fDir(0) = norm * tx; fDir(1) = norm * ty; fDir(2) = norm;
     }
 
-    void setSpatial(MtxLB::SVecD<3> & pos, MtxLB::SVecD<3> & dir) { fPos = pos; fDir = dir; fDir.Unit(); }
+    void setSpatial(SVecD<3> & pos, SVecD<3> & dir) { fPos = pos; fDir = dir; fDir.Unit(); }
 
     void setSpatialWithCos(Double_t px, Double_t py, Double_t pz, Double_t ux, Double_t uy, Double_t uz, Bool_t isNorm = true) {
 			setSpatialPos(px, py, pz);
@@ -64,12 +64,12 @@ class PhyStSpace {
 	public :
 		Bool_t vaild() {
 			Bool_t vaild = (
-				NGNumc::Valid(fPos(0)) && 
-				NGNumc::Valid(fPos(1)) && 
-				NGNumc::Valid(fPos(2)) && 
-				NGNumc::Valid(fDir(0)) && 
-				NGNumc::Valid(fDir(1)) && 
-				NGNumc::Valid(fDir(2)) 
+				MGNumc::Valid(fPos(0)) && 
+				MGNumc::Valid(fPos(1)) && 
+				MGNumc::Valid(fPos(2)) && 
+				MGNumc::Valid(fDir(0)) && 
+				MGNumc::Valid(fDir(1)) && 
+				MGNumc::Valid(fDir(2)) 
 			);
 			if (!vaild) init();
 			return vaild;
@@ -83,13 +83,13 @@ class PhyStSpace {
 		}
 
   public :
-		MtxLB::SVecD<3> & Pos() { return fPos; }
+		SVecD<3> & Pos() { return fPos; }
 		Double_t & Pos(Short_t idx) { return fPos(idx); }
 		Double_t X() { return fPos(0); }
 		Double_t Y() { return fPos(1); }
 		Double_t Z() { return fPos(2); }
 
-		MtxLB::SVecD<3> & Dir() { return fDir; }
+		SVecD<3> & Dir() { return fDir; }
 		Double_t & Dir(Short_t idx) { return fDir(idx); }
 		Double_t TanX() { return fDir(0)/fDir(2); }
 		Double_t TanY() { return fDir(1)/fDir(2); }
@@ -98,8 +98,8 @@ class PhyStSpace {
 		Double_t DirZ() { return fDir(2); }
 
   protected :
-    MtxLB::SVecD<3> fPos; // position
-		MtxLB::SVecD<3> fDir; // direction
+    SVecD<3> fPos; // position
+		SVecD<3> fDir; // direction
 
 	public :
 		static void SortSpace(std::vector<PhyStSpace> & phyStSpace, Bool_t dirType = true) {
@@ -153,7 +153,7 @@ class PhySt : public PhyStSpace {
 		PhySt(enum ParticleList part = PhySt::Proton) { init(part); }
 		~PhySt() {}
 
-		void init(enum ParticleList part = PhySt::Proton) { fPartName = ""; fStatus = MtxLB::SVecD<5>(); fPos = MtxLB::SVecD<3>(); fDir = MtxLB::SVecD<3>(); setChrgMass(part); }
+		void init(enum ParticleList part = PhySt::Proton) { fPartName = ""; fStatus = SVecD<5>(); fPos = SVecD<3>(); fDir = SVecD<3>(); setChrgMass(part); }
 
     void setChrgMass(enum ParticleList part = PhySt::Proton) {
 			// Atomic mass unit u = 0.931494095 GeV/c^2
@@ -200,23 +200,23 @@ class PhySt : public PhyStSpace {
 			if (IsMassLess()) return;
 			
 			Double_t sign = 0;
-			if (NGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
-				sign = NGNumc::Compare(Chrg());
+			if (MGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
+				sign = MGNumc::Compare(Chrg());
 			else 
-				sign = ((IsChrgLess()) ? 1. : NGNumc::Compare(chrgSign));
+				sign = ((IsChrgLess()) ? 1. : MGNumc::Compare(chrgSign));
 			
 			beta = std::fabs(beta);
 			fStatus(2) = ((beta>=(1.-1e-6)) ? (1.-1.e-6) : ((beta<=0) ?0:beta));
-			fStatus(4) = sign * ((NGNumc::EqualToZero(fStatus(2))) ? 0 : std::sqrt((1. / fStatus(2) / fStatus(2)) - 1.)); 
+			fStatus(4) = sign * ((MGNumc::EqualToZero(fStatus(2))) ? 0 : std::sqrt((1. / fStatus(2) / fStatus(2)) - 1.)); 
 			fStatus(3) = std::fabs(fStatus(1) * fStatus(4)); 
 		}
 
 		void setMom(Double_t mom, Double_t chrgSign = 0.) {
 			Double_t sign = 0;
-			if (NGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
-				sign = NGNumc::Compare(Chrg());
+			if (MGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
+				sign = MGNumc::Compare(Chrg());
 			else 
-				sign = ((IsChrgLess()) ? 1. : NGNumc::Compare(chrgSign));
+				sign = ((IsChrgLess()) ? 1. : MGNumc::Compare(chrgSign));
 			
 			fStatus(3) = std::fabs(mom);
 			fStatus(4) = sign * (IsMassLess() ? fStatus(3) : (fStatus(3) / fStatus(1)));
@@ -228,10 +228,10 @@ class PhySt : public PhyStSpace {
 			if (eng < fStatus(1)) return;
 			
 			Double_t sign = 0;
-			if (NGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
-				sign = NGNumc::Compare(Chrg());
+			if (MGNumc::EqualToZero(chrgSign) && !IsChrgLess()) 
+				sign = MGNumc::Compare(Chrg());
 			else 
-				sign = ((IsChrgLess()) ? 1. : NGNumc::Compare(chrgSign));
+				sign = ((IsChrgLess()) ? 1. : MGNumc::Compare(chrgSign));
 			
 			fStatus(3) = std::sqrt(eng * eng	- fStatus(1) * fStatus(1));
 			fStatus(4) = sign * (IsMassLess() ? fStatus(3) : (fStatus(3) / fStatus(1)));
@@ -251,7 +251,7 @@ class PhySt : public PhyStSpace {
 
 		void setInvEta(Double_t ieta) {
 			Double_t eta = 1. / ieta;
-			if (!NGNumc::Valid(eta)) eta = 0.;
+			if (!MGNumc::Valid(eta)) eta = 0.;
 			setEta(eta);
 		}
 
@@ -263,7 +263,7 @@ class PhySt : public PhyStSpace {
    
 		void setInvRig(Double_t invRig) {
 			Double_t rig = 1. / invRig;
-			if (!NGNumc::Valid(rig)) rig = 0.;
+			if (!MGNumc::Valid(rig)) rig = 0.;
 			setRig(rig);
 		}
 
@@ -274,24 +274,24 @@ class PhySt : public PhyStSpace {
 			setEng(eng, chrgSign);
 		}
     
-		void setMomVec(MtxLB::SVecD<4> & momVec, Double_t chrgSign = 0.) {
+		void setMomVec(SVecD<4> & momVec, Double_t chrgSign = 0.) {
 			setMomVec(momVec(0), momVec(1), momVec(2), momVec(3), chrgSign);
 		}
 
 	public :
 		Bool_t vaild() {
 			Bool_t vaild = (
-				NGNumc::Valid(fPos(0)) && 
-				NGNumc::Valid(fPos(1)) && 
-				NGNumc::Valid(fPos(2)) && 
-				NGNumc::Valid(fDir(0)) && 
-				NGNumc::Valid(fDir(1)) && 
-				NGNumc::Valid(fDir(2)) &&
-				NGNumc::Valid(fStatus(0)) &&
-				NGNumc::Valid(fStatus(1)) &&
-				NGNumc::Valid(fStatus(2)) &&
-				NGNumc::Valid(fStatus(3)) &&
-				NGNumc::Valid(fStatus(4)) 
+				MGNumc::Valid(fPos(0)) && 
+				MGNumc::Valid(fPos(1)) && 
+				MGNumc::Valid(fPos(2)) && 
+				MGNumc::Valid(fDir(0)) && 
+				MGNumc::Valid(fDir(1)) && 
+				MGNumc::Valid(fDir(2)) &&
+				MGNumc::Valid(fStatus(0)) &&
+				MGNumc::Valid(fStatus(1)) &&
+				MGNumc::Valid(fStatus(2)) &&
+				MGNumc::Valid(fStatus(3)) &&
+				MGNumc::Valid(fStatus(4)) 
 			);
 			if (!vaild) init(this->fPart);
 			return vaild;
@@ -304,7 +304,7 @@ class PhySt : public PhyStSpace {
 			if (!IsChrgLess()) {
 				Double_t rigv = this->Rig();
 				Double_t absr = std::fabs(rigv);
-				Double_t sign = NGNumc::Compare(rigv);
+				Double_t sign = MGNumc::Compare(rigv);
 				if (absr < 1e-6) { Double_t lmtv = 1e-6; this->setRig(sign * lmtv); }
 				if (absr > 1e+9) { Double_t lmtv = 1e+9; this->setRig(sign * lmtv); }
 			}
@@ -329,7 +329,7 @@ class PhySt : public PhyStSpace {
   public :
 		TString PartName() { return fPartName; }
 		ParticleList Part() { return fPart; }
-		MtxLB::SVecD<5> & Status() { return fStatus; }
+		SVecD<5> & Status() { return fStatus; }
 		Double_t Status(Short_t idx) { return fStatus(idx); }
 		Double_t Chrg() { return fStatus(0); }
 		Double_t Mass() { return fStatus(1); }
@@ -343,11 +343,11 @@ class PhySt : public PhyStSpace {
 		Double_t Eng() { return std::sqrt(fStatus(3) * fStatus(3) + fStatus(1) * fStatus(1)); }
 		Double_t KEng() { return (Eng() - Mass()); }
 
-		Double_t InvEta() { Double_t ieta = (1. / fStatus(4)); return (NGNumc::Valid(ieta) ? ieta : 0.); }
+		Double_t InvEta() { Double_t ieta = (1. / fStatus(4)); return (MGNumc::Valid(ieta) ? ieta : 0.); }
 		Double_t Rig() { return (IsChrgLess() ? 0 : (fStatus(4) * std::fabs(fStatus(1) / fStatus(0)))); }
 		Double_t InvRig() { return (IsChrgLess() ? 0 : (1. / Rig())); }
 
-    MtxLB::SVecD<4> MomVec() { return MtxLB::SVecD<4>(fStatus(3) * fDir(0), fStatus(3) * fDir(1), fStatus(3) * fDir(2), Eng()); }
+    SVecD<4> MomVec() { return SVecD<4>(fStatus(3) * fDir(0), fStatus(3) * fDir(1), fStatus(3) * fDir(2), Eng()); }
       
 	public :
 		Bool_t IsMassLess() { return (fPart == PhySt::Photon); }
@@ -356,7 +356,7 @@ class PhySt : public PhyStSpace {
 	protected :
 		TString           fPartName;
     enum ParticleList fPart; // kind of particle
-		MtxLB::SVecD<5>   fStatus; // (charge, mass, beta, momentum, eta := (gammaBeta * chrgSign) or momentum)
+		SVecD<5>   fStatus; // (charge, mass, beta, momentum, eta := (gammaBeta * chrgSign) or momentum)
 	
 	public :
 		static void SortSpace(std::vector<PhySt> & phySt, Bool_t dirType = true) {

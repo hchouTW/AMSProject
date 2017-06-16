@@ -49,10 +49,10 @@ Bool_t Track::officalFit(Track::MethodOption method, PhyOption phyOpt) {
 Bool_t Track::analyticFit() {
   // linear fitting for x or y dir
 	Double_t refZCoo = fHits.at(0).CZ();
-	MtxLB::SVecD<2> resX;
-	MtxLB::SVecD<2> resY;
-	MtxLB::SMtxSymD<2> mtxX;
-	MtxLB::SMtxSymD<2> mtxY;
+	SVecD<2> resX;
+	SVecD<2> resY;
+	SMtxSymD<2> mtxX;
+	SMtxSymD<2> mtxY;
 	mtxX(0, 0) = ONE;
 	mtxY(0, 0) = ONE;
 	for (Int_t ih = 0; ih < fHits.size(); ++ih) {
@@ -76,12 +76,12 @@ Bool_t Track::analyticFit() {
 	}
 	mtxX.Invert();
 	mtxY.Invert();
-	MtxLB::SVecD<2>&& rslX = mtxX * resX;
-	MtxLB::SVecD<2>&& rslY = mtxY * resY;
-	if (!NGNumc::Valid(rslX(0))) rslX(0) = fHits.at(0).CX();
-	if (!NGNumc::Valid(rslY(0))) rslY(0) = fHits.at(0).CY();
-	if (!NGNumc::Valid(rslX(1))) rslX(1) = ZERO;
-	if (!NGNumc::Valid(rslY(1))) rslY(1) = ZERO;
+	SVecD<2>&& rslX = mtxX * resX;
+	SVecD<2>&& rslY = mtxY * resY;
+	if (!MGNumc::Valid(rslX(0))) rslX(0) = fHits.at(0).CX();
+	if (!MGNumc::Valid(rslY(0))) rslY(0) = fHits.at(0).CY();
+	if (!MGNumc::Valid(rslX(1))) rslX(1) = ZERO;
+	if (!MGNumc::Valid(rslY(1))) rslY(1) = ZERO;
 
 	// analytics fitting for curve
 	const Double_t MIN_STEP = 20.;
@@ -94,7 +94,7 @@ Bool_t Track::analyticFit() {
 		Double_t dz  = hit.CZ() - refZCoo;
 		Int_t    magNSTP = Int_t(std::ceil(std::fabs(dz / MIN_STEP)));
 		Double_t magSTPZ = dz / Double_t(magNSTP);
-		Double_t magSIGN = NGNumc::Compare(dz);
+		Double_t magSIGN = MGNumc::Compare(dz);
 		Double_t magINT1_POS = 0.;
 		for (Int_t is = 0; is < magNSTP; ++is)
 			magINT1_POS += (MgntMag::GetMagFuncINT1(refZCoo + (Double_t(is) + 0.5) * magSTPZ) - magBasedINT1);
@@ -108,7 +108,7 @@ Bool_t Track::analyticFit() {
 	Double_t mtxCur = MgntProp::PROP_FACT * std::fabs(fPartSt.ChrgMass()) * mtxCurFact * mtxMag; 
 
 	Double_t rslInvEta = NEG * resCur / mtxCur;
-	if (!NGNumc::Valid(rslInvEta)) rslInvEta = 1e-6;
+	if (!MGNumc::Valid(rslInvEta)) rslInvEta = 1e-6;
 	
 	fPartSt.setSpatialWithTan(rslX(0), rslY(0), refZCoo, rslX(1), rslY(1), ((fDirOpt) ? NEG : ONE));
 	fPartSt.setInvEta(rslInvEta);
@@ -125,52 +125,52 @@ Bool_t Track::analyticFit() {
 
 		Int_t    ndf   = -5;
 		Double_t chisq = ZERO;
-		MtxLB::SVecD<5>    gradAna;
-		MtxLB::SMtxSymD<5> covAna;
+		SVecD<5>    gradAna;
+		SMtxSymD<5> covAna;
 		
 		Int_t           hitCnt = 0;
 		PhySt           propSt(fPartSt);
-		MtxLB::SMtxD<5> propJb = MtxLB::SIdMtx();
+		SMtxD<5> propJb = SMtxId();
 		for (Int_t ih = 0; ih < fHits.size(); ++ih) {
 			HitSt & hit = fHits.at(ih);
 			
-			MtxLB::SMtxSymD<2> detErr;
+			SMtxSymD<2> detErr;
 			detErr(0, 0) = (!hit.SideX()) ? ZERO : ONE / hit.DetCov(0, 0);
 			detErr(1, 1) = (!hit.SideY()) ? ZERO : ONE / hit.DetCov(1, 1);
 
-			MtxLB::SMtxD<5> curJb;
+			SMtxD<5> curJb;
 			if (!MgntProp::PropToZ_Analytic(hit.CZ(), propSt, &curJb)) break;
 			Double_t cooEst = std::sqrt(propSt.X() * propSt.X() + propSt.Y() * propSt.Y());
 			if (cooEst > EPSILON_MAX_COO) break;
 			propJb = curJb * propJb;
-			MtxLB::SMtxD<2, 5>&& subJb = propJb.Sub<MtxLB::SMtxD<2, 5>>(0, 0);
+			SMtxD<2, 5>&& subJb = propJb.Sub<SMtxD<2, 5>>(0, 0);
 			
-			MtxLB::SVecD<2> detRes;
+			SVecD<2> detRes;
 			detRes(0) = (!hit.SideX()) ? ZERO : detErr(0, 0) * (propSt.X() - hit.CX());
 			detRes(1) = (!hit.SideY()) ? ZERO : detErr(1, 1) * (propSt.Y() - hit.CY());
 
-			gradAna += MtxLB::Transpose(subJb) * detRes;
-			covAna  += MtxLB::SimilarityT(subJb, detErr);
+			gradAna += LA::Transpose(subJb) * detRes;
+			covAna  += LA::SimilarityT(subJb, detErr);
 			
 			if (hit.SideX()) { ndf++; chisq += detRes(0) * (propSt.X() - hit.CX()); }
 			if (hit.SideY()) { ndf++; chisq += detRes(1) * (propSt.Y() - hit.CY()); }
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 
 		Int_t  lmCurIter    = 1;
 		Bool_t lmIsSuccess  = false;
 		Bool_t lmIsFinePath = false;
 		while (lmCurIter <= LM_NUM_MAX_ITER && !lmIsSuccess && isFinePath) {
-			MtxLB::SMtxSymD<5> lmCovAna = lmLambda * covAna;
+			SMtxSymD<5> lmCovAna = lmLambda * covAna;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
 				lmCovAna(ipar, ipar) = covAna(ipar, ipar);
 
 			if (!lmCovAna.Invert()) break;
-			MtxLB::SVecD<5> && rslAna = lmCovAna * gradAna;
+			SVecD<5> && rslAna = lmCovAna * gradAna;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
-				if (!NGNumc::Valid(rslAna(ipar))) 
+				if (!MGNumc::Valid(rslAna(ipar))) 
 					rslAna(ipar) = ZERO;
 
 			PhySt predSt(fPartSt.Part());
@@ -194,7 +194,7 @@ Bool_t Track::analyticFit() {
 				Double_t cooEst = std::sqrt(predPropSt.X() * predPropSt.X() + predPropSt.Y() * predPropSt.Y());
 				if (cooEst > EPSILON_MAX_COO) break;
 				
-				MtxLB::SVecD<2> detRes;
+				SVecD<2> detRes;
 				detRes(0) = (!hit.SideX()) ? ZERO : (predPropSt.X() - hit.CX()) / hit.EX();
 				detRes(1) = (!hit.SideY()) ? ZERO : (predPropSt.Y() - hit.CY()) / hit.EY();
 
@@ -202,7 +202,7 @@ Bool_t Track::analyticFit() {
 				if (hit.SideY()) { predNdf++; predChisq += detRes(1) * detRes(1); }
 				predHitCnt++;
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (MGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 		
 			if (!lmIsFinePath) break;
@@ -254,8 +254,8 @@ Bool_t Track::simpleFit() {
 
 		Int_t    ndf   = -5;
 		Double_t chisq = ZERO;
-		MtxLB::SVecD<5>    gradG;
-		MtxLB::SMtxSymD<5> covGG;
+		SVecD<5>    gradG;
+		SMtxSymD<5> covGG;
 
 		Int_t hitCnt = 0;
 		PhySt propSt(fPartSt);
@@ -263,7 +263,7 @@ Bool_t Track::simpleFit() {
 		for (Int_t ih = 0; ih < fHits.size(); ++ih) {
 			HitSt & hit = fHits.at(ih);
 			
-			MtxLB::SMtxSymD<2> detErr;
+			SMtxSymD<2> detErr;
 			detErr(0, 0) = (!hit.SideX()) ? ZERO : ONE / hit.DetCov(0, 0);
 			detErr(1, 1) = (!hit.SideY()) ? ZERO : ONE / hit.DetCov(1, 1);
 		
@@ -272,34 +272,34 @@ Bool_t Track::simpleFit() {
 			Double_t cooEst = std::sqrt(propSt.X() * propSt.X() + propSt.Y() * propSt.Y());
 			if (cooEst > EPSILON_MAX_COO) break;
 			propJb.multiplied(curJb);
-			MtxLB::SMtxD<2, 5> && subJbG = propJb.SubJbGXY();
+			SMtxD<2, 5> && subJbG = propJb.SubJbGXY();
 			
-			MtxLB::SVecD<2> detRes;
+			SVecD<2> detRes;
 			detRes(0) = (!hit.SideX()) ? ZERO : detErr(0, 0) * (propSt.X() - hit.CX());
 			detRes(1) = (!hit.SideY()) ? ZERO : detErr(1, 1) * (propSt.Y() - hit.CY());
 
-  		gradG += MtxLB::Transpose(subJbG) * detRes;
-  		covGG += MtxLB::SimilarityT(subJbG, detErr);
+  		gradG += LA::Transpose(subJbG) * detRes;
+  		covGG += LA::SimilarityT(subJbG, detErr);
 
 			if (hit.SideX()) { ndf++; chisq += detRes(0) * (propSt.X() - hit.CX()); }
 			if (hit.SideY()) { ndf++; chisq += detRes(1) * (propSt.Y() - hit.CY()); }
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 		
 		Int_t  lmCurIter    = 1;
 		Bool_t lmIsSuccess  = false;
 		Bool_t lmIsFinePath = false;
 		while (lmCurIter <= LM_NUM_MAX_ITER && !lmIsSuccess && isFinePath) {
-			MtxLB::SMtxSymD<5> lmCovGG = lmLambda * covGG;
+			SMtxSymD<5> lmCovGG = lmLambda * covGG;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
 				lmCovGG(ipar, ipar) = covGG(ipar, ipar);
 
 			if (!lmCovGG.Invert()) break;
-			MtxLB::SVecD<5> && rslG = lmCovGG * gradG;
+			SVecD<5> && rslG = lmCovGG * gradG;
 			for (Int_t ipar = 0; ipar < 5; ++ipar)
-				if (!NGNumc::Valid(rslG(ipar))) 
+				if (!MGNumc::Valid(rslG(ipar))) 
 					rslG(ipar) = ZERO;
 			
 			PhySt predSt(fPartSt.Part());
@@ -324,7 +324,7 @@ Bool_t Track::simpleFit() {
 				Double_t cooEst = std::sqrt(predPropSt.X() * predPropSt.X() + predPropSt.Y() * predPropSt.Y());
 				if (cooEst > EPSILON_MAX_COO) break;
 				
-				MtxLB::SVecD<2> detRes;
+				SVecD<2> detRes;
 				detRes(0) = (!hit.SideX()) ? ZERO : (predPropSt.X() - hit.CX()) / hit.EX();
 				detRes(1) = (!hit.SideY()) ? ZERO : (predPropSt.Y() - hit.CY()) / hit.EY();
 
@@ -332,7 +332,7 @@ Bool_t Track::simpleFit() {
 				if (hit.SideY()) { predNdf++; predChisq += detRes(1) * detRes(1); }
 				predHitCnt++;
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (MGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 	
 			if (!lmIsFinePath) break;
@@ -401,8 +401,8 @@ Bool_t Track::physicalFit() {
 
 		Int_t    ndf   = -5;
 		Double_t chisq = ZERO;
-		std::vector<MtxLB::SVecD<2>>    detRes(fHits.size());
-		std::vector<MtxLB::SMtxSymD<2>> detErr(fHits.size());
+		std::vector<SVecD<2>>    detRes(fHits.size());
+		std::vector<SMtxSymD<2>> detErr(fHits.size());
 		std::vector<PhyJb>              jacb(fHits.size());
 
 		Int_t hitCnt = 0;
@@ -421,7 +421,7 @@ Bool_t Track::physicalFit() {
 			jacb.at(ih) = curJb;
 		
 			///////////TEST////////
-			//std::cout << CStrFmt("ITER %02d RIG %14.8f\n", curIter, propSt.Rig());
+			//COUT("ITER %02d RIG %14.8f\n", curIter, propSt.Rig());
 			//////////////////////
 
 			detRes.at(ih)(0) = (!hit.SideX()) ? ZERO : detErr.at(ih)(0, 0) * (propSt.X() - hit.CX());
@@ -429,63 +429,63 @@ Bool_t Track::physicalFit() {
 
 			if (hit.SideX()) { ndf++; chisq += detRes.at(ih)(0) * (propSt.X() - hit.CX()); }
 			if (hit.SideY()) { ndf++; chisq += detRes.at(ih)(1) * (propSt.Y() - hit.CY()); }
-			MtxLB::SVecD<4> intchi = matPars.at(ih).Chisq(curJb.NumRadLen());
+			SVecD<4> intchi = matPars.at(ih).Chisq(curJb.NumRadLen());
 			chisq += intchi(0) + intchi(1);
 			nrl.at(ih) = curJb.NumRadLen();	
 			hitCnt++;
 		}
-		Bool_t isFinePath = ((hitCnt == fHits.size()) && (NGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
+		Bool_t isFinePath = ((hitCnt == fHits.size()) && (MGNumc::Compare(propSt.Mom(), EPSILON_MIN_MOM) > 0));
 		Double_t normChisq = (chisq / ndf);
 		
 		//------------ SAT ---------------//
-		MtxLB::SVecD<dimG>    gradG;
-		MtxLB::SMtxSymD<dimG> covGG;
-		std::vector<MtxLB::SVecD<dimL>> gradL(matPars.size());
-		std::vector<MtxLB::SMtxD<dimL>> covLL(matPars.size()*matPars.size());
-		std::vector<MtxLB::SMtxD<dimG, dimL>> covGL(matPars.size());
+		SVecD<dimG>    gradG;
+		SMtxSymD<dimG> covGG;
+		std::vector<SVecD<dimL>> gradL(matPars.size());
+		std::vector<SMtxD<dimL>> covLL(matPars.size()*matPars.size());
+		std::vector<SMtxD<dimG, dimL>> covGL(matPars.size());
 		{
-			std::vector<MtxLB::SMtxD<2, dimG>> subJbG(fHits.size());
-			MtxLB::SMtxD<dimG> jacbG = MtxLB::SIdMtx();
+			std::vector<SMtxD<2, dimG>> subJbG(fHits.size());
+			SMtxD<dimG> jacbG = SMtxId();
 			for (Int_t ih = 0; ih < fHits.size(); ++ih) {
 				jacbG = jacb.at(ih).G() * jacbG;
-				subJbG.at(ih) = jacbG.Sub<MtxLB::SMtxD<2, dimG>>(0, 0);
+				subJbG.at(ih) = jacbG.Sub<SMtxD<2, dimG>>(0, 0);
 			}
 			
-			std::vector<MtxLB::SMtxD<2, dimL>> subJbL(matPars.size()*fHits.size());
+			std::vector<SMtxD<2, dimL>> subJbL(matPars.size()*fHits.size());
 			for (Int_t im = 1; im < matPars.size(); ++im) {
-    		MtxLB::SMtxD<dimG, dimL> jacbL = jacb.at(im).L().Sub<MtxLB::SMtxD<dimG, dimL>>(0, 0);
+    		SMtxD<dimG, dimL> jacbL = jacb.at(im).L().Sub<SMtxD<dimG, dimL>>(0, 0);
 				for (Int_t ih = im; ih < fHits.size(); ++ih) {
 					if (ih != im) jacbL = jacb.at(ih).G() * jacbL;
-					subJbL.at(im*fHits.size()+ih) = jacbL.Sub<MtxLB::SMtxD<2, dimL>>(0, 0);
+					subJbL.at(im*fHits.size()+ih) = jacbL.Sub<SMtxD<2, dimL>>(0, 0);
 				}
 			}
 	
 			for (Int_t ih = 0; ih < fHits.size(); ++ih) {
-				gradG += MtxLB::Transpose(subJbG.at(ih)) * detRes.at(ih);
-				covGG += MtxLB::SimilarityT(subJbG.at(ih), detErr.at(ih));
+				gradG += LA::Transpose(subJbG.at(ih)) * detRes.at(ih);
+				covGG += LA::SimilarityT(subJbG.at(ih), detErr.at(ih));
 			}	
 		
 			for (Int_t im = 1; im < matPars.size(); ++im) {
-				gradL.at(im) += matPars.at(im).Grad(jacb.at(im).NumRadLen()).Sub<MtxLB::SVecD<dimL>>(0); 
+				gradL.at(im) += matPars.at(im).Grad(jacb.at(im).NumRadLen()).Sub<SVecD<dimL>>(0); 
 				for (Int_t ih = im; ih < fHits.size(); ++ih) {
-					gradL.at(im) += MtxLB::Transpose(subJbL.at(im*fHits.size()+ih)) * detRes.at(ih);
-					covGL.at(im) += MtxLB::Transpose(subJbG.at(ih)) * detErr.at(ih) * subJbL.at(im*fHits.size()+ih);
+					gradL.at(im) += LA::Transpose(subJbL.at(im*fHits.size()+ih)) * detRes.at(ih);
+					covGL.at(im) += LA::Transpose(subJbG.at(ih)) * detErr.at(ih) * subJbL.at(im*fHits.size()+ih);
 				}
-				covLL.at(im*matPars.size()+im) += matPars.at(im).Cov(jacb.at(im).NumRadLen()).Sub<MtxLB::SMtxSymD<dimL>>(0, 0); 
+				covLL.at(im*matPars.size()+im) += matPars.at(im).Cov(jacb.at(im).NumRadLen()).Sub<SMtxSymD<dimL>>(0, 0); 
 			}
 
 			for (Int_t ih = 1; ih < fHits.size(); ++ih) {
 				for (Int_t im = 1; im <= ih; ++im) {
 					for (Int_t jm = 1; jm <= ih; ++jm) {
-						covLL.at(im*matPars.size()+jm) += MtxLB::Transpose(subJbL.at(im*fHits.size()+ih)) * detErr.at(ih) * subJbL.at(jm*fHits.size()+ih);
+						covLL.at(im*matPars.size()+jm) += LA::Transpose(subJbL.at(im*fHits.size()+ih)) * detErr.at(ih) * subJbL.at(jm*fHits.size()+ih);
 					}
 				}
 			}
 		}
 
 		Int_t sizeF = dimG + (matPars.size() - 1) * dimL;
-		MtxLB::TVecD gradF(sizeF);
-		MtxLB::TMtxD covFF(sizeF, sizeF);
+		TVecD gradF(sizeF);
+		TMtxD covFF(sizeF, sizeF);
 		for (Int_t ip = 0; ip < dimG; ++ip) {
 			gradF(ip) = gradG(ip);
 		}
@@ -522,16 +522,16 @@ Bool_t Track::physicalFit() {
 		Bool_t lmIsSuccess  = false;
 		Bool_t lmIsFinePath = false;
 		while (lmCurIter <= LM_NUM_MAX_ITER && !lmIsSuccess && isFinePath) {
-			MtxLB::TMtxD lmCovFF = lmLambda * covFF;
+			TMtxD lmCovFF = lmLambda * covFF;
 			for (Int_t ipar = 0; ipar < sizeF; ++ipar)
 				lmCovFF(ipar, ipar) = covFF(ipar, ipar);
 			
 			Double_t det = 0;
 			lmCovFF.Invert(&det);
-			if (!NGNumc::Valid(det) || NGNumc::EqualToZero(det)) break;
-			MtxLB::TVecD rslF = lmCovFF * gradF;
+			if (!MGNumc::Valid(det) || MGNumc::EqualToZero(det)) break;
+			TVecD rslF = lmCovFF * gradF;
 			for (Int_t ipar = 0; ipar < sizeF; ++ipar)
-				if (!NGNumc::Valid(rslF(ipar))) 
+				if (!MGNumc::Valid(rslF(ipar))) 
 					rslF(ipar) = ZERO;
 
 			//------TEST--------//
@@ -539,11 +539,11 @@ Bool_t Track::physicalFit() {
 			//-------------------//
 
 
-			MtxLB::SVecD<dimG> rslG;
+			SVecD<dimG> rslG;
 			for (Int_t ipar = 0; ipar < dimG; ++ipar)
 				rslG(ipar) = rslF(ipar);
 
-			std::vector<MtxLB::SVecD<dimL>> rslL(matPars.size());
+			std::vector<SVecD<dimL>> rslL(matPars.size());
 			for (Int_t im = 1; im < matPars.size(); ++im)
 				for (Int_t it = 0; it < dimL; ++it)
 					rslL.at(im)(it) = rslF(dimG+(im-1)*dimL+it);
@@ -587,13 +587,13 @@ Bool_t Track::physicalFit() {
 				Double_t cooEst = std::sqrt(predPropSt.X() * predPropSt.X() + predPropSt.Y() * predPropSt.Y());
 				if (cooEst > EPSILON_MAX_COO) break;
 			
-				MtxLB::SVecD<2> detRes;
+				SVecD<2> detRes;
 				detRes(0) = (!hit.SideX()) ? ZERO : ((predPropSt.X() - hit.CX()) / hit.EX());
 				detRes(1) = (!hit.SideY()) ? ZERO : ((predPropSt.Y() - hit.CY()) / hit.EY());
 			
 				if (hit.SideX()) { predNdf++; predChisq += detRes(0) * detRes(0); }
 				if (hit.SideY()) { predNdf++; predChisq += detRes(1) * detRes(1); }
-				MtxLB::SVecD<4> intchi = predMatPars.at(ih).Chisq(nrl.at(ih));
+				SVecD<4> intchi = predMatPars.at(ih).Chisq(nrl.at(ih));
 				predChisq += intchi(0) + intchi(1);
 				
 				predHitCnt++;
@@ -605,7 +605,7 @@ Bool_t Track::physicalFit() {
 				_nlly += detRes(1) * detRes(1) + intchi(0);
 				//////////////////////////
 			}
-			lmIsFinePath = ((predHitCnt == fHits.size()) && (NGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
+			lmIsFinePath = ((predHitCnt == fHits.size()) && (MGNumc::Compare(predPropSt.Mom(), EPSILON_MIN_MOM) > 0));
 			Double_t predNormChisq = (predChisq / predNdf);
 			
 			if (!lmIsFinePath) break;
@@ -618,8 +618,8 @@ Bool_t Track::physicalFit() {
 			//---------//
 			//Double_t stepRSL = std::sqrt(rslF.Norm2Sqr());
 			//Bool_t succ = ((chiConvg > (NEG * CONVG_TOLERANCE) && chiConvg < ONE) && (rigConvg < ONE)) || (lmRigConvg < ONE && lmCurIter == LM_NUM_MAX_ITER);
-			//if (lmIsSuccess ||  lmCurIter != 1) std::cout << CStrFmt("PHY ITER %03d(%03d)/%02d(%01d) CHISQ (%10.2f, %10.2f) STEP(%4.2f) %14.8f CONVG %14.8f %14.8f\n", curIter, maxIter, lmCurIter, lmIsFinePath, normChisq, predNormChisq, lmLambda, stepRSL, chiConvg, rigConvg);
-			//if (succ || lmCurIter != 1) std::cout << CStrFmt("PHY ITER %03d(%03d)/%02d(%01d) CHISQ (%10.2f, %10.2f) STEP(%4.2f) %14.8f CONVG %14.8f %14.8f\n", curIter, maxIter, lmCurIter, lmIsFinePath, normChisq, predNormChisq, lmLambda, stepRSL, chiConvg, rigConvg);
+			//if (lmIsSuccess ||  lmCurIter != 1) COUT("PHY ITER %03d(%03d)/%02d(%01d) CHISQ (%10.2f, %10.2f) STEP(%4.2f) %14.8f CONVG %14.8f %14.8f\n", curIter, maxIter, lmCurIter, lmIsFinePath, normChisq, predNormChisq, lmLambda, stepRSL, chiConvg, rigConvg);
+			//if (succ || lmCurIter != 1) COUT("PHY ITER %03d(%03d)/%02d(%01d) CHISQ (%10.2f, %10.2f) STEP(%4.2f) %14.8f CONVG %14.8f %14.8f\n", curIter, maxIter, lmCurIter, lmIsFinePath, normChisq, predNormChisq, lmLambda, stepRSL, chiConvg, rigConvg);
 			//----------//
 
 			if (lmIsSuccess) {
@@ -649,7 +649,7 @@ Bool_t Track::physicalFit() {
 		if (!isFinePath || !lmIsFinePath) {
 			//////////TEST///////
 			cntUpdate++;
-			//std::cout << CStrFmt("UPDATE %03d COO %14.8f %14.8f DIR %14.8f %14.8f RIG %14.8f\n", cntUpdate, fPartSt.X(), fPartSt.Y(), fPartSt.DirX(), fPartSt.DirY(), fPartSt.Rig());
+			//COUT("UPDATE %03d COO %14.8f %14.8f DIR %14.8f %14.8f RIG %14.8f\n", cntUpdate, fPartSt.X(), fPartSt.Y(), fPartSt.DirX(), fPartSt.DirY(), fPartSt.Rig());
 			Double_t inveta = fPartSt.InvEta() * 0.85;
 			fPartSt = bkSt;
 			fPartSt.setInvEta(inveta);
@@ -677,9 +677,9 @@ Bool_t Track::physicalFit() {
 	fMatPars   = matPars;
 
 	//////////TEST////////////
-	if      (!isSuccess)     std::cout << CStrFmt("FAILE.(%03d/%03d) UPDATE %03d CONVG ( %14.8f %14.8f )\n", curIter, maxIter, cntUpdate, lmChiConvg, lmRigConvg);
-	if      (cntUpdate >= 1) std::cout << CStrFmt("UPDAT.(%03d/%03d) UPDATE %03d CONVG ( %14.8f %14.8f )\n", curIter, maxIter, cntUpdate, lmChiConvg, lmRigConvg);
-	if (cntUpdate >= 1 || !isSuccess) std::cout << CStrFmt("COO %14.8f %14.8f DIR %14.8f %14.8f RIG %14.8f\n", fPartSt.X(), fPartSt.Y(), fPartSt.DirX(), fPartSt.DirY(), fPartSt.Rig());
+	if      (!isSuccess)     COUT("FAILE.(%03d/%03d) UPDATE %03d CONVG ( %14.8f %14.8f )\n", curIter, maxIter, cntUpdate, lmChiConvg, lmRigConvg);
+	if      (cntUpdate >= 1) COUT("UPDAT.(%03d/%03d) UPDATE %03d CONVG ( %14.8f %14.8f )\n", curIter, maxIter, cntUpdate, lmChiConvg, lmRigConvg);
+	if (cntUpdate >= 1 || !isSuccess) COUT("COO %14.8f %14.8f DIR %14.8f %14.8f RIG %14.8f\n", fPartSt.X(), fPartSt.Y(), fPartSt.DirX(), fPartSt.DirY(), fPartSt.Rig());
 	//std::cout << "--------------------------------------------------------------------------------------------\n";
 	//////////////////////////
 	
@@ -725,8 +725,8 @@ Bool_t Track::physicalFit() {
 		Int_t    ndfy  = -3;
 		Double_t chisqx = ZERO;
 		Double_t chisqy = ZERO;
-		std::vector<MtxLB::SVecD<2>>    detRes(fHits.size());
-		std::vector<MtxLB::SMtxSymD<2>> detErr(fHits.size());
+		std::vector<SVecD<2>>    detRes(fHits.size());
+		std::vector<SMtxSymD<2>> detErr(fHits.size());
 		std::vector<PhyJb>              jacb(fHits.size());
 
 		Int_t curIH = 0;
@@ -752,11 +752,11 @@ Bool_t Track::physicalFit() {
 		}
 
 		// landau distribution (ion-loss)
-		if (NGNumc::Compare(propSt.Mom(), 1e-4) <= 0 && curIH != fHits.size()-1) {
+		if (MGNumc::Compare(propSt.Mom(), 1e-4) <= 0 && curIH != fHits.size()-1) {
 			Double_t rat = 0.85;  // best 0.85
 			Int_t type = 0;
-			if (curIH <= 1) { fPartSt.setInvEta(NGNumc::Compare(fPartSt.InvEta())); type = 1; }
-			if (std::fabs(fPartSt.Eta()) < 4. * numRadLen) { fPartSt.setInvEta(NGNumc::Compare(fPartSt.InvEta()) / (4. * numRadLen)); type = 2; }
+			if (curIH <= 1) { fPartSt.setInvEta(MGNumc::Compare(fPartSt.InvEta())); type = 1; }
+			if (std::fabs(fPartSt.Eta()) < 4. * numRadLen) { fPartSt.setInvEta(MGNumc::Compare(fPartSt.InvEta()) / (4. * numRadLen)); type = 2; }
 			else { fPartSt.setInvEta(fPartSt.InvEta() * rat); type = 3; }
 			for (Int_t im = 0; im < matPars.size(); ++im) {
 				if (dimL >= 1) matPars.at(im).setMscat(0., 0.);
@@ -778,7 +778,7 @@ Bool_t Track::physicalFit() {
 			chisqDW += (matPars.at(im).MscatDW() * matPars.at(im).MscatDW());
 			chisqIN += (matPars.at(im).EnglsIN() + std::exp(-matPars.at(im).EnglsIN()) - 1.0);
 			Double_t bremslen = jacb.at(im).NumRadLen() * 1.44269504088896339e+00;
-			Double_t englsBR = (NGNumc::Compare(matPars.at(im).EnglsBR(), 1.0e-7) > 0) ? matPars.at(im).EnglsBR() : 1.0e-7;
+			Double_t englsBR = (MGNumc::Compare(matPars.at(im).EnglsBR(), 1.0e-7) > 0) ? matPars.at(im).EnglsBR() : 1.0e-7;
 			chisqBR += ((englsBR) * bremslen + (ONE - bremslen) * (std::log(englsBR) - std::log(1.0e-7)));
 		}
 		Double_t normChisq    = (chisqHX+chisqHY+chisqDV+chisqDW)/(ndfx+ndfy);
@@ -790,54 +790,54 @@ Bool_t Track::physicalFit() {
 		if (dix < ONE && dix > ZERO) { isSuccess = true; break; }
 	
 		//----------------------------------------------------------------//
-		MtxLB::SVecD<dimG>    gradG;
-		MtxLB::SMtxSymD<dimG> covGG;
-		std::vector<MtxLB::SVecD<dimL>> gradL(matPars.size());
-		std::vector<MtxLB::SMtxD<dimL>> covLL(matPars.size()*matPars.size());
-		std::vector<MtxLB::SMtxD<dimG, dimL>> covGL(matPars.size());
+		SVecD<dimG>    gradG;
+		SMtxSymD<dimG> covGG;
+		std::vector<SVecD<dimL>> gradL(matPars.size());
+		std::vector<SMtxD<dimL>> covLL(matPars.size()*matPars.size());
+		std::vector<SMtxD<dimG, dimL>> covGL(matPars.size());
 		{
-			std::vector<MtxLB::SMtxD<2, dimG>> subJbG(fHits.size());
-			MtxLB::SMtxD<dimG> jacbG = MtxLB::SIdMtx();
+			std::vector<SMtxD<2, dimG>> subJbG(fHits.size());
+			SMtxD<dimG> jacbG = SMtxId();
 			for (Int_t ih = 0; ih < fHits.size(); ++ih) {
 				jacbG = jacb.at(ih).G() * jacbG;
-				subJbG.at(ih) = jacbG.Sub<MtxLB::SMtxD<2, dimG>>(0, 0);
+				subJbG.at(ih) = jacbG.Sub<SMtxD<2, dimG>>(0, 0);
 			}
 			
-			std::vector<MtxLB::SMtxD<2, dimL>> subJbL(matPars.size()*fHits.size());
+			std::vector<SMtxD<2, dimL>> subJbL(matPars.size()*fHits.size());
 			for (Int_t im = 1; im < matPars.size(); ++im) {
-    		MtxLB::SMtxD<dimG, dimL> jacbL = jacb.at(im).L().Sub<MtxLB::SMtxD<dimG, dimL>>(0, 0);
+    		SMtxD<dimG, dimL> jacbL = jacb.at(im).L().Sub<SMtxD<dimG, dimL>>(0, 0);
 				for (Int_t ih = im; ih < fHits.size(); ++ih) {
 					if (ih != im) jacbL = jacb.at(ih).G() * jacbL;
-					subJbL.at(im*fHits.size()+ih) = jacbL.Sub<MtxLB::SMtxD<2, dimL>>(0, 0);
+					subJbL.at(im*fHits.size()+ih) = jacbL.Sub<SMtxD<2, dimL>>(0, 0);
 				}
 			}
 	
 			for (Int_t ih = 0; ih < fHits.size(); ++ih) {
-				gradG += MtxLB::Transpose(subJbG.at(ih)) * detRes.at(ih);
-				covGG += MtxLB::SimilarityT(subJbG.at(ih), detErr.at(ih));
+				gradG += LA::Transpose(subJbG.at(ih)) * detRes.at(ih);
+				covGG += LA::SimilarityT(subJbG.at(ih), detErr.at(ih));
 			}	
 		
 			for (Int_t im = 1; im < matPars.size(); ++im) {
-				gradL.at(im) += matPars.at(im).Grad(jacb.at(im).NumRadLen()).Sub<MtxLB::SVecD<dimL>>(0); 
+				gradL.at(im) += matPars.at(im).Grad(jacb.at(im).NumRadLen()).Sub<SVecD<dimL>>(0); 
 				for (Int_t ih = im; ih < fHits.size(); ++ih) {
-					gradL.at(im) += MtxLB::Transpose(subJbL.at(im*fHits.size()+ih)) * detRes.at(ih);
-					covGL.at(im) += MtxLB::Transpose(subJbG.at(ih)) * detErr.at(ih) * subJbL.at(im*fHits.size()+ih);
+					gradL.at(im) += LA::Transpose(subJbL.at(im*fHits.size()+ih)) * detRes.at(ih);
+					covGL.at(im) += LA::Transpose(subJbG.at(ih)) * detErr.at(ih) * subJbL.at(im*fHits.size()+ih);
 				}
-				covLL.at(im*matPars.size()+im) += matPars.at(im).Cov(jacb.at(im).NumRadLen()).Sub<MtxLB::SMtxSymD<dimL>>(0, 0); 
+				covLL.at(im*matPars.size()+im) += matPars.at(im).Cov(jacb.at(im).NumRadLen()).Sub<SMtxSymD<dimL>>(0, 0); 
 			}
 
 			for (Int_t ih = 1; ih < fHits.size(); ++ih) {
 				for (Int_t im = 1; im <= ih; ++im) {
 					for (Int_t jm = 1; jm <= ih; ++jm) {
-						covLL.at(im*matPars.size()+jm) += MtxLB::Transpose(subJbL.at(im*fHits.size()+ih)) * detErr.at(ih) * subJbL.at(jm*fHits.size()+ih);
+						covLL.at(im*matPars.size()+jm) += LA::Transpose(subJbL.at(im*fHits.size()+ih)) * detErr.at(ih) * subJbL.at(jm*fHits.size()+ih);
 					}
 				}
 			}
 		}
 
 		Int_t sizeF = dimG + (matPars.size() - 1) * dimL;
-		MtxLB::TVecD gradF(sizeF);
-		MtxLB::TMtxD covFF(sizeF, sizeF);
+		TVecD gradF(sizeF);
+		TMtxD covFF(sizeF, sizeF);
 		for (Int_t ip = 0; ip < dimG; ++ip) {
 			gradF(ip) = gradG(ip);
 		}
@@ -878,18 +878,18 @@ Bool_t Track::physicalFit() {
 
 		Double_t det = 0;
 		covFF.Invert(&det);
-		if (!NGNumc::Valid(det) || NGNumc::EqualToZero(det)) { std::cout << "INVERSE FAIL.\n"; break; }
-		MtxLB::TVecD rslF = covFF * gradF;
+		if (!MGNumc::Valid(det) || MGNumc::EqualToZero(det)) { std::cout << "INVERSE FAIL.\n"; break; }
+		TVecD rslF = covFF * gradF;
 	
 		Double_t decayFT = std::exp(-1. * Double_t(decayIter) / decayStep);
 		//rslF *= decayFT;
 
-		MtxLB::SVecD<dimG> rslG;
+		SVecD<dimG> rslG;
 		for (Int_t ip = 0; ip < dimG; ++ip) {
 			rslG(ip) = rslF(ip);
 		}
 
-		std::vector<MtxLB::SVecD<dimL>> rslL(matPars.size());
+		std::vector<SVecD<dimL>> rslL(matPars.size());
 		for (Int_t im = 1; im < matPars.size(); ++im) {
 			for (Int_t it = 0; it < dimL; ++it) {
 				rslL.at(im)(it) = rslF(dimG+(im-1)*dimL+it);
@@ -900,14 +900,14 @@ Bool_t Track::physicalFit() {
 		for (Int_t im = 1; im < matPars.size(); ++im) {
 			if (dimL >= 1) matPars.at(im).setMscat((dimL >= 1) ? matPars.at(im).MscatDV() - rslL.at(im)(0) : 0., (dimL >= 2) ? matPars.at(im).MscatDW() - rslL.at(im)(1) : 0.);
 			if (dimL >= 3) matPars.at(im).setEngls((dimL >= 3) ? matPars.at(im).EnglsIN() - rslL.at(im)(2) : 0., (dimL >= 4) ? matPars.at(im).EnglsBR() - rslL.at(im)(3) : 0.);
-			//if (curIter%5==0) std::cout << CStrFmt("ITER %2d  RIG %14.8f  IT %d ION %14.8f BREM %14.8f  %14.8f\n", curIter, fPartSt.Rig(), im, matPars.at(im).EnglsIN(), matPars.at(im).EnglsBR(), rslL.at(im)(3));
+			//if (curIter%5==0) COUT("ITER %2d  RIG %14.8f  IT %d ION %14.8f BREM %14.8f  %14.8f\n", curIter, fPartSt.Rig(), im, matPars.at(im).EnglsIN(), matPars.at(im).EnglsBR(), rslL.at(im)(3));
 		}
 		//----------------------------------------------------------------//
 
 		//if (!covGG.Invert()) break;
-		//MtxLB::SVecD<dimG> && rslG = covGG * gradG;
+		//SVecD<dimG> && rslG = covGG * gradG;
 		for (Int_t ipar = 0; ipar < dimG; ++ipar)
-			if (!NGNumc::Valid(rslG(ipar))) 
+			if (!MGNumc::Valid(rslG(ipar))) 
 				rslG(ipar) = 0.;
 		
 		fPartSt.setSpatialWithCos(
@@ -1066,13 +1066,13 @@ Double_t Vertex::simpleFit() {
   if (IsShareClusterX || IsShareClusterY || IsShareClusterXY) return -1;
 
 	// linear fit for x-dir
-  MtxLB::SVecD<2> vtxXZ;
+  SVecD<2> vtxXZ;
   Bool_t LinearFitX = true;
   if (LinearFitX) {
     const Int_t nIterLnX = 1;
     for (Int_t iter = 1; iter <= nIterLnX; ++iter) {
-      MtxLB::SMtxSymD<2> coefXZ;
-      MtxLB::SVecD<2>    gradXZ;
+      SMtxSymD<2> coefXZ;
+      SVecD<2>    gradXZ;
       for (Int_t itr = 0; itr < NumOfTrack(); ++itr) {
 		  	PhySt & st = TrackStatusRef(itr);
         Double_t tx = st.TanX();
@@ -1105,13 +1105,13 @@ Double_t Vertex::simpleFit() {
   }
 
   // linear fit for y-dir
-  MtxLB::SVecD<2> vtxYZ;
+  SVecD<2> vtxYZ;
   Bool_t LinearFitY = true;
   if (LinearFitY) {
     const Int_t nIterLnY = 2;
     for (Int_t iter = 1; iter <= nIterLnY; ++iter) {
-      MtxLB::SMtxSymD<2> coefYZ;
-      MtxLB::SVecD<2>    gradYZ;
+      SMtxSymD<2> coefYZ;
+      SVecD<2>    gradYZ;
       for (Int_t itr = 0; itr < NumOfTrack(); ++itr) {
 		  	PhySt & st = TrackStatusRef(itr);
         Double_t ty = st.TanY();
@@ -1219,8 +1219,8 @@ Double_t Vertex::simpleFit() {
     Int_t            NDF   = -3;
 
     for (Int_t itr = 0; itr < NumOfTrack(); ++itr) {
-      MtxLB::SMtxSymD<5> CovSub;
-      MtxLB::SVecD<5>    GradSub;
+      SMtxSymD<5> CovSub;
+      SVecD<5>    GradSub;
       Double_t         ChisqSub =  0;
       Int_t            NDFSub   = -3;
 
@@ -1237,21 +1237,21 @@ Double_t Vertex::simpleFit() {
       	//MgntProp::PropWithJacb(hit->Z() - curSt.Z(), curSt, tmpJacb);
 		    //MgntProp::PropWithJacb(hit->Z() - curSt.Z(), curSt, tmpJacb, MgntProp::kPropWithMaterial, &fMats);
       	//curJacb() = tmpJacb() * curJacb();
-      	MtxLB::SMtxD<2, 5> subJacb = curJacb.getSubJacb();
+      	SMtxD<2, 5> subJacb = curJacb.getSubJacb();
 
-      	MtxLB::SVecD<2> dst;
+      	SVecD<2> dst;
         dst(0) = (hit->SideX() ? curSt.X() - hit->X() : 0);
         dst(1) = (hit->SideY() ? curSt.Y() - hit->Y() : 0);
 
-		    MtxLB::SMtxSymD<2> det;
+		    SMtxSymD<2> det;
 		    det(0, 0) = (hit->ErrX()*hit->ErrX());
 		    det(1, 1) = (hit->ErrY()*hit->ErrY());
 
         MaterialPhy matPhy = MgntMat::Calculate(track->Mat(), TrackStatusRef(itr), TrackStatusRef(itr).Z(), hit->Z());
-        MtxLB::SMtxSymD<2> idetmat = (det + matPhy.fMatCov.Sub<MtxLB::SMtxSymD<2>>(0, 0));
+        SMtxSymD<2> idetmat = (det + matPhy.fMatCov.Sub<SMtxSymD<2>>(0, 0));
 		    idetmat.Invert();
 
-        //MtxLB::SMtxSymD<2> idet;
+        //SMtxSymD<2> idet;
       	//idet(0, 0) = 1. / (hit->ErrX()*hit->ErrX());
       	//idet(1, 1) = 1. / (hit->ErrY()*hit->ErrY());
 

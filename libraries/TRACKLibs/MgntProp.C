@@ -11,31 +11,31 @@
 // step < 0, backward trace
 // step > 0, forward trace
 Double_t MgntProp::GetPropStep(PhySt & phySt, Double_t sign) {
-	MtxLB::SVecD<3> && coo    = phySt.Pos() + sign * MgntProp::INT_STEP * phySt.Dir();
-	MtxLB::SVecD<3> &  magVec = MgntMag::GetMagFast(coo);
-	Double_t           magMag = MtxLB::Mag(magVec);
+	SVecD<3> && coo    = phySt.Pos() + sign * MgntProp::INT_STEP * phySt.Dir();
+	SVecD<3> &  magVec = MgntMag::GetMagFast(coo);
+	Double_t           magMag = LA::Mag(magVec);
 
 	Double_t prp = MgntProp::PROP_FACT * std::fabs(phySt.ChrgMass()) / (std::fabs(phySt.Eta()) + TUNE_ETA);
-	Double_t cos = MtxLB::Dot(phySt.Dir(), magVec);
+	Double_t cos = LA::Dot(phySt.Dir(), magVec);
 	Double_t sin = std::sqrt(1.001 - cos * cos / magMag / magMag);
 	Double_t chr = prp * (0.2 + 0.8 * sin); 
 
 	Double_t length = (MgntProp::TUNE_STEP / chr /  (magMag + MgntProp::TUNE_MAGF));
-	if (!NGNumc::Valid(length))     length = MgntProp::MAX_STEP;
+	if (!MGNumc::Valid(length))     length = MgntProp::MAX_STEP;
 	if (length > MgntProp::MAX_STEP) length = MgntProp::MAX_STEP;
 	if (length < MgntProp::MIN_STEP) length = MgntProp::MIN_STEP;
 
 	if (MgntProp::CheckEnvironment(MgntProp::kMaterial)) {
-		MtxLB::SVecD<3> finCoo = phySt.Pos() + (sign * length) * phySt.Dir();
+		SVecD<3> finCoo = phySt.Pos() + (sign * length) * phySt.Dir();
 		Double_t rat = MgntMatPhyCal::GetSimplicityNumRadLen(phySt.Pos(), finCoo) / MgntProp::TUNE_MAT;
-		if (NGNumc::Valid(rat) && rat > ONE) length /= rat;
+		if (MGNumc::Valid(rat) && rat > ONE) length /= rat;
 	}
 
 	return length;
 }
 
 Double_t MgntProp::GetStep(PhySt & phySt, Double_t resStep) {
-	Double_t sign = NGNumc::Compare(resStep);
+	Double_t sign = MGNumc::Compare(resStep);
 	Double_t len = MgntProp::GetPropStep(phySt, sign);
 	Double_t res = std::fabs(resStep);
 
@@ -47,8 +47,8 @@ Double_t MgntProp::GetStep(PhySt & phySt, Double_t resStep) {
 	Double_t step = sign * length;
 
 	if (MgntProp::CheckEnvironment(MgntProp::kMaterial)) {
-		MtxLB::SVecD<3>    satCoo = phySt.Pos();
-		MtxLB::SVecD<3> && endCoo = satCoo + step * phySt.Dir();
+		SVecD<3>    satCoo = phySt.Pos();
+		SVecD<3> && endCoo = satCoo + step * phySt.Dir();
 		MatCal = MgntMatPhyCal::GetMatPhyCalParam(phySt, satCoo, endCoo);
 	}
 
@@ -56,12 +56,12 @@ Double_t MgntProp::GetStep(PhySt & phySt, Double_t resStep) {
 }
 
 Double_t MgntProp::GetStepToZ(PhySt & phySt, Double_t resStepZ) {
-	Double_t signDz = NGNumc::Compare(resStepZ);
-	Double_t sign = NGNumc::Compare(phySt.DirZ() * resStepZ);
+	Double_t signDz = MGNumc::Compare(resStepZ);
+	Double_t sign = MGNumc::Compare(phySt.DirZ() * resStepZ);
 	Double_t lens = sign * MgntProp::GetPropStep(phySt, sign);
 	Double_t resz = std::fabs(resStepZ);
 
-	MtxLB::SVecD<3> & magVec = MgntMag::GetMagFast();
+	SVecD<3> & magVec = MgntMag::GetMagFast();
 	Double_t propFT = MgntProp::PROP_FACT * std::fabs(phySt.ChrgMass());
 	Double_t crsUBZ = (phySt.DirX() * magVec(1) - phySt.DirY() * magVec(0));
 	Double_t termS0 = 0.5 * propFT * phySt.InvEta() * crsUBZ;
@@ -76,24 +76,24 @@ Double_t MgntProp::GetStepToZ(PhySt & phySt, Double_t resStepZ) {
 
 	// solve step
 	Double_t step = ZERO;
-	if (NGNumc::EqualToZero(termS0)) {
+	if (MGNumc::EqualToZero(termS0)) {
 		step = NEG * termS2 / termS1;
 	}
 	else {
 		Double_t discriminant = std::sqrt(termS1 * termS1 - 4. * termS0 * termS2); 
 		Double_t solve1 = HALF * (NEG * termS1 + discriminant) / termS0;
 		Double_t solve2 = HALF * (NEG * termS1 - discriminant) / termS0;
-		Bool_t isSol1 = (!NGNumc::EqualToZero(solve1) && NGNumc::Valid<Double_t>(solve1 / lens) && std::fabs(solve1 / lens) < 10.);
-		Bool_t isSol2 = (!NGNumc::EqualToZero(solve2) && NGNumc::Valid<Double_t>(solve2 / lens) && std::fabs(solve2 / lens) < 10.);
-		if      (isSol1 && NGNumc::Compare(solve1 * sign) > 0) step = solve1;
-		else if (isSol2 && NGNumc::Compare(solve2 * sign) > 0) step = solve2;
+		Bool_t isSol1 = (!MGNumc::EqualToZero(solve1) && MGNumc::Valid<Double_t>(solve1 / lens) && std::fabs(solve1 / lens) < 10.);
+		Bool_t isSol2 = (!MGNumc::EqualToZero(solve2) && MGNumc::Valid<Double_t>(solve2 / lens) && std::fabs(solve2 / lens) < 10.);
+		if      (isSol1 && MGNumc::Compare(solve1 * sign) > 0) step = solve1;
+		else if (isSol2 && MGNumc::Compare(solve2 * sign) > 0) step = solve2;
 		else                                                    step = NEG * termS2 / termS1;
 	}
-	if (!NGNumc::Valid(step)) step = lens;
+	if (!MGNumc::Valid(step)) step = lens;
 
 	if (MgntProp::CheckEnvironment(MgntProp::kMaterial)) {
-		MtxLB::SVecD<3> satCoo = phySt.Pos();
-		MtxLB::SVecD<3> endCoo = satCoo + step * phySt.Dir();
+		SVecD<3> satCoo = phySt.Pos();
+		SVecD<3> endCoo = satCoo + step * phySt.Dir();
 		MatCal = MgntMatPhyCal::GetMatPhyCalParam(phySt, satCoo, endCoo);
 	}
 
@@ -111,8 +111,8 @@ Bool_t MgntProp::Prop(Double_t step, PhySt & phySt, PhyJb * phyJb, MatPropParam 
 	Long64_t iter = 0;
 	Bool_t   isSuccess = true;
 	Double_t currentStep = 0.;
-	Double_t chrgSign = NGNumc::Compare(phySt.Eta());
-	while (NGNumc::Valid(step - currentStep) && std::fabs(step - currentStep) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
+	Double_t chrgSign = MGNumc::Compare(phySt.Eta());
+	while (MGNumc::Valid(step - currentStep) && std::fabs(step - currentStep) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
 		Double_t residualStep = step - currentStep;
 		Double_t subStep = GetStep(phySt, residualStep);
 
@@ -132,7 +132,7 @@ Bool_t MgntProp::Prop(Double_t step, PhySt & phySt, PhyJb * phyJb, MatPropParam 
 		iter++;
 		currentStep += subStep;
 		if (WithJacb) { phyJb->multiplied(*subPhyJb); delete subPhyJb; subPhyJb = nullptr; }
-		if (NGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
+		if (MGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
 		if (!vaild) { isSuccess = false; break; }
 	}
 	
@@ -145,7 +145,7 @@ Bool_t MgntProp::Prop(Double_t step, PhySt & phySt, PhyJb * phyJb, MatPropParam 
 }
 		
 Bool_t MgntProp::PropToZ(Double_t zcoo, PhySt & phySt, PhyJb * phyJb, MatPropParam * matPar) {
-	if (NGNumc::EqualToZero(phySt.DirZ())) return false;
+	if (MGNumc::EqualToZero(phySt.DirZ())) return false;
 	if (matPar == nullptr || matPar->Vacuum()) { MgntProp::SetEnvironment(MgntProp::kVacuum); MatPar.init(); MatCal.init(); }
 	else { MgntProp::SetEnvironment(MgntProp::kMaterial); MatPar = *matPar; MatCal.init(); }
 	Bool_t WithJacb = (phyJb != nullptr);
@@ -153,8 +153,8 @@ Bool_t MgntProp::PropToZ(Double_t zcoo, PhySt & phySt, PhyJb * phyJb, MatPropPar
 
 	Long64_t iter = 0;
 	Bool_t   isSuccess = true;
-	Double_t chrgSign = NGNumc::Compare(phySt.Eta());
-	while (NGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
+	Double_t chrgSign = MGNumc::Compare(phySt.Eta());
+	while (MGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
 		Double_t residualStepZ = zcoo - phySt.Z();
 		Double_t subStep = GetStepToZ(phySt, residualStepZ);
 
@@ -173,7 +173,7 @@ Bool_t MgntProp::PropToZ(Double_t zcoo, PhySt & phySt, PhyJb * phyJb, MatPropPar
 
 		iter++;
 		if (WithJacb) { phyJb->multiplied(*subPhyJb); delete subPhyJb; subPhyJb = nullptr; }
-		if (NGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
+		if (MGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
 		if (!vaild) { isSuccess = false; break; }
 	}
 	
@@ -195,8 +195,8 @@ Bool_t MgntProp::Prop_MonteCarlo(Double_t step, PhySt & phySt, Bool_t optMscat, 
 	Long64_t iter = 0;
 	Bool_t   isSuccess = true;
 	Double_t currentStep = 0.;
-	Double_t chrgSign = NGNumc::Compare(phySt.Eta());
-	while (NGNumc::Valid(step - currentStep) && std::fabs(step - currentStep) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
+	Double_t chrgSign = MGNumc::Compare(phySt.Eta());
+	while (MGNumc::Valid(step - currentStep) && std::fabs(step - currentStep) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
 		Double_t residualStep = step - currentStep;
 		Double_t subStep = GetStep(phySt, residualStep);
 		MatPar.random(MatCal, optMscat, optEngls);
@@ -215,7 +215,7 @@ Bool_t MgntProp::Prop_MonteCarlo(Double_t step, PhySt & phySt, Bool_t optMscat, 
 
 		iter++;
 		currentStep += subStep;
-		if (NGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
+		if (MGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
 		if (!vaild) { isSuccess = false; break; }
 	}
 	
@@ -225,15 +225,15 @@ Bool_t MgntProp::Prop_MonteCarlo(Double_t step, PhySt & phySt, Bool_t optMscat, 
 }
 
 Bool_t MgntProp::PropToZ_MonteCarlo(Double_t zcoo, PhySt & phySt, Bool_t optMscat, Bool_t optEngls) {
-	if (NGNumc::EqualToZero(phySt.DirZ())) return false;
+	if (MGNumc::EqualToZero(phySt.DirZ())) return false;
 	if (optMscat || optEngls) MgntProp::SetEnvironment(MgntProp::kMaterial);
 	else MgntProp::SetEnvironment(MgntProp::kVacuum);
 	MatCal.init(); MatPar.init();
 	
 	Long64_t iter = 0;
 	Bool_t   isSuccess = true;
-	Double_t chrgSign = NGNumc::Compare(phySt.Eta());
-	while (NGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
+	Double_t chrgSign = MGNumc::Compare(phySt.Eta());
+	while (MGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) > MgntProp::MIN_CONT && iter < MgntProp::MAX_ITER) {
 		Double_t residualStepZ = zcoo - phySt.Z();
 		Double_t subStep = GetStepToZ(phySt, residualStepZ);
 		MatPar.random(MatCal, optMscat, optEngls);
@@ -251,7 +251,7 @@ Bool_t MgntProp::PropToZ_MonteCarlo(Double_t zcoo, PhySt & phySt, Bool_t optMsca
 		}
 		
 		iter++;
-		if (NGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
+		if (MGNumc::Compare(chrgSign * phySt.Eta()) < 0 || phySt.Mom() < MgntProp::MIN_MOM) { isSuccess = false; break; }
 		if (!vaild) { isSuccess = false; break; }
 	}
 	
@@ -263,12 +263,12 @@ Bool_t MgntProp::PropToZ_MonteCarlo(Double_t zcoo, PhySt & phySt, Bool_t optMsca
 
 // Official
 Bool_t MgntProp::PropToZ_Official(Double_t zcoo, PhySt & phySt) {
-	if (NGNumc::EqualToZero(phySt.DirZ())) return false;
-	if (NGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) < MgntProp::MIN_CONT) return true;
+	if (MGNumc::EqualToZero(phySt.DirZ())) return false;
+	if (MGNumc::Valid(zcoo - phySt.Z()) && std::fabs(zcoo - phySt.Z()) < MgntProp::MIN_CONT) return true;
 	MgntProp::SetEnvironment(MgntProp::kVacuum);
 	MatCal.init(); MatPar.init();
 
-	Double_t sign = NGNumc::Compare(phySt.DirZ());
+	Double_t sign = MGNumc::Compare(phySt.DirZ());
 	AMSPoint pos(phySt.X(),    phySt.Y(),    phySt.Z());
 	AMSDir   dir(phySt.DirX(), phySt.DirY(), phySt.DirZ());
 	Double_t rig = (-sign) * phySt.Rig();
@@ -292,11 +292,11 @@ Bool_t MgntProp::PropToZ_Official(Double_t zcoo, PhySt & phySt) {
 	
 
 // Analytic
-Bool_t MgntProp::PropToZ_Analytic(Double_t zcoo, PhySt & phySt, MtxLB::SMtxD<5> * phyJb) {
-	if (NGNumc::EqualToZero(phySt.DirZ())) return false;
-	if (NGNumc::EqualToZero(phySt.InvEta())) return false;
-	if (NGNumc::Valid(zcoo - phySt.Z()) && NGNumc::Compare(std::fabs(zcoo - phySt.Z()), MgntProp::MIN_CONT) < 0) {
-		if (phyJb != nullptr) (*phyJb) = MtxLB::SIdMtx();
+Bool_t MgntProp::PropToZ_Analytic(Double_t zcoo, PhySt & phySt, SMtxD<5> * phyJb) {
+	if (MGNumc::EqualToZero(phySt.DirZ())) return false;
+	if (MGNumc::EqualToZero(phySt.InvEta())) return false;
+	if (MGNumc::Valid(zcoo - phySt.Z()) && MGNumc::Compare(std::fabs(zcoo - phySt.Z()), MgntProp::MIN_CONT) < 0) {
+		if (phyJb != nullptr) (*phyJb) = SMtxId();
 		return true;
 	}
 	MgntProp::SetEnvironment(MgntProp::kVacuum);
@@ -306,7 +306,7 @@ Bool_t MgntProp::PropToZ_Analytic(Double_t zcoo, PhySt & phySt, MtxLB::SMtxD<5> 
 	Double_t chms = std::fabs(phySt.ChrgMass());
 	Double_t ieta = phySt.InvEta();
 	Double_t dsdz = std::fabs(ONE / phySt.DirZ());
-	Double_t sign = NGNumc::Compare(phySt.DirZ());
+	Double_t sign = MGNumc::Compare(phySt.DirZ());
 	Double_t prop = MgntProp::PROP_FACT * chms * sign;
 	Double_t posx = phySt.X();
 	Double_t posy = phySt.Y();
@@ -320,7 +320,7 @@ Bool_t MgntProp::PropToZ_Analytic(Double_t zcoo, PhySt & phySt, MtxLB::SMtxD<5> 
 	Int_t nStpz = std::ceil(std::fabs(stableFT * stpz / MgntProp::MAX_STEP));
 	Double_t lStpz = stpz / Double_t(nStpz); 
 
-	Double_t stpzSIGN = NGNumc::Compare(stpz);
+	Double_t stpzSIGN = MGNumc::Compare(stpz);
 	Double_t magxBasedINT1 = MgntMag::GetMagFuncINT1(phySt.Z());
 	Double_t magxINT1 = ZERO;
 	for (Int_t iStpz = 0; iStpz < nStpz; ++iStpz) {
@@ -348,7 +348,7 @@ Bool_t MgntProp::PropToZ_Analytic(Double_t zcoo, PhySt & phySt, MtxLB::SMtxD<5> 
 		Double_t ytanDevX = tanx * (tany2 + ONE) / dsdz;
 		Double_t ytanDevY = tany * (TWO * tanx2 + THREE * tany2 + THREE) / dsdz;
 
-		(*phyJb) = MtxLB::SIdMtx();
+		(*phyJb) = SMtxId();
 		
 		(*phyJb)(0, 2) += stpz * (ONE + prop * xtanDevX * magxINT1_POS * ieta); 
 		(*phyJb)(0, 3) += stpz * (prop * xtanDevY * magxINT1_POS * ieta);
@@ -474,8 +474,8 @@ Bool_t MgntProp::Prop_EulerHeunMethod(Double_t step, PhySt & phySt, PhyJb * phyJ
 			Jb1.L(JUY, it) += step * Ki0.L(JUY, it);
 			Jb1.L(JGB, it) += step * Ki0.L(JGB, it);
 		}
-		MtxLB::SMtxD<5>    && KJb1G = Ki1.G() * Jb1.G();
-		MtxLB::SMtxD<5, 4> && KJb1L = (MatCal.Vacuum()) ? MtxLB::SMtxD<5, 4>() : (Ki1.G() * Jb1.L() + Ki1.L());
+		SMtxD<5>    && KJb1G = Ki1.G() * Jb1.G();
+		SMtxD<5, 4> && KJb1L = (MatCal.Vacuum()) ? SMtxD<5, 4>() : (Ki1.G() * Jb1.L() + Ki1.L());
 
 		phyJb->init(PhyJb::Identity, MatCal.Vacuum());
 		phyJb->DeltaZ() = (phySt.Z() - St0.Z());
@@ -588,8 +588,8 @@ Bool_t MgntProp::Prop_RungeKuttaNystromMethod(Double_t step, PhySt & phySt, PhyJ
 			Jb1.L(JUY, it) += halfStep * Ki0.L(JUY, it);
 			Jb1.L(JGB, it) += halfStep * Ki0.L(JGB, it);
 		}
-		MtxLB::SMtxD<5>    && KJb1G = Ki1.G() * Jb1.G();
-		MtxLB::SMtxD<5, 4> && KJb1L = (MatCal.Vacuum()) ? MtxLB::SMtxD<5, 4>() : (Ki1.G() * Jb1.L() + Ki1.L());
+		SMtxD<5>    && KJb1G = Ki1.G() * Jb1.G();
+		SMtxD<5, 4> && KJb1L = (MatCal.Vacuum()) ? SMtxD<5, 4>() : (Ki1.G() * Jb1.L() + Ki1.L());
 		
 		PhyJb Jb2(PhyJb::Identity, MatCal.Vacuum());
 		Jb2.DeltaZ() = (St2.Z() - St0.Z());
@@ -609,8 +609,8 @@ Bool_t MgntProp::Prop_RungeKuttaNystromMethod(Double_t step, PhySt & phySt, PhyJ
 			Jb2.L(JUY, it) += halfStep * KJb1L(JUY, it);
 			Jb2.L(JGB, it) += halfStep * KJb1L(JGB, it);
 		}
-		MtxLB::SMtxD<5>    && KJb2G = Ki2.G() * Jb2.G();
-		MtxLB::SMtxD<5, 4> && KJb2L = (MatCal.Vacuum()) ? MtxLB::SMtxD<5, 4>() : (Ki2.G() * Jb2.L() + Ki2.L());
+		SMtxD<5>    && KJb2G = Ki2.G() * Jb2.G();
+		SMtxD<5, 4> && KJb2L = (MatCal.Vacuum()) ? SMtxD<5, 4>() : (Ki2.G() * Jb2.L() + Ki2.L());
 		
 		PhyJb Jb3(PhyJb::Identity, MatCal.Vacuum());
 		Jb3.DeltaZ() = (St3.Z() - St0.Z());
@@ -630,8 +630,8 @@ Bool_t MgntProp::Prop_RungeKuttaNystromMethod(Double_t step, PhySt & phySt, PhyJ
 			Jb3.L(JUY, it) += step * KJb2L(JUY, it);
 			Jb3.L(JGB, it) += step * KJb2L(JGB, it);
 		}
-		MtxLB::SMtxD<5>    && KJb3G = Ki3.G() * Jb3.G();
-		MtxLB::SMtxD<5, 4> && KJb3L = (MatCal.Vacuum()) ? MtxLB::SMtxD<5, 4>() : (Ki3.G() * Jb3.L() + Ki3.L());
+		SMtxD<5>    && KJb3G = Ki3.G() * Jb3.G();
+		SMtxD<5, 4> && KJb3L = (MatCal.Vacuum()) ? SMtxD<5, 4>() : (Ki3.G() * Jb3.L() + Ki3.L());
 		
 		phyJb->init(PhyJb::Identity, MatCal.Vacuum());
 		phyJb->DeltaZ() = (phySt.Z() - St0.Z());
@@ -661,8 +661,8 @@ Bool_t MgntProp::Prop_RungeKuttaNystromMethod(Double_t step, PhySt & phySt, PhyJ
 // Orthogonal Coordinate based on seed vector (1, 0, 0)
 // Taget is particle direction
 OrthCoord::OrthCoord(PhySt & phySt, Bool_t isWithDev) {
-	Double_t parallel = std::fabs(MtxLB::Dot(phySt.Dir(), OrthCoord::ORTH_SEED));
-	if (NGNumc::Compare(parallel, ONE) == 0) return;
+	Double_t parallel = std::fabs(LA::Dot(phySt.Dir(), OrthCoord::ORTH_SEED));
+	if (MGNumc::Compare(parallel, ONE) == 0) return;
 	else { init(); fTaget = phySt.Dir(); }
 	Double_t idot = ONE / std::sqrt(ONE - fTaget(X) * fTaget(X));
 	
@@ -704,13 +704,13 @@ DevStatusFunc::DevStatusFunc(PhySt & phySt, MatPropParam * matPar, MatPhyCalPara
 	if (matPar == nullptr || matCal == nullptr) fVacuum = true;
 	else { fVacuum = (matPar->Vacuum() || matCal->Vacuum()); }
 
-	MtxLB::SVecD<3> & magVec = MgntMag::GetMagFast(phySt.Pos());
+	SVecD<3> & magVec = MgntMag::GetMagFast(phySt.Pos());
 	Double_t        propFT = MgntProp::PROP_FACT * std::fabs(phySt.ChrgMass());
 
-	Double_t sign = NGNumc::Compare(phySt.Eta());
+	Double_t sign = MGNumc::Compare(phySt.Eta());
 	Double_t ieta = std::fabs(phySt.InvEta());
 	Double_t propWithIETA = propFT * (sign * ieta);
-	MtxLB::SVecD<3> & dir = phySt.Dir();
+	SVecD<3> & dir = phySt.Dir();
 	
 	Double_t crsUB[3] = { ZERO };
 	crsUB[X] = (dir(Y) * magVec(Z) - dir(Z) * magVec(Y));
@@ -748,7 +748,7 @@ DevStatusFunc::DevStatusFunc(PhySt & phySt, MatPropParam * matPar, MatPhyCalPara
 		if (matPar->OptEngls()) {
 			Double_t englsIN = (matPar->EnglsIN() * matCal->fEnglsISGM + matCal->fEnglsIMPV);	
 			Double_t englsBR = (matPar->EnglsBR() * matCal->fEnglsBMEN);
-			if (NGNumc::Compare(englsIN) <= 0) englsIN = ZERO;
+			if (MGNumc::Compare(englsIN) <= 0) englsIN = ZERO;
 			
 			Double_t englsI_Psi = (ieta2 * eng) * ((isLowEngLimit) ? (ONE/MgntProp::BetaLimit/MgntProp::BetaLimit + ONE) : (ibeta * ibeta + ONE)); 
 			Double_t englsB_Psi = (ieta2 * eng) * (eng - ONE); 
@@ -774,13 +774,13 @@ DevParamFunc::DevParamFunc(PhySt & phySt, MatPropParam * matPar, MatPhyCalParam 
 	if (matPar == nullptr || matCal == nullptr) fVacuum = true;
 	else { fVacuum = (matPar->Vacuum() || matCal->Vacuum()); }
 
-	MtxLB::SVecD<3> & magVec = MgntMag::GetMagFast(phySt.Pos());
+	SVecD<3> & magVec = MgntMag::GetMagFast(phySt.Pos());
 	Double_t        propFT = MgntProp::PROP_FACT * std::fabs(phySt.ChrgMass());
 	
-	Double_t sign = NGNumc::Compare(phySt.InvEta());
+	Double_t sign = MGNumc::Compare(phySt.InvEta());
 	Double_t ieta = std::fabs(phySt.InvEta());
 	Double_t propWithIETA = propFT * (sign * ieta);
-	MtxLB::SVecD<3> & dir = phySt.Dir();
+	SVecD<3> & dir = phySt.Dir();
 	Double_t tanx = phySt.TanX();
 	Double_t tany = phySt.TanY();
 	

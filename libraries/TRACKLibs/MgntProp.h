@@ -33,14 +33,14 @@ class MatPropParam {
 
 		void setMscat(Double_t mscatDV = 0, Double_t mscatDW = 0) {
 			if (!fOptMscat) return;
-			fMscatDV = (!NGNumc::Valid(mscatDV)) ? ZERO : mscatDV;
-			fMscatDW = (!NGNumc::Valid(mscatDW)) ? ZERO : mscatDW;
+			fMscatDV = (!MGNumc::Valid(mscatDV)) ? ZERO : mscatDV;
+			fMscatDW = (!MGNumc::Valid(mscatDW)) ? ZERO : mscatDW;
 		}
 		
 		void setEngls(Double_t englsIN = 0, Double_t englsBR = 0) {
 			if (!fOptEngls) return;
-			fEnglsIN  = (!NGNumc::Valid(englsIN)) ? ZERO : englsIN;
-			fEnglsBR  = (!NGNumc::Valid(englsBR) || NGNumc::Compare(englsBR) <= 0) ? ZERO : englsBR;
+			fEnglsIN  = (!MGNumc::Valid(englsIN)) ? ZERO : englsIN;
+			fEnglsBR  = (!MGNumc::Valid(englsBR) || MGNumc::Compare(englsBR) <= 0) ? ZERO : englsBR;
 		}
 
 		void random(MatPhyCalParam & matCal, Bool_t optMscat = false, Bool_t optEngls = false) {
@@ -54,12 +54,12 @@ class MatPropParam {
 
 			if (fOptEngls) {
 				Double_t englsINLMT = (NEG * matCal.fEnglsIMPV / matCal.fEnglsISGM);
-				if (!NGNumc::Valid(englsINLMT)) fEnglsIN = 0.;
+				if (!MGNumc::Valid(englsINLMT)) fEnglsIN = 0.;
 				else {
 					constexpr Short_t niter = 3;
 					Short_t iter = 0;
-					fEnglsIN = MgntROOT::Random::Landau(0.0, 1.0);
-					while (fEnglsIN < englsINLMT && iter < niter) { fEnglsIN = MgntROOT::Random::Landau(0.0, 1.0); iter++; }
+					fEnglsIN = MGROOT::Rndm::Landau(0.0, 1.0);
+					while (fEnglsIN < englsINLMT && iter < niter) { fEnglsIN = MGROOT::Rndm::Landau(0.0, 1.0); iter++; }
 					if (iter == niter) fEnglsIN = englsINLMT;
 					//--- Testing Gaus ----//
 					//fEnglsIN = MGRndm::NormalGaussian();
@@ -68,7 +68,7 @@ class MatPropParam {
 					//--------//
 				}
 				Double_t bremslen = matCal.fNumRadLen * Bremsstrahlung_1oln2;
-				fEnglsBR = (NGNumc::Compare(bremslen)<=0) ? ZERO : MGRndm::Gamma(bremslen, 1./bremslen)();
+				fEnglsBR = (MGNumc::Compare(bremslen)<=0) ? ZERO : MGRndm::Gamma(bremslen, 1./bremslen)();
 			}
 		}
 		
@@ -97,16 +97,16 @@ class MatPropParam {
 		Double_t EnglsIN() { return fEnglsIN; }
 		Double_t EnglsBR() { return fEnglsBR; }
 
-		MtxLB::SVecD<4> Param() { 
-			MtxLB::SVecD<4> param;
+		SVecD<4> Param() { 
+			SVecD<4> param;
 			if (fVacuum) return param;
 			if (fOptMscat) { param(0) = fMscatDV; param(1) = fMscatDW; }
 			if (fOptEngls) { param(2) = fEnglsIN; param(3) = fEnglsBR; }
 			return param;
 		}
 
-		MtxLB::SVecD<4> Chisq(Double_t numRadLen = ZERO) {
-			MtxLB::SVecD<4> chisq;
+		SVecD<4> Chisq(Double_t numRadLen = ZERO) {
+			SVecD<4> chisq;
 			if (fVacuum) return chisq;
 			if (fOptMscat) {
 				chisq(0) = (fMscatDV * fMscatDV);
@@ -114,16 +114,16 @@ class MatPropParam {
 			}
 			if (fOptEngls) {
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (MGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				chisq(2) = (fEnglsIN + std::exp(-fEnglsIN) - ONE);
 				chisq(3) = ((englsBR) * bremslen + (ONE - bremslen) * (std::log(englsBR) - std::log(LIMIT)));
 			}
 			return chisq;
 		}
 
-		MtxLB::SVecD<4> Grad(Double_t numRadLen = ZERO) {
-			if (numRadLen < ZERO || !NGNumc::Valid(numRadLen)) numRadLen = ZERO;
-			MtxLB::SVecD<4> grad;
+		SVecD<4> Grad(Double_t numRadLen = ZERO) {
+			if (numRadLen < ZERO || !MGNumc::Valid(numRadLen)) numRadLen = ZERO;
+			SVecD<4> grad;
 			if (fVacuum) return grad;
 			if (fOptMscat) { 
 				grad(0) = fMscatDV; 
@@ -131,7 +131,7 @@ class MatPropParam {
 			}
 			if (fOptEngls) { 
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (MGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				grad(2) = HALF * (ONE - std::exp(-fEnglsIN)); 
 				//--- Testing Gaus ----//
 				//grad(2) = fEnglsIN; 
@@ -141,9 +141,9 @@ class MatPropParam {
 			return grad;
 		}
 		
-		MtxLB::SMtxSymD<4> Cov(Double_t numRadLen = ZERO) {
-			if (numRadLen < ZERO || !NGNumc::Valid(numRadLen)) numRadLen = ZERO;
-			MtxLB::SMtxSymD<4> cov;
+		SMtxSymD<4> Cov(Double_t numRadLen = ZERO) {
+			if (numRadLen < ZERO || !MGNumc::Valid(numRadLen)) numRadLen = ZERO;
+			SMtxSymD<4> cov;
 			if (fVacuum) return cov;
 			if (fOptMscat) { 
 				cov(0, 0) = ONE; 
@@ -151,7 +151,7 @@ class MatPropParam {
 			}
 			if (fOptEngls) { 
 				Double_t bremslen = numRadLen * Bremsstrahlung_1oln2;
-				Double_t englsBR = (NGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
+				Double_t englsBR = (MGNumc::Compare(fEnglsBR, LIMIT) > 0) ? fEnglsBR : LIMIT;
 				cov(2, 2) = HALF * std::exp(-fEnglsIN); 
 				//--- Testing Gaus ----//
 				//cov(2, 2) = ONE; 
@@ -199,12 +199,12 @@ class PhyJb {
 
 		inline void init(MatrixKind kind = PhyJb::Zero, Bool_t vacuum = true) { 
 			fVacuum = vacuum; 
-			fJacbL = MtxLB::SMtxD<5, 4>(); 
+			fJacbL = SMtxD<5, 4>(); 
 			switch (kind) {
 				case Zero :
-					fJacbG = MtxLB::SMtxD<5>(); break;
+					fJacbG = SMtxD<5>(); break;
 				case Identity :
-					fJacbG = MtxLB::SIdMtx(); break;
+					fJacbG = SMtxId(); break;
 				default :
 					break;
 			}
@@ -213,17 +213,17 @@ class PhyJb {
 		}
 
 		inline Bool_t Vacuum() { return fVacuum; }
-		inline MtxLB::SMtxD<5>    & G() { return fJacbG; }
-		inline MtxLB::SMtxD<5, 4> & L() { return fJacbL; }
+		inline SMtxD<5>    & G() { return fJacbG; }
+		inline SMtxD<5, 4> & L() { return fJacbL; }
     inline Double_t & G(Short_t i, Short_t j) { return fJacbG(i, j); }
 		inline Double_t & L(Short_t i, Short_t j) { return fJacbL(i, j); }
 		inline Double_t & DeltaZ() { return fDeltaZ; }
 		inline Double_t & NumRadLen() { return fNumRadLen; }
 
-		inline MtxLB::SMtxD<2, 5> SubJbGXY() { return this->fJacbG.Sub<MtxLB::SMtxD<2, 5>>(0, 0); }
-		inline MtxLB::SMtxD<2, 4> SubJbLXY() { return this->fJacbL.Sub<MtxLB::SMtxD<2, 4>>(0, 0); }
-		inline MtxLB::SMtxD<2>    SubJbLXYWithMscat() { return this->fJacbL.Sub<MtxLB::SMtxD<2>>(0, 0); }
-		inline MtxLB::SMtxD<2>    SubJbLXYWithEngls() { return this->fJacbL.Sub<MtxLB::SMtxD<2>>(0, 2); }
+		inline SMtxD<2, 5> SubJbGXY() { return this->fJacbG.Sub<SMtxD<2, 5>>(0, 0); }
+		inline SMtxD<2, 4> SubJbLXY() { return this->fJacbL.Sub<SMtxD<2, 4>>(0, 0); }
+		inline SMtxD<2>    SubJbLXYWithMscat() { return this->fJacbL.Sub<SMtxD<2>>(0, 0); }
+		inline SMtxD<2>    SubJbLXYWithEngls() { return this->fJacbL.Sub<SMtxD<2>>(0, 2); }
 
 		void multiply(PhyJb & jb, Bool_t onlyG = false) {
 			this->fDeltaZ += jb.DeltaZ();
@@ -247,11 +247,11 @@ class PhyJb {
 		}
 
 		PhySt transfer(PhySt & phySt, MatPropParam * matPar = nullptr) { // loss one term --- ion-loss peak
-			MtxLB::SVecD<5> stOLD;
+			SVecD<5> stOLD;
 			stOLD(0) = phySt.X();    stOLD(1) = phySt.Y();
 			stOLD(2) = phySt.DirX(); stOLD(3) = phySt.DirY();
 			stOLD(4) = phySt.InvEta();
-			MtxLB::SVecD<5> && stNEW = this->G() * stOLD;
+			SVecD<5> && stNEW = this->G() * stOLD;
 			if (matPar != nullptr && !matPar->Vacuum() && !this->Vacuum()) stNEW += (this->L() * matPar->Param());
 			PhySt state = phySt;
 			state.setSpatialWithCos(stNEW(0), stNEW(1), phySt.Z() + fDeltaZ, stNEW(2), stNEW(3), phySt.DirZ(), false);
@@ -286,8 +286,8 @@ class PhyJb {
 
 	private :
 		Bool_t             fVacuum;
-		MtxLB::SMtxD<5>    fJacbG;
-		MtxLB::SMtxD<5, 4> fJacbL;
+		SMtxD<5>    fJacbG;
+		SMtxD<5, 4> fJacbL;
 		Double_t           fDeltaZ;
 		Double_t           fNumRadLen;
 };
@@ -329,7 +329,7 @@ class MgntProp {
 		static Bool_t PropToZ_Official(Double_t zcoo, PhySt & phySt);
 
 		// Analytic
-		static Bool_t PropToZ_Analytic(Double_t zcoo, PhySt & phySt, MtxLB::SMtxD<5> * phyJb = nullptr);
+		static Bool_t PropToZ_Analytic(Double_t zcoo, PhySt & phySt, SMtxD<5> * phyJb = nullptr);
 
 	private :
 		// Step Length
@@ -408,13 +408,13 @@ class OrthCoord {
 		OrthCoord(PhySt & phySt, Bool_t isWithDev = false);
 		~OrthCoord() {}
 
-		inline void init() { fTaget = MtxLB::SVecD<3>(); fAxisV = MtxLB::SVecD<3>(); fAxisW = MtxLB::SVecD<3>(); fAxisVDev = MtxLB::SMtxD<2>(); fAxisWDev = MtxLB::SMtxD<2>(); }
+		inline void init() { fTaget = SVecD<3>(); fAxisV = SVecD<3>(); fAxisW = SVecD<3>(); fAxisVDev = SMtxD<2>(); fAxisWDev = SMtxD<2>(); }
 	
-		inline MtxLB::SVecD<3> & T() { return fTaget; }
-		inline MtxLB::SVecD<3> & V() { return fAxisV; }
-		inline MtxLB::SVecD<3> & W() { return fAxisW; }
-		inline MtxLB::SMtxD<2> & VDev() { return fAxisVDev; }
-		inline MtxLB::SMtxD<2> & WDev() { return fAxisWDev; }
+		inline SVecD<3> & T() { return fTaget; }
+		inline SVecD<3> & V() { return fAxisV; }
+		inline SVecD<3> & W() { return fAxisW; }
+		inline SMtxD<2> & VDev() { return fAxisVDev; }
+		inline SMtxD<2> & WDev() { return fAxisWDev; }
 		
 		inline Double_t & T(Short_t i) { return fTaget(i); }
 		inline Double_t & V(Short_t i) { return fAxisV(i); }
@@ -424,12 +424,12 @@ class OrthCoord {
 
 
 	private :
-		static const MtxLB::SVecD<3> ORTH_SEED; // orthogonal seed vector
-		MtxLB::SVecD<3> fTaget;
-		MtxLB::SVecD<3> fAxisV;
-		MtxLB::SVecD<3> fAxisW;
-		MtxLB::SMtxD<2> fAxisVDev;
-		MtxLB::SMtxD<2> fAxisWDev;
+		static const SVecD<3> ORTH_SEED; // orthogonal seed vector
+		SVecD<3> fTaget;
+		SVecD<3> fAxisV;
+		SVecD<3> fAxisW;
+		SMtxD<2> fAxisVDev;
+		SMtxD<2> fAxisWDev;
 		
 		static constexpr Short_t  X = 0;
 		static constexpr Short_t  Y = 1;
@@ -440,7 +440,7 @@ class OrthCoord {
 		static constexpr Double_t NEG  = -1.;
 };
 
-const MtxLB::SVecD<3> OrthCoord::ORTH_SEED(1, 0, 0);
+const SVecD<3> OrthCoord::ORTH_SEED(1, 0, 0);
 
 
 //---- DevStatusFunc ----//
@@ -453,8 +453,8 @@ class DevStatusFunc {
 		DevStatusFunc(PhySt & phySt, MatPropParam * matPar = nullptr, MatPhyCalParam * matCal = nullptr);
 		~DevStatusFunc() {}
 	
-		inline void init() { fVacuum = true; fDevFunc = MtxLB::SVecD<7>(); }
-		inline MtxLB::SVecD<7> & operator() () { return fDevFunc; }
+		inline void init() { fVacuum = true; fDevFunc = SVecD<7>(); }
+		inline SVecD<7> & operator() () { return fDevFunc; }
     inline Double_t & operator() (Short_t i) { return fDevFunc(i); }
 
 		void print() {
@@ -469,7 +469,7 @@ class DevStatusFunc {
 
 	private :
 		Bool_t          fVacuum;
-		MtxLB::SVecD<7>	fDevFunc;
+		SVecD<7>	fDevFunc;
 
 		static constexpr Short_t  X = 0;
 		static constexpr Short_t  Y = 1;
@@ -497,9 +497,9 @@ class DevParamFunc {
 		DevParamFunc(PhySt & phySt, MatPropParam * matPar = nullptr, MatPhyCalParam * matCal = nullptr);
 		~DevParamFunc() {}
 	
-		inline void init() { fVacuum = true; fDevMtxG = MtxLB::SMtxD<5>(); fDevMtxL = MtxLB::SMtxD<5, 4>(); }
-		inline MtxLB::SMtxD<5>    & G() { return fDevMtxG; }
-		inline MtxLB::SMtxD<5, 4> & L() { return fDevMtxL; }
+		inline void init() { fVacuum = true; fDevMtxG = SMtxD<5>(); fDevMtxL = SMtxD<5, 4>(); }
+		inline SMtxD<5>    & G() { return fDevMtxG; }
+		inline SMtxD<5, 4> & L() { return fDevMtxL; }
     inline Double_t & G(Short_t i, Short_t j) { return fDevMtxG(i, j); }
     inline Double_t & L(Short_t i, Short_t j) { return fDevMtxL(i, j); }
 
@@ -528,8 +528,8 @@ class DevParamFunc {
 
 	private :
 		Bool_t             fVacuum;
-		MtxLB::SMtxD<5>    fDevMtxG;
-		MtxLB::SMtxD<5, 4> fDevMtxL;
+		SMtxD<5>    fDevMtxG;
+		SMtxD<5, 4> fDevMtxL;
 		
 		static constexpr Short_t  X = 0;
 		static constexpr Short_t  Y = 1;

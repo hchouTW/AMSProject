@@ -776,7 +776,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 	}
 
-	const double ChrgLimit = 0.8;
+	const double ChrgLimit = 0.85;
 	int    nearHitNm[2] = { 0, 0 };
 	int    nearHitId[2][2] = { { -1, -1 }, { -1, -1 } };
 	double nearHitDt[2][2] = { { 0, 0 }, { 0, 0 } };
@@ -1594,7 +1594,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		
 		// Vertex based on TrdHSegment (New Codes)
 		short vtxSide = 0;
-		MGROOT::LA::SVecD<3> vtxCoo;
+		SVecD<3> vtxCoo;
 
 		// full
 		if (nsegx >= 2 && nsegy >= 2) {
@@ -1607,11 +1607,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 			int iter = 1;
 			const int maxIter = 8;
 			while (iter <= maxIter) {
-				MGROOT::LA::SVecD<3> grad;
-				MGROOT::LA::SMtxD<3> icov;
+				SVecD<3> grad;
+				SMtxD<3> icov;
 				for (int d = 0; d <= 1; ++d) {
-					MGROOT::LA::SVecD<3> dgrad;
-					MGROOT::LA::SMtxD<3> dicov;
+					SVecD<3> dgrad;
+					SMtxD<3> dicov;
 					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
 						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
 						float dz = (vtxCoo[2] - seg->z);
@@ -1629,7 +1629,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 					}
 				}
 				bool ret = icov.Invert();
-				MGROOT::LA::SVecD<3> rsl = icov * grad;
+				SVecD<3> rsl = icov * grad;
 				vtxCoo = vtxCoo - rsl;
 				iter++;
 			}
@@ -1637,7 +1637,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 		// part
 		else if (nsegx >= 2 || nsegy >= 2) {
-			MGROOT::LA::SVecD<2> dvtx[2];
+			SVecD<2> dvtx[2];
 			AMSPoint trPnt; AMSDir trDir;
 			trtk->Interpolate(120., trPnt, trDir);
 			dvtx[0](0) = trPnt[0];
@@ -1648,8 +1648,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 			for (int d = 0; d <= 1; ++d) {
 				if (HSegMap.at(d).size() < 2) continue;
 				for (int iter = 1; iter <= 5; ++iter) {
-					MGROOT::LA::SVecD<2> dgrad;
-					MGROOT::LA::SMtxD<2> dicov;
+					SVecD<2> dgrad;
+					SMtxD<2> dicov;
 					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
 						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
 						float dz = (dvtx[d](1) - seg->z);
@@ -1667,7 +1667,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 					}
 					bool ret = dicov.Invert();
 					if (!ret) break;
-					MGROOT::LA::SVecD<2> drsl = dicov * dgrad;
+					SVecD<2> drsl = dicov * dgrad;
 					dvtx[d] = dvtx[d] - drsl;
 				}
 			}
@@ -2587,9 +2587,9 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	double betah = btahSIG->GetBeta();
 
 	// ~6~ (Based on Track Hits)
-	const unsigned short TrPtL34 =  12;
-	const unsigned short TrPtL56 =  48;
-	const unsigned short TrPtL78 = 192;
+	const unsigned short TrPtL34 =  12; //  4 +   8
+	const unsigned short TrPtL56 =  48; // 16 +  32
+	const unsigned short TrPtL78 = 192; // 64 + 128
 	unsigned short trBitPattJ   = trtkSIG->GetBitPatternJ();
 	unsigned short trBitPattXYJ = trtkSIG->GetBitPatternXYJ();
 	

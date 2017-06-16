@@ -57,7 +57,10 @@ inline CTime   ConvertToCTime(SysTime timpnt, ClockType type = ClockType::UTC, c
 inline CTime   ConvertToCTime(StdTime timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "") { return ConvertFromUTimeToCTime(ConvertToUTime(timpnt), type, fmt); }
 
 template<class Time>
-std::ostream& Print(Time timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "", std::ostream& out = std::cout);
+std::string PrintStr(const Time& timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "");
+
+template<class Time>
+std::ostream& Print(const Time& timpnt, ClockType type = ClockType::UTC, const std::string& fmt = "", std::ostream& out = std::cout);
 
 template <class Clock, class Time, class Duration> 
 class Stopwatch {

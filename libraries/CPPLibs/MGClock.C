@@ -35,7 +35,7 @@ CTime ConvertFromMTimeToCTime(MTime * mtime, const std::string& fmt) {
 
 
 template<class Time>
-std::ostream& Print(Time timpnt, ClockType type, const std::string& fmt, std::ostream& out) {
+std::string PrintStr(const Time& timpnt, ClockType type, const std::string& fmt) {
 	std::string timetype = "";
 	switch(type) {
 		case ClockType::UTC   : timetype = "  UTC"; break;
@@ -44,8 +44,14 @@ std::ostream& Print(Time timpnt, ClockType type, const std::string& fmt, std::os
 	}
 	UTime utime = ConvertToUTime(timpnt);
 	CTime ctime = ConvertFromUTimeToCTime(utime, type, fmt);
-	out << CSTR_FMT("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
-	return out;
+	return STR_FMT("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
+}
+
+
+template<class Time>
+std::ostream& Print(const Time& timpnt, ClockType type, const std::string& fmt, std::ostream& out) {
+    out << PrintStr(timpnt, type, fmt).c_str();
+    return out;
 }
 
 
@@ -60,13 +66,13 @@ std::ostream& Stopwatch<Clock, Time, Duration>::print(ClockType type, std::ostre
 	int      hr = hours.count();
 	int      mn = minutes.count();
 	double   sc = seconds.count();
-	CTime ctime = STR_FMT("%-3d HR %-2d MIN %12.9f SEC", hr, mn, sc);
+	CTime ctime = STR_FMT("", hr, mn, sc);
 
     std::string outstr;
-	outstr += "===========================  Stopwatch  ===========================\n";
-	outstr += "==  START TIME : "; Print(times_.first , type, "", out) << "    ==\n";
-	outstr += "==  STOP  TIME : "; Print(times_.second, type, "", out) << "    ==\n";
-	outstr += STR_FMT("==  Duration   : %-30s     (%18.9f)  ==\n", ctime.c_str(), time);
+	outstr += "===============================  Stopwatch  ================================\n";
+	outstr += STR_FMT("==  START TIME : %s    ==\n", PrintStr(times_.first , type).c_str());
+	outstr += STR_FMT("==  STOP  TIME : %s    ==\n", PrintStr(times_.second, type).c_str());
+	outstr += STR_FMT("==  Duration   : %-3d HR %-2d MIN %6.3f   SEC (%24.9f)    ==\n", hr, mn, sc, time);
 	outstr += "============================================================================\n";
     out << outstr.c_str();
 	return out;

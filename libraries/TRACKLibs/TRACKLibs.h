@@ -1,6 +1,4 @@
-using namespace MgntROOT;
-
-#include "MgntTrHit.h"
+using namespace MGROOT;
 
 #include "MgntHitSt.h"
 #include "MgntPhySt.h"
