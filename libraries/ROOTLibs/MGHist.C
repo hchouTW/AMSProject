@@ -116,10 +116,10 @@ Hist::Hist(const std::string& name, const std::string& title, const HistAxis& ax
 }
 
 
-void Hist::setBin(const HistBin& bin, Double_t content, Double_t error) {
+void Hist::set_bin(const HistBin& bin, Double_t content, Double_t error) {
 	if (!exist()) return;
 	if (bin.dim() != info_.second) {
-		MGSys::ShowError(STR_FMT("<< Hist::setBin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
+		MGSys::ShowError(STR_FMT("<< Hist::set_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
 		return;
 	}
 
@@ -151,10 +151,10 @@ void Hist::setBin(const HistBin& bin, Double_t content, Double_t error) {
 }
 
 
-std::pair<Double_t, Double_t> Hist::getBin(const HistBin& bin) const {
+std::pair<Double_t, Double_t> Hist::get_bin(const HistBin& bin) const {
 	if (!exist()) return std::make_pair(0., 0.);
 	if (bin.dim() != info_.second) {
-		MGSys::ShowError(STR_FMT("<< Hist::getBin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
+		MGSys::ShowError(STR_FMT("<< Hist::get_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
 		return std::make_pair(0., 0.);
 	}
 	

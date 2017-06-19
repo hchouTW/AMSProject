@@ -88,8 +88,8 @@ class Hist {
 		inline const HistAxis&    axis()       const { return axis_; }
 		inline TH1 *              operator()() const { return hist_; }
 		
-		void                          setBin(const HistBin& bin, Double_t content, Double_t error = -1);
-		std::pair<Double_t, Double_t> getBin(const HistBin& bin) const;
+		void                          set_bin(const HistBin& bin, Double_t content, Double_t error = -1);
+		std::pair<Double_t, Double_t> get_bin(const HistBin& bin) const;
 
 		void scale(Double_t scl = 1., Option_t * option = "");
 		void normalized(const HistNorm& norm = HistNorm::kEntries);
@@ -150,7 +150,7 @@ Long64_t                     Hist::counter_ = 0;
 std::map<std::string, Hist*> Hist::hist_map_;
 
 
-using HistList = std::vector<Hist *>;
+using HistList = std::vector<Hist*>;
 
 
 } // namespace MGROOT

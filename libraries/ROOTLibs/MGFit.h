@@ -22,10 +22,10 @@ namespace Fit {
 
 class RooPar {
     public :
-        RooPar() : fExist(false), fChi(0), fNdf(0) {}
+        RooPar() : exist_(false), fChi(0), fNdf(0) {}
         ~RooPar() { clear(); }
 
-        inline const Bool_t&   exist()        const { return fExist; }
+        inline const Bool_t&   exist()        const { return exist_; }
         inline Int_t           num()          const { return fVal.size(); }
         
         inline const Double_t& val(Int_t idx) const { return fVal.at(idx); }
@@ -34,14 +34,14 @@ class RooPar {
         inline const Double_t& chi()          const { return fChi; }
         inline const Int_t&    ndf()          const { return fNdf; }
 
-        inline void push(Double_t val, Double_t err = 0., Double_t sys = 0.) { fExist = true; fVal.push_back(val); fErr.push_back(err); fSys.push_back(sys); }
+        inline void push(Double_t val, Double_t err = 0., Double_t sys = 0.) { exist_ = true; fVal.push_back(val); fErr.push_back(err); fSys.push_back(sys); }
 
-        inline void set_ndf_and_chi(Int_t ndf, Double_t chi) { fNdf = ndf; fChi = chi; fExist = true; }
+        inline void set_ndf_and_chi(Int_t ndf, Double_t chi) { fNdf = ndf; fChi = chi; exist_ = true; }
 
-        inline void clear() { fExist = false; fVal.clear(); fErr.clear(); fSys.clear(); fChi = 0; fNdf = 0; }
+        inline void clear() { exist_ = false; fVal.clear(); fErr.clear(); fSys.clear(); fChi = 0; fNdf = 0; }
 
     protected :
-        Bool_t                fExist;
+        Bool_t                exist_;
         std::vector<Double_t> fVal;
         std::vector<Double_t> fErr;
         std::vector<Double_t> fSys;
@@ -96,16 +96,16 @@ class RooVar {
 class RooResult {
     public :
         RooResult(const RooVar& var, Bool_t extended = true, Bool_t fluc = false);
-        ~RooResult() { fExist = false; fVar.clear(); fPar.clear(); }
+        ~RooResult() { exist_ = false; var_.clear(); par_.clear(); }
 
-        inline const Bool_t& exist() const { return fExist; }
-        inline const RooVar& var()   const { return fVar; }
-        inline const RooPar& par()   const { return fPar; }
+        inline const Bool_t& exist() const { return exist_; }
+        inline const RooVar& var()   const { return var_; }
+        inline const RooPar& par()   const { return par_; }
 
     protected :
-        Bool_t fExist;
-        RooVar fVar;
-        RooPar fPar;
+        Bool_t exist_;
+        RooVar var_;
+        RooPar par_;
 
     protected :
         static Long64_t fCounter;
@@ -117,21 +117,21 @@ Long64_t RooResult::fCounter = 0;
 class RooSysResult {
     public :
         RooSysResult(const RooVar& var, Bool_t extended = true, Int_t ntimes = 400);
-        ~RooSysResult() { fExist = false; fVar.clear(); fStdPar.clear(); fSysPar.clear(); fSysFitSet.clear(); }
+        ~RooSysResult() { exist_ = false; var_.clear(); std_par_.clear(); sys_par_.clear(); sys_fit_set_.clear(); }
 
-        inline const Bool_t& exist()   const { return fExist; }
-        inline const RooVar& var()     const { return fVar; }
-        inline const RooPar& std_par() const { return fStdPar; }
-        inline const RooPar& sys_par() const { return fSysPar; }
+        inline const Bool_t& exist()   const { return exist_; }
+        inline const RooVar& var()     const { return var_; }
+        inline const RooPar& std_par() const { return std_par_; }
+        inline const RooPar& sys_par() const { return sys_par_; }
 
     protected :
-        Bool_t fExist;
-        RooVar fVar;
-        RooPar fStdPar;
-        RooPar fSysPar;
+        Bool_t exist_;
+        RooVar var_;
+        RooPar std_par_;
+        RooPar sys_par_;
 
     private :
-        std::vector<RooPar> fSysFitSet;
+        std::vector<RooPar> sys_fit_set_;
 };
     
 } // namespace Fit

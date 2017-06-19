@@ -1,9 +1,11 @@
 #ifndef __ROOTLibs_H__
 #define __ROOTLibs_H__
 
+#include <TChain.h>
 #include <TTree.h>
-#include <TGraph.h>
 #include <TF1.h>
+#include <TF2.h>
+#include <TGraph.h>
 #include <TGraphErrors.h>
 #include <TGraphAsymmErrors.h>
 

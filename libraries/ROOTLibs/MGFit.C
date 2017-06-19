@@ -89,7 +89,7 @@ void RooVar::clear() {
 
 
 
-RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : fExist(false) {
+RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : exist_(false) {
     RooResult::fCounter++;
     if (!var.exist()) return;
     const Double_t LMTVAL = 1.0e-8;
@@ -137,70 +137,70 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : fExist(f
         hist->normalized(HistNorm::kIntegral);
         temp.push_back(hist);
     }
-    fVar.set(name, samp, sumt, temp, true, min, max);
+    var_.set(name, samp, sumt, temp, true, min, max);
 
     // MsgLevel  DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5
     RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
     
     //---- Binning ----//
-    Int_t lwBin = (*fVar.samp())()->FindBin(fVar.min());
-    Int_t upBin = (*fVar.samp())()->FindBin(fVar.max());
-    Double_t total = (*fVar.samp())()->Integral(lwBin, upBin);
+    Int_t lwBin = (*var_.samp())()->FindBin(var_.min());
+    Int_t upBin = (*var_.samp())()->FindBin(var_.max());
+    Double_t total = (*var_.samp())()->Integral(lwBin, upBin);
     Double_t lwLmt = -7.0 * std::sqrt(total);
     Double_t upLmt = total + 7.0 * std::sqrt(total);
-    Double_t meanVal = (total / fVar.num());
+    Double_t meanVal = (total / var_.num());
     
     //---- RooFit ----//
-    RooRealVar xvar(fVar.name().c_str(), "", fVar.min(), fVar.max());
-    std::vector<RooRealVar*>  tempVar(fVar.num(), nullptr);
+    RooRealVar xvar(var_.name().c_str(), "", var_.min(), var_.max());
+    std::vector<RooRealVar*>  tempVar(var_.num(), nullptr);
     RooArgList tempVarList;
-    for (Int_t it = 0; it < fVar.num(); ++it) {
+    for (Int_t it = 0; it < var_.num(); ++it) {
         tempVar.at(it) = new RooRealVar(CSTR_FMT("ROOVAR__TEMP%03d", it), "", meanVal, lwLmt, upLmt);
         tempVarList.add(*tempVar.at(it));
     }
     
     //---- Templates and Model ----//
-    std::vector<RooDataHist *> tempHist(fVar.num(), nullptr);
-    std::vector<RooHistPdf *>  tempPdf(fVar.num(), nullptr);
+    std::vector<RooDataHist *> tempHist(var_.num(), nullptr);
+    std::vector<RooHistPdf *>  tempPdf(var_.num(), nullptr);
     RooArgList tempPdfList;
-    for (Int_t it = 0; it < fVar.num(); ++it) {
-        tempHist.at(it) = new RooDataHist(CSTR_FMT("ROOHIST__TEMP%03d", it), "", xvar, (*fVar.temp(it))());
+    for (Int_t it = 0; it < var_.num(); ++it) {
+        tempHist.at(it) = new RooDataHist(CSTR_FMT("ROOHIST__TEMP%03d", it), "", xvar, (*var_.temp(it))());
         tempPdf.at(it) = new RooHistPdf(CSTR_FMT("ROOPDF__TEMP%03d", it), "", xvar, *tempHist.at(it));
         tempPdfList.add(*tempPdf.at(it));
     }
     RooAddPdf model("model", "model", tempPdfList, tempVarList);
 
     //---- Sample ----//
-    RooDataHist sampHist("ROOHIST__SAMP", "", xvar, (*fVar.samp())());
+    RooDataHist sampHist("ROOHIST__SAMP", "", xvar, (*var_.samp())());
   
     //---- Fit ----//
     model.fitTo(sampHist, RooFit::Extended(extended), RooFit::PrintLevel(-1));
 
-    fPar.clear();
-    for (Int_t it = 0; it < fVar.num(); ++it) {
-        for (Int_t ib = 0; ib <= (*fVar.temp(it))()->GetNbinsX()+1; ++ib)
-            if(MGNumc::Compare((*fVar.temp(it))()->GetBinContent(ib), LMTVAL) <= 0)
-                (*fVar.temp(it))()->SetBinContent(ib, 0.0);
+    par_.clear();
+    for (Int_t it = 0; it < var_.num(); ++it) {
+        for (Int_t ib = 0; ib <= (*var_.temp(it))()->GetNbinsX()+1; ++ib)
+            if(MGNumc::Compare((*var_.temp(it))()->GetBinContent(ib), LMTVAL) <= 0)
+                (*var_.temp(it))()->SetBinContent(ib, 0.0);
         
-        fPar.push(tempVar.at(it)->getVal(), tempVar.at(it)->getError()); 
+        par_.push(tempVar.at(it)->getVal(), tempVar.at(it)->getError()); 
 
-        Double_t cntNum = (*fVar.temp(it))()->Integral(lwBin, upBin);
-        (*fVar.temp(it))()->Scale(fPar.val(it) / cntNum);
-        (*fVar.sumt())()->Add((*fVar.temp(it))());
+        Double_t cntNum = (*var_.temp(it))()->Integral(lwBin, upBin);
+        (*var_.temp(it))()->Scale(par_.val(it) / cntNum);
+        (*var_.sumt())()->Add((*var_.temp(it))());
     }
     
     Double_t chi = 0;
-    Int_t ndf = -(fVar.num() - (!extended));
+    Int_t ndf = -(var_.num() - (!extended));
     for (Int_t ibin = lwBin; ibin <= upBin; ++ibin) {
-        Double_t sampVal = (*fVar.samp())()->GetBinContent(ibin);
-        Double_t sampErr = (*fVar.samp())()->GetBinError(ibin);
+        Double_t sampVal = (*var_.samp())()->GetBinContent(ibin);
+        Double_t sampErr = (*var_.samp())()->GetBinError(ibin);
         if (MGNumc::EqualToZero(sampVal)) continue;
         
         Double_t tempVal = 0.;
         Double_t tempErr = 0.;
         for (Int_t it = 0; it < var.num(); ++it) {
-            tempVal += (*fVar.temp(it))()->GetBinContent(ibin);
-            tempErr += (*fVar.temp(it))()->GetBinError(ibin) * (*fVar.temp(it))()->GetBinError(ibin);
+            tempVal += (*var_.temp(it))()->GetBinContent(ibin);
+            tempErr += (*var_.temp(it))()->GetBinError(ibin) * (*var_.temp(it))()->GetBinError(ibin);
         }
         tempErr = std::sqrt(tempErr);
         
@@ -210,9 +210,9 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : fExist(f
         chi += (resVal * resVal);
         ndf++;
     }
-    fPar.set_ndf_and_chi(ndf, chi);
+    par_.set_ndf_and_chi(ndf, chi);
 
-    fExist = true;
+    exist_ = true;
 
     for (Int_t it = 0; it < var.num(); ++it) {
     delete tempHist.at(it); delete tempPdf.at(it); delete tempVar.at(it);
@@ -223,8 +223,8 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : fExist(f
 }
 
 
-RooSysResult::RooSysResult(const RooVar& var, Bool_t extended, Int_t ntimes) : fExist(false) {
-    fExist = false;
+RooSysResult::RooSysResult(const RooVar& var, Bool_t extended, Int_t ntimes) : exist_(false) {
+    exist_ = false;
     RooResult result(var, extended);
     if (!var.exist()) return;
     if (!result.exist()) return;
@@ -295,22 +295,22 @@ RooSysResult::RooSysResult(const RooVar& var, Bool_t extended, Int_t ntimes) : f
     }
 
     //---- Parameters ----//
-    fVar = result.var();
-    fStdPar = result.par();
-    fSysPar.clear();
+    var_ = result.var();
+    std_par_ = result.par();
+    sys_par_.clear();
     for (Int_t ip = 0; ip < var.num(); ++ip) {
         Double_t val = avgpar.at(ip).first;
         Double_t err = avgpar.at(ip).second;
         Double_t sys = avgerr.at(ip);
-        fSysPar.push(val, err, sys);
+        sys_par_.push(val, err, sys);
        
         // TODO (hchou): find Correct way
         if (ip==0) CERR("PAR %8.2f %8.2f %8.2f    (%8.2f %8.2f)\n", val, err, sys, result.par().val(ip), result.par().err(ip));
     }
-    fSysPar.set_ndf_and_chi(ndf, avgchi * ndf);
-    fSysFitSet = parvec;
+    sys_par_.set_ndf_and_chi(ndf, avgchi * ndf);
+    sys_fit_set_ = parvec;
 
-    fExist = true;
+    exist_ = true;
 }
 
 
