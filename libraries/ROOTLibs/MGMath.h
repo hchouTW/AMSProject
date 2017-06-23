@@ -43,24 +43,31 @@ namespace MGROOT {
 	using TArrD = TArrayD;
 	
 	// TVector TMatrix Package
+	using TVecO = TVectorT<Bool_t>;
 	using TVecI = TVectorT<Int_t>;
 	using TVecF = TVectorT<Float_t>;
 	using TVecD = TVectorT<Double_t>;
 	
+	using TMtxO = TMatrixT<Bool_t>;
 	using TMtxI = TMatrixT<Int_t>;
 	using TMtxF = TMatrixT<Float_t>;
 	using TMtxD = TMatrixT<Double_t>;
 			
+	using TMtxSymO = TMatrixTSym<Bool_t>;
 	using TMtxSymI = TMatrixTSym<Int_t>;
 	using TMtxSymF = TMatrixTSym<Float_t>;
 	using TMtxSymD = TMatrixTSym<Double_t>;
-	using TMtxSparseI = TMatrixTSparse<Int_t>;
+
+	using TMtxSparseO = TMatrixTSparse<Bool_t>;
 	using TMtxSparseI = TMatrixTSparse<Int_t>;
 	using TMtxSparseF = TMatrixTSparse<Float_t>;
 	using TMtxSparseD = TMatrixTSparse<Double_t>;
 	
 	// SVector SMatrix Package
 	template <unsigned int D>
+	using SVecO = ROOT::Math::SVector<Bool_t, D>;
+	
+    template <unsigned int D>
 	using SVecI = ROOT::Math::SVector<Int_t, D>;
 	
 	template <unsigned int D>
@@ -70,6 +77,9 @@ namespace MGROOT {
 	using SVecD = ROOT::Math::SVector<Double_t, D>;
 	
 	template <unsigned int D1, unsigned int D2 = D1>
+	using SMtxO = ROOT::Math::SMatrix<Bool_t, D1, D2, ROOT::Math::MatRepStd<Bool_t, D1, D2>>;
+	
+    template <unsigned int D1, unsigned int D2 = D1>
 	using SMtxI = ROOT::Math::SMatrix<Int_t, D1, D2, ROOT::Math::MatRepStd<Int_t, D1, D2>>;
 	
 	template <unsigned int D1, unsigned int D2 = D1>
@@ -78,6 +88,9 @@ namespace MGROOT {
 	template <unsigned int D1, unsigned int D2 = D1>
 	using SMtxD = ROOT::Math::SMatrix<Double_t, D1, D2, ROOT::Math::MatRepStd<Double_t, D1, D2>>;
 	
+	template <unsigned int D>
+	using SMtxSymO = ROOT::Math::SMatrix<Bool_t, D, D, ROOT::Math::MatRepSym<Bool_t, D>>;
+
 	template <unsigned int D>
 	using SMtxSymI = ROOT::Math::SMatrix<Int_t, D, D, ROOT::Math::MatRepSym<Int_t, D>>;
 	

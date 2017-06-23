@@ -55,6 +55,7 @@
 #include <GeoMagField.h>
 #include <GeoMagTrace.h>
 #include <TrReconQ.h>
+#include <MagField.h>
 
 // User defination library
 #include <CPPLibs/CPPLibs.h>

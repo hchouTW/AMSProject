@@ -776,7 +776,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 	}
 
-	const double ChrgLimit = 0.85;
+	const double ChrgLimit = 0.90;
 	int    nearHitNm[2] = { 0, 0 };
 	int    nearHitId[2][2] = { { -1, -1 }, { -1, -1 } };
 	double nearHitDt[2][2] = { { 0, 0 }, { 0, 0 } };
@@ -1280,9 +1280,11 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (isNoise) continue;
 		
 		float xchrg = std::sqrt(recHit->GetSignalCombination(0, qopt, 1));
-  	float ychrg = std::sqrt(recHit->GetSignalCombination(1, qopt, 1));
+        float ychrg = std::sqrt(recHit->GetSignalCombination(1, qopt, 1));
+        float tchrg = 0.5 * (xchrg + ychrg);
 		float dchrg = std::fabs(xchrg - ychrg) / (xchrg + ychrg);
-		if (xchrg < 0.7 || ychrg < 0.7) continue;
+		if (xchrg < 0.75 || ychrg < 0.75) continue;
+        if (tchrg < 0.80) continue;
 		
 		const float NSfluc = 0.08;
 		float chrgNS = std::sqrt(2.0 * (xcls->GetSeedNoise()/xcls->GetSeedSignal()/xcls->GetSeedSignal() + ycls->GetSeedNoise()/ycls->GetSeedSignal()/ycls->GetSeedSignal()) + NSfluc * NSfluc);

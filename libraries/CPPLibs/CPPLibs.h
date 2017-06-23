@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 
+#include "MGMath.h"
+
 #include "MGSys.h"
 #include "MGSys.C"
 

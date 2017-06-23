@@ -23,8 +23,16 @@
 #include "MGHist.h"
 #include "MGHist.C"
 
-#include "MGFit.h"
-#include "MGFit.C"
+//#include "MGFit.h"
+//#include "MGFit.C"
+
+
+namespace MGROOT {
+    void LoadDefaultEnvironment() {
+        Style::LoadDefaultEnvironment();
+        Hist::LoadDefaultEnvironment();
+    }
+}
 
 
 #endif // __ROOTLibs_H__

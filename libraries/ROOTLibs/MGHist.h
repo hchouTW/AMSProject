@@ -69,8 +69,11 @@ class HistAxis {
 
 
 class Hist {
+    public :
+        static void LoadDefaultEnvironment() { COUT("MGROOT::Hist : Load default environment.\n"); TH1::SetDefaultSumw2(true); TH1::AddDirectory(false); }
+
 	protected :
-		Hist() { TH1::SetDefaultSumw2(true); TH1::AddDirectory(false); unique_id_ = -1; info_.first = HistType::kNone; info_.second = HistDim::kNone; hist_ = nullptr; }
+		Hist() { unique_id_ = -1; info_.first = HistType::kNone; info_.second = HistDim::kNone; hist_ = nullptr; }
 
 	public :
 		Hist(const TH1 * hist, Bool_t reset = false) : Hist("", "", hist, reset) {}

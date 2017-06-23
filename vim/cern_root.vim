@@ -36,6 +36,6 @@ if !exists("c_no_cern_root")
    syn keyword	cSpecial    gGeometry gHistImagePalette gWebImagePalette gGrid gClassTable gObjectTable
    syn keyword	cSpecial    gProof gPerfStats gTQSender gTQSlotParams gDebug gDirectory gROOT gFile gPad 
    syn keyword	cSpecial    gApplication gBenchmark gEnv gErrorIgnoreLevel gErrorAbortLevel gRandom gStyle
-   syn keyword	cSpecial    gRootDir gProgName gProgPath gSystem gVirtualPS gDragManager gGuiBuilder gCurrentRegion
+   syn keyword	cSpecial    gRootDir gProgName gProgPath gSystem gInterpreter gVirtualPS gDragManager gGuiBuilder gCurrentRegion
    syn keyword	cSpecial    gClient gMinuit gHtml
 endif
