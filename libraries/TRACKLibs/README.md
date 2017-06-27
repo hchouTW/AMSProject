@@ -3,47 +3,47 @@
 
 ## Lorentz Force
 
-Magnetic Field: Uniform, 1 kGaus
-Particle Beam: (Electron Proton), Position(0, 0, 55cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (50cm 0cm))
+Magnetic Field: Uniform, 1 kGaus <br />
+Particle Beam: (Electron Proton), Position(0, 0, 55cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (50cm 0cm)) <br />
 
 ## Multiple-Scattering
 
 ### Direction Testing
 
-Magnetic Field: None
-Particle Beam: (Electron Proton), Position(0, 0, 110cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (106cm 0cm))
-Material Box: Carbon, Size(x y z := 100cm 100cm 5cm), Central Location(X Y Z := 0cm 0cm 102.5cm)
+Magnetic Field: None <br />
+Particle Beam: (Electron Proton), Position(0, 0, 110cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (106cm 0cm)) <br />
+Material Box: Carbon, Size(x y z := 100cm 100cm 5cm), Central Location(X Y Z := 0cm 0cm 102.5cm) <br />
 
 ### Position & Direction Testing
 
-Magnetic Field: None
-Particle Beam: (Electron Proton), Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm))
-Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm)
+Magnetic Field: None <br />
+Particle Beam: (Electron Proton), Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
+Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
 
 ## Ionisation Energy Loss
 
-Magnetic Field: None
-Particle Beam: (Proton Helium Carbon), Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm))
-Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm)
+Magnetic Field: None <br />
+Particle Beam: (Proton Helium Carbon), Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
+Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
 
 ## Bremsstrahlung Energy Loss
 
-Magnetic Field: None
-Particle Beam: Electron, Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm))
-Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm)
+Magnetic Field: None <br />
+Particle Beam: Electron, Position(0, 0, 15cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
+Material Box: Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
 
 
 # Track Fitting Testing
 
-Magnetic Field: (Uniform, 1 kGaus) (Gaussian, 1kGaus 0cm 40cm)
-Particle Beam: (Electron Proton Helium Carbon), Position(0, 0, 120cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 300GeV 800GeV 1000GeV 2000GeV 4000GeV 8000GeV)
-Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (110cm 100cm 32cm 28cm 2cm -2cm =28cm -32cm -100cm -110cm))
-Material Box: Carbon, Size(x y z := 100cm 100cm 5cm), Central Location(X Y Z := 0cm 0cm (60cm -60cm))
+Magnetic Field: (Uniform, 1 kGaus) (Gaussian, 1kGaus 0cm 40cm) <br />
+Particle Beam: (Electron Proton Helium Carbon), Position(0, 0, 120cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 300GeV 800GeV 1000GeV 2000GeV 4000GeV 8000GeV) <br />
+Measurement Plane: Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (110cm 100cm 32cm 28cm 2cm -2cm =28cm -32cm -100cm -110cm)) <br />
+Material Box: Carbon, Size(x y z := 100cm 100cm 5cm), Central Location(X Y Z := 0cm 0cm (60cm -60cm)) <br />
 
 
 # Special Environment Testing
