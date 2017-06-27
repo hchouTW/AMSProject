@@ -2,6 +2,7 @@
 #define __CPPLibs_MGMath_H__
 
 #include <cmath>
+#include <TROOT.h> 
 
 namespace MGMath {
 

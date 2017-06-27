@@ -37,6 +37,7 @@ MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     geo_box_->max[0] = xmax;
     geo_box_->max[1] = ymax;
     geo_box_->max[2] = zmax;
+    std::fill_n(static_cast<Double_t*>(&(geo_box_->mag)), max_len_ * DIM_, 0.0);
 }
 
 

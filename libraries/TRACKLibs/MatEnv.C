@@ -28,7 +28,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     cur_len_   = 0;
     geo_box_   = reinterpret_cast<MatGeoBox*>(file_ptr);
     elm_.fill(false);
-    cnt_.fill(0);
+    cnt_ = 0;
     den_.fill(0);
     inv_rad_len_ = 0.;
 
@@ -44,20 +44,23 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     std::fill_n(geo_box_->elm, 9, false);
     std::fill_n(geo_box_->den, 9, 0.0);
     geo_box_->inv_rad_len = 0.;
+    std::fill_n(static_cast<Bool_t*>(&(geo_box_->mat)), max_len_, false);
 }
 
 
-void MatGeoBoxCreator::fill(Bool_t elm[MatProperty::NUM_ELM], Double_t den[MatProperty::NUM_ELM]) {
+void MatGeoBoxCreator::fill(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM], Bool_t calculated) {
     if (!is_open_) return;
     if (cur_len_ >= max_len_) { MGSys::ShowError("MatGeoBoxCreator::fill() : Out range."); return; }
 
     Bool_t has_mat = false;
-    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-        if (elm[it]) elm_.at(it) = true;
-        else continue;
-        den_.at(it) += den[it];
-        cnt_.at(it)++;
-        has_mat = true;
+    if (calculated) {
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!elm[it]) continue;
+            has_mat = true;
+            elm_.at(it) = true;
+            den_.at(it) += den[it];
+        }
+        if (has_mat) cnt_++;
     }
 
     Bool_t& mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + cur_len_));
@@ -66,34 +69,38 @@ void MatGeoBoxCreator::fill(Bool_t elm[MatProperty::NUM_ELM], Double_t den[MatPr
 }
 
 
+Bool_t MatGeoBoxCreator::is_in_box(Float_t coo[3]) {
+    if (!is_open_) return false;
+    if (MGNumc::Compare(coo[2], static_cast<Float_t>(geo_box_->min[2])) <= 0 || MGNumc::Compare(coo[2], static_cast<Float_t>(geo_box_->max[2])) >= 0) return false;
+    if (MGNumc::Compare(coo[1], static_cast<Float_t>(geo_box_->min[1])) <= 0 || MGNumc::Compare(coo[1], static_cast<Float_t>(geo_box_->max[1])) >= 0) return false;
+    if (MGNumc::Compare(coo[0], static_cast<Float_t>(geo_box_->min[0])) <= 0 || MGNumc::Compare(coo[0], static_cast<Float_t>(geo_box_->max[0])) >= 0) return false;
+    return true;
+}
+
+
 void MatGeoBoxCreator::save_and_close() {
     if (!is_open_) { clear(); return; }
     if (cur_len_ < max_len_) {
         MGSys::ShowWarning(STR_FMT("MatGeoBoxCreator::close() : fill not finished. (%lld/%lld)", cur_len_, max_len_));
-        Bool_t   elm[MatProperty::NUM_ELM];
-        Double_t den[MatProperty::NUM_ELM];
+        Bool_t  elm[MatProperty::NUM_ELM];
+        Float_t den[MatProperty::NUM_ELM];
         std::fill_n(elm, 9, false);
         std::fill_n(den, 9, 0.0);
         for (Long64_t it = cur_len_; it < max_len_; ++it) fill(elm, den);
     }
     
-    Long64_t mat_cnt = 0;
-    for (Long64_t it = 0; it < max_len_; ++it) {
-        Bool_t mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + it));
-        if (!mat) continue;
-        mat_cnt++;
+    if (cnt_ > 0) {
+        Double_t inv_rad_len = 0.;
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!elm_.at(it)) continue;
+            den_.at(it) = (den_.at(it) / static_cast<Double_t>(cnt_));
+            geo_box_->elm[it] = elm_.at(it);
+            geo_box_->den[it] = den_.at(it);
+        
+            inv_rad_len += (den_.at(it) * MatProperty::MASS[it] / MatProperty::RAD_LEN[it]);
+        }
+        geo_box_->inv_rad_len = inv_rad_len;
     }
-
-    Double_t inv_rad_len = 0.;
-    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-        if (!elm_.at(it)) continue;
-        den_.at(it) = (den_.at(it) / static_cast<Double_t>(mat_cnt));
-        geo_box_->elm[it] = elm_.at(it);
-        geo_box_->den[it] = den_.at(it);
-    
-        inv_rad_len += (den_.at(it) * MatProperty::MASS[it] / MatProperty::RAD_LEN[it]);
-    }
-    if (mat_cnt > 0) geo_box_->inv_rad_len = inv_rad_len;
 
     munmap(file_ptr_, file_len_);
     close(file_des_);
@@ -191,6 +198,234 @@ Bool_t MatGeoBoxReader::is_cross_box_coord(const SVecD<3>& vbox, const SVecD<3>&
     if (MGNumc::Compare(vbox(0), MGMath::ONE ) >= 0 && MGNumc::Compare(wbox(0), MGMath::ONE ) >= 0) return false;
     return true;
 }
+
+
+Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
+    std::string g4mat_file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/g4mat.root";
+    TFile * root_file = TFile::Open(g4mat_file_path.c_str());
+    if (root_file == nullptr || root_file->IsZombie()) return false;
+    
+    Long64_t n[3];
+    Float_t  min[3];
+    Float_t  max[3];
+    TTree * tree_inf = (TTree*) root_file->Get("g4mat_inf");
+    tree_inf->SetBranchAddress("n",   &n);
+    tree_inf->SetBranchAddress("min",  min);
+    tree_inf->SetBranchAddress("max",  max);
+    tree_inf->GetEntry(0);
+
+    Bool_t  mat;
+    Int_t   idx[3];
+    Float_t coo[3];
+    Bool_t  elm[9];
+    Float_t den[9];
+    TTree * tree_elm = (TTree*) root_file->Get("g4mat_elm");
+    tree_elm->SetBranchAddress("mat", &mat);
+    tree_elm->SetBranchAddress("idx",  idx);
+    tree_elm->SetBranchAddress("coo",  coo);
+    tree_elm->SetBranchAddress("elm",  elm);
+    tree_elm->SetBranchAddress("den",  den);
+
+    std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
+    
+    MatGeoBoxCreator creator_AMS02TRL1(
+            MatAms::TRL1_N.at(0), MatAms::TRL1_MIN.at(0), MatAms::TRL1_MAX.at(0),
+            MatAms::TRL1_N.at(1), MatAms::TRL1_MIN.at(1), MatAms::TRL1_MAX.at(1),
+            MatAms::TRL1_N.at(2), MatAms::TRL1_MIN.at(2), MatAms::TRL1_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL1.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRD(
+            MatAms::TRD_N.at(0), MatAms::TRD_MIN.at(0), MatAms::TRD_MAX.at(0),
+            MatAms::TRD_N.at(1), MatAms::TRD_MIN.at(1), MatAms::TRD_MAX.at(1),
+            MatAms::TRD_N.at(2), MatAms::TRD_MIN.at(2), MatAms::TRD_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRD.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02UTOF(
+            MatAms::UTOF_N.at(0), MatAms::UTOF_MIN.at(0), MatAms::UTOF_MAX.at(0),
+            MatAms::UTOF_N.at(1), MatAms::UTOF_MIN.at(1), MatAms::UTOF_MAX.at(1),
+            MatAms::UTOF_N.at(2), MatAms::UTOF_MIN.at(2), MatAms::UTOF_MAX.at(2),
+            CSTR_FMT("%s/AMS02UTOF.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL2(
+            MatAms::TRL2_N.at(0), MatAms::TRL2_MIN.at(0), MatAms::TRL2_MAX.at(0),
+            MatAms::TRL2_N.at(1), MatAms::TRL2_MIN.at(1), MatAms::TRL2_MAX.at(1),
+            MatAms::TRL2_N.at(2), MatAms::TRL2_MIN.at(2), MatAms::TRL2_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL2.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL3(
+            MatAms::TRL3_N.at(0), MatAms::TRL3_MIN.at(0), MatAms::TRL3_MAX.at(0),
+            MatAms::TRL3_N.at(1), MatAms::TRL3_MIN.at(1), MatAms::TRL3_MAX.at(1),
+            MatAms::TRL3_N.at(2), MatAms::TRL3_MIN.at(2), MatAms::TRL3_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL3.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL4(
+            MatAms::TRL4_N.at(0), MatAms::TRL4_MIN.at(0), MatAms::TRL4_MAX.at(0),
+            MatAms::TRL4_N.at(1), MatAms::TRL4_MIN.at(1), MatAms::TRL4_MAX.at(1),
+            MatAms::TRL4_N.at(2), MatAms::TRL4_MIN.at(2), MatAms::TRL4_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL4.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL5(
+            MatAms::TRL5_N.at(0), MatAms::TRL5_MIN.at(0), MatAms::TRL5_MAX.at(0),
+            MatAms::TRL5_N.at(1), MatAms::TRL5_MIN.at(1), MatAms::TRL5_MAX.at(1),
+            MatAms::TRL5_N.at(2), MatAms::TRL5_MIN.at(2), MatAms::TRL5_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL5.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL6(
+            MatAms::TRL6_N.at(0), MatAms::TRL6_MIN.at(0), MatAms::TRL6_MAX.at(0),
+            MatAms::TRL6_N.at(1), MatAms::TRL6_MIN.at(1), MatAms::TRL6_MAX.at(1),
+            MatAms::TRL6_N.at(2), MatAms::TRL6_MIN.at(2), MatAms::TRL6_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL6.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL7(
+            MatAms::TRL7_N.at(0), MatAms::TRL7_MIN.at(0), MatAms::TRL7_MAX.at(0),
+            MatAms::TRL7_N.at(1), MatAms::TRL7_MIN.at(1), MatAms::TRL7_MAX.at(1),
+            MatAms::TRL7_N.at(2), MatAms::TRL7_MIN.at(2), MatAms::TRL7_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL7.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02TRL8(
+            MatAms::TRL8_N.at(0), MatAms::TRL8_MIN.at(0), MatAms::TRL8_MAX.at(0),
+            MatAms::TRL8_N.at(1), MatAms::TRL8_MIN.at(1), MatAms::TRL8_MAX.at(1),
+            MatAms::TRL8_N.at(2), MatAms::TRL8_MIN.at(2), MatAms::TRL8_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL8.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_AMS02LTOF(
+            MatAms::LTOF_N.at(0), MatAms::LTOF_MIN.at(0), MatAms::LTOF_MAX.at(0),
+            MatAms::LTOF_N.at(1), MatAms::LTOF_MIN.at(1), MatAms::LTOF_MAX.at(1),
+            MatAms::LTOF_N.at(2), MatAms::LTOF_MIN.at(2), MatAms::LTOF_MAX.at(2),
+            CSTR_FMT("%s/AMS02LTOF.bin", dir_path.c_str())
+        );
+
+    MatGeoBoxCreator creator_AMS02RICH(
+            MatAms::RICH_N.at(0), MatAms::RICH_MIN.at(0), MatAms::RICH_MAX.at(0),
+            MatAms::RICH_N.at(1), MatAms::RICH_MIN.at(1), MatAms::RICH_MAX.at(1),
+            MatAms::RICH_N.at(2), MatAms::RICH_MIN.at(2), MatAms::RICH_MAX.at(2),
+            CSTR_FMT("%s/AMS02RICH.bin", dir_path.c_str())
+        );
+
+    MatGeoBoxCreator creator_AMS02PMT(
+            MatAms::PMT_N.at(0), MatAms::PMT_MIN.at(0), MatAms::PMT_MAX.at(0),
+            MatAms::PMT_N.at(1), MatAms::PMT_MIN.at(1), MatAms::PMT_MAX.at(1),
+            MatAms::PMT_N.at(2), MatAms::PMT_MIN.at(2), MatAms::PMT_MAX.at(2),
+            CSTR_FMT("%s/AMS02PMT.bin", dir_path.c_str())
+        );
+
+    MatGeoBoxCreator creator_AMS02TRL9(
+            MatAms::TRL9_N.at(0), MatAms::TRL9_MIN.at(0), MatAms::TRL9_MAX.at(0),
+            MatAms::TRL9_N.at(1), MatAms::TRL9_MIN.at(1), MatAms::TRL9_MAX.at(1),
+            MatAms::TRL9_N.at(2), MatAms::TRL9_MIN.at(2), MatAms::TRL9_MAX.at(2),
+            CSTR_FMT("%s/AMS02TRL9.bin", dir_path.c_str())
+        );
+
+    MatGeoBoxCreator creator_AMS02ECAL(
+            MatAms::ECAL_N.at(0), MatAms::ECAL_MIN.at(0), MatAms::ECAL_MAX.at(0),
+            MatAms::ECAL_N.at(1), MatAms::ECAL_MIN.at(1), MatAms::ECAL_MAX.at(1),
+            MatAms::ECAL_N.at(2), MatAms::ECAL_MIN.at(2), MatAms::ECAL_MAX.at(2),
+            CSTR_FMT("%s/AMS02ECAL.bin", dir_path.c_str())
+        );
+
+    for (Long64_t entry = 0; entry < tree_elm->GetEntries(); ++entry) {
+        tree_elm->GetEntry(entry);
+        Bool_t is_in_magnetic = (MGNumc::Compare(std::sqrt(coo[0] * coo[0] + coo[1] * coo[1]), MatAms::MAGNETIC_RADIUS) < 0);
+
+        if (creator_AMS02TRL1.is_in_box(coo)) creator_AMS02TRL1.fill(elm, den);
+        if (creator_AMS02TRD .is_in_box(coo)) creator_AMS02TRD .fill(elm, den);
+        if (creator_AMS02UTOF.is_in_box(coo)) creator_AMS02UTOF.fill(elm, den);
+        if (creator_AMS02TRL2.is_in_box(coo)) creator_AMS02TRL2.fill(elm, den);
+        if (creator_AMS02TRL3.is_in_box(coo)) creator_AMS02TRL3.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL4.is_in_box(coo)) creator_AMS02TRL4.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL5.is_in_box(coo)) creator_AMS02TRL5.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL6.is_in_box(coo)) creator_AMS02TRL6.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL7.is_in_box(coo)) creator_AMS02TRL7.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL8.is_in_box(coo)) creator_AMS02TRL8.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02LTOF.is_in_box(coo)) creator_AMS02LTOF.fill(elm, den);
+        if (creator_AMS02RICH.is_in_box(coo)) creator_AMS02RICH.fill(elm, den);
+        if (creator_AMS02PMT .is_in_box(coo)) creator_AMS02PMT .fill(elm, den);
+        if (creator_AMS02TRL9.is_in_box(coo)) creator_AMS02TRL9.fill(elm, den);
+        if (creator_AMS02ECAL.is_in_box(coo)) creator_AMS02ECAL.fill(elm, den);
+    }
+    
+    creator_AMS02TRL1.save_and_close();
+    creator_AMS02TRD .save_and_close();
+    creator_AMS02UTOF.save_and_close();
+    creator_AMS02TRL2.save_and_close();
+    creator_AMS02TRL3.save_and_close();
+    creator_AMS02TRL4.save_and_close();
+    creator_AMS02TRL5.save_and_close();
+    creator_AMS02TRL6.save_and_close();
+    creator_AMS02TRL7.save_and_close();
+    creator_AMS02TRL8.save_and_close();
+    creator_AMS02LTOF.save_and_close();
+    creator_AMS02RICH.save_and_close();
+    creator_AMS02PMT .save_and_close();
+    creator_AMS02TRL9.save_and_close();
+    creator_AMS02ECAL.save_and_close();
+
+    root_file->Close();
+
+    return true;
+}
+
+
+Bool_t MatGeoBoxAms::Load() {
+    if (is_load_) return is_load_;
+    std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
+
+    reader_AMS02TRL1_.load(STR_FMT("%s/AMS02TRL1.bin",  g4mat_dir_path.c_str()));
+    reader_AMS02TRD_ .load(STR_FMT("%s/AMS02TRD.bin",   g4mat_dir_path.c_str()));
+    reader_AMS02UTOF_.load(STR_FMT("%s/AMS02UTOF.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL2_.load(STR_FMT("%s/AMS02TRL2.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL3_.load(STR_FMT("%s/AMS02TRL3.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL4_.load(STR_FMT("%s/AMS02TRL4.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL5_.load(STR_FMT("%s/AMS02TRL5.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL6_.load(STR_FMT("%s/AMS02TRL6.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL7_.load(STR_FMT("%s/AMS02TRL7.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02TRL8_.load(STR_FMT("%s/AMS02TRL8.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02LTOF_.load(STR_FMT("%s/AMS02LTOF.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02RICH_.load(STR_FMT("%s/AMS02RICH.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02PMT_ .load(STR_FMT("%s/AMS02PMT.bin",   g4mat_dir_path.c_str()));
+    reader_AMS02TRL9_.load(STR_FMT("%s/AMS02TRL9.bin" , g4mat_dir_path.c_str()));
+    reader_AMS02ECAL_.load(STR_FMT("%s/AMS02ECAL.bin" , g4mat_dir_path.c_str()));
+
+    reader_.clear();
+    reader_.push_back(&reader_AMS02TRL1_);
+    reader_.push_back(&reader_AMS02TRD_ );
+    reader_.push_back(&reader_AMS02UTOF_);
+    reader_.push_back(&reader_AMS02TRL2_);
+    reader_.push_back(&reader_AMS02TRL3_);
+    reader_.push_back(&reader_AMS02TRL4_);
+    reader_.push_back(&reader_AMS02TRL5_);
+    reader_.push_back(&reader_AMS02TRL6_);
+    reader_.push_back(&reader_AMS02TRL7_);
+    reader_.push_back(&reader_AMS02TRL8_);
+    reader_.push_back(&reader_AMS02LTOF_);
+    reader_.push_back(&reader_AMS02RICH_);
+    reader_.push_back(&reader_AMS02PMT_ );
+    reader_.push_back(&reader_AMS02TRL9_);
+    reader_.push_back(&reader_AMS02ECAL_);
+   
+    is_load_ = true;
+    for (auto&& reader : reader_) {
+        if (!reader->exist()) {
+            is_load_ = false;
+            break;
+        }
+    }
+
+    return is_load_;
+}
+
+
+
 
 
 } // namespace TrackSys

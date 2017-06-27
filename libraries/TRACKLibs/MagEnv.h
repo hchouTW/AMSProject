@@ -94,16 +94,16 @@ class MagGeoBoxReader {
         SVecD<3> do_trilinear_interpolation(const Index& index);
 
     private :
-        static constexpr Long64_t DIM_ = 3;
-        Bool_t                    is_load_;
-        std::string               file_path_;
-        void*                     file_ptr_;
-        Double_t*                 mag_ptr_;
-        std::array<Long64_t, 3>   n_;
-        std::array<Double_t, 3>   min_;
-        std::array<Double_t, 3>   max_;
-        std::array<Double_t, 3>   dlt_;
-        std::array<Long64_t, 2>   fact_;
+        static constexpr Long64_t  DIM_ = 3;
+        Bool_t                     is_load_;
+        std::string                file_path_;
+        void*                      file_ptr_;
+        Double_t*                  mag_ptr_;
+        std::array<Long64_t, DIM_> n_;
+        std::array<Double_t, DIM_> min_;
+        std::array<Double_t, DIM_> max_;
+        std::array<Double_t, DIM_> dlt_;
+        std::array<Long64_t, 2>    fact_;
 };
 
 
