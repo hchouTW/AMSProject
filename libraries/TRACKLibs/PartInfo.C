@@ -8,7 +8,7 @@ PartInfo::PartInfo(PartType type) {
     type_ = type;
     name_ = "";
     chrg_ = 0;
-    mass_ = 0;
+    mass_ = 0.;
 
     switch (type) {
         case PartType::Photon      : name_ = "Photon"     ; chrg_ =  0; mass_ =  0.000000000; break;
@@ -43,6 +43,9 @@ PartInfo::PartInfo(PartType type) {
         case PartType::Oxygen18    : name_ = "Oxygen18"   ; chrg_ =  8; mass_ = 16.766112187; break;
         default : CERR("(ERROR) PartInfo : It is not in list of PartType.\n");
     }
+    
+    is_chrgless_ = MGNumc::EqualToZero(chrg_);
+    is_massless_ = MGNumc::EqualToZero(mass_);
 }
 
 }

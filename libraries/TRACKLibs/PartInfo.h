@@ -23,27 +23,29 @@ enum class PartType {
 class PartInfo {
     public :
         PartInfo(PartType type);
-        ~PartInfo();
+        ~PartInfo() {}
         
         const PartType&     type() const { return type_; }
         const std::string&  name() const { return name_; }
         const Int_t&        chrg() const { return chrg_; }
         const Double_t&     mass() const { return mass_; }
 
-        Bool_t is_chrgless() { return MGNumc::EqualToZero(chrg_); }
-        Bool_t is_massless() { return MGNumc::EqualToZero(mass_); }
+        const Bool_t& is_chrgless() const { return is_chrgless_; }
+        const Bool_t& is_massless() const { return is_massless_; }
 
-        Double_t chrg_to_mass() const { return (MGNumc::EqualToZero(mass_) ? 0. : static_cast<Double_t>(chrg_)/mass_); }
-        Double_t mass_to_chrg() const { return (MGNumc::EqualToZero(chrg_) ? 0. : mass_/static_cast<Double_t>(chrg_)); }
+        Double_t chrg_to_mass() const { return (is_chrgless_ ? 0. : static_cast<Double_t>(chrg_)/mass_); }
+        Double_t mass_to_chrg() const { return (is_massless_ ? 0. : mass_/static_cast<Double_t>(chrg_)); }
 
     private :
         PartType     type_;
         std::string  name_;
         Int_t        chrg_;
         Double_t     mass_;
+        Bool_t       is_chrgless_;
+        Bool_t       is_massless_;
 };
 
-}
+} // namespace TrackSys
 
 
 #endif // __TRACKLibs_PartInfo_H__

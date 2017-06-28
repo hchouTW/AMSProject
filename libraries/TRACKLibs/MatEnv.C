@@ -149,6 +149,7 @@ Bool_t MatGeoBoxReader::load(const std::string& file_path) {
     fact_.at(1) = n_.at(2);
     inv_rad_len_ = geo_box->inv_rad_len;
     mat_ptr_ = &(geo_box->mat);
+    max_len_ = n_.at(0) * n_.at(1) * n_.at(2);
     
     is_load_ = true;
     file_path_ = file_path;
@@ -156,14 +157,27 @@ Bool_t MatGeoBoxReader::load(const std::string& file_path) {
     return is_load_;
 }
 
-        
-SVecD<3> MatGeoBoxReader::get_box_coord(const SVecD<3>& coo) {
-    if (!is_load_) return SVecD<3>();
-    Double_t xbox = (coo[0] - min_.at(0)) / len_.at(0);
-    Double_t ybox = (coo[1] - min_.at(1)) / len_.at(1);
-    Double_t zbox = (coo[2] - min_.at(2)) / len_.at(2);
-    return SVecD<3>(xbox, ybox, zbox);
+
+Bool_t MatGeoBoxReader::is_in_box(const SVecD<3>& coo) {
+    if (!is_load_) return false;
+    if (MGNumc::Compare(coo(2), min_.at(2)) <= 0 || MGNumc::Compare(coo(2), max_.at(2)) >= 0) return false;
+    if (MGNumc::Compare(coo(1), min_.at(1)) <= 0 || MGNumc::Compare(coo(1), max_.at(1)) >= 0) return false;
+    if (MGNumc::Compare(coo(0), min_.at(0)) <= 0 || MGNumc::Compare(coo(0), max_.at(0)) >= 0) return false;
+    return true;
 }
+
+
+Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
+    if (!is_load_) return false;
+    if (MGNumc::Compare(vcoo(2), min_.at(2)) <= 0 && MGNumc::Compare(wcoo(2), min_.at(2)) <= 0) return false;
+    if (MGNumc::Compare(vcoo(2), max_.at(2)) >= 0 && MGNumc::Compare(wcoo(2), max_.at(2)) >= 0) return false;
+    if (MGNumc::Compare(vcoo(1), min_.at(1)) <= 0 && MGNumc::Compare(wcoo(1), min_.at(1)) <= 0) return false;
+    if (MGNumc::Compare(vcoo(1), max_.at(1)) >= 0 && MGNumc::Compare(wcoo(1), max_.at(1)) >= 0) return false;
+    if (MGNumc::Compare(vcoo(0), min_.at(0)) <= 0 && MGNumc::Compare(wcoo(0), min_.at(0)) <= 0) return false;
+    if (MGNumc::Compare(vcoo(0), max_.at(0)) >= 0 && MGNumc::Compare(wcoo(0), max_.at(0)) >= 0) return false;
+    return true;
+}
+        
 
 SVecD<3> MatGeoBoxReader::get_loc_coord(const SVecD<3>& coo) {
     if (!is_load_) return SVecD<3>();
@@ -174,12 +188,16 @@ SVecD<3> MatGeoBoxReader::get_loc_coord(const SVecD<3>& coo) {
 }
 
 
-std::tuple<Long64_t, Bool_t> MatGeoBoxReader::get_index(const SVecD<3>& loc) {
-    Bool_t xin = (MGNumc::Compare(loc(0), MGMath::ZERO) > 0 && MGNumc::Compare(loc(0), static_cast<Double_t>(n_.at(0))) < 0);
-    Bool_t yin = (MGNumc::Compare(loc(1), MGMath::ZERO) > 0 && MGNumc::Compare(loc(1), static_cast<Double_t>(n_.at(1))) < 0);
-    Bool_t zin = (MGNumc::Compare(loc(2), MGMath::ZERO) > 0 && MGNumc::Compare(loc(2), static_cast<Double_t>(n_.at(2))) < 0);
-    Bool_t inbox = (xin && yin && zin);
-    if (!inbox) return std::make_tuple(-1, false);
+Bool_t MatGeoBoxReader::is_in_box_at_loc_coord(const SVecD<3>& loc) {
+    if (!is_load_) return false;
+    if (MGNumc::Compare(loc(2), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(2), static_cast<Double_t>(n_.at(2))) >= 0) return false;
+    if (MGNumc::Compare(loc(1), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(1), static_cast<Double_t>(n_.at(1))) >= 0) return false;
+    if (MGNumc::Compare(loc(0), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(0), static_cast<Double_t>(n_.at(0))) >= 0) return false;
+    return true;
+}
+
+
+std::tuple<Long64_t, Bool_t> MatGeoBoxReader::get_index_at_loc_coord(const SVecD<3>& loc) {
     Long64_t xi = static_cast<Long64_t>(loc(0));
     Long64_t yi = static_cast<Long64_t>(loc(1));
     Long64_t zi = static_cast<Long64_t>(loc(2));
@@ -189,17 +207,52 @@ std::tuple<Long64_t, Bool_t> MatGeoBoxReader::get_index(const SVecD<3>& loc) {
 }
         
 
-Bool_t MatGeoBoxReader::is_cross_box_coord(const SVecD<3>& vbox, const SVecD<3>& wbox) {
-    if (MGNumc::Compare(vbox(2), MGMath::ZERO) <= 0 && MGNumc::Compare(wbox(2), MGMath::ZERO) <= 0) return false;
-    if (MGNumc::Compare(vbox(2), MGMath::ONE ) >= 0 && MGNumc::Compare(wbox(2), MGMath::ONE ) >= 0) return false;
-    if (MGNumc::Compare(vbox(1), MGMath::ZERO) <= 0 && MGNumc::Compare(wbox(1), MGMath::ZERO) <= 0) return false;
-    if (MGNumc::Compare(vbox(1), MGMath::ONE ) >= 0 && MGNumc::Compare(wbox(1), MGMath::ONE ) >= 0) return false;
-    if (MGNumc::Compare(vbox(0), MGMath::ZERO) <= 0 && MGNumc::Compare(wbox(0), MGMath::ZERO) <= 0) return false;
-    if (MGNumc::Compare(vbox(0), MGMath::ONE ) >= 0 && MGNumc::Compare(wbox(0), MGMath::ONE ) >= 0) return false;
-    return true;
+MatFld MatGeoBoxReader::get(const SVecD<3>& coo) {
+    if (!is_in_box(coo)) return MatFld();
+    SVecD<3>&& loc = get_loc_coord(coo);
+    std::tuple<Long64_t, Bool_t>&& idx = get_index_at_loc_coord(loc);
+    if (!std::get<1>(idx)) return MatFld();
+    return MatFld(std::get<1>(idx), elm_, den_, inv_rad_len_);
+}
+        
+
+MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
+    if (!is_cross(vcoo, wcoo)) return MatFld();
+    SVecD<3>&& vwvec = wcoo - vcoo;
+    Double_t   vwlen = LA::Mag(vwvec);
+    if (MGNumc::EqualToZero(vwlen)) return get(vcoo);
+
+    SVecD<3>&& vloc = get_loc_coord(vcoo);
+    SVecD<3>&& wloc = get_loc_coord(wcoo);
+    SVecD<3>&& vwlvec = wloc - vloc;
+    Double_t   vwllen = LA::Mag(vwlvec);
+    
+    if (MGNumc::EqualToZero(vwllen)) return get(vcoo);
+    Long64_t nstp = static_cast<Long64_t>(vwllen / STEP_LEN_) + 2;
+    Double_t stp  = vwllen / static_cast<Double_t>(nstp);
+    SVecD<3>&& unit = LA::Unit(vwlvec) * stp;
+
+    Long64_t itcnt = 0;
+    SVecD<3>&& itloc = vloc + (MGMath::ONE_TO_TWO * unit);
+    for (Long64_t it = 0; it < nstp; ++it, itloc += unit) {
+        if (!is_in_box_at_loc_coord(itloc)) continue;
+        std::tuple<Long64_t, Bool_t>&& idx = get_index_at_loc_coord(itloc);
+        if (!std::get<1>(idx)) continue;
+        itcnt++;
+    }
+
+    if (itcnt != 0) {
+        Bool_t   mat = true;
+        Double_t efft = static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp);
+        Double_t efft_len = efft * vwlen;
+        return MatFld(mat, elm_, den_, inv_rad_len_, efft_len, efft);
+    }
+
+    return MatFld();
 }
 
 
+#ifdef __HAS_AMS_OFFICE_LIBS__
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     std::string g4mat_file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/g4mat.root";
     TFile * root_file = TFile::Open(g4mat_file_path.c_str());
@@ -335,18 +388,18 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
     for (Long64_t entry = 0; entry < tree_elm->GetEntries(); ++entry) {
         tree_elm->GetEntry(entry);
-        Bool_t is_in_magnetic = (MGNumc::Compare(std::sqrt(coo[0] * coo[0] + coo[1] * coo[1]), MatAms::MAGNETIC_RADIUS) < 0);
+        Bool_t is_in_magnetic_hole = (MGNumc::Compare(std::sqrt(coo[0] * coo[0] + coo[1] * coo[1]), MatAms::MAGNETIC_RADIUS) < 0);
 
         if (creator_AMS02TRL1.is_in_box(coo)) creator_AMS02TRL1.fill(elm, den);
         if (creator_AMS02TRD .is_in_box(coo)) creator_AMS02TRD .fill(elm, den);
         if (creator_AMS02UTOF.is_in_box(coo)) creator_AMS02UTOF.fill(elm, den);
         if (creator_AMS02TRL2.is_in_box(coo)) creator_AMS02TRL2.fill(elm, den);
-        if (creator_AMS02TRL3.is_in_box(coo)) creator_AMS02TRL3.fill(elm, den, is_in_magnetic);
-        if (creator_AMS02TRL4.is_in_box(coo)) creator_AMS02TRL4.fill(elm, den, is_in_magnetic);
-        if (creator_AMS02TRL5.is_in_box(coo)) creator_AMS02TRL5.fill(elm, den, is_in_magnetic);
-        if (creator_AMS02TRL6.is_in_box(coo)) creator_AMS02TRL6.fill(elm, den, is_in_magnetic);
-        if (creator_AMS02TRL7.is_in_box(coo)) creator_AMS02TRL7.fill(elm, den, is_in_magnetic);
-        if (creator_AMS02TRL8.is_in_box(coo)) creator_AMS02TRL8.fill(elm, den, is_in_magnetic);
+        if (creator_AMS02TRL3.is_in_box(coo)) creator_AMS02TRL3.fill(elm, den, is_in_magnetic_hole);
+        if (creator_AMS02TRL4.is_in_box(coo)) creator_AMS02TRL4.fill(elm, den, is_in_magnetic_hole);
+        if (creator_AMS02TRL5.is_in_box(coo)) creator_AMS02TRL5.fill(elm, den, is_in_magnetic_hole);
+        if (creator_AMS02TRL6.is_in_box(coo)) creator_AMS02TRL6.fill(elm, den, is_in_magnetic_hole);
+        if (creator_AMS02TRL7.is_in_box(coo)) creator_AMS02TRL7.fill(elm, den, is_in_magnetic_hole);
+        if (creator_AMS02TRL8.is_in_box(coo)) creator_AMS02TRL8.fill(elm, den, is_in_magnetic_hole);
         if (creator_AMS02LTOF.is_in_box(coo)) creator_AMS02LTOF.fill(elm, den);
         if (creator_AMS02RICH.is_in_box(coo)) creator_AMS02RICH.fill(elm, den);
         if (creator_AMS02PMT .is_in_box(coo)) creator_AMS02PMT .fill(elm, den);
@@ -425,7 +478,182 @@ Bool_t MatGeoBoxAms::Load() {
 }
 
 
+MatFld MatGeoBoxAms::Get(const SVecD<3>& coo) {
+    if (!Load()) return MatFld();
 
+    Bool_t mat = false;
+    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
+    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
+    Double_t                                   inv_rad_len = 0.0;
+
+    for (auto&& reader : reader_) {
+        if (!reader->is_in_box(coo)) continue;
+        MatFld&& mat_fld = reader->get(coo);
+        if (!mat_fld()) continue;
+
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!mat_fld.elm().at(it)) continue;
+            elm.at(it) = true;
+            den.at(it)  += mat_fld.den().at(it);
+        }
+        inv_rad_len += mat_fld.inv_rad_len();
+        mat = true;
+    }
+
+    if (!mat) return MatFld();
+    return MatFld(mat, elm, den, inv_rad_len);
+}
+
+
+MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
+    if (MGNumc::EqualToZero(LA::Mag(wcoo - vcoo))) return Get(vcoo);
+    if (!Load()) return MatFld();
+    
+    Bool_t                                     mat = false;
+    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
+    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
+    Double_t                                   inv_rad_len = 0.0;
+    Double_t                                   real_len = 0.0;
+    Double_t                                   efft_len = 0.0;
+    Double_t                                   efft = 0.0;
+
+    for (auto&& reader : reader_) {
+        if (!reader->is_cross(vcoo, wcoo)) continue;
+        MatFld&& mat_fld = reader->get(vcoo, wcoo);
+        if (!mat_fld()) continue;
+        
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!mat_fld.elm().at(it)) continue;
+            elm.at(it) = true;
+            den.at(it) += (mat_fld.efft_len() * mat_fld.den().at(it));
+        }
+        inv_rad_len += (mat_fld.efft_len() * mat_fld.inv_rad_len());
+        real_len    += (mat_fld.efft_len() / mat_fld.efft());
+        efft_len    += mat_fld.efft_len();
+        
+        mat = true;
+    }
+
+    if (mat && !MGNumc::EqualToZero(efft_len)) {
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!elm.at(it)) continue;
+            den.at(it) = (den.at(it) / efft_len);
+        }
+        inv_rad_len = (inv_rad_len / efft_len);
+        efft = (efft_len / real_len);
+    }
+    else return MatFld();
+
+    return MatFld(mat, elm, den, inv_rad_len, efft_len, efft);
+}
+
+
+#endif // __HAS_AMS_OFFICE_LIBS__
+
+
+MatPhyFld MatPhy::Get(const PhySt& part, Double_t stp_len) {
+    if (MGNumc::EqualToZero(stp_len)) return MatPhyFld();
+    if (MGNumc::EqualToZero(part.mom())) return MatPhyFld();
+    if (part.part().is_chrgless()) return MatPhyFld();
+    if (part.part().is_massless()) return MatPhyFld();
+
+    const SVecD<3>&  vcoo = part.coo();
+    SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
+
+#ifdef __HAS_AMS_OFFICE_LIBS__
+    MatFld&& mat = MatGeoBoxAms::Get(vcoo, wcoo);
+#elif
+    MatFld mat;
+#endif // __HAS_AMS_OFFICE_LIBS__
+    if (!mat()) return MatPhyFld();
+
+    Double_t num_rad_len = mat.efft_len() * mat.inv_rad_len();
+    Double_t mult_scat_sgm = GetMultipleScattering(mat, part);
+    std::tuple<Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mat, part);
+    Double_t brm_eloss_men = GetBremsstrahlungEnergyLoss(mat, part);
+
+    return MatPhyFld(mat(), mat.inv_rad_len(), num_rad_len, mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), brm_eloss_men);
+}
+
+
+std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(const MatFld& mat, const PhySt& part) {
+    Double_t gmbta     = ((MGNumc::Compare(part.bta(), LMT_BETA) > 0) ? part.gmbta() : LMT_GAMMA_BETA);
+    Double_t log_gmbta = std::log10(gmbta);
+
+    std::array<Double_t, MatProperty::NUM_ELM> dlt; dlt.fill(0.);
+    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+       if (!mat.elm().at(it)) continue;
+       if (log_gmbta < MatProperty::DEN_EFF_CORR_X0.at(it)) continue; // if nonconductors
+       Double_t dif_log_gmbta = MatProperty::DEN_EFF_CORR_X1.at(it) - log_gmbta;
+       dlt.at(it) = MGMath::TWO * MGMath::LOG_TEN * log_gmbta - MatProperty::DEN_EFF_CORR_C.at(it);
+       if (MGNumc::Compare(dif_log_gmbta) <= 0) continue;
+       dlt.at(it) += MatProperty::DEN_EFF_CORR_A.at(it) * std::pow(dif_log_gmbta, MatProperty::DEN_EFF_CORR_M.at(it));
+       if (MGNumc::Compare(dlt.at(it)) <= 0) dlt.at(it) = MGMath::ZERO;
+    }
+
+    return dlt;
+}
+
+
+Double_t MatPhy::GetMultipleScattering(const MatFld& mat, const PhySt& part) {
+    Double_t num_rad_len = mat.efft_len() * mat.inv_rad_len();
+    if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
+    if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
+    Double_t part_fact = MGMath::ONE / ((MGNumc::Compare(part.bta(), LMT_BETA) > 0) ? std::fabs(part.bta() * part.rig()) : (LMT_GAMMA_SQR_BETA * std::fabs(part.part().mass_to_chrg())));
+    Double_t mult_scat_sgm = RYDBERG_CONST * part_fact * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
+    return mult_scat_sgm;
+}
+
+
+std::tuple<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part) {
+    Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BETA) > 0);
+    Double_t gmbta     = ((is_over_lmt) ? part.gmbta() : LMT_GAMMA_BETA);
+    Double_t bta       = ((is_over_lmt) ? part.bta() : LMT_BETA);
+    Double_t sqr_gmbta = gmbta * gmbta;
+    Double_t sqr_bta   = bta * bta;
+    Double_t mass      = part.part().mass() * 1.0e-3; // [GeV to MeV]
+    Double_t sqr_chrg  = part.part().chrg() * part.part().chrg();
+    Double_t max_keng  = (MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta);
+    Double_t sgm_fact  = (MGMath::ONE_TO_TWO * BETHE_BLOCH_K * sqr_chrg); 
+        
+    std::array<Double_t, MatProperty::NUM_ELM>&& dlt = GetDensityEffectCorrection(mat, part);
+    
+    Double_t avg_dlt = MGMath::ZERO;
+    Double_t m_exeng = MGMath::ZERO;
+    Double_t ttl_wgt = MGMath::ZERO;
+    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+       if (!mat.elm().at(it)) continue;
+       Double_t wgt = MatProperty::MASS.at(it) * mat.den().at(it);
+       m_exeng += wgt * MatProperty::NEG_LN_MEAN_EXENG.at(it);
+       avg_dlt += wgt * dlt.at(it);
+       ttl_wgt += wgt;
+    }
+    avg_dlt /= ttl_wgt;
+    m_exeng /= ttl_wgt;
+
+    if (!MGNumc::Valid(ttl_wgt) || MGNumc::Compare(ttl_wgt) <= 0) ttl_wgt = MGMath::ZERO;
+    if (!MGNumc::Valid(avg_dlt) || MGNumc::Compare(avg_dlt) <= 0) avg_dlt = MGMath::ZERO;
+    if (!MGNumc::Valid(m_exeng) || MGNumc::Compare(m_exeng) <= 0) m_exeng = MGMath::ZERO;
+    
+    Double_t sgm = sgm_fact * ttl_wgt * mat.efft_len();
+    Double_t mpv = sgm * (std::log(max_keng * sgm / sqr_bta) + (MGMath::TWO * m_exeng) + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    
+    Double_t ion_eloss_sgm = (sgm / mat.efft_len() / mass);
+    Double_t ion_eloss_mpv = (mpv / mat.efft_len() / mass);
+    if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm) <= 0) ion_eloss_sgm = MGMath::ZERO;
+    if (!MGNumc::Valid(ion_eloss_mpv) || MGNumc::Compare(ion_eloss_mpv) <= 0) ion_eloss_mpv = MGMath::ZERO;
+
+    return std::make_tuple(ion_eloss_sgm, ion_eloss_mpv);
+}
+
+
+Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mat, const PhySt& part) {
+    Double_t sqr_chrg  = part.part().chrg() * part.part().chrg();
+    Double_t frac      = (sqr_chrg * MASS_EL_IN_GEV * MASS_EL_IN_GEV);
+    Double_t brm_eloss_men = frac * mat.inv_rad_len() / MGMath::LOG_TWO;
+    if (!MGNumc::Valid(brm_eloss_men) || MGNumc::Compare(brm_eloss_men) <= 0) brm_eloss_men = MGMath::ZERO;
+    return brm_eloss_men;
+}
 
 
 } // namespace TrackSys

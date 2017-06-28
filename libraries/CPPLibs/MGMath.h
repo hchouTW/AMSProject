@@ -27,6 +27,7 @@ constexpr Double_t ONE_TO_SEVEN = ONE / SEVEN;
 constexpr Double_t ONE_TO_EIGHT = ONE / EIGHT;
 constexpr Double_t ONE_TO_NINE  = ONE / NINE ;
 constexpr Double_t ONE_TO_TEN   = ONE / TEN  ;
+constexpr Double_t HALF = ONE_TO_TWO;
 
 const Double_t PI          = std::atan(ONE) * FOUR;
 const Double_t SQR_PI      = PI * PI;

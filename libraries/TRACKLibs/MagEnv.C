@@ -256,8 +256,8 @@ Double_t MagFuncAms::GetMagx(Double_t cooz) {
 Double_t MagFuncAms::GetMagxInt1st(Double_t cooz) {
     Double_t norm0 = MGMath::INV_SQRT_TWO * cooz / PAR_SGM.at(0);
     Double_t norm1 = MGMath::INV_SQRT_TWO * cooz / PAR_SGM.at(1);
-    Double_t magxint0 = PAR_MAG.at(0) * MGMath::ONE_TO_TWO * std::erf(norm0);
-    Double_t magxint1 = PAR_MAG.at(1) * MGMath::ONE_TO_TWO * std::erf(norm1);
+    Double_t magxint0 = PAR_MAG.at(0) * MGMath::HALF * std::erf(norm0);
+    Double_t magxint1 = PAR_MAG.at(1) * MGMath::HALF * std::erf(norm1);
     return (magxint0 + magxint1);
 }
 
@@ -267,8 +267,8 @@ Double_t MagFuncAms::GetMagxInt2nd(Double_t cooz) {
     Double_t fact1 = MGMath::SQRT_TWO * PAR_SGM.at(1);
     Double_t norm0 = cooz / fact0;
     Double_t norm1 = cooz / fact1;
-    Double_t magxint0 = PAR_MAG.at(0) * (MGMath::ONE_TO_TWO * fact0) * (norm0 * std::erf(norm0) + ((std::exp(MGMath::NEG * norm0 * norm0) - MGMath::ONE) * MGMath::SQRT_PI));
-    Double_t magxint1 = PAR_MAG.at(1) * (MGMath::ONE_TO_TWO * fact1) * (norm1 * std::erf(norm1) + ((std::exp(MGMath::NEG * norm1 * norm1) - MGMath::ONE) * MGMath::SQRT_PI));
+    Double_t magxint0 = PAR_MAG.at(0) * (MGMath::HALF * fact0) * (norm0 * std::erf(norm0) + ((std::exp(MGMath::NEG * norm0 * norm0) - MGMath::ONE) * MGMath::SQRT_PI));
+    Double_t magxint1 = PAR_MAG.at(1) * (MGMath::HALF * fact1) * (norm1 * std::erf(norm1) + ((std::exp(MGMath::NEG * norm1 * norm1) - MGMath::ONE) * MGMath::SQRT_PI));
     return (magxint0 + magxint1);
 }
 #endif // __HAS_AMS_OFFICE_LIBS__
