@@ -1,8 +1,10 @@
 #ifndef __TRACKLibs_PartInfo_H__
 #define __TRACKLibs_PartInfo_H__
 
+
 namespace TrackSys {
-        
+
+
 enum class PartType {
     Photon, 
     Electron, Positron, 
@@ -24,7 +26,9 @@ class PartInfo {
     public :
         PartInfo(PartType type);
         ~PartInfo() {}
-        
+
+        void print();
+
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }
         inline const Int_t&        chrg() const { return chrg_; }
@@ -44,6 +48,7 @@ class PartInfo {
         Bool_t       is_chrgless_;
         Bool_t       is_massless_;
 };
+
 
 } // namespace TrackSys
 

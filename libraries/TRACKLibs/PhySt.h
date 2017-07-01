@@ -1,10 +1,10 @@
 #ifndef __TRACKLibs_PhySt_H__
 #define __TRACKLibs_PhySt_H__
 
-#include <tuple>
 
 namespace TrackSys {
-        
+
+
 class PhySt {
     public :
         PhySt(PartType type = PartType::Proton) : part_(type), mom_(0), eng_(0), bta_(0), eta_(0), irig_(0), coo_(0, 0, 0), dir_(0, 0, -1) { eng_ = part_.mass(); if (part_.is_massless()) bta_ = 1.;}
@@ -68,7 +68,8 @@ class PhySt {
         SVecD<3> dir_;
 };
 
-}
+
+} // namespace TrackSys
 
 
 #endif // __TRACKLibs_PhySt_H__

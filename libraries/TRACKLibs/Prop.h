@@ -204,18 +204,6 @@ class PropMgnt {
         static constexpr Short_t JRHO = 1;
         static constexpr Short_t JION = 2;
         static constexpr Short_t JBRM = 3;
-
-
-        //static constexpr Double_t TUNE_ETA  = 3.00; // (min-eta)
-        //static constexpr Double_t TUNE_STEP = 5e-3; // (angular threshold)
-        //static constexpr Double_t TUNE_MAGF = 5e-2; // (mini magnetic field) [kG]
-        //static constexpr Double_t TUNE_MAT  = 5e-2; // (radiation length)
-        //static constexpr Double_t MIN_STEP  = 8.;   // [cm]
-        //static constexpr Double_t INT_STEP  = 15.;  // [cm]
-        //static constexpr Double_t MAX_STEP  = 30.;  // [cm]
-        //static constexpr Double_t MIN_MOM   = 1e-4; // [GeV]
-        //static constexpr Double_t MIN_CONT  = 1e-4; // [cm]
-        //static constexpr Long64_t MAX_ITER  = 100;
 };
 
 PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;

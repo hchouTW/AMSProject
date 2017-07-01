@@ -1,7 +1,9 @@
 #ifndef __TRACKLibs_PhySt_C__
 #define __TRACKLibs_PhySt_C__
 
+
 namespace TrackSys {
+
 
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx, Double_t dy, Double_t dz) {
     Double_t norm = std::sqrt(dx * dx + dy * dy + dz * dz);
@@ -118,7 +120,7 @@ void PhySt::print() {
 }
 
 
+} // namespace TrackSys
 
-}
 
 #endif // __TRACKLibs_PhySt_C__

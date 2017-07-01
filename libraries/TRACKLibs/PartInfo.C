@@ -1,7 +1,9 @@
 #ifndef __TRACKLibs_PartInfo_C__
 #define __TRACKLibs_PartInfo_C__
 
+
 namespace TrackSys {
+
 
 PartInfo::PartInfo(PartType type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
@@ -48,6 +50,19 @@ PartInfo::PartInfo(PartType type) {
     is_massless_ = MGNumc::EqualToZero(mass_);
 }
 
+
+void PartInfo::print() {
+    std::string printStr;
+    printStr += STR_FMT("==== %-15s ====\n", name_.c_str());
+    printStr += STR_FMT("Chrg %3d\n"   , chrg_);
+    printStr += STR_FMT("Mass %10.6f\n", mass_);
+    printStr += STR_FMT("M/Q  %10.6f\n", mass_to_chrg());
+    printStr += STR_FMT("=========================\n");
+    COUT(printStr);
 }
+
+
+} // namespace TrackSys
+
 
 #endif // __TRACKLibs_PartInfo_C__

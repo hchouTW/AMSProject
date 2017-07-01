@@ -20,6 +20,7 @@ using namespace MGROOT;
 #include "PhySt.h"
 #include "PhySt.C"
 #include "HitSt.h"
+#include "HitSt.C"
 #include "MagEnv.h"
 #include "MagEnv.C"
 #include "MatEnv.h"

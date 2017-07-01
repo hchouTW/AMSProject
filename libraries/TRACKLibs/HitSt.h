@@ -1,16 +1,21 @@
 #ifndef __TRACKLibs_HitSt_H__
 #define __TRACKLibs_HitSt_H__
 
+
 namespace TrackSys {
+
 
 class HitSt {
     public :
-        HitSt(Int_t id = -1, Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : id_(id), side_(sx, sy, sz) {}
+        HitSt(Int_t id = -1, Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : id_(id), side_(sx, sy, sz), err_(DEFAULT_ERR) {}
         ~HitSt() {}
 
-        void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx, coo_(1) = cy, coo_(2) = cz; }
-        void set_err(Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { err_(0) = ex; err_(1) = ey; err_(2) = ez; }
-        void set_coo_and_err(Double_t cx, Double_t cy, Double_t cz, Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { set_coo(cx, cy, cz); set_err(ex, ey, ez); }
+        inline void set_id(Int_t id) { id_ = id; }
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx, coo_(1) = cy, coo_(2) = cz; }
+        inline void set_err(Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { err_(0) = ex; err_(1) = ey; err_(2) = ez; }
+        inline void set_coo_and_err(Double_t cx, Double_t cy, Double_t cz, Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { set_coo(cx, cy, cz); set_err(ex, ey, ez); }
+
+        void print();
 
         inline const Int_t& id() const { return id_; }
         
@@ -33,8 +38,8 @@ class HitSt {
     private :
         Int_t    id_;
         SVecO<3> side_;
-        SVecD<3> coo_;
-        SVecD<3> err_;
+        SVecD<3> coo_;   // [cm]
+        SVecD<3> err_;   // [cm]
     
     public :
         static void SetDefaultErr(Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { DEFAULT_ERR(0) = ex; DEFAULT_ERR(1) = ey; DEFAULT_ERR(2) = ez; }
@@ -52,6 +57,8 @@ class HitSt {
         
 SVecD<3> HitSt::DEFAULT_ERR(24.0e-4, 10.0e-4, 300.0e-4);
 
-}
+
+} // namesapce TrackSys
+
 
 #endif // __TRACKLibs_HitSt_H__

@@ -247,7 +247,7 @@ Double_t PropMgnt::GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat) 
     return step;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+
 Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
     Bool_t withJb = (phyJb != nullptr);
     if (withJb) phyJb->init();
@@ -262,12 +262,14 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJ
         Bool_t valid = false;
         PhyJb * curJb = (!withJb) ? nullptr : (new PhyJb());
         switch (method_) {
-            case Method::kEuler : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
-            case Method::kEulerHeun : break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
+            case Method::kEulerHeun         : break;
             case Method::kRungeKuttaNystrom : break;
             default : break;
         }
+        if (!valid) break;
 
+        // TODO jacb multiplied
         //if (WithJacb) { phyJb->multiplied(*subPhyJb); delete subPhyJb; subPhyJb = nullptr; }
         if (withJb) {
             delete curJb;
@@ -295,12 +297,14 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
         Bool_t valid = false;
         PhyJb * curJb = (!withJb) ? nullptr : (new PhyJb());
         switch (method_) {
-            case Method::kEuler : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
-            case Method::kEulerHeun : break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
+            case Method::kEulerHeun         : break;
             case Method::kRungeKuttaNystrom : break;
             default : break;
         }
+        if (!valid) break;
 
+        // TODO jacb multiplied
         //if (WithJacb) { phyJb->multiplied(*subPhyJb); delete subPhyJb; subPhyJb = nullptr; }
         if (withJb) {
             delete curJb;
@@ -313,7 +317,6 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
 
     return is_succ;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
@@ -339,6 +342,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
         Double_t eta    = (st0.eta() + step * mn0.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) part.set_eta(eta);
+        else        return false;
     }
 
     if (withJb) {
@@ -375,10 +379,9 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
         }
     }
 
-    //Valid();
     return true;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 } // namespace TrackSys
 
