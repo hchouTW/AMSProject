@@ -295,19 +295,13 @@ Bool_t MagMgnt::Load() {
 }
 
 
-MagFld MagMgnt::Get(const SVecD<3>& coo, MagType type) {
+MagFld MagMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MagFld();
-
-    switch (type) {
 #ifdef __HAS_AMS_OFFICE_LIBS__
-        case MagType::kGeoBoxAms : return MagGeoBoxAms::Get(coo); break;
-        case MagType::kFuncAms : return MagFuncAms::Get(coo); break;
+    return MagGeoBoxAms::Get(coo);
 #elif
-        case MagType::kGeoBox : return geo_box_reader_.get(coo); break;
+    return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__
-        default : break;
-    }
-    return MagFld(); 
 }
 
 

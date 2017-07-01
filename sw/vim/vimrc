@@ -107,3 +107,7 @@ map <F4> :e %:p:s,.h$,.X123X,:s,.C$,.h,:s,.X123X$,.C,<CR>
 
 " Enhanced keyboard mappings
 nmap <f4> :e %:r.h<cr>
+
+
+
+let g:tex_flavor='latex'

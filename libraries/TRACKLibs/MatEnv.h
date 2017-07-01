@@ -29,24 +29,26 @@ namespace MatProperty {
 class MatFld {
     public :
         MatFld() { clear(); }
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), efft_len_(efft_len), efft_(efft) {}
+        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft) {}
         ~MatFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
         inline const std::array<Bool_t, MatProperty::NUM_ELM>&   elm() const { return elm_; }
         inline const std::array<Double_t, MatProperty::NUM_ELM>& den() const { return den_; }
         inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
+        inline const Double_t& real_len() const { return real_len_; }
         inline const Double_t& efft_len() const { return efft_len_; }
         inline const Double_t& efft() const { return efft_; }
 
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; efft_len_ = 0.; efft_ = 0.; }
+        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; }
 
     private :
         Bool_t                                     mat_;
         std::array<Bool_t, MatProperty::NUM_ELM>   elm_;
         std::array<Double_t, MatProperty::NUM_ELM> den_;
         Double_t                                   inv_rad_len_;
+        Double_t                                   real_len_;
         Double_t                                   efft_len_;
         Double_t                                   efft_;
 };
@@ -134,7 +136,7 @@ class MatGeoBoxReader {
         inline Bool_t is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo);
         
         MatFld get(const SVecD<3>& coo);
-        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo);
+        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
 
     protected :
         inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mat_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; }
@@ -147,7 +149,8 @@ class MatGeoBoxReader {
 
     private :
         static constexpr Long64_t                  DIM_ = 3;
-        static constexpr Double_t                  STEP_LEN_ = 0.25;
+        static constexpr Double_t                  FST_STEP_LEN_ = 1.0;
+        static constexpr Double_t                  STD_STEP_LEN_ = 0.2;
         Bool_t                                     is_load_;
         std::string                                file_path_;
         void*                                      file_ptr_;
@@ -243,7 +246,7 @@ class MatGeoBoxAms {
         static Bool_t Load();
 
         static MatFld Get(const SVecD<3>& coo);
-        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo);
+        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
 
     private :
         static Bool_t is_load_;
@@ -285,7 +288,6 @@ MatGeoBoxReader MatGeoBoxAms::reader_AMS02ECAL_;
 #endif // __HAS_AMS_OFFICE_LIBS__
 
 
-
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
@@ -314,12 +316,43 @@ class MatPhyFld {
 };
 
 
+class MatArg {
+    public :
+        MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
+        ~MatArg() {}
+        
+        inline void rndm(const MatPhyFld& mat);
+
+        inline const Bool_t& operator() () const { return mat_; }
+
+        inline const Bool_t& mscat() const { return sw_mscat_; }
+        inline const Bool_t& eloss() const { return sw_eloss_; }
+
+        inline const Double_t& tau() const { return tau_mscat_; }
+        inline const Double_t& rho() const { return rho_mscat_; }
+        inline const Double_t& ion() const { return ion_eloss_; }
+        inline const Double_t& brm() const { return brm_eloss_; }
+
+        inline SVecD<4> arg() const { return SVecD<4>(tau_mscat_, rho_mscat_, ion_eloss_, brm_eloss_); }
+
+    private :
+        Bool_t   mat_;
+        Bool_t   sw_mscat_;
+        Bool_t   sw_eloss_;
+        Double_t tau_mscat_;
+        Double_t rho_mscat_;
+        Double_t ion_eloss_;
+        Double_t brm_eloss_;
+};
+
+
 class MatPhy {
     public :
         MatPhy() {}
         ~MatPhy() {}
 
-        static MatPhyFld Get(const PhySt& part, Double_t stp_len);
+        static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+        static MatPhyFld Get(const Double_t stp_len, const PhySt& part, const MatArg& marg = MatArg(true, true), Bool_t is_std = true);
 
     protected :
         static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mat, const PhySt& part);
@@ -336,7 +369,7 @@ class MatPhy {
         //                     (1. + 0.038 * log(radiationLength)) )
         static constexpr Double_t RYDBERG_CONST = 0.0136; // [GeV]
         static constexpr Double_t NRL_CORR_FACT = 0.0380; // [1]
-        static constexpr Double_t LMTL_NUM_RAD_LEN = 5.0e-4;
+        static constexpr Double_t LMTL_NUM_RAD_LEN = 1.0e-3;
         static constexpr Double_t LMTU_NUM_RAD_LEN = 100.;
         
         // Energy Loss from ionization, the Bethe-Bloch equation
@@ -346,9 +379,17 @@ class MatPhy {
         static constexpr Double_t MASS_EL_IN_GEV = 0.000510999; // [GeV]
         
         // Beta Limit
-        static constexpr Double_t LMT_BETA           = 0.3;
-        static constexpr Double_t LMT_GAMMA_BETA     = 3.144855e-01;
-        static constexpr Double_t LMT_GAMMA_SQR_BETA = 9.434564e-02;
+        static constexpr Double_t LMT_BTA           = 0.3;
+        static constexpr Double_t LMT_SQR_BTA       = 0.09;
+        static constexpr Double_t LMT_INV_SQR_BTA   = 1.111111e+01;
+        static constexpr Double_t LMT_GMBTA         = 3.144855e-01;
+        static constexpr Double_t LMT_SQR_GMBTA     = 9.890110e-02;
+        static constexpr Double_t LMT_INV_GMBTA     = 3.179797e+00;
+        static constexpr Double_t LMT_INV_SQR_GMBTA = 1.011111e+01;
+
+        // Unit
+        static constexpr Double_t MEV_TO_GEV = 1.0e-3;
+        static constexpr Double_t GEV_TO_MEV = 1.0e+3;
 };
 
 

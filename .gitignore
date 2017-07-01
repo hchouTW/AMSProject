@@ -29,7 +29,20 @@
 *.out
 *.app
 
-# User Defination
+# User Defination (Backup)
 .bak
 *~
+
+# User Defination (ROOT file)
 *.root
+
+# User Defination (Tex file)
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.out
+*.pdf
+*.spl
+*.toc

@@ -110,7 +110,6 @@ namespace MGROOT {
 		using ROOT::Math::Mag;
 		using ROOT::Math::Lmag2;
 		using ROOT::Math::Lmag;
-		using ROOT::Math::Cross;
 		using ROOT::Math::Unit;
 		using ROOT::Math::TensorProd;
 		using ROOT::Math::fabs;

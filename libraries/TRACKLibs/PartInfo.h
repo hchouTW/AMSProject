@@ -25,16 +25,16 @@ class PartInfo {
         PartInfo(PartType type);
         ~PartInfo() {}
         
-        const PartType&     type() const { return type_; }
-        const std::string&  name() const { return name_; }
-        const Int_t&        chrg() const { return chrg_; }
-        const Double_t&     mass() const { return mass_; }
+        inline const PartType&     type() const { return type_; }
+        inline const std::string&  name() const { return name_; }
+        inline const Int_t&        chrg() const { return chrg_; }
+        inline const Double_t&     mass() const { return mass_; }
 
-        const Bool_t& is_chrgless() const { return is_chrgless_; }
-        const Bool_t& is_massless() const { return is_massless_; }
+        inline const Bool_t& is_chrgless() const { return is_chrgless_; }
+        inline const Bool_t& is_massless() const { return is_massless_; }
 
-        Double_t chrg_to_mass() const { return (is_chrgless_ ? 0. : static_cast<Double_t>(chrg_)/mass_); }
-        Double_t mass_to_chrg() const { return (is_massless_ ? 0. : mass_/static_cast<Double_t>(chrg_)); }
+        inline Double_t chrg_to_mass() const { return (is_chrgless_ ? 0. : static_cast<Double_t>(chrg_)/mass_); }
+        inline Double_t mass_to_chrg() const { return (is_massless_ ? 0. : mass_/static_cast<Double_t>(chrg_)); }
 
     private :
         PartType     type_;

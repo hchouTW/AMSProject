@@ -149,31 +149,16 @@ const std::array<Double_t, 2> MagFuncAms::PAR_SGM = {  37.01735081, 79.25552614 
 #endif // __HAS_AMS_OFFICE_LIBS__
 
 
-enum class MagType {
-#ifdef __HAS_AMS_OFFICE_LIBS__
-    kGeoBoxAms,
-    kFuncAms,
-#endif // __HAS_AMS_OFFICE_LIBS__
-    kGeoBox
-};
-
-
 class MagMgnt {
     public :
         static Bool_t Load();
 
-        static MagFld Get(const SVecD<3>& coo,
-#ifdef __HAS_AMS_OFFICE_LIBS__
-                MagType type = MagType::kGeoBoxAms
-#elif
-                MagType type = MagType::kGeoBox
-#endif // __HAS_AMS_OFFICE_LIBS__
-            );
+        inline static MagFld Get(const SVecD<3>& coo);
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-        static Double_t GetMagx(Double_t cooz) { return MagFuncAms::GetMagx(cooz); }
-        static Double_t GetMagxInt1st(Double_t cooz) { return MagFuncAms::GetMagxInt1st(cooz); }
-        static Double_t GetMagxInt2nd(Double_t cooz) { return MagFuncAms::GetMagxInt2nd(cooz); }
+        inline static Double_t GetMagx(Double_t cooz) { return MagFuncAms::GetMagx(cooz); }
+        inline static Double_t GetMagxInt1st(Double_t cooz) { return MagFuncAms::GetMagxInt1st(cooz); }
+        inline static Double_t GetMagxInt2nd(Double_t cooz) { return MagFuncAms::GetMagxInt2nd(cooz); }
 #endif // __HAS_AMS_OFFICE_LIBS__
 
     protected :
