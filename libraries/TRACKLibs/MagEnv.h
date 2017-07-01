@@ -1,7 +1,9 @@
 #ifndef __TRACKLibs_MagEnv_H__
 #define __TRACKLibs_MagEnv_H__
 
+
 namespace TrackSys {
+
 
 class MagFld {
     public :
@@ -27,10 +29,10 @@ class MagFld {
 //----------------------------------------------------------------------//
 // Header :                                                             //
 // Long64_t N[3]                                                        //
-// Double_t MIN[3]                                                      //
-// Double_t MAX[3]                                                      //
+// Float_t  MIN[3]                                                      //
+// Float_t  MAX[3]                                                      //
 // Content :                                                            //
-// Double_t MAG[(index)*3 + di]                                         //
+// Float_t MAG[(index)*3 + di]                                          //
 // ## Index = ( xi*YN*ZN + yi*ZN + zi )                                 //
 // ##         xi[0 XN-1] yi[0 YN-1] zi[0 ZN-1] di[0 2]                  //
 //======================================================================//
@@ -43,18 +45,18 @@ class MagFld {
 
 struct MagGeoBox {
     Long64_t n[3];
-    Double_t min[3];
-    Double_t max[3];
-    Double_t mag;
+    Float_t  min[3];
+    Float_t  max[3];
+    Float_t  mag;
 };
 
 
 class MagGeoBoxCreator {
     public :
-        MagGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Long64_t yn, Double_t ymin, Double_t ymax, Long64_t zn, Double_t zmin, Double_t zmax, const std::string& file_path = "MagGeoBox.bin");
+        MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path = "MagGeoBox.bin");
         ~MagGeoBoxCreator() { save_and_close(); }
 
-        void fill(Double_t mx = 0., Double_t my = 0., Double_t mz = 0.); // from min to max coord
+        void fill(Float_t mx = 0., Float_t my = 0., Float_t mz = 0.); // from min to max coord
 
         inline Bool_t is_open() { return is_open_; }
         void save_and_close();
@@ -82,28 +84,24 @@ class MagGeoBoxReader {
         ~MagGeoBoxReader() { clear(); }
 
         inline Bool_t exist() { return is_load_; }
-        inline MagFld get(const SVecD<3>& coo) { return ((!is_load_) ? MagFld() : MagFld( do_trilinear_interpolation( get_index(coo) ) )); }
+        inline MagFld get(const SVecD<3>& coo);
         
         Bool_t load(const std::string& file_path);
 
     protected :
         inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mag_ptr_ = nullptr;  n_.fill(0); min_.fill(0.); max_.fill(0.); dlt_.fill(0.); fact_.fill(0); }
 
-        using Index = std::tuple<Long64_t, Double_t, Double_t, Double_t>;
-        Index get_index(const SVecD<3>& coo);
-        SVecD<3> do_trilinear_interpolation(const Index& index);
-
     private :
-        static constexpr Long64_t  DIM_ = 3;
-        Bool_t                     is_load_;
-        std::string                file_path_;
-        void*                      file_ptr_;
-        Double_t*                  mag_ptr_;
-        std::array<Long64_t, DIM_> n_;
-        std::array<Double_t, DIM_> min_;
-        std::array<Double_t, DIM_> max_;
-        std::array<Double_t, DIM_> dlt_;
-        std::array<Long64_t, 2>    fact_;
+        static constexpr Long64_t   DIM_ = 3;
+        Bool_t                      is_load_;
+        std::string                 file_path_;
+        void*                       file_ptr_;
+        Float_t*                    mag_ptr_;
+        std::array<Long64_t, DIM_>  n_;
+        std::array<Float_t,  DIM_>  min_;
+        std::array<Float_t,  DIM_>  max_;
+        std::array<Float_t,  DIM_>  dlt_;
+        std::array<Long64_t, 2>     fact_;
 };
 
 

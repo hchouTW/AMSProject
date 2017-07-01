@@ -1,15 +1,17 @@
 #ifndef __TRACKLibs_MagEnv_C__
 #define __TRACKLibs_MagEnv_C__
 
+
 namespace TrackSys {
 
-MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Long64_t yn, Double_t ymin, Double_t ymax, Long64_t zn, Double_t zmin, Double_t zmax, const std::string& file_path) {
+
+MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path) {
     clear();
     if (xn < 2 || yn < 2 || zn < 2) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Size failure."); return; }
     if (MGNumc::Compare(xmin, xmax) >= 0 || MGNumc::Compare(ymin, ymax) >= 0 || MGNumc::Compare(zmin, zmax) >= 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Range failure."); return; }
     if (file_path.size() == 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File path not found."); return; }
     
-    Int_t file_len = ((sizeof(Long64_t) + sizeof(Double_t)) + (xn * yn * zn) * sizeof(Double_t)) * DIM_;
+    Int_t file_len = ((sizeof(Long64_t) + sizeof(Float_t)) + (xn * yn * zn) * sizeof(Float_t)) * DIM_;
     Int_t file_des = open(file_path.c_str(), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (file_des < 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File not opened."); return; }
 
@@ -37,15 +39,15 @@ MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     geo_box_->max[0] = xmax;
     geo_box_->max[1] = ymax;
     geo_box_->max[2] = zmax;
-    std::fill_n(static_cast<Double_t*>(&(geo_box_->mag)), max_len_ * DIM_, 0.0);
+    std::fill_n(static_cast<Float_t*>(&(geo_box_->mag)), max_len_ * DIM_, 0.0);
 }
 
 
-void MagGeoBoxCreator::fill(Double_t mx, Double_t my, Double_t mz) {
+void MagGeoBoxCreator::fill(Float_t mx, Float_t my, Float_t mz) {
     if (!is_open_) return;
     if (cur_len_ >= max_len_) { MGSys::ShowError("MagGeoBoxCreator::fill() : Out range."); return; }
 
-    Double_t * mag = static_cast<Double_t*>(&(geo_box_->mag) + cur_len_ * DIM_);
+    Float_t * mag = static_cast<Float_t*>(&(geo_box_->mag) + cur_len_ * DIM_);
     mag[0] = mx;
     mag[1] = my;
     mag[2] = mz;
@@ -94,11 +96,11 @@ Bool_t MagGeoBoxReader::load(const std::string& file_path) {
     file_ptr_ = file_ptr;
 
     MagGeoBox* geo_box = reinterpret_cast<MagGeoBox*>(file_ptr_);
-    for (Int_t ig = 0; ig < DIM_; ++ig) {
+    for (Long64_t ig = 0; ig < DIM_; ++ig) {
         n_.at(ig)   = geo_box->n[ig]; 
         min_.at(ig) = geo_box->min[ig];
         max_.at(ig) = geo_box->max[ig];
-        dlt_.at(ig) = (max_.at(ig) - min_.at(ig)) / static_cast<Double_t>(n_.at(ig)-1);
+        dlt_.at(ig) = (max_.at(ig) - min_.at(ig)) / static_cast<Float_t>(n_.at(ig)-1);
     }
     fact_.at(0) = n_.at(1) * n_.at(2);
     fact_.at(1) = n_.at(2);
@@ -111,56 +113,51 @@ Bool_t MagGeoBoxReader::load(const std::string& file_path) {
 }
 
 
-MagGeoBoxReader::Index MagGeoBoxReader::get_index(const SVecD<3>& coo) {
-    Double_t xloc = (coo[0] - min_.at(0)) / dlt_.at(0);
-    Double_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
-    Double_t zloc = (coo[2] - min_.at(2)) / dlt_.at(2);
-    Bool_t xin = (MGNumc::Compare(xloc, MGMath::ZERO) > 0 && MGNumc::Compare(xloc, static_cast<Double_t>(n_.at(0)-1)) < 0);
-    Bool_t yin = (MGNumc::Compare(yloc, MGMath::ZERO) > 0 && MGNumc::Compare(yloc, static_cast<Double_t>(n_.at(1)-1)) < 0);
-    Bool_t zin = (MGNumc::Compare(zloc, MGMath::ZERO) > 0 && MGNumc::Compare(zloc, static_cast<Double_t>(n_.at(2)-1)) < 0);
-    Bool_t inbox = (xin && yin && zin);
-    if (!inbox) return std::make_tuple(-1, 0.0, 0.0, 0.0);;
+MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
+    if (!is_load_) return MagFld();
+   
+    // Get Local Coord
+    Float_t xloc = (coo[0] - min_.at(0)) / dlt_.at(0);
+    Float_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
+    Float_t zloc = (coo[2] - min_.at(2)) / dlt_.at(2);
+
     Long64_t xi = static_cast<Long64_t>(xloc);
     Long64_t yi = static_cast<Long64_t>(yloc);
     Long64_t zi = static_cast<Long64_t>(zloc);
-    Long64_t index = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-    Double_t xc = xloc - static_cast<Double_t>(xi);
-    Double_t yc = yloc - static_cast<Double_t>(yi);
-    Double_t zc = zloc - static_cast<Double_t>(zi);
-    return std::make_tuple(index, xc, yc, zc);
-}
 
+    if (xi < 0 || xi >= (n_.at(0)-1) || 
+        yi < 0 || yi >= (n_.at(1)-1) || 
+        zi < 0 || zi >= (n_.at(2)-1)) return MagFld();
 
-SVecD<3> MagGeoBoxReader::do_trilinear_interpolation(const MagGeoBoxReader::Index& index) {
-    if (std::get<0>(index) < 0) return SVecD<3>();
-    Long64_t idx = std::get<0>(index);
-    Double_t xl = (MGMath::ONE - std::get<1>(index));
-    Double_t yl = (MGMath::ONE - std::get<2>(index));
-    Double_t zl = (MGMath::ONE - std::get<3>(index));
-    Double_t xu = std::get<1>(index);
-    Double_t yu = std::get<2>(index);
-    Double_t zu = std::get<3>(index);
+    // Do Trilinear Interpolation
+    Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
+    Float_t xu = xloc - static_cast<Float_t>(xi);
+    Float_t yu = yloc - static_cast<Float_t>(yi);
+    Float_t zu = zloc - static_cast<Float_t>(zi);
+    Float_t&& xl = (MGMath::ONE - xu);
+    Float_t&& yl = (MGMath::ONE - yu);
+    Float_t&& zl = (MGMath::ONE - zu);
 
-    Double_t * clll = (mag_ptr_ + (idx                                ) * DIM_ );
-    Double_t * cllu = (mag_ptr_ + (idx                             + 1) * DIM_ );
-    Double_t * clul = (mag_ptr_ + (idx               + fact_.at(1)    ) * DIM_ );
-    Double_t * cluu = (mag_ptr_ + (idx               + fact_.at(1) + 1) * DIM_ );
-    Double_t * cull = (mag_ptr_ + (idx + fact_.at(0)                  ) * DIM_ );
-    Double_t * culu = (mag_ptr_ + (idx + fact_.at(0)               + 1) * DIM_ );
-    Double_t * cuul = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1)    ) * DIM_ );
-    Double_t * cuuu = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1) + 1) * DIM_ );
+    Float_t * clll = (mag_ptr_ + (idx                                ) * DIM_ );
+    Float_t * cllu = (mag_ptr_ + (idx                             + 1) * DIM_ );
+    Float_t * clul = (mag_ptr_ + (idx               + fact_.at(1)    ) * DIM_ );
+    Float_t * cluu = (mag_ptr_ + (idx               + fact_.at(1) + 1) * DIM_ );
+    Float_t * cull = (mag_ptr_ + (idx + fact_.at(0)                  ) * DIM_ );
+    Float_t * culu = (mag_ptr_ + (idx + fact_.at(0)               + 1) * DIM_ );
+    Float_t * cuul = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1)    ) * DIM_ );
+    Float_t * cuuu = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1) + 1) * DIM_ );
 
-    Double_t cll[3] = { (clll[0] * xl + cull[0] * xu),  (clll[1] * xl + cull[1] * xu), (clll[2] * xl + cull[2] * xu) };
-    Double_t clu[3] = { (cllu[0] * xl + culu[0] * xu),  (cllu[1] * xl + culu[1] * xu), (cllu[2] * xl + culu[2] * xu) };
-    Double_t cul[3] = { (clul[0] * xl + cuul[0] * xu),  (clul[1] * xl + cuul[1] * xu), (clul[2] * xl + cuul[2] * xu) };
-    Double_t cuu[3] = { (cluu[0] * xl + cuuu[0] * xu),  (cluu[1] * xl + cuuu[1] * xu), (cluu[2] * xl + cuuu[2] * xu) };
+    Float_t cll[3] { (clll[0] * xl + cull[0] * xu),  (clll[1] * xl + cull[1] * xu), (clll[2] * xl + cull[2] * xu) };
+    Float_t clu[3] { (cllu[0] * xl + culu[0] * xu),  (cllu[1] * xl + culu[1] * xu), (cllu[2] * xl + culu[2] * xu) };
+    Float_t cul[3] { (clul[0] * xl + cuul[0] * xu),  (clul[1] * xl + cuul[1] * xu), (clul[2] * xl + cuul[2] * xu) };
+    Float_t cuu[3] { (cluu[0] * xl + cuuu[0] * xu),  (cluu[1] * xl + cuuu[1] * xu), (cluu[2] * xl + cuuu[2] * xu) };
     
-    Double_t cl[3] = { (cll[0] * yl + cul[0] * yu),  (cll[1] * yl + cul[1] * yu), (cll[2] * yl + cul[2] * yu) };
-    Double_t cu[3] = { (clu[0] * yl + cuu[0] * yu),  (clu[1] * yl + cuu[1] * yu), (clu[2] * yl + cuu[2] * yu) };
+    Float_t cl[3] { (cll[0] * yl + cul[0] * yu),  (cll[1] * yl + cul[1] * yu), (cll[2] * yl + cul[2] * yu) };
+    Float_t cu[3] { (clu[0] * yl + cuu[0] * yu),  (clu[1] * yl + cuu[1] * yu), (clu[2] * yl + cuu[2] * yu) };
 
-    Double_t c[3] = { (cl[0] * zl + cu[0] * zu),  (cl[1] * zl + cu[1] * zu), (cl[2] * zl + cu[2] * zu) };
+    Float_t c[3] { (cl[0] * zl + cu[0] * zu), (cl[1] * zl + cu[1] * zu), (cl[2] * zl + cu[2] * zu) };
 
-    return SVecD<3>(c[0], c[1], c[2]);
+    return MagFld(c[0], c[1], c[2]);
 }
 
 
@@ -203,9 +200,9 @@ MagFld MagGeoBoxAms::Get(const SVecD<3>& coo) {
 void MagGeoBoxAms::Output(const std::string& file_path) {
     if (!Load()) return;
     const Long64_t n = 201;
-    const Double_t min = -200.0;
-    const Double_t max =  200.0;
-    const Double_t dlt =    2.0;
+    const Float_t  min = -200.0;
+    const Float_t  max =  200.0;
+    const Float_t  dlt =    2.0;
     MagGeoBoxCreator creator(
             n, min, max,
             n, min, max,
@@ -225,14 +222,9 @@ void MagGeoBoxAms::Output(const std::string& file_path) {
     for (Long64_t xi = 0; xi < n; ++xi) {
         for (Long64_t yi = 0; yi < n; ++yi) {
             for (Long64_t zi = 0; zi < n; ++zi) {
-                Long64_t index = (xi * n * n + yi * n + zi);
-                SVecD<3> coo(
-                        (min + static_cast<Double_t>(xi) * dlt),
-                        (min + static_cast<Double_t>(yi) * dlt),
-                        (min + static_cast<Double_t>(zi) * dlt)
-                    );
+                SVecD<3> coo((min + static_cast<Double_t>(xi) * dlt), (min + static_cast<Double_t>(yi) * dlt), (min + static_cast<Double_t>(zi) * dlt));
                 MagFld&& mag = MagGeoBoxAms::Get(coo);
-                creator.fill(mag.x(), mag.y(), mag.z());
+                creator.fill(static_cast<Float_t>(mag.x()), static_cast<Float_t>(mag.y()), static_cast<Float_t>(mag.z()));
             }
         }
     }
@@ -298,7 +290,9 @@ Bool_t MagMgnt::Load() {
 MagFld MagMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MagFld();
 #ifdef __HAS_AMS_OFFICE_LIBS__
-    return MagGeoBoxAms::Get(coo);
+    // TODO (hchou): testing self method
+    //return MagGeoBoxAms::Get(coo);
+    return geo_box_reader_.get(coo);
 #elif
     return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__
