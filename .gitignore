@@ -43,6 +43,5 @@
 *.dvi
 *.log
 *.out
-*.pdf
 *.spl
 *.toc
