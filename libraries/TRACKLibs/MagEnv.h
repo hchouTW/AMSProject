@@ -14,6 +14,8 @@ class MagFld {
         MagFld(Double_t x, Double_t y, Double_t z) : mag_(x, y, z) {}
         ~MagFld() {}
 
+        void print();
+
         inline const SVecD<3>& operator() () const { return mag_; }
         inline const Double_t& x() const { return mag_(0); }
         inline const Double_t& y() const { return mag_(1); }
@@ -56,13 +58,13 @@ class MagGeoBoxCreator {
         MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path = "MagGeoBox.bin");
         ~MagGeoBoxCreator() { save_and_close(); }
 
-        void fill(Float_t mx = 0., Float_t my = 0., Float_t mz = 0.); // from min to max coord
+        void fill(Long64_t idx, Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
 
         inline Bool_t is_open() { return is_open_; }
         void save_and_close();
 
     protected :
-        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; cur_len_= 0; geo_box_ = nullptr; }
+        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }
 
     private :
         static constexpr Long64_t DIM_ = 3;
@@ -72,7 +74,6 @@ class MagGeoBoxCreator {
         Int_t                     file_len_;
         void*                     file_ptr_;
         Long64_t                  max_len_;
-        Long64_t                  cur_len_;
         MagGeoBox*                geo_box_;
 };
 

@@ -5,13 +5,19 @@
 namespace TrackSys {
 
 
+void MagFld::print() {
+    std::string printStr = STR_FMT("MAG (%8.5f %8.5f %8.5f)\n", mag_(0), mag_(1), mag_(2));
+    COUT(printStr);
+}
+
+
 MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path) {
     clear();
     if (xn < 2 || yn < 2 || zn < 2) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Size failure."); return; }
     if (MGNumc::Compare(xmin, xmax) >= 0 || MGNumc::Compare(ymin, ymax) >= 0 || MGNumc::Compare(zmin, zmax) >= 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Range failure."); return; }
     if (file_path.size() == 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File path not found."); return; }
     
-    Int_t file_len = ((sizeof(Long64_t) + sizeof(Float_t)) + (xn * yn * zn) * sizeof(Float_t)) * DIM_;
+    Int_t file_len = ((sizeof(Long64_t) + sizeof(Float_t) + sizeof(Float_t)) + (xn * yn * zn) * sizeof(Float_t)) * DIM_;
     Int_t file_des = open(file_path.c_str(), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (file_des < 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File not opened."); return; }
 
@@ -27,7 +33,6 @@ MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long
     file_len_  = file_len;
     file_ptr_  = file_ptr;
     max_len_   = (xn * yn * zn);
-    cur_len_   = 0;
     geo_box_   = reinterpret_cast<MagGeoBox*>(file_ptr);
 
     geo_box_->n[0] = xn;
@@ -43,24 +48,19 @@ MagGeoBoxCreator::MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long
 }
 
 
-void MagGeoBoxCreator::fill(Float_t mx, Float_t my, Float_t mz) {
+void MagGeoBoxCreator::fill(Long64_t idx, Float_t bx, Float_t by, Float_t bz) {
     if (!is_open_) return;
-    if (cur_len_ >= max_len_) { MGSys::ShowError("MagGeoBoxCreator::fill() : Out range."); return; }
+    if (idx < 0 || idx >= max_len_) return;
 
-    Float_t * mag = static_cast<Float_t*>(&(geo_box_->mag) + cur_len_ * DIM_);
-    mag[0] = mx;
-    mag[1] = my;
-    mag[2] = mz;
-    cur_len_++;
+    Float_t * mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM_);
+    mag[0] = bx;
+    mag[1] = by;
+    mag[2] = bz;
 }
 
 
 void MagGeoBoxCreator::save_and_close() {
     if (!is_open_) { clear(); return; }
-    if (cur_len_ < max_len_) {
-        MGSys::ShowWarning(STR_FMT("MagGeoBoxCreator::close() : fill not finished. (%lld/%lld)", cur_len_, max_len_));
-        for (Long64_t it = cur_len_; it < max_len_; ++it) fill();
-    }
         
     munmap(file_ptr_, file_len_);
     close(file_des_);
@@ -138,14 +138,15 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     Float_t&& yl = (MGMath::ONE - yu);
     Float_t&& zl = (MGMath::ONE - zu);
 
-    Float_t * clll = (mag_ptr_ + (idx                                ) * DIM_ );
-    Float_t * cllu = (mag_ptr_ + (idx                             + 1) * DIM_ );
-    Float_t * clul = (mag_ptr_ + (idx               + fact_.at(1)    ) * DIM_ );
-    Float_t * cluu = (mag_ptr_ + (idx               + fact_.at(1) + 1) * DIM_ );
-    Float_t * cull = (mag_ptr_ + (idx + fact_.at(0)                  ) * DIM_ );
-    Float_t * culu = (mag_ptr_ + (idx + fact_.at(0)               + 1) * DIM_ );
-    Float_t * cuul = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1)    ) * DIM_ );
-    Float_t * cuuu = (mag_ptr_ + (idx + fact_.at(0) + fact_.at(1) + 1) * DIM_ );
+    Float_t * cell = (mag_ptr_ + (idx * DIM_));
+    Float_t * clll = (cell                                          );
+    Float_t * cllu = (cell + (                          + 1) * DIM_ );
+    Float_t * clul = (cell + (            + fact_.at(1)    ) * DIM_ );
+    Float_t * cluu = (cell + (            + fact_.at(1) + 1) * DIM_ );
+    Float_t * cull = (cell + (fact_.at(0)                  ) * DIM_ );
+    Float_t * culu = (cell + (fact_.at(0)               + 1) * DIM_ );
+    Float_t * cuul = (cell + (fact_.at(0) + fact_.at(1)    ) * DIM_ );
+    Float_t * cuuu = (cell + (fact_.at(0) + fact_.at(1) + 1) * DIM_ );
 
     Float_t cll[3] { (clll[0] * xl + cull[0] * xu),  (clll[1] * xl + cull[1] * xu), (clll[2] * xl + cull[2] * xu) };
     Float_t clu[3] { (cllu[0] * xl + culu[0] * xu),  (cllu[1] * xl + culu[1] * xu), (cllu[2] * xl + culu[2] * xu) };
@@ -218,13 +219,14 @@ void MagGeoBoxAms::Output(const std::string& file_path) {
     COUT("MagGeoBoxAms::Output() : Y (%lld %8.2f %8.2f)\n", n, min, max);
     COUT("MagGeoBoxAms::Output() : Z (%lld %8.2f %8.2f)\n", n, min, max);
 
-    Long64_t len = n * n * n;
+    Long64_t fact[2] { (n * n), (n) };
     for (Long64_t xi = 0; xi < n; ++xi) {
         for (Long64_t yi = 0; yi < n; ++yi) {
             for (Long64_t zi = 0; zi < n; ++zi) {
+                Long64_t idx = xi * fact[0] + yi * fact[1] + zi;
                 SVecD<3> coo((min + static_cast<Double_t>(xi) * dlt), (min + static_cast<Double_t>(yi) * dlt), (min + static_cast<Double_t>(zi) * dlt));
                 MagFld&& mag = MagGeoBoxAms::Get(coo);
-                creator.fill(static_cast<Float_t>(mag.x()), static_cast<Float_t>(mag.y()), static_cast<Float_t>(mag.z()));
+                creator.fill(idx, static_cast<Float_t>(mag.x()), static_cast<Float_t>(mag.y()), static_cast<Float_t>(mag.z()));
             }
         }
     }

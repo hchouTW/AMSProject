@@ -11,8 +11,8 @@ class PhySt {
         PhySt(PartInfo part) : part_(part), mom_(0), eng_(0), bta_(0), eta_(0), irig_(0), coo_(0, 0, 0), dir_(0, 0, -1) { eng_ = part_.mass(); if (part_.is_massless()) bta_ = 1.; }
         ~PhySt() {}
 
-        void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx, Double_t dy, Double_t dz);
-        void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx, Double_t ty, Double_t dz);
+        void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx = 0., Double_t dy = 0., Double_t dz = -1.);
+        void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t dz = -1.);
 
         void set_mom(Double_t mom, Double_t sign = 0.);
         
