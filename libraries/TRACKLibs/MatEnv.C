@@ -10,6 +10,7 @@ void MatFld::print() {
     printStr += STR_FMT("========================= MatFld =========================\n");
     printStr += STR_FMT("Mat       %-d\n"  , mat_);
     printStr += STR_FMT("InvRadLen %-8.6f\n", inv_rad_len_);
+    printStr += STR_FMT("NumRadLen %-8.5f\n", num_rad_len());
     printStr += STR_FMT("RealLen   %-7.2f\n", real_len_);
     printStr += STR_FMT("EfftLen   %-7.2f\n", efft_len_);
     printStr += STR_FMT("Efft      %-6.4f\n", efft_);
@@ -73,46 +74,34 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
 
 void MatGeoBoxCreator::fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM], Bool_t calculated) {
     if (!is_open_) return;
-    Double_t xloc = (static_cast<Double_t>(coo[0]) - geo_box_->min[0]) / dlt_.at(0);
-    Double_t yloc = (static_cast<Double_t>(coo[1]) - geo_box_->min[1]) / dlt_.at(1);
-    Double_t zloc = (static_cast<Double_t>(coo[2]) - geo_box_->min[2]) / dlt_.at(2);
+    if (!calculated) return;
     
-    Long64_t xi = static_cast<Long64_t>(xloc);
-    Long64_t yi = static_cast<Long64_t>(yloc);
-    Long64_t zi = static_cast<Long64_t>(zloc);
-
-    if (xi < 0 || xi >= geo_box_->n[0] ||
-        yi < 0 || yi >= geo_box_->n[1] ||
-        zi < 0 || zi >= geo_box_->n[2]) return;
-
+    Long64_t zi = static_cast<Long64_t>(((static_cast<Double_t>(coo[2]) - geo_box_->min[2]) / dlt_.at(2)));
+    if (zi < 0 || zi >= geo_box_->n[2]) return;
+    
+    Long64_t yi = static_cast<Long64_t>(((static_cast<Double_t>(coo[1]) - geo_box_->min[1]) / dlt_.at(1)));
+    if (yi < 0 || yi >= geo_box_->n[1]) return;
+    
+    Long64_t xi = static_cast<Long64_t>(((static_cast<Double_t>(coo[0]) - geo_box_->min[0]) / dlt_.at(0)));
+    if (xi < 0 || xi >= geo_box_->n[0]) return;
+    
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-    if (idx < 0 || idx >= max_len_) return;
 
     Bool_t has_mat = false;
-    if (calculated) {
-        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-            if (!elm[it]) continue;
-            has_mat = true;
-            elm_.at(it) = true;
-            den_.at(it) += static_cast<Double_t>(den[it]);
-        }
-        if (has_mat) {
-            Bool_t& mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + idx));
-            mat = true;
-            cnt_++;
-        }
+    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+        if (!elm[it]) continue;
+        has_mat = true;
+        elm_.at(it) = true;
+        den_.at(it) += static_cast<Double_t>(den[it]);
+    }
+    
+    if (has_mat) {
+        Bool_t& mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + idx));
+        mat = true;
+        cnt_++;
     }
 }
 
-
-Bool_t MatGeoBoxCreator::is_in_box(Float_t coo[3]) {
-    if (!is_open_) return false;
-    if (MGNumc::Compare(coo[2], static_cast<Float_t>(geo_box_->min[2])) <= 0 || MGNumc::Compare(coo[2], static_cast<Float_t>(geo_box_->max[2])) >= 0) return false;
-    if (MGNumc::Compare(coo[1], static_cast<Float_t>(geo_box_->min[1])) <= 0 || MGNumc::Compare(coo[1], static_cast<Float_t>(geo_box_->max[1])) >= 0) return false;
-    if (MGNumc::Compare(coo[0], static_cast<Float_t>(geo_box_->min[0])) <= 0 || MGNumc::Compare(coo[0], static_cast<Float_t>(geo_box_->max[0])) >= 0) return false;
-    return true;
-}
-        
 
 void MatGeoBoxCreator::save_and_close() {
     if (!is_open_) { clear(); return; }
@@ -223,78 +212,83 @@ Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
 }
         
 
-SVecD<3> MatGeoBoxReader::get_loc_coord(const SVecD<3>& coo) {
-    if (!is_load_) return SVecD<3>();
-    Double_t xloc = (coo[0] - min_.at(0)) / dlt_.at(0);
-    Double_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
-    Double_t zloc = (coo[2] - min_.at(2)) / dlt_.at(2);
-    return SVecD<3>(xloc, yloc, zloc);
-}
-
-
-Bool_t MatGeoBoxReader::is_in_box_at_loc_coord(const SVecD<3>& loc) {
-    if (!is_load_) return false;
-    if (MGNumc::Compare(loc(2), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(2), static_cast<Double_t>(n_.at(2))) >= 0) return false;
-    if (MGNumc::Compare(loc(1), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(1), static_cast<Double_t>(n_.at(1))) >= 0) return false;
-    if (MGNumc::Compare(loc(0), MGMath::ZERO) <= 0 || MGNumc::Compare(loc(0), static_cast<Double_t>(n_.at(0))) >= 0) return false;
-    return true;
-}
-
-
-std::tuple<Long64_t, Bool_t> MatGeoBoxReader::get_index_at_loc_coord(const SVecD<3>& loc) {
-    Long64_t xi = static_cast<Long64_t>(loc(0));
-    Long64_t yi = static_cast<Long64_t>(loc(1));
-    Long64_t zi = static_cast<Long64_t>(loc(2));
-    Long64_t index = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-    Bool_t   mat = mat_ptr_[index];
-    return std::make_tuple(index, mat);
-}
-        
-
 MatFld MatGeoBoxReader::get(const SVecD<3>& coo) {
-    if (!is_in_box(coo)) return MatFld();
-    SVecD<3>&& loc = get_loc_coord(coo);
-    std::tuple<Long64_t, Bool_t>&& idx = get_index_at_loc_coord(loc);
-    if (!std::get<1>(idx)) return MatFld();
-    return MatFld(std::get<1>(idx), elm_, den_, inv_rad_len_);
+    if (!is_load_) return MatFld();
+
+    Long64_t zi = static_cast<Long64_t>(((coo(2) - min_.at(2)) / dlt_.at(2)));
+    if (zi < 0 || zi >= n_.at(2)) return MatFld();
+    
+    Long64_t yi = static_cast<Long64_t>(((coo(1) - min_.at(1)) / dlt_.at(1)));
+    if (yi < 0 || yi >= n_.at(1)) return MatFld();
+
+    Long64_t xi = static_cast<Long64_t>(((coo(0) - min_.at(0)) / dlt_.at(0)));
+    if (xi < 0 || xi >= n_.at(0)) return MatFld();
+
+    Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
+    Bool_t mat = mat_ptr_[idx];
+
+    if (mat) return MatFld(mat, elm_, den_, inv_rad_len_);
+    else     return MatFld();
 }
-        
+
 
 MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
-    if (!is_cross(vcoo, wcoo)) return MatFld();
-    SVecD<3>&& vwvec = wcoo - vcoo;
-    Double_t   vwlen = LA::Mag(vwvec);
-    if (MGNumc::EqualToZero(vwlen)) return get(vcoo);
+    if (!is_load_) return MatFld();
+    
+    Double_t vzloc = std::move((vcoo(2) - min_.at(2)) / dlt_.at(2));
+    Double_t wzloc = std::move((wcoo(2) - min_.at(2)) / dlt_.at(2));
+    Long64_t vzi = static_cast<Long64_t>(vzloc);
+    Long64_t wzi = static_cast<Long64_t>(wzloc);
+    if ((vzi < 0 && wzi < 0) || (vzi >= n_.at(2) && wzi >= n_.at(2))) return MatFld();
+    
+    Double_t vyloc = std::move((vcoo(1) - min_.at(1)) / dlt_.at(1));
+    Double_t wyloc = std::move((wcoo(1) - min_.at(1)) / dlt_.at(1));
+    Long64_t vyi = static_cast<Long64_t>(vyloc);
+    Long64_t wyi = static_cast<Long64_t>(wyloc);
+    if ((vyi < 0 && wyi < 0) || (vyi >= n_.at(1) && wyi >= n_.at(1))) return MatFld();
+    
+    Double_t vxloc = std::move((vcoo(0) - min_.at(0)) / dlt_.at(0));
+    Double_t wxloc = std::move((wcoo(0) - min_.at(0)) / dlt_.at(0));
+    Long64_t vxi = static_cast<Long64_t>(vxloc);
+    Long64_t wxi = static_cast<Long64_t>(wxloc);
+    if ((vxi < 0 && wxi < 0) || (vxi >= n_.at(0) && wxi >= n_.at(0))) return MatFld();
 
-    SVecD<3>&& vloc = get_loc_coord(vcoo);
-    SVecD<3>&& wloc = get_loc_coord(wcoo);
-    SVecD<3>&& vwlvec = wloc - vloc;
-    Double_t   vwllen = LA::Mag(vwlvec);
+    Double_t real_len = LA::Mag((wcoo - vcoo));
 
-    Double_t step_len = (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_);
-    if (MGNumc::EqualToZero(vwllen)) return get(vcoo);
-    Long64_t nstp = static_cast<Long64_t>(vwllen / step_len) + 2;
-    Double_t stp  = vwllen / static_cast<Double_t>(nstp);
-    SVecD<3>&& unit = LA::Unit(vwlvec) * stp;
+    if (MGNumc::EqualToZero(real_len)) {
+        Long64_t idx = (vxi * fact_.at(0) + vyi * fact_.at(1) + vzi);
+        Bool_t mat = mat_ptr_[idx];
+        if (mat) return MatFld(mat, elm_, den_, inv_rad_len_);
+        else     return MatFld();
+    }
+   
+    SVecD<3> vwvec((wxloc - vxloc), (wyloc - vyloc), (wzloc - vzloc));
+    
+    Double_t   vwlen  = LA::Mag(vwvec);
+    Long64_t   nstp   = static_cast<Long64_t>(vwlen / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_)) + 2;
+    SVecD<3>&& unit   = (vwvec / static_cast<Double_t>(nstp));
+
+    SVecD<3> itloc((vxloc + MGMath::HALF * unit(0)), (vyloc + MGMath::HALF * unit(1)), (vzloc + MGMath::HALF * unit(2)));
 
     Long64_t itcnt = 0;
-    SVecD<3>&& itloc = vloc + (MGMath::HALF * unit);
     for (Long64_t it = 0; it < nstp; ++it, itloc += unit) {
-        if (!is_in_box_at_loc_coord(itloc)) continue;
-        std::tuple<Long64_t, Bool_t>&& idx = get_index_at_loc_coord(itloc);
-        if (!std::get<1>(idx)) continue;
-        itcnt++;
+        Long64_t zi = static_cast<Long64_t>(itloc(2));
+        if (zi < 0 || zi >= n_.at(2)) continue;
+        Long64_t yi = static_cast<Long64_t>(itloc(1));
+        if (yi < 0 || yi >= n_.at(1)) continue;
+        Long64_t xi = static_cast<Long64_t>(itloc(0));
+        if (xi < 0 || xi >= n_.at(0)) continue;
+
+        Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
+        if (mat_ptr_[idx]) itcnt++;
     }
 
-    Double_t real_len = vwlen;
     if (itcnt != 0) {
-        Bool_t   mat = true;
         Double_t efft = static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp);
         Double_t efft_len = efft * real_len;
-        return MatFld(mat, elm_, den_, inv_rad_len_, real_len, efft_len, efft);
+        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft);
     }
-
-    return MatFld();
+    else return MatFld(real_len);
 }
 
 
@@ -455,30 +449,30 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
         
         Float_t trd_radius = (MatAms::TRDL_RADIUS + (coo[2] - MatAms::TRDL_Z) * MatAms::TRD_SLOPE);
         
-        Bool_t is_trd      = (MGNumc::Compare(radius < trd_radius) < 0);
+        Bool_t is_trd      = (MGNumc::Compare(radius, trd_radius) < 0);
         Bool_t is_tracker  = (MGNumc::Compare(radius, MatAms::TRACKER_RADIUS) < 0);
         Bool_t is_mag_hole = (MGNumc::Compare(radius, MatAms::MAGNETIC_RADIUS) < 0);
 
         Bool_t is_naf = (std::max(std::fabs(coo[0]), std::fabs(coo[1])) < MatAms::RICH_BOUND);
         Bool_t is_agl = !is_naf;
 
-        if (creator_AMS02RAD .is_in_box(coo)) creator_AMS02RAD .fill(coo, elm, den);
-        if (creator_AMS02TRL1.is_in_box(coo)) creator_AMS02TRL1.fill(coo, elm, den, is_tracker);
-        if (creator_AMS02UTRD.is_in_box(coo)) creator_AMS02UTRD.fill(coo, elm, den, is_trd);
-        if (creator_AMS02TRD .is_in_box(coo)) creator_AMS02TRD .fill(coo, elm, den, is_trd);
-        if (creator_AMS02LTRD.is_in_box(coo)) creator_AMS02LTRD.fill(coo, elm, den, is_trd);
-        if (creator_AMS02UTOF.is_in_box(coo)) creator_AMS02UTOF.fill(coo, elm, den);
-        if (creator_AMS02UITR.is_in_box(coo)) creator_AMS02UITR.fill(coo, elm, den, is_tracker);
-        if (creator_AMS02TRS1.is_in_box(coo)) creator_AMS02TRS1.fill(coo, elm, den, is_mag_hole);
-        if (creator_AMS02TRS2.is_in_box(coo)) creator_AMS02TRS2.fill(coo, elm, den, is_mag_hole);
-        if (creator_AMS02TRS3.is_in_box(coo)) creator_AMS02TRS3.fill(coo, elm, den, is_mag_hole);
-        if (creator_AMS02LITR.is_in_box(coo)) creator_AMS02LITR.fill(coo, elm, den, is_tracker);
-        if (creator_AMS02LTOF.is_in_box(coo)) creator_AMS02LTOF.fill(coo, elm, den);
-        if (creator_AMS02NAF .is_in_box(coo)) creator_AMS02NAF .fill(coo, elm, den, is_naf);
-        if (creator_AMS02AGL .is_in_box(coo)) creator_AMS02AGL .fill(coo, elm, den, is_agl);
-        if (creator_AMS02PMT .is_in_box(coo)) creator_AMS02PMT .fill(coo, elm, den);
-        if (creator_AMS02TRL9.is_in_box(coo)) creator_AMS02TRL9.fill(coo, elm, den);
-        if (creator_AMS02ECAL.is_in_box(coo)) creator_AMS02ECAL.fill(coo, elm, den);
+        creator_AMS02RAD .fill(coo, elm, den);
+        creator_AMS02TRL1.fill(coo, elm, den, is_tracker);
+        creator_AMS02UTRD.fill(coo, elm, den, is_trd);
+        creator_AMS02TRD .fill(coo, elm, den, is_trd);
+        creator_AMS02LTRD.fill(coo, elm, den, is_trd);
+        creator_AMS02UTOF.fill(coo, elm, den);
+        creator_AMS02UITR.fill(coo, elm, den, is_tracker);
+        creator_AMS02TRS1.fill(coo, elm, den, is_mag_hole);
+        creator_AMS02TRS2.fill(coo, elm, den, is_mag_hole);
+        creator_AMS02TRS3.fill(coo, elm, den, is_mag_hole);
+        creator_AMS02LITR.fill(coo, elm, den, is_tracker);
+        creator_AMS02LTOF.fill(coo, elm, den);
+        creator_AMS02NAF .fill(coo, elm, den, is_naf);
+        creator_AMS02AGL .fill(coo, elm, den, is_agl);
+        creator_AMS02PMT .fill(coo, elm, den);
+        creator_AMS02TRL9.fill(coo, elm, den);
+        creator_AMS02ECAL.fill(coo, elm, den);
     }
     
     creator_AMS02RAD .save_and_close();
@@ -566,34 +560,30 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& coo) {
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.0;
 
-    std::cerr << "HERE 1\n";
     for (auto&& reader : reader_) {
-        std::cerr << "HERE 2\n";
         if (!reader->is_in_box(coo)) continue;
-        std::cerr << "HERE 3\n";
         MatFld&& mat_fld = reader->get(coo);
         if (!mat_fld()) continue;
 
-        std::cerr << "HERE 4\n";
         for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
             if (!mat_fld.elm().at(it)) continue;
             elm.at(it) = true;
-            den.at(it)  += mat_fld.den().at(it);
-            std::cerr << "HERE 5\n";
+            den.at(it) += mat_fld.den().at(it);
         }
         inv_rad_len += mat_fld.inv_rad_len();
         mat = true;
     }
 
-    if (!mat) return MatFld();
-    return MatFld(mat, elm, den, inv_rad_len);
+    if (mat) return MatFld(mat, elm, den, inv_rad_len);
+    else     return MatFld();
 }
 
 
 MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
+    if (!Load()) return MatFld();
+    
     Double_t real_len = LA::Mag(wcoo - vcoo);
     if (MGNumc::EqualToZero(real_len)) return Get(vcoo);
-    if (!Load()) return MatFld();
     
     Bool_t                                     mat = false;
     std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
@@ -625,10 +615,9 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
         }
         inv_rad_len = (inv_rad_len / efft_len);
         efft = (efft_len / real_len);
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft);
     }
-    else return MatFld();
-
-    return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft);
+    else return MatFld(real_len);
 }
 
 
@@ -664,11 +653,6 @@ void MatArg::rndm(const MatPhyFld& mat) {
 
 
 Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
-    if (MGNumc::EqualToZero(stp_len)) return MGMath::ZERO;
-    if (MGNumc::EqualToZero(part.mom())) return MGMath::ZERO;
-    if (part.part().is_chrgless()) return MGMath::ZERO;
-    if (part.part().is_massless()) return MGMath::ZERO;
-
     const SVecD<3>&  vcoo = part.coo();
     SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
 
@@ -677,18 +661,15 @@ Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t 
 #elif
     MatFld mat;
 #endif // __HAS_AMS_OFFICE_LIBS__
-    if (!mat()) return MGMath::ZERO;
-
-    Double_t num_rad_len = mat.efft_len() * mat.inv_rad_len();
-    return num_rad_len;
+   
+    return mat.num_rad_len();
 }
 
 
 MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, const MatArg& marg, Bool_t is_std) {
+    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld();
     if (MGNumc::EqualToZero(stp_len)) return MatPhyFld();
     if (MGNumc::EqualToZero(part.mom())) return MatPhyFld();
-    if (part.part().is_chrgless()) return MatPhyFld();
-    if (part.part().is_massless()) return MatPhyFld();
 
     const SVecD<3>&  vcoo = part.coo();
     SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
@@ -700,26 +681,25 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, const MatArg& m
 #endif // __HAS_AMS_OFFICE_LIBS__
     if (!mat()) return MatPhyFld();
 
-    Double_t num_rad_len = mat.efft_len() * mat.inv_rad_len();
     Double_t mult_scat_sgm = GetMultipleScattering(mat, part);
-    std::tuple<Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mat, part);
+    std::pair<Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mat, part);
     Double_t brm_eloss_men = GetBremsstrahlungEnergyLoss(mat, part);
 
     // TODO fix backtrace fornttrace diffenence by energy
     if (false) {
-        Double_t ion = (marg.ion() * std::get<0>(ion_eloss) + std::get<1>(ion_eloss));
+        Double_t ion = (marg.ion() * (ion_eloss.first) + (ion_eloss.second));
         Double_t brm = (marg.brm() * brm_eloss_men);
         Double_t dlt = (stp_len * (ion + brm) / part.eta_abs());
         Double_t rel = std::exp(dlt);
         //Double_t rel = (std::exp(dlt) - 1) / dlt;
         //Double_t rel = 1 + (1./2.) * dlt + (1./6.) * dlt * dlt + (1./24.) * dlt * dlt * dlt;
 
-        std::get<0>(ion_eloss) *= rel;
-        std::get<1>(ion_eloss) *= rel;
+        ion_eloss.first  *= rel;
+        ion_eloss.second *= rel;
         brm_eloss_men *= rel; 
     }
 
-    return MatPhyFld(mat(), mat.inv_rad_len(), num_rad_len, mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), brm_eloss_men);
+    return MatPhyFld(mat(), mat.inv_rad_len(), mat.num_rad_len(), mult_scat_sgm, ion_eloss.first, ion_eloss.second, brm_eloss_men);
 }
 
 
@@ -743,18 +723,18 @@ std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(co
 
 
 Double_t MatPhy::GetMultipleScattering(const MatFld& mat, const PhySt& part) {
-    Double_t num_rad_len = mat.efft_len() * mat.inv_rad_len();
+    Double_t num_rad_len = mat.num_rad_len();
     if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
     if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t inv_gmbta = ((is_over_lmt) ? (MGMath::ONE / part.gmbta()) : LMT_INV_GMBTA);
     Double_t eta_part = (inv_gmbta * std::sqrt(inv_gmbta*inv_gmbta + MGMath::ONE));
-    Double_t mult_scat_sgm = RYDBERG_CONST * std::fabs(part.part().chrg_to_mass()) * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (MGMath::ONE / mat.real_len());
+    Double_t mult_scat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (MGMath::ONE / mat.real_len());
     return mult_scat_sgm;
 }
 
 
-std::tuple<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part) {
+std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part) {
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t sqr_gmbta = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
     Double_t sqr_bta   = ((is_over_lmt) ? (part.bta() * part.bta()) : LMT_SQR_BTA);
@@ -798,17 +778,16 @@ std::tuple<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mat
     if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm) <= 0) ion_eloss_sgm = MGMath::ZERO;
     if (!MGNumc::Valid(ion_eloss_mpv) || MGNumc::Compare(ion_eloss_mpv) <= 0) ion_eloss_mpv = MGMath::ZERO;
 
-    return std::make_tuple(ion_eloss_sgm, ion_eloss_mpv);
+    return std::make_pair(ion_eloss_sgm, ion_eloss_mpv);
 }
 
 
 Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mat, const PhySt& part) {
-    Double_t num_rad_len  = mat.efft_len() * mat.inv_rad_len() / MGMath::LOG_TWO;
     Bool_t   is_over_lmt  = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t inv_sqr_bta  = ((is_over_lmt) ? (MGMath::ONE / part.bta() / part.bta()) : LMT_INV_SQR_BTA);
     Double_t sqr_chrg_rat = (part.part().chrg() * part.part().chrg());
     Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.part().mass() / part.part().mass());
-    Double_t brm_eloss_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * num_rad_len * (part.eta_abs() / mat.real_len());
+    Double_t brm_eloss_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mat.num_rad_len() / MGMath::LOG_TWO) * (part.eta_abs() / mat.real_len());
     if (!MGNumc::Valid(brm_eloss_men) || MGNumc::Compare(brm_eloss_men) <= 0) brm_eloss_men = MGMath::ZERO;
     return brm_eloss_men;
 }

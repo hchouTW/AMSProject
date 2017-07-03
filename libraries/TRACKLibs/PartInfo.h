@@ -37,8 +37,8 @@ class PartInfo {
         inline const Bool_t& is_chrgless() const { return is_chrgless_; }
         inline const Bool_t& is_massless() const { return is_massless_; }
 
-        inline Double_t chrg_to_mass() const { return (is_chrgless_ ? 0. : static_cast<Double_t>(chrg_)/mass_); }
-        inline Double_t mass_to_chrg() const { return (is_massless_ ? 0. : mass_/static_cast<Double_t>(chrg_)); }
+        inline Double_t chrg_to_mass() const { return (is_chrgless_ ? 0. : std::fabs(static_cast<Double_t>(chrg_)/mass_)); }
+        inline Double_t mass_to_chrg() const { return (is_massless_ ? 0. : std::fabs(mass_/static_cast<Double_t>(chrg_))); }
 
     private :
         PartType     type_;

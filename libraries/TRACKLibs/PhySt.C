@@ -41,7 +41,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
         eng_   = part_.mass();
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
-        eta_  = MGMath::ZERO;
+        eta_   = MGMath::ZERO;
         irig_  = MGMath::ZERO;
     }
     else {
@@ -50,7 +50,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
         bta_   = (part_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(part_.mass() * part_.mass() / mom_ / mom_ + MGMath::ONE)));
         gmbta_ = (part_.is_massless() ? mom_ : (mom_ / part_.mass()));
         eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
-        irig_  = std::fabs(part_.chrg_to_mass()) * eta_;
+        irig_  = part_.chrg_to_mass() * eta_;
     }
 }
 
@@ -68,7 +68,7 @@ void PhySt::set_eta(Double_t eta) {
     else {
         eta_   = eta;
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
-        irig_  = std::fabs(part_.chrg_to_mass()) * eta_;
+        irig_  = part_.chrg_to_mass() * eta_;
         mom_   = (part_.is_massless() ? gmbta_ : (part_.mass() * gmbta_));
         eng_   = std::sqrt(mom_ * mom_ + part_.mass() * part_.mass());
         bta_   = (part_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(part_.mass() * part_.mass() / mom_ / mom_ + MGMath::ONE)));
@@ -90,7 +90,7 @@ void PhySt::set_irig(Double_t irig) {
     }
     else {
         irig_  = irig;
-        eta_   = std::fabs(part_.mass_to_chrg()) * irig;
+        eta_   = part_.mass_to_chrg() * irig;
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
         mom_   = (part_.is_massless() ? gmbta_ : (part_.mass() * gmbta_));
         eng_   = std::sqrt(mom_ * mom_ + part_.mass() * part_.mass());

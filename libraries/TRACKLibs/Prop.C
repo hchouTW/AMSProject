@@ -37,7 +37,7 @@ OrthCoord::OrthCoord(const SVecD<3>& org, const SVecD<3>& seed) : OrthCoord() {
 
 
 MotionFunc::MotionFunc(const PhySt& part) {
-    Double_t Lambda = PROP_FACT * std::fabs(part.part().chrg_to_mass());
+    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.coo());
     SVecD<3>&& crsub = LA::Cross(part.dir(), mag());
@@ -49,7 +49,7 @@ MotionFunc::MotionFunc(const PhySt& part) {
 
 
 MotionFunc::MotionFunc(const PhySt& part, const MatArg& arg, const MatPhyFld& mat) {
-    Double_t Lambda = PROP_FACT * std::fabs(part.part().chrg_to_mass());
+    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.coo());
     SVecD<3>&& crsub = LA::Cross(part.dir(), mag());
@@ -75,7 +75,7 @@ MotionFunc::MotionFunc(const PhySt& part, const MatArg& arg, const MatPhyFld& ma
 
 
 TransferFunc::TransferFunc(const PhySt& part) {
-    Double_t Lambda = PROP_FACT * std::fabs(part.part().chrg_to_mass());
+    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.coo());
     SVecD<3>&& crsub = LA::Cross(part.dir(), mag());
@@ -100,7 +100,7 @@ TransferFunc::TransferFunc(const PhySt& part) {
 
 
 TransferFunc::TransferFunc(const PhySt& part, const MatArg& arg, const MatPhyFld& mat) {
-    Double_t Lambda = PROP_FACT * std::fabs(part.part().chrg_to_mass());
+    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.coo());
     SVecD<3>&& crsub = LA::Cross(part.dir(), mag());
@@ -170,11 +170,9 @@ Double_t PropMgnt::GetPropStep(const PhySt& part, Short_t ward, Bool_t mat) {
 
     Double_t step = sign * pred_step;
 
-    // TODO num_rad_len is faliure
     if (mat) {
-        Double_t num_rad_len = MatPhy::GetNumRadLen(step, part);
-        //step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
-        std::cout << Form("STP %14.8f, NRL %14.8f\n", step, num_rad_len);
+        Double_t num_rad_len = MatPhy::GetNumRadLen(step, part, false);
+        step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
     }
 
     return step; 

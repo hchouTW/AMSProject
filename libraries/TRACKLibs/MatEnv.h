@@ -29,6 +29,7 @@ namespace MatProperty {
 class MatFld {
     public :
         MatFld() { clear(); }
+        MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
         MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft) {}
         ~MatFld() {}
 
@@ -41,6 +42,8 @@ class MatFld {
         inline const Double_t& real_len() const { return real_len_; }
         inline const Double_t& efft_len() const { return efft_len_; }
         inline const Double_t& efft() const { return efft_; }
+
+        inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : 0.); }
 
     protected :
         inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; }
@@ -98,8 +101,6 @@ class MatGeoBoxCreator {
 
         inline Bool_t is_open() { return is_open_; }
        
-        inline Bool_t is_in_box(Float_t coo[3]);
-
         void save_and_close();
 
     protected :
@@ -142,20 +143,14 @@ class MatGeoBoxReader {
         
         MatFld get(const SVecD<3>& coo);
         MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
-
+        
     protected :
         inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mat_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; }
 
-        inline SVecD<3> get_loc_coord(const SVecD<3>& coo);
-        
-        inline Bool_t is_in_box_at_loc_coord(const SVecD<3>& loc);
-        
-        inline std::tuple<Long64_t, Bool_t> get_index_at_loc_coord(const SVecD<3>& loc);
-
     private :
         static constexpr Long64_t                  DIM_ = 3;
-        static constexpr Double_t                  FST_STEP_LEN_ = 1.0;
-        static constexpr Double_t                  STD_STEP_LEN_ = 0.2;
+        static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
+        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
         Bool_t                                     is_load_;
         std::string                                file_path_;
         void*                                      file_ptr_;
@@ -267,8 +262,7 @@ class MatGeoBoxAms {
         static MatFld Get(const SVecD<3>& coo);
         static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
 
-    public :
-    //private :
+    private :
         static Bool_t is_load_;
         static std::vector<MatGeoBoxReader*> reader_;
         static MatGeoBoxReader reader_AMS02RAD_ ;
@@ -383,7 +377,7 @@ class MatPhy {
         
         static Double_t GetRadiationLength(const MatFld& mat, const PhySt& part);
         static Double_t GetMultipleScattering(const MatFld& mat, const PhySt& part);
-        static std::tuple<Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part);
+        static std::pair<Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mat, const PhySt& part);
 
     private :
