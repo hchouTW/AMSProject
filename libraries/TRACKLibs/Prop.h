@@ -152,7 +152,7 @@ class PropMgnt {
     
     public :
         enum class Method {
-            kEuler, kEulerHeun, kRungeKuttaNystrom
+            kEuler = 1, kEulerHeun = 2, kRungeKuttaNystrom = 4
         };
 
         static void   SetMethod(Method method = Method::kRungeKuttaNystrom) { method_ = method; }
@@ -162,6 +162,10 @@ class PropMgnt {
         static Method method_;
 
     public :
+#ifdef __HAS_AMS_OFFICE_LIBS__
+        static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
+#endif        
+        
         static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
         static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
         
@@ -177,13 +181,13 @@ class PropMgnt {
         static Double_t GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat = false);
 
         static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
-        //static Bool_t Prop_EulerHeunMethod(Double_t step, PhySt & phySt, PhyJb * phyJb = nullptr);
-        //static Bool_t Prop_RungeKuttaNystromMethod(Double_t step, PhySt & phySt, PhyJb * phyJb = nullptr);
+        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
     
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
-        static constexpr Double_t TUNE_STEP  = 5.0e-4; // (du threshold)
+        static constexpr Double_t TUNE_STEP  = 2.0e-4; // (du threshold)
         static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
         static constexpr Double_t LMTL_STEP  =  5.0;   // (ds threshold)
         static constexpr Double_t TUNE_MAT   =  0.2;   // (number radiation length threshold)
@@ -206,9 +210,9 @@ class PropMgnt {
         static constexpr Short_t JBRM = 3;
 };
 
-PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 //PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
+PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
 
 
 } // namespace TrackSys

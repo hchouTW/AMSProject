@@ -115,7 +115,7 @@ Bool_t MagGeoBoxReader::load(const std::string& file_path) {
 
 MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     if (!is_load_) return MagFld();
-   
+    
     // Get Local Coord
     Float_t xloc = (coo[0] - min_.at(0)) / dlt_.at(0);
     Float_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
@@ -134,9 +134,9 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     Float_t xu = xloc - static_cast<Float_t>(xi);
     Float_t yu = yloc - static_cast<Float_t>(yi);
     Float_t zu = zloc - static_cast<Float_t>(zi);
-    Float_t&& xl = (MGMath::ONE - xu);
-    Float_t&& yl = (MGMath::ONE - yu);
-    Float_t&& zl = (MGMath::ONE - zu);
+    Float_t xl = (MGMath::ONE - xu);
+    Float_t yl = (MGMath::ONE - yu);
+    Float_t zl = (MGMath::ONE - zu);
 
     Float_t * cell = (mag_ptr_ + (idx * DIM_));
     Float_t * clll = (cell                                          );
@@ -165,26 +165,26 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
 #ifdef __HAS_AMS_OFFICE_LIBS__
 Bool_t MagGeoBoxAms::Load() {
     if (is_load_) return is_load_;
+    is_load_ = false;
+    
     mag_field_ = MagField::GetPtr();
-    if (!mag_field_->GetMap()) {
-        bool iswork = true;
-        static int magerr = 0;
-        if (!mag_field_->GetMap() && !magerr) {
-            std::string filePath = STR_FMT("%s/v5.00/MagneticFieldMapPermanent_NEW_FULL.bin", MGSys::GetEnv("AMSDataDir").c_str());
-            if ((mag_field_->Read(filePath.c_str())) < 0) {
-                CERR("Magnetic Field map not found : %s\n", filePath.c_str());
-                magerr = -1;
-                iswork = false;
-            }
-            else {
-                COUT("MagGeoBoxAms::Load() Open file : %s\n", filePath.c_str());
-            }
+    if (mag_field_ == nullptr) return is_load_; 
+    
+    if (mag_field_->GetMap()) is_load_ = true;
+    else {
+        std::string filePath = STR_FMT("%s/v5.00/MagneticFieldMapPermanent_NEW_FULL.bin", MGSys::GetEnv("AMSDataDir").c_str());
+        if ((mag_field_->Read(filePath.c_str())) < 0) {
+            CERR("Magnetic Field map not found : %s\n", filePath.c_str());
+            mag_field_ = nullptr;
+        }
+        else {
+            COUT("MagGeoBoxAms::Load() Open file : %s\n", filePath.c_str());
             mag_field_->SetMagstat(1);
             mag_field_->SetScale(1);
+            is_load_ = true;
         }
-        if (!iswork) mag_field_ = 0;
-        else         is_load_ = true;
     }
+
     return is_load_;
 }
 
@@ -270,10 +270,11 @@ Double_t MagFuncAms::GetMagxInt2nd(Double_t cooz) {
 
 Bool_t MagMgnt::Load() {
     if (is_load_) return is_load_;
+
 #ifdef __HAS_AMS_OFFICE_LIBS__
     Bool_t is_load_ams = MagGeoBoxAms::Load();
 #endif
-
+    
     if (!geo_box_reader_.exist()) {
         std::string file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/MagGeoBox_AMS02.bin";
         geo_box_reader_.load(file_path);
@@ -291,6 +292,7 @@ Bool_t MagMgnt::Load() {
 
 MagFld MagMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MagFld();
+
 #ifdef __HAS_AMS_OFFICE_LIBS__
     // TODO (hchou): testing self method
     //return MagGeoBoxAms::Get(coo);

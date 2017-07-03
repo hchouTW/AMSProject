@@ -143,6 +143,33 @@ void PhyJb::init(Bool_t is_identity) {
     else             jb_gg_ = std::move(SMtxD<5, 5>());
     jb_gl_ = std::move(SMtxD<5, 4>()); 
 }
+
+
+#ifdef __HAS_AMS_OFFICE_LIBS__
+Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
+    Short_t sign = MGNumc::Compare(part.dz());
+    if (sign == 0) return false;
+    if (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0) return true;
+
+    AMSPoint pos(part.cx(), part.cy(), part.cz());
+    AMSDir   dir(part.dx(), part.dy(), part.dz());
+    Double_t rig = static_cast<Double_t>(-sign) * part.rig();
+
+    TrProp trProp(pos, dir, rig);
+    Double_t len = trProp.Propagate(zcoo);
+    if (len < 0) return false;
+   
+    part.set_state_with_cos(
+        trProp.GetP0x(),
+        trProp.GetP0y(),
+        trProp.GetP0z(),
+        trProp.GetD0x() * sign,
+        trProp.GetD0y() * sign,
+        trProp.GetD0z() * sign
+    );
+    return true;
+}
+#endif
  
 
 // Step Length
@@ -189,8 +216,6 @@ Double_t PropMgnt::GetStep(const PhySt& part, Double_t resStep, Bool_t mat) {
     else if (res < 1.7 * len) length = 0.5 * len;
     else                      length = len;
     Double_t step = static_cast<Double_t>(sign) * length;
-
-    std::cout << Form("Z %8.2f step %8.2f\n", part.cz(), step);
 
     return step;
 }
@@ -240,8 +265,6 @@ Double_t PropMgnt::GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat) 
     }
     if (!MGNumc::Valid(step)) step = lengths;
     
-    std::cout << Form("Z %8.2f step %8.2f\n", part.cz(), step);
-
     return step;
 }
 
@@ -261,8 +284,8 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJ
         PhyJb * curJb = (!withJb) ? nullptr : (new PhyJb());
         switch (method_) {
             case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
-            case Method::kEulerHeun         : break;
-            case Method::kRungeKuttaNystrom : break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, phyJb); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, phyJb); break;
             default : break;
         }
         if (!valid) break;
@@ -296,8 +319,8 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
         PhyJb * curJb = (!withJb) ? nullptr : (new PhyJb());
         switch (method_) {
             case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, phyJb); break;
-            case Method::kEulerHeun         : break;
-            case Method::kRungeKuttaNystrom : break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, phyJb); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, phyJb); break;
             default : break;
         }
         if (!valid) break;
@@ -323,15 +346,16 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
     Bool_t           mat = (marg() && mfld());
     Short_t     eta_sign = part.eta_sign();
     
-    Double_t half_ss = MGMath::HALF * step * step;
+    Double_t sstep = step * step;
+    Double_t ss1o2 = MGMath::HALF * sstep;
 
     PhySt st0 = part;
     MotionFunc mn0(st0, marg, mfld);
     
     part.set_state_with_cos(
-        st0.cx() + step * mn0.px() + half_ss * mn0.ux(),
-        st0.cy() + step * mn0.py() + half_ss * mn0.uy(),
-        st0.cz() + step * mn0.pz() + half_ss * mn0.uz(),
+        st0.cx() + step * mn0.px() + ss1o2 * mn0.ux(),
+        st0.cy() + step * mn0.py() + ss1o2 * mn0.uy(),
+        st0.cz() + step * mn0.pz() + ss1o2 * mn0.uz(),
         st0.dx() + step * mn0.ux(),
         st0.dy() + step * mn0.uy(),
         st0.dz() + step * mn0.uz()
@@ -342,6 +366,10 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
         if (is_mch) part.set_eta(eta);
         else        return false;
     }
+/*
+    // testcode
+    COUT("INTER\n");
+    part.print();
 
     if (withJb) {
         TransferFunc tf0(st0, marg, mfld);
@@ -376,9 +404,145 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
             phyJb->gl(JEA, JBRM) += step * tf0.eb();
         }
     }
+*/
+    return true;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
+    Bool_t        withJb = (phyJb != nullptr);
+    MatPhyFld&&     mfld = (marg() ? MatPhy::Get(step, part, marg) : MatPhyFld());
+    Bool_t           mat = (marg() && mfld());
+    Short_t     eta_sign = part.eta_sign();
+   
+    Double_t s1o2  = MGMath::HALF * step;
+    Double_t sstep = step * step;
+    Double_t ss1o2 = MGMath::HALF * sstep;
+    Double_t ss1o6 = MGMath::ONE_TO_SIX * sstep;
+
+    PhySt st0 = part;
+    MotionFunc mn0(st0, marg, mfld);
+    
+    PhySt st1 = part;
+    st1.set_state_with_cos(
+        st0.cx() + step * mn0.px() + ss1o2 * mn0.ux(),
+        st0.cy() + step * mn0.py() + ss1o2 * mn0.uy(),
+        st0.cz() + step * mn0.pz() + ss1o2 * mn0.uz(),
+        st0.dx() + step * mn0.ux(),
+        st0.dy() + step * mn0.uy(),
+        st0.dz() + step * mn0.uz()
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + step * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) st1.set_eta(eta);
+        else        return false;
+    }
+    MotionFunc mn1(st1, marg, mfld);
+   
+    part.set_state_with_cos(
+        st0.cx() + step * mn0.px() + ss1o6 * (MGMath::TWO * mn0.ux() + mn1.ux()),
+        st0.cy() + step * mn0.py() + ss1o6 * (MGMath::TWO * mn0.uy() + mn1.uy()),
+        st0.cz() + step * mn0.pz() + ss1o6 * (MGMath::TWO * mn0.uz() + mn1.uz()),
+        st0.dx() + s1o2 * (mn0.ux() + mn1.ux()),
+        st0.dy() + s1o2 * (mn0.uy() + mn1.uy()),
+        st0.dz() + s1o2 * (mn0.uz() + mn1.uz())
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + step * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) part.set_eta(eta);
+        else        return false;
+    }
 
     return true;
 }
+
+
+Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
+    Bool_t        withJb = (phyJb != nullptr);
+    MatPhyFld&&     mfld = (marg() ? MatPhy::Get(step, part, marg) : MatPhyFld());
+    Bool_t           mat = (marg() && mfld());
+    Short_t     eta_sign = part.eta_sign();
+    
+    Double_t s1o2  = MGMath::HALF * step;
+    Double_t s1o6  = MGMath::ONE_TO_SIX * step;
+    Double_t sstep = step * step;
+    Double_t ss1o2 = MGMath::HALF * sstep;
+    Double_t ss1o6 = MGMath::ONE_TO_SIX * sstep;
+    Double_t ss1o8 = MGMath::ONE_TO_EIGHT * sstep;
+
+    PhySt st0 = part;
+    MotionFunc mn0(st0, marg, mfld);
+    
+    PhySt st1 = part;
+    st1.set_state_with_cos(
+        st0.cx() + s1o2 * mn0.px() + ss1o8 * mn0.ux(),
+        st0.cy() + s1o2 * mn0.py() + ss1o8 * mn0.uy(),
+        st0.cz() + s1o2 * mn0.pz() + ss1o8 * mn0.uz(),
+        st0.dx() + s1o2 * mn0.ux(),
+        st0.dy() + s1o2 * mn0.uy(),
+        st0.dz() + s1o2 * mn0.uz()
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + s1o2 * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) st1.set_eta(eta);
+        else        return false;
+    }
+    MotionFunc mn1(st1, marg, mfld);
+    
+    PhySt st2 = part;
+    st2.set_state_with_cos(
+        st0.cx() + s1o2 * mn0.px() + ss1o8 * mn0.ux(),
+        st0.cy() + s1o2 * mn0.py() + ss1o8 * mn0.uy(),
+        st0.cz() + s1o2 * mn0.pz() + ss1o8 * mn0.uz(),
+        st0.dx() + s1o2 * mn1.ux(),
+        st0.dy() + s1o2 * mn1.uy(),
+        st0.dz() + s1o2 * mn1.uz()
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + s1o2 * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) st2.set_eta(eta);
+        else        return false;
+    }
+    MotionFunc mn2(st2, marg, mfld);
+    
+    PhySt st3 = part;
+    st3.set_state_with_cos(
+        st0.cx() + step * mn0.px() + ss1o2 * mn2.ux(),
+        st0.cy() + step * mn0.py() + ss1o2 * mn2.uy(),
+        st0.cz() + step * mn0.pz() + ss1o2 * mn2.uz(),
+        st0.dx() + step * mn2.ux(),
+        st0.dy() + step * mn2.uy(),
+        st0.dz() + step * mn2.uz()
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + step * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) st3.set_eta(eta);
+        else        return false;
+    }
+    MotionFunc mn3(st3, marg, mfld);
+    
+    part.set_state_with_cos(
+        st0.cx() + step * mn0.px() + ss1o6 * (mn0.ux() + mn1.ux() + mn2.ux()),
+        st0.cy() + step * mn0.py() + ss1o6 * (mn0.uy() + mn1.uy() + mn2.uy()),
+        st0.cz() + step * mn0.pz() + ss1o6 * (mn0.uz() + mn1.uz() + mn2.uz()),
+        st0.dx() + s1o6 * (mn0.ux() + MGMath::TWO * mn1.ux() + MGMath::TWO * mn2.ux() + mn3.ux()),
+        st0.dy() + s1o6 * (mn0.uy() + MGMath::TWO * mn1.uy() + MGMath::TWO * mn2.uy() + mn3.uy()),
+        st0.dz() + s1o6 * (mn0.uz() + MGMath::TWO * mn1.uz() + MGMath::TWO * mn2.uz() + mn3.uz())
+    );
+    if (mat) {
+        Double_t eta    = (st0.eta() + step * mn0.e());
+        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
+        if (is_mch) part.set_eta(eta);
+        else        return false;
+    }
+    
+    return true;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } // namespace TrackSys
