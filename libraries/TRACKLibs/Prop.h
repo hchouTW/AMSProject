@@ -49,7 +49,7 @@ const SVecD<3> OrthCoord::AXIS_Z(0, 0, 1);
 class MotionFunc {
     public :
         MotionFunc(const PhySt& part);
-        MotionFunc(const PhySt& part, const MatArg& arg, const MatPhyFld& mat);
+        MotionFunc(const PhySt& part, const MatArg& marg, const MatPhyFld& mphy);
         ~MotionFunc() {}
         
         inline const SVecD<3>& p() const { return zeta_p_; }
@@ -76,7 +76,7 @@ class MotionFunc {
 class TransferFunc {
     public :
         TransferFunc(const PhySt& part);
-        TransferFunc(const PhySt& part, const MatArg& arg, const MatPhyFld& mat);
+        TransferFunc(const PhySt& part, const MatArg& marg, const MatPhyFld& mphy);
         ~TransferFunc() {}
         
         inline const SVecD<3>&    pu() const { return kappa_pu_; }
@@ -114,6 +114,11 @@ class TransferFunc {
 
 class PhyJb {
     public :
+        enum class Type {
+            kZero = 0, kIdentity = 1
+        };
+
+    public :
         static constexpr Int_t DIM_G_ = 5;
         static constexpr Int_t DIM_L_ = 4;
 
@@ -122,14 +127,18 @@ class PhyJb {
     
     public :
         PhyJb() : mat_(false), num_rad_len_(0.0) {}
-        PhyJb(Bool_t is_identity) : mat_(false), num_rad_len_(0.0) { if (is_identity) jb_gg_ = std::move(SMtxId()); }
+        PhyJb(const Type& type) : mat_(false), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
         ~PhyJb() {}
 
-        inline void init(Bool_t is_identity = true);
+        inline void init(const Type& type);
+
+        inline void set_mat(Bool_t mat, Double_t num_rad_len = 0.0);
+
+        inline void multiplied(PhyJb& phyJb);
 
         inline const Bool_t& mat() const { return mat_; }
 
-        inline Double_t& num_rad_len() { return num_rad_len_; }
+        inline const Double_t& num_rad_len() { return num_rad_len_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
@@ -142,6 +151,51 @@ class PhyJb {
         Double_t  num_rad_len_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;
+};
+
+
+class TransferPhyJb {
+    public :
+        TransferPhyJb(Bool_t mat, const TransferFunc& tf, PhyJb& jb);
+        ~TransferPhyJb() {}
+
+        inline const SMtxD<2, 2>& uu() const { return uu_; }
+        inline const Double_t&    uu(Int_t i, Int_t j) const { return uu_(i, j); }
+        
+        inline const SVecD<2>& ue() const { return ue_; }
+        inline const Double_t& ue(Int_t i) const { return ue_(i); }
+        
+        inline const SVecD<2>& ut() const { return ut_; }
+        inline const Double_t& ut(Int_t i) const { return ut_(i); }
+
+        inline const SVecD<2>& ur() const { return ur_; }
+        inline const Double_t& ur(Int_t i) const { return ur_(i); }
+
+        inline const Double_t& ei() const { return ei_; }
+        inline const Double_t& eb() const { return eb_; }
+
+    private :
+        Bool_t      mat_;
+        SMtxD<2, 2> uu_;
+        SVecD<2>    ue_;
+        SVecD<2>    ut_;
+        SVecD<2>    ur_;
+        Double_t    ei_;
+        Double_t    eb_;
+    
+    private :
+        static constexpr Short_t X = 0;
+        static constexpr Short_t Y = 1;
+        static constexpr Short_t E = 2;
+        static constexpr Short_t JPX = 0;
+        static constexpr Short_t JPY = 1;
+        static constexpr Short_t JUX = 2;
+        static constexpr Short_t JUY = 3;
+        static constexpr Short_t JEA = 4;
+        static constexpr Short_t JTAU = 0;
+        static constexpr Short_t JRHO = 1;
+        static constexpr Short_t JION = 2;
+        static constexpr Short_t JBRM = 3;
 };
 
 
@@ -169,8 +223,8 @@ class PropMgnt {
         static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
         static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
         
-        //static Bool_t PropWithMC(Double_t step, PhySt& part, const MatArg& marg = MatArg(true, true));
-        //static Bool_t PropToZWithMC(Double_t step, PhySt& part, const MatArg& marg = MatArg(true, true));
+        static Bool_t PropWithMC(const Double_t step, PhySt& part, const MatArg& marg = MatArg(true, true));
+        static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(true, true));
 
     protected :
         // Step Length
@@ -180,9 +234,9 @@ class PropMgnt {
         static Double_t GetStep(const PhySt& part, Double_t resStep, Bool_t mat = false);
         static Double_t GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat = false);
 
-        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
     
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
@@ -198,7 +252,7 @@ class PropMgnt {
     private :
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;
-        static constexpr Short_t Z = 2;
+        static constexpr Short_t E = 2;
         static constexpr Short_t JPX = 0;
         static constexpr Short_t JPY = 1;
         static constexpr Short_t JUX = 2;

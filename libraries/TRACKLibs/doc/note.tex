@@ -272,7 +272,7 @@
     \xi_{G}^{f}&=\xi_{G}^{0}+\left(\begin{array}{l}
         S\cdot\zeta_{\vec{p}}^{0}+\frac{S^{2}}{6}\cdot\left(2\zeta_{\hat{u}}^{0}+\zeta_{\hat{u}}^{1}\right)\\
         \frac{S}{2}\cdot\left(\zeta_{\hat{u}}^{0}+\zeta_{\hat{u}}^{1}\right)\\
-        S\cdot\zeta_{\tilde{\eta}}^{0}
+        \frac{S}{2}\cdot\left(\zeta_{\tilde{\eta}}^{0}+\zeta_{\tilde{\eta}}^{1}\right)
     \end{array}\right) \\
     J^{f}&=\left(\begin{array}{cc}
         J_{GG}^{f} & J_{GL}^{f}
@@ -280,12 +280,12 @@
     J_{GG}^{f}&=I+\left(\begin{array}{l}
         S\cdot\kappa_{\vec{p}G}^{0}+\frac{S^{2}}{6}\cdot\left(2\kappa_{\hat{u}G}^{0}+\kappa_{\hat{u}G}^{1}J_{GG}^{1}\right)\\
         \frac{S}{2}\cdot\left(\kappa_{\hat{u}G}^{0}+\kappa_{\hat{u}G}^{1}J_{GG}^{1}\right)\\
-        S\cdot\kappa_{\tilde{\eta}G}^{0}
+        \frac{S}{2}\cdot\left(\kappa_{\tilde{\eta}G}^{0}+\kappa_{\tilde{\eta}G}^{1}J_{GG}^{1}\right)
     \end{array}\right) \\
     J_{GL}^{f}&=\left(\begin{array}{l}
         \frac{S^{2}}{6}\cdot\left(2\kappa_{\hat{u}L}^{0}+\left(\kappa_{\hat{u}G}^{1}J_{GL}^{1}+\kappa_{\hat{u}L}^{1}\right)\right)\\
         \frac{S}{2}\cdot\left(\kappa_{\hat{u}L}^{0}+\left(\kappa_{\hat{u}G}^{1}J_{GL}^{1}+\kappa_{\hat{u}L}^{1}\right)\right)\\
-        S\cdot\kappa_{\tilde{\eta}L}^{0}
+        \frac{S}{2}\cdot\left(\kappa_{\tilde{\eta}L}^{0}+\left(\kappa_{\tilde{\eta}G}^{1}J_{GL}^{1}+\kappa_{\tilde{\eta}L}^{1}\right)\right)\\
     \end{array}\right) \\
 \end{alignedat} \end{equation} 
 
@@ -315,7 +315,7 @@
     \xi_{G}^{2}&=\xi_{G}^{i}+\left(\begin{array}{l}
         \frac{S}{2}\cdot\zeta_{\vec{p}}^{0}+\frac{S^{2}}{8}\cdot\zeta_{\hat{u}}^{0}\\
         \frac{S}{2}\cdot\zeta_{\hat{u}}^{1}\\
-        \frac{S}{2}\cdot\zeta_{\tilde{\eta}}^{0}
+        \frac{S}{2}\cdot\zeta_{\tilde{\eta}}^{1}
     \end{array}\right) \\
     J^{2}&=\left(\begin{array}{cc}
         J_{GG}^{2} & J_{GL}^{2}
@@ -323,12 +323,12 @@
     J_{GG}^{2}&=I+\left(\begin{array}{l}
         \frac{S}{2}\cdot\kappa_{\vec{p}G}^{0}+\frac{S^{2}}{8}\cdot\kappa_{\hat{u}G}^{0}\\
         \frac{S}{2}\cdot\kappa_{\hat{u}G}^{1}J_{GG}^{1}\\
-        \frac{S}{2}\cdot\kappa_{\tilde{\eta}G}^{0}
+        \frac{S}{2}\cdot\kappa_{\tilde{\eta}G}^{1}J_{GG}^{1}
     \end{array}\right) \\
     J_{GL}^{2}&=\left(\begin{array}{l}
         \frac{S^{2}}{8}\cdot\kappa_{\hat{u}L}^{0}\\
         \frac{S}{2}\cdot\left(\kappa_{\hat{u}G}^{1}J_{GL}^{1}+\kappa_{\hat{u}L}^{1}\right)\\
-        \frac{S}{2}\cdot\kappa_{\tilde{\eta}L}^{0}
+        \frac{S}{2}\cdot\left(\kappa_{\tilde{\eta}G}^{1}J_{GL}^{1}+\kappa_{\tilde{\eta}L}^{1}\right)
     \end{array}\right) \\
 \end{alignedat} \end{equation}
 
@@ -338,7 +338,7 @@
     \xi_{G}^{3}&=\xi_{G}^{0}+\left(\begin{array}{l}
         S\cdot\zeta_{\vec{p}}^{0}+\frac{S^{2}}{2}\cdot\zeta_{\hat{u}}^{2}\\
         S\cdot\zeta_{\hat{u}}^{2}\\
-        S\cdot\zeta_{\tilde{\eta}}^{0}
+        S\cdot\zeta_{\tilde{\eta}}^{2}
     \end{array}\right) \\
     J^{3}&=\left(\begin{array}{cc}
         J_{GG}^{3} & J_{GL}^{3}
@@ -346,18 +346,18 @@
     J_{GG}^{3}&=I+\left(\begin{array}{l}
         S\cdot\kappa_{\vec{p}G}^{0}+\frac{S^{2}}{2}\cdot\kappa_{\hat{u}G}^{2}J_{GG}^{2}\\
         S\cdot\kappa_{\hat{u}G}^{2}J_{GG}^{2}\\
-        S\cdot\kappa_{\tilde{\eta}G}^{0}
+        S\cdot\kappa_{\tilde{\eta}G}^{2}J_{GG}^{2}
     \end{array}\right) \\
     J_{GL}^{3}&=\left(\begin{array}{l}
         \frac{S^{2}}{2}\cdot\left(\kappa_{\hat{u}G}^{2}J_{GL}^{2}+\kappa_{\hat{u}L}^{2}\right)\\
         S\cdot\left(\kappa_{\hat{u}G}^{2}J_{GL}^{2}+\kappa_{\hat{u}L}^{2}\right)\\
-        S\cdot\kappa_{\tilde{\eta}L}^{0}
+        S\cdot\left(\kappa_{\tilde{\eta}G}^{2}J_{GL}^{2}+\kappa_{\tilde{\eta}L}^{2}\right)
     \end{array}\right) \\
     \xi^{f}&=\xi\left(S\right) \\
     \xi_{G}^{f}&=\xi_{G}^{0}+\left(\begin{array}{l}
         S\cdot\zeta_{\vec{p}}^{0}+\frac{S^{2}}{6}\cdot\left(\zeta_{\hat{u}}^{0}+\zeta_{\hat{u}}^{1}+\zeta_{\hat{u}}^{2}\right)\\
         \frac{S}{6}\cdot\left(\zeta_{\hat{u}}^{0}+2\zeta_{\hat{u}}^{1}+2\zeta_{\hat{u}}^{2}+\zeta_{\hat{u}}^{3}\right)\\
-        S\cdot\zeta_{\tilde{\eta}}^{0}
+        \frac{S}{6}\cdot\left(\zeta_{\tilde{\eta}}^{0}+2\zeta_{\tilde{\eta}}^{1}+2\zeta_{\tilde{\eta}}^{2}+\zeta_{\tilde{\eta}}^{3}\right)
     \end{array}\right) \\
     J^{f}&=\left(\begin{array}{cc}
         J_{GG}^{f} & J_{GL}^{f}
@@ -365,12 +365,12 @@
     J_{GG}^{f}&=I+\left(\begin{array}{l}
         S\cdot\kappa_{\vec{p}G}^{0}+\frac{S^{2}}{6}\cdot\left(\kappa_{\hat{u}G}^{0}+\kappa_{\hat{u}G}^{1}J_{GG}^{1}+\kappa_{\hat{u}G}^{2}J_{GG}^{2}\right)\\
         \frac{S}{6}\cdot\left(\kappa_{\hat{u}G}^{0}+2\kappa_{\hat{u}G}^{1}J_{GG}^{1}+2\kappa_{\hat{u}G}^{2}J_{GG}^{2}+\kappa_{\hat{u}G}^{3}J_{GG}^{3}\right)\\
-        S\cdot\kappa_{\tilde{\eta}G}^{0}
+        \frac{S}{6}\cdot\left(\kappa_{\tilde{\eta}G}^{0}+2\kappa_{\tilde{\eta}G}^{1}J_{GG}^{1}+2\kappa_{\tilde{\eta}G}^{2}J_{GG}^{2}+\kappa_{\tilde{\eta}G}^{3}J_{GG}^{3}\right)
     \end{array}\right) \\
     J_{GL}^{f}&=\left(\begin{array}{l}
         \frac{S^{2}}{6}\cdot\left(\kappa_{\hat{u}L}^{0}+\left(\kappa_{\hat{u}G}^{1}J_{GL}^{1}+\kappa_{\hat{u}L}^{1}\right)+\left(\kappa_{\hat{u}G}^{2}J_{GL}^{2}+\kappa_{\hat{u}L}^{2}\right)\right)\\
         \frac{S}{6}\cdot\left(\kappa_{\hat{u}L}^{0}+2\left(\kappa_{\hat{u}G}^{1}J_{GL}^{1}+\kappa_{\hat{u}L}^{1}\right)+2\left(\kappa_{\hat{u}G}^{2}J_{GL}^{2}+\kappa_{\hat{u}L}^{2}\right)+\left(\kappa_{\hat{u}G}^{3}J_{GL}^{3}+\kappa_{\hat{u}L}^{3}\right)\right)\\
-        S\cdot\kappa_{\tilde{\eta}L}^{0}
+        \frac{S}{6}\cdot\left(\kappa_{\tilde{\eta}L}^{0}+2\left(\kappa_{\tilde{\eta}G}^{1}J_{GL}^{1}+\kappa_{\tilde{\eta}L}^{1}\right)+2\left(\kappa_{\tilde{\eta}G}^{2}J_{GL}^{2}+\kappa_{\tilde{\eta}L}^{2}\right)+\left(\kappa_{\tilde{\eta}G}^{3}J_{GL}^{3}+\kappa_{\tilde{\eta}L}^{3}\right)\right)
     \end{array}\right) \\
 \end{alignedat} \end{equation} 
 

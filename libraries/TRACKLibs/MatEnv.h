@@ -306,6 +306,18 @@ MatGeoBoxReader MatGeoBoxAms::reader_AMS02ECAL_;
 #endif // __HAS_AMS_OFFICE_LIBS__
 
 
+class MatMgnt {
+    public :
+        MatMgnt() {}
+        ~MatMgnt() {}
+
+        inline static MatFld Get(const SVecD<3>& coo);
+        inline static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        
+        inline static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+};
+
+
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
@@ -338,8 +350,10 @@ class MatArg {
     public :
         MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
         ~MatArg() {}
-        
-        inline void rndm(const MatPhyFld& mat);
+
+        inline void rndm(const MatFld& mfld);
+
+        inline void rndm(const MatPhyFld& mphy);
 
         inline const Bool_t& operator() () const { return mat_; }
 
@@ -371,14 +385,16 @@ class MatPhy {
 
         static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
         static MatPhyFld Get(const Double_t stp_len, const PhySt& part, const MatArg& marg = MatArg(true, true), Bool_t is_std = true);
+        
+        static MatPhyFld Get(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, true));
 
     protected :
-        static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mat, const PhySt& part);
+        static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part);
         
-        static Double_t GetRadiationLength(const MatFld& mat, const PhySt& part);
-        static Double_t GetMultipleScattering(const MatFld& mat, const PhySt& part);
-        static std::pair<Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mat, const PhySt& part);
-        static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mat, const PhySt& part);
+        static Double_t GetRadiationLength(const MatFld& mfld, const PhySt& part);
+        static Double_t GetMultipleScattering(const MatFld& mfld, const PhySt& part);
+        static std::pair<Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
+        static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part);
 
     private :
         // Coulomb Multiple Scattering, the Highland-Lynch-Dahl equation
@@ -396,7 +412,7 @@ class MatPhy {
         static constexpr Double_t MASS_EL_IN_MEV = 0.510999; // [MeV]
         static constexpr Double_t MASS_EL_IN_GEV = 0.000510999; // [GeV]
         
-        // Beta Limit
+        // Beta Limit (0.3)
         static constexpr Double_t LMT_BTA           = 0.3;
         static constexpr Double_t LMT_SQR_BTA       = 0.09;
         static constexpr Double_t LMT_INV_SQR_BTA   = 1.111111e+01;

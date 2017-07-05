@@ -5,7 +5,7 @@
 namespace TrackSys {
 
 
-PartInfo::PartInfo(PartType type) {
+PartInfo::PartInfo(const PartType& type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
     type_ = type;
     name_ = "";
@@ -48,6 +48,8 @@ PartInfo::PartInfo(PartType type) {
     
     is_chrgless_ = MGNumc::EqualToZero(chrg_);
     is_massless_ = MGNumc::EqualToZero(mass_);
+    mass_to_chrg_ = ((is_chrgless_ || is_massless_) ? 0.0 : std::fabs(mass_ / chrg_));
+    chrg_to_mass_ = ((is_chrgless_ || is_massless_) ? 0.0 : std::fabs(chrg_ / mass_));
 }
 
 
@@ -56,7 +58,7 @@ void PartInfo::print() {
     printStr += STR_FMT("==== %-15s ====\n", name_.c_str());
     printStr += STR_FMT("Chrg %3d\n"   , chrg_);
     printStr += STR_FMT("Mass %10.6f\n", mass_);
-    printStr += STR_FMT("M/Q  %10.6f\n", mass_to_chrg());
+    printStr += STR_FMT("M/Q  %10.6f\n", mass_to_chrg_);
     printStr += STR_FMT("=========================\n");
     COUT(printStr);
 }
