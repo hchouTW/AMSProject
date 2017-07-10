@@ -7,12 +7,15 @@ namespace TrackSys {
 
 class PhySt {
     public :
-        PhySt(const PartType& type = PartType::Proton) : part_(type), mom_(0), eng_(0), bta_(0), eta_(0), irig_(0), coo_(0, 0, 0), dir_(0, 0, -1) { eng_ = part_.mass(); }
-        PhySt(const PartInfo& part) : part_(part), mom_(0), eng_(0), bta_(0), eta_(0), irig_(0), coo_(0, 0, 0), dir_(0, 0, -1) { eng_ = part_.mass(); }
+        PhySt(const PartType& type = PartType::Proton) { reset(type); }
+        PhySt(const PartInfo& part) { reset(part.type()); }
         ~PhySt() {}
+
+        void reset(const PartType& type = PartType::Proton);
 
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx = 0., Double_t dy = 0., Double_t dz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t dz = -1.);
+        void set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Short_t signz = -1);
 
         void set_mom(Double_t mom, Double_t sign = 0.);
         
@@ -22,7 +25,7 @@ class PhySt {
 
         void set_rig(Double_t rig);
 
-        void print();
+        void print() const;
 
         inline const PartInfo& part() const { return part_; }
 

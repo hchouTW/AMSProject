@@ -7,6 +7,11 @@ namespace TrackSys {
 
 class HitSt {
     public :
+        enum class Orientation {
+            kDownward = 0, kUpward = 1
+        };
+    
+    public :
         HitSt(Int_t id = -1, Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : id_(id), side_(sx, sy, sz), err_(DEFAULT_ERR) {}
         ~HitSt() {}
 
@@ -15,7 +20,9 @@ class HitSt {
         inline void set_err(Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { err_(0) = ex; err_(1) = ey; err_(2) = ez; }
         inline void set_coo_and_err(Double_t cx, Double_t cy, Double_t cz, Double_t ex = DEFAULT_ERR(0), Double_t ey = DEFAULT_ERR(1), Double_t ez = DEFAULT_ERR(2)) { set_coo(cx, cy, cz); set_err(ex, ey, ez); }
 
-        void print();
+        inline void set_dummy_x(Double_t cx) { coo_(0) = cx; }
+
+        void print() const;
 
         inline const Int_t& id() const { return id_; }
         
@@ -48,10 +55,10 @@ class HitSt {
         static SVecD<3> DEFAULT_ERR;
         
     public :
-        static void Sort(std::vector<HitSt>& hits, Bool_t dirType = true) {
+        static void Sort(std::vector<HitSt>& hits, const Orientation& ortt = Orientation::kDownward) {
             if (hits.size() < 2) return;
-            if (dirType) std::sort(hits.begin(), hits.end(), [](const HitSt& hit1, const HitSt& hit2) { return (hit1.cz() < hit2.cz()); } );
-            else         std::sort(hits.begin(), hits.end(), [](const HitSt& hit1, const HitSt& hit2) { return (hit1.cz() > hit2.cz()); } );
+            if (ortt == Orientation::kDownward) std::sort(hits.begin(), hits.end(), [](const HitSt& hit1, const HitSt& hit2) { return (hit1.cz() > hit2.cz()); } );
+            else                                std::sort(hits.begin(), hits.end(), [](const HitSt& hit1, const HitSt& hit2) { return (hit1.cz() < hit2.cz()); } );
         }
 };
         

@@ -53,7 +53,7 @@ PartInfo::PartInfo(const PartType& type) {
 }
 
 
-void PartInfo::print() {
+void PartInfo::print() const {
     std::string printStr;
     printStr += STR_FMT("==== %-15s ====\n", name_.c_str());
     printStr += STR_FMT("Chrg %3d\n"   , chrg_);

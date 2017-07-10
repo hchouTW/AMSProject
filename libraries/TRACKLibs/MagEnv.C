@@ -5,7 +5,7 @@
 namespace TrackSys {
 
 
-void MagFld::print() {
+void MagFld::print() const {
     std::string printStr = STR_FMT("MAG (%8.5f %8.5f %8.5f)\n", mag_(0), mag_(1), mag_(2));
     COUT(printStr);
 }
@@ -294,8 +294,10 @@ MagFld MagMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MagFld();
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-    // TODO (hchou): testing self method
+    // TODO (hchou): testing
     //return MagGeoBoxAms::Get(coo);
+    // TODO (hchou): testcode
+    //return MagFld();
     return geo_box_reader_.get(coo);
 #elif
     return geo_box_reader_.get(coo);

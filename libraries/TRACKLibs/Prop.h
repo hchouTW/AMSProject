@@ -124,6 +124,8 @@ class PhyJb {
 
         using SMtxDGG = SMtxD<DIM_G_, DIM_G_>;
         using SMtxDGL = SMtxD<DIM_G_, DIM_L_>;
+        
+        using SMtxDXYG = SMtxD<2, DIM_G_>;
     
     public :
         PhyJb() : mat_(false), num_rad_len_(0.0) {}
@@ -145,6 +147,8 @@ class PhyJb {
         
         inline Double_t& gg(Int_t i, Int_t j) { return jb_gg_(i, j); }
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
+
+        inline SMtxDXYG xyg() { return jb_gg_.Sub<SMtxDXYG>(0, 0); }
 
     private :
         Bool_t    mat_;
@@ -218,7 +222,7 @@ class PropMgnt {
     public :
 #ifdef __HAS_AMS_OFFICE_LIBS__
         static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
-#endif        
+#endif // __HAS_AMS_OFFICE_LIBS__      
         
         static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
         static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);

@@ -27,6 +27,8 @@ Particle Beam: <br />
 (Electron Proton), Position(0, 0, 55cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV) <br />
 Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (50cm 0cm)) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 ## Multiple-Scattering
 
@@ -40,6 +42,8 @@ Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (106cm 0cm)) <br />
 Material Box: <br />
 Carbon, Size(x y z := 100cm 100cm 5cm), Central Location(X Y Z := 0cm 0cm 102.5cm) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 ### Position & Direction Testing
 
@@ -51,6 +55,8 @@ Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
 Material Box: <br />
 Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 ## Ionisation Energy Loss
 
@@ -62,6 +68,8 @@ Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
 Material Box: <br />
 Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 ## Bremsstrahlung Energy Loss
 
@@ -73,6 +81,8 @@ Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (12cm 0cm)) <br />
 Material Box: <br />
 Carbon, Size(x y z := 100cm 100cm 10cm), Central Location(X Y Z := 0cm 0cm 6cm) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 
 # Track Fitting Testing
@@ -85,6 +95,8 @@ Measurement Plane: <br />
 Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (110cm 100cm 32cm 28cm 2cm -2cm =28cm -32cm -100cm -110cm)) <br />
 Material Box: <br />
 (None) (Carbon, Size(x y z := 100cm 100cm 8cm), Central Location(X Y Z := 0cm 0cm (60cm -60cm))) <br />
+Measurement Variables: <br />
+Particle Information (position direction momentum) <br />
 
 
 ## Special Environment Testing

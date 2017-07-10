@@ -24,10 +24,10 @@ enum class PartType {
 
 class PartInfo {
     public :
-        PartInfo(const PartType& type);
+        PartInfo(const PartType& type = PartType::Proton);
         ~PartInfo() {}
 
-        void print();
+        void print() const;
 
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }

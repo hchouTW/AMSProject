@@ -5,7 +5,7 @@
 namespace TrackSys {
 
 
-void HitSt::print() {
+void HitSt::print() const {
     std::string printStr;
     printStr += STR_FMT("================= HitSt ==================\n");
     printStr += STR_FMT("Id   (%d)\n", id_);

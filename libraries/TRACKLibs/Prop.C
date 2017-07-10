@@ -385,7 +385,6 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
         
 
 Bool_t PropMgnt::PropWithMC(const Double_t step, PhySt& part, const MatArg& marg) {
-//////////////////////////////////////////////////////////////
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
     Double_t int_step = MGMath::ZERO;
@@ -411,12 +410,35 @@ Bool_t PropMgnt::PropWithMC(const Double_t step, PhySt& part, const MatArg& marg
     }
 
     return is_succ;
-//////////////////////////////////////////////////////////////
 }
 
 
 Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part, const MatArg& marg) {
-    return true;
+    Long64_t iter     = 1;
+    Bool_t   is_succ  = false;
+    Double_t int_step = MGMath::ZERO;
+    while (iter <= LMTU_ITER && !is_succ) {
+        Double_t res_stepz = zcoo - part.cz();
+        Double_t cur_step  = GetStepToZ(part, res_stepz, marg());
+    
+        Bool_t valid = false;
+        MatFld&& mfld = (marg() ? MatMgnt::Get(cur_step, part) : MatFld());
+        MatArg margloc(marg.mscat(), marg.eloss());
+        margloc.rndm(mfld);
+        switch (method_) {
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, margloc, mfld); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, margloc, mfld); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, margloc, mfld); break;
+            default : break;
+        }
+        if (!valid) break;
+
+        iter++;
+        int_step += cur_step;
+        is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
+    }
+
+    return is_succ;
 }
 
 

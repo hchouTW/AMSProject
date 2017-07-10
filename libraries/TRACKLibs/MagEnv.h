@@ -14,7 +14,7 @@ class MagFld {
         MagFld(Double_t x, Double_t y, Double_t z) : mag_(x, y, z) {}
         ~MagFld() {}
 
-        void print();
+        void print() const;
 
         inline const SVecD<3>& operator() () const { return mag_; }
         inline const Double_t& x() const { return mag_(0); }

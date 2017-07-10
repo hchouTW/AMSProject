@@ -5,7 +5,7 @@
 namespace TrackSys {
 
 
-void MatFld::print() {
+void MatFld::print() const {
     std::string printStr;
     printStr += STR_FMT("========================= MatFld =========================\n");
     printStr += STR_FMT("Mat       %-d\n"  , mat_);
@@ -126,7 +126,7 @@ void MatGeoBoxCreator::save_and_close() {
 }
 
 
-void MatGeoBoxReader::print() {
+void MatGeoBoxReader::print() const {
     if (!is_load_) return;
     std::string printStr;
     printStr += STR_FMT("===================== MatGeoBoxReader ====================\n");

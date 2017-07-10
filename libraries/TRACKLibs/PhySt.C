@@ -5,6 +5,18 @@
 namespace TrackSys {
 
 
+void PhySt::reset(const PartType& type) {
+    part_ = std::move(PartInfo(type));
+    mom_ = 0;
+    eng_ = 0;
+    bta_ = 0;
+    eta_ = part_.mass();
+    irig_ = 0;
+    coo_ = std::move(SVecD<3>(0, 0, 0));
+    dir_ = std::move(SVecD<3>(0, 0, -1));
+}
+        
+
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx, Double_t dy, Double_t dz) {
     Double_t norm = std::sqrt(dx * dx + dy * dy + dz * dz);
     if (MGNumc::EqualToZero(norm)) return;
@@ -28,7 +40,24 @@ void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t t
     dir_(1) = ty * norm_dz;
     dir_(2) = norm_dz;
 }
-        
+
+
+void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Short_t signz) {
+    Short_t sign = MGNumc::Compare(signz);
+    if (sign == 0) return;
+    Double_t uz = (MGMath::ONE - ux * ux - uy * uy);
+    if (MGNumc::Compare(uz) <= 0) uz = MGMath::ZERO;
+    else                          uz = sign * std::sqrt(uz);
+    Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
+    if (MGNumc::EqualToZero(norm)) return;
+    coo_(0) = cx;
+    coo_(1) = cy;
+    coo_(2) = cz;
+    dir_(0) = ux / norm;
+    dir_(1) = uy / norm;
+    dir_(2) = uz / norm;
+}
+ 
 
 void PhySt::set_mom(Double_t mom, Double_t sign) {
     Short_t mom_sign = MGNumc::Compare(mom);
@@ -106,7 +135,7 @@ void PhySt::set_rig(Double_t rig) {
 }
 
 
-void PhySt::print() {
+void PhySt::print() const {
     std::string printStr;
     printStr += STR_FMT("============ %-15s ============\n", part_.name().c_str());
     printStr += STR_FMT("Bta %14.8f\n", bta_);

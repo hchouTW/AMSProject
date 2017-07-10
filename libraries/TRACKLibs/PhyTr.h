@@ -8,37 +8,43 @@ namespace TrackSys {
 class PhyTr {
     public :
         enum class Orientation {
-            kUpward = 0, kDownward = 1
+            kDownward = 0, kUpward = 1
         };
 
     public :
-        PhyTr(const std::vector<HitSt>& hits, const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward) {}
+        PhyTr() { clear(); }
+        PhyTr(const std::vector<HitSt>& hits, const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward);
         ~PhyTr() {}
+
+        PhySt prop_to_z(const Double_t zcoo) { return PhySt(); }
 
         inline const Bool_t& exist() const { return succ_; }
         inline const PhySt& part() const { return part_; }
-
+        
         inline const std::vector<HitSt>& hits() const { return hits_; }
         inline const std::vector<PhySt>& phys() const { return phys_; }
         inline const std::vector<MatArg>& marg() const { return marg_; }
 
     protected :
-        Bool_t fit() { return true; }
+        void clear();
 
-        Bool_t fit_analyis() { return true; }
-        Bool_t fit_simple() { return true; }
-        Bool_t fit_physics() { return true; }
+        Bool_t check(const std::vector<HitSt>& hits);
+
+        Bool_t fit();
+        Bool_t fit_analysis();
+        Bool_t fit_simple();
+        Bool_t fit_physics();
 
     private :
         Bool_t              succ_;
-        PartType            type_;
         Orientation         ortt_;
-        PhySt               part_;
         std::vector<HitSt>  hits_;
-        std::vector<PhySt>  phys_;
+        PartType            type_;
+        PhySt               part_;
+        
         std::vector<MatArg> marg_;
-
-        Double_t chi_;
+        std::vector<PhySt>  phys_;
+        Double_t nchi_;
         Double_t ndf_;
 
     private:
@@ -47,6 +53,10 @@ class PhyTr {
         static constexpr Int_t LMTL_HIT_Y = 4;
 
         // Minimization
+        static constexpr Int_t    LMTL_ITER = 3;
+        static constexpr Int_t    LMTU_ITER = 10;
+        static constexpr Double_t CONVG_EPSILON   = 1.0e-3;
+        static constexpr Double_t CONVG_TOLERANCE = 5.0e-2;
 };
 
 

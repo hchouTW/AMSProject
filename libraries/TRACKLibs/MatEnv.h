@@ -33,7 +33,7 @@ class MatFld {
         MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft) {}
         ~MatFld() {}
 
-        void print();
+        void print() const;
 
         inline const Bool_t& operator() () const { return mat_; }
         inline const std::array<Bool_t, MatProperty::NUM_ELM>&   elm() const { return elm_; }
@@ -133,7 +133,7 @@ class MatGeoBoxReader {
 
         inline Bool_t exist() { return is_load_; }
 
-        void print();
+        void print() const;
 
         Bool_t load(const std::string& file_path);
         
