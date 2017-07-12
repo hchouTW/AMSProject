@@ -30,7 +30,7 @@ class MatFld {
     public :
         MatFld() { clear(); }
         MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft) {}
+        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc) {}
         ~MatFld() {}
 
         void print() const;
@@ -42,11 +42,12 @@ class MatFld {
         inline const Double_t& real_len() const { return real_len_; }
         inline const Double_t& efft_len() const { return efft_len_; }
         inline const Double_t& efft() const { return efft_; }
+        inline const Double_t& loc() const { return loc_; }
 
         inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : 0.); }
 
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; }
+        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; }
 
     private :
         Bool_t                                     mat_;
@@ -56,6 +57,7 @@ class MatFld {
         Double_t                                   real_len_;
         Double_t                                   efft_len_;
         Double_t                                   efft_;
+        Double_t                                   loc_;
 };
 
 
@@ -346,6 +348,30 @@ class MatPhyFld {
 };
 
 
+class MatMscatFld {
+    public :
+        MatMscatFld() { clear(); }
+        MatMscatFld(Double_t loc, Double_t sgm_loc, Double_t sgm_tha) : mat_(true), loc_(loc), sgm_loc_(sgm_loc), sgm_tha_(sgm_tha) {}
+        ~MatMscatFld() {}
+
+        std::pair<Double_t, Double_t> sgm(const Double_t stp_len, const std::vector<Double_t>& lens = std::vector<Double_t>()) const; 
+
+        inline const Bool_t& operator() () const { return mat_; }
+        inline const Double_t& loc() const { return loc_; }
+        inline const Double_t& sgm_loc() const { return sgm_loc_; }
+        inline const Double_t& sgm_tha() const { return sgm_tha_; }
+
+    protected :
+        inline void clear() { mat_ = false; loc_ = 0.; sgm_loc_ = 0.; sgm_tha_ = 0.; }
+
+    private :
+        Bool_t   mat_;
+        Double_t loc_;
+        Double_t sgm_loc_;
+        Double_t sgm_tha_;
+};
+
+
 class MatArg {
     public :
         MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
@@ -384,9 +410,12 @@ class MatPhy {
         ~MatPhy() {}
 
         static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+
         static MatPhyFld Get(const Double_t stp_len, const PhySt& part, const MatArg& marg = MatArg(true, true), Bool_t is_std = true);
         
         static MatPhyFld Get(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, true));
+
+        static MatMscatFld GetMscat(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, false));
 
     protected :
         static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part);

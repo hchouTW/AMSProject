@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "MGMath.h"
+#include "MGMath.C"
 
 #include "MGSys.h"
 #include "MGSys.C"

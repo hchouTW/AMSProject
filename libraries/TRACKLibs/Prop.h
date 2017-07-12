@@ -128,19 +128,20 @@ class PhyJb {
         using SMtxDXYG = SMtxD<2, DIM_G_>;
     
     public :
-        PhyJb() : mat_(false), num_rad_len_(0.0) {}
-        PhyJb(const Type& type) : mat_(false), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
+        PhyJb() : mat_(false), path_len_(0.0), num_rad_len_(0.0) {}
+        PhyJb(const Type& type) : mat_(false), path_len_(0.0), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
         ~PhyJb() {}
 
         inline void init(const Type& type);
 
-        inline void set_mat(Bool_t mat, Double_t num_rad_len = 0.0);
+        inline void set_mat(Bool_t mat, Double_t path_len = 0., Double_t num_rad_len = 0.);
 
         inline void multiplied(PhyJb& phyJb);
 
         inline const Bool_t& mat() const { return mat_; }
 
-        inline const Double_t& num_rad_len() { return num_rad_len_; }
+        inline const Double_t& path_len() const { return path_len_; }
+        inline const Double_t& num_rad_len() const { return num_rad_len_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
@@ -152,6 +153,7 @@ class PhyJb {
 
     private :
         Bool_t    mat_;
+        Double_t  path_len_;
         Double_t  num_rad_len_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;

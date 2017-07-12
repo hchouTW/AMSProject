@@ -14,6 +14,7 @@ void MatFld::print() const {
     printStr += STR_FMT("RealLen   %-7.2f\n", real_len_);
     printStr += STR_FMT("EfftLen   %-7.2f\n", efft_len_);
     printStr += STR_FMT("Efft      %-6.4f\n", efft_);
+    printStr += STR_FMT("Loc       %-6.4f\n", loc_);
     printStr += STR_FMT("Elm       H(%d) C(%d) N(%d) O(%d) F(%d) Na(%d) Al(%d) Si(%d) Pb(%d)\n", elm_.at(0), elm_.at(1), elm_.at(2), elm_.at(3), elm_.at(4), elm_.at(5), elm_.at(6), elm_.at(7), elm_.at(8));
     printStr += STR_FMT("==========================================================\n");
     COUT(printStr);
@@ -270,6 +271,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
 
     SVecD<3> itloc((vxloc + MGMath::HALF * unit(0)), (vyloc + MGMath::HALF * unit(1)), (vzloc + MGMath::HALF * unit(2)));
 
+    Long64_t suml = 0;
     Long64_t itcnt = 0;
     for (Long64_t it = 0; it < nstp; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(itloc(2));
@@ -280,13 +282,18 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
         if (xi < 0 || xi >= n_.at(0)) continue;
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-        if (mat_ptr_[idx]) itcnt++;
+        if (mat_ptr_[idx]) {
+            suml += it;
+            itcnt++;
+        }
     }
 
     if (itcnt != 0) {
         Double_t efft = static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp);
         Double_t efft_len = efft * real_len;
-        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft);
+        Double_t loc = ((MGMath::HALF + static_cast<Double_t>(suml) / static_cast<Double_t>(itcnt)) / static_cast<Double_t>(nstp));
+
+        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft, loc);
     }
     else return MatFld(real_len);
 }
@@ -591,6 +598,7 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
     Double_t                                   inv_rad_len = 0.0;
     Double_t                                   efft_len = 0.0;
     Double_t                                   efft = 0.0;
+    Double_t                                   loc = 0.0;
 
     for (auto&& reader : reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
@@ -602,7 +610,9 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
             elm.at(it) = true;
             den.at(it) += (mfld.efft_len() * mfld.den().at(it));
         }
-        inv_rad_len += (mfld.efft_len() * mfld.inv_rad_len());
+        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
+        loc         += mfld.loc() * num_rad_len;
+        inv_rad_len += num_rad_len;
         efft_len    += mfld.efft_len();
         
         mat = true;
@@ -613,9 +623,11 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
             if (!elm.at(it)) continue;
             den.at(it) = (den.at(it) / efft_len);
         }
+        loc         = (loc / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
         efft = (efft_len / real_len);
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft);
+
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
     }
     else return MatFld(real_len);
 }
@@ -650,6 +662,16 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
 #elif
     return MatFld();
 #endif // __HAS_AMS_OFFICE_LIBS__
+}
+
+
+std::pair<Double_t, Double_t> MatMscatFld::sgm(const Double_t stp_len, const std::vector<Double_t>& lens) const {
+    if (!mat_ || MGNumc::Compare(stp_len) <= 0) return std::make_pair(0., 0.);
+
+    Double_t ttl_len = (MGMath::ONE - loc_) * stp_len;
+    for (auto&& len : lens) ttl_len += len;
+    Double_t sgm_loc = std::sqrt((stp_len * sgm_loc) * (stp_len * sgm_loc) + (ttl_len * sgm_tha_) * (ttl_len * sgm_tha_));
+    return std::make_pair(sgm_loc, sgm_tha_);
 }
 
 
@@ -752,6 +774,25 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part, const MatArg& marg)
 
     return MatPhyFld(mfld(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, ion_eloss.first, ion_eloss.second, brm_eloss_men);
 }
+        
+
+MatMscatFld MatPhy::GetMscat(const MatFld& mfld, const PhySt& part, const MatArg& marg) {
+    if (!mfld() || !marg.mscat()) return MatMscatFld();
+    if (part.part().is_chrgless() || part.part().is_massless()) return MatMscatFld();
+    if (MGNumc::EqualToZero(part.mom())) return MatMscatFld();
+    
+    Double_t num_rad_len = mfld.num_rad_len();
+    if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
+    if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
+    Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
+    Double_t eta       = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
+    Double_t eta_part  = (part.part().chrg_to_mass() * eta) * std::sqrt(eta * eta + MGMath::ONE);
+    Double_t mscat     = RYDBERG_CONST * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
+    Double_t mscat_tha = mscat;
+    Double_t mscat_loc = MGMath::INV_SQRT_TWELVE * mfld.efft() * mscat;
+
+    return MatMscatFld(mfld.loc(), mscat_loc, mscat_tha);
+}
 
 
 std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part) {
@@ -780,8 +821,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part = std::sqrt(eta * eta + MGMath::ONE);
-    Double_t mult_scat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (eta / mfld.real_len());
-    return mult_scat_sgm;
+    Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (eta / mfld.real_len());
+    return mscat_sgm;
 }
 
 

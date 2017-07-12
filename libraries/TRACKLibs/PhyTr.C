@@ -100,7 +100,8 @@ Bool_t PhyTr::fit_analysis() {
         SVecD<2>    res;
         for (auto&& hit : hits_) {
             if (!hit.sx()) continue;
-            Double_t err = (MGMath::ONE / hit.ex() / hit.ex());
+            Double_t ex  = hit.ex(0.0);
+            Double_t err = (MGMath::ONE / ex / ex);
             Double_t dz1 = hit.cz() - prefit_pz;
             Double_t dz2 = dz1 * dz1;
             mtx(0, 0) += err * MGMath::ONE;
@@ -162,7 +163,8 @@ Bool_t PhyTr::fit_analysis() {
         Double_t    cur_Ae = MGMath::ZERO;
         for (Int_t ih = 0; ih < hits_.size(); ++ih) {
             HitSt& hit = hits_.at(ih);
-            Double_t err = (MGMath::ONE / hit.ey() / hit.ey());
+            Double_t ey  = hit.ey(0.0);
+            Double_t err = (MGMath::ONE / ey / ey);
             
             cur_Au += stp.at(ih);
             cur_Ae += MGMath::HALF * crs.at(ih) * stp.at(ih) * stp.at(ih);
@@ -203,50 +205,50 @@ Bool_t PhyTr::fit_analysis() {
 
 
 Bool_t PhyTr::fit_simple() {
-    nchi_ = 0.;
-    ndf_ = 0;
-    
     Bool_t succ = false;
     Int_t  curIter = 1;
+    std::vector<MatFld> mflds;
     while (curIter <= LMTU_ITER && !succ) {
         Int_t ndfx = 0;
         Int_t ndfy = 0;
-        Double_t chix = 0;
-        Double_t chiy = 0;
+        Double_t chix = 0.;
+        Double_t chiy = 0.;
         SVecD<5>    gradG;
         SMtxSymD<5> covGG;
 
         Int_t cnt_hits = 0;
         PhySt ppst(part_);
         PhyJb ppjb(PhyJb::Type::kIdentity);
+        std::vector<Double_t> path_len;
         for (auto&& hit : hits_) {
             PhyJb curjb;
+            SVecD<3> init_coo = ppst.coo();
             if (!PropMgnt::PropToZ(hit.cz(), ppst, MatArg(), &curjb)) break;
+            //if (curIter == LMTL_ITER) mflds.push_back(MatMgnt::Get(init_coo, ppst.coo())); 
+            path_len.push_back(curjb.path_len());
             ppjb.multiplied(curjb);
+            
+            SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
+            SVecD<2>&& merr = hit.err(mres);
+            
+            SMtxSymD<2> micov;
+            micov(0, 0) = (hit.sx() ? (MGMath::ONE / merr(0) / merr(0)) : MGMath::ZERO);
+            micov(1, 1) = (hit.sy() ? (MGMath::ONE / merr(1) / merr(1)) : MGMath::ZERO);
+
+            SVecD<2> mgrad;
+            mgrad(0) = (hit.sx() ? (micov(0, 0) * mres(0)) : MGMath::ZERO);
+            mgrad(1) = (hit.sy() ? (micov(1, 1) * mres(1)) : MGMath::ZERO);
+            
             PhyJb::SMtxDXYG&& subjb = ppjb.xyg();
-            
-            SVecD<2> mdif(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
+            gradG += LA::Transpose(subjb) * mgrad;
+            covGG += LA::SimilarityT(subjb, micov);
 
-            SMtxSymD<2> merr;
-            merr(0, 0) = (hit.sx() ? (MGMath::ONE / hit.ex() / hit.ex()) : MGMath::ZERO);
-            merr(1, 1) = (hit.sy() ? (MGMath::ONE / hit.ey() / hit.ey()) : MGMath::ZERO);
-
-            SVecD<2> mres;
-            mres(0) = (hit.sx() ? (mdif(0) * merr(0, 0)) : MGMath::ZERO);
-            mres(1) = (hit.sy() ? (mdif(1) * merr(1, 1)) : MGMath::ZERO);
-            
-            gradG += LA::Transpose(subjb) * mres;
-            covGG += LA::SimilarityT(subjb, merr);
-
-            if (hit.sx()) { ndfx++; chix += (mdif(0) * mdif(0) * merr(0, 0)); } 
-            if (hit.sy()) { ndfy++; chiy += (mdif(1) * mdif(1) * merr(1, 1)); } 
+            if (hit.sx()) { ndfx++; chix += (mgrad(0) * mres(0)); } 
+            if (hit.sy()) { ndfy++; chiy += (mgrad(1) * mres(1)); } 
             
             cnt_hits++;
+            if (!hit.sx()) hit.set_dummy_x(ppst.cx());
         }
-        Int_t ndf = ndfx + ndfy;
-        Double_t nchi = ((chix + chiy) / static_cast<Double_t>(ndf));
-        Double_t nchi_rat = std::fabs((nchi_ - nchi) / (nchi_ + nchi));
-
         if (cnt_hits != hits_.size()) return false;
         if (!covGG.Invert()) return false;
         SVecD<5>&& rslG = covGG * gradG;
@@ -260,11 +262,15 @@ Bool_t PhyTr::fit_simple() {
             ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
         part_.set_eta(part_.eta() - rslG(4));
-
-        succ = (curIter >= LMTL_ITER && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0);
-
+        
+        Int_t ndf = ndfx + ndfy;
+        Double_t nchi = ((chix + chiy) / static_cast<Double_t>(ndf));
+        Double_t nchi_rat = std::fabs((nchi_ - nchi) / (nchi_ + nchi));
+        
         ndf_ = ndf;
         nchi_ = nchi;
+
+        succ = (curIter >= LMTL_ITER && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0);
         curIter++;
     }
     
@@ -273,7 +279,10 @@ Bool_t PhyTr::fit_simple() {
 
 
 Bool_t PhyTr::fit_physics() {
-    marg_.resize(hits_.size(), MatArg(false, true));
+    /*
+    nchi_ = 0.;
+    ndf_ = 0;
+    marg_.resize(hits_.size(), MatArg(false, false));
 
     Bool_t succ = false;
     Int_t  curIter = 1;
@@ -337,6 +346,8 @@ Bool_t PhyTr::fit_physics() {
         curIter++;
     }
     return succ;
+    */
+    return true;
 }
 
 
