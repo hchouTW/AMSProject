@@ -119,28 +119,27 @@ class PhyJb {
         };
 
     public :
-        static constexpr Int_t DIM_G_ = 5;
-        static constexpr Int_t DIM_L_ = 4;
+        static constexpr Int_t DIM_G = 5;
+        static constexpr Int_t DIM_L = 4;
 
-        using SMtxDGG = SMtxD<DIM_G_, DIM_G_>;
-        using SMtxDGL = SMtxD<DIM_G_, DIM_L_>;
+        using SMtxDGG = SMtxD<DIM_G, DIM_G>;
+        using SMtxDGL = SMtxD<DIM_G, DIM_L>;
         
-        using SMtxDXYG = SMtxD<2, DIM_G_>;
+        using SMtxDXYG = SMtxD<2, DIM_G>;
     
     public :
-        PhyJb() : mat_(false), path_len_(0.0), num_rad_len_(0.0) {}
-        PhyJb(const Type& type) : mat_(false), path_len_(0.0), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
+        PhyJb() : mat_(false), num_rad_len_(0.0) {}
+        PhyJb(const Type& type) : mat_(false), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
         ~PhyJb() {}
 
         inline void init(const Type& type);
 
-        inline void set_mat(Bool_t mat, Double_t path_len = 0., Double_t num_rad_len = 0.);
+        inline void set_mat(Bool_t mat, Double_t num_rad_len = 0.);
 
         inline void multiplied(PhyJb& phyJb);
 
         inline const Bool_t& mat() const { return mat_; }
 
-        inline const Double_t& path_len() const { return path_len_; }
         inline const Double_t& num_rad_len() const { return num_rad_len_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
@@ -153,7 +152,6 @@ class PhyJb {
 
     private :
         Bool_t    mat_;
-        Double_t  path_len_;
         Double_t  num_rad_len_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;
@@ -226,8 +224,8 @@ class PropMgnt {
         static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
 #endif // __HAS_AMS_OFFICE_LIBS__      
         
-        static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
-        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr);
+        static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
+        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
         
         static Bool_t PropWithMC(const Double_t step, PhySt& part, const MatArg& marg = MatArg(true, true));
         static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(true, true));
@@ -270,9 +268,10 @@ class PropMgnt {
         static constexpr Short_t JBRM = 3;
 };
 
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
+
 PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 
 
 } // namespace TrackSys

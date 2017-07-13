@@ -58,6 +58,9 @@ class MatFld {
         Double_t                                   efft_len_;
         Double_t                                   efft_;
         Double_t                                   loc_;
+
+    public :
+        static MatFld Merge(const std::list<MatFld>& mflds);
 };
 
 
@@ -266,7 +269,7 @@ class MatGeoBoxAms {
 
     private :
         static Bool_t is_load_;
-        static std::vector<MatGeoBoxReader*> reader_;
+        static std::list<MatGeoBoxReader*> reader_;
         static MatGeoBoxReader reader_AMS02RAD_ ;
         static MatGeoBoxReader reader_AMS02TRL1_;
         static MatGeoBoxReader reader_AMS02UTRD_;
@@ -287,7 +290,7 @@ class MatGeoBoxAms {
 };
 
 Bool_t MatGeoBoxAms::is_load_ = false;
-std::vector<MatGeoBoxReader*> MatGeoBoxAms::reader_;
+std::list<MatGeoBoxReader*> MatGeoBoxAms::reader_;
 MatGeoBoxReader MatGeoBoxAms::reader_AMS02RAD_ ;
 MatGeoBoxReader MatGeoBoxAms::reader_AMS02TRL1_;
 MatGeoBoxReader MatGeoBoxAms::reader_AMS02UTRD_;
@@ -351,24 +354,24 @@ class MatPhyFld {
 class MatMscatFld {
     public :
         MatMscatFld() { clear(); }
-        MatMscatFld(Double_t loc, Double_t sgm_loc, Double_t sgm_tha) : mat_(true), loc_(loc), sgm_loc_(sgm_loc), sgm_tha_(sgm_tha) {}
+        MatMscatFld(Double_t loc, Double_t len, Double_t sqr_sgm_loc, Double_t sqr_sgm_tha) : mat_(true), loc_(loc), len_(len), sqr_sgm_loc_(sqr_sgm_loc), sqr_sgm_tha_(sqr_sgm_tha) {}
         ~MatMscatFld() {}
-
-        std::pair<Double_t, Double_t> sgm(const Double_t stp_len, const std::vector<Double_t>& lens = std::vector<Double_t>()) const; 
 
         inline const Bool_t& operator() () const { return mat_; }
         inline const Double_t& loc() const { return loc_; }
-        inline const Double_t& sgm_loc() const { return sgm_loc_; }
-        inline const Double_t& sgm_tha() const { return sgm_tha_; }
+        inline const Double_t& len() const { return len_; }
+        inline const Double_t& sqr_sgm_loc() const { return sqr_sgm_loc_; }
+        inline const Double_t& sqr_sgm_tha() const { return sqr_sgm_tha_; }
 
     protected :
-        inline void clear() { mat_ = false; loc_ = 0.; sgm_loc_ = 0.; sgm_tha_ = 0.; }
+        inline void clear() { mat_ = false; loc_ = 0.; len_ = 0.; sqr_sgm_loc_ = 0.; sqr_sgm_tha_ = 0.; }
 
     private :
         Bool_t   mat_;
         Double_t loc_;
-        Double_t sgm_loc_;
-        Double_t sgm_tha_;
+        Double_t len_;
+        Double_t sqr_sgm_loc_;
+        Double_t sqr_sgm_tha_;
 };
 
 
@@ -415,7 +418,7 @@ class MatPhy {
         
         static MatPhyFld Get(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, true));
 
-        static MatMscatFld GetMscat(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, false));
+        static MatMscatFld GetMscat(const MatFld& mfld, const PhySt& part);
 
     protected :
         static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part);

@@ -6,6 +6,7 @@ namespace TrackSys {
 
 
 void MatFld::print() const {
+    const Double_t scl = 1.0e+4;
     std::string printStr;
     printStr += STR_FMT("========================= MatFld =========================\n");
     printStr += STR_FMT("Mat       %-d\n"  , mat_);
@@ -16,8 +17,57 @@ void MatFld::print() const {
     printStr += STR_FMT("Efft      %-6.4f\n", efft_);
     printStr += STR_FMT("Loc       %-6.4f\n", loc_);
     printStr += STR_FMT("Elm       H(%d) C(%d) N(%d) O(%d) F(%d) Na(%d) Al(%d) Si(%d) Pb(%d)\n", elm_.at(0), elm_.at(1), elm_.at(2), elm_.at(3), elm_.at(4), elm_.at(5), elm_.at(6), elm_.at(7), elm_.at(8));
+    printStr += STR_FMT("Den [10^4 mol cm^-3]    H (%6.2f)  C (%6.2f)  N (%6.2f)\n", den_.at(0)*scl, den_.at(1)*scl, den_.at(2)*scl);
+    printStr += STR_FMT("Den [10^4 mol cm^-3]    O (%6.2f)  F (%6.2f)  Na(%6.2f)\n", den_.at(3)*scl, den_.at(4)*scl, den_.at(5)*scl);
+    printStr += STR_FMT("Den [10^4 mol cm^-3]    Al(%6.2f)  Si(%6.2f)  Pb(%6.2f)\n", den_.at(6)*scl, den_.at(7)*scl, den_.at(8)*scl);
     printStr += STR_FMT("==========================================================\n");
     COUT(printStr);
+}
+        
+
+MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
+    if      (mflds.size() == 0) return MatFld();
+    else if (mflds.size() == 1) return mflds.front();
+
+    Bool_t                                     mat = false;
+    std::array<Bool_t, MatProperty::NUM_ELM>   elm; elm.fill(false);
+    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
+    Double_t                                   inv_rad_len = 0.;
+    Double_t                                   real_len = 0.;
+    Double_t                                   efft_len = 0.;
+    Double_t                                   efft = 0.;
+    Double_t                                   loc = 0.;
+    
+    for (auto&& mfld : mflds) {
+        if (!mfld()) { real_len += mfld.real_len(); continue; }
+        
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!mfld.elm().at(it)) continue;
+            elm.at(it) = true;
+            den.at(it) = (mfld.efft_len() * mfld.den().at(it));
+        }
+        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
+        loc         += (real_len + mfld.loc() * mfld.real_len()) * num_rad_len;
+        inv_rad_len += num_rad_len;
+        efft_len += mfld.efft_len();
+        real_len += mfld.real_len();
+
+        mat = true;
+    }
+
+    if (mat && !MGNumc::EqualToZero(efft_len)) {
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!elm.at(it)) continue;
+            den.at(it) = (den.at(it) / efft_len);
+        }
+        loc         = (loc / real_len / inv_rad_len);
+        inv_rad_len = (inv_rad_len / efft_len);
+
+        efft = (efft_len / real_len);
+        
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
+    }
+    else return MatFld(real_len);
 }
 
 
@@ -665,14 +715,19 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
 }
 
 
-std::pair<Double_t, Double_t> MatMscatFld::sgm(const Double_t stp_len, const std::vector<Double_t>& lens) const {
-    if (!mat_ || MGNumc::Compare(stp_len) <= 0) return std::make_pair(0., 0.);
-
+/*
+std::pair<Double_t, Double_t> MatMscatFld::sgm(const std::list<Double_t>& lens) const {
+    if (!mat_ || lens.size() == 0) return std::make_pair(0., 0.);
+   
+    Double_t stp_len = lens.front();
     Double_t ttl_len = (MGMath::ONE - loc_) * stp_len;
     for (auto&& len : lens) ttl_len += len;
-    Double_t sgm_loc = std::sqrt((stp_len * sgm_loc) * (stp_len * sgm_loc) + (ttl_len * sgm_tha_) * (ttl_len * sgm_tha_));
+    //Double_t sgm_loc = std::sqrt((stp_len * sgm_loc) * (stp_len * sgm_loc) + (ttl_len * sgm_tha_) * (ttl_len * sgm_tha_));
+    Double_t sgm_loc = std::sqrt((ttl_len * sgm_tha_) * (ttl_len * sgm_tha_));
+    
     return std::make_pair(sgm_loc, sgm_tha_);
 }
+*/
 
 
 void MatArg::rndm(const MatFld& mfld) {
@@ -764,7 +819,7 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, const MatArg& m
 
 MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part, const MatArg& marg) {
     if (!mfld() || !marg()) return MatPhyFld();
-    if (MGNumc::EqualToZero(mfld.real_len())) return MatPhyFld();
+    if (MGNumc::EqualToZero(mfld.efft_len())) return MatPhyFld();
     if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld();
     if (MGNumc::EqualToZero(part.mom())) return MatPhyFld();
     
@@ -776,22 +831,25 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part, const MatArg& marg)
 }
         
 
-MatMscatFld MatPhy::GetMscat(const MatFld& mfld, const PhySt& part, const MatArg& marg) {
-    if (!mfld() || !marg.mscat()) return MatMscatFld();
+MatMscatFld MatPhy::GetMscat(const MatFld& mfld, const PhySt& part) {
+    if (!mfld()) return MatMscatFld();
+    if (MGNumc::EqualToZero(mfld.efft_len())) return MatMscatFld();
     if (part.part().is_chrgless() || part.part().is_massless()) return MatMscatFld();
     if (MGNumc::EqualToZero(part.mom())) return MatMscatFld();
     
     Double_t num_rad_len = mfld.num_rad_len();
     if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
     if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
+    
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t eta       = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part  = (part.part().chrg_to_mass() * eta) * std::sqrt(eta * eta + MGMath::ONE);
     Double_t mscat     = RYDBERG_CONST * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
+    
+    Double_t mscat_loc = MGMath::INV_SQRT_TWELVE * mfld.efft_len() * mscat;
     Double_t mscat_tha = mscat;
-    Double_t mscat_loc = MGMath::INV_SQRT_TWELVE * mfld.efft() * mscat;
 
-    return MatMscatFld(mfld.loc(), mscat_loc, mscat_tha);
+    return MatMscatFld(mfld.loc(), ((MGMath::ONE-mfld.loc())*mfld.real_len()), (mscat_loc*mscat_loc), (mscat_tha*mscat_tha));
 }
 
 

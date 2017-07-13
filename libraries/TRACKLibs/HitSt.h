@@ -17,10 +17,13 @@ class MultiGauss {
         inline const Double_t& wgt(Int_t i) const { return multi_gauss_.at(i).first; }
         inline const Double_t& sgm(Int_t i) const { return multi_gauss_.at(i).second; }
 
-        inline Double_t efft_sgm(Double_t x = 0.) const; 
+        inline Double_t efft_sgm(Double_t r = 0.) const; 
 
     private :
         std::vector<std::pair<Double_t, Double_t>> multi_gauss_;
+
+    private :
+        static constexpr Double_t LMTL_PROB = 1.0e-6;
 };
 
 

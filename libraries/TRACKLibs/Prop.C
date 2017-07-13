@@ -138,16 +138,14 @@ TransferFunc::TransferFunc(const PhySt& part, const MatArg& marg, const MatPhyFl
 
 void PhyJb::init(const Type& type) {
     mat_ = false;
-    path_len_ = 0.0;
     num_rad_len_ = 0.0; 
     if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); 
     else                         jb_gg_ = std::move(SMtxD<5, 5>());
     jb_gl_ = std::move(SMtxD<5, 4>()); 
 }
-        
+ 
 
-void PhyJb::set_mat(Bool_t mat, Double_t real_len, Double_t num_rad_len) {
-    path_len_ = path_len;
+void PhyJb::set_mat(Bool_t mat, Double_t num_rad_len) {
     num_rad_len_ = (mat) ? num_rad_len : 0.0;
     mat_ = mat;
 }
@@ -161,7 +159,6 @@ void PhyJb::multiplied(PhyJb& phyJb) {
     jb_gg_ = std::move(phyJb.gg() * jb_gg_);
 
     mat_ = (mat_ || phyJb.mat());
-    path_len_ = path_len_ + phyJb.path_len();
     if (mat_) num_rad_len_ = num_rad_len_ + phyJb.num_rad_len();
 }
         
@@ -315,9 +312,11 @@ Double_t PropMgnt::GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat) 
 }
 
 
-Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
+Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJb* phyJb, MatFld* mfld) {
     Bool_t withJb = (phyJb != nullptr);
+    Bool_t withMf = (mfld != nullptr);
     if (withJb) phyJb->init(PhyJb::Type::kIdentity);
+    std::list<MatFld> mflds;
 
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -328,11 +327,11 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJ
 
         Bool_t valid = false;
         PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
-        MatFld&& mfld = (marg() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
+        MatFld&& curMfld = ((withMf) ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
         switch (method_) {
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, mfld, curJb); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, mfld, curJb); break;
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, mfld, curJb); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, curMfld, curJb); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, curMfld, curJb); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, curMfld, curJb); break;
             default : break;
         }
         if (!valid) { delete curJb; break; }
@@ -342,18 +341,23 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, const MatArg& marg, PhyJ
             delete curJb;
         }
 
+        if (withMf) mflds.push_back(curMfld);
+
         iter++;
         int_step += cur_step;
         is_succ = (MGNumc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
     }
+    if (withMf) (*mfld) = std::move(MatFld::Merge(mflds));
 
     return is_succ;
 }
 
 
-Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, PhyJb* phyJb) {
+Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, PhyJb* phyJb, MatFld* mfld) {
     Bool_t withJb = (phyJb != nullptr);
+    Bool_t withMf = (mfld != nullptr);
     if (withJb) phyJb->init(PhyJb::Type::kIdentity);
+    std::list<MatFld> mflds;
 
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -364,11 +368,11 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
 
         Bool_t valid = false;
         PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
-        MatFld&& mfld = (marg() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
+        MatFld&& curMfld = ((withMf) ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
         switch (method_) {
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, mfld, curJb); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, mfld, curJb); break;
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, mfld, curJb); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, marg, curMfld, curJb); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, marg, curMfld, curJb); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, marg, curMfld, curJb); break;
             default : break;
         }
         if (!valid) { delete curJb; break; }
@@ -377,11 +381,14 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg, P
             phyJb->multiplied(*curJb);
             delete curJb;
         }
+        
+        if (withMf) mflds.push_back(curMfld);
 
         iter++;
         int_step += cur_step;
         is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
     }
+    if (withMf) (*mfld) = std::move(MatFld::Merge(mflds));
 
     return is_succ;
 }
@@ -400,9 +407,9 @@ Bool_t PropMgnt::PropWithMC(const Double_t step, PhySt& part, const MatArg& marg
         MatArg margloc(marg.mscat(), marg.eloss());
         margloc.rndm(mfld);
         switch (method_) {
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, margloc, mfld); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, margloc, mfld); break;
             case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, margloc, mfld); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, margloc, mfld); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, margloc, mfld); break;
             default : break;
         }
         if (!valid) break;
@@ -429,9 +436,9 @@ Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part, const MatArg& m
         MatArg margloc(marg.mscat(), marg.eloss());
         margloc.rndm(mfld);
         switch (method_) {
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, margloc, mfld); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, margloc, mfld); break;
             case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, margloc, mfld); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, margloc, mfld); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, margloc, mfld); break;
             default : break;
         }
         if (!valid) break;
@@ -476,7 +483,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
         TransferFunc tf0(st0, marg, mp0);
 
         phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(mat, mfld.real_len(), mfld.num_rad_len());
+        phyJb->set_mat(mat, mfld.num_rad_len());
         
         phyJb->gg(JPX, JUX) += step * tf0.pu(X);
         phyJb->gg(JPY, JUY) += step * tf0.pu(Y);
@@ -518,7 +525,8 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
 
     return true;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb) {
     Bool_t        withJb = (phyJb != nullptr);
     Bool_t           mat = (marg() && mfld());
@@ -612,7 +620,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatAr
         TransferPhyJb tj1(mat, tf1, jb1);
 
         phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(mat, mfld.real_len(), mfld.num_rad_len());
+        phyJb->set_mat(mat, mfld.num_rad_len());
         
         phyJb->gg(JPX, JUX) += step * tf0.pu(X);
         phyJb->gg(JPY, JUY) += step * tf0.pu(Y);
@@ -871,7 +879,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         TransferPhyJb tj3(mat, tf3, jb3);
         
         phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(mat, mfld.real_len(), mfld.num_rad_len());
+        phyJb->set_mat(mat, mfld.num_rad_len());
         
         phyJb->gg(JPX, JUX) += step * tf0.pu(X);
         phyJb->gg(JPY, JUY) += step * tf0.pu(Y);
@@ -913,7 +921,6 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
     
     return true;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } // namespace TrackSys
