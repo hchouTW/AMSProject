@@ -197,6 +197,8 @@ TransferPhyJb::TransferPhyJb(Bool_t mat, const TransferFunc& tf, PhyJb& jb) {
 
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
+#include <TrProp.h>
+
 Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
     Short_t sign = MGNumc::Compare(part.dz());
     if (sign == 0) return false;

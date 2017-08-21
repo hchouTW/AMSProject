@@ -9,16 +9,6 @@ using namespace MGROOT;
 //#include "MgntRecon.h"
 //#include "MgntRecon.C"
 
-
-
-
-
-#define __HAS_AMS_OFFICE_LIBS__
-#ifdef __HAS_AMS_OFFICE_LIBS__
-#include "MagField.h"
-#include "TrFit.h"
-#endif
-
 #include "PartInfo.h"
 #include "PartInfo.C"
 #include "PhySt.h"

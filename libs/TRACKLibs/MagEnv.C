@@ -282,7 +282,7 @@ Bool_t MagMgnt::Load() {
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
     is_load_ = (is_load_ams && geo_box_reader_.exist());
-#elif
+#else
     is_load_ = (geo_box_reader_.exist());
 #endif
 
@@ -299,7 +299,7 @@ MagFld MagMgnt::Get(const SVecD<3>& coo) {
     // TODO (hchou): testcode
     //return MagFld();
     return geo_box_reader_.get(coo);
-#elif
+#else
     return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__
 }

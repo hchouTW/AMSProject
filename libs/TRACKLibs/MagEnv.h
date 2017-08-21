@@ -107,6 +107,8 @@ class MagGeoBoxReader {
 
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
+#include <MagField.h>
+
 class MagGeoBoxAms {
     public :
         MagGeoBoxAms() {}

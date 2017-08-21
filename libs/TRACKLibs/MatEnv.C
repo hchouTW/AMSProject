@@ -687,7 +687,7 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
 MatFld MatMgnt::Get(const SVecD<3>& coo) {
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(coo);
-#elif
+#else
     return MatFld();
 #endif // __HAS_AMS_OFFICE_LIBS__
 
@@ -697,7 +697,7 @@ MatFld MatMgnt::Get(const SVecD<3>& coo) {
 MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
-#elif
+#else
     return MatFld();
 #endif // __HAS_AMS_OFFICE_LIBS__
 }
@@ -709,7 +709,7 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
-#elif
+#else
     return MatFld();
 #endif // __HAS_AMS_OFFICE_LIBS__
 }

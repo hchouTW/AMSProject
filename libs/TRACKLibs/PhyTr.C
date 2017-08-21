@@ -52,7 +52,7 @@ Bool_t PhyTr::check(const std::vector<HitSt>& hits) {
 
 Bool_t PhyTr::fit() {
     MagMgnt::Load();
-    MatGeoBoxAms::Load();
+    //MatGeoBoxAms::Load();
 
     //const Int_t ntimes = 1000;
 
