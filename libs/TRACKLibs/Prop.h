@@ -129,6 +129,7 @@ class PhyJb {
         using SMtxDGL = SMtxD<DIM_G, DIM_L>;
         
         using SMtxDXYG = SMtxD<2, DIM_G>;
+        using SMtxDXYL = SMtxD<2, DIM_L>;
     
     public :
         PhyJb() : mat_(false), num_rad_len_(0.0) {}
@@ -152,6 +153,7 @@ class PhyJb {
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
 
         inline SMtxDXYG xyg() { return jb_gg_.Sub<SMtxDXYG>(0, 0); }
+        inline SMtxDXYL xyl() { return jb_gl_.Sub<SMtxDXYL>(0, 0); }
 
     private :
         Bool_t    mat_;
