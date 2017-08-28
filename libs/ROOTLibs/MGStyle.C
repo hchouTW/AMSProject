@@ -111,7 +111,7 @@ void LoadDefaultEnvironment() {
 	// Legend
 	style.SetLegendBorderSize(0);
 	style.SetLegendFillColor(0);
-	style.SetLegendTextSize(0.025);
+	//style.SetLegendTextSize(0.025); // only for ROOT6 or later
 	style.SetLegendFont(42);
 	
 	// Use bold lines and markers

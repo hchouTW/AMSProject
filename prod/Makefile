@@ -19,14 +19,14 @@ all :
 
 $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $(TagetDir)/src/LinkDef.h
 	rootcint -f $@ -c -p $(FLGS) $+
-#rootcling -f $@ -c -p $(FLGS) $+
+	#rootcling -f $@ -c -p $(FLGS) $+ # only for ROOT6
 
 $(TagetDir)/obj/dict.o : $(TagetDir)/src/dict.C
 	$(CXX) -c -o $@ $(FLGS) $<
 
 $(TagetDir)/lib/ClassDef.so : $(TagetDir)/src/dict.C
 	$(CXX) -fPIC -shared $^ -o $@ $(FLGS)
-	@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm
+	#@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm # only for ROOT6
 
 $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.h
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD -include $(TagetDir)/obj/YiProdNtuple.d

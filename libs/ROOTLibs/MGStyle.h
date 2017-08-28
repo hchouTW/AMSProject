@@ -71,7 +71,7 @@ namespace Style {
 	void    LoadDefaultEnvironment();
 
 	// kGreyScale, kRainBow, kBird
-	void SetColorPalette(Int_t pattern = kRainBow);
+    void SetColorPalette(Int_t pattern = -1);
 
 	void SetWindow(const Window& window = Window());
 	void SetWindow(WindowSize size);

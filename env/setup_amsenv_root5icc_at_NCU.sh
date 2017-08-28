@@ -17,10 +17,6 @@ export LC_ALL=en_US
 OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
-#### CERN %% GCC Compiler
-source /cvmfs/sft.cern.ch/lcg/external/gcc/4.9.1/x86_64-slc6/setup.sh
-#source /cvmfs/sft.cern.ch/lcg/external/gcc/6.2/x86_64-slc6/setup.sh
-
 #### CMS %% GCC Compiler
 #GCCVAR=slc6_amd64_gcc493
 #GCCTAG=4.9.3
@@ -37,11 +33,27 @@ source /cvmfs/sft.cern.ch/lcg/external/gcc/4.9.1/x86_64-slc6/setup.sh
 #export PATH=${CMSSW}/bin:${PATH}
 #export LD_LIBRARY_PATH=${CMSSW}/lib:${LD_LIBRARY_PATH}
 
-#### AMS %% INTEL Compiler
-ICCTAG=2017
-ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
-source ${ICCDIR}/17-all-setup.sh intel64
-source ${ICCDIR}/x86_64/2017/compilers_and_libraries/linux/bin/compilervars.sh intel64 
+#### CERN %% GCC Compiler
+GCCTAG=4.9.1
+source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
+
+#### CERN AFS %% INTEL Compiler
+ICCTAG=17
+ICCDIR=/afs/cern.ch/sw/IntelSoftware/linux
+source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
+if [ $ICCTAG -gt 15 ]; then
+    source ${ICCDIR}/x86_64/xe20${ICCTAG}/compilers_and_libraries/linux/bin/compilervars.sh intel64
+else
+    source ${ICCDIR}/x86_64/xe20${ICCTAG}/composerxe/bin/compilervars.sh intel64 
+fi
+
+#### CERN CVMFS %% INTEL Compiler
+#ICCTAG=17
+#ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
+#source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
+#source ${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux/bin/compilervars.sh intel64 
+
+#export INTEL_LICENSE_FILE=${Offline}/intel/licenses
 
 #### AMS %% ROOT Environment
 AMSSW=root-v5-34-9-icc64-slc6
@@ -49,8 +61,6 @@ export Offline=/cvmfs/ams.cern.ch/Offline
 export ROOTSYS=${Offline}/root/Linux/${AMSSW}
 export PATH=${ROOTSYS}/bin:${PATH}
 export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
-
-#export INTEL_LICENSE_FILE=${Offline}/intel/licenses
 
 #### AMS %% Software Environment
 AMSVersion=vdev
@@ -62,4 +72,4 @@ export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
 export AMSDataDirRW=${AMSDataDir}
 
-echo -e "setting environment for GCC-${GCCTAG} CMSSW-${CMSTAG} ICC-${ICCTAG} AMSSW-${AMSVersion}-${ROOTARCH}"
+echo -e "setting environment for GCC-${GCCTAG} ICC-${ICCTAG} AMSSW-${AMSVersion}-${ROOTARCH}"

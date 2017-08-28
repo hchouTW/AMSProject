@@ -1,7 +1,7 @@
 #ifndef __ROOTLibs_MGMath_H__
 #define __ROOTLibs_MGMath_H__
 
-
+/*
 #include <Math/Functor.h>
 #include <Math/BrentMinimizer1D.h>
 #include <Math/GSLMinimizer1D.h>
@@ -26,6 +26,7 @@ namespace MGROOT {
 		using ROOT::Minuit2::Minuit2Minimizer;
 	}
 }
+*/
 
 
 #include <TArray.h>
