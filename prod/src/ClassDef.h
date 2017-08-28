@@ -893,12 +893,6 @@ class RICH : public TObject {
 			isGoodRecon = false;
 			beta = -1;
 			Q = -1;
-
-			//std::fill_n(numOfPrimHit, 2, 0);
-			//std::fill_n(numOfPrimPE,  2, 0);
-			//
-			//std::fill_n(numOfOthHit, 2, 0);
-			//std::fill_n(numOfOthPE,  2, 0);
 		}
 
 	public :
@@ -932,12 +926,6 @@ class RICH : public TObject {
 		Bool_t  isGoodRecon;
 		Float_t beta;
 		Float_t Q;
-
-		// Rich Hits (primary others) [0] cross  [1] no-cross
-		//Short_t numOfPrimHit[2];
-		//Float_t numOfPrimPE[2]; 
-		//Short_t numOfOthHit[2];
-		//Float_t numOfOthPE[2]; 
 
 	ClassDef(RICH, 5)
 };

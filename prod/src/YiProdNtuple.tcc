@@ -28,15 +28,14 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	fStopwatch.start();
 	init();
 
-	int npar    = event->NParticle();
-	int nbeta   = event->NBeta();
-	int nbetaH  = event->NBetaH();
-	int ntrtk   = event->NTrTrack();
-	int nshower = event->NEcalShower();
-	int ntrdtk  = event->NTrdTrack();
-	int ntrdhtk = event->NTrdHTrack();
-	int nring   = event->NRichRing();
-
+	//int npar    = event->NParticle();
+	//int nbeta   = event->NBeta();
+	//int nbetaH  = event->NBetaH();
+	//int ntrtk   = event->NTrTrack();
+	//int nshower = event->NEcalShower();
+	//int ntrdtk  = event->NTrdTrack();
+	//int ntrdhtk = event->NTrdHTrack();
+	//int nring   = event->NRichRing();
 
 	/** Particle **/
 	bool isParticle = false;
@@ -60,10 +59,10 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	if (!isParticle) { init(); fStopwatch.stop(); return false; }
 
 	// Beta Information
-	float Beta = 0;
-	if      (iBetaH >= 0) Beta = event->pBetaH(iBetaH)->GetBeta();
-	else if (iBeta  >= 0) Beta = event->pBeta(iBeta)->Beta;
-	else                  Beta = 1;
+	//float Beta = 0;
+	//if      (iBetaH >= 0) Beta = event->pBetaH(iBetaH)->GetBeta();
+	//else if (iBeta  >= 0) Beta = event->pBeta(iBeta)->Beta;
+	//else                  Beta = 1;
 
 	// Tracker Information
 	if (EventBase::checkEventMode(EventBase::ISS))
@@ -75,18 +74,13 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
 	TrTrackR * TkStPar = 0;
 	int        TkStID = -1;
-	AMSPoint   TkStCoo;
-	AMSDir     TkStDir;
-	float      TkStRig = 0;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
 		TkStID = TkStPar->iTrTrackPar(1, 3, 21);
-		if (TkStID >= 0) {
-			TkStCoo = TkStPar->GetP0(TkStID);
-			TkStDir = TkStPar->GetDir(TkStID);
-			TkStRig = TkStPar->GetRigidity(TkStID);
-		}
-		else { fStopwatch.stop(); return false; }
+		if (TkStID < 0) {
+            fStopwatch.stop(); 
+            return false;
+        }
 	}
 		
 	// ECAL Information
@@ -289,7 +283,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			
 			int tkid = cluster->GetTkId();
 			int layJ = TkDBc::Head->GetJFromLayer(std::fabs(cluster->GetTkId()/100));
-			int trkid = cluster->GetGtrkID();
+			//int trkid = cluster->GetGtrkID();
 			AMSPoint coo = cluster->GetXgl();
 			AMSDir dir = cluster->GetDir();
 
@@ -687,14 +681,14 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	fTof.numOfBeta = event->NBeta();
 	fTof.numOfBetaH = event->NBetaH();
 
-	int tofLayerProj[4] = {0, 1, 1, 0}; // 0,1 := x,y
+	//int tofLayerProj[4] = {0, 1, 1, 0}; // 0,1 := x,y
 		
 	while (recEv.iBeta >= 0) {
 		BetaR * beta = event->pBeta(recEv.iBeta);
 		if (beta == nullptr) break;
 		fTof.statusBeta = true;
 		fTof.beta = beta->Beta;
-		short betaPatt = beta->Pattern;
+		//short betaPatt = beta->Pattern;
 		break;
 	}
 
@@ -761,17 +755,17 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	bool   isHasTime[2] = { false, false };
 	double avgTime[2] = {0, 0};
-	double avgChrg[2] = {0, 0};
+	//double avgChrg[2] = {0, 0};
 	for (int it = 0; it < 2; ++it) {
 		isHasTime[it] = (betaHClsId.at(2*it+0) >= 0 || betaHClsId.at(2*it+1) >= 0);
 		if (isHasTime[it]) {
 			TofClusterHR * ucls = (betaHClsId.at(2*it+0) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+0)) : nullptr;
 			TofClusterHR * lcls = (betaHClsId.at(2*it+1) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+1)) : nullptr;
-			double chrg  = (((ucls) ? ucls->GetQSignal() : 0.) + ((lcls) ? lcls->GetQSignal() : 0.)) / ((ucls!=nullptr) + (lcls!=nullptr));
+			//double chrg  = (((ucls) ? ucls->GetQSignal() : 0.) + ((lcls) ? lcls->GetQSignal() : 0.)) / ((ucls!=nullptr) + (lcls!=nullptr));
 			double wgval = ((ucls) ? (ucls->Time/ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (lcls->Time/lcls->ETime/lcls->ETime) : 0.);
 			double sumwg = ((ucls) ? (1./ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (1./lcls->ETime/lcls->ETime) : 0.);
 			double value = wgval / sumwg;
-			avgChrg[it] = chrg;
+			//avgChrg[it] = chrg;
 			avgTime[it] = value;
 		}
 	}
@@ -927,8 +921,8 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 		if (time.size() == 0) break;
 		std::sort(time.begin(), time.end());
-		float timeRange[2] = { (time.front() - 5. * TimeOfOneM), (time.back()  + 10. * TimeOfOneM) };
-		float minTimeOfTOF = time.front();
+		double timeRange[2] = { (time.front() - 5. * TimeOfOneM), (time.back()  + 10. * TimeOfOneM) };
+		double minTimeOfTOF = time.front();
 
 		for (int icls = 0; icls < event->NAntiCluster(); ++icls) {
 			AntiClusterR * cls = event->pAntiCluster(icls);
@@ -1499,7 +1493,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	// numOfHSegVtx (by HY.Chou)
 	// number of TRDH segments that make a vertex with TrTrack
 	// between Z = 60 cm and 200 cm
-	int nseg = event->nTrdHSegment();
+	////int nseg = event->nTrdHSegment();
 	TrTrackR * trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
 	int        trId = (trtk) ? trtk->iTrTrackPar(1, 3, 21) : -1;
 	if (trtk && trId >= 0) {
@@ -1631,6 +1625,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 					}
 				}
 				bool ret = icov.Invert();
+				if (!ret) break;
 				SVecD<3> rsl = icov * grad;
 				vtxCoo = vtxCoo - rsl;
 				iter++;
@@ -1757,13 +1752,13 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		// It speeds lots of time 0.02 sec
 		float Q = -1;
-		float Qerror = -1;
-		int   QnumberOfHit = -1;
+		//float Qerror = -1;
+		//int   QnumberOfHit = -1;
 		int   Qstatus = trdkcls->CalculateTRDCharge(0, TOF_Beta);
 		if (Qstatus >= 0) {
 			Q = trdkcls->GetTRDCharge();
-			Qerror = trdkcls->GetTRDChargeError();
-			QnumberOfHit = trdkcls->GetQNHit();
+			//Qerror = trdkcls->GetTRDChargeError();
+			//QnumberOfHit = trdkcls->GetQNHit();
 		}
 		else continue;
 
@@ -1899,13 +1894,13 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	const float cut_aerogelExternalBorder = 3350;        // aerogel external border (r**2)
 	// modify 3500 -> 3360 (by S.H.)
 	// modify 3500 -> 3350 (by HY.Chou)
-	const float cut_PMTExternalBorder = 4050;             // PMT external border (r**2) (by HY.Chou)
+	//const float cut_PMTExternalBorder = 4050;             // PMT external border (r**2) (by HY.Chou)
 	const float cut_aerogelNafBorder[2] = {17.4, 17.6}; // aerogel/NaF border (NaF, Aerogel)
 	// modify (17, 18) -> (17.25, 17.75) (by HY.Chou)
 	//const float cut_distToTileBorder[2] = {0.08, 0.05};   // distance to tile border 
 	
 	const int nBadTile = 5;
-	const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
+	//const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
 	const int kBadTile_MgntTile[nBadTile] = { 13, 23, 58, 86, 91 }; // tiles with bad beta reconstruction
 	
 	// RichVeto - start
@@ -1983,7 +1978,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		    0.493667,      // kaon
 		    0.938272297,   // proton
 		    1.876123915 }; // deuterium
-		float betas[npart] = {0, 0, 0, 0, 0 };
+		//float betas[npart] = {0, 0, 0, 0, 0 };
 		float thetas[npart] = { -1, -1, -1, -1, -1 };
 		float numOfExpPE[npart] = {0, 0, 0, 0, 0 };
 		std::fill_n(numOfExpPE, npart, -1);
@@ -1992,8 +1987,8 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			double massChrg = mass[it] / chrg[it];
 			double beta = 1. / std::sqrt((massChrg * massChrg / rigAbs / rigAbs) + 1); 
 			double cos  = 1. / (rfrIndex * beta);
+			//betas[it] = beta;
 			thetas[it] = (MGNumc::Compare(cos, 1.0) <= 0) ? std::acos(cos) : -1.0;
-			betas[it] = beta;
 			if (!openCal[it]) continue;
 			double exppe = RichRingR::ComputeNpExp(trtk, beta, chrg[it]);
 			numOfExpPE[it] = exppe;
@@ -2343,12 +2338,11 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	// RichVeto - end
 	
 	// official RichRingR - start
-	bool isSuccRing = false;
 	while (recEv.iRichRing >= 0 && fRich.kindOfRad >= 0) {
 		// RichRingR
 		RichRingR * rich = event->pRichRing(recEv.iRichRing);
 		int kindOfRad = rich->IsNaF() ? 1 : 0;
-		int tileOfRad = rich->getTileIndex();
+		//int tileOfRad = rich->getTileIndex();
 		if (fRich.kindOfRad != kindOfRad) break;
 
 		fRich.status = true;
@@ -2372,46 +2366,9 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
                 rich->getBetaConsistency() > cut_betaConsistency[1] ||
 				rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[1]) fRich.isGoodRecon = false;
 		}
-
-		isSuccRing = true;
 		break;
 	}
 	// official RichRingR - end
-
-
-	// Rich Hits
-	//short numOfPrimHit[2] = {0, 0};
-	//float numOfPrimPE[2]  = {0, 0}; 
-	//short numOfOthHit[2] = {0, 0};
-	//float numOfOthPE[2]  = {0, 0};
-	//for (int it = 0; it < event->NRichHit(); ++it) {
-	//	RichHitR * hit = event->pRichHit(it);
-	//	if (hit == nullptr) continue;
-	//	bool used[2] = { false, false };
-	//	for (int iring = 0; iring < event->NRichRing(); ++iring) {
-	//		bool isUsed = hit->UsedInRingNumber(iring);
-	//		if (!isUsed) continue;
-	//		if (iring == recEv.iRichRing && isSuccRing) used[0] = true;
-	//		else                                        used[1] = true;
-	//	}
-	//	bool isOthers = (!used[0]);
-	//	
-	//	short cross = (hit->IsCrossed() ? 0 : 1);
-	//	float npe   = hit->Npe;
-
-	//	if (used[0])  { numOfPrimHit[cross]++;  numOfPrimPE[cross] += npe;  }
-	//	if (isOthers) { numOfOthHit[cross]++; numOfOthPE[cross] += npe; }
-	//}
-
-	//fRich.numOfPrimHit[0] = numOfPrimHit[0];
-	//fRich.numOfPrimHit[1] = numOfPrimHit[1];
-	//fRich.numOfPrimPE[0]  = numOfPrimPE[0];
-	//fRich.numOfPrimPE[1]  = numOfPrimPE[1];
-	//
-	//fRich.numOfOthHit[0] = numOfOthHit[0];
-	//fRich.numOfOthHit[1] = numOfOthHit[1];
-	//fRich.numOfOthPE[0]  = numOfOthPE[0];
-	//fRich.numOfOthPE[1]  = numOfOthPE[1];
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -2460,7 +2417,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	// threshold : remove MIPs and low energy particles (lepton study 0.250)
 	// threshold : remove very low energy particles (proton study 0.050)
-	float threshold = 0.050;
+	//float threshold = 0.050;
 
 	fEcal.numOfShower = event->NEcalShower();
 
@@ -2473,7 +2430,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 		ShowerInfo shower;
 	
 		shower.energyD = 1.e-3 * ecal->EnergyD;
-		float energyA = ecal->EnergyA;
+		//float energyA = ecal->EnergyA;
 		shower.energyE = ecal->EnergyE;
 		float energyC = ecal->EnergyC;
 		shower.energyP = ecal->EnergyP(2);

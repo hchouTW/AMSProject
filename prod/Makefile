@@ -30,7 +30,8 @@ $(TagetDir)/lib/ClassDef.so : $(TagetDir)/src/dict.C
 	#@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm # only for ROOT6
 
 $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.h
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD -include $(TagetDir)/obj/YiProdNtuple.d
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD 
+-include $(TagetDir)/obj/YiProdNtuple.d
 
 $(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o $(TagetDir)/lib/ClassDef.so
 	$(LD) -o $@ $+ $(LIBP)

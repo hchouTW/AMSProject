@@ -18,7 +18,8 @@ OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
 #### CERN %% GCC Compiler
-GCCTAG=4.9.1
+#GCCTAG=4.9.1
+GCCTAG=6.2.0
 source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
 #### AMS %% ROOT Environment

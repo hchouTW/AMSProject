@@ -55,8 +55,9 @@ std::vector<std::string> Split(const std::string& str, const std::string& expr) 
 	const std::string&& trimStr = Trim(str);
 	if (trimStr.empty()) return std::vector<std::string>();
 	try {
-		std::vector<std::string>&& strvec = { std::sregex_token_iterator(trimStr.cbegin(), trimStr.cend(), std::regex(expr), -1), std::sregex_token_iterator() };
+		//std::vector<std::string>&& strvec = { std::sregex_token_iterator(trimStr.cbegin(), trimStr.cend(), std::regex(expr), -1), std::sregex_token_iterator() };
 		//strvec.erase(std::remove_if(strvec.begin(), strvec.end(), ([](std::string& str)->bool{return str.empty();}) ), strvec.end());
+		std::vector<std::string> strvec; // test
 		return strvec;
 	}
 	catch (const std::regex_error& err) { 
@@ -74,7 +75,8 @@ std::vector<std::string> Match(const std::string& str, const std::string& expr) 
 	const std::string&& trimStr = Trim(str);
 	if (trimStr.empty()) return std::vector<std::string>();
 	try { 
-		return { std::sregex_token_iterator(trimStr.cbegin(), trimStr.cend(), std::regex(expr)), std::sregex_token_iterator() };
+		//return { std::sregex_token_iterator(trimStr.cbegin(), trimStr.cend(), std::regex(expr)), std::sregex_token_iterator() };
+		return std::vector<std::string>(); // test
 	}	
 	catch (const std::regex_error& err) { 
 		MGSys::ShowError(STR_FMT("<< Match >>  %s", err.what()),
