@@ -18,29 +18,30 @@ OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
 #### CERN %% GCC Compiler
-#source /cvmfs/sft.cern.ch/lcg/external/gcc/4.9.1/x86_64-slc6/setup.sh
+source /cvmfs/sft.cern.ch/lcg/external/gcc/4.9.1/x86_64-slc6/setup.sh
 #source /cvmfs/sft.cern.ch/lcg/external/gcc/6.2/x86_64-slc6/setup.sh
 
 #### CMS %% GCC Compiler
-GCCVAR=slc6_amd64_gcc493
-GCCTAG=4.9.3
-GCCDIR=/cvmfs/cms.cern.ch/${GCCVAR}/external/gcc/${GCCTAG}
+#GCCVAR=slc6_amd64_gcc493
+#GCCTAG=4.9.3
+#GCCDIR=/cvmfs/cms.cern.ch/${GCCVAR}/external/gcc/${GCCTAG}
 
-export PATH=${GCCDIR}/bin:${PATH}
-export LD_LIBRARY_PATH=${GCCDIR}/lib:${LD_LIBRARY_PATH}
-export LD_LIBRARY_PATH=${GCCDIR}/lib64:${LD_LIBRARY_PATH}
+#export PATH=${GCCDIR}/bin:${PATH}
+#export LD_LIBRARY_PATH=${GCCDIR}/lib:${LD_LIBRARY_PATH}
+#export LD_LIBRARY_PATH=${GCCDIR}/lib64:${LD_LIBRARY_PATH}
 
 #### CMS %% ROOT Environment
-CMSVersion=CMSSW_7_6_3
-CMSTAG=7.6.3
-CMSSW=/cvmfs/cms.cern.ch/${GCCVAR}/cms/cmssw/${CMSVersion}/external/${GCCVAR}
-export PATH=${CMSSW}/bin:${PATH}
-export LD_LIBRARY_PATH=${CMSSW}/lib:${LD_LIBRARY_PATH}
+#CMSVersion=CMSSW_7_6_3
+#CMSTAG=7.6.3
+#CMSSW=/cvmfs/cms.cern.ch/${GCCVAR}/cms/cmssw/${CMSVersion}/external/${GCCVAR}
+#export PATH=${CMSSW}/bin:${PATH}
+#export LD_LIBRARY_PATH=${CMSSW}/lib:${LD_LIBRARY_PATH}
 
 #### AMS %% INTEL Compiler
 ICCTAG=2017
-ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux/x86_64/2017/compilers_and_libraries/linux
-source ${ICCDIR}/bin/compilervars.sh intel64 
+ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
+source ${ICCDIR}/17-all-setup.sh intel64
+source ${ICCDIR}/x86_64/2017/compilers_and_libraries/linux/bin/compilervars.sh intel64 
 
 #### AMS %% ROOT Environment
 AMSSW=root-v5-34-9-icc64-slc6

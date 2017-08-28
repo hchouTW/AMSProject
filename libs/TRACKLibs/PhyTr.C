@@ -420,7 +420,7 @@ Bool_t PhyTr::fit_semi_simple() {
 
 Bool_t PhyTr::fit_physics() {
     return true;
-    
+/*    
     ////////////////////////////////////////////////////////////////////////////////////////////
     Bool_t succ = false;
     Bool_t preSucc = false;
@@ -477,7 +477,7 @@ Bool_t PhyTr::fit_physics() {
 
             SMtxSymD<5> udjb(SMtxIdSym5D);
     /////////////////////////////////////////////////////////////////////////////////////
-    
+    */
     
     return true;
 }

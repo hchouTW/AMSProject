@@ -18,7 +18,8 @@ all :
 	make $(TagetDir)/YiProdNtuple
 
 $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $(TagetDir)/src/LinkDef.h
-	rootcling -f $@ -c -p $(FLGS) $+
+	rootcint -f $@ -c -p $(FLGS) $+
+#rootcling -f $@ -c -p $(FLGS) $+
 
 $(TagetDir)/obj/dict.o : $(TagetDir)/src/dict.C
 	$(CXX) -c -o $@ $(FLGS) $<
