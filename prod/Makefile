@@ -1,7 +1,7 @@
 -include $(AMSMKfile)
 
-TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
-#TagetDir = /data3/hchou/prod/vdev
+#TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
+TagetDir = /data3/hchou/prod/vdev
 
 all :
 	@mkdir -p $(TagetDir)

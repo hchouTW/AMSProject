@@ -39,3 +39,5 @@ export AMSProj="$HOME/AMSProject"
 export AMSProjLibs="${AMSProj}/libs"
 export AMSProjProd="${AMSProj}/prod"
 export AMSProjSubj="${AMSProj}/subj"
+
+export AMSMKfile="${AMSProj}/env/env.mk"
