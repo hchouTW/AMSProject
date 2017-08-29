@@ -49,4 +49,7 @@ export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
 export AMSDataDirRW=${AMSDataDir}
 
+#### COMPILER
+export COMPILER=GCC
+
 echo -e "setting environment for GCC-${GCCTAG} ICC-${ICCTAG} AMSSW-${AMSVersion}-${ROOTARCH}"

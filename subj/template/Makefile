@@ -1,6 +1,4 @@
 -include $(AMSMKfile)
-#CXX = $(ICCCXX)
-CXX = $(GCCCXX)
 
 #ClassLib = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/lib/ClassDef.so
 #TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/analysis/template
@@ -22,7 +20,7 @@ $(TagetDir)/obj/YiSlcNtuple.o : $(TagetDir)/src/YiSlcNtuple.C $(TagetDir)/src/Yi
 -include $(TagetDir)/obj/YiSlcNtuple.d
 
 $(TagetDir)/YiSlcNtuple : $(TagetDir)/obj/YiSlcNtuple.o $(ClassLib)
-	$(LD) -o $@ $+ $(LIBP)
+	$(LD) -o $@ $+ $(LIBS)
 
 clean :
 	@rm -fv $(TagetDir)/obj/*
