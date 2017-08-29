@@ -1,7 +1,7 @@
 # Install castor-lib.x86_64 (AMS software requirement)
 
 ## In SLC6 system
-```
+```bash
 yum install castor-lib.x86_64
 ```
 
@@ -18,10 +18,10 @@ protect=1
 priority=5
 ```
 check
-```
+```bash
 yum search castor-lib
 ```
 install
-```
+```bash
 yum install castor-lib.x86_64
 ```

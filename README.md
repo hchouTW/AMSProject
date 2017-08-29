@@ -3,7 +3,7 @@ AMS02 Project
 
 ## Fast Setting
 In ~/.bashrc file
-```
+```bash
 # .bashrc
 
 # Source global definitions
@@ -18,16 +18,16 @@ export AMSCore=~/AMSCore
 source ${AMSProj}/sys/shell/bashrc.sh
 ```
 VIM
-```
+```bash
 ln -s ${AMSProj}/sw/vim ~/.vim
 ln -s ${AMSProj}/sw/vim/.vimrc ~/.vimrc
 ```
 ROOT
-```
+```bash
 ln -s ${AMSProj}/sw/ROOT/.rootlogon.C .rootlogon.C
 ```
 Git
-```
+```bash
 ln -s ${AMSProj}/sw/git/.gitconfig .gitconfig
 ```
 
