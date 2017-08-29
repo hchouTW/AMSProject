@@ -1,7 +1,9 @@
 ## Install CVMFS
+In SLC6 system
 ```
 yum install cvmfs.x86_64
 ```
+In other system
 ```
 yum localinstall http://cvmrepo.web.cern.ch/cvmrepo/yum/cvmfs/EL/6/x86_64/cvmfs-release-2-4.el6.noarch.rpm -y
 yum install cvmfs cvmfs-init-scripts cvmfs-auto-setup -y
