@@ -1,12 +1,5 @@
-# .bashrc
-
-# Source global definitions
-if [ -f /etc/bashrc ]; then
-	. /etc/bashrc
-fi
-
-# User specific aliases and functions
-stty erase '^?' #backspace and delete
+# Backspace and Delete
+stty erase '^?'
 
 # OPENSTACK
 export OS_PASSWORD='$<'
@@ -19,7 +12,7 @@ alias ssh='ssh -o "StrictHostKeyChecking no" -Y'
 
 # Sys
 alias dstat='dstat -cdlmnpsy'
-alias sysinfo='cat /proc/cpuinfo && cat /proc/meminfo && free'
+alias sysinfo='cat /proc/cpuinfo && cat /proc/meminfo && free -h'
 
 # Bash
 alias df='df -h'
@@ -31,18 +24,17 @@ alias rmfc='/bin/rm'
 alias root='root -l'
 
 # AMSProject
-export AMSProj=~/AMSProject
+#export AMSProj=~/AMSProject
 export AMSProjLibs=${AMSProj}/libs
 export AMSProjProd=${AMSProj}/prod
 export AMSProjSubj=${AMSProj}/subj
 
-export AMSMKfile=${AMSProj}/env/env.mk
-
-# Core
-export AMSCore=/data3/hchou/AMSProject/core
+# AMSCore
+#export AMSCore=/data3/hchou/AMSCore
 export AMSCoreProd=${AMSCore}/prod
 export AMSCoreSubj=${AMSCore}/subj
 
 # AMS Software
-alias amsenv_root5icc="source ${AMSProj}/env/setup_amsenv_root5icc.sh"
-alias amsenv_root5gcc="source ${AMSProj}/env/setup_amsenv_root5gcc.sh"
+export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
+alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
+alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
