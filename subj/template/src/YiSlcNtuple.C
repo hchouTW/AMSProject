@@ -4,8 +4,10 @@
 #include "YiSlcNtuple.h"
 #include "YiSlcNtuple.tcc"
 
-#include "/afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/src/ClassDef.h"
-#include "/afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/src/ClassDef.C"
+//#include "/afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/src/ClassDef.h"
+//#include "/afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/src/ClassDef.C"
+#include <vdev/src/ClassDef.h>
+#include <vdev/src/ClassDef.C>
 
 using namespace MGROOT;
 
@@ -131,7 +133,7 @@ class DST {
     public :
         static Axis AXnr;
         static Axis AXir;
-        static const Float_t CfStableFT = 1.0; // 1.2
+        static constexpr Float_t CfStableFT = 1.0; // 1.2
 };
 
 Bool_t DST::gSaveDST = true;
@@ -414,13 +416,18 @@ int main(int argc, const char ** argv) {
     std::string outputFile = STR_FMT("YiAnalytics_%s.%07ld.root", event_mode.c_str(), group_th);
     std::string path = ".";
     if (argc == 6) path = argv[5];
+    
+    YiAna ntuple;
+    ntuple.setOutputFile(outputFile.c_str(), path.c_str());
+    ntuple.readDataFrom(file_list.c_str(), group_th, group_size);
+    ntuple.loopEventChain();
 
-    YiAna * ntuple = new YiAna();
-    ntuple->setOutputFile(outputFile.c_str(), path.c_str());
-    ntuple->readDataFrom(file_list.c_str(), group_th, group_size);
-    ntuple->loopEventChain();
-    if (ntuple != 0) delete ntuple;
-    ntuple = 0;
+    //YiAna * ntuple = new YiAna();
+    //ntuple->setOutputFile(outputFile.c_str(), path.c_str());
+    //ntuple->readDataFrom(file_list.c_str(), group_th, group_size);
+    //ntuple->loopEventChain();
+    //if (ntuple != nullptr) delete ntuple;
+    //ntuple = nullptr;
 
     COUT("\n**------------------------**\n");
     COUT("\n**    YiAnaNtuple END     **\n");

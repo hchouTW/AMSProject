@@ -1,0 +1,14 @@
+Host lxplus
+Hostname lxplus.cern.ch
+
+Host cms01
+Hostname cms01.phy.ncu.edu.tw
+
+Host dirac
+Hostname dirac.phys.ncku.edu.tw
+
+#personal account
+Host github.com
+HostName github.com
+User git
+IdentityFile ~/.ssh/id_rsa

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <list>
 
 #include "MGMath.h"
 #include "MGMath.C"

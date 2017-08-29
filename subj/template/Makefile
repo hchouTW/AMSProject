@@ -1,7 +1,12 @@
 -include $(AMSMKfile)
+#CXX = $(ICCCXX)
+CXX = $(GCCCXX)
 
-ClassLib = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/lib/ClassDef.so
-TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/analysis/template
+#ClassLib = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/lib/ClassDef.so
+#TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/analysis/template
+
+ClassLib = $(AMSCoreProd)/vdev/lib/ClassDef.so
+TagetDir = $(AMSCoreSubj)/template
 
 all :
 	@mkdir -p $(TagetDir)
@@ -13,7 +18,8 @@ all :
 	make $(TagetDir)/YiSlcNtuple
 
 $(TagetDir)/obj/YiSlcNtuple.o : $(TagetDir)/src/YiSlcNtuple.C $(TagetDir)/src/YiSlcNtuple.tcc $(TagetDir)/src/YiSlcNtuple.h
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD -include $(TagetDir)/obj/YiSlcNtuple.d
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+-include $(TagetDir)/obj/YiSlcNtuple.d
 
 $(TagetDir)/YiSlcNtuple : $(TagetDir)/obj/YiSlcNtuple.o $(ClassLib)
 	$(LD) -o $@ $+ $(LIBP)

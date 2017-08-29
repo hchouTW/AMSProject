@@ -1,7 +1,9 @@
 -include $(AMSMKfile)
+#CXX = $(ICCCXX)
+CXX = $(GCCCXX)
 
 #TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
-TagetDir = /data3/hchou/prod/vdev
+TagetDir = $(AMSCoreProd)/vdev
 
 all :
 	@mkdir -p $(TagetDir)
@@ -30,7 +32,7 @@ $(TagetDir)/lib/ClassDef.so : $(TagetDir)/src/dict.C
 	#@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm # only for ROOT6
 
 $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.h
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD 
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD 
 -include $(TagetDir)/obj/YiProdNtuple.d
 
 $(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o $(TagetDir)/lib/ClassDef.so
