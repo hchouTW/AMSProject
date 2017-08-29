@@ -18,7 +18,15 @@ LIBA = $(AMSLIB)/libntuple_slc6_PG.a
 
 LIBP  = $(shell $(ROOTSYS)/bin/root-config --libs)
 LIBP += -L$(ROOTSYS)/lib -lRoot -lfreetype -pthread -lpcre
-LIBP += -lMinuit -lMinuit2 -lRFIO -lTMVA -lXMLIO -lMLP -lTreePlayer -lMathCore
-LIBP += -llzma -Llib -lcrypto
+#LIBP += -lMinuit -lMinuit2 -lRFIO -lTMVA -lXMLIO -lMLP -lTreePlayer -lMathCore
+#LIBP += -llzma -Llib -lcrypto
 LIBP += -L$(CERNDIR)/lib -lmathlib
 LIBP += $(LIBD)
+
+
+#LIBP  = $(shell $(ROOTSYS)/bin/root-config --libs)
+#LIBP += -L$(ROOTSYS)/lib -lRoot -lfreetype -pthread -lpcre
+#LIBP += -lMinuit -lMinuit2 -lRFIO -lTMVA -lXMLIO -lMLP -lTreePlayer -lMathCore
+#LIBP += -llzma -Llib -lcrypto
+#LIBP += -L$(CERNDIR)/lib -lmathlib
+#LIBP += $(LIBD)

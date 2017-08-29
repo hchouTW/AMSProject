@@ -1,3 +1,20 @@
+## Install CVMFS
+```
+yum install cvmfs.x86_64
+```
+
+## CVMFS Setting
+
+In /etc/cvmfs/default.local file
+```
+```
+
+In /etc/cvmfs/domain.d/cern.ch.conf file
+```
+```
+
+
+## Felix Lee
 Hi, Hsin-Yi,
 No problem, just add following lines:
 
