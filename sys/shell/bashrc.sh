@@ -24,13 +24,13 @@ alias rmfc='/bin/rm'
 alias root='root -l'
 
 # AMSProject
-#export AMSProj=~/AMSProject
+#export AMSProj=~/AMSProject # define in ~/.bashrc
 export AMSProjLibs=${AMSProj}/libs
 export AMSProjProd=${AMSProj}/prod
 export AMSProjSubj=${AMSProj}/subj
 
 # AMSCore
-#export AMSCore=/data3/hchou/AMSCore
+#export AMSCore=~/AMSCore # define in ~/.bashrc
 export AMSCoreProd=${AMSCore}/prod
 export AMSCoreSubj=${AMSCore}/subj
 

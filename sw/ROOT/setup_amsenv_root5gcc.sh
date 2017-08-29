@@ -35,6 +35,10 @@ export ROOTSYS=${Offline}/root/Linux/${AMSSW}
 export PATH=${ROOTSYS}/bin:${PATH}
 export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
 
+#### AMS %% Xrd Environment
+AMSXRD=${Offline}/AMSsoft/xrootd/xrootd-icc64-12
+export LD_LIBRARY_PATH=${AMSXRD}/lib64:${LD_LIBRARY_PATH}
+
 #### AMS %% Software Environment
 AMSVersion=vdev
 ROOTARCH=linuxx8664gcc5.34
