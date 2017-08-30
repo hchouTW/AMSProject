@@ -6,7 +6,7 @@
  * Description   : 
  * *******************************************************/
 
-#pragma link C++ class std::vector<std::string>+;
+#pragma link C++ class std::vector<TString>+;
 
 #pragma link C++ class RunTagInfo;
 #pragma link C++ class std::vector<RunTagInfo>+;

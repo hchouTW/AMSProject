@@ -69,8 +69,9 @@ int main(int argc, const char ** argv) {
 	ntuple->setOutputFile(outputFile, path, isMultiTree);
 	ntuple->readDataFrom(file_list, group_id, group_size);
 	ntuple->loopEventChain();
-	if (ntuple != 0) delete ntuple;
-	ntuple = 0;
+
+	if (ntuple != nullptr) delete ntuple;
+	ntuple = nullptr;
 
 	COUT("\n**------------------------**\n");
 	COUT("\n**    YiProdNtuple END    **\n");

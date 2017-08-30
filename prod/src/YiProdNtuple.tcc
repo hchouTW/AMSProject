@@ -906,7 +906,7 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr)	return false;
 	fStopwatch.start();
 	
-	event->RebuildAntiClusters();
+	//event->RebuildAntiClusters();
 	fAcc.numOfCluster = event->NAntiCluster();
 
 	const double TimeOfOneM = 3.335640e+00; // (speed of light)
@@ -2839,7 +2839,7 @@ void RunTagOperator::init() {
 bool RunTagOperator::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (chain == nullptr) return false;
 	TFile * file = chain->GetFile();
-	std::string filePath = file->GetName();
+	TString filePath = TString(file->GetName());
 	if (event == nullptr) return false;
 	UInt_t runID   = event->Run();
 	UInt_t eventID = event->Event();
@@ -2998,10 +2998,10 @@ void YiNtuple::saveInputFileList(TFile * file) {
 	if (file == nullptr || fFileList.size() == 0) return;
 	file->cd();
 	TTree * tree = new TTree("fileList", "List Of Input File Info");
-	std::string filePath;
+	TString filePath;
 	tree->Branch("file", &filePath);
 	for (int i = 0; i < fFileList.size(); ++i) {
-		filePath = fFileList.at(i);
+		filePath = TString(fFileList.at(i).c_str());
 		tree->Fill();
 	}
 	file->cd();
@@ -3077,7 +3077,7 @@ void YiNtuple::loopEventChain() {
 
 		AMSEventR * event = fChain->GetEvent(ientry);
 
-		//if (nprocessed > 10000) break; // testcode
+		//if (nprocessed > 1000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);
 

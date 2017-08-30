@@ -1,6 +1,5 @@
 #!bin/bash
-
-RunFile=${AMSCore}/prod/vdev/YiProdNtuple
+RunFile=${AMSCore}/subj/template/YiSlcNtuple
 DataType=ISS
 Stream=list/flist.iss.B950.pass6
 GroupId=0

@@ -10,8 +10,8 @@
 
 #include <iostream>
 #include <vector>
-#include <string>
-#include "TObject.h"
+#include <TObject.h>
+#include <TString.h>
 
 // RunTagInfo
 class RunTagInfo : public TObject {
@@ -25,7 +25,7 @@ class RunTagInfo : public TObject {
 			eventLT = 0;
 			numOfSelEvent = 0;
 			numOfTrgEvent = 0;
-			file.clear();
+			//file.clear();
 			
 			dateUTC = 0;
 			timeUTC = 0;
@@ -33,16 +33,16 @@ class RunTagInfo : public TObject {
 
 	public :
 		UInt_t run;
-		UInt_t eventFT;                 // first trigger event
-		UInt_t eventLT;                 // last trigger event
-		UInt_t numOfSelEvent;           // number of select  events
-		UInt_t numOfTrgEvent;           // number of trigger events
-		std::vector<std::string> file;  // file list
+		UInt_t eventFT;            // first trigger event
+		UInt_t eventLT;            // last trigger event
+		UInt_t numOfSelEvent;      // number of select  events
+		UInt_t numOfTrgEvent;      // number of trigger events
+		std::vector<TString> file; // file list
 
-		UInt_t  dateUTC;                // UTC date
-		UInt_t  timeUTC;                // UTC time
+		UInt_t  dateUTC;           // UTC date
+		UInt_t  timeUTC;           // UTC time
 
-	ClassDef(RunTagInfo, 5)
+	ClassDef(RunTagInfo, 6)
 };
 
 

@@ -22,6 +22,7 @@
 #include <cstdio>
 
 // ROOT library
+#include <TString.h>
 #include <TROOT.h>
 #include <TFile.h>
 #include <TTree.h>
@@ -395,7 +396,7 @@ class YiNtuple {
 		inline void init();
 		inline void setOutputFile(const std::string& file_name = "YiNtuple.root", const std::string& path = ".", bool isMultiTree = false);
 		void readDataFrom(const std::string& file_list = "fileList.txt", Long64_t group_id = 0, Long64_t group_size = -1);
-    void saveInputFileList(TFile * file);
+        void saveInputFileList(TFile * file);
 		void loopEventChain();
 
 	protected :
