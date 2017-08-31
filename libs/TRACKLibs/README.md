@@ -18,9 +18,31 @@
 
 # Propagation Testing
 
+## Lorentz Force
+Magnetic Field:
+```
+1) None
+2) Uniform, 1 kGaus in +X
+```
+Particle Beam:
+```
+Electron & Proton
+Position(0, 0, 55cm)
+Direction(0, 0, -1)
+Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
+```
+Measurement Plane: (Silicon Detector)
+```
+Size(x y z := 100cm 100cm 300micrometre)
+Central Location(X Y Z := 0cm 0cm (50cm 0cm))
+```
+Variables: (Particle Information)
+```
+Position
+Momentum
+```
 
 ## Lorentz Force
-
 Magnetic Field: <br />
 Uniform, 1 kGaus <br />
 Particle Beam: <br />
