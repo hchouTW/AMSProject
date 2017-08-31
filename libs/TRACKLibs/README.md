@@ -16,29 +16,36 @@
 
 
 
-# Propagation Testing
 
-## Lorentz Force
+
+
+
+
+
+# Testing
+
+## Propagation Testing
+
+### Lorentz Force
 
 Particle Beam:
 ```
 Amount(1M)
 Electron & Proton & Helium
-Position(0, 0, 55cm)
+Position(0, 0, 60cm)
 Direction(0, 0, -1)
 Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
 ```
 
 Magnetic Field:
 ```
-None
 Uniform, 1 kGaus in +X
 ```
 
 Measurement Plane: (Silicon Detector)
 ```
 Size(x y z := 100cm 100cm 300micrometre)
-Central Location(X Y Z := 0cm 0cm (50cm 0cm))
+Central Location(X Y Z := 0cm 0cm (55cm 50cm 0cm))
 ```
 
 Variables: (Particle Information)
@@ -47,15 +54,15 @@ Position (mm)
 Momentum (MeV)
 ```
 
-## Multiple Scattering & Energy Loss
+### Multiple Scattering & Energy Loss
 
 Particle Beam:
 ```
 Amount(1M)
 Electron & Proton & Helium
-Position(0, 0, 55cm)
+Position(0, 0, 60cm)
 Direction(0, 0, -1)
-Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
+Momentum(0.3GeV 0.5GeV 1GeV 3GeV 5GeV 10GeV 30GeV 50GeV 100GeV 300GeV 500GeV 1000GeV)
 ```
 
 Magnetic Field:
@@ -65,14 +72,14 @@ None
 
 Material Box: (Carbon)
 ```
-Size(x y z := 100cm 100cm 3cm)
-Central Location(X Y Z := 0cm 0cm 52cm)
+Size(x y z := 100cm 100cm 6cm)
+Central Location(X Y Z := 0cm 0cm 54cm)
 ```
 
 Measurement Plane: (Silicon Detector)
 ```
 Size(x y z := 100cm 100cm 300micrometre)
-Central Location(X Y Z := 0cm 0cm (54cm 50cm 0cm))
+Central Location(X Y Z := 0cm 0cm (58cm 50cm 0cm))
 ```
 
 Variables: (Particle Information)
@@ -81,18 +88,58 @@ Position (mm)
 Momentum (MeV)
 ```
 
-# Track Fitting Testing
+## Track Fitting Testing
 
-Magnetic Field: <br />
-(None) (Uniform, 1 kGaus) (Gaussian, 1kGaus 0cm 40cm) <br />
-Particle Beam: <br />
-(Electron Proton Helium Carbon), Position(0, 0, 120cm), Direction(0, 0, -1), Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 300GeV 800GeV 1000GeV 2000GeV 4000GeV 8000GeV) <br />
-Measurement Plane: <br />
-Silicon Detector, Size(x y z := 100cm 100cm 300micrometre), Central Location(X Y Z := 0cm 0cm (110cm 100cm 32cm 28cm 2cm -2cm =28cm -32cm -100cm -110cm)) <br />
-Material Box: <br />
-(None) (Carbon, Size(x y z := 100cm 100cm 8cm), Central Location(X Y Z := 0cm 0cm (60cm -60cm))) <br />
-Measurement Variables: <br />
-Particle Information (position direction momentum) <br />
+Particle Beam:
+```
+Amount(1M)
+Electron & Proton & Helium
+Position(0, 0, 110cm)
+Direction(0, 0, -1)
+Momentum(0.3GeV 0.5GeV 1GeV  3GeV 5GeV 10GeV  30GeV 50GeV 100GeV 300GeV 500GeV 1000GeV 5000GeV 10000GeV)
+```
+
+Magnetic Field:
+```
+Uniform, 1 kGaus in +X
+```
+
+Material Box: (Carbon)
+```
+Size(x y z := 100cm 100cm 8cm)
+Central Location(X Y Z := 0cm 0cm (65cm -65cm))
+```
+
+Material Box: (Aluminium)
+```
+Size(x y z := 100cm 100cm 3cm)
+Central Location(X Y Z := 0cm 0cm (25cm 0cm -25cm))
+```
+
+Measurement Plane: (Silicon Detector)
+```
+Size(x y z := 100cm 100cm 300micrometre)
+Central Location(X Y Z := 0cm 0cm (100cm 70cm 60cm 27cm 23cm 2cm -2cm -23cm -27cm -60cm -70cm -100cm))
+```
+
+Variables: (Particle Information)
+```
+Position (mm)
+Momentum (MeV)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## Special Environment Testing
@@ -100,24 +147,6 @@ Particle Information (position direction momentum) <br />
 ### Position Measurement
 Resultion Models: <br />
 (Single Gaussian, ) (Doublet Gaussion, ) <br />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Monte Carlo
 
