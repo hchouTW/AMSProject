@@ -43,8 +43,8 @@ Central Location(X Y Z := 0cm 0cm (50cm 0cm))
 
 Variables: (Particle Information)
 ```
-Position
-Momentum
+Position (mm)
+Momentum (MeV)
 ```
 
 ## Multiple Scattering & Energy Loss
@@ -77,8 +77,8 @@ Central Location(X Y Z := 0cm 0cm (54cm 50cm 0cm))
 
 Variables: (Particle Information)
 ```
-Position
-Momentum
+Position (mm)
+Momentum (MeV)
 ```
 
 # Track Fitting Testing
