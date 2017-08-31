@@ -22,7 +22,7 @@
 
 
 
-# Testing
+# Program Testing
 
 ## Propagation Testing
 
@@ -34,7 +34,9 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
-Momentum(0.1GeV 0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
+
+Momentum(GeV) (14 sets)
+0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  100  500  1000
 ```
 
 Magnetic Field:
@@ -54,6 +56,11 @@ Position (mm)
 Momentum (MeV)
 ```
 
+#### Example
+```
+codes
+```
+
 ### Multiple Scattering & Energy Loss
 
 Particle Beam:
@@ -62,7 +69,9 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
-Momentum(0.1GeV 0.3GeV 0.5GeV 0.8GeV 1GeV 3GeV 5GeV 8GeV 10GeV 30GeV 50GeV 80GeV 100GeV 500GeV 1000GeV)
+
+Momentum(GeV)  (18 sets)
+0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  80  100  300  500  800  1000  3000
 ```
 
 Magnetic Field:
@@ -88,6 +97,11 @@ Position (mm)
 Momentum (MeV)
 ```
 
+#### Example
+```
+codes
+```
+
 ## Track Fitting Testing
 
 Particle Beam:
@@ -96,7 +110,9 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 110cm)
 Direction(0, 0, -1)
-Momentum(0.1GeV 0.3GeV 0.5GeV 0.8GeV 1GeV 3GeV 5GeV 8GeV 10GeV 30GeV 50GeV 80GeV 100GeV 300GeV 500GeV 1000GeV 5000GeV 10000GeV)
+
+Momentum(GeV) (21 sets)
+0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  80  100  300  500  800  1000  3000  5000  8000  10000
 ```
 
 Magnetic Field:
@@ -128,97 +144,9 @@ Position (mm)
 Momentum (MeV)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#### Example
+```
+codes
+```
 
 ## Special Environment Testing
-
-### Position Measurement
-Resultion Models: <br />
-(Single Gaussian, ) (Doublet Gaussion, ) <br />
-
-# Monte Carlo
-
-## Silicon Detector (x * y * z := 150cm * 150cm * 300 micrometre)
-### Central Position
-#### Layer    : Position (x y z)
-
-Layer 01 : (0 0  160)      (AMS)  
-Layer 02 : (0 0  155)      (Test on 2 extenal layers)  
-Layer 03 : (0 0  55)       (AMS)  
-Layer 04 : (0 0  30)       (AMS)  
-Layer 05 : (0 0  25)       (AMS)  
-Layer 06 : (0 0   2.5)     (AMS)  
-Layer 07 : (0 0  -2.5)     (AMS)  
-Layer 08 : (0 0 -25)       (AMS)  
-Layer 09 : (0 0 -30)       (AMS)  
-Layer 10 : (0 0 -135)      (AMS)  
-Layer 11 : (0 0 -140)      (Test on 2 extenal layers)  
-
-## Aluminium (x * y * z := 150cm * 150cm * 4cm)
-### Central Position
-#### Layer   : Position (x y z)
-
-Layer01 : (0 0  157.5)  
-Layer02 : (0 0   70.0)  
-Layer03 : (0 0   27.5)  
-Layer04 : (0 0    0.0)  
-Layer05 : (0 0  -27.5)  
-Layer06 : (0 0  -70.0)  
-Layer07 : (0 0 -137.5)  
-
-## Carbon (x * y * z := 150cm * 150cm * 10cm)
-### Central Position
-#### Layer   : Position (x y z)
-
-Layer01 : (0 0  62)  
-Layer02 : (0 0 -62)  
-
-## Magnetic Field B (unit : 1 T = 10000 Gauss) (Only have X-Component)
-#### Uniform Model
-
-Bx(unit : T) = 0.10  
-
-#### Gaussian Model
-
-Bx(unit : T) = 0.15 * Exp(-0.5 * (z/50cm)^2 )
-
-## Trigger
-### Hits are in (Silicon L04 or L05) and (Silicon L08 or L09)
-
-## Particle Generator
-### Initial particles position and direction
-
-Position (x y z) = ((-150 to 150) (-150 to 150) 200) cm  
-Direction (theta phi) = (0~-PI Uniform)  
-
-#### Electron
-Momentum from 0.25 GeV to 2000 GeV
-
-#### Proton
-Momentum from 0.25 GeV to 4000 GeV  
-
-#### Helium
-Momentum from 1.0 GeV to 6000 GeV  
-
-#### Carbon
-Momentum from 3.0 GeV to 12000 GeV  
-
-
-# Template
-## Test on different effect
-### Tow Silicon Layers 
-### Material (Al or C or None)   (1cm 3cm 5cm 10cm 20cm 30cm)  
-### Magnetic Field (Uniform or Without)  
-### (Ionisation enregy loss and/or Multiple-Scattering)
