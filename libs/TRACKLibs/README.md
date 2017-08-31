@@ -34,7 +34,7 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
-Momentum(0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
+Momentum(0.1GeV 0.3GeV 0.5GeV 1GeV 3GeV 10GeV 100GeV 1000GeV)
 ```
 
 Magnetic Field:
@@ -62,7 +62,7 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
-Momentum(0.3GeV 0.5GeV 1GeV 3GeV 5GeV 10GeV 30GeV 50GeV 100GeV 300GeV 500GeV 1000GeV)
+Momentum(0.1GeV 0.3GeV 0.5GeV 0.8GeV 1GeV 3GeV 5GeV 8GeV 10GeV 30GeV 50GeV 80GeV 100GeV 500GeV 1000GeV)
 ```
 
 Magnetic Field:
@@ -96,7 +96,7 @@ Amount(1M)
 Electron & Proton & Helium
 Position(0, 0, 110cm)
 Direction(0, 0, -1)
-Momentum(0.3GeV 0.5GeV 1GeV  3GeV 5GeV 10GeV  30GeV 50GeV 100GeV 300GeV 500GeV 1000GeV 5000GeV 10000GeV)
+Momentum(0.1GeV 0.3GeV 0.5GeV 0.8GeV 1GeV 3GeV 5GeV 8GeV 10GeV 30GeV 50GeV 80GeV 100GeV 300GeV 500GeV 1000GeV 5000GeV 10000GeV)
 ```
 
 Magnetic Field:
