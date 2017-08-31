@@ -112,7 +112,7 @@ Central Location(X Y Z := 0cm 0cm (65cm -65cm))
 
 Material Box: (Aluminium)
 ```
-Size(x y z := 100cm 100cm 3cm)
+Size(x y z := 100cm 100cm 1cm)
 Central Location(X Y Z := 0cm 0cm (25cm 0cm -25cm))
 ```
 
@@ -222,9 +222,3 @@ Momentum from 3.0 GeV to 12000 GeV
 ### Material (Al or C or None)   (1cm 3cm 5cm 10cm 20cm 30cm)  
 ### Magnetic Field (Uniform or Without)  
 ### (Ionisation enregy loss and/or Multiple-Scattering)
-
-
-
-
-
-
