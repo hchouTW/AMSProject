@@ -1,6 +1,5 @@
 -include $(AMSMKfile)
 
-#TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/vdev
 TagetDir = $(AMSCoreProd)/vdev
 
 all :

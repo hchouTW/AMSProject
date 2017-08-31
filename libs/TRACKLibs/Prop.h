@@ -251,10 +251,10 @@ class PropMgnt {
     
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
-        static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
-        static constexpr Double_t TUNE_STEP  = 2.0e-4; // (du threshold)
-        static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  5.0;   // (ds threshold)
+        static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
+        static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
+        static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
         static constexpr Double_t TUNE_MAT   =  0.2;   // (number radiation length threshold)
 
         static constexpr Long64_t LMTU_ITER = 100;

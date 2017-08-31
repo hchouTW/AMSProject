@@ -57,6 +57,28 @@ void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t u
     dir_(1) = uy / norm;
     dir_(2) = uz / norm;
 }
+        
+
+void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz) {
+    Double_t norm = std::sqrt(mx * mx + my * my + mz * mz);
+    if (MGNumc::EqualToZero(norm)) {
+        mom_   = MGMath::ZERO;
+        eng_   = part_.mass();
+        bta_   = MGMath::ZERO;
+        gmbta_ = MGMath::ZERO;
+        eta_   = MGMath::ZERO;
+        irig_  = MGMath::ZERO;
+    }
+    else {
+        coo_(0) = cx;
+        coo_(1) = cy;
+        coo_(2) = cz;
+        dir_(0) = mx / norm;
+        dir_(1) = my / norm;
+        dir_(2) = mz / norm;
+        set_mom(norm);
+    }
+}
  
 
 void PhySt::set_mom(Double_t mom, Double_t sign) {

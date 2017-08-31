@@ -238,7 +238,7 @@ Double_t PropMgnt::GetPropStep(const PhySt& part, Short_t ward, Bool_t mat) {
     Double_t pred_step = TUNE_STEP / curve;
     if (MGNumc::Compare(pred_step, LMTU_STEP) > 0) pred_step = LMTU_STEP;
     if (MGNumc::Compare(pred_step, LMTL_STEP) < 0) pred_step = LMTL_STEP;
-    
+
     // Predict
     SVecD<3>&& pred_coo = part.coo() + (sign * pred_step) * part.dir();
     Double_t pred_mag = LA::Mag(MagMgnt::Get(pred_coo)());

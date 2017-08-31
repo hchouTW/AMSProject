@@ -1,5 +1,44 @@
 #ifndef __CPPLibs_MGConfig_H__
 #define __CPPLibs_MGConfig_H__
+
+
+namespace MGConfig {
+
+
+class JobOpt {
+    public :
+        JobOpt(int argc, char* argv[]);
+        ~JobOpt() {}
+        
+        const bool& operator() () const { return succ_; }
+
+        const std::string& type() const { return type_; }
+        const std::string& ipath() const { return ipath_; }
+        const std::string& opath() const { return opath_; }
+        
+        const long& gi() const { return gi_; }
+        const long& gs() const { return gs_; }
+
+        const std::vector<std::string> flist() const { return flist_; }
+
+    private :
+        bool        succ_;
+        std::string type_;
+        std::string ipath_;
+        std::string opath_;
+        long        gi_;
+        long        gs_;
+        
+        std::vector<std::string> flist_;
+};
+
+
+} // namesapce MGConfig
+
+
+
+
+
 /*
 
 // 4-> : Title variable type value

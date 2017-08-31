@@ -16,6 +16,8 @@ class PhySt {
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx = 0., Double_t dy = 0., Double_t dz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t dz = -1.);
         void set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Short_t signz = -1);
+        
+        void set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz);
 
         void set_mom(Double_t mom, Double_t sign = 0.);
         

@@ -311,23 +311,29 @@ class HitRICHInfo : public TObject {
 
 		void init() {
             status = 0;
+            cross = false;
 			channel = -1;
             npe = -1;
             
 			std::fill_n(coo, 3, 0);
             dist = -1.;
             dtha = -1.;
+            dphi = -1.;
             rtha = -1.;
+            rphi = -1.;
 		}
 
 	public :
         Short_t status;
+        Bool_t  cross;   // cross
 		Short_t channel; // channel = 16 * PMT + pixel
         Float_t npe;     // ADC counts above the pedestal/gain of the channel.
 		Float_t coo[3];  // x, y, z
         Float_t dist;    // distance to particle
         Float_t dtha;    // direct theta
+        Float_t dphi;    // direct phi (pmt)
         Float_t rtha;    // reflect theta
+        Float_t rphi;    // reflect phi (pmt)
 
 	ClassDef(HitRICHInfo, 1)
 };
@@ -416,9 +422,6 @@ class TrackInfo : public TObject {
 			QL1 = -1;
 			QL9 = -1;
 			
-			std::fill_n(stateUBD, 6, 0);
-			std::fill_n(stateLBD, 6, 0);
-			
 			std::fill_n(status[0], 2 * 4, false);
 			std::fill_n(rigidity[0], 2 * 4, 0);
 			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
@@ -450,10 +453,6 @@ class TrackInfo : public TObject {
 		Float_t QL1;
 		Float_t QL2;
 		Float_t QL9;
-
-		// Boundary Status at |Z| = 50cm (based on inner track)
-		Float_t stateUBD[6]; // upper
-		Float_t stateLBD[6]; // lower
 
 		// Algorithm     (CHOUTKO, CHIKANIANF)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
@@ -886,8 +885,8 @@ class RICH : public TObject {
 
             hits.clear();
 		
-			//std::fill_n(numOfCrossHit, 2, 0);
-			//std::fill_n(numOfRingHit[0], 5*3, 0);
+			std::fill_n(numOfCrossHit, 2, 0);
+			std::fill_n(numOfRingHit[0], 5*3, 0);
 
 			status = false;
 			isGoodRecon = false;
@@ -913,8 +912,8 @@ class RICH : public TObject {
 		// Rich Hits
         std::vector<HitRICHInfo> hits;
 
-		//Short_t numOfCrossHit[2];   // CrossHit[selected, others]
-		//Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
+		Short_t numOfCrossHit[2];   // CrossHit[selected, others]
+		Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
                                     // [0] electron
                                     // [1] pion
                                     // [2] kaon
@@ -927,7 +926,7 @@ class RICH : public TObject {
 		Float_t beta;
 		Float_t Q;
 
-	ClassDef(RICH, 5)
+	ClassDef(RICH, 6)
 };
 
 

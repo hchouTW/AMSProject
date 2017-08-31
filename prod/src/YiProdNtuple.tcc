@@ -1049,25 +1049,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
 
-		{
-			AMSPoint coo;
-			AMSDir   dir;
-			trtk->Interpolate( 50., coo, dir, fitidInn);
-			track.stateUBD[0] = coo[0];
-			track.stateUBD[1] = coo[1];
-			track.stateUBD[2] = coo[2];
-			track.stateUBD[3] = dir[0];
-			track.stateUBD[4] = dir[1];
-			track.stateUBD[5] = dir[2];
-			trtk->Interpolate(-50., coo, dir, fitidInn);
-			track.stateLBD[0] = coo[0];
-			track.stateLBD[1] = coo[1];
-			track.stateLBD[2] = coo[2];
-			track.stateLBD[3] = dir[0];
-			track.stateLBD[4] = dir[1];
-			track.stateLBD[5] = dir[2];
-		}
-
 		const short _nalgo = 2;
 		const short _algo[_nalgo] = { 1, 3 };
 		const short _npatt = 4;
@@ -1902,7 +1883,26 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	const int nBadTile = 5;
 	//const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
 	const int kBadTile_MgntTile[nBadTile] = { 13, 23, 58, 86, 91 }; // tiles with bad beta reconstruction
-	
+
+    // light guide : channel id
+    //  12 | 13 | 14 | 15
+    //  -----------------
+    //   8 |  9 | 10 | 11
+    //  -----------------
+    //   4 |  5 |  6 |  7
+    //  -----------------
+    //   0 |  1 |  2 |  3
+    const float lg_rfrIndex      = 1.49; // light guide refractive index
+    //const float lg_height        = 3.00;
+    //const float lg_top_length    = 3.40;
+    //const float lg_bottom_length = 1.77;
+
+    // noise npe
+    const float noise_npe = 0.4;
+
+    // Track Info
+    double trRigAbs = 0;
+
 	// RichVeto - start
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
@@ -1982,10 +1982,10 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		float thetas[npart] = { -1, -1, -1, -1, -1 };
 		float numOfExpPE[npart] = {0, 0, 0, 0, 0 };
 		std::fill_n(numOfExpPE, npart, -1);
-		double rigAbs = std::fabs(trtk->GetRigidity(fitid));
+		trRigAbs = std::fabs(trtk->GetRigidity(fitid));
 		for (int it = 0; it < npart; ++it) {
 			double massChrg = mass[it] / chrg[it];
-			double beta = 1. / std::sqrt((massChrg * massChrg / rigAbs / rigAbs) + 1); 
+			double beta = 1. / std::sqrt((massChrg * massChrg / trRigAbs / trRigAbs) + 1); 
 			double cos  = 1. / (rfrIndex * beta);
 			//betas[it] = beta;
 			thetas[it] = (MGNumc::Compare(cos, 1.0) <= 0) ? std::acos(cos) : -1.0;
@@ -2025,12 +2025,17 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			
             // dtha
             double dtha = -1.;
+            double dphi = -1.;
 			{
 				AMSDir vacph(coo - ems);
-				double theta = TMath::Pi() - std::asin(std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
-				double phi   = vacph.getphi();
-				AMSDir emsph(theta, phi);
-				dtha = 2.0*std::asin(0.5*oth.dist(emsph));
+                double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
+                if (rdtha < 1.0) {
+				    double theta = TMath::Pi() - std::asin(rdtha);
+				    double phi   = vacph.getphi();
+				    AMSDir emsph(theta, phi);
+				    dtha = 2.0*std::asin(0.5*oth.dist(emsph));
+                    dphi = std::asin(std::sin(TMath::Pi() - vacph.gettheta()) / lg_rfrIndex);
+                }
 			}
 			
 			// Calculate reflective point
@@ -2072,6 +2077,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			// bisector parameter : bt (initial value 0.5)
 			//     bt = elen / (elen + hlen)
             double rtha = -1.;
+            double rphi = -1.;
 			{
 				const double mParZ = -1.489637e-01;
 				const double mParR = -1.00;
@@ -2091,6 +2097,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 				double rflz = 0;
 				double bt = initbt;
 				double fineph[3] = { 0, 0, 0 };
+                double pmtph[3] = { 0, 0, 0 };
 
 				const int MaxIter = 30;
 				const double ToleranceLimit = 0.005;
@@ -2129,6 +2136,9 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 						fineph[0] = (fpnt[0] - epnt[0]);
 						fineph[1] = (fpnt[1] - epnt[1]);
 						fineph[2] = (fpnt[2] - epnt[2]);
+                        pmtph[0]  = (hpnt[0] - fpnt[0]);
+                        pmtph[1]  = (hpnt[1] - fpnt[1]);
+                        pmtph[2]  = (hpnt[2] - fpnt[2]);
 					}
 					else bt = predbt;
 				}
@@ -2136,15 +2146,23 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
                 bool success = (tolerance < ToleranceLimit && rflz < epnt[2] && rflz > hpnt[2]);
 				if (success) {
 					AMSDir vacph(fineph[0], fineph[1], fineph[2]);
-					double theta = TMath::Pi() - std::asin(std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
-					double phi   = vacph.getphi();
-					AMSDir emsph(theta, phi);
-					rtha = 2.0*std::asin(0.5*oth.dist(emsph));
+                    double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
+                    if (rdtha < 1.0) {
+					    double theta = TMath::Pi() - std::asin(rdtha);
+					    double phi   = vacph.getphi();
+					    AMSDir emsph(theta, phi);
+					    rtha = 2.0*std::asin(0.5*oth.dist(emsph));
+
+                        AMSDir revph(pmtph[0], pmtph[1], pmtph[2]);
+                        rphi = std::asin(std::sin(TMath::Pi() - revph.gettheta()) / lg_rfrIndex);
+                    }
+                    else success = false;
 				}
 			} // rtha
 
             HitRICHInfo hinfo;
             hinfo.status  = hit->Status;
+            hinfo.cross   = hit->IsCrossed();
 			hinfo.channel = hit->Channel;
             hinfo.npe     = hit->Npe;
 			hinfo.coo[0]  = hit->Coo[0];
@@ -2152,12 +2170,62 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			hinfo.coo[2]  = hit->Coo[2];
             hinfo.dist = dist;
             hinfo.dtha = dtha;
+            hinfo.dphi = dphi;
             hinfo.rtha = rtha;
+            hinfo.rphi = rphi;
 
             fRich.hits.push_back(hinfo);
         } // hit - for loop
 	    
         std::sort(fRich.hits.begin(), fRich.hits.end(), HitRICHInfo_sort());
+    }
+
+    if (fRich.hits.size() != 0) {
+		const int    npart = 5;
+        AMSPoint ems_coo(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
+        AMSPoint pmt_coo(fRich.receiving[0], fRich.receiving[1], fRich.receiving[2]);
+		const double thetaLimit   = std::acos(1./fRich.rfrIndex) * 1.05;
+		double       linedist     = ems_coo.dist(pmt_coo);
+		double       mscatDirFluc = 0.0136 / ((trRigAbs>0.3)?trRigAbs:0.3);
+		double       mscatCooFluc = mscatDirFluc * linedist;
+		const double measDirFluc  = 0.01;
+		const double measCooFluc  = 1.0;
+		double       dirSgm       = 3.5 * std::sqrt(mscatDirFluc * mscatDirFluc + measDirFluc * measDirFluc);
+		double       cooSgm       = 5.0 * std::sqrt(mscatCooFluc * mscatCooFluc + measCooFluc * measCooFluc);
+   
+		int countCross[2] = { 0, 0 };
+		int countCKV[5][3];
+		std::fill_n(countCKV[0], 5*3, 0);
+        for (auto&& hit : fRich.hits) {
+            if (hit.npe < noise_npe) continue;
+
+            if (hit.cross) {
+                if (hit.dist < cooSgm) countCross[0]++;
+                else                   countCross[1]++;
+            }
+            else {
+				bool isInsideDIR = (hit.dtha > 0.0 && hit.dtha < thetaLimit);
+				bool isInsideRFL = (hit.rtha > 0.0 && hit.rtha < thetaLimit);
+				bool isOutside = (!isInsideDIR && !isInsideRFL);
+
+				for (int it = 0; it < npart; ++it) {
+					bool isThetaDIR = (std::fabs(hit.dtha-fRich.theta[it]) < dirSgm);
+					bool isThetaRFL = (std::fabs(hit.rtha-fRich.theta[it]) < dirSgm);
+					bool isTheta = (isThetaDIR || isThetaRFL);
+					if      (isTheta)   countCKV[it][0]++;
+					else if (isOutside) countCKV[it][2]++;
+					else                countCKV[it][1]++;
+				}
+            }
+        }
+		
+        fRich.numOfCrossHit[0] = countCross[0];
+		fRich.numOfCrossHit[1] = countCross[1];
+		for (int it = 0; it < npart; ++it) {
+			fRich.numOfRingHit[it][0] = countCKV[it][0];
+			fRich.numOfRingHit[it][1] = countCKV[it][1];
+			fRich.numOfRingHit[it][2] = countCKV[it][2];
+		}
     }
 	// RichVeto - end
     //
@@ -2166,8 +2234,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
     //
     //
     //
-
-    /* 
+    /*
 	while (fRich.kindOfRad >= 0) {
 		const double thetaLimit   = std::acos(1./rfrIndex) * 1.05;
 		double       linedist     = ems_coo.dist(pmt_coo);
@@ -2333,8 +2400,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 		
 		break;
-	}
-    */
+	}*/
 	// RichVeto - end
 	
 	// official RichRingR - start
@@ -2693,7 +2759,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	
 	// ~2~ (Based on TrTrack)
 	if (event->NTrTrack() != 1) return -2001;
-	
+
 	// ~3~ (Based on TrdTrack)
 	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
@@ -2734,7 +2800,8 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		if (hasXY) numOfTrInX++;
 	}
 	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
-	
+/*    
+	// ~7~ (Based on Track Pattern)
 	const unsigned short TrPtL1  =   1;
 	const unsigned short TrPtL2  =   2;
 	const unsigned short TrPtL9  = 256;
@@ -2745,7 +2812,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	bool isTrPt = (isTrIn || isTrL1 || isTrL9 || isTrFs);
 	if (!isTrPt) return -6003;
 
-	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
+	// ~8~ (Only for Antiproton to Proton Flux Ratio Study)
 	bool isAppStudy = true;
 	if (isAppStudy) {
 		//isAppStudy = EventBase::checkEventMode(EventBase::ISS);
@@ -2778,11 +2845,12 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 			else EventList::Weight *= (1. / scaleProb);
 		}
 	}
-	
-	// ~8~ (Based on RTI)
+*/	
+	// ~9~ (Based on RTI)
 	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
 		if (!rti.processEvent(event)) return -8001;
-
+        
+        /*
 		double minStormer = *std::min_element(rti.fRti.cutoffStormer, rti.fRti.cutoffStormer+4);
 		double minIGRF    = *std::min_element(rti.fRti.cutoffIGRF, rti.fRti.cutoffIGRF+4);
 		double minCf      =  std::min(minStormer, minIGRF);
@@ -2800,9 +2868,10 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 
 		const double minFact = 1.2;
 		if ( hasTr && (maxRig < (minFact * minCf)) ) return -8002;
+        */
 	}
 	
-	//--------------------------//
+    //--------------------------//
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -9999;

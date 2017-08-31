@@ -1,8 +1,5 @@
 -include $(AMSMKfile)
 
-#ClassLib = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/production/V.2017Jul27/lib/ClassDef.so
-#TagetDir = /afs/cern.ch/user/h/hchou/public/BSUB/submit/user/hchou/core/analysis/template
-
 ClassLib = $(AMSCoreProd)/vdev/lib/ClassDef.so
 TagetDir = $(AMSCoreSubj)/template
 
