@@ -58,8 +58,16 @@ Momentum (MeV)
 ```
 
 #### Example
-```
-codes
+```c++
+double tagz;
+double cx, cy, cz;
+double mx, my, mz;
+
+PhySt part(PartType::Proton);
+part.set_state(cx, cy, cz, mx, my, mz);
+
+PropMgnt::PropToZ(tagz, part);
+part.print();
 ```
 
 ### Multiple Scattering & Energy Loss
