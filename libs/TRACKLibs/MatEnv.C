@@ -379,6 +379,130 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
 }
 
 
+#ifdef __HAS_TESTING__
+Bool_t MatGeoBoxTest::CreateMatGeoBox() {
+    std::string dir_path = "/data3/hchou/AMSData/MatTest";
+    
+    MatGeoBoxCreator creator_TRL1(
+            MatTest::TRL1_N.at(0), MatTest::TRL1_MIN.at(0), MatTest::TRL1_MAX.at(0),
+            MatTest::TRL1_N.at(1), MatTest::TRL1_MIN.at(1), MatTest::TRL1_MAX.at(1),
+            MatTest::TRL1_N.at(2), MatTest::TRL1_MIN.at(2), MatTest::TRL1_MAX.at(2),
+            CSTR_FMT("%s/TRL1.bin", dir_path.c_str())
+        );
+    
+    MatGeoBoxCreator creator_TRL2(
+            MatTest::TRL2_N.at(0), MatTest::TRL2_MIN.at(0), MatTest::TRL2_MAX.at(0),
+            MatTest::TRL2_N.at(1), MatTest::TRL2_MIN.at(1), MatTest::TRL2_MAX.at(1),
+            MatTest::TRL2_N.at(2), MatTest::TRL2_MIN.at(2), MatTest::TRL2_MAX.at(2),
+            CSTR_FMT("%s/TRL2.bin", dir_path.c_str())
+        );
+    
+    bool  tr_elm[9] = { 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+    float tr_den[9] = { 0, 0, 0, 0, 0, 0, 0, 0.083, 0 };
+    creator_TRL1.save_and_close(tr_elm, tr_den);
+    creator_TRL2.save_and_close(tr_elm, tr_den);
+
+    return true;
+}
+
+
+Bool_t MatGeoBoxTest::Load() {
+    if (is_load_) return is_load_;
+    std::string g4mat_dir_path = "/data3/hchou/AMSData/MatTest";
+
+    reader_TRL1_.load(STR_FMT("%s/TRL1.bin", g4mat_dir_path.c_str()));
+    reader_TRL2_.load(STR_FMT("%s/TRL2.bin", g4mat_dir_path.c_str()));
+    
+    reader_.push_back(&reader_TRL1_);
+    reader_.push_back(&reader_TRL2_);
+   
+    is_load_ = true;
+    for (auto&& reader : reader_) {
+        if (!reader->exist()) {
+            is_load_ = false;
+            break;
+        }
+    }
+
+    return is_load_;
+}
+
+
+MatFld MatGeoBoxTest::Get(const SVecD<3>& coo) {
+    if (!Load()) return MatFld();
+
+    Bool_t mat = false;
+    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
+    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
+    Double_t                                   inv_rad_len = 0.0;
+
+    for (auto&& reader : reader_) {
+        if (!reader->is_in_box(coo)) continue;
+        MatFld&& mfld = reader->get(coo);
+        if (!mfld()) continue;
+
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!mfld.elm().at(it)) continue;
+            elm.at(it) = true;
+            den.at(it) += mfld.den().at(it);
+        }
+        inv_rad_len += mfld.inv_rad_len();
+        mat = true;
+    }
+
+    if (mat) return MatFld(mat, elm, den, inv_rad_len);
+    else     return MatFld();
+}
+
+
+MatFld MatGeoBoxTest::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
+    if (!Load()) return MatFld();
+    
+    Double_t real_len = LA::Mag(wcoo - vcoo);
+    if (MGNumc::EqualToZero(real_len)) return Get(vcoo);
+    
+    Bool_t                                     mat = false;
+    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
+    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
+    Double_t                                   inv_rad_len = 0.0;
+    Double_t                                   efft_len = 0.0;
+    Double_t                                   efft = 0.0;
+    Double_t                                   loc = 0.0;
+
+    for (auto&& reader : reader_) {
+        if (!reader->is_cross(vcoo, wcoo)) continue;
+        MatFld&& mfld = reader->get(vcoo, wcoo, is_std);
+        if (!mfld()) continue;
+        
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!mfld.elm().at(it)) continue;
+            elm.at(it) = true;
+            den.at(it) += (mfld.efft_len() * mfld.den().at(it));
+        }
+        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
+        loc         += mfld.loc() * num_rad_len;
+        inv_rad_len += num_rad_len;
+        efft_len    += mfld.efft_len();
+        
+        mat = true;
+    }
+
+    if (mat && !MGNumc::EqualToZero(efft_len)) {
+        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+            if (!elm.at(it)) continue;
+            den.at(it) = (den.at(it) / efft_len);
+        }
+        loc         = (loc / inv_rad_len);
+        inv_rad_len = (inv_rad_len / efft_len);
+        efft = (efft_len / real_len);
+
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
+    }
+    else return MatFld(real_len);
+}
+#endif // __HAS_TESTING__
+
+
 #ifdef __HAS_AMS_OFFICE_LIBS__
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     std::string g4mat_file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/g4mat_AMS02.root";
@@ -715,6 +839,9 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
 
 
 MatFld MatMgnt::Get(const SVecD<3>& coo) {
+#ifdef __HAS_TESTING__
+    return MatGeoBoxTest::Get(coo);
+#endif // __HAS_TESTING__
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(coo);
 #else
@@ -725,6 +852,9 @@ MatFld MatMgnt::Get(const SVecD<3>& coo) {
     
 
 MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
+#ifdef __HAS_TESTING__
+    return MatGeoBoxTest::Get(vcoo, wcoo, is_std);
+#endif // __HAS_TESTING__
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
 #else
@@ -737,6 +867,9 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
     const SVecD<3>&  vcoo = part.coo();
     SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
 
+#ifdef __HAS_TESTING__
+    return MatGeoBoxTest::Get(vcoo, wcoo, is_std);
+#endif // __HAS_TESTING__
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
 #else

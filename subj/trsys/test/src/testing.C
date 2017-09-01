@@ -8,12 +8,12 @@ int main(int argc, char * argv[]) {
     
     TChain * chain = new TChain("Ntuple");
     
-    //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.3GeV_990k.root");
+    chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.3GeV_990k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.5GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_1GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_10GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_100GeV_1000k.root");
-    chain->Add("/data3/hchou/AMSData/Lorentz/e-_0.3GeV_1000k.root");
+    //chain->Add("/data3/hchou/AMSData/Lorentz/e-_0.3GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/e-_100GeV_1000k.root");
 
     //MGConfig::JobOpt opt(argc, argv);
@@ -35,12 +35,16 @@ int main(int argc, char * argv[]) {
 
     TH1D * hx = new TH1D("hx", "hx", 400, -0.1, 0.1);
     TH1D * hy = new TH1D("hy", "hy", 400, -0.1, 0.1);
-    TH1D * dx = new TH1D("dx", "dx", 400, -0.01, 0.01);
-    TH1D * dy = new TH1D("dy", "dy", 400, -0.01, 0.01);
+    TH1D * dx = new TH1D("dx", "dx", 400, -0.1, 0.1);
+    TH1D * dy = new TH1D("dy", "dy", 400, -0.1, 0.1);
+    TH1D * rx = new TH1D("rx", "rx", 400, -0.1, 0.1);
+    TH1D * ry = new TH1D("ry", "ry", 400, -0.1, 0.1);
     TH1D * mm = new TH1D("mm", "mm", 400,  0.0, 0.001);
     TH1D * mr = new TH1D("mr", "mr", 400,  0.0, 1.0);
 
 
+    double refcx = 0;
+    double refcy = 0;
     for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
         //if (it > 1) break;
         chain->GetEntry(it++);
@@ -66,10 +70,15 @@ int main(int argc, char * argv[]) {
         PhySt part(PartType::Electron);
         //part.set_state(0.1*px.at(0), 0.1*py.at(0), 0.1*pz.at(0), 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0));
         part.set_state(0, 0, 55, 0, 0, -0.3);
-        PropMgnt::PropToZ(0.1*pz.at(0), part);
+        if (it<2) PropMgnt::PropToZ(0.1*pz.at(1), part);
+        else      PropMgnt::PropToZWithMC(0.1*pz.at(1), part);
+        if (it < 2) refcx = part.cx();
+        if (it < 2) refcy = part.cy();
 
-        dx->Fill(part.cx()-0.1*px.at(0));
-        dy->Fill(part.cy()-0.1*py.at(0));
+        dx->Fill(part.cx()-0.1*px.at(1));
+        dy->Fill(part.cy()-0.1*py.at(1));
+        rx->Fill(part.cx()-refcx);
+        ry->Fill(part.cy()-refcy);
         
         double mm0 = 0.001 * std::sqrt(mx.at(0) * mx.at(0) + my.at(0) * my.at(0) + mz.at(0) * mz.at(0));
         double mm1 = 0.001 * std::sqrt(mx.at(1) * mx.at(1) + my.at(1) * my.at(1) + mz.at(1) * mz.at(1));
@@ -94,6 +103,8 @@ int main(int argc, char * argv[]) {
     hy->Write();
     dx->Write();
     dy->Write();
+    rx->Write();
+    ry->Write();
     mm->Write();
     mr->Write();
     file->Write();
@@ -102,17 +113,7 @@ int main(int argc, char * argv[]) {
 
 
 
-    bool elm[9] = { 0, 0, 0, 0, 0, 0, 1, 0, 0 };
-    float den[9] = { 0, 0, 0, 0, 0, 0, 0.1, 0, 0 };
-    MatGeoBoxCreator creator(10, -10, 10, 10, -10, 10, 10, -10, 10);
-    creator.save_and_close(elm, den);
-
-    SVecD<3> coo(0, 0, 0);
-    MatGeoBoxReader reader;
-    reader.load("MatGeoBox.bin");
-    MatFld&& mfld = reader.get(coo);
-    mfld.print();
-
+    //MatGeoBoxTest::CreateMatGeoBox();
 
 
 

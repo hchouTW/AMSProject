@@ -176,6 +176,46 @@ class MatGeoBoxReader {
 };
 
 
+#ifdef __HAS_TESTING__
+namespace MatTest {
+    constexpr Long64_t DIM = 3;
+    
+    constexpr std::array<Long64_t, DIM> TRL1_N   {   400,  400,       2 };
+    constexpr std::array<Double_t, DIM> TRL1_MIN {  -100, -100,  49.985 };
+    constexpr std::array<Double_t, DIM> TRL1_MAX {   100,  100,  50.015 };
+    
+    constexpr std::array<Long64_t, DIM> TRL2_N   {   400,  400,      2 };
+    constexpr std::array<Double_t, DIM> TRL2_MIN {  -100, -100, -0.015 };
+    constexpr std::array<Double_t, DIM> TRL2_MAX {   100,  100,  0.015 };
+}
+
+
+class MatGeoBoxTest {
+    public :
+        MatGeoBoxTest() {}
+        ~MatGeoBoxTest() {}
+
+        static Bool_t CreateMatGeoBox();
+
+        static Bool_t Load();
+
+        static MatFld Get(const SVecD<3>& coo);
+        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+
+    private :
+        static Bool_t is_load_;
+        static std::list<MatGeoBoxReader*> reader_;
+        static MatGeoBoxReader reader_TRL1_;
+        static MatGeoBoxReader reader_TRL2_;
+};
+
+Bool_t MatGeoBoxTest::is_load_ = false;
+std::list<MatGeoBoxReader*> MatGeoBoxTest::reader_;
+MatGeoBoxReader MatGeoBoxTest::reader_TRL1_;
+MatGeoBoxReader MatGeoBoxTest::reader_TRL2_;
+#endif // __HAS_TESTING__
+
+
 #ifdef __HAS_AMS_OFFICE_LIBS__
 namespace MatAms {
     constexpr Long64_t DIM = 3;

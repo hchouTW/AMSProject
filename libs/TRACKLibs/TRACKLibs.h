@@ -9,6 +9,8 @@ using namespace MGROOT;
 //#include "MgntRecon.h"
 //#include "MgntRecon.C"
 
+#define __HAS_TESTING__
+
 #include "PartInfo.h"
 #include "PartInfo.C"
 #include "PhySt.h"
