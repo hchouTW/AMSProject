@@ -970,6 +970,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part = std::sqrt(eta * eta + MGMath::ONE);
     Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (eta / mfld.real_len());
+
     return mscat_sgm;
 }
 

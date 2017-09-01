@@ -42,6 +42,8 @@ int main(int argc, char * argv[]) {
     TH1D * mm = new TH1D("mm", "mm", 400,  0.0, 0.001);
     TH1D * mr = new TH1D("mr", "mr", 400,  0.0, 1.0);
 
+    //static double time = 0;
+    //static long cnt = 0;
 
     double refcx = 0;
     double refcy = 0;
@@ -63,21 +65,53 @@ int main(int argc, char * argv[]) {
         //    (pos_y->size() ? pos_y->at(0) : 0), (mom_y->size() ? mom_y->at(0) : 0)
         //);
         if (px.size() < 2) continue;
-        hx->Fill(0.1*px.at(0));
-        hy->Fill(0.1*py.at(0));
+        //hx->Fill(0.1*px.at(0));
+        //hy->Fill(0.1*py.at(0));
        
         PhySt part(PartType::Proton);
+        /*
         //PhySt part(PartType::Electron);
         //part.set_state(0.1*px.at(0), 0.1*py.at(0), 0.1*pz.at(0), 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0));
         if (it < 2) {
             COUT("MOM1 %8.2f %8.2f %8.2f\n", 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0)); 
             COUT("MOM2 %8.2f %8.2f %8.2f\n", 0.001*mx.at(1), 0.001*my.at(1), 0.001*mz.at(1)); 
         }
+        */
         //
-        part.set_state(0, 0, 55, 0, 0, 0.001*mz.at(0));
+        part.set_state(0, 0, 55, 0, 0, -0.001*mz.at(0));
+
+        //MGClock::HrsStopwatch sw;
+        //sw.start();
         if (it < 2) PropMgnt::PropToZ(0.1*pz.at(1), part);
-        else        PropMgnt::PropToZWithMC(0.1*pz.at(1), part);
+        else        PropMgnt::PropToZWithMC(0.1*pz.at(1), part, MatArg(true, false));
+        //sw.stop();
+        
+        //part.set_state(0, 0, -1, 0, 0, -0.001*mz.at(0));
+        //if (it < 2) PropMgnt::PropToZ(50, part);
+        //else        PropMgnt::PropToZWithMC(50, part, MatArg(true, false));
+        
+        //part.set_state(0, 0, -1, 0, 0, 0.001*mz.at(0));
+        //if (it < 2) PropMgnt::Prop(-51, part);
+        //else        PropMgnt::PropWithMC(-51, part, MatArg(true, false));
+
+        //part.print();
+        //std::cout << Form("DM %14.8f\n", std::fabs(0.001*mz.at(0))-part.mom());
+
+        //part.set_state(0, 0, 0, 0, 0, 0.001*mz.at(0));
+        ////if (it < 2) PropMgnt::PropToZ(55, part);
+        ////else        PropMgnt::PropToZWithMC(55, part);
+        //PropMgnt::PropToZWithMC(55, part, MatArg(false, false));
+        
+        
+        //time+=sw.time();
+        //if (cnt%100==0) {
+        //    std::cerr << Form("CNT %d TIME %14.8f\n", cnt, time);
+        //    time = 0.;
+        //}
+        //cnt++;
+
         //PropMgnt::PropToZ(0.1*pz.at(1), part);
+        /*
         if (it < 2) refcx = part.cx();
         if (it < 2) refcy = part.cy();
 
@@ -106,6 +140,8 @@ int main(int argc, char * argv[]) {
         if (it < 10) {
             std::cout << Form("%8.2f %8.2f\n", mm0, mm1);
         }
+        */
+        //if (it%10000==0 || it%10000==1) std::cerr << Form("Here %d %s\n", it, MGClock::StdStopwatch::CNow().c_str());
     }
     
 

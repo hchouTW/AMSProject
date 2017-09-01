@@ -373,7 +373,6 @@ Bool_t MatMgnt::is_load_ = false;
 std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 
 
-
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
