@@ -177,7 +177,6 @@ void MatGeoBoxCreator::save_and_close() {
 }
         
 
-// testcode
 void MatGeoBoxCreator::save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]) {
     if (!is_open_) { clear(); return; }
     
@@ -425,80 +424,6 @@ Bool_t MatGeoBoxTest::Load() {
     }
 
     return is_load_;
-}
-
-
-MatFld MatGeoBoxTest::Get(const SVecD<3>& coo) {
-    if (!Load()) return MatFld();
-
-    Bool_t mat = false;
-    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
-    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
-    Double_t                                   inv_rad_len = 0.0;
-
-    for (auto&& reader : reader_) {
-        if (!reader->is_in_box(coo)) continue;
-        MatFld&& mfld = reader->get(coo);
-        if (!mfld()) continue;
-
-        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-            if (!mfld.elm().at(it)) continue;
-            elm.at(it) = true;
-            den.at(it) += mfld.den().at(it);
-        }
-        inv_rad_len += mfld.inv_rad_len();
-        mat = true;
-    }
-
-    if (mat) return MatFld(mat, elm, den, inv_rad_len);
-    else     return MatFld();
-}
-
-
-MatFld MatGeoBoxTest::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
-    if (!Load()) return MatFld();
-    
-    Double_t real_len = LA::Mag(wcoo - vcoo);
-    if (MGNumc::EqualToZero(real_len)) return Get(vcoo);
-    
-    Bool_t                                     mat = false;
-    std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
-    std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
-    Double_t                                   inv_rad_len = 0.0;
-    Double_t                                   efft_len = 0.0;
-    Double_t                                   efft = 0.0;
-    Double_t                                   loc = 0.0;
-
-    for (auto&& reader : reader_) {
-        if (!reader->is_cross(vcoo, wcoo)) continue;
-        MatFld&& mfld = reader->get(vcoo, wcoo, is_std);
-        if (!mfld()) continue;
-        
-        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-            if (!mfld.elm().at(it)) continue;
-            elm.at(it) = true;
-            den.at(it) += (mfld.efft_len() * mfld.den().at(it));
-        }
-        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
-        loc         += mfld.loc() * num_rad_len;
-        inv_rad_len += num_rad_len;
-        efft_len    += mfld.efft_len();
-        
-        mat = true;
-    }
-
-    if (mat && !MGNumc::EqualToZero(efft_len)) {
-        for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-            if (!elm.at(it)) continue;
-            den.at(it) = (den.at(it) / efft_len);
-        }
-        loc         = (loc / inv_rad_len);
-        inv_rad_len = (inv_rad_len / efft_len);
-        efft = (efft_len / real_len);
-
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
-    }
-    else return MatFld(real_len);
 }
 #endif // __HAS_TESTING__
 
@@ -761,9 +686,29 @@ Bool_t MatGeoBoxAms::Load() {
 
     return is_load_;
 }
+#endif // __HAS_AMS_OFFICE_LIBS__
 
 
-MatFld MatGeoBoxAms::Get(const SVecD<3>& coo) {
+Bool_t MatMgnt::Load() {
+    if (is_load_ && reader_ != nullptr) return true;
+    is_load_ = false;
+    reader_ = nullptr;
+
+#ifdef __HAS_TESTING__
+    is_load_ = MatGeoBoxTest::Load();
+    if (is_load_) reader_ = &MatGeoBoxTest::Reader();
+#endif // __HAS_TESTING__
+
+#ifdef __HAS_AMS_OFFICE_LIBS__
+    is_load_ = MatGeoBoxAms::Load();
+    if (is_load_) reader_ = &MatGeoBoxAms::Reader();
+#endif // __HAS_AMS_OFFICE_LIBS__
+    
+    return is_load_;
+};
+
+
+MatFld MatMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MatFld();
 
     Bool_t mat = false;
@@ -771,7 +716,7 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& coo) {
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.0;
 
-    for (auto&& reader : reader_) {
+    for (auto&& reader : *reader_) {
         if (!reader->is_in_box(coo)) continue;
         MatFld&& mfld = reader->get(coo);
         if (!mfld()) continue;
@@ -788,9 +733,9 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& coo) {
     if (mat) return MatFld(mat, elm, den, inv_rad_len);
     else     return MatFld();
 }
+    
 
-
-MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
+MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
     if (!Load()) return MatFld();
     
     Double_t real_len = LA::Mag(wcoo - vcoo);
@@ -804,7 +749,7 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
     Double_t                                   efft = 0.0;
     Double_t                                   loc = 0.0;
 
-    for (auto&& reader : reader_) {
+    for (auto&& reader : *reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
         MatFld&& mfld = reader->get(vcoo, wcoo, is_std);
         if (!mfld()) continue;
@@ -835,46 +780,13 @@ MatFld MatGeoBoxAms::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_s
     }
     else return MatFld(real_len);
 }
-#endif // __HAS_AMS_OFFICE_LIBS__
-
-
-MatFld MatMgnt::Get(const SVecD<3>& coo) {
-#ifdef __HAS_TESTING__
-    return MatGeoBoxTest::Get(coo);
-#endif // __HAS_TESTING__
-#ifdef __HAS_AMS_OFFICE_LIBS__
-    return MatGeoBoxAms::Get(coo);
-#else
-    return MatFld();
-#endif // __HAS_AMS_OFFICE_LIBS__
-
-}
-    
-
-MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
-#ifdef __HAS_TESTING__
-    return MatGeoBoxTest::Get(vcoo, wcoo, is_std);
-#endif // __HAS_TESTING__
-#ifdef __HAS_AMS_OFFICE_LIBS__
-    return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
-#else
-    return MatFld();
-#endif // __HAS_AMS_OFFICE_LIBS__
-}
 
 
 MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
     const SVecD<3>&  vcoo = part.coo();
     SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
 
-#ifdef __HAS_TESTING__
-    return MatGeoBoxTest::Get(vcoo, wcoo, is_std);
-#endif // __HAS_TESTING__
-#ifdef __HAS_AMS_OFFICE_LIBS__
-    return MatGeoBoxAms::Get(vcoo, wcoo, is_std);
-#else
-    return MatFld();
-#endif // __HAS_AMS_OFFICE_LIBS__
+    return Get(vcoo, wcoo, is_std);
 }
 
 

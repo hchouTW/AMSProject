@@ -199,8 +199,7 @@ class MatGeoBoxTest {
 
         static Bool_t Load();
 
-        static MatFld Get(const SVecD<3>& coo);
-        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        inline static std::list<MatGeoBoxReader*>& Reader() { return reader_; }
 
     private :
         static Bool_t is_load_;
@@ -306,9 +305,8 @@ class MatGeoBoxAms {
         static Bool_t CreateMatGeoBoxFromG4MatTree();
 
         static Bool_t Load();
-
-        static MatFld Get(const SVecD<3>& coo);
-        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        
+        inline static std::list<MatGeoBoxReader*>& Reader() { return reader_; }
 
     private :
         static Bool_t is_load_;
@@ -359,15 +357,19 @@ class MatMgnt {
         MatMgnt() {}
         ~MatMgnt() {}
 
-        inline static MatFld Get(const SVecD<3>& coo);
-        inline static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        static Bool_t Load();
+
+        static MatFld Get(const SVecD<3>& coo);
+        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
         
-        inline static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+        static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
 
     protected :
+        static Bool_t is_load_;
         static std::list<MatGeoBoxReader*> * reader_;
 };
 
+Bool_t MatMgnt::is_load_ = false;
 std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 
 
