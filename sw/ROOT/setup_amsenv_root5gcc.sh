@@ -49,6 +49,8 @@ export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
 export AMSDataDirRW=${AMSDataDir}
 
+alias hadd="${ROOTSYS}/bin/hadd -k"
+
 #### COMPILER
 export COMPILER=GCC
 

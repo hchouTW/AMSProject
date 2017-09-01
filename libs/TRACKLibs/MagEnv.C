@@ -301,6 +301,7 @@ MagFld MagMgnt::Get(const SVecD<3>& coo) {
     return MagFld(1.0, 0, 0);
     return geo_box_reader_.get(coo);
 #else
+    // TODO (hchou): testcode
     return MagFld(1.0, 0, 0);
     return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__

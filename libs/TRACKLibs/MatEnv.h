@@ -108,6 +108,9 @@ class MatGeoBoxCreator {
        
         void save_and_close();
 
+        // testcode
+        void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]);
+
     protected :
         inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; }
 

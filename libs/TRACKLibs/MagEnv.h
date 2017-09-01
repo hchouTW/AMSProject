@@ -62,6 +62,9 @@ class MagGeoBoxCreator {
 
         inline Bool_t is_open() { return is_open_; }
         void save_and_close();
+        
+        // testcode
+        //void save_and_close(Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
 
     protected :
         inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }

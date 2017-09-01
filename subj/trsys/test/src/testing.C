@@ -35,8 +35,8 @@ int main(int argc, char * argv[]) {
 
     TH1D * hx = new TH1D("hx", "hx", 400, -0.1, 0.1);
     TH1D * hy = new TH1D("hy", "hy", 400, -0.1, 0.1);
-    TH1D * dx = new TH1D("dx", "dx", 400, -0.1, 0.1);
-    TH1D * dy = new TH1D("dy", "dy", 400, -0.1, 0.1);
+    TH1D * dx = new TH1D("dx", "dx", 400, -0.01, 0.01);
+    TH1D * dy = new TH1D("dy", "dy", 400, -0.01, 0.01);
     TH1D * mm = new TH1D("mm", "mm", 400,  0.0, 0.001);
     TH1D * mr = new TH1D("mr", "mr", 400,  0.0, 1.0);
 
@@ -59,16 +59,17 @@ int main(int argc, char * argv[]) {
         //    (pos_y->size() ? pos_y->at(0) : 0), (mom_y->size() ? mom_y->at(0) : 0)
         //);
         if (px.size() < 2) continue;
-        hx->Fill(0.1*px.at(1));
-        hy->Fill(0.1*py.at(1));
+        hx->Fill(0.1*px.at(0));
+        hy->Fill(0.1*py.at(0));
        
         //PhySt part(PartType::Proton);
         PhySt part(PartType::Electron);
-        part.set_state(0.1*px.at(0), 0.1*py.at(0), 0.1*pz.at(0), 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0));
-        PropMgnt::PropToZ(0.1*pz.at(1), part);
+        //part.set_state(0.1*px.at(0), 0.1*py.at(0), 0.1*pz.at(0), 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0));
+        part.set_state(0, 0, 55, 0, 0, -0.3);
+        PropMgnt::PropToZ(0.1*pz.at(0), part);
 
-        dx->Fill(part.cx()-0.1*px.at(1));
-        dy->Fill(part.cy()-0.1*py.at(1));
+        dx->Fill(part.cx()-0.1*px.at(0));
+        dy->Fill(part.cy()-0.1*py.at(0));
         
         double mm0 = 0.001 * std::sqrt(mx.at(0) * mx.at(0) + my.at(0) * my.at(0) + mz.at(0) * mz.at(0));
         double mm1 = 0.001 * std::sqrt(mx.at(1) * mx.at(1) + my.at(1) * my.at(1) + mz.at(1) * mz.at(1));
@@ -97,6 +98,23 @@ int main(int argc, char * argv[]) {
     mr->Write();
     file->Write();
     file->Close();
+
+
+
+
+    bool elm[9] = { 0, 0, 0, 0, 0, 0, 1, 0, 0 };
+    float den[9] = { 0, 0, 0, 0, 0, 0, 0.1, 0, 0 };
+    MatGeoBoxCreator creator(10, -10, 10, 10, -10, 10, 10, -10, 10);
+    creator.save_and_close(elm, den);
+
+    SVecD<3> coo(0, 0, 0);
+    MatGeoBoxReader reader;
+    reader.load("MatGeoBox.bin");
+    MatFld&& mfld = reader.get(coo);
+    mfld.print();
+
+
+
 
     return 0;
 }

@@ -175,6 +175,36 @@ void MatGeoBoxCreator::save_and_close() {
 
     clear();
 }
+        
+
+// testcode
+void MatGeoBoxCreator::save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]) {
+    if (!is_open_) { clear(); return; }
+    
+    Bool_t has_mat = false;
+    Double_t inv_rad_len = 0.;
+    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+        if (!elm[it]) continue;
+        has_mat = true;
+        elm_.at(it) = true;
+        den_.at(it) = static_cast<Double_t>(den[it]);
+        
+        geo_box_->elm[it] = elm_.at(it);
+        geo_box_->den[it] = den_.at(it);
+        
+        inv_rad_len += (den_.at(it) * MatProperty::MASS[it] / MatProperty::RAD_LEN[it]);
+    }
+
+    if (has_mat) {
+        std::fill_n(static_cast<Bool_t*>(&(geo_box_->mat)), max_len_, true);
+        geo_box_->inv_rad_len = inv_rad_len;
+    }
+    
+    munmap(file_ptr_, file_len_);
+    close(file_des_);
+
+    clear();
+}
 
 
 void MatGeoBoxReader::print() const {
