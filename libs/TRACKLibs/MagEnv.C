@@ -67,6 +67,23 @@ void MagGeoBoxCreator::save_and_close() {
 
     clear();
 }
+        
+
+void MagGeoBoxCreator::save_and_close(Float_t bx, Float_t by, Float_t bz) {
+    if (!is_open_) return;
+
+    for (Long64_t idx = 0; idx < max_len_; ++idx) {
+        Float_t * mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM_);
+        mag[0] = bx;
+        mag[1] = by;
+        mag[2] = bz;
+    }
+
+    munmap(file_ptr_, file_len_);
+    close(file_des_);
+
+    clear();
+}
 
 
 Bool_t MagGeoBoxReader::load(const std::string& file_path) {
@@ -272,20 +289,16 @@ Bool_t MagMgnt::Load() {
     if (is_load_) return is_load_;
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-    Bool_t is_load_ams = MagGeoBoxAms::Load();
-#endif
-    
+    is_load = MagGeoBoxAms::Load();
+#else
     if (!geo_box_reader_.exist()) {
         //std::string file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/MagGeoBox_AMS02.bin";
-        std::string file_path = "/data3/hchou/AMSData/MagGeoBox_AMS02.bin";
+        //std::string file_path = "/data3/hchou/AMSData/MagGeoBox_AMS02.bin";
+        std::string file_path = "/data3/hchou/AMSData/MagDB/MagTest.bin";
         geo_box_reader_.load(file_path);
     }
-
-#ifdef __HAS_AMS_OFFICE_LIBS__
-    is_load_ = (is_load_ams && geo_box_reader_.exist());
-#else
     is_load_ = (geo_box_reader_.exist());
-#endif
+#endif // __HAS_AMS_OFFICE_LIBS__
 
     return is_load_;
 }
@@ -295,14 +308,8 @@ MagFld MagMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MagFld();
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-    // TODO (hchou): testing
-    //return MagGeoBoxAms::Get(coo);
-    // TODO (hchou): testcode
-    return MagFld(1.0, 0, 0);
-    return geo_box_reader_.get(coo);
+    return MagGeoBoxAms::Get(coo);
 #else
-    // TODO (hchou): testcode
-    return MagFld(1.0, 0, 0);
     return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__
 }

@@ -9,8 +9,12 @@ using namespace MGROOT;
 //#include "MgntRecon.h"
 //#include "MgntRecon.C"
 
-#define __HAS_TESTING__
+//#define __HAS_TESTING__
+//#define __HAS_AMS_OFFICE_LIBS__
 
+
+#include "Math.h"
+#include "Math.C"
 #include "PartInfo.h"
 #include "PartInfo.C"
 #include "PhySt.h"

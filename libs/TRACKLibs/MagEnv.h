@@ -56,15 +56,14 @@ struct MagGeoBox {
 class MagGeoBoxCreator {
     public :
         MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path = "MagGeoBox.bin");
-        ~MagGeoBoxCreator() { save_and_close(); }
+        ~MagGeoBoxCreator() { if (is_open_) save_and_close(); }
 
         void fill(Long64_t idx, Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
 
         inline Bool_t is_open() { return is_open_; }
         void save_and_close();
         
-        // testcode
-        //void save_and_close(Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
+        void save_and_close(Float_t bx, Float_t by, Float_t bz);
 
     protected :
         inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }

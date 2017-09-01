@@ -5,11 +5,11 @@ int main(int argc, char * argv[]) {
     //TH1::AddDirectory(true);
     using namespace MGROOT;
     using namespace TrackSys;
-    
+
     TChain * chain = new TChain("Ntuple");
     
-    chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.3GeV_990k.root");
-    //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.5GeV_1000k.root");
+    //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.3GeV_990k.root");
+    chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.5GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_1GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_10GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_100GeV_1000k.root");
@@ -35,10 +35,10 @@ int main(int argc, char * argv[]) {
 
     TH1D * hx = new TH1D("hx", "hx", 400, -0.1, 0.1);
     TH1D * hy = new TH1D("hy", "hy", 400, -0.1, 0.1);
-    TH1D * dx = new TH1D("dx", "dx", 400, -0.1, 0.1);
-    TH1D * dy = new TH1D("dy", "dy", 400, -0.1, 0.1);
-    TH1D * rx = new TH1D("rx", "rx", 400, -0.1, 0.1);
-    TH1D * ry = new TH1D("ry", "ry", 400, -0.1, 0.1);
+    TH1D * dx = new TH1D("dx", "dx", 400, -0.5, 0.5);
+    TH1D * dy = new TH1D("dy", "dy", 400, -0.5, 0.5);
+    TH1D * rx = new TH1D("rx", "rx", 400, -0.5, 0.5);
+    TH1D * ry = new TH1D("ry", "ry", 400, -0.5, 0.5);
     TH1D * mm = new TH1D("mm", "mm", 400,  0.0, 0.001);
     TH1D * mr = new TH1D("mr", "mr", 400,  0.0, 1.0);
 
@@ -66,20 +66,39 @@ int main(int argc, char * argv[]) {
         hx->Fill(0.1*px.at(0));
         hy->Fill(0.1*py.at(0));
        
-        //PhySt part(PartType::Proton);
-        PhySt part(PartType::Electron);
+        PhySt part(PartType::Proton);
+        //PhySt part(PartType::Electron);
         //part.set_state(0.1*px.at(0), 0.1*py.at(0), 0.1*pz.at(0), 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0));
-        part.set_state(0, 0, 55, 0, 0, -0.3);
+        if (it < 2) {
+            COUT("MOM1 %8.2f %8.2f %8.2f\n", 0.001*mx.at(0), 0.001*my.at(0), 0.001*mz.at(0)); 
+            COUT("MOM2 %8.2f %8.2f %8.2f\n", 0.001*mx.at(1), 0.001*my.at(1), 0.001*mz.at(1)); 
+        }
+        //
+        part.set_state(0, 0, 55, 0, 0, -1);
         if (it<2) PropMgnt::PropToZ(0.1*pz.at(1), part);
         else      PropMgnt::PropToZWithMC(0.1*pz.at(1), part);
+        //PropMgnt::PropToZ(0.1*pz.at(1), part);
         if (it < 2) refcx = part.cx();
         if (it < 2) refcy = part.cy();
+
+        if (it < 2) part.print();
+        if (it < 2) std::cout << 0.1*py.at(1) << std::endl;
+
+        //if (it < 2) {
+        //    MagFld&& mag = MagMgnt::Get(part.coo());
+        //    mag.print();
+        //    for (int it = 60; it > 0; --it) {
+        //        MagFld&& mag = MagMgnt::Get(SVecD<3>(0, 0, it));
+        //        std::cout << mag.x() << " " << std::endl;
+        //    }
+        //    std::cout << std::endl;
+        //}
 
         dx->Fill(part.cx()-0.1*px.at(1));
         dy->Fill(part.cy()-0.1*py.at(1));
         rx->Fill(part.cx()-refcx);
         ry->Fill(part.cy()-refcy);
-        
+
         double mm0 = 0.001 * std::sqrt(mx.at(0) * mx.at(0) + my.at(0) * my.at(0) + mz.at(0) * mz.at(0));
         double mm1 = 0.001 * std::sqrt(mx.at(1) * mx.at(1) + my.at(1) * my.at(1) + mz.at(1) * mz.at(1));
         mm->Fill(mm0 - mm1);
@@ -114,7 +133,8 @@ int main(int argc, char * argv[]) {
 
 
     //MatGeoBoxTest::CreateMatGeoBox();
-
+    //MagGeoBoxCreator creator(150, -150., 150., 150, -150., 150., 150, -150., 150., "/data3/hchou/AMSData/MagDB/MagTest.bin");
+    //creator.save_and_close(1.0, 0.0, 0.0);
 
 
     return 0;

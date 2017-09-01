@@ -250,7 +250,7 @@ class PropMgnt {
         static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
     
     private :
-        static constexpr Double_t PROP_FACT = 2.99792458e-04;
+        static constexpr Double_t PROP_FACT  = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
         static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)

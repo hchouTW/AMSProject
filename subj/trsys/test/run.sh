@@ -6,7 +6,8 @@ OutputDir=.
 GroupId=5
 GroupSize=6
 #${RunFile} -t ${DataType} -i ${Stream} -o ${OutputDir} -g ${GroupId} -s ${GroupSize}
-${RunFile} -t ${DataType} -i ${Stream} -o ${OutputDir} -g ${GroupId} -s ${GroupSize} 
+#${RunFile} -t ${DataType} -i ${Stream} -o ${OutputDir} -g ${GroupId} -s ${GroupSize} 
+${RunFile}
 
 
 

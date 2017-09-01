@@ -363,7 +363,13 @@ class MatMgnt {
         inline static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
         
         inline static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+
+    protected :
+        static std::list<MatGeoBoxReader*> * reader_;
 };
+
+std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
+
 
 
 class MatPhyFld {
