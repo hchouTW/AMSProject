@@ -15,10 +15,10 @@ alias dstat='dstat -cdlmnpsy'
 alias sysinfo='cat /proc/cpuinfo && cat /proc/meminfo && free -h'
 
 # Bash
-alias df='df -h'
-alias ll='ls -al -h --group-directories-first'
-alias rm='sh $HOME/AMSProject/sys/shell/rmsoft.sh'
-alias rmfc='/bin/rm'
+alias df="df -h"
+alias ll="ls -al -h --group-directories-first"
+alias rm="sh ~/AMSProject/sys/shell/rmsoft.sh"
+alias rmfc="/bin/rm"
 
 # ROOT
 alias root='root -l'
@@ -38,3 +38,12 @@ export AMSCoreSubj=${AMSCore}/subj
 export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
+
+
+# LXPLUS
+if [[ $HOSTNAME == *"lxplus"* ]]; then
+    export CASTOR=/castor/cern.ch/user/h/hchou
+    export EOS=/eos/ams/user/h/hchou
+    export AFSWORK=/afs/cern.ch/work/h/hchou
+    export ubackup=/afs/cern.ch/ubackup/h/hchou
+fi

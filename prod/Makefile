@@ -4,9 +4,13 @@ TagetDir = $(AMSCoreProd)/vdev
 
 all :
 	@mkdir -p $(TagetDir)
+	@mkdir -p $(TagetDir)/env
 	@mkdir -p $(TagetDir)/lib
-	@mkdir -p $(TagetDir)/src
 	@mkdir -p $(TagetDir)/obj
+	@mkdir -p $(TagetDir)/src
+	@mkdir -p $(TagetDir)/job
+	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(PWD)/job/* $(TagetDir)/job 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.C $(TagetDir)/src/ClassDef.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.h $(TagetDir)/src/ClassDef.h 2> /dev/null
 	@cp -fa $(PWD)/src/LinkDef.h $(TagetDir)/src/LinkDef.h 2> /dev/null
@@ -36,7 +40,9 @@ $(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o $(TagetDir)/lib/ClassD
 	$(LD) -o $@ $+ $(LIBP)
 
 clean :
+	@rm -fv $(TagetDir)/env/*
+	@rm -fv $(TagetDir)/lib/*
 	@rm -fv $(TagetDir)/obj/*
 	@rm -fv $(TagetDir)/src/*
-	@rm -fv $(TagetDir)/lib/*
+	@rm -fv $(TagetDir)/job/*
 	@rm -fv $(TagetDir)/YiProdNtuple

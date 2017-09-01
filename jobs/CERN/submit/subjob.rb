@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 require "fileutils"
 require "/afs/cern.ch/user/h/hchou/public/BSUB/submit/src/select.rb"
 require "/afs/cern.ch/user/h/hchou/public/BSUB/submit/src/parseconfig.rb"
