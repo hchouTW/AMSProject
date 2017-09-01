@@ -8,8 +8,8 @@ int main(int argc, char * argv[]) {
 
     TChain * chain = new TChain("Ntuple");
     
-    //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.3GeV_990k.root");
-    chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.5GeV_1000k.root");
+    chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.8GeV_990k.root");
+    //chain->Add("/data3/hchou/AMSData/Lorentz/proton_0.5GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_1GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_10GeV_1000k.root");
     //chain->Add("/data3/hchou/AMSData/Lorentz/proton_100GeV_1000k.root");
@@ -74,9 +74,9 @@ int main(int argc, char * argv[]) {
             COUT("MOM2 %8.2f %8.2f %8.2f\n", 0.001*mx.at(1), 0.001*my.at(1), 0.001*mz.at(1)); 
         }
         //
-        part.set_state(0, 0, 55, 0, 0, -1);
-        if (it<2) PropMgnt::PropToZ(0.1*pz.at(1), part);
-        else      PropMgnt::PropToZWithMC(0.1*pz.at(1), part);
+        part.set_state(0, 0, 55, 0, 0, 0.001*mz.at(0));
+        if (it < 2) PropMgnt::PropToZ(0.1*pz.at(1), part);
+        else        PropMgnt::PropToZWithMC(0.1*pz.at(1), part);
         //PropMgnt::PropToZ(0.1*pz.at(1), part);
         if (it < 2) refcx = part.cx();
         if (it < 2) refcy = part.cy();
@@ -103,7 +103,9 @@ int main(int argc, char * argv[]) {
         double mm1 = 0.001 * std::sqrt(mx.at(1) * mx.at(1) + my.at(1) * my.at(1) + mz.at(1) * mz.at(1));
         mm->Fill(mm0 - mm1);
         mr->Fill((mm0 - mm1)/mm0);
-
+        if (it < 10) {
+            std::cout << Form("%8.2f %8.2f\n", mm0, mm1);
+        }
     }
     
 
