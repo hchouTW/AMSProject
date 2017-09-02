@@ -9,7 +9,8 @@ using namespace MGROOT;
 //#include "MgntRecon.h"
 //#include "MgntRecon.C"
 
-#define __HAS_TESTING__
+//#define __HAS_TESTPROP__
+//#define __HAS_TESTFIT__
 //#define __HAS_AMS_OFFICE_LIBS__
 
 

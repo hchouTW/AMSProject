@@ -1,5 +1,5 @@
 #!bin/bash
-RunFile=${AMSCore}/subj/trsys/test/testing
+RunFile=${AMSCore}/subj/trsys/testing/prop
 DataType=ISS
 Stream=list/flist.iss.B950.pass6
 OutputDir=.

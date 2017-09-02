@@ -17,28 +17,28 @@ void PhySt::reset(const PartType& type) {
 }
         
 
-void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx, Double_t dy, Double_t dz) {
-    Double_t norm = std::sqrt(dx * dx + dy * dy + dz * dz);
+void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Double_t uz) {
+    Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
     if (MGNumc::EqualToZero(norm)) return;
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
-    dir_(0) = dx / norm;
-    dir_(1) = dy / norm;
-    dir_(2) = dz / norm;
+    dir_(0) = ux / norm;
+    dir_(1) = uy / norm;
+    dir_(2) = uz / norm;
 }
 
 
-void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx, Double_t ty, Double_t dz) {
-    Short_t tz = MGNumc::Compare(dz);
-    Double_t norm_dz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + MGMath::ONE);
+void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx, Double_t ty, Double_t uz) {
+    Short_t tz = MGNumc::Compare(uz);
+    Double_t norm_uz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + MGMath::ONE);
     if (tz == 0) return;
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
-    dir_(0) = tx * norm_dz;
-    dir_(1) = ty * norm_dz;
-    dir_(2) = norm_dz;
+    dir_(0) = tx * norm_uz;
+    dir_(1) = ty * norm_uz;
+    dir_(2) = norm_uz;
 }
 
 

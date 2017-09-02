@@ -31,7 +31,7 @@
 Particle Beam:
 ```
 Amount(1M)
-Electron & Proton & Helium
+Electron & Proton & Deuterium & Helium4
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
@@ -53,8 +53,8 @@ Central Location(X Y Z := 0cm 0cm (58cm 50cm 0cm))
 
 Variables: (Particle Information)
 ```
-Position (mm)
-Momentum (MeV)
+Position (cm)
+Momentum (GeV)
 ```
 
 #### Example
@@ -75,7 +75,7 @@ part.print();
 Particle Beam:
 ```
 Amount(1M)
-Electron & Proton & Helium
+Electron & Proton & Deuterium & Helium4
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
@@ -104,8 +104,8 @@ Central Location(X Y Z := 0cm 0cm (58cm 50cm 0cm))
 
 Variables: (Particle Information)
 ```
-Position (mm)
-Momentum (MeV)
+Position (cm)
+Momentum (GeV)
 ```
 
 #### Example
@@ -118,7 +118,7 @@ codes
 Particle Beam:
 ```
 Amount(1M)
-Electron & Proton & Helium
+Electron & Proton & Deuterium & Helium4
 Position(0, 0, 110cm)
 Direction(0, 0, -1)
 
@@ -154,8 +154,8 @@ Central Location(X Y Z := 0cm 0cm (100cm 70cm 60cm 27cm 23cm 2cm -2cm -23cm -27c
 
 Variables: (Particle Information)
 ```
-Position (mm)
-Momentum (MeV)
+Position (cm)
+Momentum (GeV)
 ```
 
 #### Example

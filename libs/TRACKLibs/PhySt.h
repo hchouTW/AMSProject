@@ -13,8 +13,8 @@ class PhySt {
 
         void reset(const PartType& type = PartType::Proton);
 
-        void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t dx = 0., Double_t dy = 0., Double_t dz = -1.);
-        void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t dz = -1.);
+        void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
+        void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
         void set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Short_t signz = -1);
         
         void set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz);
@@ -50,9 +50,9 @@ class PhySt {
         inline const Double_t& cy() const { return coo_(1); } 
         inline const Double_t& cz() const { return coo_(2); } 
         
-        inline const Double_t& dx() const { return dir_(0); } 
-        inline const Double_t& dy() const { return dir_(1); } 
-        inline const Double_t& dz() const { return dir_(2); } 
+        inline const Double_t& ux() const { return dir_(0); } 
+        inline const Double_t& uy() const { return dir_(1); } 
+        inline const Double_t& uz() const { return dir_(2); } 
         
         inline Double_t tx() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
         inline Double_t ty() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 

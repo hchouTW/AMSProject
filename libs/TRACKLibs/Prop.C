@@ -205,7 +205,7 @@ Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
     if (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0) return true;
 
     AMSPoint pos(part.cx(), part.cy(), part.cz());
-    AMSDir   dir(part.dx(), part.dy(), part.dz());
+    AMSDir   dir(part.ux(), part.uy(), part.uz());
     Double_t rig = static_cast<Double_t>(-sign) * part.rig();
 
     TrProp trProp(pos, dir, rig);
@@ -275,7 +275,7 @@ Double_t PropMgnt::GetStep(const PhySt& part, Double_t resStep, Bool_t mat) {
 
 Double_t PropMgnt::GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat) {
     Short_t  signz = MGNumc::Compare(resStepZ);
-    Short_t  signs = (MGNumc::Compare(part.dz() * resStepZ) >= 0 ? 1 : -1);
+    Short_t  signs = (MGNumc::Compare(part.uz() * resStepZ) >= 0 ? 1 : -1);
     Double_t lens  = GetPropStep(part, signs, mat);
 
     MotionFunc mnfunc(part);
@@ -478,9 +478,9 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatArg& m
         st0.cx() + step * mn0.px() + ss1o2 * mn0.ux(),
         st0.cy() + step * mn0.py() + ss1o2 * mn0.uy(),
         st0.cz() + step * mn0.pz() + ss1o2 * mn0.uz(),
-        st0.dx() + step * mn0.ux(),
-        st0.dy() + step * mn0.uy(),
-        st0.dz() + step * mn0.uz()
+        st0.ux() + step * mn0.ux(),
+        st0.uy() + step * mn0.uy(),
+        st0.uz() + step * mn0.uz()
     );
     if (mat) {
         Double_t eta    = st0.eta() + step * mn0.e();
@@ -558,9 +558,9 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatAr
         st0.cx() + step * mn0.px() + ss1o2 * mn0.ux(),
         st0.cy() + step * mn0.py() + ss1o2 * mn0.uy(),
         st0.cz() + step * mn0.pz() + ss1o2 * mn0.uz(),
-        st0.dx() + step * mn0.ux(),
-        st0.dy() + step * mn0.uy(),
-        st0.dz() + step * mn0.uz()
+        st0.ux() + step * mn0.ux(),
+        st0.uy() + step * mn0.uy(),
+        st0.uz() + step * mn0.uz()
     );
     if (mat) {
         Double_t eta    = st0.eta() + step * mn0.e();
@@ -575,9 +575,9 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatAr
         st0.cx() + step * mn0.px() + ss1o6 * (MGMath::TWO * mn0.ux() + mn1.ux()),
         st0.cy() + step * mn0.py() + ss1o6 * (MGMath::TWO * mn0.uy() + mn1.uy()),
         st0.cz() + step * mn0.pz() + ss1o6 * (MGMath::TWO * mn0.uz() + mn1.uz()),
-        st0.dx() + s1o2 * (mn0.ux() + mn1.ux()),
-        st0.dy() + s1o2 * (mn0.uy() + mn1.uy()),
-        st0.dz() + s1o2 * (mn0.uz() + mn1.uz())
+        st0.ux() + s1o2 * (mn0.ux() + mn1.ux()),
+        st0.uy() + s1o2 * (mn0.uy() + mn1.uy()),
+        st0.uz() + s1o2 * (mn0.uz() + mn1.uz())
     );
     if (mat) {
         Double_t eta    = st0.eta() + s1o2 * (mn0.e() + mn1.e());
@@ -701,9 +701,9 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.cx() + s1o2 * mn0.px() + ss1o8 * mn0.ux(),
         st0.cy() + s1o2 * mn0.py() + ss1o8 * mn0.uy(),
         st0.cz() + s1o2 * mn0.pz() + ss1o8 * mn0.uz(),
-        st0.dx() + s1o2 * mn0.ux(),
-        st0.dy() + s1o2 * mn0.uy(),
-        st0.dz() + s1o2 * mn0.uz()
+        st0.ux() + s1o2 * mn0.ux(),
+        st0.uy() + s1o2 * mn0.uy(),
+        st0.uz() + s1o2 * mn0.uz()
     );
     if (mat) {
         Double_t eta    = st0.eta() + s1o2 * mn0.e();
@@ -719,9 +719,9 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.cx() + s1o2 * mn0.px() + ss1o8 * mn0.ux(),
         st0.cy() + s1o2 * mn0.py() + ss1o8 * mn0.uy(),
         st0.cz() + s1o2 * mn0.pz() + ss1o8 * mn0.uz(),
-        st0.dx() + s1o2 * mn1.ux(),
-        st0.dy() + s1o2 * mn1.uy(),
-        st0.dz() + s1o2 * mn1.uz()
+        st0.ux() + s1o2 * mn1.ux(),
+        st0.uy() + s1o2 * mn1.uy(),
+        st0.uz() + s1o2 * mn1.uz()
     );
     if (mat) {
         Double_t eta    = st0.eta() + s1o2 * mn1.e();
@@ -737,9 +737,9 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.cx() + step * mn0.px() + ss1o2 * mn2.ux(),
         st0.cy() + step * mn0.py() + ss1o2 * mn2.uy(),
         st0.cz() + step * mn0.pz() + ss1o2 * mn2.uz(),
-        st0.dx() + step * mn2.ux(),
-        st0.dy() + step * mn2.uy(),
-        st0.dz() + step * mn2.uz()
+        st0.ux() + step * mn2.ux(),
+        st0.uy() + step * mn2.uy(),
+        st0.uz() + step * mn2.uz()
     );
     if (mat) {
         Double_t eta    = st0.eta() + step * mn2.e();
@@ -754,9 +754,9 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.cx() + step * mn0.px() + ss1o6 * (mn0.ux() + mn1.ux() + mn2.ux()),
         st0.cy() + step * mn0.py() + ss1o6 * (mn0.uy() + mn1.uy() + mn2.uy()),
         st0.cz() + step * mn0.pz() + ss1o6 * (mn0.uz() + mn1.uz() + mn2.uz()),
-        st0.dx() + s1o6 * (mn0.ux() + MGMath::TWO * mn1.ux() + MGMath::TWO * mn2.ux() + mn3.ux()),
-        st0.dy() + s1o6 * (mn0.uy() + MGMath::TWO * mn1.uy() + MGMath::TWO * mn2.uy() + mn3.uy()),
-        st0.dz() + s1o6 * (mn0.uz() + MGMath::TWO * mn1.uz() + MGMath::TWO * mn2.uz() + mn3.uz())
+        st0.ux() + s1o6 * (mn0.ux() + MGMath::TWO * mn1.ux() + MGMath::TWO * mn2.ux() + mn3.ux()),
+        st0.uy() + s1o6 * (mn0.uy() + MGMath::TWO * mn1.uy() + MGMath::TWO * mn2.uy() + mn3.uy()),
+        st0.uz() + s1o6 * (mn0.uz() + MGMath::TWO * mn1.uz() + MGMath::TWO * mn2.uz() + mn3.uz())
     );
     if (mat) {
         Double_t eta    = st0.eta() + s1o6 * (mn0.e() + MGMath::TWO * mn1.e() + MGMath::TWO * mn2.e() + mn3.e());

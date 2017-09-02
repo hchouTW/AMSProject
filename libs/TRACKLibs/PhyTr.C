@@ -279,8 +279,8 @@ Bool_t PhyTr::fit_simple() {
             part_.cx() - rslG(0),
             part_.cy() - rslG(1),
             part_.cz(),
-            part_.dx() - rslG(2),
-            part_.dy() - rslG(3),
+            part_.ux() - rslG(2),
+            part_.uy() - rslG(3),
             ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
         part_.set_eta(part_.eta() - rslG(4));
@@ -364,8 +364,8 @@ Bool_t PhyTr::fit_semi_simple() {
                 ppst.cx() - rslst(0),
                 ppst.cy() - rslst(1),
                 ppst.cz(),
-                ppst.dx() - rslst(2),
-                ppst.dy() - rslst(3),
+                ppst.ux() - rslst(2),
+                ppst.uy() - rslst(3),
                 ((ortt_ == Orientation::kDownward) ? -1 : 1)
             );
             ppst.set_eta(ppst.eta() - rslst(4));
@@ -390,8 +390,8 @@ Bool_t PhyTr::fit_semi_simple() {
             part_.cx() - rslG(0),
             part_.cy() - rslG(1),
             part_.cz(),
-            part_.dx() - rslG(2),
-            part_.dy() - rslG(3),
+            part_.ux() - rslG(2),
+            part_.uy() - rslG(3),
             ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
         part_.set_eta(part_.eta() - rslG(4));
@@ -469,8 +469,8 @@ Bool_t PhyTr::fit_physics() {
                 ppst.cx() - rslst(0),
                 ppst.cy() - rslst(1),
                 ppst.cz(),
-                ppst.dx() - rslst(2),
-                ppst.dy() - rslst(3),
+                ppst.ux() - rslst(2),
+                ppst.uy() - rslst(3),
                 ((ortt_ == Orientation::kDownward) ? -1 : 1)
             );
             ppst.set_eta(ppst.eta() - rslst(4));
