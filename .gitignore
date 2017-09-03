@@ -37,7 +37,7 @@
 *.root
 
 # User Defination (AMS Data filelist)
-flist.*
+#flist.*
 
 # User Defination (Tex file)
 *.aux
