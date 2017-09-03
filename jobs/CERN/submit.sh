@@ -232,39 +232,39 @@ echo "
 
 
 
-ParamFileName = "PARAMETERS"
-ParamFilePath = "#{VersionStreamLogDir}/#{ParamFileName}"
-ParamFile = File.open("#{ParamFilePath}", "w")
-ParamFile << """
-QUEUE_MODE         #{QueueMode}
-STORAGE_MODE       #{StorageMode}
-PROJECT_MODE       #{ProjectMode}
-"""
-if (ProjectMode.eql? "ANALYSIS"); then
-ParamFile << """
-SUBPROJECT_MODE    #{SubProjectMode}
-"""
-end
-ParamFile << """
-RUN_MODE           #{RunMode}
-EVENT_MODE         #{EventMode}
-
-VERSION            #{Version}
-VERSION_TITLE      #{VersionTitle}
-VERSION_STREAM     #{VersionStream}
-JOB_EXE            #{JobExe}
-STREAM             #{Stream}
-
-FILE_PER_EXE       #{FilePerExe}
-EXE_PER_JOB        #{ExePerJob}
-
-TOTAL_RUN_EXE      #{TotalExe}
-EXE_START_ID       #{ExeStartID}
-EXE_END_ID         #{ExeEndID}
-
-TOTAL_RUN_JOB      #{TotalJob}
-JOB_START_ID       #{JobStartID}
-JOB_END_ID         #{JobEndID}
-
-"""
-ParamFile.close
+#ParamFileName = "PARAMETERS"
+#ParamFilePath = "#{VersionStreamLogDir}/#{ParamFileName}"
+#ParamFile = File.open("#{ParamFilePath}", "w")
+#ParamFile << """
+#QUEUE_MODE         #{QueueMode}
+#STORAGE_MODE       #{StorageMode}
+#PROJECT_MODE       #{ProjectMode}
+#"""
+#if (ProjectMode.eql? "ANALYSIS"); then
+#ParamFile << """
+#SUBPROJECT_MODE    #{SubProjectMode}
+#"""
+#end
+#ParamFile << """
+#RUN_MODE           #{RunMode}
+#EVENT_MODE         #{EventMode}
+#
+#VERSION            #{Version}
+#VERSION_TITLE      #{VersionTitle}
+#VERSION_STREAM     #{VersionStream}
+#JOB_EXE            #{JobExe}
+#STREAM             #{Stream}
+#
+#FILE_PER_EXE       #{FilePerExe}
+#EXE_PER_JOB        #{ExePerJob}
+#
+#TOTAL_RUN_EXE      #{TotalExe}
+#EXE_START_ID       #{ExeStartID}
+#EXE_END_ID         #{ExeEndID}
+#
+#TOTAL_RUN_JOB      #{TotalJob}
+#JOB_START_ID       #{JobStartID}
+#JOB_END_ID         #{JobEndID}
+#
+#"""
+#ParamFile.close
