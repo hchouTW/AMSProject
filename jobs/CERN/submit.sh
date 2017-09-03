@@ -135,7 +135,7 @@ if [ "`bqueues -u $USER | grep ${queue}`" == "" ]; then
 fi
 
 exe_per_job=${EXEPERJOB}
-if [[ ! ${} =~ ^-?[0-9]+$ ]]; then
+if [[ ! ${exe_per_job} =~ ^-?[0-9]+$ ]]; then
     echo "\"${exe_per_job}\" is not integer"
     exit
 fi
@@ -146,12 +146,12 @@ totlen_exe=$(( ${exe_endID}-${exe_satID}+1 ))
 totlen_job=$(( ${totlen_exe}/${exe_per_job} + (${totlen_exe}%${exe_per_job}!=0) ))
 
 storage=${STORAGE^^}
-if [ "${queue}" != "EOS" ]; then
+if [ "${storage}" != "EOS" ]; then
     echo "Storage(${storage}) is not exist."
     exit
 fi
 
-if [ "${queue}" == "EOS" ]; then
+if [ "${storage}" == "EOS" ]; then
     storage_path=/eos/ams/user/${FL}/${USER}
     if [ ! -d ${storage_path} ]; then
         echo "\"${storage_path}\" is not exist."
@@ -160,8 +160,8 @@ if [ "${queue}" == "EOS" ]; then
 fi
 
 confirm=${CONFIRM^^}
-if [ "${confirm}" != "YES" ] || [ "${confirm}" != "NO" ] || [ "${confirm}" != "NONE" ]; then
-    echo "Confirm(${confirm}) is in (YES NO NONE)"
+if [ "${confirm}" != "YES" ] && [ "${confirm}" != "NO" ] && [ "${confirm}" != "NONE" ]; then
+    echo "Confirm(${confirm}) is not in (YES NO NONE)"
     exit
 fi
 
@@ -169,8 +169,8 @@ echo "========== PARAMETERS ==========
 [PROJECT]
 PATH        ${PROJPATH}/${PROJVERSION}
 TITLE       ${proj_title}
-BIN         ${proj_bin}
-FLST        ${proj_lst}
+BIN         ${PROJBIN}
+FLST        ${PROJFLIST}
 EVENTTYPE   ${event_type}
 REGION      ${job_region}
 EXESATID    ${exe_satID}
@@ -220,8 +220,8 @@ mkdir -p ${jobdir}/log
 mkdir -p ${jobdir}/proc
 
 cp -fa ${proj_env} ${jobdir}/env.sh
-cp -fa ${proj_path}/${proj_bin} ${jobdir}/jobexe
-cp -fa ${proj_path}/${proj_lst} ${jobdir}/flist
+cp -fa ${proj_bin} ${jobdir}/jobexe
+cp -fa ${proj_lst} ${jobdir}/flist
 
 echo "PARAMETERS" > ${jobdir}/PARAMETERS
 
