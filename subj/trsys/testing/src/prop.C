@@ -11,12 +11,11 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //TH1::AddDirectory(true);
 
-    std::string ifile = "/data3/hchou/AMSData/Lorentz/proton_0.8GeV_990k.root";
     MGConfig::JobOpt opt(argc, argv);
-    //for (auto&& str : opt.flist()) chain->Add(str.c_str());
+    for (auto&& str : opt.flist()) std::cout << str.c_str() << std::endl;
 
     TChain * chain = new TChain("Ntuple");
-    chain->Add(ifile.c_str());
+    chain->Add(opt.flist(0).c_str());
 
     std::vector<double> * cx = nullptr;
     std::vector<double> * cy = nullptr;

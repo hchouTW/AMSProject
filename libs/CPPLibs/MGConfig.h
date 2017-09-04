@@ -19,7 +19,9 @@ class JobOpt {
         const long& gi() const { return gi_; }
         const long& gs() const { return gs_; }
 
+        const int fsize() const { return flist_.size(); }
         const std::vector<std::string> flist() const { return flist_; }
+        const std::string& flist(int idx) const { return flist_.at(idx); }
 
     private :
         bool        succ_;
