@@ -8,9 +8,9 @@ all :
 	@mkdir -p $(TagetDir)/lib
 	@mkdir -p $(TagetDir)/obj
 	@mkdir -p $(TagetDir)/src
-	@mkdir -p $(TagetDir)/job
+	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
-	@cp -fa $(PWD)/job/* $(TagetDir)/job 2> /dev/null
+	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.C $(TagetDir)/src/ClassDef.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.h $(TagetDir)/src/ClassDef.h 2> /dev/null
 	@cp -fa $(PWD)/src/LinkDef.h $(TagetDir)/src/LinkDef.h 2> /dev/null

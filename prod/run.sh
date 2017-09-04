@@ -2,7 +2,7 @@
 
 RunFile=${AMSCore}/prod/vdev/YiProdNtuple
 DataType=ISS
-Stream=job/flist.iss.B950.pass6
+Stream=lst/flist.ncu.iss.B950.pass6
 GroupId=1
 GroupSize=1
 OutputDir=.

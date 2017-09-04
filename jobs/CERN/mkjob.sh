@@ -60,7 +60,7 @@ if [ ! -f ${proj_bin} ]; then
     exit
 fi
 
-proj_lst=${proj_path}/job/${PROJFLIST}
+proj_lst=${proj_path}/lst/${PROJFLIST}
 if [ ! -f ${proj_lst} ]; then
     echo "not found PROJLST(${proj_lst})"
     exit
@@ -210,6 +210,8 @@ cp -fa ${proj_env} ${jobdir}/env.sh
 cp -fa ${proj_bin} ${jobdir}/jobexe
 cp -fa ${proj_lst} ${jobdir}/flist
 
+datadir=${storage_path}/${PROJPATH}/${PROJVERSION}/${proj_title}
+
 echo "[PROJECT]
 PROJPATH        ${PROJPATH}
 PROJVERSION     ${PROJVERSION}
@@ -273,7 +275,7 @@ if [ ! -d \${tmpDate} ]; then
     exit
 fi
 
-dataDir=${AMSData}/${PROJPATH}/${PROJVERSION}/${proj_title}
+dataDir=${datadir}
 if [ ! -d \${dateDir} ]; then
     echo -e "taget data/ is not exist."
     exit
@@ -338,7 +340,7 @@ if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
     exit
 fi
 
-dataDir=${storage_path}/${PROJPATH}/${PROJVERSION}/${proj_title}
+dataDir=${datadir}
 mkdir -p \${dataDir}
 if [ ! -d \${dataDir} ]; then
     echo -e "taget data/ is not exist."
