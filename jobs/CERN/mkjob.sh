@@ -4,6 +4,7 @@
 FL=`whoami | cut -c1`
 USER=`whoami`
 
+
 # Check Input Parameters
 if [ $# -lt 1 ]; then
     echo "illegal number of parameters."
@@ -14,11 +15,6 @@ if [ ! -f ${jobconf} ]; then
     echo "\"${jobconf}\" is not exist."
     exit
 fi
-#runmode=${2^^}
-#if [ "${runmode}" != "RUN" ] && [ "${runmode}" != "RERUN" ]; then
-#    echo "${runmode} is not correctly."
-#    exit
-#fi
 
 
 # Check Environment Variables
@@ -37,6 +33,7 @@ fi
 
 source ${ini_parser}
 cfg_parser $jobconf
+
 
 # Input Config (PROJECT)
 cfgsec_PROJECT
@@ -125,6 +122,7 @@ else
     fi
 fi
 
+
 # Input Config (QUEUE)
 cfgsec_QUEUE
 
@@ -163,11 +161,6 @@ fi
 totlen_exe=$(( ${exe_endID}-${exe_satID}+1 ))
 totlen_job=$(( ${totlen_exe}/${exe_per_job} + (${totlen_exe}%${exe_per_job}!=0) ))
 
-confirm=${CONFIRM^^}
-if [ "${confirm}" != "YES" ] && [ "${confirm}" != "NO" ] && [ "${confirm}" != "NONE" ]; then
-    echo "Confirm(${confirm}) is not in (YES NO NONE)"
-    exit
-fi
 
 echo "**********************************************************************
 ***************************** PARAMETERS *****************************
@@ -195,13 +188,14 @@ TOTALJOB        ${totlen_job}
 **********************************************************************"
 
 
-
 # Copy to AMSJobs
 jobdir=${AMSJobs}/${PROJPATH}/${PROJVERSION}/${proj_title}
 mkdir -p ${jobdir}
 if [ ! -d ${jobdir} ]; then
     echo "JOBDIR(${jobdir}) is not exist."
     exit
+else
+    rm -rf ${jobdir}/*
 fi
 
 mkdir -p ${jobdir}/log
@@ -242,22 +236,46 @@ echo -e \"====  Local Host : \${HOSTNAME}\"
 echo -e \"====  Redhat-release  ====\"
 cat /etc/redhat-release
 
-if [ \$\# -ne 3 ]; t4yyhen
+if [ \$\# -ne 3 ]; then
     echo -e "illegal number of parameters."
     exit
 fi
 
-if [ ! -d \$(PWD)/proc ]; then
-    echo -e "proc is not exist."
+jobDir=${jobdir}
+if [ ! -d \${jobDir} ]; then
+    echo -e "jobDir is not exist."
+    exit
+fi
+if [ ! -d \${jobDir}/proc ]; then
+    echo -e "proc/ is not exist."
+    exit
 fi
 
-if [ ! -d \$(PWD)/log ]; then
-    echo -e "proc is not exist."
+if [ ! -d \${jobDir}/log ]; then
+    echo -e "log/ is not exist."
+    exit
 fi
+
+cp -fa \${jobDir}/env.sh \$(PWD)/env.sh
+cp -fa \${jobDir}/jobexe \$(PWD)/jobexe
+cp -fa \${jobDir}/flist \$(PWD)/flist
+
+source \$(PWD)/env.sh
 
 tmpData=\$(PWD)/data
 mkdir -p \${tmpData}
-source \$(PWD)/env.sh
+if [ ! -d \${tmpDate} ]; then
+    echo -e "data/ is not exist."
+    exit
+fi
+
+dataDir=${AMSData}/${PROJPATH}/${PROJVERSION}/${proj_title}
+mkdir -p \${dataDir}
+if [ ! -d \${dateDir} ]; then
+    echo -e "taget data/ is not exist."
+    exit
+fi
+
 
 echo -e \"*************************\"
 echo -e \"****  START RUNNING  ****\"
@@ -269,28 +287,29 @@ exeEndID=\$3
 
 for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
-    logID=\$(printf "JOB_%07i_EXE_%07i" \$jobID \$exeID)
-    logProc=${proj_path}/proc/\${logID}
+    logID=\$(printf "JOB%07i_EXE%07i" \$jobID \$exeID)
+    locLog=\$(PWD)/\${logID}
+    logLog=\${jobDir}/log/\${logID}
+    logProc=\${jobDir}/proc/\${logID}
     if [ ! -f \${logProc} ]; then
         continue
     fi
 
-    logLog=\${PWD}/log/\${logID}
-    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee \${logLog}
+    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee \${locLog}
+    
     rootFile=\`ls \${tmpData} | grep root\`
-    filePath=\${tmpData}/\${rootFile}
-    if [ ! -f \${filePath} ]; then
-        echo \"ROOT file is not exist.\" | tee -a \${logLog}
+    rootPath=\${tmpData}/\${rootFile}
+    if [ ! -f \${rootPath} ]; then
+        echo \"ROOT file is not exist.\" | tee -a \${locLog}
     else
-        tagetPath=${AMSData}/\${rootFile}
-        cp \${filePath} \${tagetPath}
+        tagetPath=\${dataDir}/\${rootFile}
+        cp \${rootPath} \${tagetPath}
         if [ -f \${tagetPath} ]; then
-            echo "Succ" | tee -a \${logLog}
-            cp \${logLog} ${proj_path}/log/\${logID}
-            rm \${filePath}
-            rm ${logProc}
-            rm ${proj_path}/proc/\${logID}
-
+            echo "Success." | tee -a \${locLog}
+            cp \${locLog} \${logLog}
+            rm \${rootPath}
+            rm \${locLog}
+            rm \${logProc}
         fi
     fi
 done
@@ -299,10 +318,6 @@ echo -e \"**************************\"
 echo -e \"****  FINISH RUNNING  ****\"
 echo -e \"**************************\"
 " > $job_script
-
-echo "$job_script"
-cat $job_script
-
 
 
 submit_script=${jobdir}/submit.sh
@@ -314,7 +329,17 @@ if [ \$\# -ne 1 ]; then
     echo -e "illegal number of parameters."
     exit
 fi
-runmode=$1
+runmode=\$1
+if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
+    echo \"\${runmode} is not correctly.\"
+    exit
+fi
+
+jobDir=${jobdir}
+if [ ! -d \${jobDir} ]; then
+    echo -e "jobDir is not exist."
+    exit
+fi
 
 for (( jobID=0; jobID<=${totlen_job}; jobID++ ))
 do
@@ -330,12 +355,12 @@ do
     runIt=0
     for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
     do
-        logID=\$(printf "JOB_%07i_EXE_%07i" \$jobID \$exeID)
+        logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
         if [ \${runmode} == "RUN" ]; then
-            touch ${proj_path}/proc/${logID}
+            touch \${jobDir}/proc/${logID}
             runIt=1
         else
-            if [ -f ${proj_path}/proc/${logID} ]; then
+            if [ -f \${jobDir}/proc/${logID} ]; then
                 runIt=1
             fi
         fi
@@ -345,59 +370,12 @@ do
         continue
     fi
 
-    BSUB_JobComd = \"bsub -q ${queue} -J {jobname} -oo #{@LogFile} sh {jobscript} \${jobID} \${exeSatD} \${@exeEndID}\"
+    jobLogID=\$(printf "JOB%07i" \${jobID})
+    jobLog=\${jobDir}/log/\${jobLogID}
+
+    BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatD} \${@exeEndID}\"
 done
 echo \"**********************************************************************\"
 echo \"************************** SUBMIT FINISH *****************************\"
 echo \"**********************************************************************\"
-
-
-
-#if run; then touch proc/JOB{ID}EXE{ID}
-#cp script exe flist to host
-#cp proc/JOB{ID}EXE{ID} to host (if rurun; then cp exist JOB{ID}EXE{ID} to host)
-#if rerun; check files.....
 " >> $submit_script
-echo "====================================================="
-echo $submit_script
-cat $submit_script
-
-
-if [ $# -ne 2 ]; then
-    echo "illegal number of parameters."
-    exit
-fi
-
-runmode=${2^^}
-if [ "${runmode}" != "RUN" ] && [ "${runmode}" != "RERUN" ]; then
-    echo "${runmode} is not correctly."
-    exit
-fi
-
-echo "**********************************************************************"
-echo " RUNMODE : " ${runmode}
-echo "******************************* CONFIRM ******************************"
-if [ ${confirm} == "YES" ]; then
-    echo "START SUBMIT JOB."
-elif [ ${confirm} == "NO" ]; then
-    echo "STOP SUBMIT JOB."
-    exit
-else
-    confirm_opt=
-    echo "CONFIRM (YES | NO) : "
-    read confirm_opt
-    case $confirm_opt in
-    	"YES" | "yes" | "Y" | "y" )
-    		echo "START SUBMIT JOB."
-    	;;
-    	"NO" | "no" | "N" | "n" )
-    		echo "STOP SUBMIT JOB."
-    		exit
-    	;;
-    	* )
-    		echo "ERROR CONFIRM. EXITING ..."
-    		exit
-    	;;
-    esac 
-fi
-echo "**********************************************************************"
