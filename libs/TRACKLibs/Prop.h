@@ -10,6 +10,11 @@ namespace TrackSys {
 // Axis Org := Tau x Rho
 class OrthCoord {
     public :
+        static const SVecD<3> AXIS_X;
+        static const SVecD<3> AXIS_Y;
+        static const SVecD<3> AXIS_Z;
+
+    public :
         OrthCoord() : org_(0, 0, 1), tau_(1, 0, 0), rho_(0, 1, 0) {}
         OrthCoord(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X);
         ~OrthCoord() {}
@@ -30,12 +35,7 @@ class OrthCoord {
         inline const Double_t& ry() const { return rho_(1); }
         inline const Double_t& rz() const { return rho_(2); }
 
-
     private :
-        static const SVecD<3> AXIS_X;
-        static const SVecD<3> AXIS_Y;
-        static const SVecD<3> AXIS_Z;
-
         SVecD<3> org_;
         SVecD<3> tau_;
         SVecD<3> rho_;
