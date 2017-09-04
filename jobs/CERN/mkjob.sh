@@ -142,13 +142,18 @@ if [ "${storage}" != "EOS" ]; then
     exit
 fi
 
+storage_path=
 if [ "${storage}" == "EOS" ]; then
     storage_path=/eos/ams/user/${FL}/${USER}
     if [ ! -d ${storage_path} ]; then
         echo "\"${storage_path}\" is not exist."
         exit
+    else
+        storage_path=${storage_path}/AMSData
+        mkdir -p ${storage_path}
     fi
 fi
+
 
 exe_per_job=${EXEPERJOB}
 if [[ ! ${exe_per_job} =~ ^-?[0-9]+$ ]]; then
@@ -333,7 +338,7 @@ if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
     exit
 fi
 
-dataDir=${AMSData}/${PROJPATH}/${PROJVERSION}/${proj_title}
+dataDir=${storage_path}/${PROJPATH}/${PROJVERSION}/${proj_title}
 mkdir -p \${dataDir}
 if [ ! -d \${dataDir} ]; then
     echo -e "taget data/ is not exist."
@@ -380,9 +385,11 @@ do
 
     BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}\"
     bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}
-    echo \${BSUBComd}
+    #echo \${BSUBComd}
 done
 echo \"**********************************************************************\"
 echo \"************************** SUBMIT FINISH *****************************\"
 echo \"**********************************************************************\"
 " >> $submit_script
+
+cfg_clear

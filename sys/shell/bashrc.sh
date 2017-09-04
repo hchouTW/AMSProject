@@ -45,6 +45,9 @@ alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 
 # Job Config
 source ${AMSProj}/sys/shell/ini_parser.sh
+if [[ $HOSTNAME == *"lxplus"* ]]; then
+    alias submit='sh ${AMSProj}/jobs/CERN/submit.sh'
+fi
 
 # LXPLUS
 if [[ $HOSTNAME == *"lxplus"* ]]; then
