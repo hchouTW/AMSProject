@@ -4,8 +4,8 @@
 FL=`whoami | cut -c1`
 USER=`whoami`
 
-# Check Environment
-if [ $# -ne 2 ]; then
+# Check Input Parameters
+if [ $# -ne 1 ]; then
     echo "illegal number of parameters."
     exit
 fi
@@ -14,17 +14,21 @@ if [ ! -f ${jobconf} ]; then
     echo "\"${jobconf}\" is not exist."
     exit
 fi
-runmode=${2^^}
-if [ "${runmode}" != "RUN" ] && [ "${runmode}" != "RERUN" ]; then
-    echo "${runmode} is not correctly."
-    exit
-fi
+#runmode=${2^^}
+#if [ "${runmode}" != "RUN" ] && [ "${runmode}" != "RERUN" ]; then
+#    echo "${runmode} is not correctly."
+#    exit
+#fi
 
+
+# Check Environment Variables
 if [ "${AMSProj}" == "" ] || [ "${AMSCore}" == "" ] || [ "${AMSJobs}" == "" ]; then
     echo "not found (AMSProj | AMSCore | AMSJobs)"
     exit
 fi
 
+
+# Ini_Parser
 ini_parser=${AMSProj}/sys/shell/ini_parser.sh
 if [ ! -f ${ini_parser} ]; then
     echo "\"${ini_parser}\" is not exist."
@@ -134,17 +138,6 @@ if [ "`bqueues -u $USER | grep ${queue}`" == "" ]; then
     exit
 fi
 
-exe_per_job=${EXEPERJOB}
-if [[ ! ${exe_per_job} =~ ^-?[0-9]+$ ]]; then
-    echo "\"${exe_per_job}\" is not integer"
-    exit
-fi
-if [ ${exe_per_job} -lt 1 ]; then
-    exe_per_job=1
-fi
-totlen_exe=$(( ${exe_endID}-${exe_satID}+1 ))
-totlen_job=$(( ${totlen_exe}/${exe_per_job} + (${totlen_exe}%${exe_per_job}!=0) ))
-
 storage=${STORAGE^^}
 if [ "${storage}" != "EOS" ]; then
     echo "Storage(${storage}) is not exist."
@@ -159,28 +152,47 @@ if [ "${storage}" == "EOS" ]; then
     fi
 fi
 
+exe_per_job=${EXEPERJOB}
+if [[ ! ${exe_per_job} =~ ^-?[0-9]+$ ]]; then
+    echo "\"${exe_per_job}\" is not integer"
+    exit
+fi
+if [ ${exe_per_job} -lt 1 ]; then
+    exe_per_job=1
+fi
+totlen_exe=$(( ${exe_endID}-${exe_satID}+1 ))
+totlen_job=$(( ${totlen_exe}/${exe_per_job} + (${totlen_exe}%${exe_per_job}!=0) ))
+
 confirm=${CONFIRM^^}
 if [ "${confirm}" != "YES" ] && [ "${confirm}" != "NO" ] && [ "${confirm}" != "NONE" ]; then
     echo "Confirm(${confirm}) is not in (YES NO NONE)"
     exit
 fi
 
-echo "========== PARAMETERS ==========
+echo "**********************************************************************
+***************************** PARAMETERS *****************************
+**********************************************************************
 [PROJECT]
-PATH        ${PROJPATH}/${PROJVERSION}
-TITLE       ${proj_title}
-BIN         ${PROJBIN}
-FLST        ${PROJFLIST}
-EVENTTYPE   ${event_type}
-REGION      ${job_region}
-EXESATID    ${exe_satID}
-EXEENDID    ${exe_endID}
+PROJPATH        ${PROJPATH}
+PROJVERSION     ${PROJVERSION}
+PROJTITLE       ${proj_title}
+PROJBIN         ${PROJBIN}
+PROJFLST        ${PROJFLIST}
+EVENTTYPE       ${event_type}
+FILEPEREXE      ${file_per_exe}
+JOBREGION       ${job_region}
 
 [QUEUE]
-QUEUE       ${queue}
-EXEPERJOB   ${exe_per_job}
-STORAGE     ${storage}
-======================================="
+QUEUE           ${queue}
+STORAGE         ${storage}
+EXEPERJOB       ${exe_per_job}
+
+[JOBS]
+EXESATID        ${exe_satID}
+EXEENDID        ${exe_endID}
+TOTALEXE        ${totlen_exe}
+TOTALJOB        ${totlen_job}
+**********************************************************************"
 echo "******************************** CONFIRM *******************************"
 if [ ${confirm} == "YES" ]; then
     echo "START SUBMIT JOB."
@@ -205,10 +217,10 @@ else
     	;;
     esac 
 fi
-echo "================================================="
+echo "**********************************************************************"
 
 
-
+# Copy to AMSJobs
 jobdir=${AMSJobs}/${PROJPATH}/${PROJVERSION}/${proj_title}
 mkdir -p ${jobdir}
 if [ ! -d ${jobdir} ]; then
@@ -223,41 +235,83 @@ cp -fa ${proj_env} ${jobdir}/env.sh
 cp -fa ${proj_bin} ${jobdir}/jobexe
 cp -fa ${proj_lst} ${jobdir}/flist
 
-echo "PARAMETERS" > ${jobdir}/PARAMETERS
+echo "[PROJECT]
+PROJPATH        ${PROJPATH}
+PROJVERSION     ${PROJVERSION}
+PROJTITLE       ${proj_title}
+PROJBIN         ${PROJBIN}
+PROJFLST        ${PROJFLIST}
+EVENTTYPE       ${event_type}
+FILEPEREXE      ${file_per_exe}
+JOBREGION       ${job_region}
+EXESATID        ${exe_satID}
+EXEENDID        ${exe_endID}
 
+[QUEUE]
+QUEUE           ${queue}
+STORAGE         ${storage}
+EXEPERJOB       ${exe_per_job}
+
+[JOBS]
+TOTALEXE        ${totlen_exe}
+TOTALJOB        ${totlen_job}" > ${jobdir}/PARAMETERS
+
+# Job Script
 job_script=${jobdir}/job.sh
-echo "
+echo "#!bin/bash
+#shopt -s -o nounset
+EOScomd='/afs/cern.ch/project/eos/installation/0.3.15/bin/eos.select'
+echo -e \"====  Start Run Time : '$(date)'  ====\"
+echo -e \"====  Local Host : "'$HOSTNAME'"  ====\"
+echo -e \"====  Redhat-release  ====\"
+cat /etc/redhat-release
+
+echo -e \"*************************\"
+echo -e \"****  START RUNNING  ****\"
+echo -e \"*************************\"
+
+JobID=$1
+ExeSatID=$2
+ExeEndID=$3
+
+for (( exeID=${ExeSatID}; exeID<=${ExeEndID}; exeID++ ))
+do
+
+    # check JOB{ID}EXE{ID} exist
+
+
+    echo -e \"****  RUNNING  ****\" | tee ${logID_File}
+    ./jobexe #{EventMode} ${Stream} ${exeID} #{FilePerExe} ${TmpVersionStreamSrgDir} 2>&1 | tee -a ${logID_File}
+
+    rootFile=`ls ${TmpVersionStreamSrgDir} | grep ${fileName}`
+    cp ${TmpVersionStreamSrgDir}/$rootFile ${VersionStreamSrgDir}/$rootFile
+
+	/bin/rm ${TmpVersionStreamSrgDir}/$rootFile
+	echo -e \"****  FINISH RUNNING  ****\" | tee -a ${logID_File}
+done
+
+echo -e \"**************************\"
+echo -e \"****  FINISH RUNNING  ****\"
+echo -e \"**************************\"
 " > $job_script
 
 
+#submit_script=${jobdir}/submit.sh
+#echo "#!bin/bash
+#runmode=$1
+#
+##if run; then touch proc/JOB{ID}EXE{ID}
+##cp script exe flist to host
+##cp proc/JOB{ID}EXE{ID} to host (if rurun; then cp exist JOB{ID}EXE{ID} to host)
+#if rerun; check files.....
+#
+#
+#" >> $submit_script
 
 
-#ParamFileName = "PARAMETERS"
-#ParamFilePath = "#{VersionStreamLogDir}/#{ParamFileName}"
-#ParamFile = File.open("#{ParamFilePath}", "w")
-#ParamFile << """
-#QUEUE_MODE         #{QueueMode}
-#STORAGE_MODE       #{StorageMode}
-#PROJECT_MODE       #{ProjectMode}
-#"""
-#if (ProjectMode.eql? "ANALYSIS"); then
-#ParamFile << """
-#SUBPROJECT_MODE    #{SubProjectMode}
-#"""
-#end
-#ParamFile << """
-#RUN_MODE           #{RunMode}
-#EVENT_MODE         #{EventMode}
-#
-#VERSION            #{Version}
-#VERSION_TITLE      #{VersionTitle}
-#VERSION_STREAM     #{VersionStream}
-#JOB_EXE            #{JobExe}
-#STREAM             #{Stream}
-#
-#FILE_PER_EXE       #{FilePerExe}
-#EXE_PER_JOB        #{ExePerJob}
-#
+
+
+
 #TOTAL_RUN_EXE      #{TotalExe}
 #EXE_START_ID       #{ExeStartID}
 #EXE_END_ID         #{ExeEndID}
@@ -265,6 +319,3 @@ echo "
 #TOTAL_RUN_JOB      #{TotalJob}
 #JOB_START_ID       #{JobStartID}
 #JOB_END_ID         #{JobEndID}
-#
-#"""
-#ParamFile.close

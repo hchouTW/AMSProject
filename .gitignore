@@ -36,8 +36,8 @@
 # User Defination (ROOT file)
 *.root
 
-# User Defination (AMS Data filelist)
-#flist.*
+# User Defination (VIM)
+.netrwhist
 
 # User Defination (Tex file)
 *.aux
