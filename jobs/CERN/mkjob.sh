@@ -5,7 +5,7 @@ FL=`whoami | cut -c1`
 USER=`whoami`
 
 # Check Input Parameters
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ]; then
     echo "illegal number of parameters."
     exit
 fi
@@ -193,31 +193,7 @@ EXEENDID        ${exe_endID}
 TOTALEXE        ${totlen_exe}
 TOTALJOB        ${totlen_job}
 **********************************************************************"
-echo "******************************** CONFIRM *******************************"
-if [ ${confirm} == "YES" ]; then
-    echo "START SUBMIT JOB."
-elif [ ${confirm} == "NO" ]; then
-    echo "STOP SUBMIT JOB."
-    exit
-else
-    confirm_opt=
-    echo "CONFIRM (YES | NO) : "
-    read confirm_opt
-    case $confirm_opt in
-    	"YES" | "yes" | "Y" | "y" )
-    		echo "START SUBMIT JOB."
-    	;;
-    	"NO" | "no" | "N" | "n" )
-    		echo "STOP SUBMIT JOB."
-    		exit
-    	;;
-    	* )
-    		echo "ERROR CONFIRM. EXITING ..."
-    		exit
-    	;;
-    esac 
-fi
-echo "**********************************************************************"
+
 
 
 # Copy to AMSJobs
@@ -261,33 +237,62 @@ job_script=${jobdir}/job.sh
 echo "#!bin/bash
 #shopt -s -o nounset
 EOScomd='/afs/cern.ch/project/eos/installation/0.3.15/bin/eos.select'
-echo -e \"====  Start Run Time : '$(date)'  ====\"
-echo -e \"====  Local Host : "'$HOSTNAME'"  ====\"
+echo -e \"====  Start Run Time : \$(date)\"
+echo -e \"====  Local Host : \${HOSTNAME}\"
 echo -e \"====  Redhat-release  ====\"
 cat /etc/redhat-release
+
+if [ \$\# -ne 3 ]; t4yyhen
+    echo -e "illegal number of parameters."
+    exit
+fi
+
+if [ ! -d \$(PWD)/proc ]; then
+    echo -e "proc is not exist."
+fi
+
+if [ ! -d \$(PWD)/log ]; then
+    echo -e "proc is not exist."
+fi
+
+tmpData=\$(PWD)/data
+mkdir -p \${tmpData}
+source \$(PWD)/env.sh
 
 echo -e \"*************************\"
 echo -e \"****  START RUNNING  ****\"
 echo -e \"*************************\"
 
-JobID=$1
-ExeSatID=$2
-ExeEndID=$3
+jobID=\$1
+exeSatID=\$2
+exeEndID=\$3
 
-for (( exeID=${ExeSatID}; exeID<=${ExeEndID}; exeID++ ))
+for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
+    logID=\$(printf "JOB_%07i_EXE_%07i" \$jobID \$exeID)
+    logProc=${proj_path}/proc/\${logID}
+    if [ ! -f \${logProc} ]; then
+        continue
+    fi
 
-    # check JOB{ID}EXE{ID} exist
+    logLog=\${PWD}/log/\${logID}
+    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee \${logLog}
+    rootFile=\`ls \${tmpData} | grep root\`
+    filePath=\${tmpData}/\${rootFile}
+    if [ ! -f \${filePath} ]; then
+        echo \"ROOT file is not exist.\" | tee -a \${logLog}
+    else
+        tagetPath=${AMSData}/\${rootFile}
+        cp \${filePath} \${tagetPath}
+        if [ -f \${tagetPath} ]; then
+            echo "Succ" | tee -a \${logLog}
+            cp \${logLog} ${proj_path}/log/\${logID}
+            rm \${filePath}
+            rm ${logProc}
+            rm ${proj_path}/proc/\${logID}
 
-
-    echo -e \"****  RUNNING  ****\" | tee ${logID_File}
-    ./jobexe #{EventMode} ${Stream} ${exeID} #{FilePerExe} ${TmpVersionStreamSrgDir} 2>&1 | tee -a ${logID_File}
-
-    rootFile=`ls ${TmpVersionStreamSrgDir} | grep ${fileName}`
-    cp ${TmpVersionStreamSrgDir}/$rootFile ${VersionStreamSrgDir}/$rootFile
-
-	/bin/rm ${TmpVersionStreamSrgDir}/$rootFile
-	echo -e \"****  FINISH RUNNING  ****\" | tee -a ${logID_File}
+        fi
+    fi
 done
 
 echo -e \"**************************\"
@@ -295,27 +300,105 @@ echo -e \"****  FINISH RUNNING  ****\"
 echo -e \"**************************\"
 " > $job_script
 
+echo "$job_script"
+cat $job_script
 
-#submit_script=${jobdir}/submit.sh
-#echo "#!bin/bash
-#runmode=$1
-#
-##if run; then touch proc/JOB{ID}EXE{ID}
-##cp script exe flist to host
-##cp proc/JOB{ID}EXE{ID} to host (if rurun; then cp exist JOB{ID}EXE{ID} to host)
+
+
+submit_script=${jobdir}/submit.sh
+echo "#!bin/bash
+echo \"**********************************************************************\"
+echo \"****************************** SUBMIT ********************************\"
+echo \"**********************************************************************\"
+if [ \$\# -ne 1 ]; then
+    echo -e "illegal number of parameters."
+    exit
+fi
+runmode=$1
+
+for (( jobID=0; jobID<=${totlen_job}; jobID++ ))
+do
+    exeSatID=\$(( ${exe_satID} + ${totlen_job}*\${jobID} ))
+    exeEndID=\$(( ${exe_satID} + ${totlen_job}*(\${jobID}+1) - 1 ))
+    if (( \${exeSatID} -lt ${exe_satID} )); then
+        exeSatID=${exe_satID}
+    fi
+    if (( \${exeEndID} -gt ${exe_endID} )); then
+        exeEndID=${exe_endID}
+    fi
+    
+    runIt=0
+    for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
+    do
+        logID=\$(printf "JOB_%07i_EXE_%07i" \$jobID \$exeID)
+        if [ \${runmode} == "RUN" ]; then
+            touch ${proj_path}/proc/${logID}
+            runIt=1
+        else
+            if [ -f ${proj_path}/proc/${logID} ]; then
+                runIt=1
+            fi
+        fi
+    done
+    
+    if (( \${runIt} -eq 0 )); then
+        continue
+    fi
+
+    BSUB_JobComd = \"bsub -q ${queue} -J {jobname} -oo #{@LogFile} sh {jobscript} \${jobID} \${exeSatD} \${@exeEndID}\"
+done
+echo \"**********************************************************************\"
+echo \"************************** SUBMIT FINISH *****************************\"
+echo \"**********************************************************************\"
+
+
+
+#if run; then touch proc/JOB{ID}EXE{ID}
+#cp script exe flist to host
+#cp proc/JOB{ID}EXE{ID} to host (if rurun; then cp exist JOB{ID}EXE{ID} to host)
 #if rerun; check files.....
-#
-#
-#" >> $submit_script
+" >> $submit_script
+echo "====================================================="
+echo $submit_script
+cat $submit_script
 
 
+if [ $# -ne 2 ]; then
+    echo "illegal number of parameters."
+    exit
+fi
 
+runmode=${2^^}
+if [ "${runmode}" != "RUN" ] && [ "${runmode}" != "RERUN" ]; then
+    echo "${runmode} is not correctly."
+    exit
+fi
 
-
-#TOTAL_RUN_EXE      #{TotalExe}
-#EXE_START_ID       #{ExeStartID}
-#EXE_END_ID         #{ExeEndID}
-#
-#TOTAL_RUN_JOB      #{TotalJob}
-#JOB_START_ID       #{JobStartID}
-#JOB_END_ID         #{JobEndID}
+echo "**********************************************************************"
+echo " RUNMODE : " ${runmode}
+echo "******************************* CONFIRM ******************************"
+if [ ${confirm} == "YES" ]; then
+    echo "START SUBMIT JOB."
+elif [ ${confirm} == "NO" ]; then
+    echo "STOP SUBMIT JOB."
+    exit
+else
+    confirm_opt=
+    echo "CONFIRM (YES | NO) : "
+    read confirm_opt
+    case $confirm_opt in
+    	"YES" | "yes" | "Y" | "y" )
+    		echo "START SUBMIT JOB."
+    	;;
+    	"NO" | "no" | "N" | "n" )
+    		echo "STOP SUBMIT JOB."
+    		exit
+    	;;
+    	* )
+    		echo "ERROR CONFIRM. EXITING ..."
+    		exit
+    	;;
+    esac 
+fi
+echo "**********************************************************************"
+sh ${submit_script} ${runmode}
