@@ -95,4 +95,6 @@ else
     esac 
 fi
 echo "**********************************************************************"
+cfg_clear
+
 sh ${submit_script} ${runmode}
