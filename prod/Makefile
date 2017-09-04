@@ -44,5 +44,5 @@ clean :
 	@rm -fv $(TagetDir)/lib/*
 	@rm -fv $(TagetDir)/obj/*
 	@rm -fv $(TagetDir)/src/*
-	@rm -fv $(TagetDir)/job/*
+	@rm -fv $(TagetDir)/lst/*
 	@rm -fv $(TagetDir)/YiProdNtuple
