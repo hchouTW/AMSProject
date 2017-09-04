@@ -228,49 +228,47 @@ TOTALJOB        ${totlen_job}" > ${jobdir}/PARAMETERS
 
 # Job Script
 job_script=${jobdir}/job.sh
-echo "#!bin/bash
-#shopt -s -o nounset
+echo "#!/bin/bash
 EOScomd='/afs/cern.ch/project/eos/installation/0.3.15/bin/eos.select'
 echo -e \"====  Start Run Time : \$(date)\"
 echo -e \"====  Local Host : \${HOSTNAME}\"
 echo -e \"====  Redhat-release  ====\"
 cat /etc/redhat-release
 
-if [ \$\# -ne 3 ]; then
-    echo -e "illegal number of parameters."
+if [ \$# -ne 3 ]; then
+    echo -e \"illegal number of parameters.\"
     exit
 fi
 
 jobDir=${jobdir}
 if [ ! -d \${jobDir} ]; then
-    echo -e "jobDir is not exist."
+    echo -e \"jobDir is not exist.\"
     exit
 fi
 if [ ! -d \${jobDir}/proc ]; then
-    echo -e "proc/ is not exist."
+    echo -e \"proc/ is not exist.\"
     exit
 fi
 
 if [ ! -d \${jobDir}/log ]; then
-    echo -e "log/ is not exist."
+    echo -e \"log/ is not exist.\"
     exit
 fi
 
-cp -fa \${jobDir}/env.sh \$(PWD)/env.sh
-cp -fa \${jobDir}/jobexe \$(PWD)/jobexe
-cp -fa \${jobDir}/flist \$(PWD)/flist
+cp -fa \${jobDir}/env.sh \${PWD}/env.sh
+cp -fa \${jobDir}/jobexe \${PWD}/jobexe
+cp -fa \${jobDir}/flist \${PWD}/flist
 
-source \$(PWD)/env.sh
+source \${PWD}/env.sh
 
-tmpData=\$(PWD)/data
+tmpData=\${PWD}/data
 mkdir -p \${tmpData}
 if [ ! -d \${tmpDate} ]; then
-    echo -e "data/ is not exist."
+    echo -e \"data/ is not exist.\"
     exit
 fi
 
 dataDir=${AMSData}/${PROJPATH}/${PROJVERSION}/${proj_title}
-mkdir -p \${dataDir}
 if [ ! -d \${dateDir} ]; then
     echo -e "taget data/ is not exist."
     exit
@@ -287,8 +285,8 @@ exeEndID=\$3
 
 for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
-    logID=\$(printf "JOB%07i_EXE%07i" \$jobID \$exeID)
-    locLog=\$(PWD)/\${logID}
+    logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
+    locLog=\${PWD}/\${logID}
     logLog=\${jobDir}/log/\${logID}
     logProc=\${jobDir}/proc/\${logID}
     if [ ! -f \${logProc} ]; then
@@ -321,12 +319,12 @@ echo -e \"**************************\"
 
 
 submit_script=${jobdir}/submit.sh
-echo "#!bin/bash
+echo "#!/bin/bash
 echo \"**********************************************************************\"
 echo \"****************************** SUBMIT ********************************\"
 echo \"**********************************************************************\"
-if [ \$\# -ne 1 ]; then
-    echo -e "illegal number of parameters."
+if [ \$# -ne 1 ]; then
+    echo -e \"illegal number of parameters.\"
     exit
 fi
 runmode=\$1
@@ -335,9 +333,16 @@ if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
     exit
 fi
 
+dataDir=${AMSData}/${PROJPATH}/${PROJVERSION}/${proj_title}
+mkdir -p \${dataDir}
+if [ ! -d \${dataDir} ]; then
+    echo -e "taget data/ is not exist."
+    exit
+fi
+
 jobDir=${jobdir}
 if [ ! -d \${jobDir} ]; then
-    echo -e "jobDir is not exist."
+    echo -e \"jobDir is not exist.\"
     exit
 fi
 
@@ -345,10 +350,10 @@ for (( jobID=0; jobID<=${totlen_job}; jobID++ ))
 do
     exeSatID=\$(( ${exe_satID} + ${totlen_job}*\${jobID} ))
     exeEndID=\$(( ${exe_satID} + ${totlen_job}*(\${jobID}+1) - 1 ))
-    if (( \${exeSatID} -lt ${exe_satID} )); then
+    if (( \${exeSatID} < ${exe_satID} )); then
         exeSatID=${exe_satID}
     fi
-    if (( \${exeEndID} -gt ${exe_endID} )); then
+    if (( \${exeEndID} > ${exe_endID} )); then
         exeEndID=${exe_endID}
     fi
     
@@ -357,23 +362,25 @@ do
     do
         logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
         if [ \${runmode} == "RUN" ]; then
-            touch \${jobDir}/proc/${logID}
+            touch \${jobDir}/proc/\${logID}
             runIt=1
         else
-            if [ -f \${jobDir}/proc/${logID} ]; then
+            if [ -f \${jobDir}/proc/\${logID} ]; then
                 runIt=1
             fi
         fi
     done
     
-    if (( \${runIt} -eq 0 )); then
+    if (( \${runIt} == 0 )); then
         continue
     fi
 
     jobLogID=\$(printf "JOB%07i" \${jobID})
-    jobLog=\${jobDir}/log/\${jobLogID}
+    jobLog=\${jobDir}/log/log.\${jobLogID}
 
-    BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatD} \${@exeEndID}\"
+    BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}\"
+    bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}
+    echo \${BSUBComd}
 done
 echo \"**********************************************************************\"
 echo \"************************** SUBMIT FINISH *****************************\"
