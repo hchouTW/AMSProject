@@ -353,6 +353,12 @@ if [ ! -d \${jobDir} ]; then
     exit
 fi
 
+jobScript=${job_script}
+if [ ! -f \${jobScript} ]; then
+    echo -e \"jobScript is not exist.\"
+    exit
+fi
+
 for (( jobID=0; jobID<=${totlen_job}; jobID++ ))
 do
     exeSatID=\$(( ${exe_satID} + ${totlen_job}*\${jobID} ))
@@ -385,8 +391,8 @@ do
     jobLogID=\$(printf "JOB%07i" \${jobID})
     jobLog=\${jobDir}/log/log.\${jobLogID}
 
-    BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}\"
-    bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh job.sh \${jobID} \${exeSatID} \${exeEndID}
+    BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\"
+    bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}
     #echo \${BSUBComd}
 done
 echo \"**********************************************************************\"
