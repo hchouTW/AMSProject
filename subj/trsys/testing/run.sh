@@ -1,13 +1,13 @@
 #!bin/bash
 RunFile=${AMSCore}/subj/trsys/testing/prop
 DataType=ISS
-Stream=list/flist.iss.B950.pass6
+Stream=lst/flist.iss.B950.pass6
 OutputDir=.
 GroupId=5
 GroupSize=6
 #${RunFile} -t ${DataType} -i ${Stream} -o ${OutputDir} -g ${GroupId} -s ${GroupSize}
 #${RunFile} -t ${DataType} -i ${Stream} -o ${OutputDir} -g ${GroupId} -s ${GroupSize} 
-${RunFile}
+${RunFile} ISS lst/flist.proton 
 
 
 

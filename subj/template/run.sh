@@ -1,7 +1,7 @@
 #!bin/bash
 RunFile=${AMSCore}/subj/template/YiSlcNtuple
 DataType=ISS
-Stream=list/flist.iss.B950.pass6
+Stream=lst/flist.iss.B950.pass6
 GroupId=0
 GroupSize=1
 OutputDir=.

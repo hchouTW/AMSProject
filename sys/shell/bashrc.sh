@@ -43,6 +43,9 @@ export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 
+# Read ROOT file list
+alias read_flist="sh ${AMSProj}/sys/shell/read_flist.sh"
+
 # Job Config
 source ${AMSProj}/sys/shell/ini_parser.sh
 if [[ $HOSTNAME == *"lxplus"* ]]; then

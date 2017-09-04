@@ -12,7 +12,7 @@ int main(int argc, char * argv[]) {
     //TH1::AddDirectory(true);
 
     std::string ifile = "/data3/hchou/AMSData/Lorentz/proton_0.8GeV_990k.root";
-    //MGConfig::JobOpt opt(argc, argv);
+    MGConfig::JobOpt opt(argc, argv);
     //for (auto&& str : opt.flist()) chain->Add(str.c_str());
 
     TChain * chain = new TChain("Ntuple");

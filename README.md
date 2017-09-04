@@ -14,6 +14,7 @@ fi
 # User specific aliases and functions
 export AMSProj=~/AMSProject
 export AMSCore=~/AMSCore
+export AMSJobs=~/AMSJobs
 
 source ${AMSProj}/sys/shell/bashrc.sh
 ```
