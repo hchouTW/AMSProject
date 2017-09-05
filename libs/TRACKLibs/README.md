@@ -164,3 +164,38 @@ codes
 ```
 
 ## Special Environment Testing
+
+# Usage
+## Particle Info
+```c++
+PartType type = PartType::Proton;
+PhySt part(type);
+part.print();
+```
+## Magnetic Field
+```c++
+SVecD<3> coo;
+MagFld&& mfld = MagMgnt::Get(coo);
+mfld.print();
+```
+## Material Field
+```c++
+SVecD<3> coo;
+MatFld&& mfld = MatMgnt::Get(coo);
+mfld.print();
+```
+## Propagation
+```c++
+double tagetZ;
+PhySt part;
+PropMgnt::PropToZ(tagetZ, part);
+part.print();
+```
+## Hit Info
+```c++
+HitSt hit;
+```
+## Track Fitting
+```c++
+PhyTr track;
+```

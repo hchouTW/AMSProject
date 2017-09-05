@@ -63,22 +63,22 @@ int main(int argc, char * argv[]) {
 
         Int_t  nbinc = 400;
         double binsc[2] = { -0.3, 0.3 };
-        TH1D * hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
-        TH1D * hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
-        TH1D * hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
-        TH1D * hTcy = new TH1D(Form("hTcy%02d", ifle), Form("hTcy%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
+        TH1D * hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
+        TH1D * hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
+        TH1D * hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
+        TH1D * hTcy = new TH1D(Form("hTcy%02d", ifle), Form("hTcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
 
         Int_t  nbinu = 400;
         double binsu[2] = { -0.015, 0.015 };
-        TH1D * hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D * hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D * hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D * hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [cm * p#beta/Q^2];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D * hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D * hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D * hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D * hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
 
         Int_t  nbinm = 400;
         double binsm[2] = { 0.0, 0.0005 };
-        TH1D * hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^2/Q^2];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
-        TH1D * hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^2/Q^2];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
+        TH1D * hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
+        TH1D * hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
             chain->GetEntry(it++);
@@ -135,8 +135,8 @@ int main(int argc, char * argv[]) {
     gMcx_sg->SetNameTitle("gMcx_sg", "");
     gMcx_mn->GetXaxis()->SetTitle("Momentum [GeV]");
     gMcx_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^2]");
-    gMcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^2]");
+    gMcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
+    gMcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
     
     TGraphErrors * gTcx_mn = new TGraphErrors();
     TGraphErrors * gTcx_sg = new TGraphErrors();
@@ -144,8 +144,8 @@ int main(int argc, char * argv[]) {
     gTcx_sg->SetNameTitle("gTcx_sg", "");
     gTcx_mn->GetXaxis()->SetTitle("Momentum [GeV]");
     gTcx_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^2]");
-    gTcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^2]");
+    gTcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
+    gTcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
     
     for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
         double mom = momlst.at(ifle);
@@ -185,8 +185,8 @@ int main(int argc, char * argv[]) {
     gMee_sg->SetNameTitle("gMee_sg", "");
     gMee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
     gMee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^2/Q^2]");
-    gMee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^2/Q^2]");
+    gMee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
+    gMee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^{2}/Q^{2}]");
 
     TGraphErrors * gTee_pk = new TGraphErrors();
     TGraphErrors * gTee_sg = new TGraphErrors();
@@ -194,8 +194,8 @@ int main(int argc, char * argv[]) {
     gTee_sg->SetNameTitle("gTee_sg", "");
     gTee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
     gTee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^2/Q^2]");
-    gTee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^2/Q^2]");
+    gTee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
+    gTee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^{2}/Q^{2}]");
     
     for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
         double mom = momlst.at(ifle);
