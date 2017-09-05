@@ -594,6 +594,9 @@ class MatArg {
 
         inline void rndm(const MatPhyFld& mphy);
 
+        inline void set_mscat(Double_t tau = 0., Double_t rho = 0.);
+        inline void set_eloss(Double_t ion = 0., Double_t brm = 0.);
+
         inline const Bool_t& operator() () const { return mat_; }
 
         inline const Bool_t& mscat() const { return sw_mscat_; }

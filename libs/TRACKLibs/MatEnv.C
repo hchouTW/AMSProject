@@ -1108,6 +1108,23 @@ void MatArg::rndm(const MatPhyFld& mphy) {
         brm_eloss_ = (MGNumc::Compare(bremslen) <= 0) ? MGMath::ZERO : MGRndm::Gamma(bremslen, (MGMath::ONE / bremslen))();
     }
 }
+        
+
+inline void MatArg::set_mscat(Double_t tau, Double_t rho) {
+    if (sw_mscat_) {
+        tau_mscat_ = tau;
+        rho_mscat_ = rho;
+    }
+}
+
+
+inline void MatArg::set_eloss(Double_t ion, Double_t brm) {
+    if (sw_eloss_) {
+        const Double_t ION_LIMIT = -10.0;
+        if (MGNumc::Compare(ion, ION_LIMIT) >= 0) ion_eloss_ = ion;
+        if (MGNumc::Compare(brm) >= 0) brm_eloss_ = brm;
+    }
+}
 
 
 Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
