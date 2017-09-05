@@ -108,7 +108,6 @@ class MatGeoBoxCreator {
        
         void save_and_close();
 
-        // testcode
         void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]);
 
     protected :

@@ -193,11 +193,26 @@ part.print();
 ## Magnetic Field
 Build Magnetic Field Data Base
 ```c++
-MagGeoBoxCreator creator;
+int xn, yn, zn;
+double xmin, xmax;
+double ymin, ymax;
+double zmin, zmax;
+std::string output_path;
+MagGeoBoxCreator creator(xn, xmin, xmax, yn, ymin, ymax, zn, zmin, zmax, output_path);
+
+double mag[3];
+creator.save_and_close(mag[0], mag[1], mag[2]);
 ```
 Read Magnetic Field Data Base
 ```c++
-MagGeoBoxReader reader;
+std::string input_path;
+MagGeoBoxReader reader(input_path);
+
+if (reader.exist()) {
+    SVecD<3> coo;
+    MagFld&& mfld = reader.get(coo);
+    mfld.print();
+}
 ```
 Get Magentic Field
 ```c++
@@ -208,11 +223,36 @@ mfld.print();
 ## Material Field
 Build Material Field Data Base
 ```c++
-MatGeoBoxCreator creator;
+int xn, yn, zn;
+double xmin, xmax;
+double ymin, ymax;
+double zmin, zmax;
+std::string output_path;
+MatGeoBoxCreator creator(xn, xmin, xmax, yn, ymin, ymax, zn, zmin, zmax, output_path);
+
+bool   elm[MatProperty::NUM_ELM];
+double den[MatProperty::NUM_ELM];
+creator.save_and_close(elm, den);
 ```
 Read Material Field Data Base
 ```c++
-MatGeoBoxReader reader;
+std::string input_path;
+MatGeoBoxReader reader(input_path);
+
+// get material field by point
+if (reader.exist()) {
+    SVecD<3> coo;
+    MatFld&& mfld = reader.get(coo);
+    mfld.print();
+}
+
+// get material field by path
+if (reader.exist()) {
+    bool is_std_step;
+    SVecD<3> vcoo, wcoo;
+    MatFld&& mfld = reader.get(coo, wcoo, is_std_step);
+    mfld.print();
+}
 ```
 Get Material Field
 ```c++
@@ -223,35 +263,47 @@ mfld.print();
 ## Propagation
 Normal Method
 ```c++
+// Particle
+double coo[3];
+double dir[3];
+double rig;
+PhySt part(PartType::Proton);
+part.set_state_with_cos(coo[0], coo[1], coo[2], dir[0], dir[1], dir[2]);
+part.set_rig(rig);
+
+// Interaction Option
 bool mscatOpt = true;
 bool elossOpt = true;
 MatArg marg(mscatOpt, elossOpt);
 marg.set_mscat(0., 0.);
 marg.set_eloss(0., 0.);
 
-PhySt part;
+// Jacobian for fitting
+PhyJb* phyJb = nullptr;
+
+// Material Field
+MatFld mfld;
 
 // Propagate by step length
 double tagetS;
-PropMgnt::Prop(tagetS, part, marg);
-
-// Propagate to coordinate Z
-double tagetZ;
-PropMgnt::PropToZ(tagetZ, part, marg);
+PropMgnt::Prop(tagetS, part, marg, phyJb, &mfld);
 
 part.print();
 ```
 Toy Monte Carlo
 ```c++
+// Particle
+double coo[3];
+double dir[3];
+double rig;
+PhySt part(PartType::Proton);
+part.set_state_with_cos(coo[0], coo[1], coo[2], dir[0], dir[1], dir[2]);
+part.set_rig(rig);
+
+// Interaction Option
 bool mscatOpt = true;
 bool elossOpt = true;
 MatArg marg(mscatOpt, elossOpt);
-
-PhySt part;
-
-// Propagate by step length
-double tagetS;
-PropMgnt::PropWithMC(tagetS, part, marg);
 
 // Propagate to coordinate Z
 double tagetZ;

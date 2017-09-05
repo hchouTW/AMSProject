@@ -1110,7 +1110,7 @@ void MatArg::rndm(const MatPhyFld& mphy) {
 }
         
 
-inline void MatArg::set_mscat(Double_t tau, Double_t rho) {
+void MatArg::set_mscat(Double_t tau, Double_t rho) {
     if (sw_mscat_) {
         tau_mscat_ = tau;
         rho_mscat_ = rho;
@@ -1118,7 +1118,7 @@ inline void MatArg::set_mscat(Double_t tau, Double_t rho) {
 }
 
 
-inline void MatArg::set_eloss(Double_t ion, Double_t brm) {
+void MatArg::set_eloss(Double_t ion, Double_t brm) {
     if (sw_eloss_) {
         const Double_t ION_LIMIT = -10.0;
         if (MGNumc::Compare(ion, ION_LIMIT) >= 0) ion_eloss_ = ion;
