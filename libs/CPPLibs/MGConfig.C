@@ -55,7 +55,7 @@ JobOpt::JobOpt(int argc, char* argv[]) : succ_(false), type_("NONE"), ipath_("fl
 
     long gi = (usht ? (buf[3] ? std::atol(buf[3]) : gi_) : (argc>3 ? std::atol(argv[3]) : gi_));
     long gs = (usht ? (buf[4] ? std::atol(buf[4]) : gs_) : (argc>4 ? std::atol(argv[4]) : gs_));
-    if (gs == 0) gs = list.size();
+    if (gs == 0) { gi = 0; gs = list.size(); }
     if (gi < 0 || gs < 0 || gs > list.size() || (gs*gi) >= list.size())
         MGSys::ShowErrorAndExit("JobOpt: outside (gi, gs)! Exiting ...");
 

@@ -11,6 +11,7 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     TH1::AddDirectory(true);
 
+    const int NL = 3;
     const int IDi = 0;
     const int IDj = 1;
 
@@ -42,17 +43,25 @@ int main(int argc, char * argv[]) {
         chain->SetBranchAddress("mom_z", &mz);
 
         if (chain->GetEntries() == 0) continue;
-        const double sclc = 0.1;
-        const double sclm = 1.0e-3;
-
+        
         double refm = 0;
+        double refci[3];
+        double refcj[3];
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
             chain->GetEntry(it);
-            if (mz->size() == 0) continue;
-            refm = sclm * std::sqrt(mx->at(0)*mx->at(0) + my->at(0)*my->at(0) + mz->at(0)*mz->at(0));
+            if (cz->size() != NL) continue;
+            if (mz->size() != NL) continue;
+            refm = std::sqrt(mx->at(IDi)*mx->at(IDi) + my->at(IDi)*my->at(IDi) + mz->at(IDi)*mz->at(IDi));
+            refci[0] = cx->at(IDi);
+            refci[1] = cy->at(IDi);
+            refci[2] = cz->at(IDi);
+            refcj[0] = cx->at(IDj);
+            refcj[1] = cy->at(IDj);
+            refcj[2] = cz->at(IDj);
             break;
         }
         momlst.push_back(refm);
+
         part_info.set_mom(refm);
         double scl_mscat = (part_info.mom() * part_info.bta() / (part_info.part().chrg() * part_info.part().chrg()));
         double scl_engls = (part_info.bta() * part_info.bta() / (part_info.part().chrg() * part_info.part().chrg()));
@@ -61,39 +70,37 @@ int main(int argc, char * argv[]) {
 
         ofle->cd();
 
-        Int_t  nbinc = 400;
-        double binsc[2] = { -0.3, 0.3 };
+        Int_t  nbinc = 800;
+        double binsc[2] = { -0.2, 0.2 };
         TH1D * hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D * hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D * hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D * hTcy = new TH1D(Form("hTcy%02d", ifle), Form("hTcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
 
-        Int_t  nbinu = 400;
-        double binsu[2] = { -0.015, 0.015 };
+        Int_t  nbinu = 800;
+        double binsu[2] = { -0.04, 0.04 };
         TH1D * hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D * hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D * hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D * hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
 
-        Int_t  nbinm = 400;
-        double binsm[2] = { 0.0, 0.0005 };
+        Int_t  nbinm = 1600;
+        double binsm[2] = { 0.005, 0.06 };
         TH1D * hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
         TH1D * hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
-            chain->GetEntry(it++);
-            if (cz->size() != 2) continue;
-            double icoo[3] = { sclc * cx->at(IDi), sclc * cy->at(IDi), sclc * cz->at(IDi) };
-            double jcoo[3] = { sclc * cx->at(IDj), sclc * cy->at(IDj), sclc * cz->at(IDj) };
-            
             chain->GetEntry(it);
-            if (mz->size() != 2) continue;
-            double ivec[3] = { sclm * mx->at(IDi), sclm * my->at(IDi), sclm * mz->at(IDi) };
-            double jvec[3] = { sclm * mx->at(IDj), sclm * my->at(IDj), sclm * mz->at(IDj) };
+            if (cz->size() != NL) continue;
+            if (mz->size() != NL) continue;
             
+            double icoo[3] = { cx->at(IDi), cy->at(IDi), cz->at(IDi) };
+            double ivec[3] = { mx->at(IDi), my->at(IDi), mz->at(IDi) };
             double imom    = std::sqrt(ivec[0]*ivec[0] + ivec[1]*ivec[1] + ivec[2]*ivec[2]);
             double idir[3] = { ivec[0]/imom, ivec[1]/imom, ivec[2]/imom };
             
+            double jcoo[3] = { cx->at(IDj), cy->at(IDj), cz->at(IDj) };
+            double jvec[3] = { mx->at(IDj), my->at(IDj), mz->at(IDj) };
             double jmom    = std::sqrt(jvec[0]*jvec[0] + jvec[1]*jvec[1] + jvec[2]*jvec[2]);
             double jdir[3] = { jvec[0]/jmom, jvec[1]/jmom, jvec[2]/jmom };
            
