@@ -260,6 +260,14 @@ SVecD<3> coo;
 MatFld&& mfld = MatMgnt::Get(coo);
 mfld.print();
 ```
+Get Material Physical Field
+```c++
+PhySt part;
+double step_len;
+MatPhyFld&& mpfld = MatPhy::Get(step_len, part);
+// TODO : add function
+// mpfld.print();
+```
 ## Propagation
 Normal Method
 ```c++
