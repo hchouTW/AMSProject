@@ -214,7 +214,7 @@ class MatGeoBoxTestProp {
         static MatGeoBoxReader reader_TRL1_;
         static MatGeoBoxReader reader_TRL2_;
         static MatGeoBoxReader reader_TRL3_;
-        //static MatGeoBoxReader reader_MATC_;
+        static MatGeoBoxReader reader_MATC_;
 };
 
 Bool_t MatGeoBoxTestProp::is_load_ = false;
@@ -222,7 +222,7 @@ std::list<MatGeoBoxReader*> MatGeoBoxTestProp::reader_;
 MatGeoBoxReader MatGeoBoxTestProp::reader_TRL1_;
 MatGeoBoxReader MatGeoBoxTestProp::reader_TRL2_;
 MatGeoBoxReader MatGeoBoxTestProp::reader_TRL3_;
-//MatGeoBoxReader MatGeoBoxTestProp::reader_MATC_;
+MatGeoBoxReader MatGeoBoxTestProp::reader_MATC_;
 #endif // __HAS_TESTROP__
 
 

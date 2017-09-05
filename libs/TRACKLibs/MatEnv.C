@@ -416,9 +416,9 @@ Bool_t MatGeoBoxTestProp::CreateMatGeoBox() {
     creator_TRL2.save_and_close(TR_ELM, TR_DEN);
     creator_TRL3.save_and_close(TR_ELM, TR_DEN);
     
-    //Bool_t  C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
-    //Float_t C_DEN[9] = { 0, 0.08, 0, 0, 0, 0, 0, 0, 0 };
-    //creator_MATC.save_and_close(C_ELM, C_DEN);
+    Bool_t  C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
+    Float_t C_DEN[9] = { 0, 0.08, 0, 0, 0, 0, 0, 0, 0 };
+    creator_MATC.save_and_close(C_ELM, C_DEN);
 
     return true;
 }
@@ -431,12 +431,12 @@ Bool_t MatGeoBoxTestProp::Load() {
     reader_TRL1_.load(STR_FMT("%s/TRL1.bin", g4mat_dir_path.c_str()));
     reader_TRL2_.load(STR_FMT("%s/TRL2.bin", g4mat_dir_path.c_str()));
     reader_TRL3_.load(STR_FMT("%s/TRL3.bin", g4mat_dir_path.c_str()));
-    //reader_MATC_.load(STR_FMT("%s/MATC.bin", g4mat_dir_path.c_str()));
+    reader_MATC_.load(STR_FMT("%s/MATC.bin", g4mat_dir_path.c_str()));
     
     reader_.push_back(&reader_TRL1_);
     reader_.push_back(&reader_TRL2_);
     reader_.push_back(&reader_TRL3_);
-    //reader_.push_back(&reader_MATC_);
+    reader_.push_back(&reader_MATC_);
    
     is_load_ = true;
     for (auto&& reader : reader_) {
