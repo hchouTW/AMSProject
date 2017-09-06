@@ -1,7 +1,7 @@
 #!/bin/bash
 RunFile=${AMSCore}/subj/trsys/testing/vdev/prop
 DataType=ISS
-Stream=lst/flist.proton3
+Stream=lst/flist.proton5
 OutputDir=.
 GroupId=1
 GroupSize=0

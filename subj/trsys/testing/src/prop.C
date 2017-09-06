@@ -11,6 +11,9 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     TH1::AddDirectory(true);
 
+    //MatGeoBoxTestProp::CreateMatGeoBox();
+    //return 1;
+
     const int NL = 2;
     const int IDi = 0;
     const int IDj = 1;
@@ -70,6 +73,9 @@ int main(int argc, char * argv[]) {
             SVecD<3> wcoo(refcj[0], refcj[1], refcj[2]);
             MatFld&& mfld = MatMgnt::Get(vcoo, wcoo);
             mfld.print();
+            
+            MatFld&& mfld2 = MatMgnt::Get(SVecD<3>(0, 0, 58.3), SVecD<3>(0, 0, 57.7));
+            mfld2.print();
             break;
         }
         momlst.push_back(refm);
@@ -156,7 +162,7 @@ int main(int argc, char * argv[]) {
             if (imom > 3.0) hTu->Fill( scl_mscat * (tdir[0]-rdir[0]) );
         }
     }
-   
+   /*
     // Coord X
     TGraphErrors* gMcx_mn = new TGraphErrors();
     TGraphErrors* gMcx_sg = new TGraphErrors();
@@ -398,7 +404,7 @@ int main(int argc, char * argv[]) {
 
     gpkMT->Write();
     gpkTM->Write();
-    
+*/    
     ofle->Write();
     ofle->Close();
 

@@ -417,7 +417,7 @@ Bool_t MatGeoBoxTestProp::CreateMatGeoBox() {
     creator_TRL3.save_and_close(TR_ELM, TR_DEN);
     
     Bool_t  C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
-    Float_t C_DEN[9] = { 0, 0.08, 0, 0, 0, 0, 0, 0, 0 };
+    Float_t C_DEN[9] = { 0, 0.01, 0, 0, 0, 0, 0, 0, 0 };
     creator_MATC.save_and_close(C_ELM, C_DEN);
 
     return true;
@@ -1350,7 +1350,8 @@ std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld
 
     //////////////////////////////////
     // testcode
-    ion_eloss_sgm = 0;
+    ion_eloss_sgm *= 0.2;
+    ion_eloss_mpv *= 0.46408 * (TMath::Erf(1.66661 * std::log(gmbta + 1.0) + (-0.0628618)) + 1.0);
     ///////////////////////////////////
 
     if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm) <= 0) ion_eloss_sgm = MGMath::ZERO;
