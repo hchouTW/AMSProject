@@ -20,9 +20,13 @@ namespace MatProperty {
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X0   { 0.4759, -0.0351,  1.7378,  1.7541,  1.8433, 0.2880, 0.1708, 0.2014, 0.3776 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X1   { 1.9215,  2.4860,  4.1323,  4.3213,  4.4096, 3.1962, 3.0127, 2.8715, 3.8073 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_A    { 0.1348,  0.2024,  0.1535,  0.1178,  0.1108, 0.0777, 0.0802, 0.1492, 0.0936 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_M    { 5.6249,  3.0036,  3.2125,  3.2913,  3.2962, 3.6452, 3.6345, 3.2546, 3.1608 }; // Form Geant4
+    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_K    { 5.6249,  3.0036,  3.2125,  3.2913,  3.2962, 3.6452, 3.6345, 3.2546, 3.1608 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLT0 {   0.13,     0.1,    0.19,    0.11,    0.11,   0.08,   0.12,   0.14,   0.14 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLTM {  0.021,   0.038,  0.086,  0.101,     0.121,  0.098,  0.061,  0.059,  0.019 }; // Form Geant4
+
+    // Shell Correction (ref. MUON STOPPING POWER AND RANGE TABLES 10MeV-100TeV)
+    //constexpr std::array<Double_t, 3> SHELL_CORR_2ND { 0.422377,  0.0304043, -0.00038106 };
+    //constexpr std::array<Double_t, 3> SHELL_CORR_3RD { 3.858019, -0.1667989,  0.00157955 };
 }
 
 
@@ -156,7 +160,8 @@ class MatGeoBoxReader {
 
     private :
         static constexpr Long64_t                  DIM_ = 3;
-        static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
+        //static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
+        static constexpr Double_t                  STD_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE) * 0.1; // testcode
         static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
         Bool_t                                     is_load_;
         std::string                                file_path_;
@@ -664,7 +669,7 @@ class MatPhy {
         static constexpr Double_t LMT_SQR_GMBTA     = 9.890110e-02;
         static constexpr Double_t LMT_INV_GMBTA     = 3.179797e+00;
         static constexpr Double_t LMT_INV_SQR_GMBTA = 1.011111e+01;
-
+       
         // Unit
         static constexpr Double_t MEV_TO_GEV = 1.0e-3;
         static constexpr Double_t GEV_TO_MEV = 1.0e+3;

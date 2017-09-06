@@ -5,6 +5,8 @@
 	std::cout << Form("Current Version    = %s\n", gROOT->GetVersion());
 	std::cout << Form("Build Architecture = %s\n", gSystem->GetBuildArch());
 
+    TF1 * f3gs = new TF1("f3gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])");
+
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 
 	//---------------//

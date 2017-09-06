@@ -36,7 +36,7 @@ Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
 Momentum(GeV) (15 sets)
-0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  80  100  300  500
+0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
 ```
 
 Magnetic Field:
@@ -80,7 +80,7 @@ Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
 Momentum(GeV)  (15 sets)
-0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  80  100  300  500
+0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
 ```
 
 Magnetic Field:
@@ -90,7 +90,7 @@ None
 
 Material Box: (Carbon)
 ```
-Density(0.08 mol/cm^3 = 0.9608624 g/cm^3) 
+Density(0.08 mol/cm^3 = 0.9608624 g/cm^3  or  0.03 mol/cm^3 = 0.3603234 g/cm^3) 
 Size(x y z := 100cm 100cm 7cm)
 Central Location(X Y Z := 0cm 0cm 54cm)
 ```
@@ -122,8 +122,8 @@ Electron & Proton & Deuterium & Helium4
 Position(0, 0, 110cm)
 Direction(0, 0, -1)
 
-Momentum(GeV) (21 sets)
-0.1  0.3  0.5  0.8  1  3  5  8  10  30  50  80  100  300  500  800  1000  3000  5000  8000  10000
+Momentum(GeV) (28 sets)
+0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500  800  1000  3000  5000  8000  10000
 ```
 
 Magnetic Field:

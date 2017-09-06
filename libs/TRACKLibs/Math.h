@@ -9,11 +9,10 @@ namespace TrackSys {
 
 class MultiGauss {
     public :
-        MultiGauss() {}
         MultiGauss(Double_t sgm);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3);
-        ~MultiGauss() {}
+        ~MultiGauss() { if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
         inline Int_t num() const { return multi_gauss_.size(); }
         inline const Double_t& wgt(Int_t i) const { return multi_gauss_.at(i).first; }
@@ -21,8 +20,14 @@ class MultiGauss {
 
         inline Double_t efft_sgm(Double_t r = 0.) const; 
 
+        inline Double_t rndm();
+
     private :
+        std::pair<Double_t, Double_t> bound_;
         std::vector<std::pair<Double_t, Double_t>> multi_gauss_;
+
+    private :
+        TF1 * rand_func_;
 
     private :
         static constexpr Double_t LMTL_PROB = 1.0e-6;
