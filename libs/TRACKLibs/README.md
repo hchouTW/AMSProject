@@ -79,8 +79,8 @@ Electron & Proton & Deuterium & Helium4
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
-Momentum(GeV)  (15 sets)
-0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
+Momentum(GeV)  (24 sets)
+0.05  0.08  0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
 ```
 
 Magnetic Field:
