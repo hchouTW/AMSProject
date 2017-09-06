@@ -90,7 +90,7 @@ None
 
 Material Box: (Carbon)
 ```
-Density(0.08 mol/cm^3 = 0.9608624 g/cm^3  or  0.03 mol/cm^3 = 0.3603234 g/cm^3) 
+Density(0.08 mol/cm^3 = 0.9608624 g/cm^3  or  0.02 mol/cm^3 = 0.2402156 g/cm^3) 
 Size(x y z := 100cm 100cm 7cm)
 Central Location(X Y Z := 0cm 0cm 54cm)
 ```
