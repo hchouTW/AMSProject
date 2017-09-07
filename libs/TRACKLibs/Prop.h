@@ -253,13 +253,13 @@ class PropMgnt {
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
-        static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
+        //static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
         static constexpr Double_t TUNE_MAT   =  0.1;   // (number radiation length threshold)
         
         // testcode
-        //static constexpr Double_t LMTU_STEP  = 2.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  = 2.0;   // (ds threshold)
+        static constexpr Double_t LMTU_STEP  = 2.1;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  = 2.0;   // (ds threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]

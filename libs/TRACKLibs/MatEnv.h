@@ -161,8 +161,9 @@ class MatGeoBoxReader {
     private :
         static constexpr Long64_t                  DIM_ = 3;
         //static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
+        //static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
         static constexpr Double_t                  STD_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE) * 0.1; // testcode
-        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
+        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE * 0.1; // testcode
         Bool_t                                     is_load_;
         std::string                                file_path_;
         void*                                      file_ptr_;
