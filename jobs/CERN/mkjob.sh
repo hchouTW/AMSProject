@@ -361,8 +361,8 @@ fi
 
 for (( jobID=0; jobID<=${totlen_job}; jobID++ ))
 do
-    exeSatID=\$(( ${exe_satID} + ${totlen_job}*\${jobID} ))
-    exeEndID=\$(( ${exe_satID} + ${totlen_job}*(\${jobID}+1) - 1 ))
+    exeSatID=\$(( ${exe_satID} + ${exe_per_job}*\${jobID} ))
+    exeEndID=\$(( ${exe_satID} + ${exe_per_job}*(\${jobID}+1) - 1 ))
     if (( \${exeSatID} < ${exe_satID} )); then
         exeSatID=${exe_satID}
     fi

@@ -427,9 +427,9 @@ class TrackInfo : public TObject {
 			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
 			std::fill_n(state[0][0], 2 * 4 * 6, 0);
 			
-			std::fill_n(localID[0][0][0], 2 * 4 * 9 * 3, 0);
-			std::fill_n(localLJ[0][0][0], 2 * 4 * 9 * 2, -1);
 			std::fill_n(stateLJ[0][0][0], 2 * 4 * 9 * 6, 0);
+			//std::fill_n(localID[0][0][0], 2 * 4 * 9 * 3, 0);
+			//std::fill_n(localLJ[0][0][0], 2 * 4 * 9 * 2, -1);
 			
 			hits.clear();
 		}
@@ -461,9 +461,9 @@ class TrackInfo : public TObject {
 		Float_t chisq[2][4][2];
 		Float_t state[2][4][6];
 		
-		Short_t localID[2][4][9][3]; // (tkid sens mult)
-		Float_t localLJ[2][4][9][2]; // (xloc yloc)
 		Float_t stateLJ[2][4][9][6]; // (x y z dirx diry dirz)
+		//Short_t localID[2][4][9][3]; // (tkid sens mult)
+		//Float_t localLJ[2][4][9][2]; // (xloc yloc)
 	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;

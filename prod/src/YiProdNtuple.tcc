@@ -219,6 +219,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 	fList.weight = EventList::Weight;
 
 	// G4MC
+    bool isSaveSecPart = false;
 	if (checkEventMode(EventBase::MC)) {
 		MCEventgR * primary = event->GetPrimaryMC();
 		if (primary == nullptr) return false;
@@ -236,44 +237,49 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		fG4mc.primPart.dir[1]   = primary->Dir[1];
 		fG4mc.primPart.dir[2]   = primary->Dir[2];
 
+
 		std::set<int> PrimSET;
-		for (int it = 0; it < event->NMCEventg(); it++) {
-			MCEventgR * mcev = event->pMCEventg(it);
-			if (mcev == nullptr) continue;
-			if (mcev->parentID != 1) continue; // ONLY SAVE PRIM PART
-			if (mcev->Momentum < 5.0e-2) continue;
-			double momRat = (mcev->Momentum / fG4mc.primPart.mom);
-			if (mcev->parentID == primary->trkID && momRat > 5.0e-2) { PrimSET.insert(mcev->trkID); continue; }
-			if (momRat < 0.368) continue;
-			PrimSET.insert(mcev->trkID);
-		}
+        if (isSaveSecPart) {
+		    for (int it = 0; it < event->NMCEventg(); it++) {
+		    	MCEventgR * mcev = event->pMCEventg(it);
+		    	if (mcev == nullptr) continue;
+		    	if (mcev->parentID != 1) continue; // ONLY SAVE PRIM PART
+		    	if (mcev->Momentum < 5.0e-2) continue;
+		    	double momRat = (mcev->Momentum / fG4mc.primPart.mom);
+		    	if (mcev->parentID == primary->trkID && momRat > 5.0e-2) { PrimSET.insert(mcev->trkID); continue; }
+		    	if (momRat < 0.368) continue;
+		    	PrimSET.insert(mcev->trkID);
+		    }
+        }
 
 		std::set<int> TrSET;
 		TrSET.insert(primary->trkID);
-		std::vector<short> SecTrkID;
-		for (int iev = 0; iev < event->NMCEventg(); iev++) {
-			MCEventgR * mcev = event->pMCEventg(iev);
-			if (mcev == nullptr) continue;
-			if (mcev->Momentum < 5.0e-2) continue;
-			if (PrimSET.find(mcev->parentID) == PrimSET.end()) continue;
-			TrSET.insert(mcev->trkID);
-			SecTrkID.push_back(mcev->trkID);
-			
-			PartMCInfo part;
-			part.partID   = mcev->Particle;
-			part.chrg     = mcev->Charge;
-			part.mass     = mcev->Mass;
-			part.mom      = mcev->Momentum;
-			part.kEng     = std::sqrt(mcev->Momentum * mcev->Momentum + mcev->Mass * mcev->Mass) - mcev->Mass;
-			part.coo[0]   = mcev->Coo[0];
-			part.coo[1]   = mcev->Coo[1];
-			part.coo[2]   = mcev->Coo[2];
-			part.dir[0]   = mcev->Dir[0];
-			part.dir[1]   = mcev->Dir[1];
-			part.dir[2]   = mcev->Dir[2];
-			
-			fG4mc.secParts.push_back(part);
-		}
+        std::vector<short> SecTrkID;
+        if (isSaveSecPart) {
+		    for (int iev = 0; iev < event->NMCEventg(); iev++) {
+		    	MCEventgR * mcev = event->pMCEventg(iev);
+		    	if (mcev == nullptr) continue;
+		    	if (mcev->Momentum < 5.0e-2) continue;
+		    	if (PrimSET.find(mcev->parentID) == PrimSET.end()) continue;
+		    	TrSET.insert(mcev->trkID);
+		    	SecTrkID.push_back(mcev->trkID);
+		    	
+		    	PartMCInfo part;
+		    	part.partID   = mcev->Particle;
+		    	part.chrg     = mcev->Charge;
+		    	part.mass     = mcev->Mass;
+		    	part.mom      = mcev->Momentum;
+		    	part.kEng     = std::sqrt(mcev->Momentum * mcev->Momentum + mcev->Mass * mcev->Mass) - mcev->Mass;
+		    	part.coo[0]   = mcev->Coo[0];
+		    	part.coo[1]   = mcev->Coo[1];
+		    	part.coo[2]   = mcev->Coo[2];
+		    	part.dir[0]   = mcev->Dir[0];
+		    	part.dir[1]   = mcev->Dir[1];
+		    	part.dir[2]   = mcev->Dir[2];
+		    	
+		    	fG4mc.secParts.push_back(part);
+		    }
+        }
 		
 		for (int icls = 0; icls < event->NTrMCCluster(); icls++) {
 			TrMCClusterR * cluster = event->pTrMCCluster(icls);
@@ -283,7 +289,6 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			
 			int tkid = cluster->GetTkId();
 			int layJ = TkDBc::Head->GetJFromLayer(std::fabs(cluster->GetTkId()/100));
-			//int trkid = cluster->GetGtrkID();
 			AMSPoint coo = cluster->GetXgl();
 			AMSDir dir = cluster->GetDir();
 
@@ -311,18 +316,20 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		std::sort(fG4mc.primPart.hits.begin(), fG4mc.primPart.hits.end(), HitTRKMCInfo_sort());
 		
-		std::sort(fG4mc.secParts.begin(), fG4mc.secParts.end(), PartMCInfo_sort());
-		for (auto && secPart : fG4mc.secParts)
-			std::sort(secPart.hits.begin(), secPart.hits.end(), HitTRKMCInfo_sort());
+        if (isSaveSecPart) {
+		    std::sort(fG4mc.secParts.begin(), fG4mc.secParts.end(), PartMCInfo_sort());
+		    for (auto && secPart : fG4mc.secParts)
+		    	std::sort(secPart.hits.begin(), secPart.hits.end(), HitTRKMCInfo_sort());
 
-		if (fG4mc.secParts.size() >= 2) {
-			VertexMCInfo vertex;
-			vertex.status = true;
-			vertex.coo[0] = fG4mc.secParts.at(0).coo[0];
-			vertex.coo[1] = fG4mc.secParts.at(0).coo[1];
-			vertex.coo[2] = fG4mc.secParts.at(0).coo[2];
-			fG4mc.primVtx = vertex;
-		}
+		    if (fG4mc.secParts.size() >= 2) {
+		    	VertexMCInfo vertex;
+		    	vertex.status = true;
+		    	vertex.coo[0] = fG4mc.secParts.at(0).coo[0];
+		    	vertex.coo[1] = fG4mc.secParts.at(0).coo[1];
+		    	vertex.coo[2] = fG4mc.secParts.at(0).coo[2];
+		    	fG4mc.primVtx = vertex;
+		    }
+        }
 	}
 
 	fStopwatch.stop();
@@ -1083,20 +1090,20 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
 					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
 
-					TkSens tksens(pntLJ, EventBase::checkEventMode(EventBase::MC));
-					if (tksens.LadFound()) {
-						short tkid = tksens.GetLadTkID();
-						short sens = tksens.GetSensor();
-						short mult = tksens.GetMultIndex();
-						float xloc = (tksens.GetStripX() + tksens.GetImpactPointX() + 640);
-						float yloc = (tksens.GetStripY() + tksens.GetImpactPointY());
-						
-						track.localID[algo][patt][il][0] = tkid;
-						track.localID[algo][patt][il][1] = sens;
-						track.localID[algo][patt][il][2] = mult;
-						track.localLJ[algo][patt][il][0] = xloc;
-						track.localLJ[algo][patt][il][1] = yloc;
-					}
+					//TkSens tksens(pntLJ, EventBase::checkEventMode(EventBase::MC));
+					//if (tksens.LadFound()) {
+					//	short tkid = tksens.GetLadTkID();
+					//	short sens = tksens.GetSensor();
+					//	short mult = tksens.GetMultIndex();
+					//	float xloc = (tksens.GetStripX() + tksens.GetImpactPointX() + 640);
+					//	float yloc = (tksens.GetStripY() + tksens.GetImpactPointY());
+					//	
+					//	track.localID[algo][patt][il][0] = tkid;
+					//	track.localID[algo][patt][il][1] = sens;
+					//	track.localID[algo][patt][il][2] = mult;
+					//	track.localLJ[algo][patt][il][0] = xloc;
+					//	track.localLJ[algo][patt][il][1] = yloc;
+					//}
 				}
 			} // for loop - pattern
 		}
@@ -1190,42 +1197,45 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (fTrk.tracks.size() != event->NTrTrack()) return false;
 
 	// Vertex
-	TrReconQ reconQ(event);
-	reconQ.BuildVertex();
-	AMSPoint recQ_CVtx, recQ_DVtx;
-	int recQ_TrID[2] = { -1, -1 };
-	if (reconQ.GetVertex(recQ_CVtx, recQ_DVtx, recQ_TrID) != 0) {
-		std::map<int, int>::iterator ita = trackIDMap.find(recQ_TrID[0]);
-		std::map<int, int>::iterator itb = trackIDMap.find(recQ_TrID[1]);
-		if (ita != trackIDMap.end() && itb != trackIDMap.end()) {
-			std::pair<int, int> trId = std::minmax(ita->second, itb->second);
-			VertexInfo vertex;
-			
-			vertex.vtxZqu[0] = recQ_CVtx[0];
-			vertex.vtxZqu[1] = recQ_CVtx[1];
-			vertex.vtxZqu[2] = recQ_CVtx[2];
-			vertex.vtxZqu[3] = recQ_DVtx[0];
-			vertex.vtxZqu[4] = recQ_DVtx[1];
+    bool isSaveVertex = false;
+    if (isSaveVertex) {
+	    TrReconQ reconQ(event);
+	    reconQ.BuildVertex();
+	    AMSPoint recQ_CVtx, recQ_DVtx;
+	    int recQ_TrID[2] = { -1, -1 };
+	    if (reconQ.GetVertex(recQ_CVtx, recQ_DVtx, recQ_TrID) != 0) {
+	    	std::map<int, int>::iterator ita = trackIDMap.find(recQ_TrID[0]);
+	    	std::map<int, int>::iterator itb = trackIDMap.find(recQ_TrID[1]);
+	    	if (ita != trackIDMap.end() && itb != trackIDMap.end()) {
+	    		std::pair<int, int> trId = std::minmax(ita->second, itb->second);
+	    		VertexInfo vertex;
+	    		
+	    		vertex.vtxZqu[0] = recQ_CVtx[0];
+	    		vertex.vtxZqu[1] = recQ_CVtx[1];
+	    		vertex.vtxZqu[2] = recQ_CVtx[2];
+	    		vertex.vtxZqu[3] = recQ_DVtx[0];
+	    		vertex.vtxZqu[4] = recQ_DVtx[1];
 
-			VertexR vtxR(event->pTrTrack(recQ_TrID[0]), event->pTrTrack(recQ_TrID[1]));
-			if (vtxR.IsFilled()) {
-				AMSPoint cooR = vtxR.getvert();
-				AMSDir   dirR(vtxR.gettheta(), vtxR.getphi());
-				vertex.vtxR[0] = cooR[0];
-				vertex.vtxR[1] = cooR[1];
-				vertex.vtxR[2] = cooR[2];
-				vertex.vtxR[3] = -dirR[0];
-				vertex.vtxR[4] = -dirR[1];
-				vertex.vtxR[5] = -dirR[2];
-				vertex.vtxR[6] = vtxR.getmom();
-				vertex.vtxR[7] = (vtxR.getchi2() / vtxR.getndof());
-			}
+	    		VertexR vtxR(event->pTrTrack(recQ_TrID[0]), event->pTrTrack(recQ_TrID[1]));
+	    		if (vtxR.IsFilled()) {
+	    			AMSPoint cooR = vtxR.getvert();
+	    			AMSDir   dirR(vtxR.gettheta(), vtxR.getphi());
+	    			vertex.vtxR[0] = cooR[0];
+	    			vertex.vtxR[1] = cooR[1];
+	    			vertex.vtxR[2] = cooR[2];
+	    			vertex.vtxR[3] = -dirR[0];
+	    			vertex.vtxR[4] = -dirR[1];
+	    			vertex.vtxR[5] = -dirR[2];
+	    			vertex.vtxR[6] = vtxR.getmom();
+	    			vertex.vtxR[7] = (vtxR.getchi2() / vtxR.getndof());
+	    		}
 
-			vertex.trackID.push_back(trId.first);
-			vertex.trackID.push_back(trId.second);
-			fTrk.vertices.push_back(vertex);
-		}
-	}
+	    		vertex.trackID.push_back(trId.first);
+	    		vertex.trackID.push_back(trId.second);
+	    		fTrk.vertices.push_back(vertex);
+	    	}
+        }
+    }
 
 	//---- Find External Hits ----//
 	struct CandHit {
@@ -1240,173 +1250,176 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 	};
 
-	std::map<short, std::vector<CandHit> > candHits;
+    bool isSaveOtherHits = false;
+    if (isSaveOtherHits) {
+	    std::map<short, std::vector<CandHit> > candHits;
 
-	for (int ih = 0; ih < event->NTrRecHit(); ++ih) {
-		TrRecHitR * recHit = event->pTrRecHit(ih);
-		if (recHit == nullptr) continue;
-		
-		TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
-		TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
-		if (xcls == nullptr || ycls == nullptr) continue;
-		if (xcls->Used() || ycls->Used()) continue;
-		
-		bool isNoise = (xcls->GetSeedSN() < 4.5 || ycls->GetSeedSN() < 4.5); // now, 4.5 is best
-		if (isNoise) continue;
-		
-		float xchrg = std::sqrt(recHit->GetSignalCombination(0, qopt, 1));
-        float ychrg = std::sqrt(recHit->GetSignalCombination(1, qopt, 1));
-        float tchrg = 0.5 * (xchrg + ychrg);
-		float dchrg = std::fabs(xchrg - ychrg) / (xchrg + ychrg);
-		if (xchrg < 0.75 || ychrg < 0.75) continue;
-        if (tchrg < 0.80) continue;
-		
-		const float NSfluc = 0.08;
-		float chrgNS = std::sqrt(2.0 * (xcls->GetSeedNoise()/xcls->GetSeedSignal()/xcls->GetSeedSignal() + ycls->GetSeedNoise()/ycls->GetSeedSignal()/ycls->GetSeedSignal()) + NSfluc * NSfluc);
-		if (dchrg > chrgNS) continue;
+	    for (int ih = 0; ih < event->NTrRecHit(); ++ih) {
+	    	TrRecHitR * recHit = event->pTrRecHit(ih);
+	    	if (recHit == nullptr) continue;
+	    	
+	    	TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
+	    	TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
+	    	if (xcls == nullptr || ycls == nullptr) continue;
+	    	if (xcls->Used() || ycls->Used()) continue;
+	    	
+	    	bool isNoise = (xcls->GetSeedSN() < 4.5 || ycls->GetSeedSN() < 4.5); // now, 4.5 is best
+	    	if (isNoise) continue;
+	    	
+	    	float xchrg = std::sqrt(recHit->GetSignalCombination(0, qopt, 1));
+            float ychrg = std::sqrt(recHit->GetSignalCombination(1, qopt, 1));
+            float tchrg = 0.5 * (xchrg + ychrg);
+	    	float dchrg = std::fabs(xchrg - ychrg) / (xchrg + ychrg);
+	    	if (xchrg < 0.75 || ychrg < 0.75) continue;
+            if (tchrg < 0.80) continue;
+	    	
+	    	const float NSfluc = 0.08;
+	    	float chrgNS = std::sqrt(2.0 * (xcls->GetSeedNoise()/xcls->GetSeedSignal()/xcls->GetSeedSignal() + ycls->GetSeedNoise()/ycls->GetSeedSignal()/ycls->GetSeedSignal()) + NSfluc * NSfluc);
+	    	if (dchrg > chrgNS) continue;
 
-		CandHit candh;
-		candh.hitId = ih;
-		candh.xcls = recHit->GetXClusterIndex();
-		candh.ycls = recHit->GetYClusterIndex();
-		candh.xchg = xchrg;
-		candh.ychg = ychrg;
-		candh.mtch = dchrg;
+	    	CandHit candh;
+	    	candh.hitId = ih;
+	    	candh.xcls = recHit->GetXClusterIndex();
+	    	candh.ycls = recHit->GetYClusterIndex();
+	    	candh.xchg = xchrg;
+	    	candh.ychg = ychrg;
+	    	candh.mtch = dchrg;
 
-		candHits[recHit->GetTkId()].push_back(candh);
-	}
+	    	candHits[recHit->GetTkId()].push_back(candh);
+	    }
 
-	for(auto &elmap : candHits) {
-		std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
-		std::vector<CandHit> & hits = elmap.second;
-		if (hits.size() < 2) continue;
-		float              fineScore = 0;
-		std::vector<short> fineCand;
-		for (int ih = 0; ih < hits.size(); ++ih) {
-			float sumscore = 0;
-			std::vector<short> cand;
-			std::set<short> xset;
-			std::set<short> yset;
-			for (int jh = ih; jh < hits.size(); ++jh) {
-				CandHit & hit = hits.at(jh);
-				if (xset.find(hit.xcls) != xset.end()) continue;
-				else xset.insert(hit.xcls);
-				if (yset.find(hit.ycls) != yset.end()) continue;
-				else yset.insert(hit.ycls);
-				sumscore += hit.mtch;
-				cand.push_back(jh);
-			}
-			float score = sumscore / cand.size();
-			bool change = false;
-			if (cand.size() < fineCand.size()) continue;
-			else if (cand.size() > fineCand.size()) change = true;
-			else if (score < fineScore) change = true;
-			if (!change) continue;
-			fineScore = score;
-			fineCand = cand;
-		}
-		std::vector<CandHit> fineHits;
-		for (auto && it : fineCand) {
-			fineHits.push_back( hits.at(it) );
-		}
-		elmap.second = fineHits;
-	}
+	    for(auto &elmap : candHits) {
+	    	std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
+	    	std::vector<CandHit> & hits = elmap.second;
+	    	if (hits.size() < 2) continue;
+	    	float              fineScore = 0;
+	    	std::vector<short> fineCand;
+	    	for (int ih = 0; ih < hits.size(); ++ih) {
+	    		float sumscore = 0;
+	    		std::vector<short> cand;
+	    		std::set<short> xset;
+	    		std::set<short> yset;
+	    		for (int jh = ih; jh < hits.size(); ++jh) {
+	    			CandHit & hit = hits.at(jh);
+	    			if (xset.find(hit.xcls) != xset.end()) continue;
+	    			else xset.insert(hit.xcls);
+	    			if (yset.find(hit.ycls) != yset.end()) continue;
+	    			else yset.insert(hit.ycls);
+	    			sumscore += hit.mtch;
+	    			cand.push_back(jh);
+	    		}
+	    		float score = sumscore / cand.size();
+	    		bool change = false;
+	    		if (cand.size() < fineCand.size()) continue;
+	    		else if (cand.size() > fineCand.size()) change = true;
+	    		else if (score < fineScore) change = true;
+	    		if (!change) continue;
+	    		fineScore = score;
+	    		fineCand = cand;
+	    	}
+	    	std::vector<CandHit> fineHits;
+	    	for (auto && it : fineCand) {
+	    		fineHits.push_back( hits.at(it) );
+	    	}
+	    	elmap.second = fineHits;
+	    }
 
-	for(auto &elmap : candHits) {
-		std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
-		for(auto &candHit : elmap.second) {
-			TrRecHitR * recHit = event->pTrRecHit(candHit.hitId);
-			if (recHit == nullptr) continue;
-			TrClusterR * xcls = recHit->GetXCluster();
-			TrClusterR * ycls = recHit->GetYCluster();
+	    for(auto &elmap : candHits) {
+	    	std::sort(elmap.second.begin(), elmap.second.end(), CandHit_sort());
+	    	for(auto &candHit : elmap.second) {
+	    		TrRecHitR * recHit = event->pTrRecHit(candHit.hitId);
+	    		if (recHit == nullptr) continue;
+	    		TrClusterR * xcls = recHit->GetXCluster();
+	    		TrClusterR * ycls = recHit->GetYCluster();
 
-			short clsIdX = candHit.xcls;
-			short clsIdY = candHit.ycls;
-			short layJ   = recHit->GetLayerJ();
-			short tkid   = recHit->GetTkId();  	
-			short side = 3;
-		
-			float xchrg = candHit.xchg;
-			float ychrg = candHit.ychg;
+	    		short clsIdX = candHit.xcls;
+	    		short clsIdY = candHit.ycls;
+	    		short layJ   = recHit->GetLayerJ();
+	    		short tkid   = recHit->GetTkId();  	
+	    		short side = 3;
+	    	
+	    		float xchrg = candHit.xchg;
+	    		float ychrg = candHit.ychg;
 
-			float xloc = (xcls->GetCofG() + xcls->GetSeedAddress());
-			float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
-			
-			short xseedAddr = xcls->GetSeedAddress();
-			short yseedAddr = ycls->GetSeedAddress();
+	    		float xloc = (xcls->GetCofG() + xcls->GetSeedAddress());
+	    		float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
+	    		
+	    		short xseedAddr = xcls->GetSeedAddress();
+	    		short yseedAddr = ycls->GetSeedAddress();
 
-			short xseedIndx = xcls->GetSeedIndex();
-			short yseedIndx = ycls->GetSeedIndex();
+	    		short xseedIndx = xcls->GetSeedIndex();
+	    		short yseedIndx = ycls->GetSeedIndex();
 
-			std::vector<float> xstripSig;
-			std::vector<float> xstripSgm;
-			for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
-				xstripSig.push_back(xcls->GetSignal(it));
-				xstripSgm.push_back(xcls->GetNoise(it));
-			}
-			
-			std::vector<float> ystripSig;
-			std::vector<float> ystripSgm;
-			for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
-				ystripSig.push_back(ycls->GetSignal(it));
-				ystripSgm.push_back(ycls->GetNoise(it));
-			}
-			
-			AMSPoint coo;
-			int mult = -1;
-			float distLJ = 500;
-			if (fTrk.tracks.size() > 0 && fTrk.tracks.at(0).status[0][0]) {
-				TrackInfo & track = fTrk.tracks.at(0);
-				for (int im = 0; im < recHit->GetMultiplicity(); im++) {
-					AMSPoint refcoo = recHit->GetCoord(im, 3);
-					float dx = (refcoo[0] - track.stateLJ[0][0][layJ-1][0]);
-					float dy = (refcoo[1] - track.stateLJ[0][0][layJ-1][1]);
-					float dist = std::sqrt(dx * dx + dy * dy);
-					if (dist > distLJ) continue;
-					distLJ = dist;
-					coo = refcoo;
-					mult = im;
-				}
-			}
-			else {
-				mult = 0;
-				coo = recHit->GetCoord(0, 3);
-			}
-  		
-			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
-			int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
-			
-			HitTRKInfo hit;
-			hit.clsId[0] = clsIdX;
-			hit.clsId[1] = clsIdY;
-			hit.layJ     = layJ;
-			hit.tkid     = tkid;
-			hit.sens     = sens;
-			hit.mult     = mult; 
-			hit.side     = side;
-			hit.coo[0]   = coo[0];
-			hit.coo[1]   = coo[1];
-			hit.coo[2]   = coo[2];
-			hit.chrg[0]  = xchrg;
-			hit.chrg[1]  = ychrg;
-			
-			hit.cofgX     = xloc;
-			hit.seedAddrX = xseedAddr;
-			hit.seedIndxX = xseedIndx;
-			hit.stripSigX = xstripSig;
-			hit.stripSgmX = xstripSgm;
-			
-			hit.cofgY     = yloc;
-			hit.seedAddrY = yseedAddr;
-			hit.seedIndxY = yseedIndx;
-			hit.stripSigY = ystripSig;
-			hit.stripSgmY = ystripSgm;
-	
-			fTrk.otherHits.push_back(hit);
-		}
-	}
-	if (fTrk.otherHits.size() > 1) 
-		std::sort(fTrk.otherHits.begin(), fTrk.otherHits.end(), HitTRKInfo_sort());
+	    		std::vector<float> xstripSig;
+	    		std::vector<float> xstripSgm;
+	    		for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
+	    			xstripSig.push_back(xcls->GetSignal(it));
+	    			xstripSgm.push_back(xcls->GetNoise(it));
+	    		}
+	    		
+	    		std::vector<float> ystripSig;
+	    		std::vector<float> ystripSgm;
+	    		for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
+	    			ystripSig.push_back(ycls->GetSignal(it));
+	    			ystripSgm.push_back(ycls->GetNoise(it));
+	    		}
+	    		
+	    		AMSPoint coo;
+	    		int mult = -1;
+	    		float distLJ = 500;
+	    		if (fTrk.tracks.size() > 0 && fTrk.tracks.at(0).status[0][0]) {
+	    			TrackInfo & track = fTrk.tracks.at(0);
+	    			for (int im = 0; im < recHit->GetMultiplicity(); im++) {
+	    				AMSPoint refcoo = recHit->GetCoord(im, 3);
+	    				float dx = (refcoo[0] - track.stateLJ[0][0][layJ-1][0]);
+	    				float dy = (refcoo[1] - track.stateLJ[0][0][layJ-1][1]);
+	    				float dist = std::sqrt(dx * dx + dy * dy);
+	    				if (dist > distLJ) continue;
+	    				distLJ = dist;
+	    				coo = refcoo;
+	    				mult = im;
+	    			}
+	    		}
+	    		else {
+	    			mult = 0;
+	    			coo = recHit->GetCoord(0, 3);
+	    		}
+  	    	
+	    		TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
+	    		int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
+	    		
+	    		HitTRKInfo hit;
+	    		hit.clsId[0] = clsIdX;
+	    		hit.clsId[1] = clsIdY;
+	    		hit.layJ     = layJ;
+	    		hit.tkid     = tkid;
+	    		hit.sens     = sens;
+	    		hit.mult     = mult; 
+	    		hit.side     = side;
+	    		hit.coo[0]   = coo[0];
+	    		hit.coo[1]   = coo[1];
+	    		hit.coo[2]   = coo[2];
+	    		hit.chrg[0]  = xchrg;
+	    		hit.chrg[1]  = ychrg;
+	    		
+	    		hit.cofgX     = xloc;
+	    		hit.seedAddrX = xseedAddr;
+	    		hit.seedIndxX = xseedIndx;
+	    		hit.stripSigX = xstripSig;
+	    		hit.stripSgmX = xstripSgm;
+	    		
+	    		hit.cofgY     = yloc;
+	    		hit.seedAddrY = yseedAddr;
+	    		hit.seedIndxY = yseedIndx;
+	    		hit.stripSigY = ystripSig;
+	    		hit.stripSgmY = ystripSgm;
+	    
+	    		fTrk.otherHits.push_back(hit);
+	    	}
+	    }
+	    if (fTrk.otherHits.size() > 1) 
+	    	std::sort(fTrk.otherHits.begin(), fTrk.otherHits.end(), HitTRKInfo_sort());
+    }
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -3117,8 +3130,8 @@ void YiNtuple::loopEventChain() {
 
 	Long64_t npassed = 0;
 	Long64_t nprocessed = 0;
-	const Long64_t printLimit = 25000;
-	Long64_t printRate = loop_entries / 100;
+	const Long64_t printLimit = 20000;
+	Long64_t printRate = loop_entries / 200;
 	if (printRate < printLimit) printRate = printLimit;
 	if (printRate > printLimit * 5) printRate = printLimit * 5;
 	for (Long64_t ientry = first_entry; ientry < last_entry; ++ientry){

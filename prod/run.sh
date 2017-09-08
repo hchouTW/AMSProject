@@ -1,8 +1,10 @@
 #!bin/bash
 
 RunFile=${AMSCore}/prod/vdev/YiProdNtuple
-DataType=ISS
-Stream=lst/flist.ncu.iss.B950.pass6
+#DataType=ISS
+#Stream=lst/flist.ncu.iss.B950.pass6
+DataType=MC
+Stream=lst/flist.cern.mc.pr.pl1.flux.l1a9.2016000
 GroupId=1
 GroupSize=1
 OutputDir=.
