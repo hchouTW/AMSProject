@@ -1054,6 +1054,31 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
 }
 
 
+void MatArg::rndm(Double_t num_rad_len) {
+    tau_mscat_ = MGMath::ZERO;
+    rho_mscat_ = MGMath::ZERO;
+    ion_eloss_ = MGMath::ZERO;
+    brm_eloss_ = MGMath::ZERO;
+
+    if (sw_mscat_) {
+        tau_mscat_ = MGRndm::NormalGaussian();
+        rho_mscat_ = MGRndm::NormalGaussian();
+    }
+    if (sw_eloss_) {
+        Int_t cnt = 0;
+        const Int_t MAX_CNT = 3;
+        const Double_t ION_LIMIT = -10.0;
+        do {
+            ion_eloss_ = Rndm::Landau();
+            cnt++;
+        } while(MGNumc::Compare(ion_eloss_, ION_LIMIT) < 0 && cnt <= MAX_CNT);
+        
+        Double_t bremslen = num_rad_len / MGMath::LOG_TWO;
+        brm_eloss_ = (MGNumc::Compare(bremslen) <= 0) ? MGMath::ZERO : MGRndm::Gamma(bremslen, (MGMath::ONE / bremslen))();
+    }
+}
+
+
 void MatArg::rndm(const MatFld& mfld) {
     if (!mfld()) {
         tau_mscat_ = MGMath::ZERO;
@@ -1068,14 +1093,9 @@ void MatArg::rndm(const MatFld& mfld) {
         rho_mscat_ = MGRndm::NormalGaussian();
 
         // testcode
-        //static MultiGauss mgrndm(9.00708e-01, 1.00000e+00, 7.44876e-02, 1.83657e+00, 2.48049e-02, 8.60705e+00);
-        //static MultiGauss mgrndm(9.05418414685868589e-01, 1.0, 6.72348321271836746e-02, 1.93395193483382521e+00, 2.73467531869478093e-02, 1.09230667638024386e+01);
-        //tau_mscat_ = 0.888006 * mgrndm.rndm();
-        //rho_mscat_ = 0.888006 * mgrndm.rndm();
-        
-        static MultiGauss mgrndm(9.33699086801723865e-01, 1.00000e+00, 5.69984034225005862e-02, 2.25913650798166454e+00, 9.30250977577563344e-03, 5.68675388592744913e+00);
-        tau_mscat_ = 8.95113573242526828e-01 * mgrndm.rndm();
-        rho_mscat_ = 8.95113573242526828e-01 * mgrndm.rndm();
+        static MultiGauss mgrndm(8.93115399039242752e-01, 1.0, 9.21150589636446360e-02, 1.85106039735428074e+00, 1.16762994946200249e-02, 4.47837012769442655e+00, 3.09324250249259089e-03, 2.39095714977104379e+01);
+        tau_mscat_ = 8.637135e-01 * mgrndm.rndm();
+        rho_mscat_ = 8.637135e-01 * mgrndm.rndm();
     }
     if (sw_eloss_) {
         Int_t cnt = 0;
@@ -1104,16 +1124,6 @@ void MatArg::rndm(const MatPhyFld& mphy) {
     if (sw_mscat_) {
         tau_mscat_ = MGRndm::NormalGaussian();
         rho_mscat_ = MGRndm::NormalGaussian();
-        
-        // testcode
-        //static MultiGauss mgrndm(9.00708e-01, 1.00000e+00, 7.44876e-02, 1.83657e+00, 2.48049e-02, 8.60705e+00);
-        //static MultiGauss mgrndm(9.05418414685868589e-01, 1.0, 6.72348321271836746e-02, 1.93395193483382521e+00, 2.73467531869478093e-02, 1.09230667638024386e+01);
-        //tau_mscat_ = 0.888006 * mgrndm.rndm();
-        //rho_mscat_ = 0.888006 * mgrndm.rndm();
-        
-        static MultiGauss mgrndm(9.33699086801723865e-01, 1.00000e+00, 5.69984034225005862e-02, 2.25913650798166454e+00, 9.30250977577563344e-03, 5.68675388592744913e+00);
-        tau_mscat_ = 8.95113573242526828e-01 * mgrndm.rndm();
-        rho_mscat_ = 8.95113573242526828e-01 * mgrndm.rndm();
     }
     if (sw_eloss_) {
         Int_t cnt = 0;
@@ -1276,6 +1286,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
 }
 
 
+/*
 std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part) {
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t gmbta     = ((is_over_lmt) ? part.gmbta() : LMT_GMBTA);
@@ -1305,30 +1316,8 @@ std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld
   
     Double_t el_abs   = (ttl_wgt * mfld.efft_len());
     Double_t eng_fact = (MGMath::HALF * BETHE_BLOCH_K * el_abs * sqr_chrg / sqr_bta);
-    
-    //----------------------//
-    // testcode
-    //Double_t sclf = 0.5;
-    //Double_t par[4] = { 0.924919, 0.488845, 0.771796, -0.153307 };
-    //Double_t scl = par[0] - sclf * par[1] * (1.0 - TMath::Erf(par[2]*std::log(gmbta) + par[3]));
-    //eng_fact *= scl;
-    //----------------------//
-    
     Double_t eta_part = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
     Double_t sgm_fact = (eng_fact * eta_part / mass / mfld.real_len());
-
-    //-------------------------//
-    //// testcode
-    //Double_t par[3] = { 0.473479, 1.4689, 0.11389 };
-    //Double_t scl = par[0] * (TMath::Erf(par[1]*std::log(gmbta+1) + par[2]) + 1.0);
-    //Double_t par[4] = { 0.473577, 1.00367, 0.359824, 0.829302 };
-    //Double_t scl = par[0] * (TMath::Erf(par[1]*std::log(gmbta+par[2]) + par[3]) + 1.0);
-    //sgm_fact *= scl;
-    
-    //sgm_fact *= 0.75;
-    //sgm_fact *= 0.85;
-    //---------------------------//
-
 
     Double_t exeng    = std::exp(-m_exeng);
     Double_t max_keng = std::log(MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta / exeng);
@@ -1340,25 +1329,76 @@ std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld
     Double_t ion_eloss_sgm = sgm_fact;
     Double_t ion_eloss_mpv = sgm_fact * (max_keng + ion_keng + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
 
-    //----------------------------//
-    // testcode
-    //ion_eloss_mpv *= 9.46313201642682844e-01;
-    //ion_eloss_sgm *= 9.46313201642682844e-01;
-    //ion_eloss_mpv *= 0.5 * (TMath::Erf(2.70054 * std::log(gmbta + 1.0) + (-0.630356)) + 1.0);
-    //-------------------------------//
-
-
-    //////////////////////////////////
-    // testcode
-    ion_eloss_sgm *= 0.2;
-    ion_eloss_mpv *= 0.46408 * (TMath::Erf(1.66661 * std::log(gmbta + 1.0) + (-0.0628618)) + 1.0);
-    ///////////////////////////////////
-
     if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm) <= 0) ion_eloss_sgm = MGMath::ZERO;
     if (!MGNumc::Valid(ion_eloss_mpv) || MGNumc::Compare(ion_eloss_mpv) <= 0) ion_eloss_mpv = MGMath::ZERO;
 
     return std::make_pair(ion_eloss_sgm, ion_eloss_mpv);
 }
+*/
+
+
+//////////////////////////////////////////////////////////////////////////////////////////SAT
+std::pair<Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part) {
+    Bool_t is_over_lmt   = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
+    Double_t gmbta       = ((is_over_lmt) ? part.gmbta() : LMT_GMBTA);
+    Double_t sqr_gmbta   = ((is_over_lmt) ? (gmbta * gmbta) : LMT_SQR_GMBTA);
+    Double_t sqr_bta     = ((is_over_lmt) ? (part.bta() * part.bta()) : LMT_SQR_BTA);
+    Double_t sqr_chrg    = part.part().chrg() * part.part().chrg();
+    Double_t mass_in_GeV = part.part().mass();
+    Double_t mass_in_MeV = part.part().mass() * GEV_TO_MEV;
+    Double_t teng        = mass_in_GeV * ((is_over_lmt) ? part.gm() : LMT_GM);
+        
+    // Density Effect Correction
+    std::array<Double_t, MatProperty::NUM_ELM>&& dlt = GetDensityEffectCorrection(mfld, part);
+    
+    // Calculate Weighted Average
+    Double_t avg_dlt = MGMath::ZERO;
+    Double_t m_exeng = MGMath::ZERO;
+    Double_t ttl_wgt = MGMath::ZERO;
+    for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
+       if (!mfld.elm().at(it)) continue;
+       Double_t wgt = MatProperty::CHRG.at(it) * mfld.den().at(it);
+       m_exeng += wgt * MatProperty::NEG_LN_MEAN_EXENG.at(it);
+       avg_dlt += wgt * dlt.at(it);
+       ttl_wgt += wgt;
+    }
+    avg_dlt /= ttl_wgt;
+    m_exeng /= ttl_wgt;
+
+    if (!MGNumc::Valid(ttl_wgt) || MGNumc::Compare(ttl_wgt) <= 0) ttl_wgt = MGMath::ZERO;
+    if (!MGNumc::Valid(avg_dlt) || MGNumc::Compare(avg_dlt) <= 0) avg_dlt = MGMath::ZERO;
+    if (!MGNumc::Valid(m_exeng) || MGNumc::Compare(m_exeng) <= 0) m_exeng = MGMath::ZERO;
+    Double_t exeng = std::exp(-m_exeng);
+ 
+    // Calculate Matterial Quality
+    Double_t electron_cloud_abundance = (ttl_wgt * mfld.efft_len());
+    Double_t Bethe_Bloch_fact = (MGMath::HALF * BETHE_BLOCH_K * electron_cloud_abundance * sqr_chrg / sqr_bta);
+  
+    // Calculate Eta Trans
+    Double_t eta_trans = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
+    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV / mfld.real_len());
+    
+    // Calculate Peak 
+    Double_t max_keng_part = std::log(MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta / exeng);
+    Double_t ion_keng_part = std::log(Bethe_Bloch_fact / exeng);
+    if (!MGNumc::Valid(max_keng_part) || MGNumc::Compare(max_keng_part) <= 0) max_keng_part = MGMath::ZERO;
+    if (!MGNumc::Valid(ion_keng_part) || MGNumc::Compare(ion_keng_part) <= 0) ion_keng_part = MGMath::ZERO;
+    
+    Double_t ion_eloss_mpv = Bethe_Bloch_eta_trans * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+
+    // Calculate Sigma
+    Double_t bta_corr = (MGMath::ONE - MGMath::HALF * sqr_bta);
+    Double_t max_keng_in_single_collision = MGMath::TWO * MASS_EL_IN_GEV * (teng*teng - mass_in_GeV*mass_in_GeV) / (mass_in_GeV*mass_in_GeV + MGMath::TWO*teng*MASS_EL_IN_GEV + MASS_EL_IN_GEV*MASS_EL_IN_GEV) / (mass_in_GeV * gmbta);
+    //Double_t ion_eloss_sgm = Bethe_Bloch_eta_trans * bta_corr * max_keng_in_single_collision;
+    Double_t ion_eloss_sgm = Bethe_Bloch_eta_trans * max_keng_in_single_collision;
+   
+    // Check
+    if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm) <= 0) ion_eloss_sgm = MGMath::ZERO;
+    if (!MGNumc::Valid(ion_eloss_mpv) || MGNumc::Compare(ion_eloss_mpv) <= 0) ion_eloss_mpv = MGMath::ZERO;
+
+    return std::make_pair(ion_eloss_sgm, ion_eloss_mpv);
+}
+//////////////////////////////////////////////////////////////////////////////////////////END
 
 
 Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part) {

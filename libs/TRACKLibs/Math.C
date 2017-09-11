@@ -31,6 +31,17 @@ MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm
 }
 
 
+MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4) : rand_func_(nullptr)  {
+    Double_t norm = wgt1 + wgt2 + wgt3 + wgt4;
+    multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gauss_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gauss_.push_back(std::make_pair(wgt4/norm, sgm4));
+    bound_.first  = std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4);
+    bound_.second = std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4);
+}
+
+
 Double_t MultiGauss::efft_sgm(Double_t r) const {
     if (multi_gauss_.size() == 0) return MGMath::ZERO;
     if (multi_gauss_.size() == 1) return multi_gauss_.at(0).second;
@@ -67,14 +78,19 @@ Double_t MultiGauss::rndm() {
     
     if (rand_func_) return rand_func_->GetRandom();
     else {
-        if (multi_gauss_.size() == 2) {
+        const Long64_t npx = 100000;
+        if      (multi_gauss_.size() == 2) {
             rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])", -ROBUST*bound_.second, ROBUST*bound_.second);
-            rand_func_->SetNpx(100000);
+            rand_func_->SetNpx(npx);
 
         }
-        if (multi_gauss_.size() == 3) {
+        else if (multi_gauss_.size() == 3) {
             rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])", -ROBUST*bound_.second, ROBUST*bound_.second);
-            rand_func_->SetNpx(100000);
+            rand_func_->SetNpx(npx);
+        }
+        else if (multi_gauss_.size() == 4) {
+            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5]) + ([6]/[7])*TMath::Exp(-0.5*x*x/[7]/[7])", -ROBUST*bound_.second, ROBUST*bound_.second);
+            rand_func_->SetNpx(npx);
         }
         if (rand_func_) {
             short count = 0;

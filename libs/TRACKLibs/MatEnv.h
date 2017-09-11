@@ -163,7 +163,7 @@ class MatGeoBoxReader {
         //static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
         //static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
         static constexpr Double_t                  STD_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE) * 0.1; // testcode
-        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE * 0.1; // testcode
+        static constexpr Double_t                  FST_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE); // testcode
         Bool_t                                     is_load_;
         std::string                                file_path_;
         void*                                      file_ptr_;
@@ -595,6 +595,8 @@ class MatArg {
         MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
         ~MatArg() {}
 
+        inline void rndm(Double_t num_rad_len = 0.0);
+        
         inline void rndm(const MatFld& mfld);
 
         inline void rndm(const MatPhyFld& mphy);
@@ -670,6 +672,7 @@ class MatPhy {
         static constexpr Double_t LMT_SQR_GMBTA     = 9.890110e-02;
         static constexpr Double_t LMT_INV_GMBTA     = 3.179797e+00;
         static constexpr Double_t LMT_INV_SQR_GMBTA = 1.011111e+01;
+        static constexpr Double_t LMT_GM            = 1.048285e+00;
        
         // Unit
         static constexpr Double_t MEV_TO_GEV = 1.0e-3;

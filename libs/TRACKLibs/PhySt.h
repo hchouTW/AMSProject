@@ -36,7 +36,9 @@ class PhySt {
         inline const Double_t& bta()   const { return bta_; }
         inline const Double_t& gmbta() const { return gmbta_; }
         inline const Double_t& eta()   const { return eta_; }
-       
+      
+        inline Double_t gm() const { return ((MGNumc::EqualToZero(bta_)) ? MGMath::ONE : (gmbta_/bta_)); }
+
         inline Short_t  eta_sign() const { return (MGNumc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }
 

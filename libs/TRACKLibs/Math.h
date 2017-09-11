@@ -3,6 +3,7 @@
 
 // TODO
 // include robust (efft_sigma is value/5 if value > 5 * maximum sigma)
+// Gauss ([0]/[1])*exp(-0.5*x*x/[1]/[1])
 
 namespace TrackSys {
 
@@ -12,6 +13,7 @@ class MultiGauss {
         MultiGauss(Double_t sgm);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3);
+        MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4);
         ~MultiGauss() { if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
         inline Int_t num() const { return multi_gauss_.size(); }

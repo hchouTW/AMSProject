@@ -42,6 +42,7 @@ export AMSCoreSubj=${AMSCore}/subj
 export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
+alias amsenv=${amsenv_root5gcc}
 
 # Read ROOT file list
 alias readflist="sh ${AMSProj}/sys/shell/readflist.sh"

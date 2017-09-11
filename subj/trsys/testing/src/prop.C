@@ -23,8 +23,8 @@ int main(int argc, char * argv[]) {
     PhySt part_info(part_type);
     TFile * ofle = new TFile("proton.root", "RECREATE");
         
-    TH1D* hMu = new TH1D("hMu", "hMu;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.08 * sclu, 0.08 * sclu);
-    TH1D* hTu = new TH1D("hTu", "hTu;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.08 * sclu, 0.08 * sclu);
+    TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
+    TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
 
     MGConfig::JobOpt opt(argc, argv);
     std::vector<double> momlst;
@@ -91,7 +91,7 @@ int main(int argc, char * argv[]) {
         ofle->cd();
 
         Int_t  nbinc = 1600;
-        double binsc[2] = { -0.4*sclc, 0.4*sclc };
+        double binsc[2] = { -0.25*sclc, 0.25*sclc };
         TH1D* hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
@@ -99,13 +99,13 @@ int main(int argc, char * argv[]) {
 
         Int_t  nbinu = 1600;
         double binsu[2] = { -0.06*sclu, 0.06*sclu };
-        TH1D* hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D* hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D* hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
-        TH1D* hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D* hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D* hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D* hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
+        TH1D* hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         
         Int_t  nbinm = 1600;
-        double binsm[2] = { 0.005*scle, 0.06*scle };
+        double binsm[2] = { 0.0005*scle, 0.006*scle };
         TH1D* hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
@@ -154,11 +154,11 @@ int main(int argc, char * argv[]) {
             hMee->Fill( scl_eloss * (imom-jmom) );
             hTee->Fill( scl_eloss * (imom-tmom) );
 
-            if (imom > 3.0) hMu->Fill( scl_mscat * (jdir[0]-rdir[0]) );
-            if (imom > 3.0) hTu->Fill( scl_mscat * (tdir[0]-rdir[0]) );
+            if (imom > 8.01) hMu->Fill( scl_mscat * (jdir[0]-rdir[0]) );
+            if (imom > 8.01) hTu->Fill( scl_mscat * (tdir[0]-rdir[0]) );
         }
     }
-/*  
+ 
     // Coord X
     TGraphErrors* gMcx_mn = new TGraphErrors();
     TGraphErrors* gMcx_sg = new TGraphErrors();
@@ -335,8 +335,8 @@ int main(int argc, char * argv[]) {
 
         double pkm = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
         double pkt = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
-        if (func) gpkMT->SetPoint(ifle, gmbta, pkm/pkt);
-        if (func) gpkTM->SetPoint(ifle, gmbta, pkt/pkm);
+        gpkMT->SetPoint(ifle, gmbta, pkm/pkt);
+        gpkTM->SetPoint(ifle, gmbta, pkt/pkm);
     }    
     
     gMee_pk->Write();
@@ -347,7 +347,7 @@ int main(int argc, char * argv[]) {
 
     gpkMT->Write();
     gpkTM->Write();
- */  
+
     ofle->Write();
     ofle->Close();
 
