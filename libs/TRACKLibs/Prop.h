@@ -255,7 +255,7 @@ class PropMgnt {
         static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
         //static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
         //static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.1;   // (number radiation length threshold)
+        static constexpr Double_t TUNE_MAT   =  0.15;  // (number radiation length threshold)
         
         // testcode
         static constexpr Double_t LMTU_STEP  = 1.1;   // (ds threshold)

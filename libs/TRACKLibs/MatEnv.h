@@ -160,10 +160,8 @@ class MatGeoBoxReader {
 
     private :
         static constexpr Long64_t                  DIM_ = 3;
-        //static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE + MGMath::ONE_TO_THREE;
-        //static constexpr Double_t                  FST_STEP_LEN_ = MGMath::THREE + MGMath::ONE_TO_THREE;
-        static constexpr Double_t                  STD_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE) * 0.1; // testcode
-        static constexpr Double_t                  FST_STEP_LEN_ = (MGMath::ONE + MGMath::ONE_TO_THREE); // testcode
+        static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE_TO_THREE;
+        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::ONE_TO_THREE + MGMath::ONE;
         Bool_t                                     is_load_;
         std::string                                file_path_;
         void*                                      file_ptr_;
@@ -540,7 +538,7 @@ std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
-        MatPhyFld(Bool_t mat, Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t ion_eloss_sgm = 0., Double_t ion_eloss_mpv = 0., Double_t brm_eloss_men = 0.) : mat_(mat), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), ion_eloss_sgm_(ion_eloss_sgm), ion_eloss_mpv_(ion_eloss_mpv), brm_eloss_men_(brm_eloss_men) {}
+        MatPhyFld(Bool_t mat, Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t ion_eloss_sgm = 0., Double_t ion_eloss_mpv = 0., Double_t ion_eloss_kpa = 0., Double_t brm_eloss_men = 0.) : mat_(mat), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), ion_eloss_sgm_(ion_eloss_sgm), ion_eloss_mpv_(ion_eloss_mpv), ion_eloss_kpa_(ion_eloss_kpa), brm_eloss_men_(brm_eloss_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
@@ -549,10 +547,13 @@ class MatPhyFld {
         inline const Double_t& mult_scat_sgm() const { return mult_scat_sgm_; }
         inline const Double_t& ion_eloss_sgm() const { return ion_eloss_sgm_; }
         inline const Double_t& ion_eloss_mpv() const { return ion_eloss_mpv_; }
+        inline const Double_t& ion_eloss_kpa() const { return ion_eloss_kpa_; }
         inline const Double_t& brm_eloss_men() const { return brm_eloss_men_; }
 
+        inline static MultiGauss& mult_scat() { return mult_scat_; }
+
     protected :
-        inline void clear() { mat_ = false; inv_rad_len_ = 0.; num_rad_len_ = 0.; mult_scat_sgm_ = 0.; mult_scat_sgm_ = 0.; ion_eloss_sgm_ = 0.; ion_eloss_mpv_ = 0.; brm_eloss_men_ = 0.; }
+        inline void clear() { mat_ = false; inv_rad_len_ = 0.; num_rad_len_ = 0.; mult_scat_sgm_ = 0.; mult_scat_sgm_ = 0.; ion_eloss_sgm_ = 0.; ion_eloss_mpv_ = 0.; ion_eloss_kpa_ = 1.; brm_eloss_men_ = 0.; }
 
     private :
         Bool_t   mat_;           // has matter?
@@ -561,8 +562,14 @@ class MatPhyFld {
         Double_t mult_scat_sgm_; // multiple-scattering length [1]
         Double_t ion_eloss_sgm_; // ionization-energy-loss SGM [cm^-1]
         Double_t ion_eloss_mpv_; // ionization-energy-loss MPV [cm^-1]
+        Double_t ion_eloss_kpa_; // ionization-energy-loss KPA [1]
         Double_t brm_eloss_men_; // bremsstrahlung-energy-loss Mean [cm^-1]
+
+    private :
+        static MultiGauss mult_scat_;
 };
+    
+MultiGauss MatPhyFld::mult_scat_(8.931154e-01, 1.000000e+00, 9.211506e-02, 1.851060e+00, 1.167630e-02, 4.478370e+00, 3.093243e-03, 2.390957e+01);
 
 
 class MatMscatFld {
@@ -590,16 +597,47 @@ class MatMscatFld {
 };
 
 
+// testcode
+class MatElossFld {
+    public :
+        MatElossFld() {}
+        ~MatElossFld() {}
+
+        static Double_t Rndm(Double_t bta = 1.0);
+        
+        static void Clear();
+
+    private :
+        static constexpr Int_t NSETS_ = 100;
+        static constexpr Double_t STEP_ = 0.01;
+        static constexpr Double_t LMTL_BTA_ = 0.3;
+        static constexpr Double_t LMTU_BTA_ = 1.0;
+        static constexpr Double_t AVOID_INF = 0.3;
+        static constexpr Double_t LONG_TAIL = 800.;
+        static constexpr Double_t LONG_SGML = 3.0;
+
+        static constexpr Int_t NPX_ = 100000;
+        static std::vector<TF1 *> member_;
+
+        // [(MPV/SGM), KPA] -> Func
+        static std::map<std::pair<Int_t, Int_t>, TF1 *> func_map_;
+};
+        
+std::vector<TF1 *> MatElossFld::member_;
+
+
 class MatArg {
     public :
         MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
         ~MatArg() {}
 
-        inline void rndm(Double_t num_rad_len = 0.0);
-        
-        inline void rndm(const MatFld& mfld);
+        void rndm_mscat();
+        void rndm_eloss(Double_t num_rad_len = 0.0);
+        void rndm_eloss(const MatPhyFld& mphy);
 
-        inline void rndm(const MatPhyFld& mphy);
+        inline void rndm(Double_t num_rad_len = 0.0) { rndm_mscat(); rndm_eloss(num_rad_len); }
+        inline void rndm(const MatFld& mfld) { rndm_mscat(); rndm_eloss(mfld.num_rad_len()); }
+        inline void rndm(const MatPhyFld& mphy) { rndm_mscat(); rndm_eloss(mphy); }
 
         inline void set_mscat(Double_t tau = 0., Double_t rho = 0.);
         inline void set_eloss(Double_t ion = 0., Double_t brm = 0.);
@@ -645,7 +683,7 @@ class MatPhy {
         
         static Double_t GetRadiationLength(const MatFld& mfld, const PhySt& part);
         static Double_t GetMultipleScattering(const MatFld& mfld, const PhySt& part);
-        static std::pair<Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part);
 
     private :
@@ -664,15 +702,15 @@ class MatPhy {
         static constexpr Double_t MASS_EL_IN_MEV = 0.510999; // [MeV]
         static constexpr Double_t MASS_EL_IN_GEV = 0.000510999; // [GeV]
         
-        // Beta Limit (0.3)
-        static constexpr Double_t LMT_BTA           = 0.3;
-        static constexpr Double_t LMT_SQR_BTA       = 0.09;
-        static constexpr Double_t LMT_INV_SQR_BTA   = 1.111111e+01;
-        static constexpr Double_t LMT_GMBTA         = 3.144855e-01;
-        static constexpr Double_t LMT_SQR_GMBTA     = 9.890110e-02;
-        static constexpr Double_t LMT_INV_GMBTA     = 3.179797e+00;
-        static constexpr Double_t LMT_INV_SQR_GMBTA = 1.011111e+01;
-        static constexpr Double_t LMT_GM            = 1.048285e+00;
+        // Beta Limit (0.2)
+        static constexpr Double_t LMT_BTA           = 0.2;
+        static constexpr Double_t LMT_SQR_BTA       = 0.04;
+        static constexpr Double_t LMT_INV_SQR_BTA   = 2.500000e+01;
+        static constexpr Double_t LMT_GMBTA         = 2.041241e-01;
+        static constexpr Double_t LMT_SQR_GMBTA     = 4.166666e-02;
+        static constexpr Double_t LMT_INV_GMBTA     = 4.898979e+00;
+        static constexpr Double_t LMT_INV_SQR_GMBTA = 2.400000e+01;
+        static constexpr Double_t LMT_GM            = 1.020620e+00;
        
         // Unit
         static constexpr Double_t MEV_TO_GEV = 1.0e-3;

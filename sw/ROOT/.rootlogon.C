@@ -20,6 +20,15 @@
     TF1 * fldgs = new TF1("fldgs", "[0]*TMath::Exp(-0.5 * ( (x-[1])/[2] + TMath::Exp(-(x-[1])/[2]*[4]) + ((x-[1])*(x-[1])/[2]/[2])*[3]*[3]) )");
     fldgs->SetParameters(1000., 0.001, 0.0002, 1.0, 1.0);
     
+    TF1 * fldgm1 = new TF1("fldgm1", "[0] * TMath::Exp(-[3] * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
+    fldgm1->SetParameters(1000., 0.001, 0.0002, 0.5);
+    
+    TF1 * fldgm2 = new TF1("fldgm2", "[0] * TMath::Exp(-([3]*([2]/x)) * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
+    fldgm2->SetParameters(1000., 0.001, 0.0002, 10.0);
+    
+    TF1 * fldgm3 = new TF1("fldgm3", "[0] * TMath::Power([3]*([2]/x), [3]*([2]/x)) / TMath::Gamma([3]*([2]/x)) * TMath::Exp(-([3]*([2]/x)) * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
+    fldgm3->SetParameters(1000., 0.001, 0.0002, 8.0);
+    
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 
 	//---------------//

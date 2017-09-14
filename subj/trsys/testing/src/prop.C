@@ -22,9 +22,18 @@ int main(int argc, char * argv[]) {
     PartType part_type = PartType::Proton;
     PhySt part_info(part_type);
     TFile * ofle = new TFile("proton.root", "RECREATE");
+    
+    TH1D* hMc = new TH1D("hMc", "hMc;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc);
+    TH1D* hTc = new TH1D("hTc", "hTc;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc);
         
     TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
     TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
+    
+    TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc, 1600, -0.06 * sclu, 0.06 * sclu);
+    TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc, 1600, -0.06 * sclu, 0.06 * sclu);
+    
+    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", 1600, 0.0005 * scle, 0.006 * scle);
+    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", 1600, 0.0005 * scle, 0.006 * scle);
 
     MGConfig::JobOpt opt(argc, argv);
     std::vector<double> momlst;
@@ -153,9 +162,18 @@ int main(int argc, char * argv[]) {
 
             hMee->Fill( scl_eloss * (imom-jmom) );
             hTee->Fill( scl_eloss * (imom-tmom) );
+            
+            if (imom > 8.01) hMc->Fill( scl_mscat * (jcoo[0]-rcoo[0]) );
+            if (imom > 8.01) hTc->Fill( scl_mscat * (tcoo[0]-rcoo[0]) );
 
             if (imom > 8.01) hMu->Fill( scl_mscat * (jdir[0]-rdir[0]) );
             if (imom > 8.01) hTu->Fill( scl_mscat * (tdir[0]-rdir[0]) );
+            
+            if (imom > 8.01) hMcu->Fill( scl_mscat * (jcoo[0]-rcoo[0]), scl_mscat * (jdir[0]-rdir[0]) );
+            if (imom > 8.01) hTcu->Fill( scl_mscat * (tcoo[0]-rcoo[0]), scl_mscat * (tdir[0]-rdir[0]) );
+            
+            if (imom > 8.01) hMe->Fill( scl_eloss * (imom-jmom) );
+            if (imom > 8.01) hTe->Fill( scl_eloss * (imom-tmom) );
         }
     }
  
@@ -283,8 +301,12 @@ int main(int argc, char * argv[]) {
     // Energy Loss
     TGraphErrors* gMee_pk = new TGraphErrors();
     TGraphErrors* gMee_sg = new TGraphErrors();
+    TGraphErrors* gMee_dt = new TGraphErrors();
+    TGraphErrors* gMee_ms = new TGraphErrors();
     gMee_pk->SetNameTitle("gMee_pk", "");
     gMee_sg->SetNameTitle("gMee_sg", "");
+    gMee_dt->SetNameTitle("gMee_dt", "");
+    gMee_ms->SetNameTitle("gMee_ms", "");
     gMee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
     gMee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
     gMee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
@@ -292,61 +314,135 @@ int main(int argc, char * argv[]) {
 
     TGraphErrors* gTee_pk = new TGraphErrors();
     TGraphErrors* gTee_sg = new TGraphErrors();
-
+    TGraphErrors* gTee_dt = new TGraphErrors();
+    TGraphErrors* gTee_ms = new TGraphErrors();
     gTee_pk->SetNameTitle("gTee_pk", "");
     gTee_sg->SetNameTitle("gTee_sg", "");
+    gTee_dt->SetNameTitle("gTee_dt", "");
+    gTee_ms->SetNameTitle("gTee_ms", "");
     gTee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
     gTee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
     gTee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
     gTee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^{2}/Q^{2}]");
     
-    TGraphErrors * gpkMT = new TGraphErrors();
-    gpkMT->SetNameTitle("gpkMT", "");
-    TGraphErrors * gpkTM = new TGraphErrors();
-    gpkTM->SetNameTitle("gpkTM", "");
+    TGraphErrors* gMsg = new TGraphErrors();
+    gMsg->SetNameTitle("gMsg", "");
+    
+    TGraphErrors * gMTpk = new TGraphErrors();
+    gMTpk->SetNameTitle("gMTpk", "");
+    
+    TGraphErrors * gMTsg = new TGraphErrors();
+    gMTsg->SetNameTitle("gMTsg", "");
+    
+    TGraphErrors * gMTdt = new TGraphErrors();
+    gMTdt->SetNameTitle("gMTdt", "");
+    
+    TGraphErrors * gTMdt = new TGraphErrors();
+    gTMdt->SetNameTitle("gTMdt", "");
+    
+    TGraphErrors * gMkap = new TGraphErrors();
+    gMkap->SetNameTitle("gMkap", "");
+    
+    TF1 * feloss = new TF1("feloss", "[0] * TMath::Power([3]*([2]/x), [3]*([2]/x)) / TMath::Gamma([3]*([2]/x)) * TMath::Exp(-([3]*([2]/x)) * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
+    feloss->SetParameters(1000., 0.001, 0.0002, 8.0); 
     
     for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
         double mom = momlst.at(ifle);
         part_info.set_mom(mom);
         double gmbta = part_info.gmbta();
+        double bta = part_info.bta();
         TF1 * func = nullptr;
         double scl_eloss = 1.0 / sclelosslst.at(ifle);
         scl_eloss = 1.0;
 
         TH1D* hMee = (TH1D*) ofle->Get(Form("hMee%02d", ifle));
-        hMee->Fit("landau", "q0", "");
-        func = hMee->GetFunction("landau");
+        double pkm = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
+        feloss->SetParameters(1000., pkm, 0.05*pkm, 8.0);
+        feloss->FixParameter(3, 8.0);
+        hMee->Fit(feloss, "q0", "");
+        hMee->Fit(feloss, "q0", "");
+        feloss->SetParameter(3, 8.0);
+        feloss->SetParLimits(3, 1.0, 400.);
+        hMee->Fit(feloss, "q0", "");
+        hMee->Fit(feloss, "q0", "");
+        hMee->Fit(feloss, "q0", "");
+        func = feloss;
+
+        double m1 = 1, m2 = 1, m3 = 1;
         if (func) {
             gMee_pk->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(1));
             gMee_pk->SetPointError(ifle,  0., scl_eloss * func->GetParError(1));
             gMee_sg->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(2));
             gMee_sg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2));
+            gMee_dt->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(3));
+            gMee_dt->SetPointError(ifle,  0., scl_eloss * func->GetParError(3));
+            m1 = scl_eloss * func->GetParameter(1);
+            m2 = scl_eloss * func->GetParameter(2);
+            m3 = scl_eloss * func->GetParameter(3);
+            gMee_ms->SetPoint     (ifle, bta, m1/m2);
+            gMee_ms->SetPointError(ifle,  0., 0.);
+
+            const Double_t ion_eloss_kappa0 = 7.39439;
+            gMkap->SetPoint     (ifle, bta, ion_eloss_kappa0/m3);
+            gMkap->SetPointError(ifle,  0., 0.);
+
+            const Double_t sgm = 8.03715e-05;
+            gMsg->SetPoint     (ifle, bta, scl_eloss * func->GetParameter(2) / sgm);
+            gMsg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2) / sgm);
+
         }
         
         TH1D* hTee = (TH1D*) ofle->Get(Form("hTee%02d", ifle));
-        hTee->Fit("landau", "q0", "");
-        func = hTee->GetFunction("landau");
+        double pkt = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
+        feloss->SetParameters(1000., pkt, 0.05*pkt, 8.0);
+        feloss->FixParameter(3, 8.0);
+        hTee->Fit(feloss, "q0", "");
+        hTee->Fit(feloss, "q0", "");
+        feloss->SetParameter(3, 8.0);
+        feloss->SetParLimits(3, 1.0, 400.);
+        hTee->Fit(feloss, "q0", "");
+        hTee->Fit(feloss, "q0", "");
+        hTee->Fit(feloss, "q0", "");
+        func = feloss;
+        
+        double t1 = 1, t2 = 1, t3 = 1;
         if (func) {
             gTee_pk->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(1));
             gTee_pk->SetPointError(ifle,  0., scl_eloss * func->GetParError(1));
             gTee_sg->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(2));
             gTee_sg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2));
+            gTee_dt->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(3));
+            gTee_dt->SetPointError(ifle,  0., scl_eloss * func->GetParError(3));
+            t1 = scl_eloss * func->GetParameter(1);
+            t2 = scl_eloss * func->GetParameter(2);
+            t3 = scl_eloss * func->GetParameter(3);
+            gTee_ms->SetPoint     (ifle, bta, t1/t2);
+            gTee_ms->SetPointError(ifle,  0., 0.);
         }
 
-        double pkm = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
-        double pkt = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
-        gpkMT->SetPoint(ifle, gmbta, pkm/pkt);
-        gpkTM->SetPoint(ifle, gmbta, pkt/pkm);
+        gMTpk->SetPoint(ifle, bta, m1/t1);
+        gMTsg->SetPoint(ifle, bta, m2/t2);
+        gMTdt->SetPoint(ifle, bta, m3/t3);
+        gTMdt->SetPoint(ifle, bta, t3/m3);
     }    
     
     gMee_pk->Write();
     gMee_sg->Write();
+    gMee_dt->Write();
+    gMee_ms->Write();
 
     gTee_pk->Write();
     gTee_sg->Write();
+    gTee_dt->Write();
+    gTee_ms->Write();
 
-    gpkMT->Write();
-    gpkTM->Write();
+    gMTpk->Write();
+    gMTsg->Write();
+    gMTdt->Write();
+    gTMdt->Write();
+    gMsg->Write();
+    
+    gMkap->Write();
 
     ofle->Write();
     ofle->Close();
