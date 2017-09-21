@@ -16,6 +16,7 @@ void MatFld::print() const {
     printStr += STR_FMT("EfftLen   %-7.2f\n", efft_len_);
     printStr += STR_FMT("Efft      %-6.4f\n", efft_);
     printStr += STR_FMT("Loc       %-6.4f\n", loc_);
+    printStr += STR_FMT("LocSqr    %-6.4f\n", locsqr_);
     printStr += STR_FMT("Elm       H(%d) C(%d) N(%d) O(%d) F(%d) Na(%d) Al(%d) Si(%d) Pb(%d)\n", elm_.at(0), elm_.at(1), elm_.at(2), elm_.at(3), elm_.at(4), elm_.at(5), elm_.at(6), elm_.at(7), elm_.at(8));
     printStr += STR_FMT("Den [10^4 mol cm^-3]    H (%6.2f)  C (%6.2f)  N (%6.2f)\n", den_.at(0)*scl, den_.at(1)*scl, den_.at(2)*scl);
     printStr += STR_FMT("Den [10^4 mol cm^-3]    O (%6.2f)  F (%6.2f)  Na(%6.2f)\n", den_.at(3)*scl, den_.at(4)*scl, den_.at(5)*scl);
@@ -37,6 +38,7 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
     Double_t                                   efft_len = 0.;
     Double_t                                   efft = 0.;
     Double_t                                   loc = 0.;
+    Double_t                                   locsqr = 0.;
     
     for (auto&& mfld : mflds) {
         if (!mfld()) { real_len += mfld.real_len(); continue; }
@@ -46,8 +48,10 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
             elm.at(it) = true;
             den.at(it) = (mfld.efft_len() * mfld.den().at(it));
         }
-        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
-        loc         += (real_len + mfld.loc() * mfld.real_len()) * num_rad_len;
+        Double_t loclen = mfld.loc() * mfld.real_len();
+        Double_t num_rad_len = mfld.num_rad_len();
+        loc         += (real_len + loclen) * num_rad_len;
+        locsqr      += (real_len * real_len + loclen * loclen + MGMath::TWO * real_len * loclen) * num_rad_len;
         inv_rad_len += num_rad_len;
         efft_len += mfld.efft_len();
         real_len += mfld.real_len();
@@ -61,11 +65,12 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
             den.at(it) = (den.at(it) / efft_len);
         }
         loc         = (loc / real_len / inv_rad_len);
+        locsqr      = (locsqr / (real_len * real_len) / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
 
         efft = (efft_len / real_len);
         
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
@@ -351,6 +356,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     SVecD<3> itloc((vxloc + MGMath::HALF * unit(0)), (vyloc + MGMath::HALF * unit(1)), (vzloc + MGMath::HALF * unit(2)));
 
     Long64_t suml = 0;
+    Long64_t sumll = 0;
     Long64_t itcnt = 0;
     for (Long64_t it = 0; it < nstp; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(itloc(2));
@@ -363,6 +369,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         if (mat_ptr_[idx]) {
             suml += it;
+            sumll += it*it;
             itcnt++;
         }
     }
@@ -370,9 +377,10 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     if (itcnt != 0) {
         Double_t efft = static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp);
         Double_t efft_len = efft * real_len;
-        Double_t loc = ((MGMath::HALF + static_cast<Double_t>(suml) / static_cast<Double_t>(itcnt)) / static_cast<Double_t>(nstp));
+        Double_t loc = ((MGMath::HALF + static_cast<Double_t>(suml) / static_cast<Double_t>(nstp)) / static_cast<Double_t>(itcnt));
+        Double_t locsqr = (((static_cast<Double_t>(sumll + suml) + MGMath::HALF * MGMath::HALF) / static_cast<Double_t>(nstp * nstp)) / static_cast<Double_t>(itcnt)); 
 
-        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft, loc);
+        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
@@ -976,6 +984,7 @@ MatFld MatMgnt::Get(const SVecD<3>& coo) {
     if (!Load()) return MatFld();
 
     Bool_t mat = false;
+    Double_t real_len = 0.0;
     std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.0;
@@ -1012,6 +1021,7 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
     Double_t                                   efft_len = 0.0;
     Double_t                                   efft = 0.0;
     Double_t                                   loc = 0.0;
+    Double_t                                   locsqr = 0.0;
 
     for (auto&& reader : *reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
@@ -1023,8 +1033,9 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
             elm.at(it) = true;
             den.at(it) += (mfld.efft_len() * mfld.den().at(it));
         }
-        Double_t num_rad_len = (mfld.efft_len() * mfld.inv_rad_len());
+        Double_t num_rad_len = mfld.num_rad_len();
         loc         += mfld.loc() * num_rad_len;
+        locsqr      += mfld.locsqr() * num_rad_len;
         inv_rad_len += num_rad_len;
         efft_len    += mfld.efft_len();
         
@@ -1037,113 +1048,27 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
             den.at(it) = (den.at(it) / efft_len);
         }
         loc         = (loc / inv_rad_len);
+        locsqr      = (locsqr / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
         efft = (efft_len / real_len);
 
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc);
+        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
 
 
 MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
-    const SVecD<3>&  vcoo = part.coo();
-    SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
+    const SVecD<3>&  vcoo = part.c();
+    SVecD<3>&&       wcoo = part.c() + stp_len * part.u();
 
     return Get(vcoo, wcoo, is_std);
 }
 
 
-void MatArg::rndm_mscat() {
-    tau_mscat_ = MGMath::ZERO;
-    rho_mscat_ = MGMath::ZERO;
-    
-    if (sw_mscat_) {
-        //tau_mscat_ = MGRndm::NormalGaussian();
-        //rho_mscat_ = MGRndm::NormalGaussian();
-        
-        // testcode
-        tau_mscat_ = MatPhyFld::mult_scat().rndm();
-        rho_mscat_ = MatPhyFld::mult_scat().rndm();
-    }
-}
-
-
-void MatArg::rndm_eloss(Double_t num_rad_len) {
-    ion_eloss_ = MGMath::ZERO;
-    brm_eloss_ = MGMath::ZERO;
-    
-    if (sw_eloss_) {
-        Int_t cnt = 0;
-        const Int_t MAX_CNT = 3;
-        const Double_t ION_LIMIT = -5.0;
-        do {
-            ion_eloss_ = Rndm::Landau();
-            cnt++;
-        } while(MGNumc::Compare(ion_eloss_, ION_LIMIT) < 0 && cnt <= MAX_CNT);
-        
-        Double_t bremslen = num_rad_len / MGMath::LOG_TWO;
-        brm_eloss_ = (MGNumc::Compare(bremslen) <= 0) ? MGMath::ZERO : MGRndm::Gamma(bremslen, (MGMath::ONE / bremslen))();
-    }
-}
-
-
-void MatArg::rndm_eloss(const MatPhyFld& mphy) {
-    ion_eloss_ = MGMath::ZERO;
-    brm_eloss_ = MGMath::ZERO;
-    
-    if (sw_eloss_ && mphy()) {
-        Int_t cnt = 0;
-        const Int_t MAX_CNT = 3;
-        Double_t ionlimit = MGMath::NEG * mphy.ion_eloss_mpv() / mphy.ion_eloss_sgm();
-        do {
-            ion_eloss_ = Rndm::Landau();
-            cnt++;
-        } while(MGNumc::Compare(ion_eloss_, ionlimit) < 0 && cnt <= MAX_CNT);
-
-
-        // testcode
-        /*
-        //MGClock::HrsStopwatch sw;
-        //sw.start();
-        std::string ionfmt = "(x<[2])?0:(TMath::Power([1]/(x+[0]), [1]/(x+[0])) / TMath::Gamma([1]/(x+[0])) * TMath::Exp(-([1]/(x+[0])) * (x+TMath::Exp(-x))))";
-        Double_t ionlmt = mphy.ion_eloss_mpv() / mphy.ion_eloss_sgm();
-        Double_t ionkpa = mphy.ion_eloss_kpa();
-        TF1 func("ionfunc", ionfmt.c_str(), -0.3*ionlmt, 0.5*ionlmt);
-        func.SetParameters(ionlmt, ionkpa, -0.3*ionlmt);
-        func.SetNpx(50);
-
-        ion_eloss_ = func.GetRandom();
-        //sw.stop();
-        //std::cout << Form("TIME %14.8f\n", sw.time());
-        */
-
-        Double_t bremslen = mphy.num_rad_len() / MGMath::LOG_TWO;
-        brm_eloss_ = (MGNumc::Compare(bremslen) <= 0) ? MGMath::ZERO : MGRndm::Gamma(bremslen, (MGMath::ONE / bremslen))();
-    }
-}
-
-
-void MatArg::set_mscat(Double_t tau, Double_t rho) {
-    if (sw_mscat_) {
-        tau_mscat_ = tau;
-        rho_mscat_ = rho;
-    }
-}
-
-
-void MatArg::set_eloss(Double_t ion, Double_t brm) {
-    if (sw_eloss_) {
-        const Double_t ION_LIMIT = -10.0;
-        if (MGNumc::Compare(ion, ION_LIMIT) >= 0) ion_eloss_ = ion;
-        if (MGNumc::Compare(brm) >= 0) brm_eloss_ = brm;
-    }
-}
-
-
 Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
-    const SVecD<3>&  vcoo = part.coo();
-    SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
+    const SVecD<3>&  vcoo = part.c();
+    SVecD<3>&&       wcoo = part.c() + stp_len * part.u();
 
     MatFld&& mfld = MatMgnt::Get(vcoo, wcoo, is_std);
    
@@ -1151,162 +1076,42 @@ Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t 
 }
 
 
-MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, const MatArg& marg, Bool_t is_std) {
-    if (!marg()) return MatPhyFld();
-    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld();
-    if (MGNumc::EqualToZero(stp_len)) return MatPhyFld();
-    if (MGNumc::EqualToZero(part.mom())) return MatPhyFld();
+MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
+    Double_t len = std::fabs(stp_len);
+    if (!part.field()) return MatPhyFld(len);
+    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld(len);
+    if (MGNumc::EqualToZero(stp_len)) return MatPhyFld(len);
+    if (MGNumc::EqualToZero(part.mom())) return MatPhyFld(len);
 
-    const SVecD<3>&  vcoo = part.coo();
-    SVecD<3>&&       wcoo = part.coo() + stp_len * part.dir();
+    const SVecD<3>&  vcoo = part.c();
+    SVecD<3>&&       wcoo = part.c() + stp_len * part.u();
 
     MatFld&& mfld = MatMgnt::Get(vcoo, wcoo, is_std);
     
-    if (!mfld()) return MatPhyFld();
+    if (!mfld()) return MatPhyFld(mfld.real_len());
 
     Double_t mult_scat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
-    Double_t brm_eloss_men = GetBremsstrahlungEnergyLoss(mfld, part);
+    Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
 
-    return MatPhyFld(mfld(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), brm_eloss_men);
+    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
 }
 
 
-MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part, const MatArg& marg) {
-    if (!mfld() || !marg()) return MatPhyFld();
-    if (MGNumc::EqualToZero(mfld.efft_len())) return MatPhyFld();
-    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld();
-    if (MGNumc::EqualToZero(part.mom())) return MatPhyFld();
+MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part) {
+    Double_t len = mfld.real_len();
+    if (!mfld() || !part.field()) return MatPhyFld(len);
+    if (MGNumc::EqualToZero(mfld.efft_len())) return MatPhyFld(len);
+    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld(len);
+    if (MGNumc::EqualToZero(part.mom())) return MatPhyFld(len);
     
     Double_t mult_scat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
-    Double_t brm_eloss_men = GetBremsstrahlungEnergyLoss(mfld, part);
-
-    return MatPhyFld(mfld(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), brm_eloss_men);
+    Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
+    
+    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
 }
         
-
-void MatMscatFld::print() const {
-    std::string printStr;
-    printStr += STR_FMT("===== MatMscatFld =====\n");
-    printStr += STR_FMT("Mat     %-d\n", mat_);
-    printStr += STR_FMT("SgmLoc  %-9.6f\n", sgm_loc_);
-    printStr += STR_FMT("SgmTha  %-9.6f\n", sgm_tha_);
-    printStr += STR_FMT("CovLoc  %-9.6f %-9.6f\n", std::sqrt(cov_(0, 0)), std::sqrt(cov_(1, 1)));
-    printStr += STR_FMT("CovTha  %-9.6f %-9.6f\n", std::sqrt(cov_(2, 2)), std::sqrt(cov_(3, 3)));
-    printStr += STR_FMT("=======================\n");
-    COUT(printStr);
-}
-
-
-// testcode
-Double_t MatElossFld::Rndm(Double_t bta) {
-    if (member_.size() == 0) {
-        member_.resize(NSETS_, nullptr);
-        for (Int_t it = 0; it < member_.size(); ++it) {
-            std::cerr << Form("IT %d BEG\n", it);
-            Double_t val = (it+1)*STEP_;
-            std::string name = STR_FMT("fElossFld%03d\n", it);
-            std::string fmt  = "(x<[2])?0:(TMath::Power([1]/(x+[0]), [1]/(x+[0])) / TMath::Gamma([1]/(x+[0])) * TMath::Exp(-([1]/(x+[0])) * (x+TMath::Exp(-x))))";
-
-            const Double_t ion_eloss_kpa0 = 7.39439;
-            const Double_t kpa_pars[2] = { -1.82403, 1.79287 }; 
-            Double_t kpa = ion_eloss_kpa0 / ( MGMath::ONE - (MGMath::TWO - TMath::Erfc(kpa_pars[0]*std::pow(val*val, kpa_pars[1]))) );
-            kpa = ion_eloss_kpa0;
-
-            Double_t msv[6] = { 1.0 };
-            Double_t tv = (val < 0.3) ? 0.3 : val;
-            for (Int_t m = 1; m < 6; ++m) msv[m] = msv[m-1] * tv;
-            const Double_t msr_pars[6] = { -125.847, 1075.17, -3363.44, 5050.67, -3631.87, 1011.26 }; 
-            Double_t msr = (msv[0]*msr_pars[0] + msv[1]*msr_pars[1] + msv[2]*msr_pars[2] + msv[3]*msr_pars[3] + msv[4]*msr_pars[4] + msv[5]*msr_pars[5]);
-            msr *= 3;
-          
-            // Calculate Boundary
-            Double_t lmtl = -AVOID_INF * msr;
-            
-            Double_t lmtu_est = (LONG_TAIL / kpa);
-            Double_t lmtu = ((lmtu_est > LONG_SGML) ? lmtu_est : LONG_SGML);
-
-            member_.at(it) = new TF1(name.c_str(), fmt.c_str(), lmtl, lmtu);
-            member_.at(it)->SetParameters(msr, kpa, lmtl);
-            member_.at(it)->SetNpx(NPX_);
-          
-            std::cerr << Form("BTA %8.4f MSR %8.2f KPA %8.2f\n", val, msr, kpa);
-
-            std::cerr << Form("IT %d SET\n", it);
-            if (MGNumc::Compare(val, LMTL_BTA_) < 0) continue;
-            if (MGNumc::Compare(val, LMTU_BTA_) > 0) continue;
-            std::cerr << Form("FUNC %d\n", member_.at(it)!=nullptr);
-            std::cerr << Form("IT %d BEF RNDM\n", it);
-            std::cerr << Form("IT %d CEN %8.4f  MAX %14.8f\n", it, member_.at(it)->GetMaximumX(-1, 1));
-            std::cerr << Form("IT %d CEN %8.4f  RAT %14.8f\n", it, member_.at(it)->Eval(0), kpa/msr);
-            std::cerr << Form("IT %d MID RNDM\n", it);
-            std::cerr << Form("IT %d RNDM %14.8f\n", it, member_.at(it)->GetRandom());
-            std::cerr << Form("IT %d AFT RNDM\n", it);
-        }
-    }
-
-    Double_t beta = bta;
-    if      (MGNumc::Compare(beta, LMTL_BTA_) <= 0) beta = LMTL_BTA_;
-    else if (MGNumc::Compare(beta, LMTU_BTA_) >= 0) beta = LMTU_BTA_;
-    Int_t ref = static_cast<Int_t>(std::rint((beta/STEP_))) - 1;
-    if (ref < 0 || ref >= member_.size()) return 0.0;
-    Double_t rndm = member_.at(ref)->GetRandom();
-
-    return rndm;
-}
-
-
-void MatElossFld::Clear() {
-    if (member_.size() != 0) {
-        for (Int_t it = 0; it < member_.size(); ++it) {
-            if (member_.at(it) == nullptr) continue;
-            delete member_.at(it);
-            member_.at(it) = nullptr;
-        }
-        member_.clear();
-    }
-}
-
-
-MatMscatFld MatPhy::GetMscat(const MatFld& mfld, const PhySt& part) {
-    if (!mfld()) return MatMscatFld();
-    if (MGNumc::EqualToZero(mfld.efft_len())) return MatMscatFld();
-    if (part.part().is_chrgless() || part.part().is_massless()) return MatMscatFld();
-    if (MGNumc::EqualToZero(part.mom())) return MatMscatFld();
-    
-    Double_t num_rad_len = mfld.num_rad_len();
-    if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
-    if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
-    
-    Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
-    Double_t eta       = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
-    Double_t eta_part  = (part.part().chrg_to_mass() * eta) * std::sqrt(eta * eta + MGMath::ONE);
-    Double_t sgm_tha   = RYDBERG_CONST * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
-    Double_t sgm_loc   = MGMath::INV_SQRT_TWELVE * mfld.efft_len() * sgm_tha;
-    Double_t res_len   = (MGMath::ONE - mfld.loc()) * mfld.real_len();
-
-    Double_t mscat_tha_tha = sgm_tha * sgm_tha;
-    Double_t mscat_loc_loc = (sgm_loc * sgm_loc + res_len * res_len * mscat_tha_tha);
-    Double_t mscat_loc_tha = res_len * mscat_tha_tha;
-
-    Double_t uxx = (MGMath::ONE - part.uy() * part.uy());
-    Double_t uyy = (MGMath::ONE - part.ux() * part.ux());
-    Double_t uxy = (part.ux() * part.uy());
-
-    SMtxSymD<5> mscat;
-    mscat(0, 0) = mscat_loc_loc * uxx;
-    mscat(1, 1) = mscat_loc_loc * uyy;
-    mscat(0, 1) = mscat_loc_loc * uxy;
-    mscat(2, 2) = mscat_tha_tha * uxx;
-    mscat(3, 3) = mscat_tha_tha * uyy;
-    mscat(2, 3) = mscat_tha_tha * uxy;
-    mscat(0, 2) = mscat_loc_tha;
-    mscat(1, 3) = mscat_loc_tha;
-
-    return MatMscatFld(sgm_loc, sgm_tha, mscat);
-}
-
 
 std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part) {
     Double_t gmbta     = ((MGNumc::Compare(part.bta(), LMT_BTA) > 0) ? part.gmbta() : LMT_GMBTA);
@@ -1332,12 +1137,15 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
     if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
+    Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
-    Double_t eta_part = std::sqrt(eta * eta + MGMath::ONE);
-    Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len)) * (eta / mfld.real_len());
+    Double_t eta_part = (eta * std::sqrt(eta * eta + MGMath::ONE));
+    Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
     
     // Tune by Hsin-Yi Chou
-    const Double_t tune_sgm = 8.637135e-01;
+    const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
+    const Double_t tune_sgm = pars[0] * (MGMath::ONE + pars[1] * TMath::Power(bta, pars[2]));
+    //const Double_t tune_sgm = 8.637135e-01 * std::pow(bta, -MGMath::ONE_TO_THREE);
     mscat_sgm *= tune_sgm;
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -1385,37 +1193,36 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
   
     // Calculate Eta Trans
     Double_t eta_trans = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
-    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV / mfld.real_len());
+    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV) * (part.eta());
+    
+    // Calculate Sigma
+    Double_t eloss_ion_sgm = Bethe_Bloch_eta_trans / std::sqrt(sqr_bta);
     
     // Calculate Peak 
     Double_t max_keng_part = std::log(MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta / exeng);
     Double_t ion_keng_part = std::log(Bethe_Bloch_fact / exeng);
     if (!MGNumc::Valid(max_keng_part) || MGNumc::Compare(max_keng_part) <= 0) max_keng_part = MGMath::ZERO;
     if (!MGNumc::Valid(ion_keng_part) || MGNumc::Compare(ion_keng_part) <= 0) ion_keng_part = MGMath::ZERO;
-    Double_t ion_eloss_mpv = Bethe_Bloch_eta_trans * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    Double_t eloss_ion_mpv = Bethe_Bloch_eta_trans * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+   
+    // Calculate Kappa
+    const Double_t eloss_ion_kpa0 = MGMath::SQRT_TWO;
+    Double_t eloss_ion_kpa = eloss_ion_kpa0 / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
 
-    // Calculate Sigma
-    Double_t ion_eloss_sgm = Bethe_Bloch_eta_trans;
-
+    // testcode
     // Tune by Hsin-Yi Chou
-    const Double_t mpv_pars[4] = { 0.456642, 4.49294, 1.58625, 0.646944 }; 
+    const Double_t tune_kpa = 1.05379361892339474e+00;
+    eloss_ion_kpa *= tune_kpa;
+    
+    const Double_t mpv_pars[4] = { 0.489891, 8.8992, 0.0408363, -7.16981 }; 
     Double_t tune_mpv = (mpv_pars[0]) * (TMath::Erf(mpv_pars[1] * TMath::Power(sqr_bta, mpv_pars[2]) + mpv_pars[3]) + MGMath::ONE);
-    ion_eloss_mpv *= tune_mpv;
-    
-    const Double_t sgm_par = 2.90097e-01;
-    Double_t tune_sgm = MGMath::TWO * std::pow(sqr_bta, sgm_par) / (MGMath::ONE + sqr_bta);
-    ion_eloss_sgm *= tune_sgm;
+    eloss_ion_mpv *= 0.903547;
 
-    const Double_t ion_eloss_kpa0 = 7.35007e+00;
-    const Double_t kpa_pars[3] = { 3.73563e+00, -4.14693e-01, -1.64452e+00 }; 
-    Double_t ion_eloss_kpa = ion_eloss_kpa0 + kpa_pars[0]*TMath::Exp(kpa_pars[1]*std::sqrt(1.0-std::log(1.0+gmbta)/gmbta))*TMath::Power((gmbta*std::log(1.0+gmbta)), kpa_pars[2]);
-    
-    // Check
-    if (!MGNumc::Valid(ion_eloss_sgm) || MGNumc::Compare(ion_eloss_sgm)                 <= 0) ion_eloss_sgm = MGMath::ZERO;
-    if (!MGNumc::Valid(ion_eloss_mpv) || MGNumc::Compare(ion_eloss_mpv)                 <= 0) ion_eloss_mpv = MGMath::ZERO;
-    if (!MGNumc::Valid(ion_eloss_kpa) || MGNumc::Compare(ion_eloss_kpa, ion_eloss_kpa0) <= 0) ion_eloss_kpa = ion_eloss_kpa0;
+    if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;
+    if (!MGNumc::Valid(eloss_ion_mpv) || MGNumc::Compare(eloss_ion_mpv) <= 0) eloss_ion_mpv = MGMath::ZERO;
+    if (!MGNumc::Valid(eloss_ion_sgm) || MGNumc::Compare(eloss_ion_sgm) <= 0) eloss_ion_sgm = MGMath::ZERO;
 
-    return std::make_tuple(ion_eloss_sgm, ion_eloss_mpv, ion_eloss_kpa);
+    return std::make_tuple(eloss_ion_kpa, eloss_ion_mpv, eloss_ion_sgm);
 }
 
 
@@ -1426,10 +1233,11 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& pa
     Double_t inv_sqr_bta  = ((is_over_lmt) ? (MGMath::ONE / part.bta() / part.bta()) : LMT_INV_SQR_BTA);
     Double_t sqr_chrg_rat = (part.part().chrg() * part.part().chrg());
     Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.part().mass() / part.part().mass());
-    Double_t brm_eloss_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mfld.num_rad_len() / MGMath::LOG_TWO) / mfld.real_len();
-    if (!MGNumc::Valid(brm_eloss_men) || MGNumc::Compare(brm_eloss_men) <= 0) brm_eloss_men = MGMath::ZERO;
+    Double_t eloss_brm_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mfld.num_rad_len() / MGMath::LOG_TWO) * part.eta();
+    
+    if (!MGNumc::Valid(eloss_brm_men) || MGNumc::Compare(eloss_brm_men) <= 0) eloss_brm_men = MGMath::ZERO;
 
-    return brm_eloss_men;
+    return eloss_brm_men;
 }
 
 

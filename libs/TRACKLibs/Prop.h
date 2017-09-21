@@ -16,9 +16,11 @@ class OrthCoord {
 
     public :
         OrthCoord() : org_(0, 0, 1), tau_(1, 0, 0), rho_(0, 1, 0) {}
-        OrthCoord(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X);
+        OrthCoord(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X) : OrthCoord() { reset(org, seed); }
         ~OrthCoord() {}
-        
+
+        inline void reset(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X);
+
         inline const SVecD<3>& org() const { return org_; }
         inline const SVecD<3>& tau() const { return tau_; }
         inline const SVecD<3>& rho() const { return rho_; }
@@ -48,26 +50,30 @@ const SVecD<3> OrthCoord::AXIS_Z(0, 0, 1);
 
 class MotionFunc {
     public :
-        MotionFunc(const PhySt& part);
-        MotionFunc(const PhySt& part, const MatArg& marg, const MatPhyFld& mphy);
+        MotionFunc(PhySt& part);
+        MotionFunc(PhySt& part, const MatPhyFld& mphy);
         ~MotionFunc() {}
         
-        inline const SVecD<3>& p() const { return zeta_p_; }
+        inline const OrthCoord& orth() const { return orth_; }
+        
+        inline const SVecD<3>& c() const { return zeta_c_; }
         inline const SVecD<3>& u() const { return zeta_u_; }
         inline const Double_t& e() const { return zeta_e_; }
         
-        inline const Double_t& px() const { return zeta_p_(0); }
-        inline const Double_t& py() const { return zeta_p_(1); }
-        inline const Double_t& pz() const { return zeta_p_(2); }
+        inline const Double_t& cx() const { return zeta_c_(0); }
+        inline const Double_t& cy() const { return zeta_c_(1); }
+        inline const Double_t& cz() const { return zeta_c_(2); }
 
         inline const Double_t& ux() const { return zeta_u_(0); }
         inline const Double_t& uy() const { return zeta_u_(1); }
         inline const Double_t& uz() const { return zeta_u_(2); }
-        
+
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
         
-        SVecD<3> zeta_p_;
+        OrthCoord orth_;
+        
+        SVecD<3> zeta_c_;
         SVecD<3> zeta_u_;
         Double_t zeta_e_;
 };
@@ -75,12 +81,12 @@ class MotionFunc {
 
 class TransferFunc {
     public :
-        TransferFunc(const PhySt& part);
-        TransferFunc(const PhySt& part, const MatArg& marg, const MatPhyFld& mphy);
+        TransferFunc(PhySt& part);
+        TransferFunc(PhySt& part, const MatPhyFld& mphy);
         ~TransferFunc() {}
         
-        inline const SVecD<3>&    pu() const { return kappa_pu_; }
-        inline const Double_t&    pu(Int_t i) const { return kappa_pu_(i); }
+        inline const SVecD<3>&    cu() const { return kappa_cu_; }
+        inline const Double_t&    cu(Int_t i) const { return kappa_cu_(i); }
         
         inline const SMtxD<3, 3>& uu() const { return kappa_uu_; }
         inline const Double_t&    uu(Int_t i, Int_t j) const { return kappa_uu_(i, j); }
@@ -101,7 +107,7 @@ class TransferFunc {
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
         
-        SVecD<3>    kappa_pu_; // d(dp/ds) / du
+        SVecD<3>    kappa_cu_; // d(dp/ds) / du
         
         SMtxD<3, 3> kappa_uu_; // d(du/ds) / du
         SVecD<3>    kappa_ue_; // d(du/ds) / de
@@ -210,6 +216,62 @@ class TransferPhyJb {
 };
 
 
+// testcode
+class PropPhyCal {
+    public :
+        PropPhyCal(Double_t eta, Bool_t sw_mscat = false, Bool_t sw_eloss = false) { init(eta); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; }
+        ~PropPhyCal() {}
+
+        void init(Double_t eta); 
+        void normalized(PhySt& part, MatFld& mfld);
+
+        void push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
+
+        const Double_t& len() const { return len_; }
+        const Double_t& nrl() const { return nrl_; }
+
+        const SVecD<3>& tau() const { return tau_; }
+        const SVecD<3>& rho() const { return rho_; }
+        
+        const Double_t& mscatu()  const { return mscatu_; }
+        const Double_t& mscatcu() const { return mscatcu_; }
+        const Double_t& mscatcl() const { return mscatcl_; }
+
+        const Double_t& eloss_ion() const { return eloss_ion_; }
+        const Double_t& eloss_brm() const { return eloss_brm_; }
+
+        inline void set_virtualPhySt(PhySt& part) const;
+
+    private :
+        Bool_t   sw_mscat_;
+        Bool_t   sw_eloss_;
+        Double_t eta_;
+        Double_t len_;
+        Double_t nrl_;
+
+        std::vector<Bool_t>   vec_vac_;
+        std::vector<Double_t> vec_len_;
+        std::vector<Double_t> vec_eft_;
+        std::vector<Double_t> vec_invloc_;
+        std::vector<Double_t> vec_invlocsqr_;
+        std::vector<Double_t> vec_mscat_;
+
+        SVecD<3> tau_;
+        SVecD<3> rho_;
+        
+        Double_t mscatu_;
+        Double_t mscatcu_;
+        Double_t mscatcl_;
+
+        Double_t eloss_ion_kpa_;
+        Double_t eloss_ion_mpv_;
+        Double_t eloss_ion_sgm_;
+
+        Double_t eloss_ion_;
+        Double_t eloss_brm_;
+};
+
+
 class PropMgnt {
     public :
         PropMgnt() {}
@@ -231,37 +293,35 @@ class PropMgnt {
         static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
 #endif // __HAS_AMS_OFFICE_LIBS__      
         
-        static Bool_t Prop(const Double_t step, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
-        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(), PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
+        static Bool_t Prop(const Double_t step, PhySt& part, PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
+        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
         
-        static Bool_t PropWithMC(const Double_t step, PhySt& part, const MatArg& marg = MatArg(true, true));
-        static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part, const MatArg& marg = MatArg(true, true));
+        static Bool_t PropWithMC(const Double_t step, PhySt& part);
+        static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part);
 
     protected :
         // Step Length
         // step < 0, backward trace
         // step > 0, forward trace
-        static Double_t GetPropStep(const PhySt& part, Short_t ward, Bool_t mat = false);
-        static Double_t GetStep(const PhySt& part, Double_t resStep, Bool_t mat = false);
-        static Double_t GetStepToZ(const PhySt& part, Double_t resStepZ, Bool_t mat = false);
+        static Double_t GetPropStep(PhySt& part, Short_t ward);
+        static Double_t GetStep(PhySt& part, Double_t resStep);
+        static Double_t GetStepToZ(PhySt& part, Double_t resStepZ);
+        
+        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr);
+        
+        // testcode
+        static Bool_t PropWithEuler2(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb = nullptr); 
 
-        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatArg& marg, const MatFld& mfld, PhyJb* phyJb = nullptr); 
-    
     private :
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
-        //static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.15;  // (number radiation length threshold)
-        
-        // testcode
-        static constexpr Double_t LMTU_STEP  = 1.1;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  = 1.0;   // (ds threshold)
-        //static constexpr Double_t LMTU_STEP  = 50.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  = 50.0;   // (ds threshold)
+        static constexpr Double_t PROP_STEP  = 30.0;   // (ds threshold)
+        static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
+        static constexpr Double_t TUNE_MAT   =  0.1;  // (number radiation length threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
@@ -281,10 +341,10 @@ class PropMgnt {
         static constexpr Short_t JBRM = 3;
 };
 
-
-PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
+// testcode
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
 //PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
+PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 
 
 } // namespace TrackSys

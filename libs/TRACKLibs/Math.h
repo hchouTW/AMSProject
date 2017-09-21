@@ -10,7 +10,7 @@ namespace TrackSys {
 
 class MultiGauss {
     public :
-        MultiGauss(Double_t sgm);
+        MultiGauss(Double_t sgm = 1.0);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4);
@@ -32,8 +32,9 @@ class MultiGauss {
         TF1 * rand_func_;
 
     private :
-        static constexpr Double_t LMTL_PROB = 1.0e-6;
-        static constexpr Double_t ROBUST = 5.0;
+        static constexpr Int_t    NPX_ = 10000;
+        static constexpr Double_t LMTL_PROB_ = 1.0e-6;
+        static constexpr Double_t ROBUST_ = 5.0;
 };
 
 

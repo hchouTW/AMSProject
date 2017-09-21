@@ -62,11 +62,11 @@ Double_t MultiGauss::efft_sgm(Double_t r) const {
         inv_nrm += prb / (nrm * nrm);
     }
     
-    Double_t sgm = bound_.second * ((MGNumc::Compare(ttl_wgt, LMTL_PROB) <= 0 || MGNumc::EqualToZero(inv_nrm)) ? MGMath::ONE : std::sqrt(ttl_wgt / inv_nrm));
+    Double_t sgm = bound_.second * ((MGNumc::Compare(ttl_wgt, LMTL_PROB_) <= 0 || MGNumc::EqualToZero(inv_nrm)) ? MGMath::ONE : std::sqrt(ttl_wgt / inv_nrm));
     if (!MGNumc::Valid(sgm)) sgm = bound_.second;
     
     // Robust estimator
-    if (std::fabs(r / sgm) > ROBUST) sgm = (ROBUST * std::fabs(r));
+    if (std::fabs(r / sgm) > ROBUST_) sgm = (ROBUST_ * std::fabs(r));
 
     return sgm;
 }
@@ -78,19 +78,18 @@ Double_t MultiGauss::rndm() {
     
     if (rand_func_) return rand_func_->GetRandom();
     else {
-        const Long64_t npx = 100000;
         if      (multi_gauss_.size() == 2) {
-            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])", -ROBUST*bound_.second, ROBUST*bound_.second);
-            rand_func_->SetNpx(npx);
+            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])", -ROBUST_*bound_.second, ROBUST_*bound_.second);
+            rand_func_->SetNpx(NPX_);
 
         }
         else if (multi_gauss_.size() == 3) {
-            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])", -ROBUST*bound_.second, ROBUST*bound_.second);
-            rand_func_->SetNpx(npx);
+            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])", -ROBUST_*bound_.second, ROBUST_*bound_.second);
+            rand_func_->SetNpx(NPX_);
         }
         else if (multi_gauss_.size() == 4) {
-            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5]) + ([6]/[7])*TMath::Exp(-0.5*x*x/[7]/[7])", -ROBUST*bound_.second, ROBUST*bound_.second);
-            rand_func_->SetNpx(npx);
+            rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5]) + ([6]/[7])*TMath::Exp(-0.5*x*x/[7]/[7])", -ROBUST_*bound_.second, ROBUST_*bound_.second);
+            rand_func_->SetNpx(NPX_);
         }
         if (rand_func_) {
             short count = 0;

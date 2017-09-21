@@ -29,6 +29,9 @@
     TF1 * fldgm3 = new TF1("fldgm3", "[0] * TMath::Power([3]*([2]/x), [3]*([2]/x)) / TMath::Gamma([3]*([2]/x)) * TMath::Exp(-([3]*([2]/x)) * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
     fldgm3->SetParameters(1000., 0.001, 0.0002, 8.0);
     
+    TF1 * feloss2 = new TF1("feloss2", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    feloss2->SetParameters(1000., 1.0, 0.001, 0.0002); 
+    
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 
 	//---------------//

@@ -23,10 +23,6 @@ namespace MatProperty {
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_K    { 5.6249,  3.0036,  3.2125,  3.2913,  3.2962, 3.6452, 3.6345, 3.2546, 3.1608 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLT0 {   0.13,     0.1,    0.19,    0.11,    0.11,   0.08,   0.12,   0.14,   0.14 }; // Form Geant4
     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLTM {  0.021,   0.038,  0.086,  0.101,     0.121,  0.098,  0.061,  0.059,  0.019 }; // Form Geant4
-
-    // Shell Correction (ref. MUON STOPPING POWER AND RANGE TABLES 10MeV-100TeV)
-    //constexpr std::array<Double_t, 3> SHELL_CORR_2ND { 0.422377,  0.0304043, -0.00038106 };
-    //constexpr std::array<Double_t, 3> SHELL_CORR_3RD { 3.858019, -0.1667989,  0.00157955 };
 }
 
 
@@ -34,7 +30,7 @@ class MatFld {
     public :
         MatFld() { clear(); }
         MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc) {}
+        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) {}
         ~MatFld() {}
 
         void print() const;
@@ -47,11 +43,12 @@ class MatFld {
         inline const Double_t& efft_len() const { return efft_len_; }
         inline const Double_t& efft() const { return efft_; }
         inline const Double_t& loc() const { return loc_; }
+        inline const Double_t& locsqr() const { return locsqr_; }
 
         inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : 0.); }
 
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; }
+        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; }
 
     private :
         Bool_t                                     mat_;
@@ -62,6 +59,7 @@ class MatFld {
         Double_t                                   efft_len_;
         Double_t                                   efft_;
         Double_t                                   loc_;
+        Double_t                                   locsqr_;
 
     public :
         static MatFld Merge(const std::list<MatFld>& mflds);
@@ -538,130 +536,39 @@ std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
-        MatPhyFld(Bool_t mat, Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t ion_eloss_sgm = 0., Double_t ion_eloss_mpv = 0., Double_t ion_eloss_kpa = 0., Double_t brm_eloss_men = 0.) : mat_(mat), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), ion_eloss_sgm_(ion_eloss_sgm), ion_eloss_mpv_(ion_eloss_mpv), ion_eloss_kpa_(ion_eloss_kpa), brm_eloss_men_(brm_eloss_men) {}
+        MatPhyFld(Double_t len) { clear(); len_ = len; }
+        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_brm_men_(eloss_brm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
+        inline const Double_t& len() const { return len_; }
+        inline const Double_t& efft() const { return efft_; }
+        inline const Double_t& loc() const { return loc_; }
+        inline const Double_t& locsqr() const { return locsqr_; }
         inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
         inline const Double_t& num_rad_len() const { return num_rad_len_; }
         inline const Double_t& mult_scat_sgm() const { return mult_scat_sgm_; }
-        inline const Double_t& ion_eloss_sgm() const { return ion_eloss_sgm_; }
-        inline const Double_t& ion_eloss_mpv() const { return ion_eloss_mpv_; }
-        inline const Double_t& ion_eloss_kpa() const { return ion_eloss_kpa_; }
-        inline const Double_t& brm_eloss_men() const { return brm_eloss_men_; }
-
-        inline static MultiGauss& mult_scat() { return mult_scat_; }
+        inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
+        inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
+        inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
+        inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
     protected :
-        inline void clear() { mat_ = false; inv_rad_len_ = 0.; num_rad_len_ = 0.; mult_scat_sgm_ = 0.; mult_scat_sgm_ = 0.; ion_eloss_sgm_ = 0.; ion_eloss_mpv_ = 0.; ion_eloss_kpa_ = 1.; brm_eloss_men_ = 0.; }
+        inline void clear() { mat_ = false; len_ = 0.; efft_ - 0.; loc_ = 0.; locsqr_ = 0.; inv_rad_len_ = 0.; num_rad_len_ = 0.; mult_scat_sgm_ = 0.; eloss_ion_kpa_ = 0.; eloss_ion_mpv_ = 0.; eloss_ion_sgm_ = 0.; eloss_brm_men_ = 0.; }
 
     private :
         Bool_t   mat_;           // has matter?
+        Double_t len_;
+        Double_t efft_;
+        Double_t loc_;
+        Double_t locsqr_;
         Double_t inv_rad_len_;   // inverse radiation length [cm^-1]
         Double_t num_rad_len_;   // number of radiation length [1]
         Double_t mult_scat_sgm_; // multiple-scattering length [1]
-        Double_t ion_eloss_sgm_; // ionization-energy-loss SGM [cm^-1]
-        Double_t ion_eloss_mpv_; // ionization-energy-loss MPV [cm^-1]
-        Double_t ion_eloss_kpa_; // ionization-energy-loss KPA [1]
-        Double_t brm_eloss_men_; // bremsstrahlung-energy-loss Mean [cm^-1]
-
-    private :
-        static MultiGauss mult_scat_;
-};
-    
-MultiGauss MatPhyFld::mult_scat_(8.931154e-01, 1.000000e+00, 9.211506e-02, 1.851060e+00, 1.167630e-02, 4.478370e+00, 3.093243e-03, 2.390957e+01);
-
-
-class MatMscatFld {
-    public :
-        MatMscatFld() { clear(); }
-        MatMscatFld(Double_t sgm_loc, Double_t sgm_tha, SMtxSymD<5>& cov) : mat_(true), sgm_loc_(sgm_loc), sgm_tha_(sgm_tha), cov_(cov) {}
-        ~MatMscatFld() {}
-        
-        void print() const;
-
-        inline const Bool_t& operator() () const { return mat_; }
-        inline const Double_t&    sgm_loc() const { return sgm_loc_; }
-        inline const Double_t&    sgm_tha() const { return sgm_tha_; }
-        inline const SMtxSymD<5>& cov() const { return cov_; }
-        inline const Double_t&    cov(Int_t i, Int_t j) const { return cov_(i, j); }
-
-    protected :
-        inline void clear() { mat_ = false; sgm_loc_ = 0.; sgm_tha_ = 0.; cov_ = std::move(SMtxSymD<5>()); }
-
-    private :
-        Bool_t      mat_;
-        Double_t    sgm_loc_;
-        Double_t    sgm_tha_;
-        SMtxSymD<5> cov_;
-};
-
-
-// testcode
-class MatElossFld {
-    public :
-        MatElossFld() {}
-        ~MatElossFld() {}
-
-        static Double_t Rndm(Double_t bta = 1.0);
-        
-        static void Clear();
-
-    private :
-        static constexpr Int_t NSETS_ = 100;
-        static constexpr Double_t STEP_ = 0.01;
-        static constexpr Double_t LMTL_BTA_ = 0.3;
-        static constexpr Double_t LMTU_BTA_ = 1.0;
-        static constexpr Double_t AVOID_INF = 0.3;
-        static constexpr Double_t LONG_TAIL = 800.;
-        static constexpr Double_t LONG_SGML = 3.0;
-
-        static constexpr Int_t NPX_ = 100000;
-        static std::vector<TF1 *> member_;
-
-        // [(MPV/SGM), KPA] -> Func
-        static std::map<std::pair<Int_t, Int_t>, TF1 *> func_map_;
-};
-        
-std::vector<TF1 *> MatElossFld::member_;
-
-
-class MatArg {
-    public :
-        MatArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) : mat_((sw_mscat || sw_eloss)), sw_mscat_(sw_mscat), sw_eloss_(sw_eloss), tau_mscat_(0), rho_mscat_(0), ion_eloss_(0), brm_eloss_(0) {}
-        ~MatArg() {}
-
-        void rndm_mscat();
-        void rndm_eloss(Double_t num_rad_len = 0.0);
-        void rndm_eloss(const MatPhyFld& mphy);
-
-        inline void rndm(Double_t num_rad_len = 0.0) { rndm_mscat(); rndm_eloss(num_rad_len); }
-        inline void rndm(const MatFld& mfld) { rndm_mscat(); rndm_eloss(mfld.num_rad_len()); }
-        inline void rndm(const MatPhyFld& mphy) { rndm_mscat(); rndm_eloss(mphy); }
-
-        inline void set_mscat(Double_t tau = 0., Double_t rho = 0.);
-        inline void set_eloss(Double_t ion = 0., Double_t brm = 0.);
-
-        inline const Bool_t& operator() () const { return mat_; }
-
-        inline const Bool_t& mscat() const { return sw_mscat_; }
-        inline const Bool_t& eloss() const { return sw_eloss_; }
-
-        inline const Double_t& tau() const { return tau_mscat_; }
-        inline const Double_t& rho() const { return rho_mscat_; }
-        inline const Double_t& ion() const { return ion_eloss_; }
-        inline const Double_t& brm() const { return brm_eloss_; }
-
-        inline SVecD<4> arg() const { return SVecD<4>(tau_mscat_, rho_mscat_, ion_eloss_, brm_eloss_); }
-
-    private :
-        Bool_t   mat_;
-        Bool_t   sw_mscat_;
-        Bool_t   sw_eloss_;
-        Double_t tau_mscat_;
-        Double_t rho_mscat_;
-        Double_t ion_eloss_;
-        Double_t brm_eloss_;
+        Double_t eloss_ion_kpa_; // ionization-energy-loss KPA [1]
+        Double_t eloss_ion_mpv_; // ionization-energy-loss MPV [1]
+        Double_t eloss_ion_sgm_; // ionization-energy-loss SGM [1]
+        Double_t eloss_brm_men_; // bremsstrahlung-energy-loss Mean [1]
 };
 
 
@@ -672,11 +579,9 @@ class MatPhy {
 
         static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
 
-        static MatPhyFld Get(const Double_t stp_len, const PhySt& part, const MatArg& marg = MatArg(true, true), Bool_t is_std = true);
+        static MatPhyFld Get(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
         
-        static MatPhyFld Get(const MatFld& mfld, const PhySt& part, const MatArg& marg = MatArg(true, true));
-
-        static MatMscatFld GetMscat(const MatFld& mfld, const PhySt& part);
+        static MatPhyFld Get(const MatFld& mfld, const PhySt& part);
 
     protected :
         static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part);
@@ -723,4 +628,3 @@ class MatPhy {
 
 
 #endif // __TRACKLibs_MatEnv_H__
-

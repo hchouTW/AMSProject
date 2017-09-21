@@ -247,7 +247,7 @@ Bool_t PhyTr::fit_simple() {
         PhyJb ppjb(PhyJb::Type::kIdentity);
         for (auto&& hit : hits_) {
             PhyJb curjb;
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, MatArg(), &curjb)) break;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, &curjb)) break;
             ppjb.multiplied(curjb);
             
             SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
@@ -311,7 +311,7 @@ Bool_t PhyTr::fit_semi_simple() {
         PhySt ppst(part_);
         Int_t cnt_nhit = 0;
         for (auto&& hit : hits_) {
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, MatArg(), nullptr, &mflds.at(cnt_nhit))) break;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &mflds.at(cnt_nhit))) break;
             cnt_nhit++;
         }
         if (cnt_nhit != hits_.size()) return false;
@@ -337,7 +337,7 @@ Bool_t PhyTr::fit_semi_simple() {
             MatMscatFld&& mscat = MatPhy::GetMscat(mflds.at(cnt_nhit), ppst);
             
             PhyJb curjb;
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, MatArg(), &curjb)) break;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, &curjb)) break;
             PhyJb::SMtxDXYG&& subjb = curjb.xyg() * ppjb;
             
             SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
@@ -442,7 +442,7 @@ Bool_t PhyTr::fit_physics() {
             MatMscatFld&& mscat = MatPhy::GetMscat(mflds.at(cnt_nhit), ppst);
             
             PhyJb curjb;
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, MatArg(), &curjb)) break;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, &curjb)) break;
             PhyJb::SMtxDXYG&& subjb = curjb.xyg() * ppjb;
             
             SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());

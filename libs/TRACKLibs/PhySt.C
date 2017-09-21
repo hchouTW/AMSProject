@@ -4,8 +4,37 @@
 
 namespace TrackSys {
 
+        
+void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
+    if (sw_eloss_) {
+        if (MGNumc::EqualToZero(kpa)) return;
 
-void PhySt::reset(const PartType& type) {
+        std::string ion_var = "([1]/(x*[0]+[1])/[0]/[0])";
+        std::string ion_fmt = STR_FMT("(x<-%f)?0.0:TMath::Power(%s, %s)/TMath::Gamma(%s)*TMath::Exp(-%s*([0]*x+TMath::Exp(-[0]*x)))", std::min(LMT_SGM_, MGMath::HALF*mos), ion_var.c_str(), ion_var.c_str(), ion_var.c_str(), ion_var.c_str());
+
+        Int_t idx_kpa = static_cast<Int_t>(std::rint(kpa / STEP_KPA_));
+        Int_t idx_mos = static_cast<Int_t>(std::rint(mos / STEP_MOS_));
+        
+        TF1 * func = nullptr;
+        std::pair<Int_t, Int_t> idx(idx_kpa, idx_mos);
+        std::map<std::pair<Int_t, Int_t>, TF1*>::iterator it = pdf_eloss_ion_.find(idx);
+        if (it == pdf_eloss_ion_.end()) {
+            Double_t ref_kpa = idx_kpa * STEP_KPA_;
+            Double_t ref_mos = idx_mos * STEP_MOS_;
+            func = new TF1(CSTR_FMT("fElossIon%06d%06d", idx_kpa, idx_mos), ion_fmt.c_str(), -LMT_SGM_, LMT_SGM_ + MGMath::EIGHT * LMT_SGM_ * ref_kpa);
+            func->SetParameters(ref_kpa, ref_mos);
+            func->SetNpx(NPX_);
+
+            pdf_eloss_ion_[idx] = func; 
+        }
+        else func = it->second;
+
+        eloss_ion_ = func->GetRandom();
+    }
+}
+
+
+void PhySt::reset(const PartType& type, Bool_t sw_mscat, Bool_t sw_eloss) {
     part_ = std::move(PartInfo(type));
     mom_ = 0;
     eng_ = 0;
@@ -14,6 +43,8 @@ void PhySt::reset(const PartType& type) {
     irig_ = 0;
     coo_ = std::move(SVecD<3>(0, 0, 0));
     dir_ = std::move(SVecD<3>(0, 0, -1));
+    vst_.reset();
+    arg_.reset(sw_mscat, sw_eloss);
 }
         
 
@@ -168,6 +199,26 @@ void PhySt::print() const {
     printStr += STR_FMT("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
     printStr += STR_FMT("=========================================\n");
     COUT(printStr);
+}
+        
+
+void PhySt::symbk(Bool_t is_rndm) {
+    if (!arg_()) { vst_.reset(); return; }
+    if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mos(), vst_.nrl()); }
+
+    if (arg_.mscat()) {
+        coo_ = std::move(coo_ + vst_.symbk_mscatc(arg_.tauu(), arg_.rhou(), arg_.tauc(), arg_.rhoc()));
+        dir_ = std::move(LA::Unit(dir_ + vst_.symbk_mscatu(arg_.tauu(), arg_.rhou())));
+    }
+    if (arg_.eloss()) {
+        Short_t org_sign = eta_sign();
+        set_eta(eta_ + vst_.symbk_eloss(arg_.ion(), arg_.brm()));
+        Short_t sym_sign = eta_sign();
+        if (org_sign != sym_sign) set_eta(MGMath::ZERO);
+    }
+    
+    vst_.reset();
+    arg_.reset(arg_.mscat(), arg_.eloss());
 }
 
 

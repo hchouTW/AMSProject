@@ -11,10 +11,13 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     TH1::AddDirectory(true);
 
-    const int NL = 2;
+    const int NL = 3;
     const int IDi = 0;
     const int IDj = 1;
 
+    Int_t  nbinc = 1600;
+    Int_t  nbinu = 1600;
+    Int_t  nbinm = 1600;
     const double sclc = 1.0;
     const double sclu = 1.0;
     const double scle = 1.0;
@@ -23,17 +26,17 @@ int main(int argc, char * argv[]) {
     PhySt part_info(part_type);
     TFile * ofle = new TFile("proton.root", "RECREATE");
     
-    TH1D* hMc = new TH1D("hMc", "hMc;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc);
-    TH1D* hTc = new TH1D("hTc", "hTc;Residual [cm * p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc);
+    TH1D* hMc = new TH1D("hMc", "hMc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc);
+    TH1D* hTc = new TH1D("hTc", "hTc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc);
         
-    TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
-    TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.06 * sclu, 0.06 * sclu);
+    TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.06 * sclu, 0.06 * sclu);
+    TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.06 * sclu, 0.06 * sclu);
     
-    TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc, 1600, -0.06 * sclu, 0.06 * sclu);
-    TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", 1600, -0.25 * sclc, 0.25 * sclc, 1600, -0.06 * sclu, 0.06 * sclu);
+    TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc, nbinu, -0.06 * sclu, 0.06 * sclu);
+    TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc, nbinu, -0.06 * sclu, 0.06 * sclu);
     
-    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", 1600, 0.0005 * scle, 0.006 * scle);
-    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", 1600, 0.0005 * scle, 0.006 * scle);
+    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.001 * scle, 0.006 * scle);
+    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.001 * scle, 0.006 * scle);
 
     MGConfig::JobOpt opt(argc, argv);
     std::vector<double> momlst;
@@ -81,9 +84,6 @@ int main(int argc, char * argv[]) {
             SVecD<3> wcoo(refcj[0], refcj[1], refcj[2]);
             MatFld&& mfld = MatMgnt::Get(vcoo, wcoo);
             mfld.print();
-            
-            MatFld&& mfld2 = MatMgnt::Get(SVecD<3>(0, 0, 58.3), SVecD<3>(0, 0, 57.7));
-            mfld2.print();
             break;
         }
         momlst.push_back(refm);
@@ -99,27 +99,25 @@ int main(int argc, char * argv[]) {
 
         ofle->cd();
 
-        Int_t  nbinc = 1600;
+        
         double binsc[2] = { -0.25*sclc, 0.25*sclc };
         TH1D* hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hTcy = new TH1D(Form("hTcy%02d", ifle), Form("hTcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
 
-        Int_t  nbinu = 1600;
         double binsu[2] = { -0.06*sclu, 0.06*sclu };
         TH1D* hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         
-        Int_t  nbinm = 1600;
         double binsm[2] = { 0.0005*scle, 0.006*scle };
         TH1D* hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
-            if (it > 100000) break; // testcode
+            //if (it > 100000) break; // testcode
             chain->GetEntry(it);
             if (cz->size() < NL) continue;
             if (mz->size() < NL) continue;
@@ -145,7 +143,7 @@ int main(int argc, char * argv[]) {
             double rmom    = pst.mom();
 
             pst = part;
-            PropMgnt::PropToZWithMC(jcoo[2], pst, MatArg(true, true));
+            PropMgnt::PropToZWithMC(jcoo[2], pst);
             double tcoo[3] = { pst.cx(), pst.cy(), pst.cz() };
             double tdir[3] = { pst.ux(), pst.uy(), pst.uz() };
             double tmom    = pst.mom();
@@ -174,276 +172,263 @@ int main(int argc, char * argv[]) {
             
             if (imom > 8.01) hMe->Fill( scl_eloss * (imom-jmom) );
             if (imom > 8.01) hTe->Fill( scl_eloss * (imom-tmom) );
+
+            //std::cout << Form("imom %14.8f ELOSS %14.8f %14.8f\n", imom, scl_eloss * (imom-jmom), scl_eloss * (imom-tmom));
         }
     }
- 
-    // Coord X
-    TGraphErrors* gMcx_mn = new TGraphErrors();
-    TGraphErrors* gMcx_sg = new TGraphErrors();
-    gMcx_mn->SetNameTitle("gMcx_mn", "");
-    gMcx_sg->SetNameTitle("gMcx_sg", "");
-    gMcx_mn->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMcx_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
-    gMcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
-    
-    TGraphErrors* gTcx_mn = new TGraphErrors();
-    TGraphErrors* gTcx_sg = new TGraphErrors();
-    gTcx_mn->SetNameTitle("gTcx_mn", "");
-    gTcx_sg->SetNameTitle("gTcx_sg", "");
-    gTcx_mn->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTcx_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTcx_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
-    gTcx_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
-    
-    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
-        double mom = momlst.at(ifle);
-        part_info.set_mom(mom);
-        double gmbta = part_info.gmbta();
-        TF1 * func = nullptr;
-        double scl_mscat = 1.0 / sclmscatlst.at(ifle);
-        scl_mscat = 1.0;
-        
-        TH1D* hMcx = (TH1D*) ofle->Get(Form("hMcx%02d", ifle));
-        hMcx->Fit("gaus", "q0", "");
-        func = hMcx->GetFunction("gaus");
-        if (func) {
-            gMcx_mn->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(1));
-            gMcx_mn->SetPointError(ifle,  0., scl_mscat * func->GetParError(1));
-            gMcx_sg->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(2));
-            gMcx_sg->SetPointError(ifle,  0., scl_mscat * func->GetParError(2));
-        }
-        
-        TH1D* hTcx = (TH1D*) ofle->Get(Form("hTcx%02d", ifle));
-        hTcx->Fit("gaus", "q0", "");
-        func = hTcx->GetFunction("gaus");
-        if (func) {
-            gTcx_mn->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(1));
-            gTcx_mn->SetPointError(ifle,  0., scl_mscat * func->GetParError(1));
-            gTcx_sg->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(2));
-            gTcx_sg->SetPointError(ifle,  0., scl_mscat * func->GetParError(2));
-        }
-    }
-    
-    gMcx_mn->Write();
-    gMcx_sg->Write();
-    
-    gTcx_mn->Write();
-    gTcx_sg->Write();
-   
-    
-    // Momentum X
-    TGraphErrors* gMux_mn = new TGraphErrors();
-    TGraphErrors* gMux_sg = new TGraphErrors();
-    gMux_mn->SetNameTitle("gMux_mn", "");
-    gMux_sg->SetNameTitle("gMux_sg", "");
-    gMux_mn->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMux_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMux_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
-    gMux_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
-    
-    TGraphErrors* gTux_mn = new TGraphErrors();
-    TGraphErrors* gTux_sg = new TGraphErrors();
-    gTux_mn->SetNameTitle("gTux_mn", "");
-    gTux_sg->SetNameTitle("gTux_sg", "");
-    gTux_mn->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTux_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTux_mn->GetYaxis()->SetTitle("Mean [cm * p#beta/Q^{2}]");
-    gTux_sg->GetYaxis()->SetTitle("Sigma [cm * p#beta/Q^{2}]");
-    
-    TGraphErrors* gMTux_sg = new TGraphErrors();
-    gMTux_sg->SetNameTitle("gMTux_sg", "");
-    gMTux_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMTux_sg->GetYaxis()->SetTitle("Sigma/Sigma [1]");
-    
-    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
-        double mom = momlst.at(ifle);
-        part_info.set_mom(mom);
-        double gmbta = part_info.gmbta();
-        TF1 * func = nullptr;
-        double scl_mscat = 1.0 / sclmscatlst.at(ifle);
-        scl_mscat = 1.0;
-        
-        TH1D* hMux = (TH1D*) ofle->Get(Form("hMux%02d", ifle));
-        hMux->Fit("gaus", "q0", "", -0.005, 0.005);
-        func = hMux->GetFunction("gaus");
-        if (func) { 
-            gMux_mn->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(1));
-            gMux_mn->SetPointError(ifle,  0., scl_mscat * func->GetParError(1));
-            gMux_sg->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(2));
-            gMux_sg->SetPointError(ifle,  0., scl_mscat * func->GetParError(2));
-        }
-        Double_t sgM = (func) ? func->GetParameter(2) : 1;
-        
-        TH1D* hTux = (TH1D*) ofle->Get(Form("hTux%02d", ifle));
-        hTux->Fit("gaus", "q0", "", -0.005, 0.005);
-        func = hTux->GetFunction("gaus");
-        if (func) {
-            gTux_mn->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(1));
-            gTux_mn->SetPointError(ifle,  0., scl_mscat * func->GetParError(1));
-            gTux_sg->SetPoint     (ifle, mom, scl_mscat * func->GetParameter(2));
-            gTux_sg->SetPointError(ifle,  0., scl_mscat * func->GetParError(2));
-        }
-        Double_t sgT = (func) ? func->GetParameter(2) : 1;
-        
-        gMTux_sg->SetPoint(ifle, gmbta, sgM/sgT);
-    }
-    
-    gMux_mn->Write();
-    gMux_sg->Write();
-    
-    gTux_mn->Write();
-    gTux_sg->Write();
-   
-    gMTux_sg->Write();
 
 
-    // Energy Loss
-    TGraphErrors* gMee_pk = new TGraphErrors();
-    TGraphErrors* gMee_sg = new TGraphErrors();
-    TGraphErrors* gMee_dt = new TGraphErrors();
-    TGraphErrors* gMee_ms = new TGraphErrors();
-    gMee_pk->SetNameTitle("gMee_pk", "");
-    gMee_sg->SetNameTitle("gMee_sg", "");
-    gMee_dt->SetNameTitle("gMee_dt", "");
-    gMee_ms->SetNameTitle("gMee_ms", "");
-    gMee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gMee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
-    gMee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^{2}/Q^{2}]");
-
-    TGraphErrors* gTee_pk = new TGraphErrors();
-    TGraphErrors* gTee_sg = new TGraphErrors();
-    TGraphErrors* gTee_dt = new TGraphErrors();
-    TGraphErrors* gTee_ms = new TGraphErrors();
-    gTee_pk->SetNameTitle("gTee_pk", "");
-    gTee_sg->SetNameTitle("gTee_sg", "");
-    gTee_dt->SetNameTitle("gTee_dt", "");
-    gTee_ms->SetNameTitle("gTee_ms", "");
-    gTee_pk->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTee_sg->GetXaxis()->SetTitle("Momentum [GeV]");
-    gTee_pk->GetYaxis()->SetTitle("Peak [GeV * #beta^{2}/Q^{2}]");
-    gTee_sg->GetYaxis()->SetTitle("Sigma [GeV * #beta^{2}/Q^{2}]");
-    
-    TGraphErrors* gMsg = new TGraphErrors();
-    gMsg->SetNameTitle("gMsg", "");
-    
-    TGraphErrors * gMTpk = new TGraphErrors();
-    gMTpk->SetNameTitle("gMTpk", "");
-    
-    TGraphErrors * gMTsg = new TGraphErrors();
-    gMTsg->SetNameTitle("gMTsg", "");
-    
-    TGraphErrors * gMTdt = new TGraphErrors();
-    gMTdt->SetNameTitle("gMTdt", "");
-    
-    TGraphErrors * gTMdt = new TGraphErrors();
-    gTMdt->SetNameTitle("gTMdt", "");
-    
-    TGraphErrors * gMkap = new TGraphErrors();
-    gMkap->SetNameTitle("gMkap", "");
-    
-    TF1 * feloss = new TF1("feloss", "[0] * TMath::Power([3]*([2]/x), [3]*([2]/x)) / TMath::Gamma([3]*([2]/x)) * TMath::Exp(-([3]*([2]/x)) * ((x-[1])/[2] + TMath::Exp(-(x-[1])/[2])) )");
-    feloss->SetParameters(1000., 0.001, 0.0002, 8.0); 
+    TGraphErrors* gMcx_men = new TGraphErrors(); gMcx_men->SetNameTitle("gMcx_men", "");
+    TGraphErrors* gMcx_sgm = new TGraphErrors(); gMcx_sgm->SetNameTitle("gMcx_sgm", "");
+    TGraphErrors* gMcy_men = new TGraphErrors(); gMcy_men->SetNameTitle("gMcy_men", "");
+    TGraphErrors* gMcy_sgm = new TGraphErrors(); gMcy_sgm->SetNameTitle("gMcy_sgm", "");
+    TGraphErrors* gMux_men = new TGraphErrors(); gMux_men->SetNameTitle("gMux_men", "");
+    TGraphErrors* gMux_sgm = new TGraphErrors(); gMux_sgm->SetNameTitle("gMux_sgm", "");
+    TGraphErrors* gMuy_men = new TGraphErrors(); gMuy_men->SetNameTitle("gMuy_men", "");
+    TGraphErrors* gMuy_sgm = new TGraphErrors(); gMuy_sgm->SetNameTitle("gMuy_sgm", "");
+    TF1 * sgaus = new TF1("sgaus", "gaus", -0.1, 0.1);
+    TF1 * mgaus = new TF1("mgaus", "gaus", -0.1, 0.1);
     
     for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
         double mom = momlst.at(ifle);
         part_info.set_mom(mom);
         double gmbta = part_info.gmbta();
         double bta = part_info.bta();
-        TF1 * func = nullptr;
-        double scl_eloss = 1.0 / sclelosslst.at(ifle);
-        scl_eloss = 1.0;
+        double val = bta;
+        
+        TH1D* hMcx = (TH1D*) ofle->Get(Form("hMcx%02d", ifle));
+        sgaus->SetParameters(1000, 0, hMcx->GetRMS());
+        hMcx->Fit(sgaus, "q0", "");
+        hMcx->Fit(sgaus, "q0", "");
+        gMcx_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gMcx_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gMcx_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gMcx_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hMcy = (TH1D*) ofle->Get(Form("hMcy%02d", ifle));
+        sgaus->SetParameters(1000, 0, hMcy->GetRMS());
+        hMcy->Fit(sgaus, "q0", "");
+        hMcy->Fit(sgaus, "q0", "");
+        gMcy_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gMcy_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gMcy_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gMcy_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hMux = (TH1D*) ofle->Get(Form("hMux%02d", ifle));
+        sgaus->SetParameters(1000, 0, hMux->GetRMS());
+        hMux->Fit(sgaus, "q0", "");
+        hMux->Fit(sgaus, "q0", "");
+        gMux_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gMux_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gMux_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gMux_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hMuy = (TH1D*) ofle->Get(Form("hMuy%02d", ifle));
+        sgaus->SetParameters(1000, 0, hMuy->GetRMS());
+        hMuy->Fit(sgaus, "q0", "");
+        hMuy->Fit(sgaus, "q0", "");
+        gMuy_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gMuy_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gMuy_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gMuy_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+    }
+
+    gMcx_men->Write();
+    gMcx_sgm->Write();
+    gMcy_men->Write();
+    gMcy_sgm->Write();
+    gMux_men->Write();
+    gMux_sgm->Write();
+    gMuy_men->Write();
+    gMuy_sgm->Write();
+
+
+    TGraphErrors* gTcx_men = new TGraphErrors(); gTcx_men->SetNameTitle("gTcx_men", "");
+    TGraphErrors* gTcx_sgm = new TGraphErrors(); gTcx_sgm->SetNameTitle("gTcx_sgm", "");
+    TGraphErrors* gTcy_men = new TGraphErrors(); gTcy_men->SetNameTitle("gTcy_men", "");
+    TGraphErrors* gTcy_sgm = new TGraphErrors(); gTcy_sgm->SetNameTitle("gTcy_sgm", "");
+    TGraphErrors* gTux_men = new TGraphErrors(); gTux_men->SetNameTitle("gTux_men", "");
+    TGraphErrors* gTux_sgm = new TGraphErrors(); gTux_sgm->SetNameTitle("gTux_sgm", "");
+    TGraphErrors* gTuy_men = new TGraphErrors(); gTuy_men->SetNameTitle("gTuy_men", "");
+    TGraphErrors* gTuy_sgm = new TGraphErrors(); gTuy_sgm->SetNameTitle("gTuy_sgm", "");
+    
+    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
+        double mom = momlst.at(ifle);
+        part_info.set_mom(mom);
+        double gmbta = part_info.gmbta();
+        double bta = part_info.bta();
+        double val = bta;
+        
+        TH1D* hTcx = (TH1D*) ofle->Get(Form("hTcx%02d", ifle));
+        sgaus->SetParameters(1000, 0, hTcx->GetRMS());
+        hTcx->Fit(sgaus, "q0", "");
+        hTcx->Fit(sgaus, "q0", "");
+        gTcx_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gTcx_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gTcx_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gTcx_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hTcy = (TH1D*) ofle->Get(Form("hTcy%02d", ifle));
+        sgaus->SetParameters(1000, 0, hTcy->GetRMS());
+        hTcy->Fit(sgaus, "q0", "");
+        hTcy->Fit(sgaus, "q0", "");
+        gTcy_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gTcy_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gTcy_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gTcy_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hTux = (TH1D*) ofle->Get(Form("hTux%02d", ifle));
+        sgaus->SetParameters(1000, 0, hTux->GetRMS());
+        hTux->Fit(sgaus, "q0", "");
+        hTux->Fit(sgaus, "q0", "");
+        gTux_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gTux_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gTux_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gTux_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+        
+        TH1D* hTuy = (TH1D*) ofle->Get(Form("hTuy%02d", ifle));
+        sgaus->SetParameters(1000, 0, hTuy->GetRMS());
+        hTuy->Fit(sgaus, "q0", "");
+        hTuy->Fit(sgaus, "q0", "");
+        gTuy_men->SetPoint     (ifle, val, sgaus->GetParameter(1));
+        gTuy_men->SetPointError(ifle,  0., sgaus->GetParError(1));
+        gTuy_sgm->SetPoint     (ifle, val, sgaus->GetParameter(2));
+        gTuy_sgm->SetPointError(ifle,  0., sgaus->GetParError(2));
+    }
+
+    gTcx_men->Write();
+    gTcx_sgm->Write();
+    gTcy_men->Write();
+    gTcy_sgm->Write();
+    gTux_men->Write();
+    gTux_sgm->Write();
+    gTuy_men->Write();
+    gTuy_sgm->Write();
+
+    TGraphErrors* gMTcx_sgm  = new TGraphErrors(); gMTcx_sgm ->SetNameTitle("gMTcx_sgm",  "");
+    TGraphErrors* gMTcy_sgm  = new TGraphErrors(); gMTcy_sgm ->SetNameTitle("gMTcy_sgm",  "");
+    TGraphErrors* gMTux_sgm  = new TGraphErrors(); gMTux_sgm ->SetNameTitle("gMTux_sgm",  "");
+    TGraphErrors* gMTuy_sgm  = new TGraphErrors(); gMTuy_sgm ->SetNameTitle("gMTuy_sgm",  "");
+    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
+        gMTcx_sgm->SetPoint     (ifle, gMcx_sgm->GetX()[ifle], gMcx_sgm->GetY()[ifle]/gTcx_sgm->GetY()[ifle]);
+        gMTcx_sgm->SetPointError(ifle, 0., 0.);
+        gMTcy_sgm->SetPoint     (ifle, gMcy_sgm->GetX()[ifle], gMcy_sgm->GetY()[ifle]/gTcy_sgm->GetY()[ifle]);
+        gMTcy_sgm->SetPointError(ifle, 0., 0.);
+        gMTux_sgm->SetPoint     (ifle, gMux_sgm->GetX()[ifle], gMux_sgm->GetY()[ifle]/gTux_sgm->GetY()[ifle]);
+        gMTux_sgm->SetPointError(ifle, 0., 0.);
+        gMTuy_sgm->SetPoint     (ifle, gMuy_sgm->GetX()[ifle], gMuy_sgm->GetY()[ifle]/gTuy_sgm->GetY()[ifle]);
+        gMTuy_sgm->SetPointError(ifle, 0., 0.);
+    }
+   
+    gMTcx_sgm->Write();
+    gMTcy_sgm->Write();
+    gMTux_sgm->Write();
+    gMTuy_sgm->Write();
+
+    // Energy Loss
+    TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    feloss->SetParameters(1000., 1.0, 0.001, 0.0002); 
+    
+    TGraphErrors* gMee_peak = new TGraphErrors(); gMee_peak->SetNameTitle("gMee_peak", "");
+    TGraphErrors* gMee_kpa  = new TGraphErrors(); gMee_kpa ->SetNameTitle("gMee_kpa",  "");
+    TGraphErrors* gMee_mpv  = new TGraphErrors(); gMee_mpv ->SetNameTitle("gMee_mpv",  "");
+    TGraphErrors* gMee_sgm  = new TGraphErrors(); gMee_sgm ->SetNameTitle("gMee_sgm",  "");
+    TGraphErrors* gMee_mos  = new TGraphErrors(); gMee_mos ->SetNameTitle("gMee_mos",  "");
+    
+    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
+        double mom = momlst.at(ifle);
+        part_info.set_mom(mom);
+        double gmbta = part_info.gmbta();
+        double bta = part_info.bta();
+        double val = bta;
 
         TH1D* hMee = (TH1D*) ofle->Get(Form("hMee%02d", ifle));
-        double pkm = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
-        feloss->SetParameters(1000., pkm, 0.05*pkm, 8.0);
-        feloss->FixParameter(3, 8.0);
-        hMee->Fit(feloss, "q0", "");
-        hMee->Fit(feloss, "q0", "");
-        feloss->SetParameter(3, 8.0);
-        feloss->SetParLimits(3, 1.0, 400.);
+        double peak = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
+        feloss->SetParameters(1000., 1.0, peak, 0.05*peak);
         hMee->Fit(feloss, "q0", "");
         hMee->Fit(feloss, "q0", "");
         hMee->Fit(feloss, "q0", "");
-        func = feloss;
 
-        double m1 = 1, m2 = 1, m3 = 1;
-        if (func) {
-            gMee_pk->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(1));
-            gMee_pk->SetPointError(ifle,  0., scl_eloss * func->GetParError(1));
-            gMee_sg->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(2));
-            gMee_sg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2));
-            gMee_dt->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(3));
-            gMee_dt->SetPointError(ifle,  0., scl_eloss * func->GetParError(3));
-            m1 = scl_eloss * func->GetParameter(1);
-            m2 = scl_eloss * func->GetParameter(2);
-            m3 = scl_eloss * func->GetParameter(3);
-            gMee_ms->SetPoint     (ifle, bta, m1/m2);
-            gMee_ms->SetPointError(ifle,  0., 0.);
+        gMee_peak->SetPoint     (ifle, val, peak);
+        gMee_peak->SetPointError(ifle,    0., 0.);
+        gMee_kpa->SetPoint     (ifle, val, feloss->GetParameter(1));
+        gMee_kpa->SetPointError(ifle,    0., feloss->GetParError(1));
+        gMee_mpv->SetPoint     (ifle, val, feloss->GetParameter(2));
+        gMee_mpv->SetPointError(ifle,    0., feloss->GetParError(2));
+        gMee_sgm->SetPoint     (ifle, val, feloss->GetParameter(3));
+        gMee_sgm->SetPointError(ifle,    0., feloss->GetParError(3));
+        gMee_mos->SetPoint     (ifle, val, feloss->GetParameter(2)/feloss->GetParameter(3));
+        gMee_mos->SetPointError(ifle,    0., 0.);
+    }
+    
+    TGraphErrors* gTee_peak = new TGraphErrors(); gTee_peak->SetNameTitle("gTee_peak", "");
+    TGraphErrors* gTee_kpa  = new TGraphErrors(); gTee_kpa ->SetNameTitle("gTee_kpa",  "");
+    TGraphErrors* gTee_mpv  = new TGraphErrors(); gTee_mpv ->SetNameTitle("gTee_mpv",  "");
+    TGraphErrors* gTee_sgm  = new TGraphErrors(); gTee_sgm ->SetNameTitle("gTee_sgm",  "");
+    TGraphErrors* gTee_mos  = new TGraphErrors(); gTee_mos ->SetNameTitle("gTee_mos",  "");
+    
+    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
+        double mom = momlst.at(ifle);
+        part_info.set_mom(mom);
+        double gmbta = part_info.gmbta();
+        double bta = part_info.bta();
+        double val = bta;
 
-            const Double_t ion_eloss_kappa0 = 7.39439;
-            gMkap->SetPoint     (ifle, bta, ion_eloss_kappa0/m3);
-            gMkap->SetPointError(ifle,  0., 0.);
-
-            const Double_t sgm = 8.03715e-05;
-            gMsg->SetPoint     (ifle, bta, scl_eloss * func->GetParameter(2) / sgm);
-            gMsg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2) / sgm);
-
-        }
-        
         TH1D* hTee = (TH1D*) ofle->Get(Form("hTee%02d", ifle));
-        double pkt = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
-        feloss->SetParameters(1000., pkt, 0.05*pkt, 8.0);
-        feloss->FixParameter(3, 8.0);
-        hTee->Fit(feloss, "q0", "");
-        hTee->Fit(feloss, "q0", "");
-        feloss->SetParameter(3, 8.0);
-        feloss->SetParLimits(3, 1.0, 400.);
+        double peak = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
+        feloss->SetParameters(1000., 1.0, peak, 0.05*peak);
         hTee->Fit(feloss, "q0", "");
         hTee->Fit(feloss, "q0", "");
         hTee->Fit(feloss, "q0", "");
-        func = feloss;
+
+        gTee_peak->SetPoint     (ifle, val, peak);
+        gTee_peak->SetPointError(ifle,    0., 0.);
+        gTee_kpa->SetPoint     (ifle, val, feloss->GetParameter(1));
+        gTee_kpa->SetPointError(ifle,    0., feloss->GetParError(1));
+        gTee_mpv->SetPoint     (ifle, val, feloss->GetParameter(2));
+        gTee_mpv->SetPointError(ifle,    0., feloss->GetParError(2));
+        gTee_sgm->SetPoint     (ifle, val, feloss->GetParameter(3));
+        gTee_sgm->SetPointError(ifle,    0., feloss->GetParError(3));
+        gTee_mos->SetPoint     (ifle, val, feloss->GetParameter(2)/feloss->GetParameter(3));
+        gTee_mos->SetPointError(ifle,    0., 0.);
+    }
+    
+    TGraphErrors* gMTee_peak = new TGraphErrors(); gMTee_peak->SetNameTitle("gMTee_peak", "");
+    TGraphErrors* gMTee_kpa  = new TGraphErrors(); gMTee_kpa ->SetNameTitle("gMTee_kpa",  "");
+    TGraphErrors* gMTee_mpv  = new TGraphErrors(); gMTee_mpv ->SetNameTitle("gMTee_mpv",  "");
+    TGraphErrors* gMTee_sgm  = new TGraphErrors(); gMTee_sgm ->SetNameTitle("gMTee_sgm",  "");
+    TGraphErrors* gMTee_mos  = new TGraphErrors(); gMTee_mos ->SetNameTitle("gMTee_mos",  "");
+    for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
+        gMTee_peak->SetPoint     (ifle, gMee_peak->GetX()[ifle], gMee_peak->GetY()[ifle]/gTee_peak->GetY()[ifle]);
+        gMTee_peak->SetPointError(ifle, 0., 0.);
+        gMTee_kpa->SetPoint     (ifle, gMee_kpa->GetX()[ifle], gMee_kpa->GetY()[ifle]/gTee_kpa->GetY()[ifle]);
+        gMTee_kpa->SetPointError(ifle, 0., 0.);
+        gMTee_mpv->SetPoint     (ifle, gMee_mpv->GetX()[ifle], gMee_mpv->GetY()[ifle]/gTee_mpv->GetY()[ifle]);
+        gMTee_mpv->SetPointError(ifle, 0., 0.);
+        gMTee_sgm->SetPoint     (ifle, gMee_sgm->GetX()[ifle], gMee_sgm->GetY()[ifle]/gTee_sgm->GetY()[ifle]);
+        gMTee_sgm->SetPointError(ifle, 0., 0.);
+        gMTee_mos->SetPoint     (ifle, gMee_mos->GetX()[ifle], gMee_mos->GetY()[ifle]/gTee_mos->GetY()[ifle]);
+        gMTee_mos->SetPointError(ifle, 0., 0.);
+    }
+    
+    gMee_peak->Write();
+    gMee_kpa ->Write();
+    gMee_mpv ->Write();
+    gMee_sgm ->Write();
+    gMee_mos ->Write();
+    
+    gTee_peak->Write();
+    gTee_kpa ->Write();
+    gTee_mpv ->Write();
+    gTee_sgm ->Write();
+    gTee_mos ->Write();
+    
+    gMTee_peak->Write();
+    gMTee_kpa ->Write();
+    gMTee_mpv ->Write();
+    gMTee_sgm ->Write();
+    gMTee_mos ->Write();
         
-        double t1 = 1, t2 = 1, t3 = 1;
-        if (func) {
-            gTee_pk->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(1));
-            gTee_pk->SetPointError(ifle,  0., scl_eloss * func->GetParError(1));
-            gTee_sg->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(2));
-            gTee_sg->SetPointError(ifle,  0., scl_eloss * func->GetParError(2));
-            gTee_dt->SetPoint     (ifle, mom, scl_eloss * func->GetParameter(3));
-            gTee_dt->SetPointError(ifle,  0., scl_eloss * func->GetParError(3));
-            t1 = scl_eloss * func->GetParameter(1);
-            t2 = scl_eloss * func->GetParameter(2);
-            t3 = scl_eloss * func->GetParameter(3);
-            gTee_ms->SetPoint     (ifle, bta, t1/t2);
-            gTee_ms->SetPointError(ifle,  0., 0.);
-        }
-
-        gMTpk->SetPoint(ifle, bta, m1/t1);
-        gMTsg->SetPoint(ifle, bta, m2/t2);
-        gMTdt->SetPoint(ifle, bta, m3/t3);
-        gTMdt->SetPoint(ifle, bta, t3/m3);
-    }    
-    
-    gMee_pk->Write();
-    gMee_sg->Write();
-    gMee_dt->Write();
-    gMee_ms->Write();
-
-    gTee_pk->Write();
-    gTee_sg->Write();
-    gTee_dt->Write();
-    gTee_ms->Write();
-
-    gMTpk->Write();
-    gMTsg->Write();
-    gMTdt->Write();
-    gTMdt->Write();
-    gMsg->Write();
-    
-    gMkap->Write();
-
     ofle->Write();
     ofle->Close();
 
