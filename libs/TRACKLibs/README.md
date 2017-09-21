@@ -272,19 +272,16 @@ MatPhyFld&& mpfld = MatPhy::Get(step_len, part);
 Normal Method
 ```c++
 // Particle
+bool mscatOpt = true;
+bool elossOpt = true;
+PhyArg::SetOpt(mscatOpt, elossOpt);
+
 double coo[3];
 double dir[3];
 double rig;
 PhySt part(PartType::Proton);
 part.set_state_with_cos(coo[0], coo[1], coo[2], dir[0], dir[1], dir[2]);
 part.set_rig(rig);
-
-// Interaction Option
-bool mscatOpt = true;
-bool elossOpt = true;
-MatArg marg(mscatOpt, elossOpt);
-marg.set_mscat(0., 0.);
-marg.set_eloss(0., 0.);
 
 // Jacobian for fitting
 PhyJb* phyJb = nullptr;
@@ -294,28 +291,50 @@ MatFld mfld;
 
 // Propagate by step length
 double tagetS;
-PropMgnt::Prop(tagetS, part, marg, phyJb, &mfld);
+PropMgnt::Prop(tagetS, part, phyJb, &mfld);
+
+part.print();
+
+// pdf parameters
+part.vst().mscatu();
+part.vst().mscatcu();
+part.vst().mscatcl();
+
+part.vst().eloss_ion_kpa();
+part.vst().eloss_ion_mos();
+
+part.vst().eloss_brm();
+
+// 1st way
+part.arg().set_mscat();
+part.arg().set_eloss();
+
+// 2nd way
+part.arg().rndm_mscat();
+part.arg().rndm_eloss_ion();
+part.arg().rndm_eloss_brm();
+
+// symmetry break
+part.symbk();
 
 part.print();
 ```
 Toy Monte Carlo
 ```c++
 // Particle
+bool mscatOpt = true;
+bool elossOpt = true;
+
 double coo[3];
 double dir[3];
 double rig;
-PhySt part(PartType::Proton);
+PhySt part(PartType::Proton, mscatOpt, elossOpt);
 part.set_state_with_cos(coo[0], coo[1], coo[2], dir[0], dir[1], dir[2]);
 part.set_rig(rig);
 
-// Interaction Option
-bool mscatOpt = true;
-bool elossOpt = true;
-MatArg marg(mscatOpt, elossOpt);
-
 // Propagate to coordinate Z
 double tagetZ;
-PropMgnt::PropToZWithMC(tagetZ, part, marg);
+PropMgnt::PropToZWithMC(tagetZ, part);
 
 part.print();
 ```

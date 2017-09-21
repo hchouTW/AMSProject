@@ -19,7 +19,7 @@ class PhyArg {
         static Bool_t opt_eloss_;
 
     public :
-        PhyArg(Bool_t sw_mscat = false, Bool_t sw_eloss = false) { reset(sw_mscat, sw_eloss); }
+        PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
         inline void reset(Bool_t sw_mscat = false, Bool_t sw_eloss = false) { mat_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; } 
