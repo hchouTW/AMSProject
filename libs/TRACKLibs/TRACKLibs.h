@@ -26,6 +26,14 @@ using namespace MGROOT;
 #include "MagEnv.C"
 #include "MatEnv.h"
 #include "MatEnv.C"
+
+#include "MatEnvAms.h"
+#include "MatEnvAms.C"
+#include "MatEnvTestProp.h"
+#include "MatEnvTestProp.C"
+#include "MatEnvTestFit.h"
+#include "MatEnvTestFit.C"
+
 #include "Prop.h"
 #include "Prop.C"
 //#include "PhyTr.h"
