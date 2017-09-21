@@ -12,13 +12,13 @@ class HitSt {
         };
     
     public :
-        HitSt(Int_t id = -1, Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : id_(id), side_(sx, sy, sz), coo_(0., 0., 0.), err_x_(DEFAULT_ERR_X), err_y_(DEFAULT_ERR_Y), err_z_(DEFAULT_ERR_Z) {}
+        HitSt(Int_t id = -1, Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : id_(id), side_(sx, sy, sz), coo_(0., 0., 0.), err_x_(DEFAULT_ERR_X_), err_y_(DEFAULT_ERR_Y_), err_z_(DEFAULT_ERR_Z_) {}
         ~HitSt() {}
 
         inline void set_id(Int_t id) { id_ = id; }
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx, coo_(1) = cy, coo_(2) = cz; }
-        inline void set_err(const MultiGauss& ex = DEFAULT_ERR_X, const MultiGauss& ey = DEFAULT_ERR_Y, const MultiGauss& ez = DEFAULT_ERR_Z) { err_x_ = ex; err_y_ = ey; err_z_ = ez; }
-        inline void set_coo_and_err(Double_t cx, Double_t cy, Double_t cz, const MultiGauss& ex = DEFAULT_ERR_X, const MultiGauss& ey = DEFAULT_ERR_Y, const MultiGauss& ez = DEFAULT_ERR_Z) { set_coo(cx, cy, cz); set_err(ex, ey, ez); }
+        inline void set_err(const MultiGauss& ex = DEFAULT_ERR_X_, const MultiGauss& ey = DEFAULT_ERR_Y_, const MultiGauss& ez = DEFAULT_ERR_Z_) { err_x_ = ex; err_y_ = ey; err_z_ = ez; }
+        inline void set_coo_and_err(Double_t cx, Double_t cy, Double_t cz, const MultiGauss& ex = DEFAULT_ERR_X_, const MultiGauss& ey = DEFAULT_ERR_Y_, const MultiGauss& ez = DEFAULT_ERR_Z_) { set_coo(cx, cy, cz); set_err(ex, ey, ez); }
 
         inline void set_dummy_x(Double_t cx) { coo_(0) = cx; }
 
@@ -57,22 +57,22 @@ class HitSt {
         MultiGauss err_z_;   // [cm]
     
     public :
-        static void SetDefaultErrX(const MultiGauss& ex = DEFAULT_ERR_X) { DEFAULT_ERR_X = ex; }
-        static void SetDefaultErrY(const MultiGauss& ey = DEFAULT_ERR_Y) { DEFAULT_ERR_Y = ey; }
-        static void SetDefaultErrZ(const MultiGauss& ez = DEFAULT_ERR_Z) { DEFAULT_ERR_Z = ez; }
+        static void SetDefaultErrX(const MultiGauss& ex = DEFAULT_ERR_X_) { DEFAULT_ERR_X_ = ex; }
+        static void SetDefaultErrY(const MultiGauss& ey = DEFAULT_ERR_Y_) { DEFAULT_ERR_Y_ = ey; }
+        static void SetDefaultErrZ(const MultiGauss& ez = DEFAULT_ERR_Z_) { DEFAULT_ERR_Z_ = ez; }
 
-        static const MultiGauss& GetDefaultErrX() { return DEFAULT_ERR_X; }
-        static const MultiGauss& GetDefaultErrY() { return DEFAULT_ERR_Y; }
-        static const MultiGauss& GetDefaultErrZ() { return DEFAULT_ERR_Z; }
+        static const MultiGauss& GetDefaultErrX() { return DEFAULT_ERR_X_; }
+        static const MultiGauss& GetDefaultErrY() { return DEFAULT_ERR_Y_; }
+        static const MultiGauss& GetDefaultErrZ() { return DEFAULT_ERR_Z_; }
         
-        static Double_t GetDefaultErrX(Double_t r) { return DEFAULT_ERR_X.efft_sgm(r); }
-        static Double_t GetDefaultErrY(Double_t r) { return DEFAULT_ERR_Y.efft_sgm(r); }
-        static Double_t GetDefaultErrZ(Double_t r) { return DEFAULT_ERR_Z.efft_sgm(r); }
+        static Double_t GetDefaultErrX(Double_t r) { return DEFAULT_ERR_X_.efft_sgm(r); }
+        static Double_t GetDefaultErrY(Double_t r) { return DEFAULT_ERR_Y_.efft_sgm(r); }
+        static Double_t GetDefaultErrZ(Double_t r) { return DEFAULT_ERR_Z_.efft_sgm(r); }
 
     protected :
-        static MultiGauss DEFAULT_ERR_X;
-        static MultiGauss DEFAULT_ERR_Y;
-        static MultiGauss DEFAULT_ERR_Z;
+        static MultiGauss DEFAULT_ERR_X_;
+        static MultiGauss DEFAULT_ERR_Y_;
+        static MultiGauss DEFAULT_ERR_Z_;
         
     public :
         static void Sort(std::vector<HitSt>& hits, const Orientation& ortt = Orientation::kDownward) {
@@ -82,9 +82,9 @@ class HitSt {
         }
 };
         
-MultiGauss HitSt::DEFAULT_ERR_X(24.0e-4);
-MultiGauss HitSt::DEFAULT_ERR_Y(10.0e-4);
-MultiGauss HitSt::DEFAULT_ERR_Z(300.0e-4);
+MultiGauss HitSt::DEFAULT_ERR_X_(24.0e-4);
+MultiGauss HitSt::DEFAULT_ERR_Y_(10.0e-4);
+MultiGauss HitSt::DEFAULT_ERR_Z_(300.0e-4);
 
 
 } // namesapce TrackSys

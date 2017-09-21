@@ -216,17 +216,18 @@ class TransferPhyJb {
 };
 
 
-// testcode
 class PropPhyCal {
     public :
-        PropPhyCal(Double_t eta, Bool_t sw_mscat = false, Bool_t sw_eloss = false) { init(eta); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; }
+        PropPhyCal(Short_t sign, Double_t eta, Bool_t sw_mscat = false, Bool_t sw_eloss = false) { init(sign, eta); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; }
         ~PropPhyCal() {}
 
-        void init(Double_t eta); 
+        void init(Short_t sign, Double_t eta); 
         void normalized(PhySt& part, MatFld& mfld);
 
         void push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
 
+        const Short_t& sign() const { return sign_; }
+        
         const Double_t& len() const { return len_; }
         const Double_t& nrl() const { return nrl_; }
 
@@ -237,8 +238,11 @@ class PropPhyCal {
         const Double_t& mscatcu() const { return mscatcu_; }
         const Double_t& mscatcl() const { return mscatcl_; }
 
-        const Double_t& eloss_ion() const { return eloss_ion_; }
-        const Double_t& eloss_brm() const { return eloss_brm_; }
+        const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
+        const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
+        const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
+
+        const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
         inline void set_virtualPhySt(PhySt& part) const;
 
@@ -246,6 +250,8 @@ class PropPhyCal {
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
         Double_t eta_;
+        
+        Short_t  sign_;
         Double_t len_;
         Double_t nrl_;
 
@@ -267,8 +273,7 @@ class PropPhyCal {
         Double_t eloss_ion_mpv_;
         Double_t eloss_ion_sgm_;
 
-        Double_t eloss_ion_;
-        Double_t eloss_brm_;
+        Double_t eloss_brm_men_;
 };
 
 

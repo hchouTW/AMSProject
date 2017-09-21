@@ -1145,7 +1145,6 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     // Tune by Hsin-Yi Chou
     const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
     const Double_t tune_sgm = pars[0] * (MGMath::ONE + pars[1] * TMath::Power(bta, pars[2]));
-    //const Double_t tune_sgm = 8.637135e-01 * std::pow(bta, -MGMath::ONE_TO_THREE);
     mscat_sgm *= tune_sgm;
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -1209,14 +1208,12 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     const Double_t eloss_ion_kpa0 = MGMath::SQRT_TWO;
     Double_t eloss_ion_kpa = eloss_ion_kpa0 / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
 
-    // testcode
     // Tune by Hsin-Yi Chou
     const Double_t tune_kpa = 1.05379361892339474e+00;
     eloss_ion_kpa *= tune_kpa;
     
-    const Double_t mpv_pars[4] = { 0.489891, 8.8992, 0.0408363, -7.16981 }; 
-    Double_t tune_mpv = (mpv_pars[0]) * (TMath::Erf(mpv_pars[1] * TMath::Power(sqr_bta, mpv_pars[2]) + mpv_pars[3]) + MGMath::ONE);
-    eloss_ion_mpv *= 0.903547;
+    const Double_t tune_mpv = 0.903547;
+    eloss_ion_mpv *= tune_mpv;
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;
     if (!MGNumc::Valid(eloss_ion_mpv) || MGNumc::Compare(eloss_ion_mpv) <= 0) eloss_ion_mpv = MGMath::ZERO;

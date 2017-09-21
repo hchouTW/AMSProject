@@ -292,8 +292,6 @@ Bool_t MagMgnt::Load() {
     is_load = MagGeoBoxAms::Load();
 #else
     if (!geo_box_reader_.exist()) {
-        //std::string file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/MagGeoBox_AMS02.bin";
-        //std::string file_path = "/data3/hchou/AMSData/MagGeoBox_AMS02.bin";
         std::string file_path = "/data3/hchou/AMSData/MagDB/MagTest.bin";
         geo_box_reader_.load(file_path);
     }
@@ -310,6 +308,7 @@ MagFld MagMgnt::Get(const SVecD<3>& coo) {
 #ifdef __HAS_AMS_OFFICE_LIBS__
     return MagGeoBoxAms::Get(coo);
 #else
+    // testcode
     return MagFld();
     return geo_box_reader_.get(coo);
 #endif // __HAS_AMS_OFFICE_LIBS__

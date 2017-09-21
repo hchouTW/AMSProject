@@ -26,17 +26,17 @@ int main(int argc, char * argv[]) {
     PhySt part_info(part_type);
     TFile * ofle = new TFile("proton.root", "RECREATE");
     
-    TH1D* hMc = new TH1D("hMc", "hMc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc);
-    TH1D* hTc = new TH1D("hTc", "hTc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc);
+    TH1D* hMc = new TH1D("hMc", "hMc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc);
+    TH1D* hTc = new TH1D("hTc", "hTc;Residual [cm * p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc);
         
-    TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.06 * sclu, 0.06 * sclu);
-    TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.06 * sclu, 0.06 * sclu);
+    TH1D* hMu = new TH1D("hMu", "hMu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.04 * sclu, 0.04 * sclu);
+    TH1D* hTu = new TH1D("hTu", "hTu;Residual [p#beta/Q^{2}];Events/Bin", nbinu, -0.04 * sclu, 0.04 * sclu);
     
-    TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc, nbinu, -0.06 * sclu, 0.06 * sclu);
-    TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.25 * sclc, 0.25 * sclc, nbinu, -0.06 * sclu, 0.06 * sclu);
+    TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc, nbinu, -0.04 * sclu, 0.04 * sclu);
+    TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc, nbinu, -0.04 * sclu, 0.04 * sclu);
     
-    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.001 * scle, 0.006 * scle);
-    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.001 * scle, 0.006 * scle);
+    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.005 * scle);
+    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.005 * scle);
 
     MGConfig::JobOpt opt(argc, argv);
     std::vector<double> momlst;
@@ -100,24 +100,24 @@ int main(int argc, char * argv[]) {
         ofle->cd();
 
         
-        double binsc[2] = { -0.25*sclc, 0.25*sclc };
+        double binsc[2] = { -0.2*sclc, 0.2*sclc };
         TH1D* hMcx = new TH1D(Form("hMcx%02d", ifle), Form("hMcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hMcy = new TH1D(Form("hMcy%02d", ifle), Form("hMcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hTcx = new TH1D(Form("hTcx%02d", ifle), Form("hTcx%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
         TH1D* hTcy = new TH1D(Form("hTcy%02d", ifle), Form("hTcy%02d;Residual [cm * p#beta/Q^{2}];Events/Bin", ifle), nbinc, binsc[0], binsc[1]);
 
-        double binsu[2] = { -0.06*sclu, 0.06*sclu };
+        double binsu[2] = { -0.04*sclu, 0.04*sclu };
         TH1D* hMux = new TH1D(Form("hMux%02d", ifle), Form("hMux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hMuy = new TH1D(Form("hMuy%02d", ifle), Form("hMuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         
-        double binsm[2] = { 0.0005*scle, 0.006*scle };
+        double binsm[2] = { 0.0005*scle, 0.005*scle };
         TH1D* hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
-            //if (it > 100000) break; // testcode
+            if (it > 200000) break; // testcode
             chain->GetEntry(it);
             if (cz->size() < NL) continue;
             if (mz->size() < NL) continue;
