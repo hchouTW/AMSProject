@@ -2,8 +2,8 @@
 | Date | Contents | Name |
 | ---- | ------- | ---- |
 | Week 1st | Chapter 1.1~1.6 | Hsin-Yi Chou |
-| Week 2nd | Chapter 2.1~2.3 | |
-| Week 3rd | Chapter 2.4~2.6 | |
+| Week 2nd | Chapter 2.1~2.3 | Yu-Yu Syu |
+| Week 3rd | Chapter 2.4~2.6 | Martha V |
 | Week 4th | Chapter 3.1~3.3 | |
 | Week 5th | Chapter 3.4~3.6 | |
 | Week 6th | Chapter 3.7~3.8 | |
