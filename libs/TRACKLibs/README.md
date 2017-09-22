@@ -296,13 +296,19 @@ PropMgnt::Prop(tagetS, part, &mfld, phyJb);
 part.print();
 
 // pdf parameters
+
+// angle (multi-gaussian)
 part.vst().mscatu();
+
+// position (multi-gaussian)
 part.vst().mscatcu();
 part.vst().mscatcl();
 
+// ion-energy loss (modified-Moyal eq.)
 part.vst().eloss_ion_kpa();
 part.vst().eloss_ion_mos();
 
+// Bremsstrahlung-energy loss (gamma) (Now, Turn off)
 part.vst().eloss_brm_men();
 
 // 1st way
