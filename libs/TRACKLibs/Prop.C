@@ -186,11 +186,11 @@ TransferPhyJb::TransferPhyJb(Bool_t mat, const TransferFunc& tf, PhyJb& jb) {
 }
 
 
-void PropPhyCal::init(Short_t sign, Double_t eta) {
+void PropPhyCal::init() {
     sw_mscat_      = false;
     sw_eloss_      = false;
-    eta_           = eta;
-    sign_          = (sign>=0)?1:-1;
+    eta_           = 0;
+    sign_          = 1; 
     len_           = MGMath::ZERO;
     nrl_           = MGMath::ZERO;
     tau_           = std::move(SVecD<3>(1.0,  0.0, 0.0));
@@ -211,7 +211,7 @@ void PropPhyCal::init(Short_t sign, Double_t eta) {
 }
 
 
-void PropPhyCal::normalized(PhySt& part, MatFld& mfld) {
+void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
     if (sw_mscat_ && !MGNumc::EqualToZero(mscatu_)) {
         tau_.Unit();
         rho_.Unit();
@@ -255,7 +255,7 @@ void PropPhyCal::normalized(PhySt& part, MatFld& mfld) {
            
             // testcode
             //Double_t eloss_ion_mpv = std::fabs(part.eta() - eta_);
-            //std::cout << Form("MPV %14.8f %14.8f DIFF %14.8f\n", eloss_ion_mpv_, eloss_ion_mpv, eloss_ion_mpv_-eloss_ion_mpv);
+            //std::cerr << Form("MPV %14.8f %14.8f DIFF %14.8f\n", part.eta()*eloss_ion_mpv_, eloss_ion_mpv, part.eta()*eloss_ion_mpv_-eloss_ion_mpv);
         
             eloss_brm_men_ = mpfld.eloss_brm_men();
         }
@@ -297,6 +297,7 @@ void PropPhyCal::push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3
 
 
 void PropPhyCal::set_virtualPhySt(PhySt& part) const {
+    part.vst().reset();
     part.vst().set_sign(sign_);
     part.vst().set_len(len_);
     part.vst().set_nrl(nrl_);
@@ -436,202 +437,138 @@ Double_t PropMgnt::GetStepToZ(PhySt& part, Double_t resStepZ) {
 }
         
 
-Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, PhyJb* phyJb, MatFld* mfld) {
-    Bool_t withJb = (phyJb != nullptr);
+Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
     Bool_t withMf = (mfld != nullptr);
+    Bool_t withJb = (phyJb != nullptr);
     if (withJb) phyJb->init(PhyJb::Type::kIdentity);
-    std::list<MatFld> mflds;
 
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
     Double_t int_step = MGMath::ZERO;
+    
+    std::list<MatFld> mflds;
+    PropPhyCal ppcal(part, step);
     while (iter <= LMTU_ITER && !is_succ) {
         Double_t res_step = step - int_step;
         Double_t cur_step = GetStep(part, res_step);
 
         Bool_t valid = false;
         PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
-        MatFld&& curMfld = ((part.field() || withMf) ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
+        MatFld&& curMfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
         switch (method_) {
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, curMfld, curJb); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, curMfld, curJb); break;
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, curMfld, curJb); break;
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, curMfld, ppcal, curJb); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, curMfld, ppcal, curJb); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, curMfld, ppcal, curJb); break;
             default : break;
         }
-        if (!valid) { delete curJb; break; }
+        if (!valid) { 
+            if (withJb && curJb != nullptr) delete curJb;
+            curJb = nullptr;
+            break;
+        }
 
+        mflds.push_back(curMfld);
         if (withJb) {
             phyJb->multiplied(*curJb);
             delete curJb;
         }
 
-        if (withMf) mflds.push_back(curMfld);
-
         iter++;
         int_step += cur_step;
         is_succ = (MGNumc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
     }
-    if (withMf) (*mfld) = std::move(MatFld::Merge(mflds));
-
-    return is_succ;
-}
-
-
-Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, PhyJb* phyJb, MatFld* mfld) {
-    Bool_t withJb = (phyJb != nullptr);
-    Bool_t withMf = (mfld != nullptr);
-    if (withJb) phyJb->init(PhyJb::Type::kIdentity);
-    std::list<MatFld> mflds;
-
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = MGMath::ZERO;
-    while (iter <= LMTU_ITER && !is_succ) {
-        Double_t res_stepz = zcoo - part.cz();
-        Double_t cur_step  = GetStepToZ(part, res_stepz);
-
-        Bool_t valid = false;
-        PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
-        MatFld&& curMfld = ((part.field() || withMf) ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
-        switch (method_) {
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, curMfld, curJb); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, curMfld, curJb); break;
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, curMfld, curJb); break;
-            default : break;
-        }
-        if (!valid) { delete curJb; break; }
-
-        if (withJb) {
-            phyJb->multiplied(*curJb);
-            delete curJb;
-        }
-        
-        if (withMf) mflds.push_back(curMfld);
-
-        iter++;
-        int_step += cur_step;
-        is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
-    }
-    if (withMf) (*mfld) = std::move(MatFld::Merge(mflds));
-
-    return is_succ;
-}
-        
-
-Bool_t PropMgnt::PropWithMC(const Double_t step, PhySt& part) {
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = MGMath::ZERO;
+    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    if (withMf) *mfld = mgfld;
     
-    while (iter <= LMTU_ITER && !is_succ) {
-        Double_t res_step = step - int_step;
-        Double_t cur_step = GetStep(part, res_step);
-    
-        Bool_t valid = false;
-        MatFld&& mfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
-        part.arg().rndm(mfld.num_rad_len());
-        
-        switch (method_) {
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, mfld); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, mfld); break;
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, mfld); break;
-            default : break;
-        }
-        if (!valid) break;
-
-        iter++;
-        int_step += cur_step;
-        is_succ = (MGNumc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
-    }
-    
-    return is_succ;
-}
-
-
-/*
-Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part) {
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = MGMath::ZERO;
-    
-    while (iter <= LMTU_ITER && !is_succ) {
-        Double_t res_stepz = zcoo - part.cz();
-        Double_t cur_step  = GetStepToZ(part, res_stepz);
-        
-        Bool_t valid = false;
-        MatFld&& mfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
-        part.arg().rndm(mfld.num_rad_len());
-        
-        switch (method_) {
-            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, mfld); break;
-            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, mfld); break;
-            case Method::kEuler             : valid = PropWithEuler(cur_step, part, mfld); break;
-            default : break;
-        }
-        if (!valid) break;
-
-        iter++;
-        int_step += cur_step;
-        is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
-    }
-
-    return is_succ;
-}
-*/
-
-
-// testcode
-Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part) {
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = MGMath::ZERO;
-    std::list<MatFld> mflds;
-
-    Short_t sign = MGNumc::Compare(part.uz()*(zcoo-part.cz()))>=0?1:-1;
-    PropPhyCal ppcal(sign, part.eta(), part.arg().mscat(), part.arg().eloss());
-    while (iter <= LMTU_ITER && !is_succ) {
-        Double_t res_stepz = zcoo - part.cz();
-        Double_t cur_step  = GetStepToZ(part, res_stepz);
-        
-        Bool_t valid = false;
-        MatFld&& mfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
-
-        valid = PropWithEuler2(cur_step, part, mfld, ppcal);
-        if (!valid) break;
-
-        iter++;
-        int_step += cur_step;
-        is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
-        
-        mflds.push_back(mfld);
-    }
-    MatFld&& fld = std::move(MatFld::Merge(mflds));
-    ppcal.normalized(part, fld);
-
+    ppcal.normalized(mgfld, part);
     ppcal.set_virtualPhySt(part);
-    part.symbk(true);
 
     return is_succ;
 }
 
 
+Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
+    Bool_t withMf = (mfld != nullptr);
+    Bool_t withJb = (phyJb != nullptr);
+    if (withJb) phyJb->init(PhyJb::Type::kIdentity);
+
+    Long64_t iter     = 1;
+    Bool_t   is_succ  = false;
+    Double_t int_step = MGMath::ZERO;
+    
+    std::list<MatFld> mflds;
+    PropPhyCal ppcal(part, part.uz()*(zcoo-part.cz()));
+    while (iter <= LMTU_ITER && !is_succ) {
+        Double_t res_stepz = zcoo - part.cz();
+        Double_t cur_step  = GetStepToZ(part, res_stepz);
+
+        Bool_t valid = false;
+        PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
+        MatFld&& curMfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
+
+        switch (method_) {
+            case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, curMfld, ppcal, curJb); break;
+            case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, curMfld, ppcal, curJb); break;
+            case Method::kEuler             : valid = PropWithEuler(cur_step, part, curMfld, ppcal, curJb); break;
+            default : break;
+        }
+        if (!valid) { 
+            if (withJb && curJb != nullptr) delete curJb;
+            curJb = nullptr;
+            break;
+        }
+
+        mflds.push_back(curMfld);
+        if (withJb) {
+            phyJb->multiplied(*curJb);
+            delete curJb;
+        }
+
+        iter++;
+        int_step += cur_step;
+        is_succ = (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
+    }
+    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    if (withMf) *mfld = mgfld;
+    
+    ppcal.normalized(mgfld, part);
+    ppcal.set_virtualPhySt(part);
+    
+    return is_succ;
+}
+        
+
+Bool_t PropMgnt::PropWithMC(const Double_t step, PhySt& part, MatFld* mfld) {
+    Bool_t is_succ = PropMgnt::Prop(step, part, mfld, nullptr);
+    if (is_succ) part.symbk(true);
+    else         part.zero();
+    return is_succ;
+}
 
 
+Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part, MatFld* mfld) {
+    Bool_t is_succ = PropMgnt::PropToZ(zcoo, part, mfld, nullptr);
+    if (is_succ) part.symbk(true);
+    else         part.zero();
+    return is_succ;
+}
 
-//////////////////////////////////////////////////
-// testcode
-Bool_t PropMgnt::PropWithEuler2(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
-    Bool_t        withJb = (phyJb != nullptr);
-    Bool_t           mat = (part.field() && mfld());
+
+Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
+    Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
+    Bool_t     withEloss = (part.arg().eloss() && mfld());
+    Bool_t        withJb = (phyJb != nullptr);
     
     Double_t sstep = step * step;
-    Double_t ss1o2 = MGMath::HALF * sstep;
+    Double_t ss1o2 = sstep * MGMath::HALF;
+    
+    Double_t step_ps = prop_sign;
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
     MotionFunc mn0(st0, mp0);
-
+    
     part.set_state_with_cos(
         st0.cx() + step * mn0.cx() + ss1o2 * mn0.ux(),
         st0.cy() + step * mn0.cy() + ss1o2 * mn0.uy(),
@@ -640,49 +577,14 @@ Bool_t PropMgnt::PropWithEuler2(const Double_t step, PhySt& part, const MatFld& 
         st0.uy() + step * mn0.uy(),
         st0.uz() + step * mn0.uz()
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + ppcal.sign() * mn0.e();
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + step_ps * mn0.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) part.set_eta(eta);
         else        return false;
     }
     
     ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
-
-    return true;
-}
-/////////////////////////////////////////
-
-
-
-
-
-Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb) {
-    Bool_t        withJb = (phyJb != nullptr);
-    Bool_t           mat = (part.field() && mfld());
-    Short_t     eta_sign = part.eta_sign();
-    
-    Double_t sstep = step * step;
-    Double_t ss1o2 = MGMath::HALF * sstep;
-
-    PhySt st0 = part;
-    MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
-    MotionFunc mn0(st0, mp0);
-    
-    part.set_state_with_cos(
-        st0.cx() + step * mn0.cx() + ss1o2 * mn0.ux(),
-        st0.cy() + step * mn0.cy() + ss1o2 * mn0.uy(),
-        st0.cz() + step * mn0.cz() + ss1o2 * mn0.uz(),
-        st0.ux() + step * mn0.ux(),
-        st0.uy() + step * mn0.uy(),
-        st0.uz() + step * mn0.uz()
-    );
-    if (mat) {
-        Double_t eta    = st0.eta() + step * mn0.e();
-        Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
-        if (is_mch) part.set_eta(eta);
-        else        return false;
-    }
   
     /*
     if (withJb) {
@@ -736,15 +638,19 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
 }
 
 
-Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb) {
-    Bool_t        withJb = (phyJb != nullptr);
-    Bool_t           mat = (part.field() && mfld());
+Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
+    Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
+    Bool_t     withEloss = (part.arg().eloss() && mfld());
+    Bool_t        withJb = (phyJb != nullptr);
    
-    Double_t s1o2  = MGMath::HALF * step;
+    Double_t s1o2  = step * MGMath::HALF;
     Double_t sstep = step * step;
-    Double_t ss1o2 = MGMath::HALF * sstep;
-    Double_t ss1o6 = MGMath::ONE_TO_SIX * sstep;
+    Double_t ss1o2 = sstep * MGMath::HALF;
+    Double_t ss1o6 = sstep * MGMath::ONE_TO_SIX;
+    
+    Double_t step_ps = prop_sign;
+    Double_t s1o2_ps = prop_sign * MGMath::HALF;
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
@@ -759,8 +665,8 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         st0.uy() + step * mn0.uy(),
         st0.uz() + step * mn0.uz()
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + step * mn0.e();
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + step_ps * mn0.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) st1.set_eta(eta);
         else        return false;
@@ -776,13 +682,15 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         st0.uy() + s1o2 * (mn0.uy() + mn1.uy()),
         st0.uz() + s1o2 * (mn0.uz() + mn1.uz())
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + s1o2 * (mn0.e() + mn1.e());
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + s1o2_ps * (mn0.e() + mn1.e()));
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) part.set_eta(eta);
         else        return false;
     }
- 
+    
+    ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
+
     /*
     if (withJb) {
         TransferFunc tf0(st0, marg, mp0);
@@ -879,17 +787,22 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
 }
 
 
-Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb) {
-    Bool_t        withJb = (phyJb != nullptr);
-    Bool_t           mat = (part.field() && mfld());
+Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
+    Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
+    Bool_t     withEloss = (part.arg().eloss() && mfld());
+    Bool_t        withJb = (phyJb != nullptr);
 
-    Double_t s1o2  = MGMath::HALF * step;
-    Double_t s1o6  = MGMath::ONE_TO_SIX * step;
+    Double_t s1o2  = step * MGMath::HALF;
+    Double_t s1o6  = step * MGMath::ONE_TO_SIX;
     Double_t sstep = step * step;
-    Double_t ss1o2 = MGMath::HALF * sstep;
-    Double_t ss1o6 = MGMath::ONE_TO_SIX * sstep;
-    Double_t ss1o8 = MGMath::ONE_TO_EIGHT * sstep;
+    Double_t ss1o2 = sstep * MGMath::HALF;
+    Double_t ss1o6 = sstep * MGMath::ONE_TO_SIX;
+    Double_t ss1o8 = sstep * MGMath::ONE_TO_EIGHT;
+    
+    Double_t step_ps = prop_sign;
+    Double_t s1o2_ps = prop_sign * MGMath::HALF;
+    Double_t s1o6_ps = prop_sign * MGMath::ONE_TO_SIX;
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
@@ -904,8 +817,8 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.uy() + s1o2 * mn0.uy(),
         st0.uz() + s1o2 * mn0.uz()
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + s1o2 * mn0.e();
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + s1o2_ps * mn0.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) st1.set_eta(eta);
         else        return false;
@@ -922,8 +835,8 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.uy() + s1o2 * mn1.uy(),
         st0.uz() + s1o2 * mn1.uz()
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + s1o2 * mn1.e();
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + s1o2_ps * mn1.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) st2.set_eta(eta);
         else        return false;
@@ -940,8 +853,8 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.uy() + step * mn2.uy(),
         st0.uz() + step * mn2.uz()
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + step * mn2.e();
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + step_ps * mn2.e());
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) st3.set_eta(eta);
         else        return false;
@@ -957,12 +870,14 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         st0.uy() + s1o6 * (mn0.uy() + MGMath::TWO * mn1.uy() + MGMath::TWO * mn2.uy() + mn3.uy()),
         st0.uz() + s1o6 * (mn0.uz() + MGMath::TWO * mn1.uz() + MGMath::TWO * mn2.uz() + mn3.uz())
     );
-    if (mat) {
-        Double_t eta    = st0.eta() + s1o6 * (mn0.e() + MGMath::TWO * mn1.e() + MGMath::TWO * mn2.e() + mn3.e());
+    if (withEloss) {
+        Double_t eta    = st0.eta() * (MGMath::ONE + s1o6_ps * (mn0.e() + MGMath::TWO * mn1.e() + MGMath::TWO * mn2.e() + mn3.e()));
         Bool_t   is_mch = (MGNumc::Compare(eta) == eta_sign);
         if (is_mch) part.set_eta(eta);
         else        return false;
     }
+    
+    ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
     
     /*
     if (withJb) {

@@ -10,6 +10,7 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     TH1::AddDirectory(true);
+    PhyArg::SetOpt(true, true);
 
     const int NL = 3;
     const int IDi = 0;
@@ -138,12 +139,14 @@ int main(int argc, char * argv[]) {
 
             PhySt pst = part;
             PropMgnt::PropToZ(jcoo[2], pst);
+            //PropMgnt::Prop(std::fabs(jcoo[2]-icoo[2]), pst);
             double rcoo[3] = { pst.cx(), pst.cy(), pst.cz() };
             double rdir[3] = { pst.ux(), pst.uy(), pst.uz() };
             double rmom    = pst.mom();
 
             pst = part;
             PropMgnt::PropToZWithMC(jcoo[2], pst);
+            //PropMgnt::PropWithMC(std::fabs(jcoo[2]-icoo[2]), pst);
             double tcoo[3] = { pst.cx(), pst.cy(), pst.cz() };
             double tdir[3] = { pst.ux(), pst.uy(), pst.uz() };
             double tmom    = pst.mom();

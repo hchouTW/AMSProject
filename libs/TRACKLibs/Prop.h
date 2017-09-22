@@ -218,13 +218,15 @@ class TransferPhyJb {
 
 class PropPhyCal {
     public :
-        PropPhyCal(Short_t sign, Double_t eta, Bool_t sw_mscat = false, Bool_t sw_eloss = false) { init(sign, eta); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; }
+        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_ = part.eta(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
         ~PropPhyCal() {}
 
-        void init(Short_t sign, Double_t eta); 
-        void normalized(PhySt& part, MatFld& mfld);
+        void init(); 
+        void normalized(const MatFld& mfld, const PhySt& part);
 
         void push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
+
+        Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
 
         const Short_t& sign() const { return sign_; }
         
@@ -296,13 +298,13 @@ class PropMgnt {
     public :
 #ifdef __HAS_AMS_OFFICE_LIBS__
         static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
-#endif // __HAS_AMS_OFFICE_LIBS__      
+#endif // __HAS_AMS_OFFICE_LIBS__
         
-        static Bool_t Prop(const Double_t step, PhySt& part, PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
-        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, PhyJb* phyJb = nullptr, MatFld* mfld = nullptr);
+        static Bool_t Prop(const Double_t step, PhySt& part, MatFld* mfld = nullptr, PhyJb* phyJb = nullptr);
+        static Bool_t PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld = nullptr, PhyJb* phyJb = nullptr);
         
-        static Bool_t PropWithMC(const Double_t step, PhySt& part);
-        static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part);
+        static Bool_t PropWithMC(const Double_t step, PhySt& part, MatFld* mfld = nullptr);
+        static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part, MatFld* mfld = nullptr);
 
     protected :
         // Step Length
@@ -312,13 +314,10 @@ class PropMgnt {
         static Double_t GetStep(PhySt& part, Double_t resStep);
         static Double_t GetStepToZ(PhySt& part, Double_t resStepZ);
         
-        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr); 
-        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PhyJb* phyJb = nullptr);
+        static Bool_t PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb = nullptr); 
+        static Bool_t PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb = nullptr);
         
-        // testcode
-        static Bool_t PropWithEuler2(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb = nullptr); 
-
     private :
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
@@ -346,10 +345,9 @@ class PropMgnt {
         static constexpr Short_t JBRM = 3;
 };
 
-// testcode
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
+PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
 //PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
-PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 
 
 } // namespace TrackSys

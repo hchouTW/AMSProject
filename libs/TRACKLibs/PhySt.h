@@ -122,10 +122,11 @@ class VirtualPhySt {
         inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
         inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
         inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
+        inline Double_t        eloss_ion_mos() const { return ( MGNumc::EqualToZero(eloss_ion_sgm_) ? MGMath::ZERO : (eloss_ion_mpv_/eloss_ion_sgm_) ); }
 
         inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
-        inline Double_t symbk_eloss(Double_t ion = 0.0, Double_t brm = 0.0) const { return (ion * (eloss_ion_kpa_*eloss_ion_sgm_) + brm * eloss_brm_men_); }
+        inline Double_t symbk_eloss(Double_t ion = 0.0, Double_t brm = 0.0) const { return (sign_ * (ion * (eloss_ion_kpa_*eloss_ion_sgm_) + brm * eloss_brm_men_)); }
 
     private :
         Short_t  sign_;

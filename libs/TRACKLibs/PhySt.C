@@ -204,7 +204,7 @@ void PhySt::print() const {
 
 void PhySt::symbk(Bool_t is_rndm) {
     if (!arg_()) { zero(); return; }
-    if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mpv()/vst_.eloss_ion_sgm(), vst_.nrl()); }
+    if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mos(), vst_.nrl()); }
 
     if (arg_.mscat()) {
         coo_ = std::move(coo_ + vst_.symbk_mscatc(arg_.tauu(), arg_.rhou(), arg_.tauc(), arg_.rhoc()));
@@ -212,7 +212,7 @@ void PhySt::symbk(Bool_t is_rndm) {
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ + vst_.sign() * vst_.symbk_eloss(arg_.ion(), arg_.brm()));
+        set_eta(eta_ * (MGMath::ONE + vst_.symbk_eloss(arg_.ion(), arg_.brm())));
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(MGMath::ZERO);
     }

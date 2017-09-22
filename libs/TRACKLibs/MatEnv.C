@@ -545,7 +545,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Bool_t is_over_lmt = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
-    Double_t eta_part = (eta * std::sqrt(eta * eta + MGMath::ONE));
+    Double_t eta_part = (eta / bta);
     Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
     
     // Tune by Hsin-Yi Chou
@@ -598,7 +598,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
   
     // Calculate Eta Trans
     Double_t eta_trans = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
-    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV) * (part.eta());
+    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV);
     
     // Calculate Sigma
     Double_t eloss_ion_sgm = Bethe_Bloch_eta_trans / std::sqrt(sqr_bta);
@@ -630,13 +630,14 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
 
 
 Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part) {
+    // testcode
     return 0.0; // TODO: Include Bremsstrahlung
 
     Bool_t   is_over_lmt  = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t inv_sqr_bta  = ((is_over_lmt) ? (MGMath::ONE / part.bta() / part.bta()) : LMT_INV_SQR_BTA);
     Double_t sqr_chrg_rat = (part.part().chrg() * part.part().chrg());
     Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.part().mass() / part.part().mass());
-    Double_t eloss_brm_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mfld.num_rad_len() / MGMath::LOG_TWO) * part.eta();
+    Double_t eloss_brm_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mfld.num_rad_len() / MGMath::LOG_TWO);
     
     if (!MGNumc::Valid(eloss_brm_men) || MGNumc::Compare(eloss_brm_men) <= 0) eloss_brm_men = MGMath::ZERO;
 
