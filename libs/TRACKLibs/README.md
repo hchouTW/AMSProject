@@ -283,15 +283,15 @@ PhySt part(PartType::Proton);
 part.set_state_with_cos(coo[0], coo[1], coo[2], dir[0], dir[1], dir[2]);
 part.set_rig(rig);
 
-// Jacobian for fitting
-PhyJb* phyJb = nullptr;
-
 // Material Field
 MatFld mfld;
 
+// Jacobian for fitting
+PhyJb* phyJb = nullptr;
+
 // Propagate by step length
 double tagetS;
-PropMgnt::Prop(tagetS, part, phyJb, &mfld);
+PropMgnt::Prop(tagetS, part, &mfld, phyJb);
 
 part.print();
 
@@ -303,19 +303,16 @@ part.vst().mscatcl();
 part.vst().eloss_ion_kpa();
 part.vst().eloss_ion_mos();
 
-part.vst().eloss_brm();
+part.vst().eloss_brm_men();
 
 // 1st way
 part.arg().set_mscat();
 part.arg().set_eloss();
 
-// 2nd way
-part.arg().rndm_mscat();
-part.arg().rndm_eloss_ion();
-part.arg().rndm_eloss_brm();
+part.symbk(); // symmetry break
 
-// symmetry break
-part.symbk();
+// 2nd way
+part.symbk(true); // symmetry break
 
 part.print();
 ```

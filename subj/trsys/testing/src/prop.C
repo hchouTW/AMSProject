@@ -36,8 +36,8 @@ int main(int argc, char * argv[]) {
     TH2D* hMcu = new TH2D("hMcu", "hMcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc, nbinu, -0.04 * sclu, 0.04 * sclu);
     TH2D* hTcu = new TH2D("hTcu", "hTcu;Residual [cm * p#beta/Q^{2}];Residual [p#beta/Q^{2}];Events/Bin", nbinc, -0.2 * sclc, 0.2 * sclc, nbinu, -0.04 * sclu, 0.04 * sclu);
     
-    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.005 * scle);
-    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.005 * scle);
+    TH1D* hMe = new TH1D("hMe", "hMe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.007 * scle);
+    TH1D* hTe = new TH1D("hTe", "hTe;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", nbinm, 0.0005 * scle, 0.007 * scle);
 
     MGConfig::JobOpt opt(argc, argv);
     std::vector<double> momlst;
@@ -113,7 +113,7 @@ int main(int argc, char * argv[]) {
         TH1D* hTux = new TH1D(Form("hTux%02d", ifle), Form("hTux%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         TH1D* hTuy = new TH1D(Form("hTuy%02d", ifle), Form("hTuy%02d;Residual [p#beta/Q^{2}];Events/Bin", ifle), nbinu, binsu[0], binsu[1]);
         
-        double binsm[2] = { 0.0005*scle, 0.005*scle };
+        double binsm[2] = { 0.0005*scle, 0.007*scle };
         TH1D* hMee = new TH1D(Form("hMee%02d", ifle), Form("hMee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 

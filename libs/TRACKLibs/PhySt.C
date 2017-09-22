@@ -7,7 +7,7 @@ namespace TrackSys {
         
 void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
     if (sw_eloss_) {
-        if (MGNumc::EqualToZero(kpa)) return;
+        if (MGNumc::EqualToZero(kpa) || MGNumc::EqualToZero(mos)) return;
 
         std::string ion_var = "([1]/(x*[0]+[1])/[0]/[0])";
         std::string ion_fmt = STR_FMT("(x<-%f)?0.0:TMath::Power(%s, %s)/TMath::Gamma(%s)*TMath::Exp(-%s*([0]*x+TMath::Exp(-[0]*x)))", std::min(LMT_SGM_, MGMath::HALF*mos), ion_var.c_str(), ion_var.c_str(), ion_var.c_str(), ion_var.c_str());
