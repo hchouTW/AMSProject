@@ -218,13 +218,13 @@ class TransferPhyJb {
 
 class PropPhyCal {
     public :
-        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_ = part.eta(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
+        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta0_abs_ = part.eta_abs(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
         ~PropPhyCal() {}
 
         void init(); 
         void normalized(const MatFld& mfld, const PhySt& part);
 
-        void push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
+        void push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
 
         Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
 
@@ -251,7 +251,7 @@ class PropPhyCal {
     private :
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
-        Double_t eta_;
+        Double_t eta0_abs_;
         
         Short_t  sign_;
         Double_t len_;
@@ -270,6 +270,9 @@ class PropPhyCal {
         Double_t mscatu_;
         Double_t mscatcu_;
         Double_t mscatcl_;
+
+        std::vector<Double_t> vec_ieta_kpa_;
+        std::vector<Double_t> vec_ieta_sgm_;
 
         Double_t eloss_ion_kpa_;
         Double_t eloss_ion_mpv_;
@@ -329,6 +332,10 @@ class PropMgnt {
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
+        
+        // testcode
+        //static constexpr Double_t LMTU_STEP  =  3.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  3.0;   // (ds threshold)
 
     private :
         static constexpr Short_t X = 0;

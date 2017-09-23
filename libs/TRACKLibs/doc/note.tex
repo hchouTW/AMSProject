@@ -138,7 +138,8 @@
 \paragraph{Bremsstrahlung Energy Loss}
 \begin{equation} \begin{alignedat}{-1}
     \frac{d\tilde{\eta}}{ds}&=\tilde{\eta}\cdot\left(\omega_{B}\cdot\Omega_{B}\right) \\
-    \Omega_{B}&={\left(\frac{q}{q_{e}}\cdot\frac{m_{e}}{m}\right)}^{2}\cdot(\tilde{\eta}^{2}+1)\cdot\left(\frac{l\cdot L}{\ln{2}}\right)\cdot(1/S) \\
+    %\Omega_{B}&={\left(\frac{q}{q_{e}}\cdot\frac{m_{e}}{m}\right)}^{2}\cdot(\tilde{\eta}^{2}+1)\cdot\left(\frac{l\cdot L}{\ln{2}}\right)\cdot(1/S) \\
+    \Omega_{B}&={\left(\frac{q}{q_{e}}\cdot\frac{m_{e}}{m}\right)}^{2}\cdot(\sqrt{\tilde{\eta}^{-2}+1}-1)\cdot\left(\frac{l\cdot L}{\ln{2}}\right)\cdot(\tilde{\eta}^{2}\sqrt{\tilde{\eta}^{-2}+1})\cdot(1/S) \\
     \omega_{B}&\sim\Gamma\left(t,t\right)\ \ require\ \left[0\leq\omega_{B}<\inf\right] \\ 
     f\left(\omega_{B}\right)&=\left(\frac{t^t}{\Gamma\left(t\right)}\right)\cdot\left(\omega_{B}^{t-1}\cdot\exp{\left(-\omega_{B}\cdot t\right)}\right)\ where\ t=\left(\frac{l\cdot L}{\ln{2}}\right)
 \end{alignedat} \end{equation} 

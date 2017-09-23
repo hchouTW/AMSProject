@@ -189,7 +189,7 @@ TransferPhyJb::TransferPhyJb(Bool_t mat, const TransferFunc& tf, PhyJb& jb) {
 void PropPhyCal::init() {
     sw_mscat_      = false;
     sw_eloss_      = false;
-    eta_           = 0;
+    eta0_abs_      = MGMath::ZERO;
     sign_          = 1; 
     len_           = MGMath::ZERO;
     nrl_           = MGMath::ZERO;
@@ -208,6 +208,8 @@ void PropPhyCal::init() {
     vec_invloc_.clear();
     vec_invlocsqr_.clear();
     vec_mscat_.clear();
+    vec_ieta_kpa_.clear();
+    vec_ieta_sgm_.clear();
 }
 
 
@@ -249,21 +251,28 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
     if (sw_eloss_) {
         MatPhyFld&& mpfld = MatPhy::Get(mfld, part);
         if (mpfld()) {
-            eloss_ion_kpa_ = mpfld.eloss_ion_kpa();
-            eloss_ion_mpv_ = mpfld.eloss_ion_mpv();
-            eloss_ion_sgm_ = mpfld.eloss_ion_sgm();
-           
-            // testcode
-            //Double_t eloss_ion_mpv = std::fabs(part.eta() - eta_);
-            //std::cerr << Form("MPV %14.8f %14.8f DIFF %14.8f\n", part.eta()*eloss_ion_mpv_, eloss_ion_mpv, part.eta()*eloss_ion_mpv_-eloss_ion_mpv);
-        
+            Double_t ttlwgt = MGMath::ZERO;
+            for (auto&& wgt : vec_ieta_sgm_) ttlwgt += wgt;
+            Double_t eloss_ieta_sgm = std::sqrt(ttlwgt);
+            
+            Double_t ttlkpa = MGMath::ZERO;
+            for (auto&& kpa : vec_ieta_kpa_) ttlkpa += kpa;
+            Double_t eloss_eta_kpa = (ttlkpa / ttlwgt); 
+            
+            Double_t eloss_eta_sgm = MGMath::HALF * (std::sqrt(MGMath::ONE/ttlwgt + MGMath::FOUR * part.eta() * part.eta()) - (MGMath::ONE / eloss_ieta_sgm));
+            Double_t eloss_ion_sgm = (eloss_eta_sgm / eloss_eta_kpa / part.eta_abs());
+
+            eloss_ion_kpa_ = eloss_eta_kpa;
+            eloss_ion_sgm_ = eloss_ion_sgm;
+            eloss_ion_mpv_ = (std::fabs(part.eta_abs() - eta0_abs_) / std::sqrt(part.eta_abs() * eta0_abs_));
+
             eloss_brm_men_ = mpfld.eloss_brm_men();
         }
     }
 }
 
 
-void PropPhyCal::push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho) {
+void PropPhyCal::push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho) {
     len_ += mpfld.len();
     if (mpfld()) nrl_ += mpfld.num_rad_len();
     if (sw_mscat_) {
@@ -292,6 +301,13 @@ void PropPhyCal::push(const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3
         tau_     += wgt * tau;
         rho_     += wgt * rho;
         mscatcl_ += wgt * (len * mpfld.efft());
+    }
+    if (sw_eloss_ && mpfld()) {
+        Double_t ion_eloss = (mpfld.eloss_ion_kpa() * mpfld.eloss_ion_sgm() / (MGMath::ONE + sign_ * mpfld.eloss_ion_mpv()));
+        Double_t ion_sgm = ((ion_eloss / (MGMath::ONE - ion_eloss * ion_eloss)) / part.eta_abs());
+        Double_t wgt = ion_sgm * ion_sgm;
+        vec_ieta_kpa_.push_back(mpfld.eloss_ion_kpa() * wgt);
+        vec_ieta_sgm_.push_back(wgt);
     }
 }
 
@@ -584,7 +600,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         else        return false;
     }
     
-    ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
+    ppcal.push(part, mp0, mn0.orth().tau(), mn0.orth().rho());
   
     /*
     if (withJb) {
@@ -689,7 +705,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         else        return false;
     }
     
-    ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
+    ppcal.push(part, mp0, mn0.orth().tau(), mn0.orth().rho());
 
     /*
     if (withJb) {
@@ -877,7 +893,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         else        return false;
     }
     
-    ppcal.push(mp0, mn0.orth().tau(), mn0.orth().rho());
+    ppcal.push(part, mp0, mn0.orth().tau(), mn0.orth().rho());
     
     /*
     if (withJb) {

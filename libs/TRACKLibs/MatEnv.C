@@ -617,8 +617,10 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     // Tune by Hsin-Yi Chou
     const Double_t tune_kpa = 1.05379361892339474e+00;
     eloss_ion_kpa *= tune_kpa;
-    
-    const Double_t tune_mpv = 0.903547;
+
+    //const Double_t tune_mpv = 0.903547;
+    const Double_t tune_mpv_pars[2] = { 0.903547, 0.0045 };
+    const Double_t tune_mpv = tune_mpv_pars[0] / (MGMath::ONE + tune_mpv_pars[1] * (std::pow(sqr_gmbta, -MGMath::SQRT_TWO) + MGMath::TWO * (sqr_bta - MGMath::ONE)));
     eloss_ion_mpv *= tune_mpv;
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;
@@ -634,10 +636,13 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& pa
     return 0.0; // TODO: Include Bremsstrahlung
 
     Bool_t   is_over_lmt  = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
-    Double_t inv_sqr_bta  = ((is_over_lmt) ? (MGMath::ONE / part.bta() / part.bta()) : LMT_INV_SQR_BTA);
+    Double_t sqr_gmbta    = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
     Double_t sqr_chrg_rat = (part.part().chrg() * part.part().chrg());
     Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.part().mass() / part.part().mass());
-    Double_t eloss_brm_men = sqr_chrg_rat * sqr_mass_rat * inv_sqr_bta * (mfld.num_rad_len() / MGMath::LOG_TWO);
+    Double_t eng          = std::sqrt(sqr_gmbta + MGMath::ONE);
+    Double_t ke_part      = (eng - MGMath::ONE);
+    Double_t eta_trans    = (eng / sqr_gmbta);
+    Double_t eloss_brm_men = sqr_chrg_rat * sqr_mass_rat * (ke_part * eta_trans) * (mfld.num_rad_len() / MGMath::LOG_TWO);
     
     if (!MGNumc::Valid(eloss_brm_men) || MGNumc::Compare(eloss_brm_men) <= 0) eloss_brm_men = MGMath::ZERO;
 

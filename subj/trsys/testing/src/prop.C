@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
-            if (it > 200000) break; // testcode
+            if (it > 100000) break; // testcode
             chain->GetEntry(it);
             if (cz->size() < NL) continue;
             if (mz->size() < NL) continue;
