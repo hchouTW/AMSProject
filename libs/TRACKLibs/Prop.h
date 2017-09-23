@@ -332,10 +332,6 @@ class PropMgnt {
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
-        
-        // testcode
-        //static constexpr Double_t LMTU_STEP  =  3.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  3.0;   // (ds threshold)
 
     private :
         static constexpr Short_t X = 0;

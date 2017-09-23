@@ -1,18 +1,8 @@
 using namespace MGROOT;
 
-//#include "MgntHitSt.h"
-//#include "MgntPhySt.h"
-//#include "MgntMag.h"
-//#include "MgntMat.h"
-//#include "MgntProp.h"
-//#include "MgntProp.C"
-//#include "MgntRecon.h"
-//#include "MgntRecon.C"
-
 //#define __HAS_TESTPROP__
 //#define __HAS_TESTFIT__
 //#define __HAS_AMS_OFFICE_LIBS__
-
 
 #include "Math.h"
 #include "Math.C"
@@ -20,8 +10,7 @@ using namespace MGROOT;
 #include "PartInfo.C"
 #include "PhySt.h"
 #include "PhySt.C"
-#include "HitSt.h"
-#include "HitSt.C"
+
 #include "MagEnv.h"
 #include "MagEnv.C"
 #include "MatEnv.h"
@@ -36,5 +25,9 @@ using namespace MGROOT;
 
 #include "Prop.h"
 #include "Prop.C"
+
+#include "HitSt.h"
+#include "HitSt.C"
+
 //#include "PhyTr.h"
 //#include "PhyTr.C"
