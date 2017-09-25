@@ -56,13 +56,13 @@ PhyTr::PhyTr(const std::vector<HitSt>& hits, const PartType& type, const Orienta
 Bool_t PhyTr::fit() {
     //const Int_t ntimes = 1000;
 
-    COUT("\n==== Analysis ====\n");
-    MGClock::HrsStopwatch swa;
+    //COUT("\n==== Analysis ====\n");
+    //MGClock::HrsStopwatch swa;
     //for (Int_t it = 0; it < ntimes; ++it)
     if (!fit_analysis()) return false;
-    swa.stop();
-    swa.print();
-    part_.print();
+    //swa.stop();
+    //swa.print();
+    //part_.print();
 
     //nchi_ = 0.;
     //ndf_ = 0;
@@ -102,7 +102,6 @@ Bool_t PhyTr::fit() {
 
 
 Bool_t PhyTr::fit_analysis() {
-DEBUG();
     // Linear Fit on X
     // Equation of Motion
     // X  = PX + UX * (Z - RefZ)
@@ -141,9 +140,6 @@ DEBUG();
             hit.set_dummy_x(px);
         }
     }
-DEBUG();
-std::cout << Form("X Z UX = (%14.8f %14.8f %14.8f)\n", prefit_px, prefit_pz, prefit_ux);
-
 
     // Curve Fit on Y
     // Equation of Motion
@@ -219,7 +215,6 @@ std::cout << Form("X Z UX = (%14.8f %14.8f %14.8f)\n", prefit_px, prefit_pz, pre
         prefit_uy = rsl(1);
         prefit_ea = rsl(2);
     }
-DEBUG();
    
     // Merge Fitting Result
     Double_t prefit_uz = (MGMath::ONE - prefit_ux*prefit_ux - prefit_uy*prefit_uy);
@@ -231,8 +226,6 @@ DEBUG();
         prefit_ux, prefit_uy, prefit_uz
     );
     part_.set_eta(prefit_ea);
-
-DEBUG();
 
     return true;
 }
@@ -290,7 +283,7 @@ Bool_t PhyTr::fit_simple() {
             part_.cz(),
             part_.ux() - rslG(2),
             part_.uy() - rslG(3),
-            ((ortt_ == Orientation::kDownward) ? -1 : 1)
+            ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE)
         );
         part_.set_eta(part_.eta() - rslG(4));
         

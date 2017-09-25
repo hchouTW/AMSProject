@@ -35,8 +35,9 @@ Electron & Proton & Deuterium & Helium4
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
-Momentum(GeV) (15 sets)
-0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
+Momentum(GeV)  (27 sets)
+0.30  0.35  0.40  0.45  0.50  0.55  0.60  0.65  0.70  0.75  0.80  0.85  0.90  
+1  2  3  4  5  8  10  30  50  80  100  300  500  1000
 ```
 
 Magnetic Field:
@@ -79,8 +80,9 @@ Electron & Proton & Deuterium & Helium4
 Position(0, 0, 60cm)
 Direction(0, 0, -1)
 
-Momentum(GeV)  (22 sets)
-0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500
+Momentum(GeV)  (27 sets)
+0.30  0.35  0.40  0.45  0.50  0.55  0.60  0.65  0.70  0.75  0.80  0.85  0.90  
+1  2  3  4  5  8  10  30  50  80  100  300  500  1000
 ```
 
 Magnetic Field:
@@ -122,8 +124,9 @@ Electron & Proton & Deuterium & Helium4
 Position(0, 0, 110cm)
 Direction(0, 0, -1)
 
-Momentum(GeV) (28 sets)
-0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1  2  3  4  5  8  10  30  50  80  100  300  500  800  1000  3000  5000  8000  10000
+Momentum(GeV)  (31 sets)
+0.30  0.35  0.40  0.45  0.50  0.55  0.60  0.65  0.70  0.75  0.80  0.85  0.90  
+1  2  3  4  5  8  10  30  50  80  100  300  500  800  1000  3000  5000  8000
 ```
 
 Magnetic Field:
@@ -133,7 +136,7 @@ Uniform, 1 kGaus in +X
 
 Material Box: (Carbon)
 ```
-Density(0.08 mol/cm^3 = 0.9608624 g/cm^3) 
+Density(0.01 mol/cm^3 = 0.1201078 g/cm^3) 
 Size(x y z := 100cm 100cm 8cm)
 Central Location(X Y Z := 0cm 0cm (65cm -65cm))
 ```

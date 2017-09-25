@@ -27,6 +27,8 @@ class PhyTr {
 
         Bool_t fit();
 
+        inline const PhySt& part() const { return part_; }
+
     protected :
         void   clear();
         Bool_t fit_analysis();

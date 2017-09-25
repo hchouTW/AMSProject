@@ -57,10 +57,12 @@ int main(int argc, char * argv[]) {
     TH1D * hmom = new TH1D("hmom", "hmom", 100, 20, 2000);
     TH1D * hrx = new TH1D("hrx", "hrx", 1600, -300, 300);
     TH1D * hry = new TH1D("hry", "hry", 1600, -200, 200);
+    
+    TH2D * hrig = new TH2D("hrig", "hrig", 10, 20, 2000, 400, -0.05, 0.05);
 
     std::cout << Form("Entries %lld\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
-        if (entry > 100) break; // testcode
+        //if (entry > 100) break; // testcode
         dst->GetEntry(entry);
         
         if (fTrk->tracks.size() != 1) continue;
@@ -89,9 +91,11 @@ int main(int argc, char * argv[]) {
         if (hits.size() < 4) continue;
 
         PhyTr tr(hits);
-        tr.print();
+        //tr.print();
         tr.fit();
 
+        Double_t diff = (tr.part().irig() - 1./fG4mc->primPart.mom);
+        hrig->Fill(fG4mc->primPart.mom, diff);
     }
 
     ofle->Write();
@@ -121,18 +125,6 @@ int main(int argc, char * argv[]) {
     if (fTrd ) { delete fTrd ; fTrd  = nullptr; }
     //if (fRich) { delete fRich; fRich = nullptr; }
     //if (fEcal) { delete fEcal; fEcal = nullptr; }
-
-
-
-    SVecD<3> gen_coo(0, 0,  195);
-    SVecD<3> gen_mom(0, 0, -100);
-    
-    PhySt gen;
-    gen.set_state(gen_coo, gen_mom);
-
-    gen.arg().rndm();
-    gen.print();
-    //PropMgnt::Prop();
 
     return 0;
 }
