@@ -13,6 +13,7 @@ using namespace MGROOT;
 
 #include "MagEnv.h"
 #include "MagEnv.C"
+
 #include "MatEnv.h"
 #include "MatEnv.C"
 
@@ -29,5 +30,5 @@ using namespace MGROOT;
 #include "HitSt.h"
 #include "HitSt.C"
 
-//#include "PhyTr.h"
-//#include "PhyTr.C"
+#include "PhyTr.h"
+#include "PhyTr.C"

@@ -10,7 +10,8 @@ namespace TrackSys {
 
 class MultiGauss {
     public :
-        MultiGauss(Double_t sgm = 1.0);
+        MultiGauss() : rand_func_(nullptr) {}
+        MultiGauss(Double_t sgm);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3);
         MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4);

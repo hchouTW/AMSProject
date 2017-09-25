@@ -25,7 +25,7 @@ class RunTagInfo : public TObject {
 			eventLT = 0;
 			numOfSelEvent = 0;
 			numOfTrgEvent = 0;
-			//file.clear();
+			file.clear();
 			
 			dateUTC = 0;
 			timeUTC = 0;

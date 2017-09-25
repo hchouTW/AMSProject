@@ -2,6 +2,11 @@
 #define __TRACKLibs_MagEnv_H__
 
 
+#ifdef __HAS_AMS_OFFICE_LIBS__
+#include <MagField.h>
+#endif // __HAS_AMS_OFFICE_LIBS__
+
+
 namespace TrackSys {
 
 
@@ -109,8 +114,6 @@ class MagGeoBoxReader {
 
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-#include <MagField.h>
-
 class MagGeoBoxAms {
     public :
         MagGeoBoxAms() {}

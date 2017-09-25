@@ -4,7 +4,65 @@
 
 namespace TrackSys {
 
+class PhyTr {
+    public :
+        enum class Orientation {
+            kDownward = 0, kUpward = 1
+        };
 
+        inline static void HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
+
+        inline static Bool_t HitCheck(const std::vector<HitSt>& hits);
+
+    protected :
+        // Number of Hit Requirement
+        static constexpr Int_t LMTL_NHIT_X = 3;
+        static constexpr Int_t LMTL_NHIT_Y = 4;
+        
+    public :
+        PhyTr(const std::vector<HitSt>& hits, const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward);
+        ~PhyTr() { clear(); }
+
+        void print() const;
+
+        Bool_t fit();
+
+    protected :
+        void   clear();
+        Bool_t fit_analysis();
+        Bool_t fit_simple();
+        Bool_t fit_semi_simple();
+        Bool_t fit_physics();
+        
+    private :
+        Bool_t              succ_;
+        PartType            type_;
+        Orientation         ortt_;
+        PhySt               part_;
+        std::vector<HitSt>  hits_;
+        Double_t nchi_;
+        Double_t ndf_;
+
+    protected :
+        // Minimization
+        static constexpr Int_t    LMTL_ITER = 3;
+        static constexpr Int_t    LMTU_ITER = 20;
+        static constexpr Double_t CONVG_EPSILON   = 1.0e-3;
+        static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
+       
+        // Dimension
+        static constexpr Int_t DIM_G = 5;
+        static constexpr Int_t DIM_L = 4;
+};
+
+
+
+
+
+
+
+
+/*
 class PhyTr {
     public :
         enum class Orientation {
@@ -24,7 +82,6 @@ class PhyTr {
         inline const SVecI<2>& nhit() const { return nhit_; }
         inline const std::vector<HitSt>& hits() const { return hits_; }
         inline const std::vector<PhySt>& phys() const { return phys_; }
-        inline const std::vector<MatArg>& marg() const { return marg_; }
 
     protected :
         void clear();
@@ -45,7 +102,6 @@ class PhyTr {
         PartType            type_;
         PhySt               part_;
         
-        std::vector<MatArg> marg_;
         std::vector<PhySt>  phys_;
         Double_t nchi_;
         Double_t ndf_;
@@ -65,7 +121,7 @@ class PhyTr {
         static constexpr Int_t DIM_G = 5;
         static constexpr Int_t DIM_L = 4;
 };
-
+*/
 
 } // namespace TrackSys
 

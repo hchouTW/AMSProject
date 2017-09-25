@@ -34,11 +34,11 @@ class PhyArg {
         void rndm_mscatc() { mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; if (sw_mscat_) { mscatc_tau_ = pdf_mscat_.rndm(); mscatc_rho_ = pdf_mscat_.rndm(); } }
         void rndm_mscat() { rndm_mscatu(); rndm_mscatc(); }
 
-        void rndm_eloss_ion(Double_t kpa = 0.0, Double_t mos = 15.0);
+        void rndm_eloss_ion(Double_t kpa = 0.0, Double_t mos = 0.0);
         void rndm_eloss_brm(Double_t nrl = 0.0) { if (sw_eloss_) { Double_t bremslen = nrl / MGMath::LOG_TWO; eloss_brm_=((bremslen<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
-        void rndm_eloss(Double_t kpa = 0.0, Double_t mos = 15.0, Double_t nrl = 0.0) { rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
+        void rndm_eloss(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
 
-        void rndm(Double_t kpa = 0.0, Double_t mos = 15.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatc(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
+        void rndm(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatc(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
 
         inline const Bool_t& operator() () const { return mat_; }
 
@@ -160,8 +160,12 @@ class PhySt {
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
         void set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Short_t signz = -1);
-        
         void set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz);
+        
+        inline void set_state_with_cos(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_cos(c(0), c(1), c(2), u(0), u(1), u(2)); }
+        inline void set_state_with_tan(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_tan(c(0), c(1), c(2), u(0), u(1), u(2)); }
+        inline void set_state_with_uxy(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_uxy(c(0), c(1), c(2), u(0), u(1), u(2)); }
+        inline void set_state(const SVecD<3>& c, const SVecD<3>& m) { set_state(c(0), c(1), c(2), m(0), m(1), m(2)); }
         
         void set_mom(Double_t mom, Double_t sign = 0.);
         

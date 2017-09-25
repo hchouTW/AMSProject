@@ -1,6 +1,12 @@
 #ifndef __TRACKLibs_Prop_C__
 #define __TRACKLibs_Prop_C__
 
+
+#ifdef __HAS_AMS_OFFICE_LIBS__
+#include <TrFit.h>
+#endif // __HAS_AMS_OFFICE_LIBS__
+
+
 namespace TrackSys {
 
 
@@ -326,10 +332,8 @@ void PropPhyCal::set_virtualPhySt(PhySt& part) const {
 
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
-#include <TrProp.h>
-
 Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
-    Short_t sign = MGNumc::Compare(part.dz());
+    Short_t sign = MGNumc::Compare(part.uz());
     if (sign == 0) return false;
     if (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0) return true;
 
@@ -351,8 +355,8 @@ Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
     );
     return true;
 }
-#endif
- 
+#endif // __HAS_AMS_OFFICE_LIBS__
+
 
 // Step Length
 // ward < 0, backward trace

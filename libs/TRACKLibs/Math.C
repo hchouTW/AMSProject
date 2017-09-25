@@ -5,14 +5,14 @@
 namespace TrackSys {
         
 
-MultiGauss::MultiGauss(Double_t sgm) : rand_func_(nullptr)  {
+MultiGauss::MultiGauss(Double_t sgm) : MultiGauss()  {
     multi_gauss_.push_back(std::make_pair(MGMath::ONE, sgm));
     bound_.first  = sgm;
     bound_.second = sgm;
 }
 
 
-MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2) : rand_func_(nullptr)  {
+MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2) : MultiGauss()  {
     Double_t norm = wgt1 + wgt2;
     multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
     multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
@@ -21,7 +21,7 @@ MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm
 }
 
 
-MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3) : rand_func_(nullptr)  {
+MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3) : MultiGauss()  {
     Double_t norm = wgt1 + wgt2 + wgt3;
     multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
     multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
@@ -31,7 +31,7 @@ MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm
 }
 
 
-MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4) : rand_func_(nullptr)  {
+MultiGauss::MultiGauss(Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4) : MultiGauss()  {
     Double_t norm = wgt1 + wgt2 + wgt3 + wgt4;
     multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
     multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
@@ -81,7 +81,6 @@ Double_t MultiGauss::rndm() {
         if      (multi_gauss_.size() == 2) {
             rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])", -ROBUST_*bound_.second, ROBUST_*bound_.second);
             rand_func_->SetNpx(NPX_);
-
         }
         else if (multi_gauss_.size() == 3) {
             rand_func_ = new TF1("rand_func", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])", -ROBUST_*bound_.second, ROBUST_*bound_.second);
@@ -98,6 +97,7 @@ Double_t MultiGauss::rndm() {
                 rand_func_->SetParameter(2*count+1, gauss.second);
                 count++;
             }
+            gRandom->SetSeed(0);
             return rand_func_->GetRandom();
         }
     }

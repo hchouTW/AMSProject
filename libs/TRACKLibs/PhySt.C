@@ -8,6 +8,7 @@ namespace TrackSys {
 void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
     if (sw_eloss_) {
         if (MGNumc::EqualToZero(kpa) || MGNumc::EqualToZero(mos)) return;
+        if (pdf_eloss_ion_.size() == 0) gRandom->SetSeed(0);
 
         std::string ion_var = "([1]/(x*[0]+[1])/[0]/[0])";
         std::string ion_fmt = STR_FMT("(x<-%f)?0.0:TMath::Power(%s, %s)/TMath::Gamma(%s)*TMath::Exp(-%s*([0]*x+TMath::Exp(-[0]*x)))", std::min(LMT_SGM_, MGMath::HALF*mos), ion_var.c_str(), ion_var.c_str(), ion_var.c_str(), ion_var.c_str());
@@ -197,6 +198,11 @@ void PhySt::print() const {
     printStr += STR_FMT("Rig %14.8f\n", rig());
     printStr += STR_FMT("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
     printStr += STR_FMT("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
+    if (arg_()) {
+        printStr += STR_FMT("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(), arg_.rhou());
+        printStr += STR_FMT("Mscat    Tauc %6.2f  Rhoc %6.2f\n", arg_.tauc(), arg_.rhoc());
+        printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.ion(),  arg_.brm());
+    }
     printStr += STR_FMT("=========================================\n");
     COUT(printStr);
 }

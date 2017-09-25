@@ -3,57 +3,57 @@
 
 
 namespace TrackSys {
-
-
-PhyTr::PhyTr(const std::vector<HitSt>& hits, const PartType& type, const Orientation& ortt) : PhyTr() {
-    if (!check(hits)) return;
-    
-    type_ = type;
-    ortt_ = ortt;
-    hits_ = hits;
-    for (auto&& hit : hits) {
-        if (hit.sx()) nhit_(0)++;
-        if (hit.sy()) nhit_(1)++;
-    }
-    if (ortt == Orientation::kDownward) HitSt::Sort(hits_, HitSt::Orientation::kDownward);
-    else                                HitSt::Sort(hits_, HitSt::Orientation::kUpward);
-    part_.reset(type);
-
-    if (!fit()) clear();
-    else        succ_ = true;
-}
         
+    
+void PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
+    if (ortt == Orientation::kDownward) HitSt::Sort(hits, HitSt::Orientation::kDownward);
+    else                                HitSt::Sort(hits, HitSt::Orientation::kUpward);
+}
+
+    
+Bool_t PhyTr::HitCheck(const std::vector<HitSt>& hits) {
+    Short_t nx = 0;
+    Short_t ny = 0;
+    for (auto&& hit : hits) {
+        if (hit.sx()) nx++;
+        if (hit.sy()) ny++;
+    }
+
+    return (nx >= LMTL_NHIT_X && ny >= LMTL_NHIT_Y);
+}
+
 
 void PhyTr::clear() {
     succ_ = false;
-    ortt_ = Orientation::kDownward;
-    nhit_ = SVecI<2>();
-    hits_.clear();
     type_ = PartType::Proton;
+    ortt_ = Orientation::kDownward;
     part_.reset(type_);
-    phys_.clear();
-    marg_.clear();
+    hits_.clear();
     nchi_ = 0.;
     ndf_ = 0;
 }
+        
+
+void PhyTr::print() const {
+    std::cerr << "\n======================================\n";
+    part_.print();
+    for (auto&& hit : hits_) hit.print();
+    std::cerr << "======================================\n";
+}
 
 
-Bool_t PhyTr::check(const std::vector<HitSt>& hits) {
-    Short_t nhit_x = 0;
-    Short_t nhit_y = 0;
-    for (auto&& hit : hits) {
-        if (hit.sx()) nhit_x++;
-        if (hit.sy()) nhit_y++;
-    }
-
-    return (nhit_x >= LMTL_NHIT_X && nhit_y >= LMTL_NHIT_Y);
+PhyTr::PhyTr(const std::vector<HitSt>& hits, const PartType& type, const Orientation& ortt) {
+    clear();
+    if (!HitCheck(hits)) return;
+    type_ = type;
+    ortt_ = ortt;
+    part_.reset(type);
+    hits_ = hits;
+    HitSort(hits_);
 }
 
 
 Bool_t PhyTr::fit() {
-    //MagMgnt::Load();
-    //MatGeoBoxAms::Load();
-
     //const Int_t ntimes = 1000;
 
     COUT("\n==== Analysis ====\n");
@@ -66,15 +66,16 @@ Bool_t PhyTr::fit() {
 
     //nchi_ = 0.;
     //ndf_ = 0;
-    COUT("\n==== Simple ====\n");
-    MGClock::HrsStopwatch sws;
-    //for (Int_t it = 0; it < ntimes; ++it)
-    if (!fit_simple()  ) return false;
-    sws.stop();
-    sws.print();
-    part_.print();
-    COUT("CHI %14.8f\n", nchi_);   
-    
+    //COUT("\n==== Simple ====\n");
+    //MGClock::HrsStopwatch sws;
+    ////for (Int_t it = 0; it < ntimes; ++it)
+    //if (!fit_simple()  ) return false;
+    //sws.stop();
+    //sws.print();
+    //part_.print();
+    //COUT("CHI %14.8f\n", nchi_);   
+   
+    /*
     COUT("\n==== Semi-Simple ====\n");
     MGClock::HrsStopwatch swss;
     //for (Int_t it = 0; it < ntimes; ++it)
@@ -84,6 +85,7 @@ Bool_t PhyTr::fit() {
     swss.print();
     part_.print();
     COUT("CHI %14.8f\n", nchi_);   
+    */
    
     //nchi_ = 0.;
     //ndf_ = 0;
@@ -100,6 +102,7 @@ Bool_t PhyTr::fit() {
 
 
 Bool_t PhyTr::fit_analysis() {
+DEBUG();
     // Linear Fit on X
     // Equation of Motion
     // X  = PX + UX * (Z - RefZ)
@@ -138,6 +141,9 @@ Bool_t PhyTr::fit_analysis() {
             hit.set_dummy_x(px);
         }
     }
+DEBUG();
+std::cout << Form("X Z UX = (%14.8f %14.8f %14.8f)\n", prefit_px, prefit_pz, prefit_ux);
+
 
     // Curve Fit on Y
     // Equation of Motion
@@ -164,14 +170,14 @@ Bool_t PhyTr::fit_analysis() {
 
         const Int_t nstp = 3;
         for (Int_t ih = 1; ih < hits_.size(); ++ih) {
-            SVecD<3>&& ref_l = (hits_.at(ih).coo() - hits_.at(ih-1).coo());
+            SVecD<3>&& ref_l = (hits_.at(ih).c() - hits_.at(ih-1).c());
             SVecD<3>&& ref_u = LA::Unit(ref_l);
             Double_t   ref_s = LA::Mag(ref_l);
             
             SVecD<3> mfldv;
             for (Int_t it = 0; it < nstp; ++it) {
                 Double_t stp = ((static_cast<Double_t>(it) + MGMath::HALF) / static_cast<Double_t>(nstp));
-                SVecD<3>&& ref_m = ((MGMath::ONE - stp) * hits_.at(ih-1).coo() + stp * hits_.at(ih).coo());
+                SVecD<3>&& ref_m = ((MGMath::ONE - stp) * hits_.at(ih-1).c() + stp * hits_.at(ih).c());
                 MagFld&&   mfld  = MagMgnt::Get(ref_m);
                 mfldv += mfld();
             }
@@ -213,6 +219,7 @@ Bool_t PhyTr::fit_analysis() {
         prefit_uy = rsl(1);
         prefit_ea = rsl(2);
     }
+DEBUG();
    
     // Merge Fitting Result
     Double_t prefit_uz = (MGMath::ONE - prefit_ux*prefit_ux - prefit_uy*prefit_uy);
@@ -224,6 +231,8 @@ Bool_t PhyTr::fit_analysis() {
         prefit_ux, prefit_uy, prefit_uz
     );
     part_.set_eta(prefit_ea);
+
+DEBUG();
 
     return true;
 }
@@ -247,11 +256,11 @@ Bool_t PhyTr::fit_simple() {
         PhyJb ppjb(PhyJb::Type::kIdentity);
         for (auto&& hit : hits_) {
             PhyJb curjb;
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, &curjb)) break;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
             ppjb.multiplied(curjb);
             
             SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
-            SVecD<2>&& merr = hit.err(mres);
+            SVecD<2>&& merr = hit.e(mres(0), mres(1));
            
             SMtxSymD<2> micov;
             micov(0, 0) = (hit.sx() ? (MGMath::ONE / merr(0) / merr(0)) : MGMath::ZERO);
@@ -306,6 +315,8 @@ Bool_t PhyTr::fit_simple() {
 
 
 Bool_t PhyTr::fit_semi_simple() {
+    return true;
+    /*
     std::vector<MatFld> mflds(hits_.size());
     {
         PhySt ppst(part_);
@@ -415,6 +426,7 @@ Bool_t PhyTr::fit_semi_simple() {
     }
     
     return succ;
+    */
 }
 
 

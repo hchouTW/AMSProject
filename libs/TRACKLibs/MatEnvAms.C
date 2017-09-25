@@ -10,6 +10,7 @@ namespace TrackSys {
 
 // Set to MatMgnt::Load()
 Bool_t MatMgnt::Load() {
+    return false;
     if (is_load_ && reader_ != nullptr) return true;
     is_load_ = false;
     reader_ = nullptr;

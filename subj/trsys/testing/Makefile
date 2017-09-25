@@ -1,6 +1,8 @@
 -include $(AMSMKfile)
 
 TagetDir = $(AMSCoreSubj)/trsys/testing/vdev
+#ClassLib = $(AMSCoreProd)/vdev/lib/ClassDef.so
+ClassLib = /data1/hchou/17Sep08/lib/ClassDef.so
 
 all :
 	@mkdir -p $(TagetDir)
@@ -10,9 +12,9 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
-	@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
+	#@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
-	make $(TagetDir)/prop
+	#make $(TagetDir)/prop
 	make $(TagetDir)/fit
 
 $(TagetDir)/obj/prop.o : $(TagetDir)/src/prop.C
@@ -26,8 +28,8 @@ $(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
 -include $(TagetDir)/obj/fit.d
 
-$(TagetDir)/fit : $(TagetDir)/obj/fit.o
-	$(LD) -o $@ $+ $(LIBS)
+$(TagetDir)/fit : $(TagetDir)/obj/fit.o $(ClassLib)
+	$(LD) -o $@ $+ $(LIBP)
 
 
 clean :
