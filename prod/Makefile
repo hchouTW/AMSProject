@@ -1,6 +1,7 @@
 -include $(AMSMKfile)
 
-TagetDir = $(AMSCoreProd)/vdev
+Version = vdev
+TagetDir = $(AMSCoreProd)/$(Version)
 
 all :
 	@mkdir -p $(TagetDir)
