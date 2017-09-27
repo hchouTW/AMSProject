@@ -37,84 +37,107 @@ int main(int argc, char * argv[]) {
         dst->SetBranchAddress("g4mc", &fG4mc);
     if (opt.type() == "ISS")
         dst->SetBranchAddress("rti",  &fRti);
-    dst->SetBranchAddress("trg",  &fTrg);
+    //dst->SetBranchAddress("trg",  &fTrg);
     dst->SetBranchAddress("tof",  &fTof);
-    dst->SetBranchAddress("acc",  &fAcc);
+    //dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
-    dst->SetBranchAddress("trd",  &fTrd);
+    //dst->SetBranchAddress("trd",  &fTrd);
     //dst->SetBranchAddress("rich", &fRich);
     //dst->SetBranchAddress("ecal", &fEcal);
-
-
-
-
-
-
-
-
-
-    TFile * ofle = new TFile("fit.root", "RECREATE");
-    TH1D * hmom = new TH1D("hmom", "hmom", 100, 20, 2000);
-    TH1D * hrx = new TH1D("hrx", "hrx", 1600, -300, 300);
-    TH1D * hry = new TH1D("hry", "hry", 1600, -200, 200);
     
-    TH2D * hrig = new TH2D("hrig", "hrig", 10, 20, 2000, 400, -0.05, 0.05);
+    //---------------------------------------------------------------//
+    //---------------------------------------------------------------//
+    //---------------------------------------------------------------//
+    
+    
+    TFile * ofle = new TFile("fit.root", "RECREATE");
+    
+    Axis AXmom("Momentum [GeV]", 20, 20., 16000., AxisScale::kLog);
 
-    std::cout << Form("Entries %lld\n", dst->GetEntries());
+    Axis AXres("Residual [10^{-4} cm]", 800, -300., 300.);
+    Hist * hXres = Hist::New("hXres", "hXres", HistAxis(AXmom, AXres));
+    Hist * hYres = Hist::New("hYres", "hYres", HistAxis(AXmom, AXres));
+    
+    Axis AXrso("(1/Rm - 1/Rt) [1/GV]", 800, -1.0, 1.0);
+    Hist * hCKrso = Hist::New("hCKrso", "hCKrso", HistAxis(AXmom, AXrso));
+    Hist * hCNrso = Hist::New("hCNrso", "hCNrso", HistAxis(AXmom, AXrso));
+    Hist * hHYrso = Hist::New("hHYrso", "hHYrso", HistAxis(AXmom, AXrso));
+
+    std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         //if (entry > 100) break; // testcode
         dst->GetEntry(entry);
         
+        Double_t mc_mom  = (fG4mc->primPart.mom);
+        
+        Double_t bincen = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
+       
+        if (fTof->betaH < 0.3 || fTof->betaH > 1.3) continue;
+        if (fTof->normChisqT > 10.) continue;
+        if (fTof->normChisqC > 10.) continue;
+        if (fTof->Qall < 0.8 || fTof->Qall > 1.8) continue;
+        if (fTof->betaHPatt != 15) continue;
+
         if (fTrk->tracks.size() != 1) continue;
         TrackInfo& track = fTrk->tracks.at(0);
 
-        hmom->Fill(fG4mc->primPart.mom);
+        Short_t countMC = 0;
         for (auto&& hit : fG4mc->primPart.hits) {
-            if (hit.layJ < 3 || hit.layJ > 8) continue;
-            for (auto&& trhit : track.hits) {
-                if (trhit.layJ != hit.layJ) continue;
-                if (trhit.side != 3) continue;
-                Double_t resx = 1e4 * (trhit.coo[0] - hit.coo[0]);
-                Double_t resy = 1e4 * (trhit.coo[1] - hit.coo[1]);
-                hrx->Fill(resx);
-                hry->Fill(resy);
+            if (hit.layJ < 2 || hit.layJ > 8) continue;
+            countMC++;
+        }
+        
+        Short_t countMS = 0;
+        for (auto&& hit : track.hits) {
+            if (hit.layJ < 2 || hit.layJ > 8) continue;
+            countMS++;
+        }
+
+        const Short_t cutNHit = 4;
+        if (countMC <= cutNHit || countMS <= cutNHit) continue;
+
+        std::vector<HitSt> mhits;
+        for (auto&& hit : track.hits) {
+            if (hit.layJ < 2 || hit.layJ > 8) continue;
+            if (hit.side != 3) continue;
+            HitSt mhit(hit.coo[0], hit.coo[1], hit.coo[2]);
+            mhits.push_back(mhit);
+
+            for (auto&& mchit : fG4mc->primPart.hits) {
+                if (mchit.layJ < 3 || mchit.layJ > 8) continue;
+                if (mchit.layJ != hit.layJ) continue;
+                Double_t resx = 1.0e4 * (hit.coo[0] - mchit.coo[0]);
+                Double_t resy = 1.0e4 * (hit.coo[1] - mchit.coo[1]);
+                hXres->fill(mc_mom, resx);
+                hYres->fill(mc_mom, resy);
             }
         }
-       
-        std::vector<HitSt> hits;
-        for (auto&& trhit : track.hits) {
-            if (trhit.layJ < 3 || trhit.layJ > 8) continue;
-            if (trhit.side != 3) continue;
-            HitSt hit(trhit.coo[0], trhit.coo[1], trhit.coo[2]);
-            hits.push_back(hit);
-        }
-        if (hits.size() < 4) continue;
+        if (mhits.size() <= cutNHit) continue;
 
-        PhyTr tr(hits);
-        //tr.print();
+        Double_t mc_irig = (fG4mc->primPart.chrg / fG4mc->primPart.mom);
+        Double_t ck_irig = ((track.status[0][0]) ? 1.0/track.rigidity[0][0] : 0.);
+        Double_t cn_irig = ((track.status[1][0]) ? 1.0/track.rigidity[1][0] : 0.);
+
+        // Fitting by H.Y.Chou
+        //std::cout << Form("\n==== Entry %lld ====\n", entry);
+        PhyArg::SetOpt(false, false);
+        PhyTr tr(mhits);
         tr.fit();
+        //tr.print();
+        Double_t hy_irig = tr.part().irig();
 
-        Double_t diff = (tr.part().irig() - 1./fG4mc->primPart.mom);
-        hrig->Fill(fG4mc->primPart.mom, diff);
+        hCKrso->fill(mc_mom, bincen * (ck_irig - mc_irig));
+        hCNrso->fill(mc_mom, bincen * (cn_irig - mc_irig));
+        hHYrso->fill(mc_mom, bincen * (hy_irig - mc_irig));
     }
 
     ofle->Write();
     ofle->Close();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //---------------------------------------------------------------//
+    //---------------------------------------------------------------//
+    //---------------------------------------------------------------//
     if (fList) { delete fList; fList = nullptr; }
     if (fG4mc) { delete fG4mc; fG4mc = nullptr; }
     if (fRti ) { delete fRti ; fRti  = nullptr; }

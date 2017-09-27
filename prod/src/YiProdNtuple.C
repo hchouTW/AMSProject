@@ -20,12 +20,12 @@ int main(int argc, const char ** argv) {
 	//YiNtuple::setSelectionMode(YiNtuple::COPY);
 
 	DataSelection::setOption(DataSelection::LIST, DataSelection::ON);
-	DataSelection::setOption(DataSelection::RTI, DataSelection::ON);
-	DataSelection::setOption(DataSelection::TRG, DataSelection::ON);
+	DataSelection::setOption(DataSelection::RTI, DataSelection::OFF);
+	DataSelection::setOption(DataSelection::TRG, DataSelection::OFF);
 	DataSelection::setOption(DataSelection::TOF, DataSelection::ON);
-	DataSelection::setOption(DataSelection::ACC, DataSelection::ON);
+	DataSelection::setOption(DataSelection::ACC, DataSelection::OFF);
 	DataSelection::setOption(DataSelection::TRK, DataSelection::ON);
-	DataSelection::setOption(DataSelection::TRD, DataSelection::ON);
+	DataSelection::setOption(DataSelection::TRD, DataSelection::OFF);
 	DataSelection::setOption(DataSelection::RICH, DataSelection::OFF);
 	DataSelection::setOption(DataSelection::ECAL, DataSelection::OFF);
 

@@ -12,8 +12,10 @@ void PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
 
     
 Bool_t PhyTr::HitCheck(const std::vector<HitSt>& hits) {
-    Short_t nx = 0;
-    Short_t ny = 0;
+    // Number of Hit Requirement
+    const Int_t LMTL_NHIT_X = 3;
+    const Int_t LMTL_NHIT_Y = 4;
+    Short_t nx = 0, ny = 0;
     for (auto&& hit : hits) {
         if (hit.sx()) nx++;
         if (hit.sy()) ny++;
@@ -69,30 +71,18 @@ Bool_t PhyTr::fit() {
     //COUT("\n==== Simple ====\n");
     //MGClock::HrsStopwatch sws;
     ////for (Int_t it = 0; it < ntimes; ++it)
-    //if (!fit_simple()  ) return false;
+    if (!fit_simple()  ) return false;
     //sws.stop();
     //sws.print();
     //part_.print();
     //COUT("CHI %14.8f\n", nchi_);   
-   
-    /*
-    COUT("\n==== Semi-Simple ====\n");
-    MGClock::HrsStopwatch swss;
-    //for (Int_t it = 0; it < ntimes; ++it)
-    if (!fit_semi_simple()  ) return false;
-    //if (!fit_simple()  ) return false;
-    swss.stop();
-    swss.print();
-    part_.print();
-    COUT("CHI %14.8f\n", nchi_);   
-    */
    
     //nchi_ = 0.;
     //ndf_ = 0;
     //COUT("\n==== Physics ====\n");
     //MGClock::HrsStopwatch swp;
     ////for (Int_t it = 0; it < ntimes; ++it)
-    //if (!fit_physics() ) return false;
+    if (!fit_physics() ) return false;
     //swp.stop();
     //swp.print();
     //part_.print();
@@ -307,9 +297,88 @@ Bool_t PhyTr::fit_simple() {
 }
 
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+Bool_t PhyTr::fit_physics() {
+    Bool_t succ = false;
+    Bool_t preSucc = false;
+    Bool_t curSucc = false;
+    Int_t  curIter = 1;
+    while (curIter <= LMTU_ITER && !succ) {
+        Int_t ndfx = 0;
+        Int_t ndfy = 0;
+        Double_t chix = 0.;
+        Double_t chiy = 0.;
+        SVecD<5>    gradG;
+        SMtxSymD<5> covGG;
+
+        Int_t cnt_nhit = 0;
+        PhySt ppst(part_);
+        PhyJb ppjb(PhyJb::Type::kIdentity);
+        for (auto&& hit : hits_) {
+            PhyJb curjb;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+            ppjb.multiplied(curjb);
+            
+            SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
+            SVecD<2>&& merr = hit.e(mres(0), mres(1));
+           
+            SMtxSymD<2> micov;
+            micov(0, 0) = (hit.sx() ? (MGMath::ONE / merr(0) / merr(0)) : MGMath::ZERO);
+            micov(1, 1) = (hit.sy() ? (MGMath::ONE / merr(1) / merr(1)) : MGMath::ZERO);
+
+            SVecD<2> mgrad;
+            mgrad(0) = (hit.sx() ? (micov(0, 0) * mres(0)) : MGMath::ZERO);
+            mgrad(1) = (hit.sy() ? (micov(1, 1) * mres(1)) : MGMath::ZERO);
+            
+            PhyJb::SMtxDXYG&& subjb = ppjb.xyg();
+            gradG += LA::Transpose(subjb) * mgrad;
+            covGG += LA::SimilarityT(subjb, micov);
+
+            if (hit.sx()) { ndfx++; chix += (mgrad(0) * mres(0)); } 
+            if (hit.sy()) { ndfy++; chiy += (mgrad(1) * mres(1)); } 
+            
+            cnt_nhit++;
+            if (!hit.sx()) hit.set_dummy_x(ppst.cx());
+        }
+        if (cnt_nhit != hits_.size()) return false;
+        if (!covGG.Invert()) return false;
+        SVecD<5>&& rslG = covGG * gradG;
+
+        part_.set_state_with_uxy(
+            part_.cx() - rslG(0),
+            part_.cy() - rslG(1),
+            part_.cz(),
+            part_.ux() - rslG(2),
+            part_.uy() - rslG(3),
+            ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE)
+        );
+        part_.set_eta(part_.eta() - rslG(4));
+        
+        Int_t    ndf  = ndfx + ndfy;
+        Double_t nchi = ((chix + chiy) / static_cast<Double_t>(ndf));
+        Double_t nchi_rat = std::fabs((nchi - nchi_) / (nchi + nchi_ + CONVG_EPSILON));
+        Bool_t   sign     = (MGNumc::Compare(nchi - nchi_, CONVG_EPSILON) < 0);
+        
+        ndf_ = ndf;
+        nchi_ = nchi;
+
+        curSucc = (curIter >= LMTL_ITER && (sign && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0));
+        
+        succ = (preSucc && curSucc);
+        preSucc = curSucc;
+        
+        curIter++;
+    }
+    
+    return succ;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
 Bool_t PhyTr::fit_semi_simple() {
     return true;
-    /*
     std::vector<MatFld> mflds(hits_.size());
     {
         PhySt ppst(part_);
@@ -419,13 +488,12 @@ Bool_t PhyTr::fit_semi_simple() {
     }
     
     return succ;
-    */
 }
+*/
 
-
+/*
 Bool_t PhyTr::fit_physics() {
     return true;
-/*    
     ////////////////////////////////////////////////////////////////////////////////////////////
     Bool_t succ = false;
     Bool_t preSucc = false;
@@ -482,11 +550,10 @@ Bool_t PhyTr::fit_physics() {
 
             SMtxSymD<5> udjb(SMtxIdSym5D);
     /////////////////////////////////////////////////////////////////////////////////////
-    */
     
     return true;
 }
-
+*/
 
 } // namespace TrackSys
 

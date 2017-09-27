@@ -13,7 +13,7 @@ int main(int argc, char * argv[]) {
 
     const int NL = 3;
     const int IDi = 0;
-    const int IDj = 1;
+    const int IDj = 2;
 
     Int_t  nbinc = 1600;
     Int_t  nbinu = 1600;
@@ -117,7 +117,7 @@ int main(int argc, char * argv[]) {
         TH1D* hTee = new TH1D(Form("hTee%02d", ifle), Form("hTee%02d;Energy Loss [GeV * #beta^{2}/Q^{2}];Events/Bin", ifle), nbinm, binsm[0], binsm[1]);
 
         for (Long64_t it = 0; it < chain->GetEntries(); ++it) {
-            //if (it > 100000) break; // testcode
+            if (it > 100000) break; // testcode
             chain->GetEntry(it);
             if (cz->size() < NL) continue;
             if (mz->size() < NL) continue;
@@ -331,11 +331,15 @@ int main(int argc, char * argv[]) {
     TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
     feloss->SetParameters(1000., 1.0, 0.001, 0.0002); 
     
+    //TF1 * feloss = new TF1("feloss", "[0] * (TMath::Power( ([2]/x)^[4]/[1]/[1], ([2]/x)^[4]/[1]/[1] ) / TMath::Gamma( ([2]/x)^[4]/[1]/[1] )) * TMath::Exp(-( (([2]/x)^[4]/[1]/[1]) ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    //feloss->SetParameters(1000., 1.0, 0.001, 0.0002, 0.0); 
+    
     TGraphErrors* gMee_peak = new TGraphErrors(); gMee_peak->SetNameTitle("gMee_peak", "");
     TGraphErrors* gMee_kpa  = new TGraphErrors(); gMee_kpa ->SetNameTitle("gMee_kpa",  "");
     TGraphErrors* gMee_mpv  = new TGraphErrors(); gMee_mpv ->SetNameTitle("gMee_mpv",  "");
     TGraphErrors* gMee_sgm  = new TGraphErrors(); gMee_sgm ->SetNameTitle("gMee_sgm",  "");
     TGraphErrors* gMee_mos  = new TGraphErrors(); gMee_mos ->SetNameTitle("gMee_mos",  "");
+    TGraphErrors* gMee_pow  = new TGraphErrors(); gMee_pow ->SetNameTitle("gMee_pow",  "");
     
     for (int ifle = 0; ifle < opt.fsize(); ++ifle) {
         double mom = momlst.at(ifle);
@@ -346,10 +350,31 @@ int main(int argc, char * argv[]) {
 
         TH1D* hMee = (TH1D*) ofle->Get(Form("hMee%02d", ifle));
         double peak = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
-        feloss->SetParameters(1000., 1.0, peak, 0.05*peak);
-        hMee->Fit(feloss, "q0", "");
-        hMee->Fit(feloss, "q0", "");
-        hMee->Fit(feloss, "q0", "");
+        feloss->SetParameters(1000., 1.0, peak, 0.1*peak);
+        feloss->SetParameter(1, std::sqrt(2.0)/(1.0/bta/bta+0.5*(bta*bta-1.0)));
+        hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+
+        //feloss->FixParameter(1, std::sqrt(2.0)/(1.0/bta/bta+0.5*(bta*bta-1.0)));
+        //feloss->SetParameter(4, 1.0);
+        //feloss->SetParLimits(4, -1.0, 1.0);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //feloss->ReleaseParameter(1);
+        //feloss->SetParLimits(1, 0.0, TMath::Sqrt(2.0));
+        //if (bta < 0.5) feloss->FixParameter(4, -1.0);
+        //else feloss->FixParameter(4, feloss->GetParameter(4));
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //if (bta > 0.5) feloss->ReleaseParameter(4);
+        //if (bta > 0.5) feloss->SetParLimits(4, -1.0, 1.0);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        //hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+
 
         gMee_peak->SetPoint     (ifle, val, peak);
         gMee_peak->SetPointError(ifle,    0., 0.);
@@ -359,6 +384,8 @@ int main(int argc, char * argv[]) {
         gMee_mpv->SetPointError(ifle,    0., feloss->GetParError(2));
         gMee_sgm->SetPoint     (ifle, val, feloss->GetParameter(3));
         gMee_sgm->SetPointError(ifle,    0., feloss->GetParError(3));
+        gMee_pow->SetPoint     (ifle, val, feloss->GetParameter(4));
+        gMee_pow->SetPointError(ifle,    0., feloss->GetParError(4));
         gMee_mos->SetPoint     (ifle, val, feloss->GetParameter(2)/feloss->GetParameter(3));
         gMee_mos->SetPointError(ifle,    0., 0.);
     }
@@ -378,10 +405,11 @@ int main(int argc, char * argv[]) {
 
         TH1D* hTee = (TH1D*) ofle->Get(Form("hTee%02d", ifle));
         double peak = hTee->GetXaxis()->GetBinCenter(hTee->GetMaximumBin());
-        feloss->SetParameters(1000., 1.0, peak, 0.05*peak);
-        hTee->Fit(feloss, "q0", "");
-        hTee->Fit(feloss, "q0", "");
-        hTee->Fit(feloss, "q0", "");
+        feloss->SetParameters(1000., 1.0, peak, 0.1*peak);
+        feloss->SetParameter(1, std::sqrt(2.0)/(1.0/bta/bta+0.5*(bta*bta-1.0)));
+        hTee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        hTee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        hTee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
 
         gTee_peak->SetPoint     (ifle, val, peak);
         gTee_peak->SetPointError(ifle,    0., 0.);
@@ -418,6 +446,7 @@ int main(int argc, char * argv[]) {
     gMee_mpv ->Write();
     gMee_sgm ->Write();
     gMee_mos ->Write();
+    gMee_pow ->Write();
     
     gTee_peak->Write();
     gTee_kpa ->Write();

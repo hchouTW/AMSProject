@@ -10,7 +10,6 @@ namespace TrackSys {
 
 // Set to MatMgnt::Load()
 Bool_t MatMgnt::Load() {
-    return false;
     if (is_load_ && reader_ != nullptr) return true;
     is_load_ = false;
     reader_ = nullptr;
@@ -230,7 +229,8 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
-    std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
+    std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
+    //std::string g4mat_dir_path = "/data1/hchou/material"; // at NCU
 
     reader_AMS02RAD_ .load(STR_FMT("%s/AMS02RAD.bin" , g4mat_dir_path.c_str()));
     reader_AMS02TRL1_.load(STR_FMT("%s/AMS02TRL1.bin", g4mat_dir_path.c_str()));

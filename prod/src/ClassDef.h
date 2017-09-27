@@ -208,16 +208,16 @@ class HitTRKInfo : public TObject {
 			std::fill_n(chrg, 2, -1);
 
 			cofgX = 0;
-			seedAddrX = -1;
-			seedIndxX = -1;
-			stripSigX.clear();
-			stripSgmX.clear();
+			//seedAddrX = -1;
+			//seedIndxX = -1;
+			//stripSigX.clear();
+			//stripSgmX.clear();
 
 			cofgY = 0;
-			seedAddrY = -1;
-			seedIndxY = -1;
-			stripSigY.clear();
-			stripSgmY.clear();
+			//seedAddrY = -1;
+			//seedIndxY = -1;
+			//stripSigY.clear();
+			//stripSgmY.clear();
 		}
 
 	public :
@@ -231,16 +231,16 @@ class HitTRKInfo : public TObject {
 		Float_t chrg[2];  // charge
 		
 		Float_t              cofgX;     // (elc) cofg	
-		Float_t              seedAddrX; // (elc) seed strip address
-		Float_t              seedIndxX; // (elc) seed strip index
-		std::vector<Float_t> stripSigX; // (elc) strip signal (value)
-		std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
+		//Float_t              seedAddrX; // (elc) seed strip address
+		//Float_t              seedIndxX; // (elc) seed strip index
+		//std::vector<Float_t> stripSigX; // (elc) strip signal (value)
+		//std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
 		
 		Float_t              cofgY;     // (elc) cofg	
-		Float_t              seedAddrY; // (elc) seed strip address
-		Float_t              seedIndxY; // (elc) seed strip index
-		std::vector<Float_t> stripSigY; // (elc) strip signal (value)
-		std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
+		//Float_t              seedAddrY; // (elc) seed strip address
+		//Float_t              seedIndxY; // (elc) seed strip index
+		//std::vector<Float_t> stripSigY; // (elc) strip signal (value)
+		//std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
 
 	ClassDef(HitTRKInfo, 6)
 };

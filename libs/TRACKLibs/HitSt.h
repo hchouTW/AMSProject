@@ -46,9 +46,12 @@ class HitSt {
         SVecD<3>   err_;  // [cm]
     
     protected :
-        static constexpr Double_t DEFERR_X_ =  24.0e-4;
-        static constexpr Double_t DEFERR_Y_ =  10.0e-4;
-        static constexpr Double_t DEFERR_Z_ = 300.0e-4;
+        //static constexpr Double_t DEFERR_X_ =  24.0e-4;
+        //static constexpr Double_t DEFERR_Y_ =  10.0e-4;
+        //static constexpr Double_t DEFERR_Z_ = 300.0e-4;
+        static constexpr Double_t DEFERR_X_ =  1.83212e-3;
+        static constexpr Double_t DEFERR_Y_ =  7.30612e-4;
+        static constexpr Double_t DEFERR_Z_ =  3.00000e-2;
         static MultiGauss pdf_meas_x_;
         static MultiGauss pdf_meas_y_;
         static MultiGauss pdf_meas_z_;
@@ -65,8 +68,11 @@ class HitSt {
         }
 };
         
-MultiGauss HitSt::pdf_meas_x_(1.0);
-MultiGauss HitSt::pdf_meas_y_(1.0);
+//MultiGauss HitSt::pdf_meas_x_(1.0);
+//MultiGauss HitSt::pdf_meas_y_(1.0);
+//MultiGauss HitSt::pdf_meas_z_;
+MultiGauss HitSt::pdf_meas_x_(4.09179469252831607e-01, 1.0, 5.23373315836982100e-01, 1.70439163373578140e+00, 6.74472149101862095e-02, 4.07118529353972392e+00);
+MultiGauss HitSt::pdf_meas_y_(3.63365247299082317e-01, 1.0, 4.96610520364725028e-01, 2.01176547880407108e+00, 1.40024232336192656e-01, 5.07893382534094773e+00);
 MultiGauss HitSt::pdf_meas_z_;
 
 

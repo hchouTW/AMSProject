@@ -1136,25 +1136,25 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
   		
 			// origin info
-			short xseedAddr = (xcls) ? xcls->GetSeedAddress() : -1;
-			short yseedAddr = (ycls) ? ycls->GetSeedAddress() : -1;
+			//short xseedAddr = (xcls) ? xcls->GetSeedAddress() : -1;
+			//short yseedAddr = (ycls) ? ycls->GetSeedAddress() : -1;
 
-			short xseedIndx = (xcls) ? xcls->GetSeedIndex() : -1;
-			short yseedIndx = (ycls) ? ycls->GetSeedIndex() : -1;
+			//short xseedIndx = (xcls) ? xcls->GetSeedIndex() : -1;
+			//short yseedIndx = (ycls) ? ycls->GetSeedIndex() : -1;
 
-			std::vector<float> xstripSig;
-			std::vector<float> xstripSgm;
-			for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
-				xstripSig.push_back(xcls->GetSignal(it));
-				xstripSgm.push_back(xcls->GetNoise(it));
-			}
+			//std::vector<float> xstripSig;
+			//std::vector<float> xstripSgm;
+			//for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
+			//	xstripSig.push_back(xcls->GetSignal(it));
+			//	xstripSgm.push_back(xcls->GetNoise(it));
+			//}
 			
-			std::vector<float> ystripSig;
-			std::vector<float> ystripSgm;
-			for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
-				ystripSig.push_back(ycls->GetSignal(it));
-				ystripSgm.push_back(ycls->GetNoise(it));
-			}
+			//std::vector<float> ystripSig;
+			//std::vector<float> ystripSgm;
+			//for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
+			//	ystripSig.push_back(ycls->GetSignal(it));
+			//	ystripSgm.push_back(ycls->GetNoise(it));
+			//}
 			
 			HitTRKInfo hit;
 			hit.clsId[0] = clsIdX;
@@ -1171,16 +1171,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.chrg[1]  = ychrg;
 			
 			hit.cofgX     = xloc;
-			hit.seedAddrX = xseedAddr;
-			hit.seedIndxX = xseedIndx;
-			hit.stripSigX = xstripSig;
-			hit.stripSgmX = xstripSgm;
+			//hit.seedAddrX = xseedAddr;
+			//hit.seedIndxX = xseedIndx;
+			//hit.stripSigX = xstripSig;
+			//hit.stripSgmX = xstripSgm;
 			
 			hit.cofgY     = yloc;
-			hit.seedAddrY = yseedAddr;
-			hit.seedIndxY = yseedIndx;
-			hit.stripSigY = ystripSig;
-			hit.stripSgmY = ystripSgm;
+			//hit.seedAddrY = yseedAddr;
+			//hit.seedIndxY = yseedIndx;
+			//hit.stripSigY = ystripSig;
+			//hit.stripSgmY = ystripSgm;
 	
 			track.hits.push_back(hit);
 		} // for loop - layer
@@ -1344,25 +1344,26 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	    		float xloc = (xcls->GetCofG() + xcls->GetSeedAddress());
 	    		float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
 	    		
-	    		short xseedAddr = xcls->GetSeedAddress();
-	    		short yseedAddr = ycls->GetSeedAddress();
+			    // origin info
+	    		//short xseedAddr = xcls->GetSeedAddress();
+	    		//short yseedAddr = ycls->GetSeedAddress();
 
-	    		short xseedIndx = xcls->GetSeedIndex();
-	    		short yseedIndx = ycls->GetSeedIndex();
+	    		//short xseedIndx = xcls->GetSeedIndex();
+	    		//short yseedIndx = ycls->GetSeedIndex();
 
-	    		std::vector<float> xstripSig;
-	    		std::vector<float> xstripSgm;
-	    		for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
-	    			xstripSig.push_back(xcls->GetSignal(it));
-	    			xstripSgm.push_back(xcls->GetNoise(it));
-	    		}
+	    		//std::vector<float> xstripSig;
+	    		//std::vector<float> xstripSgm;
+	    		//for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
+	    		//	xstripSig.push_back(xcls->GetSignal(it));
+	    		//	xstripSgm.push_back(xcls->GetNoise(it));
+	    		//}
 	    		
-	    		std::vector<float> ystripSig;
-	    		std::vector<float> ystripSgm;
-	    		for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
-	    			ystripSig.push_back(ycls->GetSignal(it));
-	    			ystripSgm.push_back(ycls->GetNoise(it));
-	    		}
+	    		//std::vector<float> ystripSig;
+	    		//std::vector<float> ystripSgm;
+	    		//for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
+	    		//	ystripSig.push_back(ycls->GetSignal(it));
+	    		//	ystripSgm.push_back(ycls->GetNoise(it));
+	    		//}
 	    		
 	    		AMSPoint coo;
 	    		int mult = -1;
@@ -1403,16 +1404,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	    		hit.chrg[1]  = ychrg;
 	    		
 	    		hit.cofgX     = xloc;
-	    		hit.seedAddrX = xseedAddr;
-	    		hit.seedIndxX = xseedIndx;
-	    		hit.stripSigX = xstripSig;
-	    		hit.stripSgmX = xstripSgm;
+	    		//hit.seedAddrX = xseedAddr;
+	    		//hit.seedIndxX = xseedIndx;
+	    		//hit.stripSigX = xstripSig;
+	    		//hit.stripSgmX = xstripSgm;
 	    		
 	    		hit.cofgY     = yloc;
-	    		hit.seedAddrY = yseedAddr;
-	    		hit.seedIndxY = yseedIndx;
-	    		hit.stripSigY = ystripSig;
-	    		hit.stripSgmY = ystripSgm;
+	    		//hit.seedAddrY = yseedAddr;
+	    		//hit.seedIndxY = yseedIndx;
+	    		//hit.stripSigY = ystripSig;
+	    		//hit.stripSgmY = ystripSgm;
 	    
 	    		fTrk.otherHits.push_back(hit);
 	    	}
@@ -1584,7 +1585,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		
 		// Vertex based on TrdHSegment (New Codes)
 		short vtxSide = 0;
-		SVecD<3> vtxCoo;
+        MGROOT::SVecD<3> vtxCoo;
 
 		// full
 		if (nsegx >= 2 && nsegy >= 2) {
@@ -1597,11 +1598,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 			int iter = 1;
 			const int maxIter = 8;
 			while (iter <= maxIter) {
-				SVecD<3> grad;
-				SMtxD<3> icov;
+				MGROOT::SVecD<3> grad;
+				MGROOT::SMtxD<3> icov;
 				for (int d = 0; d <= 1; ++d) {
-					SVecD<3> dgrad;
-					SMtxD<3> dicov;
+					MGROOT::SVecD<3> dgrad;
+					MGROOT::SMtxD<3> dicov;
 					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
 						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
 						float dz = (vtxCoo[2] - seg->z);
@@ -1620,7 +1621,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				}
 				bool ret = icov.Invert();
 				if (!ret) break;
-				SVecD<3> rsl = icov * grad;
+				MGROOT::SVecD<3> rsl = icov * grad;
 				vtxCoo = vtxCoo - rsl;
 				iter++;
 			}
@@ -1628,7 +1629,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 		// part
 		else if (nsegx >= 2 || nsegy >= 2) {
-			SVecD<2> dvtx[2];
+			MGROOT::SVecD<2> dvtx[2];
 			AMSPoint trPnt; AMSDir trDir;
 			trtk->Interpolate(120., trPnt, trDir);
 			dvtx[0](0) = trPnt[0];
@@ -1639,8 +1640,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 			for (int d = 0; d <= 1; ++d) {
 				if (HSegMap.at(d).size() < 2) continue;
 				for (int iter = 1; iter <= 5; ++iter) {
-					SVecD<2> dgrad;
-					SMtxD<2> dicov;
+					MGROOT::SVecD<2> dgrad;
+					MGROOT::SMtxD<2> dicov;
 					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
 						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
 						float dz = (dvtx[d](1) - seg->z);
@@ -1658,7 +1659,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 					}
 					bool ret = dicov.Invert();
 					if (!ret) break;
-					SVecD<2> drsl = dicov * dgrad;
+					MGROOT::SVecD<2> drsl = dicov * dgrad;
 					dvtx[d] = dvtx[d] - drsl;
 				}
 			}
@@ -1983,7 +1984,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 		// Number of photoelectrons expected for a given track, beta and charge.
 		const int    npart = 5;
-		const bool   openCal[npart] = { 1, 0, 0, 1, 0 };
+		const bool   openCal[npart] = { 1, 0, 0, 1, 1 };
 		const double chrg[npart] = { 1., 1., 1., 1., 1. };
 		const double mass[npart] = 
 		  { 0.000510999,   // electron

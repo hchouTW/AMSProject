@@ -12,9 +12,9 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
-	#@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
+	@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
-	#make $(TagetDir)/prop
+	make $(TagetDir)/prop
 	make $(TagetDir)/fit
 
 $(TagetDir)/obj/prop.o : $(TagetDir)/src/prop.C

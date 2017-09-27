@@ -94,15 +94,7 @@ class TransferFunc {
         inline const SVecD<3>&    ue() const { return kappa_ue_; }
         inline const Double_t&    ue(Int_t i) const { return kappa_ue_(i); }
         
-        inline const SVecD<3>&    ut() const { return kappa_ut_; }
-        inline const Double_t&    ut(Int_t i) const { return kappa_ut_(i); }
-        
-        inline const SVecD<3>&    ur() const { return kappa_ur_; }
-        inline const Double_t&    ur(Int_t i) const { return kappa_ur_(i); }
-        
         inline const Double_t&    ee() const { return kappa_ee_; }
-        inline const Double_t&    ei() const { return kappa_ei_; }
-        inline const Double_t&    eb() const { return kappa_eb_; }
     
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
@@ -112,12 +104,7 @@ class TransferFunc {
         SMtxD<3, 3> kappa_uu_; // d(du/ds) / du
         SVecD<3>    kappa_ue_; // d(du/ds) / de
         
-        SVecD<3>    kappa_ut_; // d(du/ds) / dtau
-        SVecD<3>    kappa_ur_; // d(du/ds) / drho
-        
         Double_t    kappa_ee_; // d(de/ds) / de
-        Double_t    kappa_ei_; // d(de/ds) / dion
-        Double_t    kappa_eb_; // d(de/ds) / dbrm
 };
 
 
@@ -171,7 +158,7 @@ class PhyJb {
 
 class TransferPhyJb {
     public :
-        TransferPhyJb(Bool_t mat, const TransferFunc& tf, PhyJb& jb);
+        TransferPhyJb(const TransferFunc& tf, PhyJb& jb);
         ~TransferPhyJb() {}
 
         inline const SMtxD<2, 2>& uu() const { return uu_; }
@@ -180,25 +167,12 @@ class TransferPhyJb {
         inline const SVecD<2>& ue() const { return ue_; }
         inline const Double_t& ue(Int_t i) const { return ue_(i); }
         
-        inline const SVecD<2>& ut() const { return ut_; }
-        inline const Double_t& ut(Int_t i) const { return ut_(i); }
-
-        inline const SVecD<2>& ur() const { return ur_; }
-        inline const Double_t& ur(Int_t i) const { return ur_(i); }
-
         inline const Double_t& ee() const { return ee_; }
-        inline const Double_t& ei() const { return ei_; }
-        inline const Double_t& eb() const { return eb_; }
 
     private :
-        Bool_t      mat_;
         SMtxD<2, 2> uu_;
         SVecD<2>    ue_;
-        SVecD<2>    ut_;
-        SVecD<2>    ur_;
         Double_t    ee_;
-        Double_t    ei_;
-        Double_t    eb_;
     
     private :
         static constexpr Short_t X = 0;
@@ -209,10 +183,6 @@ class TransferPhyJb {
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
-        static constexpr Short_t JTAU = 0;
-        static constexpr Short_t JRHO = 1;
-        static constexpr Short_t JION = 2;
-        static constexpr Short_t JBRM = 3;
 };
 
 

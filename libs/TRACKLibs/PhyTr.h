@@ -13,11 +13,6 @@ class PhyTr {
         inline static void HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
 
         inline static Bool_t HitCheck(const std::vector<HitSt>& hits);
-
-    protected :
-        // Number of Hit Requirement
-        static constexpr Int_t LMTL_NHIT_X = 3;
-        static constexpr Int_t LMTL_NHIT_Y = 4;
         
     public :
         PhyTr(const std::vector<HitSt>& hits, const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward);
@@ -33,7 +28,6 @@ class PhyTr {
         void   clear();
         Bool_t fit_analysis();
         Bool_t fit_simple();
-        Bool_t fit_semi_simple();
         Bool_t fit_physics();
         
     private :

@@ -32,6 +32,15 @@
     TF1 * feloss2 = new TF1("feloss2", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
     feloss2->SetParameters(1000., 1.0, 0.001, 0.0002); 
     
+    TF1 * feloss3 = new TF1("feloss3", "[0] * TMath::Power( ([2]/x/[1]/[1])^[4], ([2]/x/[1]/[1])^[4] ) / TMath::Gamma( ([2]/x/[1]/[1])^[4] ) * TMath::Exp(-( ([2]/x/[1]/[1])^[4] ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    feloss3->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
+    
+    TF1 * feloss4 = new TF1("feloss4", "[0] * TMath::Power( (([2]/x)^[4])/[1]/[1], (([2]/x)^[4])/[1]/[1] ) / TMath::Gamma( (([2]/x)^[4])/[1]/[1] ) * TMath::Exp(-( (([2]/x)^[4])/[1]/[1] ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    feloss4->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
+    
+    TF1 * feloss5 = new TF1("feloss5", "[0] * (TMath::Power( ([2]/x)^([4])/[1]/[1], ([2]/x)^([4])/[1]/[1] ) / TMath::Gamma( ([2]/x)^([4])/[1]/[1] )) * TMath::Exp(-( (([2]/x)^([4])/[1]/[1]) ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    feloss5->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
+    
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 
 	//---------------//
