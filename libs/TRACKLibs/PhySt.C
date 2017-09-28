@@ -33,6 +33,23 @@ void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
         eloss_ion_ = func->GetRandom();
     }
 }
+        
+
+void VirtualPhySt::reset(Bool_t field) {
+    field_ = field;
+    sign_ = 1;
+    len_ = MGMath::ZERO;
+    nrl_ = MGMath::ZERO;
+    tau_ = std::move(SVecD<3>(1.0, 0.0, 0.0));
+    rho_ = std::move(SVecD<3>(0.0, -1.0, 0.0));
+    mscatu_  = MGMath::ZERO;
+    mscatcu_ = MGMath::ZERO;
+    mscatcl_ = MGMath::ZERO;
+    eloss_ion_kpa_ = MGMath::ZERO;
+    eloss_ion_mpv_ = MGMath::ZERO;
+    eloss_ion_sgm_ = MGMath::ZERO;
+    eloss_brm_men_ = MGMath::ZERO;
+}
 
 
 void PhySt::reset(const PartType& type, Bool_t sw_mscat, Bool_t sw_eloss) {
@@ -209,7 +226,7 @@ void PhySt::print() const {
         
 
 void PhySt::symbk(Bool_t is_rndm) {
-    if (!arg_()) { zero(); return; }
+    if (!arg_() || !vst_()) { zero(); return; }
     if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mos(), vst_.nrl()); }
 
     if (arg_.mscat()) {

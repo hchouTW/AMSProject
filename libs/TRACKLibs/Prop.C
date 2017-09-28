@@ -42,19 +42,8 @@ void OrthCoord::reset(const SVecD<3>& org, const SVecD<3>& seed) {
 }
 
 
-MotionFunc::MotionFunc(PhySt& part) {
-    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
-    
-    MagFld&& mag = MagMgnt::Get(part.c());
-    SVecD<3>&& crsub = LA::Cross(part.u(), mag());
-    
-    zeta_c_ = std::move(part.u());
-    zeta_u_ = std::move((Lambda * part.eta()) * crsub);
-    zeta_e_ = MGMath::ZERO;
-}
-
-
-MotionFunc::MotionFunc(PhySt& part, const MatPhyFld& mphy) {
+MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
+    Bool_t field = (part.field() && mphy != nullptr && (*mphy)());
     Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.c());
@@ -63,38 +52,15 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld& mphy) {
     zeta_c_ = std::move(part.u());
     zeta_u_ = std::move((Lambda * part.eta()) * crsub);
     
-    if (part.field()) orth_.reset(part.u(), mag());
+    if (field) orth_.reset(part.u(), mag());
     
-    if (part.arg().eloss() && mphy()) zeta_e_ = mphy.eloss_ion_mpv();
-    else                              zeta_e_ = MGMath::ZERO;
+    if (field && part.arg().eloss()) zeta_e_ = mphy->eloss_ion_mpv();
+    else                             zeta_e_ = MGMath::ZERO;
 }
 
 
-TransferFunc::TransferFunc(PhySt& part) {
-    Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
-    
-    MagFld&& mag = MagMgnt::Get(part.c());
-    SVecD<3>&& crsub = LA::Cross(part.u(), mag());
-    
-    kappa_cu_(0) = MGMath::ONE;
-    kappa_cu_(1) = MGMath::ONE;
-    kappa_cu_(2) = MGMath::ONE;
-
-    kappa_uu_(0, 1) =  mag.z();
-    kappa_uu_(0, 2) = -mag.y();
-    kappa_uu_(1, 0) = -mag.z();
-    kappa_uu_(1, 2) =  mag.x();
-    kappa_uu_(2, 0) =  mag.y();
-    kappa_uu_(2, 1) = -mag.x();
-    kappa_uu_ = std::move((Lambda * part.eta()) * kappa_uu_);
- 
-    kappa_ue_ = std::move(Lambda * crsub);
-    
-    kappa_ee_ = MGMath::ZERO;
-}
-
-
-TransferFunc::TransferFunc(PhySt& part, const MatPhyFld& mphy) {
+TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
+    Bool_t field = (part.field() && mphy != nullptr && (*mphy)());
     Double_t Lambda = PROP_FACT * part.part().chrg_to_mass();
     
     MagFld&& mag = MagMgnt::Get(part.c());
@@ -114,37 +80,58 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld& mphy) {
  
     kappa_ue_ = std::move(Lambda * crsub);
 
-    if (part.arg().eloss() && mphy()) kappa_ee_ = mphy.eloss_ion_mpv();
-    else                              kappa_ee_ = MGMath::ZERO;
+    if (field && part.arg().eloss()) kappa_ee_ = mphy->eloss_ion_mpv();
+    else                             kappa_ee_ = MGMath::ZERO;
 }
  
 
-void PhyJb::init(const Type& type) {
-    mat_ = false;
-    num_rad_len_ = 0.0; 
-    if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); 
-    else                         jb_gg_ = std::move(SMtxD<5, 5>());
-    jb_gl_ = std::move(SMtxD<5, 4>()); 
+void PhyJb::init() {
+    field_ = false;
+    jb_gg_ = std::move(SMtxId()); 
+    jb_gl_ = std::move(SMtxDGL()); 
 }
  
 
-void PhyJb::set_mat(Bool_t mat, Double_t num_rad_len) {
-    num_rad_len_ = (mat) ? num_rad_len : 0.0;
-    mat_ = mat;
+void PhyJb::set(PhySt& part) {
+    if (!part.field()) return;
+    VirtualPhySt& vst = part.vst();
+    field_ = (part.field() && vst());
+    if (!field_) return;
+    
+    if (part.arg().mscat()) {
+        jb_gl_(JPX, JTAU) = vst.mscatcu() * vst.tau(X);
+        jb_gl_(JPY, JTAU) = vst.mscatcu() * vst.tau(Y);
+        jb_gl_(JUX, JTAU) = vst.mscatu()  * vst.tau(X);
+        jb_gl_(JUY, JTAU) = vst.mscatu()  * vst.tau(Y);
+        jb_gl_(JEA, JTAU) = MGMath::ZERO;
+        
+        jb_gl_(JPX, JRHO) = vst.mscatcu() * vst.rho(X);
+        jb_gl_(JPY, JRHO) = vst.mscatcu() * vst.rho(Y);
+        jb_gl_(JUX, JRHO) = vst.mscatu()  * vst.rho(X);
+        jb_gl_(JUY, JRHO) = vst.mscatu()  * vst.rho(Y);
+        jb_gl_(JEA, JRHO) = MGMath::ZERO;
+    }
 }
 
 
 void PhyJb::multiplied(PhyJb& phyJb) {
-    if      (mat_ && phyJb.mat()) jb_gl_ = std::move(phyJb.gg() * jb_gl_ + phyJb.gl());
-    else if (mat_)                jb_gl_ = std::move(phyJb.gg() * jb_gl_);
-    else if (phyJb.mat())         jb_gl_ = std::move(phyJb.gl());
-
+    if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
     jb_gg_ = std::move(phyJb.gg() * jb_gg_);
-
-    mat_ = (mat_ || phyJb.mat());
-    if (mat_) num_rad_len_ = num_rad_len_ + phyJb.num_rad_len();
 }
         
+
+void PhyJb::print() const {
+    std::string printStr;
+    printStr += STR_FMT("============================================= PhyJb =============================================\n");
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f\n", jb_gg_(JPX, JPX), jb_gg_(JPX, JPY), jb_gg_(JPX, JUX), jb_gg_(JPX, JUY), jb_gg_(JPX, JEA), jb_gl_(JPX, JTAU), jb_gl_(JPX, JRHO));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f\n", jb_gg_(JPY, JPX), jb_gg_(JPY, JPY), jb_gg_(JPY, JUX), jb_gg_(JPY, JUY), jb_gg_(JPY, JEA), jb_gl_(JPY, JTAU), jb_gl_(JPY, JRHO));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f\n", jb_gg_(JUX, JPX), jb_gg_(JUX, JPY), jb_gg_(JUX, JUX), jb_gg_(JUX, JUY), jb_gg_(JUX, JEA), jb_gl_(JUX, JTAU), jb_gl_(JUX, JRHO));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f\n", jb_gg_(JUY, JPX), jb_gg_(JUY, JPY), jb_gg_(JUY, JUX), jb_gg_(JUY, JUY), jb_gg_(JUY, JEA), jb_gl_(JUY, JTAU), jb_gl_(JUY, JRHO));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f\n", jb_gg_(JEA, JPX), jb_gg_(JEA, JPY), jb_gg_(JEA, JUX), jb_gg_(JEA, JUY), jb_gg_(JEA, JEA), jb_gl_(JEA, JTAU), jb_gl_(JEA, JRHO));
+    printStr += STR_FMT("=================================================================================================\n");
+    COUT(printStr); 
+}
+
 
 TransferPhyJb::TransferPhyJb(const TransferFunc& tf, PhyJb& jb) {
     uu_(X, X) = tf.uu(X, X) * jb.gg(JUX, JUX) + tf.uu(X, Y) * jb.gg(JUY, JUX) + tf.ue(X) * jb.gg(JEA, JUX);
@@ -164,6 +151,7 @@ void PropPhyCal::init() {
     sw_mscat_      = false;
     sw_eloss_      = false;
     eta0_abs_      = MGMath::ZERO;
+    field_         = false;
     sign_          = 1; 
     len_           = MGMath::ZERO;
     nrl_           = MGMath::ZERO;
@@ -221,6 +209,11 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         vec_invloc_.clear();
         vec_invlocsqr_.clear();
         vec_mscat_.clear();
+
+        if (!MGNumc::Valid(mscatu_)  || MGNumc::Compare(mscatu_)  <= 0) mscatu_  = MGMath::ZERO;
+        if (!MGNumc::Valid(mscatcu_) || MGNumc::Compare(mscatcu_) <= 0) mscatcu_ = MGMath::ZERO;
+        if (!MGNumc::Valid(mscatcl_) || MGNumc::Compare(mscatcl_) <= 0) mscatcl_ = MGMath::ZERO;
+        field_ = true;
     }
     if (sw_eloss_) {
         MatPhyFld&& mpfld = MatPhy::Get(mfld, part);
@@ -241,6 +234,12 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
             eloss_ion_mpv_ = (std::fabs(part.eta_abs() - eta0_abs_) / std::sqrt(part.eta_abs() * eta0_abs_));
 
             eloss_brm_men_ = mpfld.eloss_brm_men();
+        
+            if (!MGNumc::Valid(eloss_ion_kpa_) || MGNumc::Compare(eloss_ion_kpa_) <= 0) eloss_ion_kpa_ = MGMath::ZERO;
+            if (!MGNumc::Valid(eloss_ion_sgm_) || MGNumc::Compare(eloss_ion_sgm_) <= 0) eloss_ion_sgm_ = MGMath::ZERO;
+            if (!MGNumc::Valid(eloss_ion_mpv_) || MGNumc::Compare(eloss_ion_mpv_) <= 0) eloss_ion_mpv_ = MGMath::ZERO;
+            if (!MGNumc::Valid(eloss_brm_men_) || MGNumc::Compare(eloss_brm_men_) <= 0) eloss_brm_men_ = MGMath::ZERO;
+            field_ = true;
         }
     }
 }
@@ -257,17 +256,21 @@ void PropPhyCal::push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>&
         vec_vac_.push_back(vac);
         vec_len_.push_back(len);
         if (vac) {
-            vec_eft_.push_back(0.0);
-            vec_invloc_.push_back(0.0);
-            vec_invlocsqr_.push_back(0.0);
-            vec_mscat_.push_back(0.0);
+            vec_eft_.push_back(MGMath::ZERO);
+            vec_invloc_.push_back(MGMath::ZERO);
+            vec_invlocsqr_.push_back(MGMath::ZERO);
+            vec_mscat_.push_back(MGMath::ZERO);
         }
         else {
-            Double_t invloc = (MGMath::ONE - mpfld.loc()) * len;
-            Double_t invlocsqr = (MGMath::ONE - MGMath::TWO * mpfld.loc() + mpfld.locsqr()) * (len * len);
+            Double_t invloc    = (MGMath::ONE - mpfld.loc());
+            Double_t invlocsqr = (MGMath::ONE - MGMath::TWO * mpfld.loc() + mpfld.locsqr());
+            
+            if (MGNumc::Compare(invloc)    <= 0) invloc    = MGMath::ZERO;
+            if (MGNumc::Compare(invlocsqr) <= 0) invlocsqr = MGMath::ZERO;
+
             vec_eft_.push_back(len * mpfld.efft());
-            vec_invloc_.push_back(invloc);
-            vec_invlocsqr_.push_back(invlocsqr);
+            vec_invloc_.push_back((invloc * len));
+            vec_invlocsqr_.push_back((invlocsqr * len * len));
             vec_mscat_.push_back(wgt);
         }
         if (vac) return;
@@ -287,15 +290,21 @@ void PropPhyCal::push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>&
 
 
 void PropPhyCal::set_virtualPhySt(PhySt& part) const {
-    part.vst().reset();
+    part.vst().reset(field_);
     part.vst().set_sign(sign_);
     part.vst().set_len(len_);
-    part.vst().set_nrl(nrl_);
-    part.vst().set_orth(tau_, rho_);
-    part.vst().set_mscatu(mscatu_);
-    part.vst().set_mscatc(mscatcu_, mscatcl_);
-    part.vst().set_eloss_ion(eloss_ion_kpa_, eloss_ion_mpv_, eloss_ion_sgm_);
-    part.vst().set_eloss_brm(eloss_brm_men_);
+    if (part.vst()()) {
+        part.vst().set_nrl(nrl_);
+        if (part.arg().mscat()) {
+            part.vst().set_orth(tau_, rho_);
+            part.vst().set_mscatu(mscatu_);
+            part.vst().set_mscatc(mscatcu_, mscatcl_);
+        }
+        if (part.arg().eloss()) {
+            part.vst().set_eloss_ion(eloss_ion_kpa_, eloss_ion_mpv_, eloss_ion_sgm_);
+            part.vst().set_eloss_brm(eloss_brm_men_);
+        }
+    }
 }
 
 
@@ -432,7 +441,7 @@ Double_t PropMgnt::GetStepToZ(PhySt& part, Double_t resStepZ) {
 Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
     Bool_t withMf = (mfld != nullptr);
     Bool_t withJb = (phyJb != nullptr);
-    if (withJb) phyJb->init(PhyJb::Type::kIdentity);
+    if (withJb) phyJb->init();
 
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -445,8 +454,9 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
         Double_t cur_step = GetStep(part, res_step);
 
         Bool_t valid = false;
-        PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
+        PhyJb* curJb = ((withJb) ? (new PhyJb()) : nullptr);
         MatFld&& curMfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
+        
         switch (method_) {
             case Method::kRungeKuttaNystrom : valid = PropWithRungeKuttaNystrom(cur_step, part, curMfld, ppcal, curJb); break;
             case Method::kEulerHeun         : valid = PropWithEulerHeun(cur_step, part, curMfld, ppcal, curJb); break;
@@ -474,6 +484,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
     
     ppcal.normalized(mgfld, part);
     ppcal.set_virtualPhySt(part);
+    if (withJb) phyJb->set(part);
 
     return is_succ;
 }
@@ -482,7 +493,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
 Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
     Bool_t withMf = (mfld != nullptr);
     Bool_t withJb = (phyJb != nullptr);
-    if (withJb) phyJb->init(PhyJb::Type::kIdentity);
+    if (withJb) phyJb->init();
     
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -495,7 +506,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
         Double_t cur_step  = GetStepToZ(part, res_stepz);
 
         Bool_t valid = false;
-        PhyJb * curJb = ((withJb) ? (new PhyJb()) : nullptr);
+        PhyJb* curJb = ((withJb) ? (new PhyJb()) : nullptr);
         MatFld&& curMfld = (part.field() ? MatMgnt::Get(cur_step, part) : MatFld(std::fabs(cur_step)));
 
         switch (method_) {
@@ -525,6 +536,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
     
     ppcal.normalized(mgfld, part);
     ppcal.set_virtualPhySt(part);
+    if (withJb) phyJb->set(part);
    
     return is_succ;
 }
@@ -560,7 +572,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
-    MotionFunc mn0(st0, mp0);
+    MotionFunc mn0(st0, &mp0);
     
     part.set_state_with_cos(
         st0.cx() + step * mn0.cx() + ss1o2 * mn0.ux(),
@@ -581,10 +593,9 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
  
    
     if (withJb) {
-        TransferFunc tf0(st0, mp0);
+        TransferFunc tf0(st0, &mp0);
 
-        phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(withMf, mfld.num_rad_len());
+        phyJb->init();
         
         phyJb->gg(JPX, JUX) += step * tf0.cu(X);
         phyJb->gg(JPY, JUY) += step * tf0.cu(Y);
@@ -629,7 +640,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
-    MotionFunc mn0(st0, mp0);
+    MotionFunc mn0(st0, &mp0);
     
     PhySt st1 = part;
     st1.set_state_with_cos(
@@ -647,7 +658,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         else        return false;
     }
     MatPhyFld&& mp1 = MatPhy::Get(mfld, st1);
-    MotionFunc mn1(st1, mp1);
+    MotionFunc mn1(st1, &mp1);
    
     part.set_state_with_cos(
         st0.cx() + step * mn0.cx() + ss1o6 * (MGMath::TWO * mn0.ux() + mn1.ux()),
@@ -668,10 +679,10 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
 
     
     if (withJb) {
-        TransferFunc tf0(st0, mp0);
-        TransferFunc tf1(st1, mp1);
+        TransferFunc tf0(st0, &mp0);
+        TransferFunc tf1(st1, &mp1);
 
-        PhyJb jb1(PhyJb::Type::kIdentity);
+        PhyJb jb1;
         
         jb1.gg(JPX, JUX) += step * tf0.cu(X);
         jb1.gg(JPY, JUY) += step * tf0.cu(Y);
@@ -696,8 +707,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
 
         TransferPhyJb tj1(tf1, jb1);
 
-        phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(withMf, mfld.num_rad_len());
+        phyJb->init();
         
         phyJb->gg(JPX, JUX) += step * tf0.cu(X);
         phyJb->gg(JPY, JUY) += step * tf0.cu(Y);
@@ -745,7 +755,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
-    MotionFunc mn0(st0, mp0);
+    MotionFunc mn0(st0, &mp0);
 
     PhySt st1 = part;
     st1.set_state_with_cos(
@@ -763,7 +773,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         else        return false;
     }
     MatPhyFld&& mp1 = MatPhy::Get(mfld, st1);
-    MotionFunc mn1(st1, mp1);
+    MotionFunc mn1(st1, &mp1);
     
     PhySt st2 = part;
     st2.set_state_with_cos(
@@ -781,7 +791,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         else        return false;
     }
     MatPhyFld&& mp2 = MatPhy::Get(mfld, st2);
-    MotionFunc mn2(st2, mp2);
+    MotionFunc mn2(st2, &mp2);
     
     PhySt st3 = part;
     st3.set_state_with_cos(
@@ -799,7 +809,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         else        return false;
     }
     MatPhyFld&& mp3 = MatPhy::Get(mfld, st3);
-    MotionFunc mn3(st3, mp3);
+    MotionFunc mn3(st3, &mp3);
     
     part.set_state_with_cos(
         st0.cx() + step * mn0.cx() + ss1o6 * (mn0.ux() + mn1.ux() + mn2.ux()),
@@ -820,12 +830,12 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
     
     
     if (withJb) {
-        TransferFunc tf0(st0, mp0);
-        TransferFunc tf1(st1, mp1);
-        TransferFunc tf2(st2, mp2);
-        TransferFunc tf3(st3, mp3);
+        TransferFunc tf0(st0, &mp0);
+        TransferFunc tf1(st1, &mp1);
+        TransferFunc tf2(st2, &mp2);
+        TransferFunc tf3(st3, &mp3);
 
-        PhyJb jb1(PhyJb::Type::kIdentity);
+        PhyJb jb1;
         
         jb1.gg(JPX, JUX) += s1o2 * tf0.cu(X);
         jb1.gg(JPY, JUY) += s1o2 * tf0.cu(Y);
@@ -850,7 +860,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         
         TransferPhyJb tj1(tf1, jb1);
         
-        PhyJb jb2(PhyJb::Type::kIdentity);
+        PhyJb jb2;
         
         jb2.gg(JPX, JUX) += s1o2 * tf0.cu(X);
         jb2.gg(JPY, JUY) += s1o2 * tf0.cu(Y);
@@ -875,7 +885,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         
         TransferPhyJb tj2(tf2, jb2);
         
-        PhyJb jb3(PhyJb::Type::kIdentity);
+        PhyJb jb3;
         
         jb3.gg(JPX, JUX) += step * tf0.cu(X);
         jb3.gg(JPY, JUY) += step * tf0.cu(Y);
@@ -900,8 +910,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         
         TransferPhyJb tj3(tf3, jb3);
         
-        phyJb->init(PhyJb::Type::kIdentity);
-        phyJb->set_mat(withMf, mfld.num_rad_len());
+        phyJb->init();
         
         phyJb->gg(JPX, JUX) += step * tf0.cu(X);
         phyJb->gg(JPY, JUY) += step * tf0.cu(Y);

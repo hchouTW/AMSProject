@@ -9,9 +9,10 @@
 
 RunFile=${AMSCore}/subj/trsys/testing/vdev/fit
 DataType=MC
-Stream=lst/flist.mc.pr2016000
+#Stream=lst/flist.ncu.mc.pr1800
+Stream=lst/flist.ncu.mc.pr0510
 OutputDir=.
 GroupId=1
-GroupSize=15
+GroupSize=1
 
 ${RunFile} ${DataType} ${Stream} ${GroupId} ${GroupSize} ${OutputDir}

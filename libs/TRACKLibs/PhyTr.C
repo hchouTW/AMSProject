@@ -82,7 +82,7 @@ Bool_t PhyTr::fit() {
     //COUT("\n==== Physics ====\n");
     //MGClock::HrsStopwatch swp;
     ////for (Int_t it = 0; it < ntimes; ++it)
-    if (!fit_physics() ) return false;
+    //if (!fit_physics() ) return false;
     //swp.stop();
     //swp.print();
     //part_.print();
@@ -108,7 +108,7 @@ Bool_t PhyTr::fit_analysis() {
         SVecD<2>    res;
         for (auto&& hit : hits_) {
             if (!hit.sx()) continue;
-            Double_t ex  = hit.ex(0.0);
+            Double_t ex  = hit.ex();
             Double_t err = (MGMath::ONE / ex / ex);
             Double_t dz1 = hit.cz() - prefit_pz;
             Double_t dz2 = dz1 * dz1;
@@ -180,7 +180,7 @@ Bool_t PhyTr::fit_analysis() {
         Double_t    cur_Ae = MGMath::ZERO;
         for (Int_t ih = 0; ih < hits_.size(); ++ih) {
             HitSt& hit = hits_.at(ih);
-            Double_t ey  = hit.ey(0.0);
+            Double_t ey  = hit.ey();
             Double_t err = (MGMath::ONE / ey / ey);
             
             cur_Au += stp.at(ih);
@@ -236,7 +236,7 @@ Bool_t PhyTr::fit_simple() {
 
         Int_t cnt_nhit = 0;
         PhySt ppst(part_);
-        PhyJb ppjb(PhyJb::Type::kIdentity);
+        PhyJb ppjb;
         for (auto&& hit : hits_) {
             PhyJb curjb;
             if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
@@ -314,12 +314,12 @@ Bool_t PhyTr::fit_physics() {
 
         Int_t cnt_nhit = 0;
         PhySt ppst(part_);
-        PhyJb ppjb(PhyJb::Type::kIdentity);
+        PhyJb ppjb;
         for (auto&& hit : hits_) {
             PhyJb curjb;
             if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
             ppjb.multiplied(curjb);
-            
+        
             SVecD<2> mres(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
             SVecD<2>&& merr = hit.e(mres(0), mres(1));
            

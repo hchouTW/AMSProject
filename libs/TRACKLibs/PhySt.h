@@ -22,7 +22,7 @@ class PhyArg {
         PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
-        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { mat_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; } 
+        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; } 
         
         inline void set_mscat(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) { if (sw_mscat_) {mscatu_tau_ = tauu; mscatu_rho_ = rhou; mscatc_tau_ = tauc; mscatc_rho_ = rhoc; } }
         
@@ -40,7 +40,7 @@ class PhyArg {
 
         void rndm(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatc(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
 
-        inline const Bool_t& operator() () const { return mat_; }
+        inline const Bool_t& operator() () const { return field_; }
 
         inline const Bool_t& mscat() const { return sw_mscat_; }
         inline const Bool_t& eloss() const { return sw_eloss_; }
@@ -56,7 +56,7 @@ class PhyArg {
         //inline static MultiGauss& pdf_mscat() { return pdf_mscat_; }
 
     private :
-        Bool_t   mat_;
+        Bool_t   field_;
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
         Double_t mscatu_tau_;
@@ -90,9 +90,11 @@ class VirtualPhySt {
         VirtualPhySt() { reset(); }
         ~VirtualPhySt() {}
 
-        inline void reset() { sign_ = 1; len_ = 0.0; nrl_ = 0.0; tau_ = std::move(SVecD<3>(1.0, 0.0, 0.0)); rho_ = std::move(SVecD<3>(0.0, -1.0, 0.0)); mscatu_ = 0.0; mscatcu_ = 0.0; mscatcl_ = 0.0; eloss_ion_kpa_ = 0.0; eloss_ion_mpv_ = 0.0; eloss_ion_sgm_ = 0.0; eloss_brm_men_ = 0.0; }
+        inline void reset(Bool_t field = false);
+       
+        inline const Bool_t& operator() () const { return field_; }
 
-        inline void set_sign(Short_t sign = 1) { sign_ = (sign>=0)?1:-1; }
+        inline void set_sign(Short_t sign = 1) { sign_ = ((sign>=0)?1:-1); }
     
         inline const Short_t& sign() { return sign_; }
 
@@ -105,6 +107,8 @@ class VirtualPhySt {
         inline void set_orth(const SVecD<3>& tau, const SVecD<3>& rho) { tau_ = tau; rho_ = rho; }
         inline const SVecD<3>& tau() const { return tau_; }
         inline const SVecD<3>& rho() const { return rho_; }
+        inline const Double_t& tau(Int_t idx) const { return tau_(idx); }
+        inline const Double_t& rho(Int_t idx) const { return rho_(idx); }
 
         inline void set_mscatu(Double_t mscatu) { mscatu_ = mscatu; }
         inline void set_mscatc(Double_t mscatcu, Double_t mscatcl) { mscatcu_ = mscatcu; mscatcl_ = mscatcl; } 
@@ -113,8 +117,8 @@ class VirtualPhySt {
         inline const Double_t& mscatcu() const { return mscatcu_; }
         inline const Double_t& mscatcl() const { return mscatcl_; }
 
-        inline SVecD<3> symbk_mscatu(Double_t tauu = 0.0, Double_t rhou = 0.0) const { return ((tauu*mscatu_)*tau_ + (rhou*mscatu_)*rho_); }
-        inline SVecD<3> symbk_mscatc(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) const { return ((tauu*mscatcu_+tauc*mscatcl_)*tau_ + (rhou*mscatcu_+rhoc*mscatcl_)*rho_); }
+        inline SVecD<3> symbk_mscatu(Double_t tauu = 0.0, Double_t rhou = 0.0) const { return (field_ ? ((tauu*mscatu_)*tau_ + (rhou*mscatu_)*rho_) : SVecD<3>()); }
+        inline SVecD<3> symbk_mscatc(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) const { return (field_ ? ((tauu*mscatcu_+tauc*mscatcl_)*tau_ + (rhou*mscatcu_+rhoc*mscatcl_)*rho_) : SVecD<3>()); }
 
         inline void set_eloss_ion(Double_t kpa, Double_t mpv, Double_t sgm) { eloss_ion_kpa_ = kpa; eloss_ion_mpv_ = mpv; eloss_ion_sgm_ = sgm; }
         inline void set_eloss_brm(Double_t men) { eloss_brm_men_ = men; }
@@ -126,9 +130,10 @@ class VirtualPhySt {
 
         inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
-        inline Double_t symbk_eloss(Double_t ion = 0.0, Double_t brm = 0.0) const { return (sign_ * (ion * (eloss_ion_kpa_*eloss_ion_sgm_) + brm * eloss_brm_men_)); }
+        inline Double_t symbk_eloss(Double_t ion = 0.0, Double_t brm = 0.0) const { return (field_ ? (sign_ * (ion * (eloss_ion_kpa_*eloss_ion_sgm_) + brm * eloss_brm_men_)) : MGMath::ZERO); }
 
     private :
+        Bool_t   field_;
         Short_t  sign_;
 
         Double_t len_;

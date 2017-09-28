@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data1/hchou/17Sep08/src/ClassDef.h"
-#include "/data1/hchou/17Sep08/src/ClassDef.C"
+#include "/data1/hchou/17SEP27/src/ClassDef.h"
+#include "/data1/hchou/17SEP27/src/ClassDef.C"
 
 using namespace std;
 
@@ -35,8 +35,8 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("list", &fList);
     if (opt.type() == "MC")
         dst->SetBranchAddress("g4mc", &fG4mc);
-    if (opt.type() == "ISS")
-        dst->SetBranchAddress("rti",  &fRti);
+    //if (opt.type() == "ISS")
+    //    dst->SetBranchAddress("rti",  &fRti);
     //dst->SetBranchAddress("trg",  &fTrg);
     dst->SetBranchAddress("tof",  &fTof);
     //dst->SetBranchAddress("acc",  &fAcc);
@@ -48,11 +48,11 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    
+    PhyArg::SetOpt(true, true);
     
     TFile * ofle = new TFile("fit.root", "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 20, 20., 16000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 10, 0.5, 10., AxisScale::kLog);
 
     Axis AXres("Residual [10^{-4} cm]", 800, -300., 300.);
     Hist * hXres = Hist::New("hXres", "hXres", HistAxis(AXmom, AXres));
@@ -63,8 +63,10 @@ int main(int argc, char * argv[]) {
     Hist * hCNrso = Hist::New("hCNrso", "hCNrso", HistAxis(AXmom, AXrso));
     Hist * hHYrso = Hist::New("hHYrso", "hHYrso", HistAxis(AXmom, AXrso));
 
+    Long64_t printRate = dst->GetEntries()/50;
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
+        if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         //if (entry > 100) break; // testcode
         dst->GetEntry(entry);
         
@@ -120,7 +122,7 @@ int main(int argc, char * argv[]) {
 
         // Fitting by H.Y.Chou
         //std::cout << Form("\n==== Entry %lld ====\n", entry);
-        PhyArg::SetOpt(false, false);
+
         PhyTr tr(mhits);
         tr.fit();
         //tr.print();

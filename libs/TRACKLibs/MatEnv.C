@@ -48,10 +48,11 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
             elm.at(it) = true;
             den.at(it) = (mfld.efft_len() * mfld.den().at(it));
         }
-        Double_t loclen = mfld.loc() * mfld.real_len();
+        Double_t loclen    = mfld.loc() * mfld.real_len();
+        Double_t locsqrlen = mfld.locsqr() * mfld.real_len() * mfld.real_len();
         Double_t num_rad_len = mfld.num_rad_len();
         loc         += (real_len + loclen) * num_rad_len;
-        locsqr      += (real_len * real_len + loclen * loclen + MGMath::TWO * real_len * loclen) * num_rad_len;
+        locsqr      += (real_len * real_len + locsqrlen + MGMath::TWO * real_len * loclen) * num_rad_len;
         inv_rad_len += num_rad_len;
         efft_len += mfld.efft_len();
         real_len += mfld.real_len();
@@ -64,8 +65,8 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
             if (!elm.at(it)) continue;
             den.at(it) = (den.at(it) / efft_len);
         }
-        loc         = (loc / real_len / inv_rad_len);
-        locsqr      = (locsqr / (real_len * real_len) / inv_rad_len);
+        loc         = ((loc / (real_len)) / inv_rad_len);
+        locsqr      = ((locsqr / (real_len * real_len)) / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
 
         efft = (efft_len / real_len);
@@ -377,8 +378,12 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     if (itcnt != 0) {
         Double_t efft = static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp);
         Double_t efft_len = efft * real_len;
-        Double_t loc = ((MGMath::HALF + static_cast<Double_t>(suml) / static_cast<Double_t>(nstp)) / static_cast<Double_t>(itcnt));
-        Double_t locsqr = (((static_cast<Double_t>(sumll + suml) + MGMath::HALF * MGMath::HALF) / static_cast<Double_t>(nstp * nstp)) / static_cast<Double_t>(itcnt)); 
+        Double_t sftloc = (MGMath::HALF / static_cast<Double_t>(nstp));
+        Double_t sftsqr = (sftloc * sftloc);
+        Double_t avgloc = (static_cast<Double_t>(suml)  / static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp));
+        Double_t avgsqr = (static_cast<Double_t>(sumll) / static_cast<Double_t>(itcnt) / static_cast<Double_t>(nstp * nstp));
+        Double_t loc    = (avgloc + sftloc);
+        Double_t locsqr = (avgsqr + MGMath::TWO * sftloc * avgloc + sftsqr);
 
         return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft, loc, locsqr);
     }

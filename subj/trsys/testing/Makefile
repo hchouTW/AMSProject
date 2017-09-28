@@ -1,8 +1,9 @@
 -include $(AMSMKfile)
 
+Version=17SEP27
 TagetDir = $(AMSCoreSubj)/trsys/testing/vdev
-#ClassLib = $(AMSCoreProd)/vdev/lib/ClassDef.so
-ClassLib = /data1/hchou/17Sep08/lib/ClassDef.so
+#ClassLib = $(AMSCoreProd)/${Version}/lib/ClassDef.so
+ClassLib = /data1/hchou/${Version}/lib/ClassDef.so
 
 all :
 	@mkdir -p $(TagetDir)

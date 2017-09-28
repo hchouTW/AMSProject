@@ -290,13 +290,17 @@ Bool_t MagMgnt::Load() {
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
     is_load_ = MagGeoBoxAms::Load();
-#else
+#endif // __HAS_AMS_OFFICE_LIBS__
+#ifdef __HAS_TESTPROP__
+    is_load_ = false;
+#endif // __HAS_TESTPROP__
+#ifdef __HAS_TESTFIT__
     if (!geo_box_reader_.exist()) {
         std::string file_path = "/data3/hchou/AMSData/MagDB/MagTest.bin";
         geo_box_reader_.load(file_path);
     }
     is_load_ = (geo_box_reader_.exist());
-#endif // __HAS_AMS_OFFICE_LIBS__
+#endif // __HAS_TESTFIT__
 
     return is_load_;
 }

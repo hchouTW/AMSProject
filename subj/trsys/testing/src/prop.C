@@ -13,7 +13,7 @@ int main(int argc, char * argv[]) {
 
     const int NL = 3;
     const int IDi = 0;
-    const int IDj = 2;
+    const int IDj = 1;
 
     Int_t  nbinc = 1600;
     Int_t  nbinu = 1600;

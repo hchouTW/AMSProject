@@ -50,8 +50,7 @@ const SVecD<3> OrthCoord::AXIS_Z(0, 0, 1);
 
 class MotionFunc {
     public :
-        MotionFunc(PhySt& part);
-        MotionFunc(PhySt& part, const MatPhyFld& mphy);
+        MotionFunc(PhySt& part, const MatPhyFld* mphy = nullptr);
         ~MotionFunc() {}
         
         inline const OrthCoord& orth() const { return orth_; }
@@ -81,8 +80,7 @@ class MotionFunc {
 
 class TransferFunc {
     public :
-        TransferFunc(PhySt& part);
-        TransferFunc(PhySt& part, const MatPhyFld& mphy);
+        TransferFunc(PhySt& part, const MatPhyFld* mphy = nullptr);
         ~TransferFunc() {}
         
         inline const SVecD<3>&    cu() const { return kappa_cu_; }
@@ -110,13 +108,8 @@ class TransferFunc {
 
 class PhyJb {
     public :
-        enum class Type {
-            kZero = 0, kIdentity = 1
-        };
-
-    public :
         static constexpr Int_t DIM_G = 5;
-        static constexpr Int_t DIM_L = 4;
+        static constexpr Int_t DIM_L = 2;
 
         using SMtxDGG = SMtxD<DIM_G, DIM_G>;
         using SMtxDGL = SMtxD<DIM_G, DIM_L>;
@@ -125,19 +118,18 @@ class PhyJb {
         using SMtxDXYL = SMtxD<2, DIM_L>;
     
     public :
-        PhyJb() : mat_(false), num_rad_len_(0.0) {}
-        PhyJb(const Type& type) : mat_(false), num_rad_len_(0.0) { if (type == Type::kIdentity) jb_gg_ = std::move(SMtxId()); }
+        PhyJb() { init(); }
         ~PhyJb() {}
 
-        inline void init(const Type& type);
-
-        inline void set_mat(Bool_t mat, Double_t num_rad_len = 0.);
+        inline void init();
+        
+        inline void set(PhySt& part);
 
         inline void multiplied(PhyJb& phyJb);
 
-        inline const Bool_t& mat() const { return mat_; }
+        inline void print() const;
 
-        inline const Double_t& num_rad_len() const { return num_rad_len_; }
+        inline const Bool_t& field() const { return field_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
@@ -149,10 +141,23 @@ class PhyJb {
         inline SMtxDXYL xyl() { return jb_gl_.Sub<SMtxDXYL>(0, 0); }
 
     private :
-        Bool_t    mat_;
-        Double_t  num_rad_len_;
+        Bool_t    field_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;
+    
+    private :
+        static constexpr Short_t X = 0;
+        static constexpr Short_t Y = 1;
+        static constexpr Short_t E = 2;
+        static constexpr Short_t JPX = 0;
+        static constexpr Short_t JPY = 1;
+        static constexpr Short_t JUX = 2;
+        static constexpr Short_t JUY = 3;
+        static constexpr Short_t JEA = 4;
+        static constexpr Short_t JTAU = 0;
+        static constexpr Short_t JRHO = 1;
+        static constexpr Short_t JION = 2;
+        static constexpr Short_t JBRM = 3;
 };
 
 
@@ -196,7 +201,7 @@ class PropPhyCal {
 
         void push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
 
-        Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
+        //Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
 
         const Short_t& sign() const { return sign_; }
         
@@ -222,7 +227,8 @@ class PropPhyCal {
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
         Double_t eta0_abs_;
-        
+       
+        Bool_t   field_;
         Short_t  sign_;
         Double_t len_;
         Double_t nrl_;
