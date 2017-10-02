@@ -22,11 +22,11 @@ class PhyArg {
         PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
-        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; } 
+        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; tune_eloss_ion_ = MGMath::ONE; } 
         
         inline void set_mscat(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) { if (sw_mscat_) {mscatu_tau_ = tauu; mscatu_rho_ = rhou; mscatc_tau_ = tauc; mscatc_rho_ = rhoc; } }
         
-        inline void set_eloss(Double_t ion = 0.0, Double_t brm = 0.0) { if (sw_eloss_) { eloss_ion_ = ((ion<-4.0)?0.0:ion); eloss_brm_ = ((brm<0.0)?0.0:brm); } }
+        inline void set_eloss(Double_t ion = 0.0, Double_t brm = 0.0, Double_t ionlmt = 0.0) { if (sw_eloss_) { eloss_ion_ = (ion<-std::max(LMT_SGM_, ionlmt)?-std::max(LMT_SGM_, ionlmt):ion); eloss_brm_ = ((brm<0.0)?0.0:brm); } }
         
         inline void set(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0, Double_t ion = 0.0, Double_t brm = 0.0) { set_mscat(tauu, rhou, tauc, rhoc); set_eloss(ion, brm); }
 
@@ -52,8 +52,21 @@ class PhyArg {
         
         inline const Double_t& ion() const { return eloss_ion_; }
         inline const Double_t& brm() const { return eloss_brm_; }
-        
-        //inline static MultiGauss& pdf_mscat() { return pdf_mscat_; }
+       
+        inline Double_t etauu() const { return pdf_mscat_.efft_sgm(mscatu_tau_); }
+        inline Double_t erhou() const { return pdf_mscat_.efft_sgm(mscatu_rho_); }
+        inline Double_t etauc() const { return pdf_mscat_.efft_sgm(mscatc_tau_); }
+        inline Double_t erhoc() const { return pdf_mscat_.efft_sgm(mscatc_rho_); }
+      
+        // Note: Expert Tool
+        inline void set_tune_ion(Double_t tune = 1.0) { if (sw_eloss_) { 
+            if      (tune < MGMath::ZERO) tune_eloss_ion_ = MGMath::ZERO;
+            else if (tune > MGMath::ONE)  tune_eloss_ion_ = MGMath::ONE;
+            else                          tune_eloss_ion_ = tune;
+        } }
+        inline const Double_t& tune_ion() const { return tune_eloss_ion_; }
+
+        inline static MultiGauss& pdf_mscat() { return pdf_mscat_; }
 
     private :
         Bool_t   field_;
@@ -65,6 +78,9 @@ class PhyArg {
         Double_t mscatc_rho_;
         Double_t eloss_ion_;
         Double_t eloss_brm_;
+
+        // Note: Expert Tool
+        Double_t tune_eloss_ion_;
         
     protected :
         static MultiGauss pdf_mscat_;
@@ -127,6 +143,7 @@ class VirtualPhySt {
         inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
         inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
         inline Double_t        eloss_ion_mos() const { return ( MGNumc::EqualToZero(eloss_ion_sgm_) ? MGMath::ZERO : (eloss_ion_mpv_/eloss_ion_sgm_) ); }
+        inline Double_t        eloss_ion_lmt() const { Double_t lmt = (eloss_ion_mpv_/(eloss_ion_kpa_*eloss_ion_sgm_)); return ((MGNumc::Valid(lmt) && MGNumc::Compare(lmt)>0) ? lmt : MGMath::ZERO); }
 
         inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
@@ -157,7 +174,7 @@ class VirtualPhySt {
 class PhySt {
     public :
         PhySt(const PartType& type = PartType::Proton, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
-        PhySt(const PartInfo& part, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(part.type()); }
+        PhySt(const PartInfo& info, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info.type()); }
         ~PhySt() {}
 
         void reset(const PartType& type = PartType::Proton, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
@@ -182,7 +199,9 @@ class PhySt {
 
         void print() const;
 
-        inline const PartInfo& part() const { return part_; }
+        inline const PartInfo& info() const { return info_; }
+        inline const Int_t&    chrg() const { return (info_.chrg()); }
+        inline const Double_t& mass() const { return (info_.mass()); }
 
         inline const Double_t& mom()   const { return mom_; }
         inline const Double_t& eng()   const { return eng_; } 
@@ -220,7 +239,7 @@ class PhySt {
         void symbk(Bool_t is_rndm = false);
 
     private :
-        PartInfo part_;
+        PartInfo info_;
 
         Double_t mom_;
         Double_t eng_;

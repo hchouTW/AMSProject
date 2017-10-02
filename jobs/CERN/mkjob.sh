@@ -210,6 +210,12 @@ cp -fa ${proj_env} ${jobdir}/env.sh
 cp -fa ${proj_bin} ${jobdir}/jobexe
 cp -fa ${proj_lst} ${jobdir}/flist
 
+# libClassDef
+proj_libClassDef=${proj_path}/lib/libClassDef.so
+if [ -f ${proj_libClassDef} ]; then
+    cp -fa ${proj_libClassDef} ${jobdir}/libClassDef.so
+fi
+
 datadir=${storage_path}/${PROJPATH}/${PROJVERSION}/${proj_title}
 
 echo "[PROJECT]
@@ -266,7 +272,14 @@ cp -fa \${jobDir}/env.sh \${PWD}/env.sh
 cp -fa \${jobDir}/jobexe \${PWD}/jobexe
 cp -fa \${jobDir}/flist \${PWD}/flist
 
+# libClassDef
+libClassDef=\${jobDir}/libClassDef.so
+if [ -f \${libClassDef} ]; then
+    cp -fa \${libClassDef} \${PWD}/libClassDef.so
+fi
+
 source \${PWD}/env.sh
+LD_LIBRARY_PATH=\${PWD}:\${LD_LIBRARY_PATH}
 
 tmpData=\${PWD}/data
 mkdir -p \${tmpData}
@@ -300,7 +313,8 @@ do
         continue
     fi
 
-    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee \${locLog}
+    ldd \${PWD}/jobexe | tee \${locLog}
+    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${locLog}
     
     rootFile=\`ls \${tmpData} | grep root\`
     rootPath=\${tmpData}/\${rootFile}

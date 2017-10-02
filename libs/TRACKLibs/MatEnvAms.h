@@ -19,31 +19,31 @@ namespace MatAms {
     constexpr Float_t MAGNETIC_RADIUS = 53.0;
     constexpr Float_t RICH_BOUND = 17;
     
-    constexpr std::array<Long64_t, DIM> RAD_N   {   480,  480,    16 };
+    constexpr std::array<Long64_t, DIM> RAD_N   {   240,  240,    16 };
     constexpr std::array<Double_t, DIM> RAD_MIN {  -120, -120, 165.0 };
     constexpr std::array<Double_t, DIM> RAD_MAX {   120,  120, 173.0 };
     
-    constexpr std::array<Long64_t, DIM> TRL1_N   {  280, 280,    14 };
+    constexpr std::array<Long64_t, DIM> TRL1_N   {  140, 140,    14 };
     constexpr std::array<Double_t, DIM> TRL1_MIN {  -70, -70, 158.0 };
     constexpr std::array<Double_t, DIM> TRL1_MAX {   70,  70, 165.0 };
 
-    constexpr std::array<Long64_t, DIM> UTRD_N   {  440,  440,    20 };
+    constexpr std::array<Long64_t, DIM> UTRD_N   {  220,  220,    20 };
     constexpr std::array<Double_t, DIM> UTRD_MIN { -110, -110, 146.0 };
     constexpr std::array<Double_t, DIM> UTRD_MAX {  110,  110, 156.0 };
 
-    constexpr std::array<Long64_t, DIM> TRD_N   {   400,  400,   120 };
+    constexpr std::array<Long64_t, DIM> TRD_N   {   200,  200,   120 };
     constexpr std::array<Double_t, DIM> TRD_MIN {  -100, -100,  85.0 };
     constexpr std::array<Double_t, DIM> TRD_MAX {   100,  100, 145.0 };
     
-    constexpr std::array<Long64_t, DIM> LTRD_N   {  320, 320,   10 };
+    constexpr std::array<Long64_t, DIM> LTRD_N   {  160, 160,   10 };
     constexpr std::array<Double_t, DIM> LTRD_MIN {  -80, -80, 79.0 };
     constexpr std::array<Double_t, DIM> LTRD_MAX {   80,  80, 84.0 };
 
-    constexpr std::array<Long64_t, DIM> UTOF_N   { 260, 260,   34 };
+    constexpr std::array<Long64_t, DIM> UTOF_N   { 130, 130,   34 };
     constexpr std::array<Double_t, DIM> UTOF_MIN { -65, -65, 60.0 };
     constexpr std::array<Double_t, DIM> UTOF_MAX {  65,  65, 77.0 };
     
-    constexpr std::array<Long64_t, DIM> UITR_N   {  280, 280,    4 };
+    constexpr std::array<Long64_t, DIM> UITR_N   {  140, 140,    4 };
     constexpr std::array<Double_t, DIM> UITR_MIN {  -70, -70, 58.0 };
     constexpr std::array<Double_t, DIM> UITR_MAX {   70,  70, 60.0 };
     

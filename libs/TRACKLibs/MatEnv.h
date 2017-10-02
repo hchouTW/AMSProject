@@ -104,7 +104,7 @@ class MatGeoBoxCreator {
         MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Long64_t yn, Double_t ymin, Double_t ymax, Long64_t zn, Double_t zmin, Double_t zmax, const std::string& file_path = "MatGeoBox.bin");
         ~MatGeoBoxCreator() { save_and_close(); }
 
-        void fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM], Bool_t calculated = true);
+        void fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t mol[MatProperty::NUM_ELM], Bool_t calculated = true);
 
         inline Bool_t is_open() { return is_open_; }
        
@@ -113,7 +113,7 @@ class MatGeoBoxCreator {
         void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]);
 
     protected :
-        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; }
+        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; vol_ = 0.; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; }
 
     private :
         static constexpr Long64_t  DIM_ = 3;
@@ -124,6 +124,7 @@ class MatGeoBoxCreator {
         void*                      file_ptr_;
         Long64_t                   max_len_;
         MatGeoBox*                 geo_box_;
+        Double_t                   vol_;
         std::array<Double_t, DIM_> dlt_;
         std::array<Long64_t, 2>    fact_;
         Long64_t                                   cnt_;

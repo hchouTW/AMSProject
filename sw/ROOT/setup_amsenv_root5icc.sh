@@ -56,6 +56,7 @@ AMSVersion=vdev
 ROOTARCH=linuxx8664icc5.34
 export AMSSRC=${Offline}/${AMSVersion}
 export AMSLIB=${AMSSRC}/lib/${ROOTARCH}
+export LD_LIBRARY_PATH=${AMSLIB}:${LD_LIBRARY_PATH}
 
 export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir

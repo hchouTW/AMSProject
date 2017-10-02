@@ -19,7 +19,7 @@ all :
 	@cp -fa $(PWD)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.tcc 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.C 2> /dev/null
 	make $(TagetDir)/obj/dict.o
-	make $(TagetDir)/lib/ClassDef.so
+	make $(TagetDir)/lib/libClassDef.so
 	make $(TagetDir)/YiProdNtuple
 
 $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $(TagetDir)/src/LinkDef.h
@@ -29,7 +29,7 @@ $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $
 $(TagetDir)/obj/dict.o : $(TagetDir)/src/dict.C
 	$(CXX) -c -o $@ $(FLGS) $<
 
-$(TagetDir)/lib/ClassDef.so : $(TagetDir)/src/dict.C
+$(TagetDir)/lib/libClassDef.so : $(TagetDir)/src/dict.C
 	$(CXX) -fPIC -shared $^ -o $@ $(FLGS)
 	#@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm # only for ROOT6
 
@@ -37,8 +37,8 @@ $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD 
 -include $(TagetDir)/obj/YiProdNtuple.d
 
-$(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o $(TagetDir)/lib/ClassDef.so
-	$(LD) -o $@ $+ $(LIBP)
+$(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o
+	$(LD) -o $@ $+ $(LIBP) -L$(TagetDir)/lib -lClassDef
 
 clean :
 	@rm -fv $(TagetDir)/env/*

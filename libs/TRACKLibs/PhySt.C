@@ -53,11 +53,11 @@ void VirtualPhySt::reset(Bool_t field) {
 
 
 void PhySt::reset(const PartType& type, Bool_t sw_mscat, Bool_t sw_eloss) {
-    part_ = std::move(PartInfo(type));
+    info_ = std::move(PartInfo(type));
     mom_ = 0;
     eng_ = 0;
     bta_ = 0;
-    eta_ = part_.mass();
+    eta_ = info_.mass();
     irig_ = 0;
     coo_ = std::move(SVecD<3>(0, 0, 0));
     dir_ = std::move(SVecD<3>(0, 0, -1));
@@ -112,7 +112,7 @@ void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double
     Double_t norm = std::sqrt(mx * mx + my * my + mz * mz);
     if (MGNumc::EqualToZero(norm)) {
         mom_   = MGMath::ZERO;
-        eng_   = part_.mass();
+        eng_   = info_.mass();
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -134,11 +134,11 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     Short_t mom_sign = MGNumc::Compare(mom);
     Short_t eta_sign = MGNumc::Compare(sign);
     if (mom_sign  < 0) return;
-    if (eta_sign == 0) eta_sign = ((MGNumc::Compare(part_.chrg()) >= 0) ? 1 : -1);
+    if (eta_sign == 0) eta_sign = ((MGNumc::Compare(info_.chrg()) >= 0) ? 1 : -1);
 
     if (mom_sign == 0) {
         mom_   = MGMath::ZERO;
-        eng_   = part_.mass();
+        eng_   = info_.mass();
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -146,11 +146,11 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     }
     else {
         mom_   = mom;
-        eng_   = std::sqrt(mom_ * mom_ + part_.mass() * part_.mass());
-        bta_   = (part_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(part_.mass() * part_.mass() / mom_ / mom_ + MGMath::ONE)));
-        gmbta_ = (part_.is_massless() ? mom_ : (mom_ / part_.mass()));
+        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
+        gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
         eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
-        irig_  = part_.chrg_to_mass() * eta_;
+        irig_  = info_.chrg_to_mass() * eta_;
     }
 }
 
@@ -159,7 +159,7 @@ void PhySt::set_eta(Double_t eta) {
     Short_t eta_sign = MGNumc::Compare(eta);
     if (eta_sign == 0) {
         mom_   = MGMath::ZERO;
-        eng_   = part_.mass();
+        eng_   = info_.mass();
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -168,21 +168,21 @@ void PhySt::set_eta(Double_t eta) {
     else {
         eta_   = eta;
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
-        irig_  = part_.chrg_to_mass() * eta_;
-        mom_   = (part_.is_massless() ? gmbta_ : (part_.mass() * gmbta_));
-        eng_   = std::sqrt(mom_ * mom_ + part_.mass() * part_.mass());
-        bta_   = (part_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(part_.mass() * part_.mass() / mom_ / mom_ + MGMath::ONE)));
+        irig_  = info_.chrg_to_mass() * eta_;
+        mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
+        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
     }
 }
 
 
 void PhySt::set_irig(Double_t irig) {
     Short_t rig_sign = MGNumc::Compare(irig);
-    if (part_.is_chrgless()) return;
-    if (part_.is_massless()) return;
+    if (info_.is_chrgless()) return;
+    if (info_.is_massless()) return;
     if (rig_sign == 0) {
         mom_ = MGMath::ZERO;
-        eng_   = part_.mass();
+        eng_   = info_.mass();
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -190,11 +190,11 @@ void PhySt::set_irig(Double_t irig) {
     }
     else {
         irig_  = irig;
-        eta_   = part_.mass_to_chrg() * irig;
+        eta_   = info_.mass_to_chrg() * irig;
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
-        mom_   = (part_.is_massless() ? gmbta_ : (part_.mass() * gmbta_));
-        eng_   = std::sqrt(mom_ * mom_ + part_.mass() * part_.mass());
-        bta_   = (part_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(part_.mass() * part_.mass() / mom_ / mom_ + MGMath::ONE)));
+        mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
+        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
     }
 }
 
@@ -208,7 +208,7 @@ void PhySt::set_rig(Double_t rig) {
 
 void PhySt::print() const {
     std::string printStr;
-    printStr += STR_FMT("============ %-15s ============\n", part_.name().c_str());
+    printStr += STR_FMT("============ %-15s ============\n", info_.name().c_str());
     printStr += STR_FMT("Bta %14.8f\n", bta_);
     printStr += STR_FMT("Mom %14.8f\n", mom_);
     printStr += STR_FMT("Eta %14.8f\n", eta_);

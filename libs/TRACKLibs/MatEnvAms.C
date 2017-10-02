@@ -22,11 +22,14 @@ Bool_t MatMgnt::Load() {
 
 
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
-    std::string g4mat_file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/g4mat_AMS02.root";
+    std::string g4mat_file_path = "/data1/hchou/material/g4mat_AMS02.root";
+    //std::string g4mat_file_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/g4mat_AMS02.root";
+    
     TFile * root_file = TFile::Open(g4mat_file_path.c_str());
     if (root_file == nullptr || root_file->IsZombie()) return false;
 
-    std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
+    std::string dir_path = "/data1/hchou/material";
+    //std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
     
     MatGeoBoxCreator creator_AMS02RAD(
             MatAms::RAD_N.at(0), MatAms::RAD_MIN.at(0), MatAms::RAD_MAX.at(0),
@@ -153,10 +156,14 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     Float_t  min[3];
     Float_t  max[3];
     TTree * tree_inf = (TTree*) root_file->Get("g4mat_inf");
-    tree_inf->SetBranchAddress("n",   &n);
-    tree_inf->SetBranchAddress("min",  min);
-    tree_inf->SetBranchAddress("max",  max);
+    tree_inf->SetBranchAddress("n",   n);
+    tree_inf->SetBranchAddress("min", min);
+    tree_inf->SetBranchAddress("max", max);
     tree_inf->GetEntry(0);
+    Double_t xclen = ((max[0] - min[0]) / n[0]);
+    Double_t yclen = ((max[1] - min[1]) / n[1]);
+    Double_t zclen = ((max[2] - min[2]) / n[2]);
+    Double_t vol   = (xclen * yclen * zclen);
 
     Bool_t  mat;
     Int_t   idx[3];
@@ -170,7 +177,13 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     tree_elm->SetBranchAddress("elm",  elm);
     tree_elm->SetBranchAddress("den",  den);
 
+    COUT("====================================================================\n");
+    Long64_t nentries = tree_elm->GetEntries();
+    Long64_t printRat = (nentries / 20);
     for (Long64_t entry = 0; entry < tree_elm->GetEntries(); ++entry) {
+        if ((entry%printRat) == 0 || (entry == nentries-1)) {
+            COUT("Entry %lld/%lld  (%6.2f %)\n", entry+1, nentries, 100. * static_cast<Double_t>(entry+1)/static_cast<Double_t>(nentries));
+        }
         tree_elm->GetEntry(entry);
         if (!mat) continue;
         Float_t radius = std::sqrt(coo[0]*coo[0] + coo[1]*coo[1]);
@@ -184,24 +197,28 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
         Bool_t is_naf = (std::max(std::fabs(coo[0]), std::fabs(coo[1])) < MatAms::RICH_BOUND);
         Bool_t is_agl = !is_naf;
 
-        creator_AMS02RAD .fill(coo, elm, den);
-        creator_AMS02TRL1.fill(coo, elm, den, is_tracker);
-        creator_AMS02UTRD.fill(coo, elm, den, is_trd);
-        creator_AMS02TRD .fill(coo, elm, den, is_trd);
-        creator_AMS02LTRD.fill(coo, elm, den, is_trd);
-        creator_AMS02UTOF.fill(coo, elm, den);
-        creator_AMS02UITR.fill(coo, elm, den, is_tracker);
-        creator_AMS02TRS1.fill(coo, elm, den, is_mag_hole);
-        creator_AMS02TRS2.fill(coo, elm, den, is_mag_hole);
-        creator_AMS02TRS3.fill(coo, elm, den, is_mag_hole);
-        creator_AMS02LITR.fill(coo, elm, den, is_tracker);
-        creator_AMS02LTOF.fill(coo, elm, den);
-        creator_AMS02NAF .fill(coo, elm, den, is_naf);
-        creator_AMS02AGL .fill(coo, elm, den, is_agl);
-        creator_AMS02PMT .fill(coo, elm, den);
-        creator_AMS02TRL9.fill(coo, elm, den);
-        creator_AMS02ECAL.fill(coo, elm, den);
+        Float_t mol[9]; std::fill_n(mol, 9, 0.);
+        for (Int_t it = 0; it < 9; ++it) mol[it] = (vol * den[it]);
+
+        creator_AMS02RAD .fill(coo, elm, mol);
+        creator_AMS02TRL1.fill(coo, elm, mol, is_tracker);
+        creator_AMS02UTRD.fill(coo, elm, mol, is_trd);
+        creator_AMS02TRD .fill(coo, elm, mol, is_trd);
+        creator_AMS02LTRD.fill(coo, elm, mol, is_trd);
+        creator_AMS02UTOF.fill(coo, elm, mol);
+        creator_AMS02UITR.fill(coo, elm, mol, is_tracker);
+        creator_AMS02TRS1.fill(coo, elm, mol, is_mag_hole);
+        creator_AMS02TRS2.fill(coo, elm, mol, is_mag_hole);
+        creator_AMS02TRS3.fill(coo, elm, mol, is_mag_hole);
+        creator_AMS02LITR.fill(coo, elm, mol, is_tracker);
+        creator_AMS02LTOF.fill(coo, elm, mol);
+        creator_AMS02NAF .fill(coo, elm, mol, is_naf);
+        creator_AMS02AGL .fill(coo, elm, mol, is_agl);
+        creator_AMS02PMT .fill(coo, elm, mol);
+        creator_AMS02TRL9.fill(coo, elm, mol);
+        creator_AMS02ECAL.fill(coo, elm, mol);
     }
+    COUT("====================================================================\n");
     
     creator_AMS02RAD .save_and_close();
     creator_AMS02TRL1.save_and_close();
@@ -229,8 +246,8 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
-    std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
-    //std::string g4mat_dir_path = "/data1/hchou/material"; // at NCU
+    //std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
+    std::string g4mat_dir_path = "/data1/hchou/material"; // at NCU
 
     reader_AMS02RAD_ .load(STR_FMT("%s/AMS02RAD.bin" , g4mat_dir_path.c_str()));
     reader_AMS02TRL1_.load(STR_FMT("%s/AMS02TRL1.bin", g4mat_dir_path.c_str()));

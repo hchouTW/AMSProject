@@ -116,7 +116,13 @@ class PhyJb {
         
         using SMtxDXYG = SMtxD<2, DIM_G>;
         using SMtxDXYL = SMtxD<2, DIM_L>;
-    
+
+        inline static SMtxDGG Multiply(const SMtxDGG& jb, const SMtxDGG& jbG) { return (jb * jbG); }
+        inline static SMtxDGL Multiply(const SMtxDGG& jb, const SMtxDGL& jbL) { return (jb * jbL); }
+        
+        inline static SMtxDXYG SubXYG(const SMtxDGG& jb) { return jb.Sub<SMtxDXYG>(0, 0); }
+        inline static SMtxDXYL SubXYL(const SMtxDGL& jb) { return jb.Sub<SMtxDXYL>(0, 0); }
+
     public :
         PhyJb() { init(); }
         ~PhyJb() {}
@@ -144,7 +150,7 @@ class PhyJb {
         Bool_t    field_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;
-    
+
     private :
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;
@@ -199,7 +205,7 @@ class PropPhyCal {
         void init(); 
         void normalized(const MatFld& mfld, const PhySt& part);
 
-        void push(const PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
+        void push(PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
 
         //Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
 
@@ -304,10 +310,14 @@ class PropMgnt {
         static constexpr Double_t PROP_STEP  = 30.0;   // (ds threshold)
         static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
         static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.1;  // (number radiation length threshold)
+        static constexpr Double_t TUNE_MAT   =  0.1;   // (number radiation length threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
+        
+        // testcode
+        //static constexpr Double_t LMTU_STEP  =  8.5;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
 
     private :
         static constexpr Short_t X = 0;

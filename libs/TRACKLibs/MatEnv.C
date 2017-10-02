@@ -100,6 +100,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     file_ptr_  = file_ptr;
     max_len_   = (xn * yn * zn);
     geo_box_   = reinterpret_cast<MatGeoBox*>(file_ptr);
+    vol_ = 0.;
     dlt_.fill(0);
     fact_.fill(0);
     cnt_ = 0;
@@ -121,6 +122,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     dlt_.at(2) = (zmax - zmin) / static_cast<Double_t>(zn);
     fact_.at(0) = yn * zn;
     fact_.at(1) = zn;
+    vol_ = (dlt_.at(0) * dlt_.at(1) * dlt_.at(2));
 
     std::fill_n(geo_box_->elm, MatProperty::NUM_ELM, false);
     std::fill_n(geo_box_->den, MatProperty::NUM_ELM, 0.0);
@@ -129,7 +131,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
 }
 
 
-void MatGeoBoxCreator::fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM], Bool_t calculated) {
+void MatGeoBoxCreator::fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t mol[MatProperty::NUM_ELM], Bool_t calculated) {
     if (!is_open_) return;
     if (!calculated) return;
     
@@ -143,17 +145,17 @@ void MatGeoBoxCreator::fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Fl
     if (xi < 0 || xi >= geo_box_->n[0]) return;
     
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
+    Bool_t&  mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + idx));
 
     Bool_t has_mat = false;
     for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
         if (!elm[it]) continue;
         has_mat = true;
         elm_.at(it) = true;
-        den_.at(it) += static_cast<Double_t>(den[it]);
+        den_.at(it) += static_cast<Double_t>(mol[it]);
     }
     
-    if (has_mat) {
-        Bool_t& mat = *(static_cast<Bool_t*>(&(geo_box_->mat) + idx));
+    if (!mat && has_mat) {
         mat = true;
         cnt_++;
     }
@@ -167,7 +169,7 @@ void MatGeoBoxCreator::save_and_close() {
         Double_t inv_rad_len = 0.;
         for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
             if (!elm_.at(it)) continue;
-            den_.at(it) = (den_.at(it) / static_cast<Double_t>(cnt_));
+            den_.at(it) = (den_.at(it) / (vol_ * static_cast<Double_t>(cnt_)));
             geo_box_->elm[it] = elm_.at(it);
             geo_box_->den[it] = den_.at(it);
         
@@ -490,7 +492,7 @@ Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t 
 MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
     Double_t len = std::fabs(stp_len);
     if (!part.field()) return MatPhyFld(len);
-    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld(len);
+    if (part.info().is_chrgless() || part.info().is_massless()) return MatPhyFld(len);
     if (MGNumc::EqualToZero(stp_len)) return MatPhyFld(len);
     if (MGNumc::EqualToZero(part.mom())) return MatPhyFld(len);
 
@@ -513,7 +515,7 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part) {
     Double_t len = mfld.real_len();
     if (!mfld() || !part.field()) return MatPhyFld(len);
     if (MGNumc::EqualToZero(mfld.efft_len())) return MatPhyFld(len);
-    if (part.part().is_chrgless() || part.part().is_massless()) return MatPhyFld(len);
+    if (part.info().is_chrgless() || part.info().is_massless()) return MatPhyFld(len);
     if (MGNumc::EqualToZero(part.mom())) return MatPhyFld(len);
     
     Double_t mult_scat_sgm = GetMultipleScattering(mfld, part);
@@ -551,12 +553,16 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part = (eta / bta);
-    Double_t mscat_sgm = RYDBERG_CONST * part.part().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
+    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
     
     // Tune by Hsin-Yi Chou
-    const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
-    const Double_t tune_sgm = pars[0] * (MGMath::ONE + pars[1] * TMath::Power(bta, pars[2]));
-    mscat_sgm *= tune_sgm;
+    //const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
+    //const Double_t tune_sgm = pars[0] * (MGMath::ONE + pars[1] * TMath::Power(bta, pars[2]));
+    //mscat_sgm *= tune_sgm;
+    
+    //----------------- AMS
+    mscat_sgm *= 1.1254;
+    //----------------- AMS
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
 
@@ -570,9 +576,9 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t sqr_gmbta   = ((is_over_lmt) ? (gmbta * gmbta) : LMT_SQR_GMBTA);
     Double_t sqr_bta     = ((is_over_lmt) ? (part.bta() * part.bta()) : LMT_SQR_BTA);
     Double_t gm          = ((is_over_lmt) ? part.gm() : LMT_GM);
-    Double_t sqr_chrg    = part.part().chrg() * part.part().chrg();
-    Double_t mass_in_GeV = part.part().mass();
-    Double_t mass_in_MeV = part.part().mass() * GEV_TO_MEV;
+    Double_t sqr_chrg    = part.chrg() * part.chrg();
+    Double_t mass_in_GeV = part.mass();
+    Double_t mass_in_MeV = part.mass() * GEV_TO_MEV;
     Double_t rel_mass    = (MASS_EL_IN_GEV / mass_in_GeV);
         
     // Density Effect Correction
@@ -606,7 +612,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV);
     
     // Calculate Sigma
-    Double_t eloss_ion_sgm = Bethe_Bloch_eta_trans / std::sqrt(sqr_bta);
+    Double_t eloss_ion_sgm = Bethe_Bloch_eta_trans;
     
     // Calculate Peak 
     Double_t max_keng_part = std::log(MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta / exeng);
@@ -620,13 +626,25 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t eloss_ion_kpa = eloss_ion_kpa0 / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
 
     // Tune by Hsin-Yi Chou
-    const Double_t tune_kpa = 1.05379361892339474e+00;
-    eloss_ion_kpa *= tune_kpa;
+    //const Double_t tune_kpa = 1.05379361892339474e+00;
+    //eloss_ion_kpa *= tune_kpa;
 
-    //const Double_t tune_mpv = 0.903547;
-    const Double_t tune_mpv_pars[2] = { 0.903547, 0.0045 };
-    const Double_t tune_mpv = tune_mpv_pars[0] / (MGMath::ONE + tune_mpv_pars[1] * (std::pow(sqr_gmbta, -MGMath::SQRT_TWO) + MGMath::TWO * (sqr_bta - MGMath::ONE)));
-    eloss_ion_mpv *= tune_mpv;
+    //const Double_t tune_mpv_pars[2] = { 0.903547, 0.0045 };
+    //const Double_t tune_mpv = tune_mpv_pars[0] / (MGMath::ONE + tune_mpv_pars[1] * (std::pow(sqr_gmbta, -MGMath::SQRT_TWO) + MGMath::TWO * (sqr_bta - MGMath::ONE)));
+    //eloss_ion_mpv *= tune_mpv;
+
+    //----------------- AMS
+    //eloss_ion_kpa  = 1.28394e+00 * 1.5 / 1.07327;
+    ////eloss_ion_kpa  = 1.28394e+00;
+    //eloss_ion_mpv *= 1.37456;
+    ////eloss_ion_sgm *= 1.6033;
+    //eloss_ion_sgm *= (1.6033 * 1.40);
+    //----------------- AMS
+    //----------------- AMS
+    eloss_ion_kpa  = 1.28394e+00;
+    eloss_ion_mpv *= 1.37456;
+    //eloss_ion_sgm *= 1.0;
+    //----------------- AMS
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;
     if (!MGNumc::Valid(eloss_ion_mpv) || MGNumc::Compare(eloss_ion_mpv) <= 0) eloss_ion_mpv = MGMath::ZERO;
@@ -642,8 +660,8 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& pa
 
     Bool_t   is_over_lmt  = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t sqr_gmbta    = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
-    Double_t sqr_chrg_rat = (part.part().chrg() * part.part().chrg());
-    Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.part().mass() / part.part().mass());
+    Double_t sqr_chrg_rat = (part.chrg() * part.chrg());
+    Double_t sqr_mass_rat = (MASS_EL_IN_GEV * MASS_EL_IN_GEV / part.mass() / part.mass());
     Double_t eng          = std::sqrt(sqr_gmbta + MGMath::ONE);
     Double_t ke_part      = (eng - MGMath::ONE);
     Double_t eta_trans    = (eng / sqr_gmbta);

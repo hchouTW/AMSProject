@@ -117,8 +117,8 @@ void LoadDefaultEnvironment() {
 	// Use bold lines and markers
 	style.SetMarkerColor(1);
 	style.SetMarkerStyle(20);
-	style.SetMarkerSize(1.2);
-	style.SetHistLineWidth((Width_t) 2.);
+	style.SetMarkerSize(1.0);
+	style.SetHistLineWidth((Width_t) 1.);
 	style.SetLineStyleString(2, "[12 12]"); // postscript dashes
 	
 	// Set the hist title

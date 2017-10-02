@@ -15,8 +15,10 @@ all :
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
 	@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
+	@cp -fa $(PWD)/src/prop_ams02.C $(TagetDir)/src/prop_ams02.C 2> /dev/null
 	make $(TagetDir)/prop
 	make $(TagetDir)/fit
+	make $(TagetDir)/prop_ams02
 
 $(TagetDir)/obj/prop.o : $(TagetDir)/src/prop.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
@@ -29,9 +31,15 @@ $(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
 -include $(TagetDir)/obj/fit.d
 
-$(TagetDir)/fit : $(TagetDir)/obj/fit.o $(ClassLib)
-	$(LD) -o $@ $+ $(LIBP)
+$(TagetDir)/fit : $(TagetDir)/obj/fit.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
+$(TagetDir)/obj/prop_ams02.o : $(TagetDir)/src/prop_ams02.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+-include $(TagetDir)/obj/prop_ams02.d
+
+$(TagetDir)/prop_ams02 : $(TagetDir)/obj/prop_ams02.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 clean :
 	@rm -fv $(TagetDir)/env/*
@@ -40,3 +48,4 @@ clean :
 	@rm -fv $(TagetDir)/lst/*
 	@rm -fv $(TagetDir)/prop
 	@rm -fv $(TagetDir)/fit
+	@rm -fv $(TagetDir)/prop_ams02

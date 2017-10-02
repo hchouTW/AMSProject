@@ -7,6 +7,9 @@ Hostname cms01.phy.ncu.edu.tw
 Host dirac
 Hostname dirac.phys.ncku.edu.tw
 
+Host hep
+Hostname hep068.phy.ncu.edu.tw
+
 #personal account
 Host github.com
 HostName github.com

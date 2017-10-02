@@ -22,7 +22,7 @@ inline TAttFill Fill(Color_t color = kBlack, Style_t style = 0) { return TAttFil
 
 
 //---- Line ----//
-inline TAttLine Line(Color_t color = kBlack, Style_t style = 0, Width_t width = 2) { return TAttLine(color, (style%10), width); }
+inline TAttLine Line(Color_t color = kBlack, Style_t style = 0, Width_t width = 1) { return TAttLine(color, (style%10), width); }
 
 
 //---- Marker ----//
@@ -32,7 +32,7 @@ enum class MarkerType : UInt_t { kFull = 0, kOpen = 1 };
 inline Style_t MarkerStyle(UInt_t idx = 0);
 inline Style_t MarkerStyle(MarkerShape shape, MarkerType type = MarkerType::kFull) { return MarkerStyle(static_cast<UInt_t>(shape) * 2 + static_cast<UInt_t>(type)); }
 	
-inline TAttMarker Marker(Color_t color = kBlack, Style_t style = MarkerStyle(), Size_t size = 3.0) { return TAttMarker(color, style, size); } 
+inline TAttMarker Marker(Color_t color = kBlack, Style_t style = MarkerStyle(), Size_t size = 1.0) { return TAttMarker(color, style, size); } 
 
 
 //---- Text ----//

@@ -90,8 +90,8 @@ int main(int argc, char * argv[]) {
         if (MGNumc::EqualToZero(refm)) continue;
 
         part_info.set_mom(refm);
-        double scl_mscat = (part_info.mom() * part_info.bta() / (part_info.part().chrg() * part_info.part().chrg()));
-        double scl_eloss = (part_info.bta() * part_info.bta() / (part_info.part().chrg() * part_info.part().chrg()));
+        double scl_mscat = (part_info.mom() * part_info.bta() / (part_info.chrg() * part_info.chrg()));
+        double scl_eloss = (part_info.bta() * part_info.bta() / (part_info.chrg() * part_info.chrg()));
         sclmscatlst.push_back(scl_mscat);
         sclelosslst.push_back(scl_eloss);
         
@@ -331,8 +331,8 @@ int main(int argc, char * argv[]) {
     TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
     feloss->SetParameters(1000., 1.0, 0.001, 0.0002); 
     
-    //TF1 * feloss = new TF1("feloss", "[0] * (TMath::Power( ([2]/x)^[4]/[1]/[1], ([2]/x)^[4]/[1]/[1] ) / TMath::Gamma( ([2]/x)^[4]/[1]/[1] )) * TMath::Exp(-( (([2]/x)^[4]/[1]/[1]) ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
-    //feloss->SetParameters(1000., 1.0, 0.001, 0.0002, 0.0); 
+    //TF1 * feloss = new TF1("feloss", "[0] * (TMath::Power( ([2]/x)^([4]*[4]*[1]*[1]/2)/[1]/[1], ([2]/x)^([4]*[4]*[1]*[1]/2)/[1]/[1] ) / TMath::Gamma( ([2]/x)^([4]*[4]*[1]*[1]/2)/[1]/[1] )) * TMath::Exp(-( (([2]/x)^([4]*[4]*[1]*[1]/2)/[1]/[1]) ) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    //feloss->SetParameters(1000., 1.0, 0.001, 0.0002, 1.0); 
     
     TGraphErrors* gMee_peak = new TGraphErrors(); gMee_peak->SetNameTitle("gMee_peak", "");
     TGraphErrors* gMee_kpa  = new TGraphErrors(); gMee_kpa ->SetNameTitle("gMee_kpa",  "");
@@ -350,8 +350,13 @@ int main(int argc, char * argv[]) {
 
         TH1D* hMee = (TH1D*) ofle->Get(Form("hMee%02d", ifle));
         double peak = hMee->GetXaxis()->GetBinCenter(hMee->GetMaximumBin());
-        feloss->SetParameters(1000., 1.0, peak, 0.1*peak);
+        feloss->SetParameters(1000., 1.0, peak, 0.1*peak, 1.0);
+
+        //if (bta < 0.6) feloss->FixParameter(1, 0.0);
+        //else           feloss->ReleaseParameter(1);
         feloss->SetParameter(1, std::sqrt(2.0)/(1.0/bta/bta+0.5*(bta*bta-1.0)));
+        hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
+        hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
         hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
         hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
         hMee->Fit(feloss, "q0", "", 0.8*peak, 3*peak);
