@@ -1,3 +1,30 @@
+## Submit Jobs System In NCU
+### Config File
+```
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  vdev
+PROJTITLE    =  TESTING
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.iss.B950.pass6
+EVENTTYPE    =  ISS
+FILEPEREXE   =  1
+JOBREGION    =  PART
+EXESATID     =  1
+EXEENDID     =  10
+
+[QUEUE]
+QUEUE      =  ams
+STORAGE    =  DPM
+EXEPERJOB  =  3
+CONFIRM    =  NONE
+```
+### Make Job and Run
+```bash
+cat job.ncu.testing.conf
+submit RUN job.ncu.testing.conf
+```
+
 ## Certificate Authority (CA)
 
 ### CA from CERN
