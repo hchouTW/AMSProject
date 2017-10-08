@@ -50,13 +50,22 @@ alias readflist="sh ${AMSProj}/sys/shell/readflist.sh"
 # Job Config
 source ${AMSProj}/sys/shell/ini_parser.sh
 if [[ $HOSTNAME == *"lxplus"* ]]; then
+    alias mkjob='sh ${AMSProj}/jobs/CERN/mkjob.sh'
     alias submit='sh ${AMSProj}/jobs/CERN/submit.sh'
+else
+    alias mkjob='sh ${AMSProj}/jobs/NCU/mkjob.sh'
+    alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
+    alias voms_info='voms-proxy-info --all'
+    alias voms_init='voms-proxy-init --voms ams02.cern.ch --hours 168 --out ~/ams02'
 fi
 
-# LXPLUS
 if [[ $HOSTNAME == *"lxplus"* ]]; then
     export CASTOR=/castor/cern.ch/user/h/hchou
     export EOS=/eos/ams/user/h/hchou
     export AFSWORK=/afs/cern.ch/work/h/hchou
     export ubackup=/afs/cern.ch/ubackup/h/hchou
+else
+    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443/
+    export EOS_ASGC=root://tw-eos03.grid.sinica.edu.tw/
+    export DPM_NCU=root://grid71.phy.ncu.edu.tw:1094/
 fi
