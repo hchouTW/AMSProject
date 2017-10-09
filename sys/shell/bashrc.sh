@@ -60,16 +60,18 @@ else
     alias voms_init='voms-proxy-init --voms ams02.cern.ch --hours 168 --out ~/ams02'
 fi
 
-if [[ $HOSTNAME == *"lxplus"* ]]; then
+if [[ ${HOSTNAME} == *"lxplus"* ]]; then
     export CASTOR=/castor/cern.ch/user/h/hchou
     export EOS=/eos/ams/user/h/hchou
     export AFSWORK=/afs/cern.ch/work/h/hchou
     export ubackup=/afs/cern.ch/ubackup/h/hchou
 else
-    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
+    # system
     export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
     export EOS_HOME=/eos/ams
     export DPM_HOST=grid71.phy.ncu.edu.tw
     export DPNS_HOST=grid71.phy.ncu.edu.tw
-    export DPM_HOME=/dpm/phy.ncu.edu.tw/home/ams02
+    # user
+    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
+    export DPM_HOME=/dpm/phy.ncu.edu.tw/home
 fi

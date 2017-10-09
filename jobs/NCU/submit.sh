@@ -66,6 +66,8 @@ if [ "${confirm}" != "YES" ] && [ "${confirm}" != "NO" ] && [ "${confirm}" != "N
     echo "Confirm(${confirm}) is not in (YES NO NONE)"
     exit
 fi
+echo "******************************** VMOS ********************************"
+voms-proxy-info --all
 echo "***************************** PARAMETERS *****************************"
 cat ${PARAMETERS}
 echo "******************************* RUNMODE ******************************"

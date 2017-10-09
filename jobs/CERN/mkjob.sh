@@ -350,7 +350,7 @@ if [ \$# -ne 1 ]; then
 fi
 
 runmode=\$1
-if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
+if [ \"\${runmode}\" != \"RUN\" ] && [ \"\${runmode}\" != \"RERUN\" ]; then
     echo \"\${runmode} is not correctly.\"
     exit
 fi

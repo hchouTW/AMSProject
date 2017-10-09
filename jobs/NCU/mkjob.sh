@@ -4,6 +4,10 @@
 FL=`whoami | cut -c1`
 USER=`whoami`
 
+# VMOS
+echo -e "******************************** VMOS ********************************"
+voms-proxy-info --all
+echo -e "**********************************************************************"
 
 # Check Input Parameters
 if [ $# -lt 1 ]; then
@@ -140,8 +144,9 @@ fi
 
 storage_path=
 if [ "${storage}" == "DPM" ]; then
-    storage_path=${DPM_HOME}/user
-    if [[ "`dpns-ls ${storage_path}`" == *"No such file or directory"* ]] || [[ "`dpns-ls ${storage_path}`" == *"invalid path"* ]]; then
+    storage_path=${DPM_HOME}/ams02/user
+    storage_check=$(dpns-ls ${storage_path} 2>&1)
+    if [[ "${storage_check}" == *"No such file or directory"* ]] || [[ "${storage_check}" == *"invalid path"* ]]; then
         echo "\"${storage_path}\" is not exist."
         exit
     else
@@ -198,9 +203,6 @@ if [ ! -d ${jobdir} ]; then
 else
     rm -rf ${jobdir}/*
 fi
-
-jobscriptdir=${jobdir}/jobscript
-mkdir -p ${jobscriptdir}
 
 mkdir -p ${jobdir}/log
 mkdir -p ${jobdir}/proc
@@ -278,7 +280,8 @@ if [ ! -d \${tmpDate} ]; then
 fi
 
 dataDir=${datadir}
-if [[ \"\`dpns-ls \${dataDir}\`\" == *\"No such file or directory\"* ]] || [[ \"\`dpns-ls \${dataDir}\`\" == *\"invalid path\"* ]]; then
+dataDirCheck=\$(dpns-ls \${dataDir} 2>&1)
+if [[ \"\${dataDirCheck}\" == *\"No such file or directory\"* ]] || [[ \"\${dataDirCheck}\" == *\"invalid path\"* ]]; then
     echo -e \"taget data/ is not exist.\"
     exit
 fi
@@ -301,8 +304,13 @@ do
         continue
     fi
 
-    ldd \${jobDir}/jobexe | tee \${logLog}
+    echo -e \"==== (Job) Start Time: \`date\`\\n\\n\" | tee \${logLog}
+    
+    ldd \${jobDir}/jobexe | tee -a \${logLog}
+    
+    echo -e \"\\n\\n==== (Exe) Start Time: \`date\`\" | tee -a \${logLog}
     \${jobDir}/jobexe ${event_type} \${jobDir}/flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${logLog}
+    echo -e \"==== (Exe) End Time: \`date\`\\n\\n\" | tee -a \${logLog}
    
     FileID=\$(printf "%07i" \${exeID})
     rootFile=\`ls \${tmpData} | grep \${FileID}.root\`
@@ -311,13 +319,20 @@ do
         echo \"ROOT file is not exist.\" | tee -a \${logLog}
     else
         tagetPath=\${dataDir}/\${rootFile}
+        echo -e \"==== (CopyFile) Start Time: \`date\`\" | tee -a \${logLog}
         rfcp \${rootPath} \${tagetPath}
-        if [ -f \${tagetPath} ]; then
-            echo "Success." | tee -a \${logLog}
+        echo -e \"==== (CopyFile) End Time: \`date\`\\n\\n\" | tee -a \${logLog}
+        tagetPathCheck=\$(dpns-ls \${tagetPath} 2>&1)
+        if [[ \"\${tagetPathCheck}\" == *\"No such file or directory\"* ]] || [[ \"\${tagetPathCheck}\" == *\"invalid path\"* ]]; then
+            echo "Failure." | tee -a \${logLog}
+        else
             rm \${rootPath}
             rm \${logProc}
+            echo "Success." | tee -a \${logLog}
         fi
     fi
+    
+    echo -e \"==== (Job) End Time: \`date\`\" | tee -a \${logLog}
 done
 
 echo -e \"**************************\"
@@ -331,33 +346,43 @@ echo "#!/bin/bash
 echo \"**********************************************************************\"
 echo \"****************************** SUBMIT ********************************\"
 echo \"**********************************************************************\"
+
+echo \"******************************** VMOS ********************************\"
+voms-proxy-info --all
+echo \"**********************************************************************\"
+
 if [ \$# -ne 1 ]; then
     echo -e \"illegal number of parameters.\"
     exit
 fi
 
 runmode=\$1
-if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
+if [ \"\${runmode}\" != \"RUN\" ] && [ \"\${runmode}\" != \"RERUN\" ]; then
     echo \"\${runmode} is not correctly.\"
     exit
 fi
 
 dataDir=${datadir}
 dpns-mkdir -p \${dataDir}
-if [[ \"\`dpns-ls \${dataDir}\`\" == *\"No such file or directory\"* ]] || [[ \"\`dpns-ls \${dataDir}\`\" == *\"invalid path\"* ]]; then
+dataDirCheck=\$(dpns-ls \${dataDir} 2>&1)
+if [[ \"\${dataDirCheck}\" == *\"No such file or directory\"* ]] || [[ \"\${dataDirCheck}\" == *\"invalid path\"* ]]; then
     echo -e \"taget data/ is not exist.\"
     exit
+else
+    if [ \"\${runmode}\" == \"RUN\" ]; then
+        rfrm -rf \${dataDir}
+        dpns-mkdir -p \${dataDir}
+        dataDirCheck=\$(dpns-ls \${dataDir} 2>&1)
+        if [[ \"\${dataDirCheck}\" == *\"No such file or directory\"* ]] || [[ \"\${dataDirCheck}\" == *\"invalid path\"* ]]; then
+            echo -e \"taget data/ is not exist.\"
+            exit
+        fi
+    fi
 fi
 
 jobDir=${jobdir}
 if [ ! -d \${jobDir} ]; then
     echo -e \"jobDir is not exist.\"
-    exit
-fi
-
-jobScriptDir=${jobscriptdir}
-if [ ! -d \${jobScriptDir} ]; then
-    echo -e \"jobScriptDir is not exist.\"
     exit
 fi
 
@@ -399,13 +424,8 @@ do
     jobLogID=\$(printf "JOB%07i" \${jobID})
     jobLog=\${jobDir}/log/log.\${jobLogID}
 
-    jobRunScript=\${jobScriptDir}/\${jobLogID}.sh
     echo \"\#!/bin/bash
-sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\" > \${jobRunScript}
-
-    BSUBComd=\"qsub -q ${queue} -o \${jobLog} \${jobRunScript}\"
-    qsub -q ${queue} -j oe -o \${jobLog} \${jobRunScript}
-    #echo \${BSUBComd}
+sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\" | qsub -q ${queue} -N \${jobLogID} -j oe -o \${jobLog}
 done
 echo \"**********************************************************************\"
 echo \"************************** SUBMIT FINISH *****************************\"
