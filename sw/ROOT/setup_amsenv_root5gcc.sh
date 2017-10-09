@@ -1,10 +1,6 @@
 #!/bin/bash
 #shopt -s -o nounset
 
-ulimit -c 0
-ulimit -d 700000
-ulimit -s 32000
-
 unset DEBUGFLAG 
 export GDBMAN=1
 export GDBINFO=1
