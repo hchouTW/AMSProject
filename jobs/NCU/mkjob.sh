@@ -139,14 +139,14 @@ if [ "${storage}" != "DPM" ]; then
 fi
 
 storage_path=
-if [ "${storage}" == "EOS" ]; then
-    storage_path=/eos/ams/user/${FL}/${USER}
-    if [ ! -d ${storage_path} ]; then
+if [ "${storage}" == "DPM" ]; then
+    storage_path=${DPM_HOME}/user
+    if [[ "`dpns-ls ${storage_path}`" == *"No such file or directory"* ]] || [[ "`dpns-ls ${storage_path}`" == *"invalid path"* ]]; then
         echo "\"${storage_path}\" is not exist."
         exit
     else
-        storage_path=${storage_path}/AMSData
-        mkdir -p ${storage_path}
+        storage_path=${storage_path}/${USER}/AMSData
+        dpns-mkdir -p ${storage_path}
     fi
 fi
 
@@ -199,6 +199,9 @@ else
     rm -rf ${jobdir}/*
 fi
 
+jobscriptdir=${jobdir}/jobscript
+mkdir -p ${jobscriptdir}
+
 mkdir -p ${jobdir}/log
 mkdir -p ${jobdir}/proc
 
@@ -213,6 +216,7 @@ if [ -f ${proj_libClassDef} ]; then
 fi
 
 datadir=${storage_path}/${PROJPATH}/${PROJVERSION}/${proj_title}
+
 
 echo "[PROJECT]
 PROJPATH        ${PROJPATH}
@@ -263,20 +267,10 @@ if [ ! -d \${jobDir}/log ]; then
     exit
 fi
 
-cp -fa \${jobDir}/env.sh \${PWD}/env.sh
-cp -fa \${jobDir}/jobexe \${PWD}/jobexe
-cp -fa \${jobDir}/flist \${PWD}/flist
+source \${jobDir}/env.sh
+LD_LIBRARY_PATH=\${jobDir}:\${LD_LIBRARY_PATH}
 
-# libClassDef
-libClassDef=\${jobDir}/libClassDef.so
-if [ -f \${libClassDef} ]; then
-    cp -fa \${libClassDef} \${PWD}/libClassDef.so
-fi
-
-source \${PWD}/env.sh
-LD_LIBRARY_PATH=\${PWD}:\${LD_LIBRARY_PATH}
-
-tmpData=\${PWD}/data
+tmpData=\${jobDir}/data
 mkdir -p \${tmpData}
 if [ ! -d \${tmpDate} ]; then
     echo -e \"data/ is not exist.\"
@@ -284,8 +278,8 @@ if [ ! -d \${tmpDate} ]; then
 fi
 
 dataDir=${datadir}
-if [ ! -d \${dateDir} ]; then
-    echo -e "taget data/ is not exist."
+if [[ \"\`dpns-ls \${dataDir}\`\" == *\"No such file or directory\"* ]] || [[ \"\`dpns-ls \${dataDir}\`\" == *\"invalid path\"* ]]; then
+    echo -e \"taget data/ is not exist.\"
     exit
 fi
 
@@ -301,28 +295,26 @@ exeEndID=\$3
 for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
     logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
-    locLog=\${PWD}/\${logID}
     logLog=\${jobDir}/log/\${logID}
     logProc=\${jobDir}/proc/\${logID}
     if [ ! -f \${logProc} ]; then
         continue
     fi
 
-    ldd \${PWD}/jobexe | tee \${locLog}
-    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${locLog}
-    
-    rootFile=\`ls \${tmpData} | grep root\`
+    ldd \${jobDir}/jobexe | tee \${logLog}
+    \${jobDir}/jobexe ${event_type} \${jobDir}/flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${logLog}
+   
+    FileID=\$(printf "%07i" \${exeID})
+    rootFile=\`ls \${tmpData} | grep \${FileID}.root\`
     rootPath=\${tmpData}/\${rootFile}
     if [ ! -f \${rootPath} ]; then
-        echo \"ROOT file is not exist.\" | tee -a \${locLog}
+        echo \"ROOT file is not exist.\" | tee -a \${logLog}
     else
         tagetPath=\${dataDir}/\${rootFile}
-        cp \${rootPath} \${tagetPath}
+        rfcp \${rootPath} \${tagetPath}
         if [ -f \${tagetPath} ]; then
-            echo "Success." | tee -a \${locLog}
-            cp \${locLog} \${logLog}
+            echo "Success." | tee -a \${logLog}
             rm \${rootPath}
-            rm \${locLog}
             rm \${logProc}
         fi
     fi
@@ -343,6 +335,7 @@ if [ \$# -ne 1 ]; then
     echo -e \"illegal number of parameters.\"
     exit
 fi
+
 runmode=\$1
 if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
     echo \"\${runmode} is not correctly.\"
@@ -350,15 +343,21 @@ if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
 fi
 
 dataDir=${datadir}
-mkdir -p \${dataDir}
-if [ ! -d \${dataDir} ]; then
-    echo -e "taget data/ is not exist."
+dpns-mkdir -p \${dataDir}
+if [[ \"\`dpns-ls \${dataDir}\`\" == *\"No such file or directory\"* ]] || [[ \"\`dpns-ls \${dataDir}\`\" == *\"invalid path\"* ]]; then
+    echo -e \"taget data/ is not exist.\"
     exit
 fi
 
 jobDir=${jobdir}
 if [ ! -d \${jobDir} ]; then
     echo -e \"jobDir is not exist.\"
+    exit
+fi
+
+jobScriptDir=${jobscriptdir}
+if [ ! -d \${jobScriptDir} ]; then
+    echo -e \"jobScriptDir is not exist.\"
     exit
 fi
 
@@ -400,8 +399,12 @@ do
     jobLogID=\$(printf "JOB%07i" \${jobID})
     jobLog=\${jobDir}/log/log.\${jobLogID}
 
-    BSUBComd=\"qsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\"
-    qsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}
+    jobRunScript=\${jobScriptDir}/\${jobLogID}.sh
+    echo \"\#!/bin/bash
+sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\" > \${jobRunScript}
+
+    BSUBComd=\"qsub -q ${queue} -o \${jobLog} \${jobRunScript}\"
+    qsub -q ${queue} -j oe -o \${jobLog} \${jobRunScript}
     #echo \${BSUBComd}
 done
 echo \"**********************************************************************\"
