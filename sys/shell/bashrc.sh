@@ -55,6 +55,7 @@ if [[ $HOSTNAME == *"lxplus"* ]]; then
 else
     alias mkjob='sh ${AMSProj}/jobs/NCU/mkjob.sh'
     alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
+    export X509_USER_PROXY=/ams_home/hchou/ams02
     alias voms_info='voms-proxy-info --all'
     alias voms_init='voms-proxy-init --voms ams02.cern.ch --hours 168 --out ~/ams02'
 fi
@@ -65,7 +66,10 @@ if [[ $HOSTNAME == *"lxplus"* ]]; then
     export AFSWORK=/afs/cern.ch/work/h/hchou
     export ubackup=/afs/cern.ch/ubackup/h/hchou
 else
-    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443/
-    export EOS_ASGC=root://tw-eos03.grid.sinica.edu.tw/
-    export DPM_NCU=root://grid71.phy.ncu.edu.tw:1094/
+    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
+    export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
+    export EOS_HOME=/eos/ams
+    export DPM_HOST=grid71.phy.ncu.edu.tw
+    export DPNS_HOST=grid71.phy.ncu.edu.tw
+    export DPM_HOME=/dpm/phy.ncu.edu.tw/home/ams02
 fi

@@ -290,7 +290,7 @@ fi
 
 dataDir=${datadir}
 if [ ! -d \${dateDir} ]; then
-    echo -e "taget data/ is not exist."
+    echo -e \"taget data/ is not exist.\"
     exit
 fi
 
@@ -348,6 +348,7 @@ if [ \$# -ne 1 ]; then
     echo -e \"illegal number of parameters.\"
     exit
 fi
+
 runmode=\$1
 if [ "\${runmode}" != "RUN" ] && [ "\${runmode}" != "RERUN" ]; then
     echo \"\${runmode} is not correctly.\"
@@ -357,7 +358,7 @@ fi
 dataDir=${datadir}
 mkdir -p \${dataDir}
 if [ ! -d \${dataDir} ]; then
-    echo -e "taget data/ is not exist."
+    echo -e \"taget data/ is not exist.\"
     exit
 fi
 
