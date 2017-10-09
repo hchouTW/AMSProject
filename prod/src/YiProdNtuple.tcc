@@ -1197,6 +1197,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (fTrk.tracks.size() != event->NTrTrack()) return false;
 
 	// Vertex
+    /*
     bool isSaveVertex = false;
     if (isSaveVertex) {
 	    TrReconQ reconQ(event);
@@ -1236,8 +1237,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	    	}
         }
     }
+    */
 
 	//---- Find External Hits ----//
+    /*
 	struct CandHit {
 		int   hitId;
 		short xcls, ycls;
@@ -1421,6 +1424,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	    if (fTrk.otherHits.size() > 1) 
 	    	std::sort(fTrk.otherHits.begin(), fTrk.otherHits.end(), HitTRKInfo_sort());
     }
+    */
 
 	fStopwatch.stop();
 	return selectEvent(event);
