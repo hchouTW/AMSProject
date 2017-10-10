@@ -49,18 +49,18 @@ alias readflist="sh ${AMSProj}/sys/shell/readflist.sh"
 
 # Job Config
 source ${AMSProj}/sys/shell/ini_parser.sh
-if [[ $HOSTNAME == *"lxplus"* ]]; then
+if [[ "$HOSTNAME" == *"lxplus"* ]]; then
     alias mkjob='sh ${AMSProj}/jobs/CERN/mkjob.sh'
     alias submit='sh ${AMSProj}/jobs/CERN/submit.sh'
 else
     alias mkjob='sh ${AMSProj}/jobs/NCU/mkjob.sh'
     alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
-    export X509_USER_PROXY=/ams_home/hchou/ams02
-    alias voms_info='voms-proxy-info --all'
-    alias voms_init='voms-proxy-init --voms ams02.cern.ch --hours 168 --out ~/ams02'
+    alias voms_info='voms-proxy-info --all --file ~/ams02'
+    alias voms_init='voms-proxy-init --hours 168 --out ~/ams02 --voms ams02.cern.ch'
+    export X509_USER_PROXY=~/ams02
 fi
 
-if [[ ${HOSTNAME} == *"lxplus"* ]]; then
+if [[ "${HOSTNAME}" == *"lxplus"* ]]; then
     export CASTOR=/castor/cern.ch/user/h/hchou
     export EOS=/eos/ams/user/h/hchou
     export AFSWORK=/afs/cern.ch/work/h/hchou
