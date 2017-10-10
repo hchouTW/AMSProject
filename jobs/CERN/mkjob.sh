@@ -312,25 +312,38 @@ do
     if [ ! -f \${logProc} ]; then
         continue
     fi
+    
+    echo -e \"==== (Job) Start Time: \`date\`\\n\\n\" | tee \${locLog}
 
     ldd \${PWD}/jobexe | tee \${locLog}
-    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${locLog}
     
-    rootFile=\`ls \${tmpData} | grep root\`
+    echo -e \"\\n\\n==== (Exe) Start Time: \`date\`\" | tee -a \${locLog}
+    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${locLog}
+    echo -e \"==== (Exe) End Time: \`date\`\\n\\n\" | tee -a \${locLog}
+    
+    FileID=\$(printf "%07i" \${exeID})
+    rootFile=\`ls \${tmpData} | grep \${FileID}.root\`
     rootPath=\${tmpData}/\${rootFile}
     if [ ! -f \${rootPath} ]; then
         echo \"ROOT file is not exist.\" | tee -a \${locLog}
     else
         tagetPath=\${dataDir}/\${rootFile}
+        echo -e \"==== (CopyFile) Start Time: \`date\`\" | tee -a \${locLog}
         cp \${rootPath} \${tagetPath}
+        echo -e \"==== (CopyFile) End Time: \`date\`\\n\\n\" | tee -a \${locLog}
         if [ -f \${tagetPath} ]; then
             echo "Success." | tee -a \${locLog}
-            cp \${locLog} \${logLog}
             rm \${rootPath}
-            rm \${locLog}
             rm \${logProc}
+        else
+            echo "Failure." | tee -a \${locLog}
         fi
     fi
+    
+    echo -e \"==== (Job) End Time: \`date\`\" | tee -a \${locLog}
+    
+    cp \${locLog} \${logLog}
+    rm \${locLog}
 done
 
 echo -e \"**************************\"
@@ -360,6 +373,15 @@ mkdir -p \${dataDir}
 if [ ! -d \${dataDir} ]; then
     echo -e \"taget data/ is not exist.\"
     exit
+else
+    if [ \"\${runmode}\" == \"RUN\" ]; then
+        rm -rf \${dataDir}
+        mkdir -p \${dataDir}
+        if [ ! -d \${dataDir} ]; then
+            echo -e \"taget data/ is not exist.\"
+            exit
+        fi
+    fi
 fi
 
 jobDir=${jobdir}
