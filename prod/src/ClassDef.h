@@ -798,9 +798,9 @@ class TRK : public TObject {
 			beamDist = -1;
 
 			tracks.clear();
-			vertices.clear();
+			//vertices.clear();
 
-			otherHits.clear();
+			//otherHits.clear();
 		}
 
 	public :
@@ -808,11 +808,11 @@ class TRK : public TObject {
 		Float_t beamDist;
 
 		std::vector<TrackInfo> tracks;
-		std::vector<VertexInfo> vertices;
+		//std::vector<VertexInfo> vertices;
 
-		std::vector<HitTRKInfo> otherHits;
+		//std::vector<HitTRKInfo> otherHits;
 
-	ClassDef(TRK, 4)
+	ClassDef(TRK, 5)
 };
 
 
