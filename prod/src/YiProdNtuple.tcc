@@ -2735,16 +2735,15 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 void DataSelection::fill() {
 	if (isMultiTree == false) evTree->Fill();
 	else {
-        // testcode
-		//if (checkOption(DataSelection::LIST)) list.fill();
-		//if (checkOption(DataSelection::RTI)) rti.fill();
-		//if (checkOption(DataSelection::TRG)) trg.fill();
-		//if (checkOption(DataSelection::TOF)) tof.fill();
-		//if (checkOption(DataSelection::ACC)) acc.fill();
-		//if (checkOption(DataSelection::TRK)) trk.fill();
-		//if (checkOption(DataSelection::TRD)) trd.fill();
-		//if (checkOption(DataSelection::RICH)) rich.fill();
-		//if (checkOption(DataSelection::ECAL)) ecal.fill();
+		if (checkOption(DataSelection::LIST)) list.fill();
+		if (checkOption(DataSelection::RTI)) rti.fill();
+		if (checkOption(DataSelection::TRG)) trg.fill();
+		if (checkOption(DataSelection::TOF)) tof.fill();
+		if (checkOption(DataSelection::ACC)) acc.fill();
+		if (checkOption(DataSelection::TRK)) trk.fill();
+		if (checkOption(DataSelection::TRD)) trd.fill();
+		if (checkOption(DataSelection::RICH)) rich.fill();
+		if (checkOption(DataSelection::ECAL)) ecal.fill();
 	}
 }
 
@@ -3182,7 +3181,8 @@ void YiNtuple::loopEventChain() {
 			int analysisEventStatus = fData->analysisEvent(event);
 			if (analysisEventStatus < 0) continue;
 
-			fData->fill();
+            // testcode
+			//fData->fill();
 		}
 		else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 			fChain->SaveCurrentEvent();
