@@ -85,11 +85,23 @@ number of files = 132115 <br/>
 size = 1.6P <br/>
 
 ### EOS (AS)
+In ~/.bashrc
+```bash
+export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
+export EOS_HOME=/eos/ams
+```
+Commands
 ```bash
 xrd tw-eos03.grid.sinica.edu.tw ls /eos/ams/amsdatadisk/Data/2014/ISS.B950/pass6
 ```
 
 ### DPM (Disk Pool Manager)
+In ~/.bashrc
+```bash
+export DPM_HOST=grid71.phy.ncu.edu.tw
+export DPNS_HOST=grid71.phy.ncu.edu.tw
+```
+Commands
 ```bash
 xrdfs grid71.phy.ncu.edu.tw
 dpns-ls /dpm/phy.ncu.edu.tw/home/ams02
