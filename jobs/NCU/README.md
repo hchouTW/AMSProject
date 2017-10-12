@@ -67,7 +67,7 @@ voms-proxy-info -all -file ~/ams02
 ```
 
 ## PBS (Portable Batch System)
-commands
+Commands
 ```bash
 qsub -q ams -N JobName -j oe -o job.out script.sh
 qstat
@@ -90,7 +90,7 @@ In ~/.bashrc
 export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
 export EOS_HOME=/eos/ams
 ```
-Commands
+Example:
 ```bash
 xrd tw-eos03.grid.sinica.edu.tw ls /eos/ams/amsdatadisk/Data/2014/ISS.B950/pass6
 ```
@@ -101,7 +101,7 @@ In ~/.bashrc
 export DPM_HOST=grid71.phy.ncu.edu.tw
 export DPNS_HOST=grid71.phy.ncu.edu.tw
 ```
-Commands
+Example:
 ```bash
 xrdfs grid71.phy.ncu.edu.tw
 dpns-ls /dpm/phy.ncu.edu.tw/home/ams02
