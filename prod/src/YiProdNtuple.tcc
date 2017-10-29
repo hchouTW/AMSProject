@@ -2940,7 +2940,7 @@ void YiNtuple::loopEventChain() {
 
 	Long64_t npassed = 0;
 	Long64_t nprocessed = 0;
-	const Long64_t printLimit = 20000;
+	const Long64_t printLimit = 10000;
 	Long64_t printRate = loop_entries / 200;
 	if (printRate < printLimit) printRate = printLimit;
 	if (printRate > printLimit * 5) printRate = printLimit * 5;
