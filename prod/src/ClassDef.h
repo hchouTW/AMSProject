@@ -704,10 +704,7 @@ class TOF : public TObject {
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
 
-			std::fill_n(extClsN, 2, 0);
-			std::fill_n(extClsL[0], 2*2, -1);
-			std::fill_n(extClsQ[0], 2*2, -1);
-			std::fill_n(extClsT[0], 2*2,  0);
+			std::fill_n(extClsN, 4, 0);
 
 			//statusBetaHs = false;
 			//betaHBits = 0;
@@ -744,11 +741,8 @@ class TOF : public TObject {
 		Float_t Q[4];
 		Float_t Qall;
 
-		// extern clusters (near betaH hit by time)
-		Short_t extClsN[2];
-		Short_t extClsL[2][2];
-		Float_t	extClsQ[2][2];
-		Float_t extClsT[2][2];
+		// extern clusters
+		Short_t extClsN[4];
 
 		// TRK Track independent
 		//Bool_t  statusBetaHs;
@@ -763,7 +757,7 @@ class TOF : public TObject {
 		//Float_t Qalls;
 		//Float_t betaHStates[6];
 
-	ClassDef(TOF, 4)
+	ClassDef(TOF, 5)
 };
 
 
@@ -827,9 +821,9 @@ class TRD : public TObject {
 			numOfHTrack = 0;
 			std::fill_n(numOfHSeg, 2, 0);
 			
-			vtxSide = 0;
-			std::fill_n(vtxCoo, 3, 0);
-			std::fill_n(vtxTrCoo, 3, 0);
+			//vtxSide = 0;
+			//std::fill_n(vtxCoo, 3, 0);
+			//std::fill_n(vtxTrCoo, 3, 0);
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(Q, 2, -1);
@@ -846,9 +840,9 @@ class TRD : public TObject {
 		Short_t numOfHSeg[2];
 
 		// (TrTrack, TrdSegment) Vertex
-		Short_t vtxSide;
-		Float_t vtxCoo[3];
-		Float_t vtxTrCoo[3];
+		//Short_t vtxSide;
+		//Float_t vtxCoo[3];
+		//Float_t vtxTrCoo[3];
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
@@ -880,13 +874,13 @@ class RICH : public TObject {
 			std::fill_n(emission, 6, 0);
 			std::fill_n(receiving, 6, 0);
 
-			std::fill_n(numOfExpPE, 5, -1);
-			std::fill_n(theta, 5, -1);
-
             hits.clear();
+			
+            //std::fill_n(numOfExpPE, 5, -1);
+			//std::fill_n(theta, 5, -1);
 		
-			std::fill_n(numOfCrossHit, 2, 0);
-			std::fill_n(numOfRingHit[0], 5*3, 0);
+			//std::fill_n(numOfCrossHit, 2, 0);
+			//std::fill_n(numOfRingHit[0], 5*3, 0);
 
 			status = false;
 			isGoodRecon = false;
@@ -904,16 +898,16 @@ class RICH : public TObject {
 		Bool_t isInFiducialVolume;
 		Float_t emission[6];
         Float_t receiving[6];
-		
-        // [0] electron [1] pion [2] kaon [3] proton [4] deuterium
-		Float_t numOfExpPE[5]; // number of photoelectrons expected for a given track, beta and charge.
-        Float_t theta[5];      // theta for a given track, beta and charge.
 
 		// Rich Hits
         std::vector<HitRICHInfo> hits;
+        
+        // [0] electron [1] pion [2] kaon [3] proton [4] deuterium
+		//Float_t numOfExpPE[5]; // number of photoelectrons expected for a given track, beta and charge.
+        //Float_t theta[5];      // theta for a given track, beta and charge.
 
-		Short_t numOfCrossHit[2];   // CrossHit[selected, others]
-		Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
+		//Short_t numOfCrossHit[2];   // CrossHit[selected, others]
+		//Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
                                     // [0] electron
                                     // [1] pion
                                     // [2] kaon

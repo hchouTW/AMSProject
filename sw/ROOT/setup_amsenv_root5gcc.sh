@@ -47,6 +47,14 @@ export AMSDataDir=${Offline}/AMSDataDir
 export AMSDataDirRW=${AMSDataDir}
 
 alias hadd="${ROOTSYS}/bin/hadd -k"
+function merge {
+    if [ $# == 1 ]; then
+        if [ -f ${1}.root ]; then /bin/rm ${1}.root; fi
+        ${ROOTSYS}/bin/hadd -k ${1}.root ${1}*.root
+    else
+        echo -e "Error: No Merged Name."
+    fi
+}
 
 #### COMPILER
 export COMPILER=GCC

@@ -18,14 +18,16 @@ int main(int argc, char * argv[]) {
     
     MGConfig::JobOpt opt(argc, argv);
 
-    MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
-    MatFld&& mat1 = MatMgnt::Get(SVecD<3>(0, 0, 195.0), SVecD<3>(0, 0, 50.0));
-    MatFld&& mat2 = MatMgnt::Get(SVecD<3>(2, 2, -60.0), SVecD<3>(2, 2, -70.0));
-    MatFld&& mat3 = MatMgnt::Get(SVecD<3>(0, 0, 58.0),  SVecD<3>(0, 0, 51.0));
-    mat1.print();
-    mat2.print();
-    mat3.print();
-    return 1;
+    //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
+    //MatFld&& mat1 = MatMgnt::Get(SVecD<3>(0, 0, -200.0), SVecD<3>(0, 0, 200.0));
+    //MatFld&& mat2 = MatMgnt::Get(SVecD<3>(2, 2, 200.0), SVecD<3>(2, 2, 50.0));
+    //MatFld&& mat3 = MatMgnt::Get(SVecD<3>(0, 0, -50),  SVecD<3>(0, 0, -100));
+    //MatFld&& mat4 = MatMgnt::Get(SVecD<3>(0, 0, -140),  SVecD<3>(0, 0, -165));
+    //mat1.print();
+    //mat2.print();
+    //mat3.print();
+    //mat4.print();
+    //return 1;
 
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
@@ -57,14 +59,15 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    PhyArg::SetOpt(true, false);
+    PhyArg::SetOpt(true, true);
     Int_t layBeg = 1;
     Int_t layEnd = 2;
     
     TFile * ofle = new TFile("prop_ams02.root", "RECREATE");
     
-    //Axis AXmom("Momentum [GeV]", 40, 0.5, 10., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 40, 1.0, 800., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 20, 0.5, 10., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 20, 1.0, 800., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 250, 0.5, 800., AxisScale::kLog);
     Axis AXcos("Cos [1]", 40, 0.9,  1.);
 
     Hist * hCos = Hist::New("hCos", "hCos", HistAxis(AXcos, AXcos));
@@ -75,19 +78,26 @@ int main(int argc, char * argv[]) {
     Hist * hYres = Hist::New("hYres", "hYres", HistAxis(AXmom, AXres));
 
     // Prop
-    Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -3, 3);
+    //Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -1.0, 1.0);
+    Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -6.0, 6.0);
+    //Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 200, -0.2, 0.2);
+    //Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 200, -0.01, 0.01);
     Hist * hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXmom, AXcoo));
     Hist * hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXmom, AXcoo));
     Hist * hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo));
     Hist * hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo));
     
-    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.05, 0.05);
+    //Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.02, 0.02);
+    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.12, 0.12);
+    //Axis AXagl("Residual [p#beta/Q^{2}]", 200, -0.005, 0.005);
+    //Axis AXagl("Residual [p#beta/Q^{2}]", 200, -0.003, 0.003);
     Hist * hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl));
     Hist * hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl));
     Hist * hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl));
     Hist * hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXmom, AXagl));
     
-    Axis AXels("Eloss [GeV * #beta^{2}/Q^{2}]", 400, 0.005, 0.05);
+    //Axis AXels("Eloss [GeV * #beta^{2}/Q^{2}]", 200, 0.005, 0.05);
+    Axis AXels("Eloss [GeV * #beta^{2}/Q^{2}]", 200, 0.002, 0.018);
     Hist * hMee = Hist::New("hMee", "hMee", HistAxis(AXmom, AXels));
     Hist * hTee = Hist::New("hTee", "hTee", HistAxis(AXmom, AXels));
     
@@ -100,7 +110,8 @@ int main(int argc, char * argv[]) {
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
-        //if (entry > 100) break; // testcode
+        //if (entry>(dst->GetEntries()/20)) break; // testcode
+        //if (entry%10!=0) continue; // testcode
         dst->GetEntry(entry);
         
         //Double_t mc_mom  = (fG4mc->primPart.mom);
@@ -122,9 +133,12 @@ int main(int argc, char * argv[]) {
         HitTRKMCInfo * mchitL = nullptr;
         for (auto&& hit : fG4mc->primPart.hits) {
             Double_t radius = std::sqrt(hit.coo[0]*hit.coo[0] + hit.coo[1]*hit.coo[1]);
-            Double_t cos = std::fabs(hit.dir[2]);
-            if (radius > 30.) continue;
-            //if (cos < 0.90) continue;
+            Double_t maxxy  = std::max(std::fabs(hit.coo[0]), std::fabs(hit.coo[1]));
+            Double_t cos    = std::fabs(hit.dir[2]);
+            if (maxxy > 25.) continue;
+            //if (maxxy > 10.) continue;
+            //if (radius > 35.) continue;
+            //if (radius > 20.) continue;
             if (hit.layJ == layBeg) mchitU = &hit;
             if (hit.layJ == layEnd) mchitL = &hit;
         }
@@ -136,18 +150,26 @@ int main(int argc, char * argv[]) {
             );
             part.set_mom(mchitU->mom);
             Double_t mc_mom = mchitU->mom;
-            Double_t mc_cos = std::fabs(mchitU->dir[2]);
+            Double_t mc_cos = std::sqrt(std::fabs(mchitU->dir[2] * mchitL->dir[2]));
             
-            Double_t scl_eloss = mc_cos * (part.bta() * part.bta()) / (part.chrg() * part.chrg());
-            Double_t scl_mscat = mc_cos * (part.mom() * part.bta()) / (part.chrg() * part.chrg());
+            Double_t scl_eloss = (part.bta() * part.bta()) / (part.chrg() * part.chrg());
+            Double_t scl_mscat = (part.mom() * part.bta()) / std::fabs(part.chrg());
             
             hCos->fill(std::fabs(mchitU->dir[2]), std::fabs(mchitL->dir[2]));
-            
+
+            MatFld mfld;
+            //MatFld&& mfld = MatMgnt::Get(SVecD<3>(mchitU->coo[0], mchitU->coo[1], mchitU->coo[2]), SVecD<3>(mchitL->coo[0], mchitL->coo[1], mchitL->coo[2]));
+
             PhySt ppst(part);
-            PropMgnt::PropToZ(mchitL->coo[2], ppst);
+            //PropMgnt::PropToZ(mchitL->coo[2], ppst);
+            PropMgnt::PropToZ(mchitL->coo[2], ppst, &mfld);
+            //PropMgnt::PropToZ_AMSLibs(mchitL->coo[2], ppst);
             SVecD<3> refc = ppst.c();
             SVecD<3> refu = ppst.u();
-            
+           
+            scl_mscat /= std::sqrt(mfld.num_rad_len());
+            scl_eloss /= mfld.elcloud_abundance();
+
             ppst = part;
             PropMgnt::PropToZWithMC(mchitL->coo[2], ppst);
             Double_t mc_resc[2] = { mchitL->coo[0] - refc(0), mchitL->coo[1] - refc(1) };
@@ -311,9 +333,9 @@ int main(int argc, char * argv[]) {
         
         double mpeak = (*vhMee.at(it))()->GetXaxis()->GetBinCenter((*vhMee.at(it))()->GetMaximumBin());
         feloss->SetParameters(1000., 1.0, mpeak, 0.1*mpeak, 1.0);
-        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 3*mpeak);
-        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 3*mpeak);
-        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 3*mpeak);
+        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 2*mpeak);
+        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 2*mpeak);
+        (*vhMee.at(it))()->Fit(feloss, "q0", "", 0.8*mpeak, 2*mpeak);
         gMee_kpa->SetPoint     (it-1, val, feloss->GetParameter(1));
         gMee_kpa->SetPointError(it-1,  0., feloss->GetParError(1));
         gMee_mpv->SetPoint     (it-1, val, feloss->GetParameter(2));

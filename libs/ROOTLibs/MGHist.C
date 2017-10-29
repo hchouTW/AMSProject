@@ -301,7 +301,7 @@ void Hist::Write() {
 
 
 Bool_t Hist::Load(const std::string& filename, const std::string& filepath) {
-	std::string fullPath = STR_FMT("%s/%s.root", filepath.c_str(), filename.c_str());
+	std::string fullPath = STR_FMT("%s/%s", filepath.c_str(), filename.c_str());
 	if (!MGSys::TestFile(fullPath, 'f')) {
 		MGSys::ShowError(STR_FMT("<< Hist::Load >>  %s is not open.", fullPath.c_str()));
 		return false;
@@ -325,7 +325,7 @@ Bool_t Hist::Load(const std::string& filename, const std::string& filepath) {
 
 
 Bool_t Hist::Save(const std::string& filename, const std::string& filepath) {
-	std::string fullPath = STR_FMT("%s/%s.root", filepath.c_str(), filename.c_str());
+	std::string fullPath = STR_FMT("%s/%s", filepath.c_str(), filename.c_str());
 	if (!MGSys::TestFile(filepath, 'd')) return false;
 	
 	TFile * file = new TFile(fullPath.c_str(), "RECREATE");

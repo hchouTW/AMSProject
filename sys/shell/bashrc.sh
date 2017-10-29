@@ -55,8 +55,9 @@ if [[ "$HOSTNAME" == *"lxplus"* ]]; then
 else
     alias mkjob='sh ${AMSProj}/jobs/NCU/mkjob.sh'
     alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
-    alias voms_info='voms-proxy-info --all --file ~/ams02'
-    alias voms_init='voms-proxy-init --hours 168 --out ~/ams02 --voms ams02.cern.ch'
+    alias voms_info='voms-proxy-info -all -file ~/ams02'
+    alias voms_init='voms-proxy-init -voms ams02.cern.ch -valid 168:00 -hours 168 -out ~/ams02'
+    alias voms_auto_init='cat ~/.globus/passwd | voms-proxy-init -rfc -voms ams02.cern.ch -cert ~/.globus/usercert.pem -key ~/.globus/userkey.pem -hours 1 -vomslife 1:0 -pwstdin'
     export X509_USER_PROXY=~/ams02
 fi
 

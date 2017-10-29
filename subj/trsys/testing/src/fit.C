@@ -19,8 +19,8 @@ int main(int argc, char * argv[]) {
     MGConfig::JobOpt opt(argc, argv);
 
     //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
-    MatFld&& mat = MatMgnt::Get(SVecD<3>(0, 0, 195.0), SVecD<3>(0, 0, 50.0));
-    mat.print();
+    //MatFld&& mat = MatMgnt::Get(SVecD<3>(0, 0, 195.0), SVecD<3>(0, 0, 50.0));
+    //mat.print();
 
     ////MatFld&& matNaf = MatMgnt::Get(SVecD<3>(1, 1, -71.8), SVecD<3>(1, 1, -74.8));
     ////MatFld&& matAgl = MatMgnt::Get(SVecD<3>(20, 20, -71.8), SVecD<3>(20, 20, -74.8));

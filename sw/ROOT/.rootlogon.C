@@ -7,6 +7,7 @@
 
     TF1 * f3gs = new TF1("f3gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])");
     f3gs->SetParameters(10., 0.001, 10., 0.003, 10., 0.01);
+    
     TF1 * f4gs = new TF1("f4gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5]) + ([6]/[7])*TMath::Exp(-0.5*x*x/[7]/[7])");
     f4gs->SetParameters(10., 0.001, 10., 0.003, 10., 0.01, 10., 0.03);
     
@@ -14,9 +15,9 @@
     feloss->SetParameters(1000., 1.0, 0.0015, 0.0002); 
     
     
-    const char* tt = "(1.0/[1]/[1]) * (([2]/[3]) / ((abs((x-[2])/[3])) + ([2]/[3])) )^[4]";
-    TF1 * feloss2 = new TF1("feloss2", Form("[0] * TMath::Power(%s, %s) / TMath::Gamma(%s) * TMath::Exp(-(%s) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )", tt, tt, tt, tt));
-    feloss2->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
+    //const char* tt = "(1.0/[1]/[1]) * (([2]/[3]) / ((abs((x-[2])/[3])) + ([2]/[3])) )^[4]";
+    //TF1 * feloss2 = new TF1("feloss2", Form("[0] * TMath::Power(%s, %s) / TMath::Gamma(%s) * TMath::Exp(-(%s) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )", tt, tt, tt, tt));
+    //feloss2->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
     
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 

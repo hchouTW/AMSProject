@@ -71,6 +71,7 @@ class HistAxis {
 class Hist {
     public :
         static void LoadDefaultEnvironment() { COUT("MGROOT::Hist : Load default environment.\n"); TH1::SetDefaultSumw2(true); TH1::AddDirectory(false); }
+        static void AddDirectory(Bool_t opt = true) { TH1::AddDirectory(opt); }
 
 	protected :
 		Hist() { unique_id_ = -1; info_.first = HistType::kNone; info_.second = HistDim::kNone; hist_ = nullptr; }
@@ -90,6 +91,10 @@ class Hist {
 		inline const HistDim&     dim()        const { return info_.second; }
 		inline const HistAxis&    axis()       const { return axis_; }
 		inline TH1 *              operator()() const { return hist_; }
+		
+        inline const Axis&        xaxis()      const { return axis_.x(); }
+		inline const Axis&        yaxis()      const { return axis_.y(); }
+		inline const Axis&        zaxis()      const { return axis_.z(); }
 		
 		void                          set_bin(const HistBin& bin, Double_t content, Double_t error = -1);
 		std::pair<Double_t, Double_t> get_bin(const HistBin& bin) const;
