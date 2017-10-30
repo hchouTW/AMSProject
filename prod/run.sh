@@ -8,9 +8,9 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 #DataType=ISS
 #Stream=lst/flist.ncu.iss.B950.pass6
 DataType=MC
-#Stream=lst/flist.cern.mc.pr.pl1.0510
+Stream=lst/flist.cern.mc.pr.pl1.0510
 #Stream=lst/flist.cern.mc.pr.pl1.1800
-Stream=lst/flist.cern.mc.pr.pl1.flux.l1a9.2016000
+#Stream=lst/flist.cern.mc.pr.pl1.flux.l1a9.2016000
 
 GroupId=1
 GroupSize=1

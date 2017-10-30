@@ -417,6 +417,7 @@ class TrackInfo : public TObject {
 			bitPattJ = 0;
 			bitPattXYJ = 0;
 			bitPatt = 0;
+			bitPattXY = 0;
 			QIn = -1;
 			QL2 = -1;
 			QL1 = -1;
@@ -438,15 +439,20 @@ class TrackInfo : public TObject {
 		UShort_t bitPattJ;
 		UShort_t bitPattXYJ;
 		
-		// bitPatt := hasInner *   1 + hasInnerXY *   2 +
-		//            hasL2    *   4 + hasL2XY    *   8 +
-		//            hasL1    *  16 + hasL1XY    *  32 +
-		//            hasL9    *  64 + hasL9XY    * 128
-		// Inner    (XY) := ((bitPatt&   2)==  2)
-		// InnerL1  (XY) := ((bitPatt&  34)== 34)
-		// InnerL9  (XY) := ((bitPatt& 130)==130)
-		// FullSpan (XY) := ((bitPatt& 162)==162)
-		UShort_t bitPatt;
+		// bitPatt   := hasInner   * 1 +
+		//              hasL2      * 2 +
+		//              hasL1      * 4 +
+		//              hasL9      * 8
+		// bitPattXY := hasInnerXY * 1 +
+		//              hasL2XY    * 2 +
+		//              hasL1XY    * 4 +
+		//              hasL9XY    * 8
+		// Inner    (XY) := ((bitPattXY&  1)==  1)
+		// InnerL1  (XY) := ((bitPattXY&  5)==  5)
+		// InnerL9  (XY) := ((bitPattXY&  9)==  9)
+		// FullSpan (XY) := ((bitPattXY& 13)== 13)
+		Short_t bitPatt;
+		Short_t bitPattXY;
 
 		// Track Charge
 		Float_t QIn;
@@ -701,6 +707,7 @@ class TOF : public TObject {
 			normChisqT = -1;
 			normChisqC = -1;
 			std::fill_n(T, 4,  0);
+			std::fill_n(E, 4,  0);
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
 
@@ -714,6 +721,7 @@ class TOF : public TObject {
 			//normChisqTs = -1;
 			//normChisqCs = -1;
 			//std::fill_n(Ts, 4,  0);
+			//std::fill_n(Es, 4,  0);
 			//std::fill_n(Qs, 4, -1);
 			//Qalls = -1;
 			//std::fill_n(betaHStates, 6, 0);
@@ -738,6 +746,7 @@ class TOF : public TObject {
 		Float_t normChisqT;
 		Float_t normChisqC;
 		Float_t T[4];
+        Float_t E[4];
 		Float_t Q[4];
 		Float_t Qall;
 
@@ -753,11 +762,12 @@ class TOF : public TObject {
 		//Float_t normChisqTs;
 		//Float_t normChisqCs;
 		//Float_t Ts[4];
+		//Float_t Es[4];
 		//Float_t Qs[4];
 		//Float_t Qalls;
 		//Float_t betaHStates[6];
 
-	ClassDef(TOF, 5)
+	ClassDef(TOF, 6)
 };
 
 

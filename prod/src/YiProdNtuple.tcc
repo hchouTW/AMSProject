@@ -28,15 +28,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	fStopwatch.start();
 	init();
 
-	//int npar    = event->NParticle();
-	//int nbeta   = event->NBeta();
-	//int nbetaH  = event->NBetaH();
-	//int ntrtk   = event->NTrTrack();
-	//int nshower = event->NEcalShower();
-	//int ntrdtk  = event->NTrdTrack();
-	//int ntrdhtk = event->NTrdHTrack();
-	//int nring   = event->NRichRing();
-
 	/** Particle **/
 	bool isParticle = false;
 	if (event->NParticle() > 0 && event->pParticle(0) != 0) {
@@ -722,8 +713,10 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			TofClusterHR * cls = betaH->GetClusterHL(il);
 			if (cls == nullptr) continue;
 			fTof.T[il] = cls->Time;
+			fTof.E[il] = betaH->GetEdepL(il);
 			fTof.Q[il] = betaH->GetQL(il);
 			fTof.betaHPatt += pattIdx[il];
+
 			if (cls->IsGoodTime())
 				fTof.betaHGoodTime += pattIdx[il];
 		}
@@ -759,43 +752,37 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (int it = 0; it < betaH->NTofClusterH(); ++it)
 			betaHClsId.at(betaH->pTofClusterH(it)->Layer) = betaH->iTofClusterH(it);
 	}
-
-	bool   isHasTime[2] = { false, false };
-	double avgTime[2] = {0, 0};
-	//double avgChrg[2] = {0, 0};
-	for (int it = 0; it < 2; ++it) {
-		isHasTime[it] = (betaHClsId.at(2*it+0) >= 0 || betaHClsId.at(2*it+1) >= 0);
-		if (isHasTime[it]) {
-			TofClusterHR * ucls = (betaHClsId.at(2*it+0) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+0)) : nullptr;
-			TofClusterHR * lcls = (betaHClsId.at(2*it+1) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+1)) : nullptr;
-			//double chrg  = (((ucls) ? ucls->GetQSignal() : 0.) + ((lcls) ? lcls->GetQSignal() : 0.)) / ((ucls!=nullptr) + (lcls!=nullptr));
-			double wgval = ((ucls) ? (ucls->Time/ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (lcls->Time/lcls->ETime/lcls->ETime) : 0.);
-			double sumwg = ((ucls) ? (1./ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (1./lcls->ETime/lcls->ETime) : 0.);
-			double value = wgval / sumwg;
-			//avgChrg[it] = chrg;
-			avgTime[it] = value;
-		}
-	}
-
-	const double ChrgLimit = 0.90;
+	
+    const double ChrgLimit = 0.90;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
 	for (int it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
 		if (cls == nullptr) continue;
-		//if (betaHClsId.at(cls->Layer) < 0) continue;
 		if (betaHClsId.at(cls->Layer) == it) continue;
 		int    lay  = cls->Layer;
-		//int    slay = (cls->Layer / 2);
 		double chrg = cls->GetQSignal();
-		//double dltT = (cls->Time - avgTime[slay]);
-		//double absT = std::fabs(dltT) / cls->ETime;
 		if (chrg > ChrgLimit) nearHitNm[lay]++;
 	}
-
-	for (int it = 0; it < 4; ++it) {
-		fTof.extClsN[it] = nearHitNm[it];
+	for (int il = 0; il < 4; ++il) {
+		fTof.extClsN[il] = nearHitNm[il];
 	}
 
+	//bool   isHasTime[2] = { false, false };
+	//double avgTime[2] = {0, 0};
+	////double avgChrg[2] = {0, 0};
+	//for (int it = 0; it < 2; ++it) {
+	//	isHasTime[it] = (betaHClsId.at(2*it+0) >= 0 || betaHClsId.at(2*it+1) >= 0);
+	//	if (isHasTime[it]) {
+	//		TofClusterHR * ucls = (betaHClsId.at(2*it+0) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+0)) : nullptr;
+	//		TofClusterHR * lcls = (betaHClsId.at(2*it+1) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+1)) : nullptr;
+	//		//double chrg  = (((ucls) ? ucls->GetQSignal() : 0.) + ((lcls) ? lcls->GetQSignal() : 0.)) / ((ucls!=nullptr) + (lcls!=nullptr));
+	//		double wgval = ((ucls) ? (ucls->Time/ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (lcls->Time/lcls->ETime/lcls->ETime) : 0.);
+	//		double sumwg = ((ucls) ? (1./ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (1./lcls->ETime/lcls->ETime) : 0.);
+	//		double value = wgval / sumwg;
+	//		//avgChrg[it] = chrg;
+	//		avgTime[it] = value;
+	//	}
+	//}
 
 	/*
 	TofRecH::BuildOpt = 1; // TrTrack independent
@@ -818,6 +805,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			TofClusterHR * cls = betaHs->GetClusterHL(il);
 			if (cls == nullptr) continue;
 			fTof.Ts[il] = cls->Time;
+			fTof.Es[il] = betaHs->GetEdepL(il);
 			fTof.Qs[il] = betaHs->GetQL(il);
 			fTof.betaHPatts += pattIdx[il];
 			if (cls->IsGoodTime())
@@ -1006,26 +994,30 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		const unsigned short _hasL56 =  48;
 		const unsigned short _hasL78 = 192;
 		const unsigned short _hasL9  = 256;
+	
 		track.bitPattJ = trtk->GetBitPatternJ();
 		track.bitPattXYJ = trtk->GetBitPatternXYJ();
-	
-		short isInner   = ((track.bitPattJ&_hasL34) > 0 &&
+		
+        short isInner   = ((track.bitPattJ&_hasL34) > 0 &&
 		                   (track.bitPattJ&_hasL56) > 0 &&
 						   (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
-		short isInnerXY = ((track.bitPattXYJ&_hasL34) > 0 &&
+		short isL2      = ((track.bitPattJ&_hasL2) > 0) ?  2 : 0;
+		short isL1      = ((track.bitPattJ&_hasL1) > 0) ?  4 : 0;
+		short isL9      = ((track.bitPattJ&_hasL9) > 0) ?  8 : 0;
+		short bitPatt   = isInner + isL2 + isL1 + isL9;
+
+        short isInnerXY = ((track.bitPattXYJ&_hasL34) > 0 &&
 		                   (track.bitPattXYJ&_hasL56) > 0 &&
-						   (track.bitPattXYJ&_hasL78) > 0) ? 2 : 0;
-		short isL2    = ((track.bitPattJ  &_hasL2) > 0) ?   4 : 0;
-		short isL2XY  = ((track.bitPattXYJ&_hasL2) > 0) ?   8 : 0;
-		short isL1    = ((track.bitPattJ  &_hasL1) > 0) ?  16 : 0;
-		short isL1XY  = ((track.bitPattXYJ&_hasL1) > 0) ?  32 : 0;
-		short isL9    = ((track.bitPattJ  &_hasL9) > 0) ?  64 : 0;
-		short isL9XY  = ((track.bitPattXYJ&_hasL9) > 0) ? 128 : 0;
-		short bitPatt = isInner + isInnerXY + isL2 + isL2XY + isL1 + isL1XY + isL9 + isL9XY;
+						   (track.bitPattXYJ&_hasL78) > 0) ? 1 : 0;
+		short isL2XY    = ((track.bitPattXYJ&_hasL2) > 0) ?  2 : 0;
+		short isL1XY    = ((track.bitPattXYJ&_hasL1) > 0) ?  4 : 0;
+		short isL9XY    = ((track.bitPattXYJ&_hasL9) > 0) ?  8 : 0;
+		short bitPattXY = isInnerXY + isL2XY + isL1XY + isL9XY;
 	
 		short fitidInn = trtk->iTrTrackPar(1, 3, 21);
 		if (fitidInn < 0) continue;
-		track.bitPatt = bitPatt; 
+		track.bitPatt   = bitPatt; 
+		track.bitPattXY = bitPattXY; 
 		track.QIn = trtk->GetInnerQ_all(Beta, fitidInn).Mean; 
 		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
@@ -2986,8 +2978,7 @@ void YiNtuple::loopEventChain() {
 			int analysisEventStatus = fData->analysisEvent(event);
 			if (analysisEventStatus < 0) continue;
 
-            // testcode
-			//fData->fill();
+			fData->fill();
 		}
 		else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 			fChain->SaveCurrentEvent();
