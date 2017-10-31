@@ -50,13 +50,14 @@ create usercert.pem and userkey.pem by openssl
 ```bash
 openssl pkcs12 -in myCertificate.p12 -clcerts -nokeys -out usercert.pem
 openssl pkcs12 -in myCertificate.p12 -nocerts -out userkey.pem
+chmod 400 userkey.pem
 ```
 
 ## VOMS (from AS)
 https://voms.grid.sinica.edu.tw:8443/
 
 ### Init VOMS
-In ~/.bashrc
+In ~/.bashrc file
 ```bash
 export X509_USER_PROXY=~/ams02
 ```
@@ -85,7 +86,7 @@ number of files = 132115 <br/>
 size = 1.6P <br/>
 
 ### EOS (AS)
-In ~/.bashrc
+In ~/.bashrc file
 ```bash
 export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
 export EOS_HOME=/eos/ams
@@ -96,7 +97,7 @@ xrd tw-eos03.grid.sinica.edu.tw ls /eos/ams/amsdatadisk/Data/2014/ISS.B950/pass6
 ```
 
 ### DPM (Disk Pool Manager)
-In ~/.bashrc
+In ~/.bashrc file
 ```bash
 export DPM_HOST=grid71.phy.ncu.edu.tw
 export DPNS_HOST=grid71.phy.ncu.edu.tw
