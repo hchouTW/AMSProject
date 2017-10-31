@@ -52,14 +52,14 @@ Bool_t MatGeoBoxTestProp::CreateMatGeoBox() {
             CSTR_FMT("%s/MATC.bin", dir_path.c_str())
         );
     
-    Bool_t  TR_ELM[9] = { 0, 0, 0, 0, 0, 0, 0,     1, 0 };
-    Float_t TR_DEN[9] = { 0, 0, 0, 0, 0, 0, 0, 0.083, 0 };
+    Bool_t   TR_ELM[9] = { 0, 0, 0, 0, 0, 0, 0,     1, 0 };
+    Double_t TR_DEN[9] = { 0, 0, 0, 0, 0, 0, 0, 0.083, 0 };
     creator_TRL1.save_and_close(TR_ELM, TR_DEN);
     creator_TRL2.save_and_close(TR_ELM, TR_DEN);
     creator_TRL3.save_and_close(TR_ELM, TR_DEN);
     
-    Bool_t  C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
-    Float_t C_DEN[9] = { 0, 0.01, 0, 0, 0, 0, 0, 0, 0 };
+    Bool_t   C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
+    Double_t C_DEN[9] = { 0, 0.01, 0, 0, 0, 0, 0, 0, 0 };
     creator_MATC.save_and_close(C_ELM, C_DEN);
 
     return true;

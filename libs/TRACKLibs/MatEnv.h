@@ -45,7 +45,16 @@ class MatFld {
         inline const Double_t& loc() const { return loc_; }
         inline const Double_t& locsqr() const { return locsqr_; }
 
-        inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : 0.); }
+        inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : MGMath::ZERO); }
+        
+        inline Double_t elcloud_abundance() const { 
+            if (!mat_) return MGMath::ZERO;
+            Double_t elden = MGMath::ZERO;
+            for (Int_t ie = 0; ie < MatProperty::NUM_ELM; ++ie) { 
+                if (elm_.at(ie)) elden += MatProperty::CHRG.at(ie) * den_.at(ie);
+            }
+            return (elden * efft_len_);
+        }
 
     protected :
         inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; }
@@ -104,13 +113,13 @@ class MatGeoBoxCreator {
         MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Long64_t yn, Double_t ymin, Double_t ymax, Long64_t zn, Double_t zmin, Double_t zmax, const std::string& file_path = "MatGeoBox.bin");
         ~MatGeoBoxCreator() { save_and_close(); }
 
-        void fill(Float_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Float_t mol[MatProperty::NUM_ELM], Bool_t calculated = true);
+        void fill(Double_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Double_t mol[MatProperty::NUM_ELM], Bool_t calculated = true);
 
         inline Bool_t is_open() { return is_open_; }
        
         void save_and_close();
 
-        void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Float_t den[MatProperty::NUM_ELM]);
+        void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Double_t den[MatProperty::NUM_ELM]);
 
     protected :
         inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; vol_ = 0.; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; }
@@ -183,7 +192,11 @@ class MatMgnt {
         MatMgnt() {}
         ~MatMgnt() {}
 
+#if defined(__HAS_TESTPROP__) || defined(__HAS_TESTFIT__) || defined(__HAS_AMS_OFFICE_LIBS__)
         static Bool_t Load();
+#else
+        static Bool_t Load() { return false; }
+#endif
 
         static MatFld Get(const SVecD<3>& coo);
         static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
@@ -203,7 +216,7 @@ class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
         MatPhyFld(Double_t len) { clear(); len_ = len; }
-        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_brm_men_(eloss_brm_men) {}
+        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_men = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_ion_men_(eloss_ion_men), eloss_brm_men_(eloss_brm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
@@ -217,6 +230,7 @@ class MatPhyFld {
         inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
         inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
         inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
+        inline const Double_t& eloss_ion_men() const { return eloss_ion_men_; }
         inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
     protected :
@@ -234,6 +248,7 @@ class MatPhyFld {
         Double_t eloss_ion_kpa_; // ionization-energy-loss KPA [1]
         Double_t eloss_ion_mpv_; // ionization-energy-loss MPV [1]
         Double_t eloss_ion_sgm_; // ionization-energy-loss SGM [1]
+        Double_t eloss_ion_men_; // ionization-energy-loss MEN [1]
         Double_t eloss_brm_men_; // bremsstrahlung-energy-loss Mean [1]
 };
 
@@ -254,7 +269,7 @@ class MatPhy {
         
         static Double_t GetRadiationLength(const MatFld& mfld, const PhySt& part);
         static Double_t GetMultipleScattering(const MatFld& mfld, const PhySt& part);
-        static std::tuple<Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part);
 
     private :

@@ -199,15 +199,13 @@ class TransferPhyJb {
 
 class PropPhyCal {
     public :
-        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta0_abs_ = part.eta_abs(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
+        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_abs_sat_ = part.eta_abs(); eta_abs_end_ = part.eta_abs(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
         ~PropPhyCal() {}
 
         void init(); 
         void normalized(const MatFld& mfld, const PhySt& part);
 
         void push(PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
-
-        //Bool_t operator() () const { return (sw_mscat_ || sw_eloss_); }
 
         const Short_t& sign() const { return sign_; }
         
@@ -232,7 +230,8 @@ class PropPhyCal {
     private :
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
-        Double_t eta0_abs_;
+        Double_t eta_abs_sat_;
+        Double_t eta_abs_end_;
        
         Bool_t   field_;
         Short_t  sign_;
@@ -245,6 +244,7 @@ class PropPhyCal {
         std::vector<Double_t> vec_invloc_;
         std::vector<Double_t> vec_invlocsqr_;
         std::vector<Double_t> vec_mscat_;
+        std::vector<Double_t> vec_mscatsqr_;
 
         SVecD<3> tau_;
         SVecD<3> rho_;
@@ -252,9 +252,6 @@ class PropPhyCal {
         Double_t mscatu_;
         Double_t mscatcu_;
         Double_t mscatcl_;
-
-        std::vector<Double_t> vec_ieta_kpa_;
-        std::vector<Double_t> vec_ieta_sgm_;
 
         Double_t eloss_ion_kpa_;
         Double_t eloss_ion_mpv_;
@@ -305,20 +302,19 @@ class PropMgnt {
         
     private :
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
-        static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
-        static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
-        static constexpr Double_t PROP_STEP  = 30.0;   // (ds threshold)
-        static constexpr Double_t LMTU_STEP  = 50.0;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.1;   // (number radiation length threshold)
+        static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
+        static constexpr Double_t TUNE_STEP  = 8.0e-4; // (du threshold)
+        static constexpr Double_t PROP_STEP  = 20.0;   // (ds threshold)
+        static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
+        static constexpr Double_t TUNE_MAT   =  0.05;  // (number radiation length threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
         
-        // testcode
-        //static constexpr Double_t LMTU_STEP  =  8.5;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-
+        //static constexpr Double_t LMTU_STEP  =  6.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
+        
     private :
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;

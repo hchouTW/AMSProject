@@ -164,8 +164,8 @@ Bool_t MatGeoBoxTestFit::CreateMatGeoBox() {
             CSTR_FMT("%s/MATAL06.bin", dir_path.c_str())
         );
     
-    Bool_t  TR_ELM[9] = { 0, 0, 0, 0, 0, 0, 0,     1, 0 };
-    Float_t TR_DEN[9] = { 0, 0, 0, 0, 0, 0, 0, 0.083, 0 };
+    Bool_t   TR_ELM[9] = { 0, 0, 0, 0, 0, 0, 0,     1, 0 };
+    Double_t TR_DEN[9] = { 0, 0, 0, 0, 0, 0, 0, 0.083, 0 };
     creator_TRL01.save_and_close(TR_ELM, TR_DEN);
     creator_TRL02.save_and_close(TR_ELM, TR_DEN);
     creator_TRL03.save_and_close(TR_ELM, TR_DEN);
@@ -179,13 +179,13 @@ Bool_t MatGeoBoxTestFit::CreateMatGeoBox() {
     creator_TRL11.save_and_close(TR_ELM, TR_DEN);
     creator_TRL12.save_and_close(TR_ELM, TR_DEN);
     
-    Bool_t  C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
-    Float_t C_DEN[9] = { 0, 0.08, 0, 0, 0, 0, 0, 0, 0 };
+    Bool_t   C_ELM[9] = { 0,    1, 0, 0, 0, 0, 0, 0, 0 };
+    Double_t C_DEN[9] = { 0, 0.08, 0, 0, 0, 0, 0, 0, 0 };
     creator_MATC01.save_and_close(C_ELM, C_DEN);
     creator_MATC02.save_and_close(C_ELM, C_DEN);
     
-    Bool_t  AL_ELM[9] = { 0, 0, 0, 0, 0, 0,   1, 0, 0 };
-    Float_t AL_DEN[9] = { 0, 0, 0, 0, 0, 0, 0.1, 0, 0 };
+    Bool_t   AL_ELM[9] = { 0, 0, 0, 0, 0, 0,   1, 0, 0 };
+    Double_t AL_DEN[9] = { 0, 0, 0, 0, 0, 0, 0.1, 0, 0 };
     creator_MATAL01.save_and_close(AL_ELM, AL_DEN);
     creator_MATAL02.save_and_close(AL_ELM, AL_DEN);
     creator_MATAL03.save_and_close(AL_ELM, AL_DEN);

@@ -138,9 +138,9 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     Float_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
     Float_t zloc = (coo[2] - min_.at(2)) / dlt_.at(2);
 
-    Long64_t xi = static_cast<Long64_t>(xloc);
-    Long64_t yi = static_cast<Long64_t>(yloc);
-    Long64_t zi = static_cast<Long64_t>(zloc);
+    Long64_t xi = static_cast<Long64_t>(std::floor(xloc));
+    Long64_t yi = static_cast<Long64_t>(std::floor(yloc));
+    Long64_t zi = static_cast<Long64_t>(std::floor(zloc));
 
     if (xi < 0 || xi >= (n_.at(0)-1) || 
         yi < 0 || yi >= (n_.at(1)-1) || 
