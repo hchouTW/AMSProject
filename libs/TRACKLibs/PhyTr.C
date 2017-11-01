@@ -97,15 +97,16 @@ Bool_t PhyTr::fit() {
 Bool_t PhyTr::fit_analysis() {
     // Linear Fit on X
     // Equation of Motion
-    // X  = PX + UX * (Z - RefZ)
+    // X  = PX + TX * (Z - RefZ)
     // dZ = Z - RefZ
+    // UX = TX * UZ
     // Chisq = (X - Xm)^2
     // | PX |   | Sum(1)     Sum(dZ)   |^-1   | Sum(Xm)    |
     // |    | = |                      |    * |            |
-    // | UX |   | Sum(dZ)    Sum(dZ^2) |      | Sum(dZ*Xm) |
+    // | TX |   | Sum(dZ)    Sum(dZ^2) |      | Sum(dZ*Xm) |
     Double_t prefit_pz = hits_.at(0).cz();
     Double_t prefit_px = MGMath::ZERO;
-    Double_t prefit_ux = MGMath::ZERO;
+    Double_t prefit_tx = MGMath::ZERO;
     {
         SMtxSymD<2> mtx;
         SVecD<2>    res;
@@ -124,12 +125,12 @@ Bool_t PhyTr::fit_analysis() {
         if (!mtx.Invert()) return false;
         SVecD<2>&& rsl = mtx * res;
         prefit_px = rsl(0);
-        prefit_ux = rsl(1);
+        prefit_tx = rsl(1);
         
         for (auto&& hit : hits_) {
             if (hit.sx()) continue;
             Double_t dz = hit.cz() - prefit_pz;
-            Double_t px = prefit_px + prefit_ux * dz;
+            Double_t px = prefit_px + prefit_tx * dz;
             hit.set_dummy_x(px);
         }
     }
@@ -210,10 +211,9 @@ Bool_t PhyTr::fit_analysis() {
     }
    
     // Merge Fitting Result
-    Double_t prefit_uz = (MGMath::ONE - prefit_ux*prefit_ux - prefit_uy*prefit_uy);
-    if (MGNumc::Compare(prefit_uz) <= 0) prefit_uz = MGMath::ZERO;
-    else                                 prefit_uz = ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE) * std::sqrt(prefit_uz);
-
+    Double_t prefit_ortt = ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE);
+    Double_t prefit_uz = prefit_ortt * std::fabs((MGMath::ONE - prefit_uy * prefit_uy) / (MGMath::ONE + prefit_tx * prefit_tx));
+    Double_t prefit_ux = prefit_tx * prefit_uz;
     part_.set_state_with_cos(
         prefit_px, prefit_py, prefit_pz,
         prefit_ux, prefit_uy, prefit_uz
@@ -294,7 +294,7 @@ Bool_t PhyTr::fit_simple() {
             part_.cz(),
             part_.ux() - rslG(2),
             part_.uy() - rslG(3),
-            ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE)
+            ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
         part_.set_eta(part_.eta() - rslG(4));
         
@@ -464,7 +464,7 @@ Bool_t PhyTr::fit_physics() {
             part_.cz(),
             part_.ux() - rsl(2),
             part_.uy() - rsl(3),
-            ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE)
+            ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
         part_.set_eta(part_.eta() - rsl(4));
         

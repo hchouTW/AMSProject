@@ -229,7 +229,10 @@ class PhySt {
         
         inline Double_t tx() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
         inline Double_t ty() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
-  
+
+        inline void set_st(const SVecD<5>& st) { set_state_with_uxy(SVecD<3>(st(0), st(1), coo_(2)), SVecD<3>(st(2), st(3), MGNumc::Compare(dir_(2)))); set_eta(st(4)); }
+        inline SVecD<5> st() const { return SVecD<5>(coo_(0), coo_(1), dir_(0), dir_(1), eta_); }
+
         inline PhyArg&       arg() { return arg_; }
         inline VirtualPhySt& vst() { return vst_; }
         

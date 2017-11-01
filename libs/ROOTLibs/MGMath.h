@@ -131,8 +131,8 @@ namespace MGROOT {
 		
 		// SMatrix Template Function 
 		using ROOT::Math::Transpose;
-		using ROOT::Math::Similarity;
-		using ROOT::Math::SimilarityT;
+		using ROOT::Math::Similarity;   // U   M U^T
+		using ROOT::Math::SimilarityT;  // U^T M U
 		using ROOT::Math::fabs;
 		using ROOT::Math::sqr;
 		using ROOT::Math::sqrt;

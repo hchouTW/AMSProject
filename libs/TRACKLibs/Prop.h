@@ -109,7 +109,7 @@ class TransferFunc {
 class PhyJb {
     public :
         static constexpr Int_t DIM_G = 5;
-        static constexpr Int_t DIM_L = 2;
+        static constexpr Int_t DIM_L = 4;
 
         using SMtxDGG = SMtxD<DIM_G, DIM_G>;
         using SMtxDGL = SMtxD<DIM_G, DIM_L>;
@@ -160,10 +160,12 @@ class PhyJb {
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
-        static constexpr Short_t JTAU = 0;
-        static constexpr Short_t JRHO = 1;
-        static constexpr Short_t JION = 2;
-        static constexpr Short_t JBRM = 3;
+        static constexpr Short_t JTAUU = 0;
+        static constexpr Short_t JTAUC = 1;
+        static constexpr Short_t JRHOU = 2;
+        static constexpr Short_t JRHOC = 3;
+        static constexpr Short_t JION  = 4;
+        static constexpr Short_t JBRM  = 5;
 };
 
 
@@ -205,7 +207,7 @@ class PropPhyCal {
         void init(); 
         void normalized(const MatFld& mfld, const PhySt& part);
 
-        void push(PhySt& part, const MatPhyFld& mpfld, const SVecD<3>& tau, const SVecD<3>& rho);
+        void push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, const SVecD<3>& rho, Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_mpv = 0.);
 
         const Short_t& sign() const { return sign_; }
         
@@ -220,8 +222,8 @@ class PropPhyCal {
         const Double_t& mscatcl() const { return mscatcl_; }
 
         const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
-        const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
         const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
+        const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
 
         const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
 
@@ -252,10 +254,14 @@ class PropPhyCal {
         Double_t mscatu_;
         Double_t mscatcu_;
         Double_t mscatcl_;
+        
+        std::vector<Double_t> vec_ion_kpa_;
+        std::vector<Double_t> vec_ion_sgm_;
+        std::vector<Double_t> vec_ion_mpv_;
 
         Double_t eloss_ion_kpa_;
-        Double_t eloss_ion_mpv_;
         Double_t eloss_ion_sgm_;
+        Double_t eloss_ion_mpv_;
 
         Double_t eloss_brm_men_;
 };
