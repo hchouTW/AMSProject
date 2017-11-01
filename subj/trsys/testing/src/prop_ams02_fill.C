@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data1/hchou/17SEP27/src/ClassDef.h"
-#include "/data1/hchou/17SEP27/src/ClassDef.C"
+#include "/data3/hchou/AMSCore/prod/17Oct30/src/ClassDef.h"
+#include "/data3/hchou/AMSCore/prod/17Oct30/src/ClassDef.C"
 
 using namespace std;
 
@@ -54,8 +54,9 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/prop_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 50, 20., 16000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 200, 1.0, 800., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 50, 20., 16000., AxisScale::kLog);
     Axis AXcos("Cos [1]", 40, 0.9,  1.);
 
     Hist * hCos = Hist::New("hCos", "hCos", HistAxis(AXcos, AXcos));
@@ -110,7 +111,7 @@ int main(int argc, char * argv[]) {
             Double_t radius = std::sqrt(hit.coo[0]*hit.coo[0] + hit.coo[1]*hit.coo[1]);
             Double_t maxxy  = std::max(std::fabs(hit.coo[0]), std::fabs(hit.coo[1]));
             Double_t cos    = std::fabs(hit.dir[2]);
-            //if (maxxy > 25.) continue;
+            //if (maxxy > 30.) continue;
             //if (maxxy > 17.) continue;
             if (radius > 40.) continue;
             if (hit.layJ == layBeg) mchitU = &hit;

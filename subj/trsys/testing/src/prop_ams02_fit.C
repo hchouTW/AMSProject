@@ -1,6 +1,6 @@
 //#define __HAS_TESTPROP__
 //#define __HAS_TESTFIT__
-//#define __HAS_AMS_OFFICE_LIBS__
+#define __HAS_AMS_OFFICE_LIBS__
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
@@ -12,6 +12,15 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
+    
+    //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
+    //MatFld&& mat1 = MatMgnt::Get(SVecD<3>(0, 0, 159.0), SVecD<3>(0, 0, 50.0));
+    //MatFld&& mat2 = MatMgnt::Get(SVecD<3>(0, 0, 50.0), SVecD<3>(0, 0, -50.0));
+    //MatFld&& mat3 = MatMgnt::Get(SVecD<3>(0, 0, -50.0), SVecD<3>(0, 0, -100.0));
+    //mat1.print();
+    //mat2.print();
+    //mat3.print();
+    //return 1;
    
     Hist::Load("prop_ams02_fill.root", "dat");
 
@@ -74,9 +83,9 @@ int main(int argc, char * argv[]) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);
         part.set_mom(mom);
-        Double_t val = part.gmbta();
+        //Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        //Double_t val = part.bta();
+        Double_t val = part.bta();
         
         gaus->SetParameters(1000, 0, (*vhMcx.at(it))()->GetRMS());
         (*vhMcx.at(it))()->Fit(gaus, "q0", "");
@@ -177,25 +186,31 @@ int main(int argc, char * argv[]) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);
         part.set_mom(mom);
-        Double_t val = part.gmbta();
+        //Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        //Double_t val = part.bta();
+        Double_t val = part.bta();
+        
+        Double_t sqr_bta = (part.bta() * part.bta());
+        Double_t eloss_ion_kpa  = MGMath::SQRT_TWO / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
+        Double_t eloss_ion_kpa2 = MGMath::SQRT_TWO / (-2.83667e+00 * std::pow(std::fabs(MGMath::ONE - sqr_bta), 1.37299e+00) + std::pow(MGMath::ONE/sqr_bta, 1.56239e+00)) + 0.0859215;
        
         int    mpbin = (*vhMee.at(it))()->GetMaximumBin();
         int    mpval = (*vhMee.at(it))()->GetBinContent(mpbin);
         double mpeak = (*vhMee.at(it))()->GetXaxis()->GetBinCenter(mpbin);
         
         int mmin = mpbin, mmax = mpbin;
-        for (Int_t bin = mpbin; bin >= 1;                              --bin) { if ((*vhMee.at(it))()->GetBinContent(bin) < 0.1*mpval) { mmin = bin; break; } }
-        for (Int_t bin = mpbin; bin <= (*vhMee.at(it))()->GetNbinsX(); ++bin) { if ((*vhMee.at(it))()->GetBinContent(bin) < 0.1*mpval) { mmax = bin; break; } }
+        for (Int_t bin = mpbin; bin >= 1;                              --bin) { if ((*vhMee.at(it))()->GetBinContent(bin) < 1.5e-1*mpval) { mmin = bin; break; } }
+        for (Int_t bin = mpbin; bin <= (*vhMee.at(it))()->GetNbinsX(); ++bin) { if ((*vhMee.at(it))()->GetBinContent(bin) < 5.0e-3*mpval) { mmax = bin; break; } }
         double mbdmin = vhMee.at(it)->xaxis().center(mmin);
         double mbdmax = vhMee.at(it)->xaxis().center(mmax);
-
-        feloss->SetParameters(1000., 1.0, mpeak, 0.1*mpeak, 0.5);
-        (*vhMee.at(it))()->Fit(feloss, "q0", "", mbdmin, mbdmax);
         
+        feloss->SetParameters(1000., 1.0, mpeak, 0.1*mpeak, 0.5);
+        feloss->FixParameter(1, eloss_ion_kpa2);
+        (*vhMee.at(it))()->Fit(feloss, "q0", "", mbdmin, mbdmax);
+
         if (feloss->GetParameter(1) < 0) feloss->SetParameter(1, -feloss->GetParameter(1));
         if (feloss->GetParameter(3) < 0) feloss->SetParameter(3, -feloss->GetParameter(3));
+        feloss->ReleaseParameter(1);
         (*vhMee.at(it))()->Fit(feloss, "q0", "", mbdmin, mbdmax);
 
         if (feloss->GetParameter(1) < 0) feloss->SetParameter(1, -feloss->GetParameter(1));
@@ -209,7 +224,6 @@ int main(int argc, char * argv[]) {
         gMee_sgm->SetPoint     (it-1, val, feloss->GetParameter(3));
         gMee_sgm->SetPointError(it-1,  0., feloss->GetParError(3));
         gMee_mos->SetPoint     (it-1, val, feloss->GetParameter(2)/feloss->GetParameter(3));
-        //gMee_mos->SetPoint     (it-1, val, feloss->GetParameter(2)/feloss->GetParameter(3)/feloss->GetParameter(1));
         gMee_mos->SetPointError(it-1,  0., 0.);
        
         int    tpbin = (*vhTee.at(it))()->GetMaximumBin();
@@ -217,16 +231,18 @@ int main(int argc, char * argv[]) {
         double tpeak = (*vhTee.at(it))()->GetXaxis()->GetBinCenter(tpbin);
         
         int tmin = tpbin, tmax = tpbin;
-        for (Int_t bin = tpbin; bin >= 1;                              --bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 0.1*tpval) { tmin = bin; break; } }
-        for (Int_t bin = tpbin; bin <= (*vhTee.at(it))()->GetNbinsX(); ++bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 0.1*tpval) { tmax = bin; break; } }
+        for (Int_t bin = tpbin; bin >= 1;                              --bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 1.5e-1*tpval) { tmin = bin; break; } }
+        for (Int_t bin = tpbin; bin <= (*vhTee.at(it))()->GetNbinsX(); ++bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 5.0e-3*tpval) { tmax = bin; break; } }
         double tbdmin = vhTee.at(it)->xaxis().center(tmin);
         double tbdmax = vhTee.at(it)->xaxis().center(tmax);
         
         feloss->SetParameters(1000., 1.0, tpeak, 0.1*tpeak, 0.5);
+        feloss->FixParameter(1, eloss_ion_kpa2);
         (*vhTee.at(it))()->Fit(feloss, "q0", "", tbdmin, tbdmax);
-        
+
         if (feloss->GetParameter(1) < 0) feloss->SetParameter(1, -feloss->GetParameter(1));
         if (feloss->GetParameter(3) < 0) feloss->SetParameter(3, -feloss->GetParameter(3));
+        feloss->ReleaseParameter(1);
         (*vhTee.at(it))()->Fit(feloss, "q0", "", tbdmin, tbdmax);
         
         if (feloss->GetParameter(1) < 0) feloss->SetParameter(1, -feloss->GetParameter(1));
@@ -240,7 +256,6 @@ int main(int argc, char * argv[]) {
         gTee_sgm->SetPoint     (it-1, val, feloss->GetParameter(3));
         gTee_sgm->SetPointError(it-1,  0., feloss->GetParError(3));
         gTee_mos->SetPoint     (it-1, val, feloss->GetParameter(2)/feloss->GetParameter(3));
-        //gTee_mos->SetPoint     (it-1, val, feloss->GetParameter(2)/feloss->GetParameter(3)/feloss->GetParameter(1));
         gTee_mos->SetPointError(it-1,  0., 0.);
     }
 
@@ -260,6 +275,7 @@ int main(int argc, char * argv[]) {
     TGraphErrors* gMTkpa = new TGraphErrors(); gMTkpa->SetNameTitle("gMTkpa", "");
     TGraphErrors* gMTmpv = new TGraphErrors(); gMTmpv->SetNameTitle("gMTmpv", "");
     TGraphErrors* gMTsgm = new TGraphErrors(); gMTsgm->SetNameTitle("gMTsgm", "");
+    TGraphErrors* gMTmos = new TGraphErrors(); gMTmos->SetNameTitle("gMTmos", "");
     for (int it = 0; it < AXmom.nbin(); ++it) {
         gMTcx->SetPoint(it, gMcx_sgm->GetX()[it], gMcx_sgm->GetY()[it]/gTcx_sgm->GetY()[it]);
         gMTcy->SetPoint(it, gMcy_sgm->GetX()[it], gMcy_sgm->GetY()[it]/gTcy_sgm->GetY()[it]);
@@ -268,6 +284,7 @@ int main(int argc, char * argv[]) {
         gMTkpa->SetPoint(it, gMee_kpa->GetX()[it], gMee_kpa->GetY()[it]/gTee_kpa->GetY()[it]);
         gMTmpv->SetPoint(it, gMee_mpv->GetX()[it], gMee_mpv->GetY()[it]/gTee_mpv->GetY()[it]);
         gMTsgm->SetPoint(it, gMee_sgm->GetX()[it], gMee_sgm->GetY()[it]/gTee_sgm->GetY()[it]);
+        gMTmos->SetPoint(it, gMee_mos->GetX()[it], gMee_mos->GetY()[it]/gTee_mos->GetY()[it]);
     }
     
     gMTcx ->Write(); 
@@ -277,6 +294,7 @@ int main(int argc, char * argv[]) {
     gMTkpa->Write();
     gMTmpv->Write();
     gMTsgm->Write();
+    gMTmos->Write();
 
     ofle->Write();
     ofle->Close();
