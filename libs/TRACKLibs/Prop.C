@@ -672,7 +672,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         phyJb->gg(JUY, JUY) += step * tf0.uu(Y, Y);
         phyJb->gg(JUY, JEA) += step * tf0.ue(Y);
 
-        if (withEloss) phyJb->gg(JEA, JEA) += step_ps * tf0.ee();
+        if (withEloss) phyJb->gg(JEA, JEA) *= (MGMath::ONE + step_ps * tf0.ee());
     }
 
     return true;
@@ -766,7 +766,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         jb1.gg(JUY, JUY) += step * tf0.uu(Y, Y);
         jb1.gg(JUY, JEA) += step * tf0.ue(Y);
 
-        if (withEloss) jb1.gg(JEA, JEA) += step_ps * tf0.ee();
+        if (withEloss) jb1.gg(JEA, JEA) *= (MGMath::ONE + step_ps * tf0.ee());
 
         TransferPhyJb tj1(tf1, jb1);
 
@@ -791,7 +791,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         phyJb->gg(JUY, JUY) += s1o2 * (tf0.uu(Y, Y) + tj1.uu(Y, Y));
         phyJb->gg(JUY, JEA) += s1o2 * (tf0.ue(Y)    + tj1.ue(Y)   );
         
-        if (withEloss) phyJb->gg(JEA, JEA) += s1o2_ps * (tf0.ee() + tj1.ee());
+        if (withEloss) phyJb->gg(JEA, JEA) *= (MGMath::ONE + s1o2_ps * (tf0.ee() + tj1.ee()));
     }
 
     return true;
@@ -950,7 +950,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb1.gg(JUY, JUY) += s1o2 * tf0.uu(Y, Y);
         jb1.gg(JUY, JEA) += s1o2 * tf0.ue(Y);
 
-        if (withEloss) jb1.gg(JEA, JEA) += s1o2_ps * tf0.ee();
+        if (withEloss) jb1.gg(JEA, JEA) *= (MGMath::ONE + s1o2_ps * tf0.ee());
         
         TransferPhyJb tj1(tf1, jb1);
         
@@ -975,7 +975,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb2.gg(JUY, JUY) += s1o2 * tj1.uu(Y, Y);
         jb2.gg(JUY, JEA) += s1o2 * tj1.ue(Y);
 
-        if (withEloss) jb2.gg(JEA, JEA) += s1o2_ps * tj1.ee();
+        if (withEloss) jb2.gg(JEA, JEA) *= (MGMath::ONE + s1o2_ps * tj1.ee());
         
         TransferPhyJb tj2(tf2, jb2);
         
@@ -1000,7 +1000,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb3.gg(JUY, JUY) += step * tj2.uu(Y, Y);
         jb3.gg(JUY, JEA) += step * tj2.ue(Y);
 
-        if (withEloss) jb3.gg(JEA, JEA) += step_ps * tj2.ee();
+        if (withEloss) jb3.gg(JEA, JEA) *= (MGMath::ONE + step_ps * tj2.ee());
         
         TransferPhyJb tj3(tf3, jb3);
         
@@ -1025,7 +1025,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         phyJb->gg(JUY, JUY) += s1o6 * (tf0.uu(Y, Y) + MGMath::TWO * tj1.uu(Y, Y) + MGMath::TWO * tj2.uu(Y, Y) + tj3.uu(Y, Y));
         phyJb->gg(JUY, JEA) += s1o6 * (tf0.ue(Y)    + MGMath::TWO * tj1.ue(Y)    + MGMath::TWO * tj2.ue(Y)    + tj3.ue(Y)   );
 
-        if (withEloss) phyJb->gg(JEA, JEA) += s1o6_ps * (tf0.ee() + MGMath::TWO * tj1.ee() + MGMath::TWO * tj2.ee() + tj3.ee());
+        if (withEloss) phyJb->gg(JEA, JEA) *= (MGMath::ONE + s1o6_ps * (tf0.ee() + MGMath::TWO * tj1.ee() + MGMath::TWO * tj2.ee() + tj3.ee()));
     }
     
     return true;

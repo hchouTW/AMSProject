@@ -579,7 +579,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     //mscat_sgm *= tune_sgm;
     
     //----------------- AMS
-    mscat_sgm *= 1.106224638618;
+    //mscat_sgm *= 1.106224638618;
     //----------------- AMS
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -666,8 +666,8 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     //eloss_ion_kpa  = eloss_ion_kpa0 / (-2.83667e+00 * std::pow(std::fabs(MGMath::ONE - sqr_bta), 1.37299e+00) + std::pow(MGMath::ONE/sqr_bta, 1.56239e+00)) + 0.0859215; // testcode
     //eloss_ion_mpv *= 1.22 * (0.501228 * (MGMath::ONE + std::erf(2.99373 * (bta - 0.115642))));
     eloss_ion_kpa  = eloss_ion_kpa0;
-    eloss_ion_mpv *= 1.2648105641808;
-    eloss_ion_sgm *= 1.2648105641808;
+    //eloss_ion_mpv *= 1.2648105641808;
+    //eloss_ion_sgm *= 1.2648105641808;
     //eloss_ion_sgm *= 1.26837 * (MGMath::ONE + 0.740225 * std::erfc(6.89382 * (bta - 0.682716)));
     //----------------- AMS
 

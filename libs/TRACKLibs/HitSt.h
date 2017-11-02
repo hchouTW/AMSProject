@@ -6,7 +6,7 @@ namespace TrackSys {
 
 class HitSt {
     public :
-        HitSt() : side_(true, true, true), coo_(0., 0., 0.), err_(DEFERR_X_, DEFERR_Y_, DEFERR_Z_) {}
+        HitSt(Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : side_(sx, sy, sz), coo_(0., 0., 0.), err_(DEFERR_X_, DEFERR_Y_, DEFERR_Z_) {}
         
         HitSt(Double_t cx, Double_t cy, Double_t cz) : HitSt() { set_coo(cx, cy, cz); }
 
