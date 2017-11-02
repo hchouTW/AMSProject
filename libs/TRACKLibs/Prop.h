@@ -145,11 +145,15 @@ class PhyJb {
 
         inline SMtxDXYG xyg() { return jb_gg_.Sub<SMtxDXYG>(0, 0); }
         inline SMtxDXYL xyl() { return jb_gl_.Sub<SMtxDXYL>(0, 0); }
+        
+        inline const SMtxSymD<DIM_G>& covll() const { return covll_; }
 
     private :
         Bool_t    field_;
         SMtxDGG   jb_gg_;
         SMtxDGL   jb_gl_;
+
+        SMtxSymD<DIM_G> covll_;
 
     private :
         static constexpr Short_t X = 0;

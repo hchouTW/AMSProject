@@ -88,7 +88,8 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
 void PhyJb::init() {
     field_ = false;
     jb_gg_ = std::move(SMtxId()); 
-    jb_gl_ = std::move(SMtxDGL()); 
+    jb_gl_ = std::move(SMtxDGL());
+    covll_ = std::move(SMtxSymD<5>());
 }
  
 
@@ -113,6 +114,14 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JUY, JRHOU) = vst.mscatu()  * vst.rho(Y);
         jb_gl_(JPX, JRHOC) = vst.mscatcl() * vst.rho(X);
         jb_gl_(JPY, JRHOC) = vst.mscatcl() * vst.rho(Y);
+
+        for (Int_t it = 0;  it < DIM_G-1; ++it) {
+        for (Int_t jt = it; jt < DIM_G-1; ++jt) {
+            covll_(it, jt) += (jb_gl_(it, 0)*jb_gl_(jt, 0) + 
+                               jb_gl_(it, 1)*jb_gl_(jt, 1) + 
+                               jb_gl_(it, 2)*jb_gl_(jt, 2) + 
+                               jb_gl_(it, 3)*jb_gl_(jt, 3));
+        }}
     }
 }
 

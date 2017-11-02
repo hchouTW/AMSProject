@@ -44,7 +44,7 @@ class PhyTr {
         static constexpr Int_t    LMTL_ITER = 3;
         static constexpr Int_t    LMTM_ITER = 5;
         static constexpr Int_t    LMTU_ITER = 20;
-        static constexpr Double_t CONVG_EPSILON   = 1.0e-3;
+        static constexpr Double_t CONVG_EPSILON   = 5.0e-2;
         static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
        
         // Dimension
