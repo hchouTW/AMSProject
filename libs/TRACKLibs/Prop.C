@@ -200,7 +200,6 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
 
         Double_t real_len = MGMath::ZERO;
         Double_t efft_len = MGMath::ZERO;
-        Double_t cov_cll = MGMath::ZERO;
         Double_t cov_cLL = MGMath::ZERO;
         Double_t cov_cLT = MGMath::ZERO;
         Double_t corr_LL = MGMath::ZERO;
@@ -213,7 +212,6 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
             Double_t est_len = std::sqrt(real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it));
             Double_t sgmLocL = est_len * vec_mscat_.at(it);
             
-            cov_cll += ((vec_eft_.at(it) * vec_eft_.at(it)) * vec_mscatsqr_.at(it) * MGMath::ONE_TO_TWELVE);
             cov_cLL += (sgmLocL * sgmLocL);
             cov_cLT += (sgmLocL * vec_mscat_.at(it));
             corr_LL += (sgmLocL * (vec_mscat_.at(it) / mscatu_));
@@ -224,10 +222,7 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         Double_t sgmL    = std::sqrt(cov_cLL);
         Double_t rel_cLT = (cov_cLT / (sgmL * mscatu_));
         Double_t sgmSsqr = ( ((MGMath::ONE + rel_cLT*rel_cLT) * cov_cLL) - (MGMath::TWO * (rel_cLT * sgmL * corr_LL)) );
-
-        // testcode
-        cov_cll = ((efft_len * efft_len * mscatu_ * mscatu_) * MGMath::ONE_TO_TWELVE);
-
+        Double_t cov_cll = ((efft_len * efft_len * mscatu_ * mscatu_) * MGMath::ONE_TO_TWELVE);
 
         mscatcu_ = (rel_cLT * sgmL);
         mscatcl_ = std::sqrt(cov_cll + sgmSsqr);
@@ -246,45 +241,34 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         field_ = true;
     }
     if (sw_eloss_ && mfld()) {
-        Double_t efteta = part.eta_sign() * std::sqrt(eta_abs_sat_ * eta_abs_end_);
-        PhySt eftpart(part); eftpart.set_eta(efteta);
-        MatPhyFld&& mpfld = MatPhy::Get(mfld, eftpart);
-        //if (mpfld()) {
-        //    eloss_ion_kpa_ = mpfld.eloss_ion_kpa();
-        //    eloss_ion_sgm_ = mpfld.eloss_ion_sgm();
-        //    eloss_ion_mpv_ = mpfld.eloss_ion_mpv();
-        //    
-        //    if (!MGNumc::Valid(eloss_ion_kpa_) || MGNumc::Compare(eloss_ion_kpa_) <= 0) eloss_ion_kpa_ = MGMath::ZERO;
-        //    if (!MGNumc::Valid(eloss_ion_sgm_) || MGNumc::Compare(eloss_ion_sgm_) <= 0) eloss_ion_sgm_ = MGMath::ZERO;
-        //    if (!MGNumc::Valid(eloss_ion_mpv_) || MGNumc::Compare(eloss_ion_mpv_) <= 0) eloss_ion_mpv_ = MGMath::ZERO;
-        //    
-        //    eloss_brm_men_ = mpfld.eloss_brm_men();
-        //    if (!MGNumc::Valid(eloss_brm_men_) || MGNumc::Compare(eloss_brm_men_) <= 0) eloss_brm_men_ = MGMath::ZERO;
-        //    
-        //    field_ = true;
-        //}
+        //Double_t efteta = part.eta_sign() * std::sqrt(eta_abs_sat_ * eta_abs_end_);
+        //PhySt eftpart(part); eftpart.set_eta(efteta);
+        //MatPhyFld&& mpfld = MatPhy::Get(mfld, eftpart);
         //
-
-        // testcode
-        eloss_ion_kpa_ = vec_ion_kpa_.at(0);
-
-        Double_t rat = MGMath::ONE;
-        eloss_ion_sgm_ = MGMath::ZERO;
-        for (Int_t it = vec_ion_sgm_.size()-1; it >= 0; --it) {
-            rat /= (MGMath::ONE + vec_ion_mpv_.at(it));
-            eloss_ion_sgm_ += (rat * rat) * (vec_ion_sgm_.at(it) * vec_ion_sgm_.at(it));
+        //
+        Double_t ion_sgm = MGMath::ZERO;
+        Double_t ion_kpa = MGMath::ZERO;
+        Double_t eloss_scl = MGMath::ONE;
+        for (Int_t it = vec_ion_mpv_.size()-1; it >= 0; --it) {
+            eloss_scl /= vec_ion_mpv_.at(it);
+            ion_sgm += eloss_scl * vec_ion_sgm_.at(it);
+            ion_kpa += eloss_scl * vec_ion_sgm_.at(it) * vec_ion_kpa_.at(it);
+            //std::cout << vec_ion_mpv_.at(it) << std::endl;
         }
-        eloss_ion_sgm_ = std::sqrt(eloss_ion_sgm_);
+        Double_t ion_mpv = std::fabs(eloss_scl - MGMath::ONE);
+        ion_kpa = (ion_kpa / ion_sgm);
 
-        eloss_ion_mpv_ = std::fabs((eta_abs_end_ / eta_abs_sat_) - MGMath::ONE);
-
+        eloss_ion_kpa_ = ion_kpa;
+        eloss_ion_sgm_ = ion_sgm;
+        eloss_ion_mpv_ = ion_mpv;
 
         //std::cout << Form("SUM MOM %14.8f KPA %14.8f SMG %14.8f MPV %14.8f MOS %14.8f\n", part.mom(), eloss_ion_kpa_, eloss_ion_sgm_, eloss_ion_mpv_, eloss_ion_mpv_/eloss_ion_sgm_);
         //std::cout << Form("AVG MOM %14.8f KPA %14.8f SMG %14.8f MPV %14.8f MOS %14.8f\n", part.mom(), mpfld.eloss_ion_kpa(), mpfld.eloss_ion_sgm(), mpfld.eloss_ion_mpv(), mpfld.eloss_ion_mpv()/mpfld.eloss_ion_sgm());
 
-        eloss_ion_kpa_ = mpfld.eloss_ion_kpa();
-        eloss_ion_sgm_ = mpfld.eloss_ion_sgm();
-        eloss_ion_mpv_ = mpfld.eloss_ion_mpv();
+
+        //eloss_ion_kpa_ = mpfld.eloss_ion_kpa();
+        //eloss_ion_sgm_ = mpfld.eloss_ion_sgm();
+        //eloss_ion_mpv_ = mpfld.eloss_ion_mpv();
 
         if (!MGNumc::Valid(eloss_ion_kpa_) || MGNumc::Compare(eloss_ion_kpa_) <= 0) eloss_ion_kpa_ = MGMath::ZERO;
         if (!MGNumc::Valid(eloss_ion_sgm_) || MGNumc::Compare(eloss_ion_sgm_) <= 0) eloss_ion_sgm_ = MGMath::ZERO;
@@ -898,25 +882,24 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
                                      ) * MGMath::ONE_TO_SIX) :
                              MGMath::ZERO;
     
-    Double_t eloss_ion_kpa = (mfld() && part.arg().eloss()) ? 
-                             (mp0.eloss_ion_kpa() + 
-                              MGMath::TWO * mp1.eloss_ion_kpa() + 
-                              MGMath::TWO * mp2.eloss_ion_kpa() + 
-                              mp3.eloss_ion_kpa()
-                             ) * MGMath::ONE_TO_SIX :
+    Double_t eloss_ion_sgm = (mfld() && part.arg().eloss()) ? 
+                             ((mp0.eloss_ion_sgm() + 
+                               MGMath::TWO * mp1.eloss_ion_sgm() + 
+                               MGMath::TWO * mp2.eloss_ion_sgm() + 
+                               mp3.eloss_ion_sgm()
+                              ) * s1o6_ps) :
                              MGMath::ZERO;
     
-    Double_t eloss_ion_sgm = (mfld() && part.arg().eloss()) ? 
-                             std::sqrt(
-                                     (mp0.eloss_ion_sgm()*mp0.eloss_ion_sgm() + 
-                                      MGMath::TWO * mp1.eloss_ion_sgm()*mp1.eloss_ion_sgm() + 
-                                      MGMath::TWO * mp2.eloss_ion_sgm()*mp2.eloss_ion_sgm() + 
-                                      mp3.eloss_ion_sgm()*mp3.eloss_ion_sgm()
-                                     ) * MGMath::ONE_TO_SIX) :
+    Double_t eloss_ion_kpa = (mfld() && part.arg().eloss()) ? 
+                             (((mp0.eloss_ion_kpa() * mp0.eloss_ion_sgm() + 
+                                MGMath::TWO * mp1.eloss_ion_kpa() * mp1.eloss_ion_sgm() + 
+                                MGMath::TWO * mp2.eloss_ion_kpa() * mp2.eloss_ion_sgm() + 
+                                mp3.eloss_ion_kpa() * mp3.eloss_ion_sgm()
+                               ) * s1o6_ps) / eloss_ion_sgm):
                              MGMath::ZERO;
     
     Double_t eloss_ion_mpv = (mfld() && part.arg().eloss()) ?
-                             ((part.eta() / st0.eta()) - MGMath::ONE) :
+                             (part.eta() / st0.eta()) :
                              MGMath::ZERO;
 
     // testcode
@@ -1027,7 +1010,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
 
         if (withEloss) phyJb->gg(JEA, JEA) *= (MGMath::ONE + s1o6_ps * (tf0.ee() + MGMath::TWO * tj1.ee() + MGMath::TWO * tj2.ee() + tj3.ee()));
     }
-    
+
     return true;
 }
 

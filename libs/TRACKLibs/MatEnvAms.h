@@ -12,7 +12,7 @@ namespace MatAms {
     constexpr Long64_t DIM = 3;
 
     // TRACKER
-    constexpr Float_t INNER_TRACKER_RADIUS = 54.0;
+    constexpr Float_t INNER_TRACKER_RADIUS = 53.0;
     
     constexpr std::array<Long64_t, DIM> TRL1_N   {  260, 180,       4 };
     constexpr std::array<Double_t, DIM> TRL1_MIN {  -65, -45,  158.90 };
@@ -53,8 +53,8 @@ namespace MatAms {
     // TRD
     constexpr Float_t TRDL_Z = 85.0;
     constexpr Float_t TRDU_Z = 145.0;
-    constexpr Float_t TRDL_RADIUS = 70.0;
-    constexpr Float_t TRDU_RADIUS = 110.0;
+    constexpr Float_t TRDL_RADIUS = 65.0;
+    constexpr Float_t TRDU_RADIUS = 105.0;
     constexpr Float_t TRD_SLOPE = (TRDU_RADIUS - TRDL_RADIUS) / (TRDU_Z - TRDL_Z);
     constexpr Float_t TRD_FACTOR = 1.5;
     
@@ -66,13 +66,17 @@ namespace MatAms {
     constexpr std::array<Double_t, DIM> TRDU_MIN {  -110, -110, 132.0 };
     constexpr std::array<Double_t, DIM> TRDU_MAX {   110,  110, 144.0 };
     
-    constexpr std::array<Long64_t, DIM> TRDM_N   {   400,  400,    17 };
-    constexpr std::array<Double_t, DIM> TRDM_MIN {  -100, -100,  98.0 };
+    constexpr std::array<Long64_t, DIM> TRDM_N   {   400,  400,     9 };
+    constexpr std::array<Double_t, DIM> TRDM_MIN {  -100, -100, 114.0 };
     constexpr std::array<Double_t, DIM> TRDM_MAX {   100,  100, 132.0 };
     
-    constexpr std::array<Long64_t, DIM> TRDL_N   {  360, 360,     7 };
+    constexpr std::array<Long64_t, DIM> TRDI_N   {   400,  400,     9 };
+    constexpr std::array<Double_t, DIM> TRDI_MIN {  -100, -100,  96.0 };
+    constexpr std::array<Double_t, DIM> TRDI_MAX {   100,  100, 114.0 };
+    
+    constexpr std::array<Long64_t, DIM> TRDL_N   {  360, 360,     6 };
     constexpr std::array<Double_t, DIM> TRDL_MIN {  -90, -90,  84.0 };
-    constexpr std::array<Double_t, DIM> TRDL_MAX {   90,  90,  98.0 };
+    constexpr std::array<Double_t, DIM> TRDL_MAX {   90,  90,  96.0 };
 
     // TOF
     constexpr std::array<Long64_t, DIM> TOFU_N   { 260, 260,   13 };
@@ -228,6 +232,7 @@ class MatGeoBoxAms {
         static MatGeoBoxReader reader_TRDS_;
         static MatGeoBoxReader reader_TRDU_;
         static MatGeoBoxReader reader_TRDM_;
+        static MatGeoBoxReader reader_TRDI_;
         static MatGeoBoxReader reader_TRDL_;
         
         static MatGeoBoxReader reader_TOFU_;
@@ -284,6 +289,7 @@ MatGeoBoxReader MatGeoBoxAms::reader_TRL9_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRDS_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRDU_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRDM_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRDI_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRDL_;
 
 MatGeoBoxReader MatGeoBoxAms::reader_TOFU_;

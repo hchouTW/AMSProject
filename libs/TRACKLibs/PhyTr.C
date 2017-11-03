@@ -238,18 +238,15 @@ Bool_t PhyTr::fit_simple() {
         SVecD<5>    gradG;
         SMtxSymD<5> covGG;
 
-        PhySt ppst(part_); // test
+        PhySt ppst(part_);
         SMtxSymD<5>    ppCov;
         PhyJb::SMtxDGG ppjb = SMtxIdSym5D;
         Int_t cnt_nhit = 0;
         for (auto&& hit : hits_) {
             PhyJb curjb;
-        
-            //PhySt ppst(part_); // test
-            //ppst.arg().set_tune_ion(tuneIon);
+            ppst.arg().set_tune_ion(tuneIon);
             if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-            ppjb = std::move(PhyJb::Multiply(curjb.gg(), ppjb)); // test
-            //ppjb = curjb.gg(); // test
+            ppjb = std::move(PhyJb::Multiply(curjb.gg(), ppjb));
 
             SVecD<2> resM(ppst.cx() - hit.cx(), ppst.cy() - hit.cy());
             SMtxSymD<2> covM;
@@ -285,17 +282,15 @@ Bool_t PhyTr::fit_simple() {
             if (!hit.sx()) hit.set_dummy_x(ppst.cx());
         }
         if (cnt_nhit != hits_.size()) break;
+        
         //------------------//
         // testcode
-        //CERR("END LOOP\n");
         //if (cnt_nhit != hits_.size()) {
-        //    std::cout << Form("LIMIT %d/%d\n", cnt_nhit, hits_.size());
-        //    break;
-        ////    if (curIter < LMTL_ITER) return false;
-        ////    else { tuneIon -= 0.1; curIter++; continue; }
+        //    tuneIon -= 0.05;
+        //    curIter++;
+        //    continue;
         //}
-
-        //if (curIter >= LMTL_ITER && cnt_nhit == hits_.size()) tuneIon += 0.1;
+        //else { tuneIon += 0.05; }
         //if (tuneIon < 0.) tuneIon = 0.;
         //if (tuneIon > 1.) tuneIon = 1.;
         //CERR("ITER %d ION %14.8f RIG(%14.8f) CHI %14.8f\n", curIter, tuneIon, part_.rig(), ((chix + chiy) / static_cast<Double_t>((ndfx + ndfy - 5))));
@@ -328,12 +323,9 @@ Bool_t PhyTr::fit_simple() {
         succ = (preSucc && curSucc);
         preSucc = curSucc;
         
-        //if (curIter > 15) CERR("ITER %d RIG(%14.8f) CHI %14.8f\n", curIter, part_.rig(), nchi);
-        //CERR("ITER %d RIG(%14.8f) CHI %14.8f\n", curIter, part_.rig(), nchi);
-        
         curIter++;
     }
-    if (!succ) std::cout << Form("FAIL. %d (CHI %14.8f)\n", curIter, nchi_);
+    if (!succ) std::cout << Form("FAIL. %d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
     
     return succ;
 }

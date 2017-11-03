@@ -29,7 +29,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     if (root_file == nullptr || root_file->IsZombie()) return false;
 
     //std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
-    std::string dir_path = "/data1/hchou/material4";
+    std::string dir_path = "/data1/hchou/material5";
    
     // TRACKER
     MatGeoBoxCreator creator_TRL1(MatAms::TRL1_N.at(0), MatAms::TRL1_MIN.at(0), MatAms::TRL1_MAX.at(0), MatAms::TRL1_N.at(1), MatAms::TRL1_MIN.at(1), MatAms::TRL1_MAX.at(1), MatAms::TRL1_N.at(2), MatAms::TRL1_MIN.at(2), MatAms::TRL1_MAX.at(2), CSTR_FMT("%s/AMS02TRL1.bin", dir_path.c_str()));
@@ -46,6 +46,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     MatGeoBoxCreator creator_TRDS(MatAms::TRDS_N.at(0), MatAms::TRDS_MIN.at(0), MatAms::TRDS_MAX.at(0), MatAms::TRDS_N.at(1), MatAms::TRDS_MIN.at(1), MatAms::TRDS_MAX.at(1), MatAms::TRDS_N.at(2), MatAms::TRDS_MIN.at(2), MatAms::TRDS_MAX.at(2), CSTR_FMT("%s/AMS02TRDS.bin", dir_path.c_str()));
     MatGeoBoxCreator creator_TRDU(MatAms::TRDU_N.at(0), MatAms::TRDU_MIN.at(0), MatAms::TRDU_MAX.at(0), MatAms::TRDU_N.at(1), MatAms::TRDU_MIN.at(1), MatAms::TRDU_MAX.at(1), MatAms::TRDU_N.at(2), MatAms::TRDU_MIN.at(2), MatAms::TRDU_MAX.at(2), CSTR_FMT("%s/AMS02TRDU.bin", dir_path.c_str()));
     MatGeoBoxCreator creator_TRDM(MatAms::TRDM_N.at(0), MatAms::TRDM_MIN.at(0), MatAms::TRDM_MAX.at(0), MatAms::TRDM_N.at(1), MatAms::TRDM_MIN.at(1), MatAms::TRDM_MAX.at(1), MatAms::TRDM_N.at(2), MatAms::TRDM_MIN.at(2), MatAms::TRDM_MAX.at(2), CSTR_FMT("%s/AMS02TRDM.bin", dir_path.c_str()));
+    MatGeoBoxCreator creator_TRDI(MatAms::TRDI_N.at(0), MatAms::TRDI_MIN.at(0), MatAms::TRDI_MAX.at(0), MatAms::TRDI_N.at(1), MatAms::TRDI_MIN.at(1), MatAms::TRDI_MAX.at(1), MatAms::TRDI_N.at(2), MatAms::TRDI_MIN.at(2), MatAms::TRDI_MAX.at(2), CSTR_FMT("%s/AMS02TRDI.bin", dir_path.c_str()));
     MatGeoBoxCreator creator_TRDL(MatAms::TRDL_N.at(0), MatAms::TRDL_MIN.at(0), MatAms::TRDL_MAX.at(0), MatAms::TRDL_N.at(1), MatAms::TRDL_MIN.at(1), MatAms::TRDL_MAX.at(1), MatAms::TRDL_N.at(2), MatAms::TRDL_MIN.at(2), MatAms::TRDL_MAX.at(2), CSTR_FMT("%s/AMS02TRDL.bin", dir_path.c_str()));
 
     // TOF
@@ -173,6 +174,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
         creator_TRDS.fill(coo, elm, mol, is_trd);
         creator_TRDU.fill(coo, elm, mol, is_trd);
         creator_TRDM.fill(coo, elm, mol, is_trd);
+        creator_TRDI.fill(coo, elm, mol, is_trd);
         creator_TRDL.fill(coo, elm, mol, is_trd);
         
         // TOF
@@ -238,6 +240,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     creator_TRDS.save_and_close();
     creator_TRDU.save_and_close();
     creator_TRDM.save_and_close();
+    creator_TRDI.save_and_close();
     creator_TRDL.save_and_close();
     
     creator_TOFU.save_and_close();
@@ -286,7 +289,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
     //std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
-    std::string g4mat_dir_path = "/data1/hchou/material4"; // at NCU
+    std::string g4mat_dir_path = "/data1/hchou/material5"; // at NCU
 
     reader_TRL1_.load(STR_FMT("%s/AMS02TRL1.bin" , g4mat_dir_path.c_str()));
     reader_TRL2_.load(STR_FMT("%s/AMS02TRL2.bin" , g4mat_dir_path.c_str()));
@@ -301,6 +304,7 @@ Bool_t MatGeoBoxAms::Load() {
     reader_TRDS_.load(STR_FMT("%s/AMS02TRDS.bin" , g4mat_dir_path.c_str()));
     reader_TRDU_.load(STR_FMT("%s/AMS02TRDU.bin" , g4mat_dir_path.c_str()));
     reader_TRDM_.load(STR_FMT("%s/AMS02TRDM.bin" , g4mat_dir_path.c_str()));
+    reader_TRDI_.load(STR_FMT("%s/AMS02TRDI.bin" , g4mat_dir_path.c_str()));
     reader_TRDL_.load(STR_FMT("%s/AMS02TRDL.bin" , g4mat_dir_path.c_str()));
     
     reader_TOFU_.load(STR_FMT("%s/AMS02TOFU.bin" , g4mat_dir_path.c_str()));
@@ -355,6 +359,7 @@ Bool_t MatGeoBoxAms::Load() {
     reader_.push_back(&reader_TRDS_);
     reader_.push_back(&reader_TRDU_);
     reader_.push_back(&reader_TRDM_);
+    reader_.push_back(&reader_TRDI_);
     reader_.push_back(&reader_TRDL_);
     
     reader_.push_back(&reader_TOFU_);
