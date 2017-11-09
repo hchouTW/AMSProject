@@ -15,7 +15,10 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
-    
+   
+    //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
+    //return 0;
+
     MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
@@ -49,13 +52,14 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     PhyArg::SetOpt(true, true);
-    Int_t layBeg = 3;
-    Int_t layEnd = 8;
+    Int_t layBeg = 1;
+    Int_t layEnd = 2;
     
     TFile * ofle = new TFile(Form("%s/prop_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
+    Axis AXmom("Momentum [GeV]", 40, 0.5, 10., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 200, 1.0, 800., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 50, 20., 16000., AxisScale::kLog);
     Axis AXcos("Cos [1]", 40, 0.9,  1.);
 
@@ -75,13 +79,13 @@ int main(int argc, char * argv[]) {
     Hist * hNrlElc = Hist::New("hNrlElc", "hNrlElc", HistAxis(AXnrl, AXelc));
 
     // Prop
-    Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -6.0, 6.0);
+    Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -4.0, 4.0);
     Hist * hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXmom, AXcoo));
     Hist * hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXmom, AXcoo));
     Hist * hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo));
     Hist * hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo));
     
-    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.12, 0.12);
+    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.05, 0.05);
     Hist * hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl));
     Hist * hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl));
     Hist * hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl));
@@ -112,7 +116,7 @@ int main(int argc, char * argv[]) {
             Double_t maxxy  = std::max(std::fabs(hit.coo[0]), std::fabs(hit.coo[1]));
             Double_t cos    = std::fabs(hit.dir[2]);
             //if (maxxy > 30.) continue;
-            //if (maxxy > 17.) continue;
+            //if (maxxy > 18.) continue;
             if (radius > 40.) continue;
             if (hit.layJ == layBeg) mchitU = &hit;
             if (hit.layJ == layEnd) mchitL = &hit;

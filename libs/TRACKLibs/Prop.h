@@ -217,6 +217,7 @@ class PropPhyCal {
         
         const Double_t& len() const { return len_; }
         const Double_t& nrl() const { return nrl_; }
+        const Double_t& ela() const { return ela_; }
 
         const SVecD<3>& tau() const { return tau_; }
         const SVecD<3>& rho() const { return rho_; }
@@ -243,6 +244,7 @@ class PropPhyCal {
         Short_t  sign_;
         Double_t len_;
         Double_t nrl_;
+        Double_t ela_;
 
         std::vector<Bool_t>   vec_vac_;
         std::vector<Double_t> vec_len_;
@@ -315,12 +317,21 @@ class PropMgnt {
         static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 8.0e-4; // (du threshold)
         static constexpr Double_t PROP_STEP  = 20.0;   // (ds threshold)
-        static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.05;  // (number radiation length threshold)
+        //static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
+        static constexpr Double_t TUNE_MAT   =  0.1;  // (number radiation length threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
+        
+        static constexpr Double_t LMTU_STEP  =  200.1;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  200.0;   // (ds threshold)
+        
+        //static constexpr Double_t LMTU_STEP  =  5.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  5.0;   // (ds threshold)
+        
+        //static constexpr Double_t LMTU_STEP  =  1.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  1.0;   // (ds threshold)
         
     private :
         static constexpr Short_t X = 0;

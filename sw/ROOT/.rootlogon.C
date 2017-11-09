@@ -14,6 +14,9 @@
     TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
     feloss->SetParameters(1000., 1.0, 0.0015, 0.0002); 
     
+    TF1 * fseloss = new TF1("fseloss", "[0] * TMath::Power( ([2]/x)^[4]/[1]/[1], ([2]/x)^[4]/[1]/[1] ) / TMath::Gamma( ([2]/x)^[4]/[1]/[1] ) * TMath::Exp(-(([2]/x)^[4]/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
+    fseloss->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
+    
     
     //const char* tt = "(1.0/[1]/[1]) * (([2]/[3]) / ((abs((x-[2])/[3])) + ([2]/[3])) )^[4]";
     //TF1 * feloss2 = new TF1("feloss2", Form("[0] * TMath::Power(%s, %s) / TMath::Gamma(%s) * TMath::Exp(-(%s) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )", tt, tt, tt, tt));

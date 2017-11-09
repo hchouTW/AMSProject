@@ -40,6 +40,7 @@ void VirtualPhySt::reset(Bool_t field) {
     sign_ = 1;
     len_ = MGMath::ZERO;
     nrl_ = MGMath::ZERO;
+    ela_ = MGMath::ZERO;
     tau_ = std::move(SVecD<3>(1.0, 0.0, 0.0));
     rho_ = std::move(SVecD<3>(0.0, -1.0, 0.0));
     mscatu_  = MGMath::ZERO;

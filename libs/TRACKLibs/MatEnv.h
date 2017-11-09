@@ -277,8 +277,10 @@ class MatPhy {
         // Sigma_plane_angle = (RydbergConstant / abs(beta * rigidity) *
         //                     sqrt( radiationLength ) *
         //                     (1. + 0.038 * log(radiationLength)) )
-        static constexpr Double_t RYDBERG_CONST = 0.0136; // [GeV]
-        static constexpr Double_t NRL_CORR_FACT = 0.0380; // [1]
+        static constexpr Double_t RYDBERG_CONST  = 0.0136; // [GeV]
+        static constexpr Double_t NRL_CORR_FACT  = 0.0380; // [1]
+        static constexpr Double_t NRL_CORR_FACT1 = 0.1050; // [1]
+        static constexpr Double_t NRL_CORR_FACT2 = 0.0035; // [1]
         static constexpr Double_t LMTL_NUM_RAD_LEN = 1.0e-3;
         static constexpr Double_t LMTU_NUM_RAD_LEN = 100.;
         

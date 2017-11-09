@@ -76,3 +76,42 @@ else
     export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
     export DPM_HOME=/dpm/phy.ncu.edu.tw/home
 fi
+
+# Local Job Command
+function lj_search {
+    if [ $# == 1 ]; then
+        ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep
+    else
+        ps -U $USER -o pid -o s -o time -o command
+    fi
+}
+
+function lj_kill {
+    if [ $# == 1 ]; then
+        ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep | awk '{print $1}' | xargs kill
+    else
+        echo -e "Error: No Keyword."
+    fi
+}
+
+function lj_check {
+    if [ $# == 1 ]; then
+        date_beg=`date`
+        while true
+        do
+            clear
+            jobs_num=`lj_search ${1} | wc -l`
+            echo -e "BEGIN DATE  ${date_beg}"
+            echo -e "`date`  NJOBS ${jobs_num}\n"
+            lj_search ${1}
+            if (( ${jobs_num} == 0 )); then
+                echo -e "SUCCESS."
+                break
+            else
+                sleep 30
+            fi
+        done
+    else
+        echo -e "Error: No Keyword."
+    fi
+}

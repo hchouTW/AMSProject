@@ -123,6 +123,9 @@ void PhyJb::set(PhySt& part) {
                                jb_gl_(it, 3)*jb_gl_(jt, 3));
         }}
     }
+    
+    if (part.arg().eloss()) {
+    }
 }
 
 
@@ -168,6 +171,7 @@ void PropPhyCal::init() {
     sign_          = 1; 
     len_           = MGMath::ZERO;
     nrl_           = MGMath::ZERO;
+    ela_           = MGMath::ZERO;
     tau_           = std::move(SVecD<3>(1.0,  0.0, 0.0));
     rho_           = std::move(SVecD<3>(0.0, -1.0, 0.0));
     mscatu_        = MGMath::ZERO;
@@ -202,30 +206,32 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         Double_t efft_len = MGMath::ZERO;
         Double_t cov_cLL = MGMath::ZERO;
         Double_t cov_cLT = MGMath::ZERO;
-        Double_t corr_LL = MGMath::ZERO;
         for (Int_t it = vec_vac_.size()-1; it >= 0; --it) {
             if (vec_vac_.at(it)) { real_len += vec_len_.at(it); continue; }
             Double_t len = vec_len_.at(it);
             Double_t eft = (efft_len + vec_eft_.at(it)) / (real_len + len);
             Double_t eftres = (MGNumc::EqualToZero(real_len) ? MGMath::ZERO : (efft_len / real_len));
 
-            Double_t est_len = std::sqrt(real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it));
-            Double_t sgmLocL = est_len * vec_mscat_.at(it);
+            Double_t est_len    = real_len + vec_invloc_.at(it);
+            Double_t sgm_lentha = est_len * vec_mscatsqr_.at(it);
+            Double_t est_lensqr = real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it);
+            Double_t sgm_lensqr = est_lensqr * vec_mscatsqr_.at(it);
             
-            cov_cLL += (sgmLocL * sgmLocL);
-            cov_cLT += (sgmLocL * vec_mscat_.at(it));
-            corr_LL += (sgmLocL * (vec_mscat_.at(it) / mscatu_));
+            cov_cLL += sgm_lensqr;
+            cov_cLT += sgm_lentha;
 
             real_len += len;
             efft_len += vec_eft_.at(it);
         }
         Double_t sgmL    = std::sqrt(cov_cLL);
         Double_t rel_cLT = (cov_cLT / (sgmL * mscatu_));
-        Double_t sgmSsqr = ( ((MGMath::ONE + rel_cLT*rel_cLT) * cov_cLL) - (MGMath::TWO * (rel_cLT * sgmL * corr_LL)) );
-        Double_t cov_cll = ((efft_len * efft_len * mscatu_ * mscatu_) * MGMath::ONE_TO_TWELVE);
-
+        Double_t rel_cll = std::sqrt(MGMath::ONE - rel_cLT * rel_cLT);
+        if (MGNumc::Compare(rel_cLT, MGMath::ONE) >= 0 || !MGNumc::Valid(rel_cll)) {
+            rel_cLT = MGMath::ONE;
+            rel_cll = MGMath::ZERO;
+        }
         mscatcu_ = (rel_cLT * sgmL);
-        mscatcl_ = std::sqrt(cov_cll + sgmSsqr);
+        mscatcl_ = (rel_cll * sgmL);
 
         vec_vac_.clear();
         vec_len_.clear();
@@ -234,6 +240,14 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         vec_invlocsqr_.clear();
         vec_mscat_.clear();
         vec_mscatsqr_.clear();
+
+        // testcode (correction)
+        //Double_t corr = (MGMath::ONE + 0.0380 * std::log(nrl_));
+        //corr = (corr * corr);
+        //mscatu_  *= corr;
+        //mscatcu_ *= corr;
+        //mscatcl_ *= corr;
+        //////////
 
         if (!MGNumc::Valid(mscatu_)  || MGNumc::Compare(mscatu_)  <= 0) mscatu_  = MGMath::ZERO;
         if (!MGNumc::Valid(mscatcu_) || MGNumc::Compare(mscatcu_) <= 0) mscatcu_ = MGMath::ZERO;
@@ -286,6 +300,7 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, cons
     len_ += mfld.real_len();
     eta_abs_end_ = part.eta_abs();
     if (mfld()) nrl_ += mfld.num_rad_len();
+    if (mfld()) ela_ += mfld.elcloud_abundance();
     if (sw_mscat_) {
         Bool_t vac = !mfld();
         Double_t len = mfld.real_len();
@@ -332,6 +347,7 @@ void PropPhyCal::set_virtualPhySt(PhySt& part) const {
     part.vst().set_len(len_);
     if (part.vst()()) {
         part.vst().set_nrl(nrl_);
+        part.vst().set_ela(ela_);
         if (part.arg().mscat()) {
             part.vst().set_orth(tau_, rho_);
             part.vst().set_mscatu(mscatu_);
@@ -398,10 +414,11 @@ Double_t PropMgnt::GetPropStep(PhySt& part, Short_t ward) {
     if (MGNumc::EqualToZero(cur_mag) && MGNumc::EqualToZero(pred_mag)) pred_step = PROP_STEP;
     
     Double_t step = pred_step;
-    if (part.field()) {
-        Double_t num_rad_len = MatPhy::GetNumRadLen((sign * step), part, false);
-        step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
-    }
+    // testcode no-scale
+    //if (part.field()) {
+    //    Double_t num_rad_len = MatPhy::GetNumRadLen((sign * step), part, false);
+    //    step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
+    //}
     
     return step; 
 }

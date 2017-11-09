@@ -571,7 +571,13 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part = (eta / bta);
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * std::log(num_rad_len));
+    Double_t log_nrl = std::log(num_rad_len);
+    
+    // Highland-Lynch-Dahl formula
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
+    
+    // Modified Highland-Lynch-Dahl formula
+    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len * (MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl));
     
     // Tune by Hsin-Yi Chou
     //const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
@@ -579,7 +585,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     //mscat_sgm *= tune_sgm;
     
     //----------------- AMS
-    //mscat_sgm *= 1.106224638618;
+    //mscat_sgm = 0.015 * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len); // linear
     //----------------- AMS
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -628,9 +634,6 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
   
     // Calculate Eta Trans
     Double_t eta_trans = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
-    //----------------- AMS
-    //eta_trans *= 1.14631;
-    //----------------- AMS
     
     Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV);
     
@@ -663,12 +666,9 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     //eloss_ion_mpv *= tune_mpv;
 
     //----------------- AMS
-    //eloss_ion_kpa  = eloss_ion_kpa0 / (-2.83667e+00 * std::pow(std::fabs(MGMath::ONE - sqr_bta), 1.37299e+00) + std::pow(MGMath::ONE/sqr_bta, 1.56239e+00)) + 0.0859215; // testcode
-    //eloss_ion_mpv *= 1.22 * (0.501228 * (MGMath::ONE + std::erf(2.99373 * (bta - 0.115642))));
-    eloss_ion_kpa  = eloss_ion_kpa0;
-    //eloss_ion_mpv *= 1.2648105641808;
-    //eloss_ion_sgm *= 1.2648105641808;
-    //eloss_ion_sgm *= 1.26837 * (MGMath::ONE + 0.740225 * std::erfc(6.89382 * (bta - 0.682716)));
+    eloss_ion_kpa  = MGMath::ONE;
+    eloss_ion_mpv  = eloss_ion_men;
+    eloss_ion_sgm  *= MGMath::TWO;
     //----------------- AMS
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;

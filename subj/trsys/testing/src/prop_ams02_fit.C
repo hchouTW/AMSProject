@@ -69,7 +69,8 @@ int main(int argc, char * argv[]) {
     TGraphErrors* gTux_sgm = new TGraphErrors(); gTux_sgm->SetNameTitle("gTux_sgm", "");
     TGraphErrors* gTuy_men = new TGraphErrors(); gTuy_men->SetNameTitle("gTuy_men", "");
     TGraphErrors* gTuy_sgm = new TGraphErrors(); gTuy_sgm->SetNameTitle("gTuy_sgm", "");
-    
+   
+    const Double_t stable = 2.0;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
     std::vector<Hist*> vhMcx = Hist::ProjectAll(HistProj::kY, hMcx);
     std::vector<Hist*> vhMcy = Hist::ProjectAll(HistProj::kY, hMcy);
@@ -89,7 +90,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhMcx.at(it))()->GetRMS());
         (*vhMcx.at(it))()->Fit(gaus, "q0", "");
-        (*vhMcx.at(it))()->Fit(gaus, "q0", "");
+        (*vhMcx.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gMcx_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMcx_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMcx_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -97,7 +98,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhMcy.at(it))()->GetRMS());
         (*vhMcy.at(it))()->Fit(gaus, "q0", "");
-        (*vhMcy.at(it))()->Fit(gaus, "q0", "");
+        (*vhMcy.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gMcy_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMcy_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMcy_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -105,7 +106,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhMux.at(it))()->GetRMS());
         (*vhMux.at(it))()->Fit(gaus, "q0", "");
-        (*vhMux.at(it))()->Fit(gaus, "q0", "");
+        (*vhMux.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gMux_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMux_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMux_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -113,7 +114,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhMuy.at(it))()->GetRMS());
         (*vhMuy.at(it))()->Fit(gaus, "q0", "");
-        (*vhMuy.at(it))()->Fit(gaus, "q0", "");
+        (*vhMuy.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gMuy_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMuy_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMuy_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -121,7 +122,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhTcx.at(it))()->GetRMS());
         (*vhTcx.at(it))()->Fit(gaus, "q0", "");
-        (*vhTcx.at(it))()->Fit(gaus, "q0", "");
+        (*vhTcx.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gTcx_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gTcx_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gTcx_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -129,7 +130,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhTcy.at(it))()->GetRMS());
         (*vhTcy.at(it))()->Fit(gaus, "q0", "");
-        (*vhTcy.at(it))()->Fit(gaus, "q0", "");
+        (*vhTcy.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gTcy_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gTcy_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gTcy_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -137,7 +138,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhTux.at(it))()->GetRMS());
         (*vhTux.at(it))()->Fit(gaus, "q0", "");
-        (*vhTux.at(it))()->Fit(gaus, "q0", "");
+        (*vhTux.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gTux_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gTux_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gTux_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -145,7 +146,7 @@ int main(int argc, char * argv[]) {
         
         gaus->SetParameters(1000, 0, (*vhTuy.at(it))()->GetRMS());
         (*vhTuy.at(it))()->Fit(gaus, "q0", "");
-        (*vhTuy.at(it))()->Fit(gaus, "q0", "");
+        (*vhTuy.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
         gTuy_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gTuy_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gTuy_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));

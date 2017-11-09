@@ -116,9 +116,11 @@ class VirtualPhySt {
 
         inline void set_len(Double_t len) { len_ = len; }
         inline void set_nrl(Double_t nrl) { nrl_ = nrl; }
+        inline void set_ela(Double_t ela) { ela_ = ela; }
         
         inline const Double_t& len() const { return len_; }
         inline const Double_t& nrl() const { return nrl_; }
+        inline const Double_t& ela() const { return ela_; }
 
         inline void set_orth(const SVecD<3>& tau, const SVecD<3>& rho) { tau_ = tau; rho_ = rho; }
         inline const SVecD<3>& tau() const { return tau_; }
@@ -155,6 +157,7 @@ class VirtualPhySt {
 
         Double_t len_;
         Double_t nrl_;
+        Double_t ela_;
 
         SVecD<3> tau_;
         SVecD<3> rho_;
