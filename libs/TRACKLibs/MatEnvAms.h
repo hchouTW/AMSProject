@@ -58,23 +58,23 @@ namespace MatAms {
     constexpr Float_t TRD_SLOPE = (TRDU_RADIUS - TRDL_RADIUS) / (TRDU_Z - TRDL_Z);
     constexpr Float_t TRD_FACTOR = 1.5;
     
-    constexpr std::array<Long64_t, DIM> TRDS_N   {   440,  440,     6 };
+    constexpr std::array<Long64_t, DIM> TRDS_N   {   440,  440,    12 };
     constexpr std::array<Double_t, DIM> TRDS_MIN {  -110, -110, 144.0 };
     constexpr std::array<Double_t, DIM> TRDS_MAX {   110,  110, 156.0 };
 
-    constexpr std::array<Long64_t, DIM> TRDU_N   {   440,  440,     6 };
+    constexpr std::array<Long64_t, DIM> TRDU_N   {   440,  440,    12 };
     constexpr std::array<Double_t, DIM> TRDU_MIN {  -110, -110, 132.0 };
     constexpr std::array<Double_t, DIM> TRDU_MAX {   110,  110, 144.0 };
     
-    constexpr std::array<Long64_t, DIM> TRDM_N   {   400,  400,     9 };
+    constexpr std::array<Long64_t, DIM> TRDM_N   {   400,  400,    18 };
     constexpr std::array<Double_t, DIM> TRDM_MIN {  -100, -100, 114.0 };
     constexpr std::array<Double_t, DIM> TRDM_MAX {   100,  100, 132.0 };
     
-    constexpr std::array<Long64_t, DIM> TRDI_N   {   400,  400,     9 };
+    constexpr std::array<Long64_t, DIM> TRDI_N   {   400,  400,    18 };
     constexpr std::array<Double_t, DIM> TRDI_MIN {  -100, -100,  96.0 };
     constexpr std::array<Double_t, DIM> TRDI_MAX {   100,  100, 114.0 };
     
-    constexpr std::array<Long64_t, DIM> TRDL_N   {  360, 360,     6 };
+    constexpr std::array<Long64_t, DIM> TRDL_N   {  360, 360,    12 };
     constexpr std::array<Double_t, DIM> TRDL_MIN {  -90, -90,  84.0 };
     constexpr std::array<Double_t, DIM> TRDL_MAX {   90,  90,  96.0 };
 
