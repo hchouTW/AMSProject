@@ -8,6 +8,14 @@ namespace TrackSys {
 void PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
     if (ortt == Orientation::kDownward) HitSt::Sort(hits, HitSt::Orientation::kDownward);
     else                                HitSt::Sort(hits, HitSt::Orientation::kUpward);
+    
+    Short_t seqID = 0;
+    for (auto&& hit : hits) {
+        hit.set_seqID(seqID);
+        Short_t size = (hit.sx() + hit.sy());
+        seqID += size;
+    }
+    nseq_ = seqID;
 }
 
     

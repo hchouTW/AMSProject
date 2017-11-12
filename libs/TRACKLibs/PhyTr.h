@@ -36,6 +36,7 @@ class PhyTr {
         Orientation         ortt_;
         PhySt               part_;
         std::vector<HitSt>  hits_;
+        Short_t             nseq_;
         Double_t nchi_;
         Double_t ndf_;
 
