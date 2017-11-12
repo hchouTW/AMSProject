@@ -260,17 +260,16 @@ class MatPhy {
 
         static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
 
-        static MatPhyFld Get(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+        static MatPhyFld Get(const Double_t stp_len, PhySt& part, Bool_t is_std = true);
         
-        static MatPhyFld Get(const MatFld& mfld, const PhySt& part);
+        static MatPhyFld Get(const MatFld& mfld, PhySt& part);
 
     protected :
-        static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part);
+        static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, PhySt& part);
         
-        static Double_t GetRadiationLength(const MatFld& mfld, const PhySt& part);
-        static Double_t GetMultipleScattering(const MatFld& mfld, const PhySt& part);
-        static std::tuple<Double_t, Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part);
-        static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part);
+        static Double_t GetMultipleScattering(const MatFld& mfld, PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
+        static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part);
 
     private :
         // Coulomb Multiple Scattering, the Highland-Lynch-Dahl equation

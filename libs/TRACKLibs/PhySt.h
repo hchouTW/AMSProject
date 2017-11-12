@@ -22,23 +22,23 @@ class PhyArg {
         PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
-        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; tune_eloss_ion_ = MGMath::ONE; } 
+        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatl_tau_ = 0.0; mscatl_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; tune_eloss_ion_ = MGMath::ONE; } 
         
-        inline void set_mscat(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) { if (sw_mscat_) {mscatu_tau_ = tauu; mscatu_rho_ = rhou; mscatc_tau_ = tauc; mscatc_rho_ = rhoc; } }
+        inline void set_mscat(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) { if (sw_mscat_) { mscatu_tau_ = tauu; mscatu_rho_ = rhou; mscatl_tau_ = taul; mscatl_rho_ = rhol; } }
         
         inline void set_eloss(Double_t ion = 0.0, Double_t brm = 0.0, Double_t ionlmt = 0.0) { if (sw_eloss_) { eloss_ion_ = (ion<-std::max(LMT_SGM_, ionlmt)?-std::max(LMT_SGM_, ionlmt):ion); eloss_brm_ = ((brm<0.0)?0.0:brm); } }
         
-        inline void set(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0, Double_t ion = 0.0, Double_t brm = 0.0) { set_mscat(tauu, rhou, tauc, rhoc); set_eloss(ion, brm); }
+        inline void set(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0, Double_t ion = 0.0, Double_t brm = 0.0) { set_mscat(tauu, rhou, taul, rhol); set_eloss(ion, brm); }
 
         void rndm_mscatu() { mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; if (sw_mscat_) { mscatu_tau_ = pdf_mscat_.rndm(); mscatu_rho_ = pdf_mscat_.rndm(); } }
-        void rndm_mscatc() { mscatc_tau_ = 0.0; mscatc_rho_ = 0.0; if (sw_mscat_) { mscatc_tau_ = pdf_mscat_.rndm(); mscatc_rho_ = pdf_mscat_.rndm(); } }
-        void rndm_mscat() { rndm_mscatu(); rndm_mscatc(); }
+        void rndm_mscatl() { mscatl_tau_ = 0.0; mscatl_rho_ = 0.0; if (sw_mscat_) { mscatl_tau_ = pdf_mscat_.rndm(); mscatl_rho_ = pdf_mscat_.rndm(); } }
+        void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
 
         void rndm_eloss_ion(Double_t kpa = 0.0, Double_t mos = 0.0);
         void rndm_eloss_brm(Double_t nrl = 0.0) { if (sw_eloss_) { Double_t bremslen = nrl / MGMath::LOG_TWO; eloss_brm_=((bremslen<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
         void rndm_eloss(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
 
-        void rndm(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatc(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
+        void rndm(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatl(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
 
         inline const Bool_t& operator() () const { return field_; }
 
@@ -47,16 +47,16 @@ class PhyArg {
 
         inline const Double_t& tauu() const { return mscatu_tau_; }
         inline const Double_t& rhou() const { return mscatu_rho_; }
-        inline const Double_t& tauc() const { return mscatc_tau_; }
-        inline const Double_t& rhoc() const { return mscatc_rho_; }
+        inline const Double_t& taul() const { return mscatl_tau_; }
+        inline const Double_t& rhol() const { return mscatl_rho_; }
         
         inline const Double_t& ion() const { return eloss_ion_; }
         inline const Double_t& brm() const { return eloss_brm_; }
        
         inline Double_t etauu() const { return pdf_mscat_.efft_sgm(mscatu_tau_); }
         inline Double_t erhou() const { return pdf_mscat_.efft_sgm(mscatu_rho_); }
-        inline Double_t etauc() const { return pdf_mscat_.efft_sgm(mscatc_tau_); }
-        inline Double_t erhoc() const { return pdf_mscat_.efft_sgm(mscatc_rho_); }
+        inline Double_t etaul() const { return pdf_mscat_.efft_sgm(mscatl_tau_); }
+        inline Double_t erhol() const { return pdf_mscat_.efft_sgm(mscatl_rho_); }
       
         // Note: Expert Tool
         inline void set_tune_ion(Double_t tune = 1.0) { if (sw_eloss_) { 
@@ -74,8 +74,8 @@ class PhyArg {
         Bool_t   sw_eloss_;
         Double_t mscatu_tau_;
         Double_t mscatu_rho_;
-        Double_t mscatc_tau_;
-        Double_t mscatc_rho_;
+        Double_t mscatl_tau_;
+        Double_t mscatl_rho_;
         Double_t eloss_ion_;
         Double_t eloss_brm_;
 
@@ -128,16 +128,17 @@ class VirtualPhySt {
         inline const Double_t& tau(Int_t idx) const { return tau_(idx); }
         inline const Double_t& rho(Int_t idx) const { return rho_(idx); }
 
-        inline void set_mscatu(Double_t mscatu) { mscatu_ = mscatu; }
-        inline void set_mscatc(Double_t mscatcu, Double_t mscatcl) { mscatcu_ = mscatcu; mscatcl_ = mscatcl; } 
+        inline void set_mscatu(Double_t mscatuu, Double_t mscatcu) { mscatuu_ = mscatuu; mscatcu_ = mscatcu; }
+        inline void set_mscatl(Double_t mscatul, Double_t mscatcl) { mscatul_ = mscatul; mscatcl_ = mscatcl; } 
 
-        inline const Double_t& mscatu()  const { return mscatu_; }
+        inline const Double_t& mscatuu() const { return mscatuu_; }
         inline const Double_t& mscatcu() const { return mscatcu_; }
+        inline const Double_t& mscatul() const { return mscatul_; }
         inline const Double_t& mscatcl() const { return mscatcl_; }
 
-        inline SVecD<3> symbk_mscatu(Double_t tauu = 0.0, Double_t rhou = 0.0) const { return (field_ ? ((tauu*mscatu_)*tau_ + (rhou*mscatu_)*rho_) : SVecD<3>()); }
-        inline SVecD<3> symbk_mscatc(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t tauc = 0.0, Double_t rhoc = 0.0) const { return (field_ ? ((tauu*mscatcu_+tauc*mscatcl_)*tau_ + (rhou*mscatcu_+rhoc*mscatcl_)*rho_) : SVecD<3>()); }
-
+        inline SVecD<3> symbk_mscatu(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) const { return (field_ ? ((tauu*mscatuu_+taul*mscatul_)*tau_ + (rhou*mscatuu_+rhol*mscatul_)*rho_) : SVecD<3>()); }
+        inline SVecD<3> symbk_mscatc(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) const { return (field_ ? ((tauu*mscatcu_+taul*mscatcl_)*tau_ + (rhou*mscatcu_+rhol*mscatcl_)*rho_) : SVecD<3>()); }
+       
         inline void set_eloss_ion(Double_t kpa, Double_t mpv, Double_t sgm) { eloss_ion_kpa_ = kpa; eloss_ion_mpv_ = mpv; eloss_ion_sgm_ = sgm; }
         inline void set_eloss_brm(Double_t men) { eloss_brm_men_ = men; }
         
@@ -162,8 +163,9 @@ class VirtualPhySt {
         SVecD<3> tau_;
         SVecD<3> rho_;
 
-        Double_t mscatu_;
+        Double_t mscatuu_;
         Double_t mscatcu_;
+        Double_t mscatul_;
         Double_t mscatcl_;
 
         Double_t eloss_ion_kpa_;

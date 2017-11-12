@@ -507,7 +507,7 @@ Double_t MatPhy::GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t 
 }
 
 
-MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, Bool_t is_std) {
+MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
     Double_t len = std::fabs(stp_len);
     if (!part.field()) return MatPhyFld(len);
     if (part.info().is_chrgless() || part.info().is_massless()) return MatPhyFld(len);
@@ -529,7 +529,7 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, const PhySt& part, Bool_t is_std) 
 }
 
 
-MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part) {
+MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     Double_t len = mfld.real_len();
     if (!mfld() || !part.field()) return MatPhyFld(len);
     if (MGNumc::EqualToZero(mfld.efft_len())) return MatPhyFld(len);
@@ -544,7 +544,7 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, const PhySt& part) {
 }
         
 
-std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(const MatFld& mfld, const PhySt& part) {
+std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(const MatFld& mfld, PhySt& part) {
     Double_t gmbta     = ((MGNumc::Compare(part.bta(), LMT_BTA) > 0) ? part.gmbta() : LMT_GMBTA);
     Double_t log_gmbta = std::log10(gmbta);
 
@@ -563,7 +563,9 @@ std::array<Double_t, MatProperty::NUM_ELM> MatPhy::GetDensityEffectCorrection(co
 }
 
 
-Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
+Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
+    if (!part.arg().mscat()) return MGMath::ZERO;
+    
     Double_t num_rad_len = mfld.num_rad_len();
     if (MGNumc::Compare(num_rad_len, LMTL_NUM_RAD_LEN) < 0) num_rad_len = LMTL_NUM_RAD_LEN;
     if (MGNumc::Compare(num_rad_len, LMTU_NUM_RAD_LEN) > 0) num_rad_len = LMTU_NUM_RAD_LEN;
@@ -574,10 +576,10 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     Double_t log_nrl = std::log(num_rad_len);
     
     // Highland-Lynch-Dahl formula
-    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
+    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
     
     // Modified Highland-Lynch-Dahl formula
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len * (MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl));
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len * (MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl));
     
     // Tune by Hsin-Yi Chou
     //const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
@@ -585,7 +587,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
     //mscat_sgm *= tune_sgm;
     
     //----------------- AMS
-    //mscat_sgm = 0.015 * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len); // linear
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len);
     //----------------- AMS
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -594,7 +596,9 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, const PhySt& part) {
 }
 
 
-std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, const PhySt& part) {
+std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part) {
+    if (!part.arg().eloss()) return std::make_tuple(MGMath::ZERO, MGMath::ZERO, MGMath::ZERO, MGMath::ZERO);
+    
     Bool_t is_over_lmt   = (MGNumc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t gmbta       = ((is_over_lmt) ? part.gmbta() : LMT_GMBTA);
     Double_t sqr_gmbta   = ((is_over_lmt) ? (gmbta * gmbta) : LMT_SQR_GMBTA);
@@ -680,7 +684,8 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
 }
 
 
-Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, const PhySt& part) {
+Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
+    if (!part.arg().eloss()) return MGMath::ZERO;
     // testcode
     return 0.0; // TODO: Include Bremsstrahlung
 

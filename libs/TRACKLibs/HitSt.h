@@ -6,17 +6,21 @@ namespace TrackSys {
 
 class HitSt {
     public :
-        HitSt(Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : side_(sx, sy, sz), coo_(0., 0., 0.), err_(DEFERR_X_, DEFERR_Y_, DEFERR_Z_) {}
+        HitSt(Bool_t sx = true, Bool_t sy = true, Bool_t sz = true) : seqID_(-1), side_(sx, sy, sz), coo_(0., 0., 0.), err_(DEFERR_X_, DEFERR_Y_, DEFERR_Z_) {}
         
         HitSt(Double_t cx, Double_t cy, Double_t cz) : HitSt() { set_coo(cx, cy, cz); }
 
         void print() const;
         
+        inline void set_seqID(Short_t id) { seqID_ = id; }
+
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx, coo_(1) = cy, coo_(2) = cz; }
         inline void set_err(Double_t ex, Double_t ey, Double_t ez) { err_(0) = ex, err_(1) = ey, err_(2) = ez; }
         
         inline void set_dummy_x(Double_t cx) { coo_(0) = cx; }
 
+        inline const Short_t&  seqID() const { return seqID_; }
+        
         inline const Bool_t&   sx() const { return side_(0); }
         inline const Bool_t&   sy() const { return side_(1); }
         inline const Bool_t&   sz() const { return side_(2); }
@@ -41,6 +45,8 @@ class HitSt {
         inline SVecD<3> e(Double_t rx, Double_t ry, Double_t rz) const { return SVecD<3>(ex(rx), ey(ry), ez(rz)); }
         
     private :
+        Short_t    seqID_;
+
         SVecO<3>   side_;
         SVecD<3>   coo_;  // [cm]
         SVecD<3>   err_;  // [cm]

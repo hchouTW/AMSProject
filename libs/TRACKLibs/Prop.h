@@ -165,9 +165,9 @@ class PhyJb {
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
         static constexpr Short_t JTAUU = 0;
-        static constexpr Short_t JTAUC = 1;
+        static constexpr Short_t JTAUL = 1;
         static constexpr Short_t JRHOU = 2;
-        static constexpr Short_t JRHOC = 3;
+        static constexpr Short_t JRHOL = 3;
         static constexpr Short_t JION  = 4;
         static constexpr Short_t JBRM  = 5;
 };
@@ -222,7 +222,8 @@ class PropPhyCal {
         const SVecD<3>& tau() const { return tau_; }
         const SVecD<3>& rho() const { return rho_; }
         
-        const Double_t& mscatu()  const { return mscatu_; }
+        const Double_t& mscatuu() const { return mscatuu_; }
+        const Double_t& mscatul() const { return mscatul_; }
         const Double_t& mscatcu() const { return mscatcu_; }
         const Double_t& mscatcl() const { return mscatcl_; }
 
@@ -251,13 +252,14 @@ class PropPhyCal {
         std::vector<Double_t> vec_eft_;
         std::vector<Double_t> vec_invloc_;
         std::vector<Double_t> vec_invlocsqr_;
-        std::vector<Double_t> vec_mscat_;
         std::vector<Double_t> vec_mscatsqr_;
 
         SVecD<3> tau_;
         SVecD<3> rho_;
         
-        Double_t mscatu_;
+        Bool_t   mscat_;
+        Double_t mscatuu_;
+        Double_t mscatul_;
         Double_t mscatcu_;
         Double_t mscatcl_;
         
@@ -317,21 +319,21 @@ class PropMgnt {
         static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 8.0e-4; // (du threshold)
         static constexpr Double_t PROP_STEP  = 20.0;   // (ds threshold)
-        //static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
+        static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
         static constexpr Double_t TUNE_MAT   =  0.1;  // (number radiation length threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
         
-        static constexpr Double_t LMTU_STEP  =  200.1;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  200.0;   // (ds threshold)
+        //static constexpr Double_t LMTU_STEP  =  200.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  200.0;   // (ds threshold)
         
-        //static constexpr Double_t LMTU_STEP  =  5.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  5.0;   // (ds threshold)
+        //static constexpr Double_t LMTU_STEP  =  15.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  15.0;   // (ds threshold)
         
-        //static constexpr Double_t LMTU_STEP  =  1.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  1.0;   // (ds threshold)
+        //static constexpr Double_t LMTU_STEP  =  4.1;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  4.0;   // (ds threshold)
         
     private :
         static constexpr Short_t X = 0;

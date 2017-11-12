@@ -10,7 +10,7 @@ class PhyTr {
             kDownward = 0, kUpward = 1
         };
 
-        inline static void HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
+        inline static Short_t HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
 
         inline static Bool_t HitCheck(const std::vector<HitSt>& hits);
         
@@ -45,7 +45,7 @@ class PhyTr {
         static constexpr Int_t    LMTL_ITER = 3;
         static constexpr Int_t    LMTM_ITER = 5;
         static constexpr Int_t    LMTU_ITER = 100;
-        static constexpr Double_t CONVG_EPSILON   = 5.0e-2;
+        static constexpr Double_t CONVG_EPSILON   = 2.0e-2;
         static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
        
         // Dimension

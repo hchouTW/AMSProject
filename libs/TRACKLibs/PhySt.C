@@ -43,8 +43,9 @@ void VirtualPhySt::reset(Bool_t field) {
     ela_ = MGMath::ZERO;
     tau_ = std::move(SVecD<3>(1.0, 0.0, 0.0));
     rho_ = std::move(SVecD<3>(0.0, -1.0, 0.0));
-    mscatu_  = MGMath::ZERO;
+    mscatuu_ = MGMath::ZERO;
     mscatcu_ = MGMath::ZERO;
+    mscatul_ = MGMath::ZERO;
     mscatcl_ = MGMath::ZERO;
     eloss_ion_kpa_ = MGMath::ZERO;
     eloss_ion_mpv_ = MGMath::ZERO;
@@ -218,7 +219,7 @@ void PhySt::print() const {
     printStr += STR_FMT("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
     if (arg_()) {
         printStr += STR_FMT("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(), arg_.rhou());
-        printStr += STR_FMT("Mscat    Tauc %6.2f  Rhoc %6.2f\n", arg_.tauc(), arg_.rhoc());
+        printStr += STR_FMT("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(), arg_.rhol());
         printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.ion(),  arg_.brm());
     }
     printStr += STR_FMT("=========================================\n");
@@ -231,8 +232,8 @@ void PhySt::symbk(Bool_t is_rndm) {
     if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mos(), vst_.nrl()); }
 
     if (arg_.mscat()) {
-        coo_ = std::move(coo_ + vst_.symbk_mscatc(arg_.tauu(), arg_.rhou(), arg_.tauc(), arg_.rhoc()));
-        dir_ = std::move(LA::Unit(dir_ + vst_.symbk_mscatu(arg_.tauu(), arg_.rhou())));
+        coo_ = std::move(coo_ + vst_.symbk_mscatc(arg_.tauu(), arg_.rhou(), arg_.taul(), arg_.rhol()));
+        dir_ = std::move(LA::Unit(dir_ + vst_.symbk_mscatu(arg_.tauu(), arg_.rhou(), arg_.taul(), arg_.rhol())));
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();

@@ -102,18 +102,23 @@ void PhyJb::set(PhySt& part) {
     if (part.arg().mscat()) {
         jb_gl_(JPX, JTAUU) = vst.mscatcu() * vst.tau(X);
         jb_gl_(JPY, JTAUU) = vst.mscatcu() * vst.tau(Y);
-        jb_gl_(JUX, JTAUU) = vst.mscatu()  * vst.tau(X);
-        jb_gl_(JUY, JTAUU) = vst.mscatu()  * vst.tau(Y);
+        jb_gl_(JPX, JTAUL) = vst.mscatcl() * vst.tau(X);
+        jb_gl_(JPY, JTAUL) = vst.mscatcl() * vst.tau(Y);
         
-        jb_gl_(JPX, JTAUC) = vst.mscatcl() * vst.tau(X);
-        jb_gl_(JPY, JTAUC) = vst.mscatcl() * vst.tau(Y);
+        jb_gl_(JUX, JTAUU) = vst.mscatuu() * vst.tau(X);
+        jb_gl_(JUY, JTAUU) = vst.mscatuu() * vst.tau(Y);
+        jb_gl_(JUX, JTAUL) = vst.mscatul() * vst.tau(X);
+        jb_gl_(JUY, JTAUL) = vst.mscatul() * vst.tau(Y);
 
         jb_gl_(JPX, JRHOU) = vst.mscatcu() * vst.rho(X);
         jb_gl_(JPY, JRHOU) = vst.mscatcu() * vst.rho(Y);
-        jb_gl_(JUX, JRHOU) = vst.mscatu()  * vst.rho(X);
-        jb_gl_(JUY, JRHOU) = vst.mscatu()  * vst.rho(Y);
-        jb_gl_(JPX, JRHOC) = vst.mscatcl() * vst.rho(X);
-        jb_gl_(JPY, JRHOC) = vst.mscatcl() * vst.rho(Y);
+        jb_gl_(JPX, JRHOL) = vst.mscatcl() * vst.rho(X);
+        jb_gl_(JPY, JRHOL) = vst.mscatcl() * vst.rho(Y);
+        
+        jb_gl_(JUX, JRHOU) = vst.mscatuu() * vst.rho(X);
+        jb_gl_(JUY, JRHOU) = vst.mscatuu() * vst.rho(Y);
+        jb_gl_(JUX, JRHOL) = vst.mscatul() * vst.rho(X);
+        jb_gl_(JUY, JRHOL) = vst.mscatul() * vst.rho(Y);
 
         for (Int_t it = 0;  it < DIM_G-1; ++it) {
         for (Int_t jt = it; jt < DIM_G-1; ++jt) {
@@ -138,11 +143,11 @@ void PhyJb::multiplied(PhyJb& phyJb) {
 void PhyJb::print() const {
     std::string printStr;
     printStr += STR_FMT("============================================= PhyJb =============================================\n");
-    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPX, JPX), jb_gg_(JPX, JPY), jb_gg_(JPX, JUX), jb_gg_(JPX, JUY), jb_gg_(JPX, JEA), jb_gl_(JPX, JTAUU), jb_gl_(JPX, JTAUC), jb_gl_(JPX, JRHOU), jb_gl_(JPX, JRHOC));
-    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPY, JPX), jb_gg_(JPY, JPY), jb_gg_(JPY, JUX), jb_gg_(JPY, JUY), jb_gg_(JPY, JEA), jb_gl_(JPY, JTAUU), jb_gl_(JPY, JTAUC), jb_gl_(JPY, JRHOU), jb_gl_(JPY, JRHOC));
-    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUX, JPX), jb_gg_(JUX, JPY), jb_gg_(JUX, JUX), jb_gg_(JUX, JUY), jb_gg_(JUX, JEA), jb_gl_(JUX, JTAUU), jb_gl_(JUX, JTAUC), jb_gl_(JUX, JRHOU), jb_gl_(JUX, JRHOC));
-    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUY, JPX), jb_gg_(JUY, JPY), jb_gg_(JUY, JUX), jb_gg_(JUY, JUY), jb_gg_(JUY, JEA), jb_gl_(JUY, JTAUU), jb_gl_(JUY, JTAUC), jb_gl_(JUY, JRHOU), jb_gl_(JUY, JRHOC));
-    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JEA, JPX), jb_gg_(JEA, JPY), jb_gg_(JEA, JUX), jb_gg_(JEA, JUY), jb_gg_(JEA, JEA), jb_gl_(JEA, JTAUU), jb_gl_(JEA, JTAUC), jb_gl_(JEA, JRHOU), jb_gl_(JEA, JRHOC));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPX, JPX), jb_gg_(JPX, JPY), jb_gg_(JPX, JUX), jb_gg_(JPX, JUY), jb_gg_(JPX, JEA), jb_gl_(JPX, JTAUU), jb_gl_(JPX, JTAUL), jb_gl_(JPX, JRHOU), jb_gl_(JPX, JRHOL));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPY, JPX), jb_gg_(JPY, JPY), jb_gg_(JPY, JUX), jb_gg_(JPY, JUY), jb_gg_(JPY, JEA), jb_gl_(JPY, JTAUU), jb_gl_(JPY, JTAUL), jb_gl_(JPY, JRHOU), jb_gl_(JPY, JRHOL));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUX, JPX), jb_gg_(JUX, JPY), jb_gg_(JUX, JUX), jb_gg_(JUX, JUY), jb_gg_(JUX, JEA), jb_gl_(JUX, JTAUU), jb_gl_(JUX, JTAUL), jb_gl_(JUX, JRHOU), jb_gl_(JUX, JRHOL));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUY, JPX), jb_gg_(JUY, JPY), jb_gg_(JUY, JUX), jb_gg_(JUY, JUY), jb_gg_(JUY, JEA), jb_gl_(JUY, JTAUU), jb_gl_(JUY, JTAUL), jb_gl_(JUY, JRHOU), jb_gl_(JUY, JRHOL));
+    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JEA, JPX), jb_gg_(JEA, JPY), jb_gg_(JEA, JUX), jb_gg_(JEA, JUY), jb_gg_(JEA, JEA), jb_gl_(JEA, JTAUU), jb_gl_(JEA, JTAUL), jb_gl_(JEA, JRHOU), jb_gl_(JEA, JRHOL));
     printStr += STR_FMT("=================================================================================================\n");
     COUT(printStr); 
 }
@@ -174,7 +179,9 @@ void PropPhyCal::init() {
     ela_           = MGMath::ZERO;
     tau_           = std::move(SVecD<3>(1.0,  0.0, 0.0));
     rho_           = std::move(SVecD<3>(0.0, -1.0, 0.0));
-    mscatu_        = MGMath::ZERO;
+    mscat_         = false;
+    mscatuu_       = MGMath::ZERO;
+    mscatul_       = MGMath::ZERO;
     mscatcu_       = MGMath::ZERO;
     mscatcl_       = MGMath::ZERO;
     eloss_ion_kpa_ = MGMath::ZERO;
@@ -186,7 +193,6 @@ void PropPhyCal::init() {
     vec_eft_.clear();
     vec_invloc_.clear();
     vec_invlocsqr_.clear();
-    vec_mscat_.clear();
     vec_mscatsqr_.clear();
     vec_ion_kpa_.clear();
     vec_ion_sgm_.clear();
@@ -195,63 +201,61 @@ void PropPhyCal::init() {
 
 
 void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
-    if (sw_mscat_ && !MGNumc::EqualToZero(mscatu_)) {
+    if (sw_mscat_ && mscat_) {
         tau_.Unit();
         rho_.Unit();
-        mscatu_  = std::sqrt(mscatu_);
+        mscatuu_ = MGMath::ZERO;
+        mscatul_ = MGMath::ZERO;
         mscatcu_ = MGMath::ZERO;
         mscatcl_ = MGMath::ZERO;
 
         Double_t real_len = MGMath::ZERO;
         Double_t efft_len = MGMath::ZERO;
+        Double_t cov_cUU = MGMath::ZERO;
         Double_t cov_cLL = MGMath::ZERO;
-        Double_t cov_cLT = MGMath::ZERO;
+        Double_t cov_cLU = MGMath::ZERO;
         for (Int_t it = vec_vac_.size()-1; it >= 0; --it) {
             if (vec_vac_.at(it)) { real_len += vec_len_.at(it); continue; }
-            Double_t len = vec_len_.at(it);
-            Double_t eft = (efft_len + vec_eft_.at(it)) / (real_len + len);
-            Double_t eftres = (MGNumc::EqualToZero(real_len) ? MGMath::ZERO : (efft_len / real_len));
-
-            Double_t est_len    = real_len + vec_invloc_.at(it);
-            Double_t sgm_lentha = est_len * vec_mscatsqr_.at(it);
-            Double_t est_lensqr = real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it);
-            Double_t sgm_lensqr = est_lensqr * vec_mscatsqr_.at(it);
             
+            Double_t est_len    = real_len + vec_invloc_.at(it);
+            Double_t est_lensqr = real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it);
+            
+            Double_t sgm_thasqr = vec_mscatsqr_.at(it);
+            Double_t sgm_lentha = est_len * sgm_thasqr;
+            Double_t sgm_lensqr = est_lensqr * sgm_thasqr;
+            
+            cov_cUU += sgm_thasqr;
             cov_cLL += sgm_lensqr;
-            cov_cLT += sgm_lentha;
+            cov_cLU += sgm_lentha;
 
-            real_len += len;
+            real_len += vec_len_.at(it);
             efft_len += vec_eft_.at(it);
         }
-        Double_t sgmL    = std::sqrt(cov_cLL);
-        Double_t rel_cLT = (cov_cLT / (sgmL * mscatu_));
-        Double_t rel_cll = std::sqrt(MGMath::ONE - rel_cLT * rel_cLT);
-        if (MGNumc::Compare(rel_cLT, MGMath::ONE) >= 0 || !MGNumc::Valid(rel_cll)) {
-            rel_cLT = MGMath::ONE;
-            rel_cll = MGMath::ZERO;
-        }
-        mscatcu_ = (rel_cLT * sgmL);
-        mscatcl_ = (rel_cll * sgmL);
-
+        
         vec_vac_.clear();
         vec_len_.clear();
         vec_eft_.clear();
         vec_invloc_.clear();
         vec_invlocsqr_.clear();
-        vec_mscat_.clear();
         vec_mscatsqr_.clear();
+        
+        Double_t sgmU = std::sqrt(cov_cUU);
+        Double_t sgmL = std::sqrt(cov_cLL);
+        Double_t rel  = (cov_cLU / (sgmL * sgmU));
+        if (!MGNumc::Valid(sgmU) || MGNumc::Compare(sgmU) <= 0)            sgmU = MGMath::ZERO;
+        if (!MGNumc::Valid(sgmL) || MGNumc::Compare(sgmL) <= 0)            sgmL = MGMath::ZERO;
+        if (!MGNumc::Valid(rel)  || MGNumc::Compare(rel, MGMath::ONE) >= 0) rel = MGMath::ONE;
 
-        // testcode (correction)
-        //Double_t corr = (MGMath::ONE + 0.0380 * std::log(nrl_));
-        //corr = (corr * corr);
-        //mscatu_  *= corr;
-        //mscatcu_ *= corr;
-        //mscatcl_ *= corr;
-        //////////
+        Double_t normu = std::sqrt(MGMath::HALF * (MGMath::ONE + rel)); 
+        Double_t norml = std::sqrt(MGMath::HALF * (MGMath::ONE - rel));
+        if (!MGNumc::Valid(normu) || MGNumc::Compare(normu) <= 0) normu = MGMath::ZERO;
+        if (!MGNumc::Valid(norml) || MGNumc::Compare(norml) <= 0) normu = MGMath::ZERO;
+        
+        mscatuu_ =  sgmU * normu;
+        mscatcu_ =  sgmL * normu;
+        mscatul_ =  sgmU * norml;
+        mscatcl_ = -sgmL * norml;
 
-        if (!MGNumc::Valid(mscatu_)  || MGNumc::Compare(mscatu_)  <= 0) mscatu_  = MGMath::ZERO;
-        if (!MGNumc::Valid(mscatcu_) || MGNumc::Compare(mscatcu_) <= 0) mscatcu_ = MGMath::ZERO;
-        if (!MGNumc::Valid(mscatcl_) || MGNumc::Compare(mscatcl_) <= 0) mscatcl_ = MGMath::ZERO;
         field_ = true;
     }
     if (sw_eloss_ && mfld()) {
@@ -304,15 +308,13 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, cons
     if (sw_mscat_) {
         Bool_t vac = !mfld();
         Double_t len = mfld.real_len();
-        Double_t mscat = mult_scat_sgm;
-        Double_t wgt = mscat * mscat;
+        Double_t wgt = mult_scat_sgm * mult_scat_sgm;
         vec_vac_.push_back(vac);
         vec_len_.push_back(len);
         if (vac) {
             vec_eft_.push_back(MGMath::ZERO);
             vec_invloc_.push_back(MGMath::ZERO);
             vec_invlocsqr_.push_back(MGMath::ZERO);
-            vec_mscat_.push_back(MGMath::ZERO);
             vec_mscatsqr_.push_back(MGMath::ZERO);
         }
         else {
@@ -325,10 +327,9 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, cons
             vec_eft_.push_back(len * mfld.efft());
             vec_invloc_.push_back((invloc * len));
             vec_invlocsqr_.push_back((invlocsqr * len * len));
-            vec_mscat_.push_back(mscat);
             vec_mscatsqr_.push_back(wgt);
         
-            mscatu_  += wgt;
+            mscat_    = true;
             tau_     += wgt * tau;
             rho_     += wgt * rho;
         }
@@ -350,8 +351,8 @@ void PropPhyCal::set_virtualPhySt(PhySt& part) const {
         part.vst().set_ela(ela_);
         if (part.arg().mscat()) {
             part.vst().set_orth(tau_, rho_);
-            part.vst().set_mscatu(mscatu_);
-            part.vst().set_mscatc(mscatcu_, mscatcl_);
+            part.vst().set_mscatu(mscatuu_, mscatcu_);
+            part.vst().set_mscatl(mscatul_, mscatcl_);
         }
         if (part.arg().eloss()) {
             part.vst().set_eloss_ion(eloss_ion_kpa_, eloss_ion_mpv_, eloss_ion_sgm_);
@@ -414,11 +415,10 @@ Double_t PropMgnt::GetPropStep(PhySt& part, Short_t ward) {
     if (MGNumc::EqualToZero(cur_mag) && MGNumc::EqualToZero(pred_mag)) pred_step = PROP_STEP;
     
     Double_t step = pred_step;
-    // testcode no-scale
-    //if (part.field()) {
-    //    Double_t num_rad_len = MatPhy::GetNumRadLen((sign * step), part, false);
-    //    step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
-    //}
+    if (part.field()) {
+        Double_t num_rad_len = MatPhy::GetNumRadLen((sign * step), part, false);
+        step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
+    }
     
     return step; 
 }
