@@ -48,9 +48,10 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    PhyArg::SetOpt(true, true);
+    PhyArg::SetOpt(true, false);
+    //PhyArg::SetOpt(true, true);
     Bool_t optL1 = true;
-    Bool_t optL9 = false;
+    Bool_t optL9 = true;
     
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
@@ -164,8 +165,8 @@ int main(int argc, char * argv[]) {
         Double_t cn_irig = ((track.status[1][patt]) ? MGMath::ONE/track.rigidity[1][patt] : 0.);
         
         PhyTr tr(mhits);
-        //Bool_t succ = tr.fit();
-        Bool_t succ = false;
+        Bool_t succ = tr.fit();
+        //Bool_t succ = false;
         //tr.print();
         Double_t hc_irig = tr.part().irig();
         

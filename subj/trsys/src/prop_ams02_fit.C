@@ -14,18 +14,9 @@ int main(int argc, char * argv[]) {
     //Hist::AddDirectory();
     
     //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
-    //MatFld&& mat1 = MatMgnt::Get(SVecD<3>(0, 0, 159.0), SVecD<3>(0, 0, 50.0));
-    //MatFld&& mat2 = MatMgnt::Get(SVecD<3>(0, 0, 50.0), SVecD<3>(0, 0, -50.0));
-    //MatFld&& mat3 = MatMgnt::Get(SVecD<3>(0, 0, -50.0), SVecD<3>(0, 0, -100.0));
-    //mat1.print();
-    //mat2.print();
-    //mat3.print();
-    //return 1;
+    //return 0;
    
     Hist::Load("prop_ams02_fill.root", "dat");
-
-    Hist * hXres = Hist::Head("hXres");
-    Hist * hYres = Hist::Head("hYres");
 
     // Prop
     Hist * hMcx = Hist::Head("hMcx");

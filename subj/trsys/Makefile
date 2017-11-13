@@ -1,7 +1,7 @@
 -include $(AMSMKfile)
 
 Version=17Oct30
-TagetDir = $(AMSCoreSubj)/trsys/testing/vdev
+TagetDir = $(AMSCoreSubj)/trsys/vdev
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 
 all :
@@ -12,16 +12,12 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
-	#@cp -fa $(PWD)/src/prop.C $(TagetDir)/src/prop.C 2> /dev/null
-	#@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_ams02_fill.C $(TagetDir)/src/prop_ams02_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_ams02_fit.C $(TagetDir)/src/prop_ams02_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit_ams02_fill.C $(TagetDir)/src/fit_ams02_fill.C 2> /dev/null
-	#make $(TagetDir)/prop
-	#make $(TagetDir)/fit
 	make $(TagetDir)/prop_ams02_fill
 	make $(TagetDir)/prop_ams02_fit
-	make $(TagetDir)/fit_ams02_fill
+	#make $(TagetDir)/fit_ams02_fill
 
 $(TagetDir)/obj/prop.o : $(TagetDir)/src/prop.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD

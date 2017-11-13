@@ -51,6 +51,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
+    //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
     Int_t layBeg = 1;
     Int_t layEnd = 2;
@@ -65,11 +66,6 @@ int main(int argc, char * argv[]) {
 
     Hist * hCos = Hist::New("hCos", "hCos", HistAxis(AXcos, AXcos));
 
-    // Hit
-    Axis AXres("Residual [10^{-4} cm]", 800, -300., 300.);
-    Hist * hXres = Hist::New("hXres", "hXres", HistAxis(AXmom, AXres));
-    Hist * hYres = Hist::New("hYres", "hYres", HistAxis(AXmom, AXres));
-    
     Axis AXnrl("Nrl", 800, 0., 0.05);
     Axis AXelc("Elc", 800, 0., 1.00);
     Axis AXchg("Chg", 800, 15., 17.);
@@ -85,7 +81,7 @@ int main(int argc, char * argv[]) {
     Hist * hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo));
     Hist * hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo));
     
-    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.05, 0.05);
+    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.06, 0.06);
     Hist * hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl));
     Hist * hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl));
     Hist * hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl));
@@ -180,10 +176,10 @@ int main(int argc, char * argv[]) {
             hTuy->fill(mc_mom, scl_mscat * tm_resu[1]);
             hTee->fill(mc_mom, scl_eloss * tm_elsm);
             
-            hMcux->fill(scl_mscat * mc_resc[0], scl_mscat * mc_resu[0]);
-            hMcuy->fill(scl_mscat * mc_resc[1], scl_mscat * mc_resu[1]);
-            hTcux->fill(scl_mscat * tm_resc[0], scl_mscat * tm_resu[0]);
-            hTcuy->fill(scl_mscat * tm_resc[1], scl_mscat * tm_resu[1]);
+            if (mc_mom > 1.0) hMcux->fill(scl_mscat * mc_resc[0], scl_mscat * mc_resu[0]);
+            if (mc_mom > 1.0) hMcuy->fill(scl_mscat * mc_resc[1], scl_mscat * mc_resu[1]);
+            if (mc_mom > 1.0) hTcux->fill(scl_mscat * tm_resc[0], scl_mscat * tm_resu[0]);
+            if (mc_mom > 1.0) hTcuy->fill(scl_mscat * tm_resc[1], scl_mscat * tm_resu[1]);
         }
     }
 
