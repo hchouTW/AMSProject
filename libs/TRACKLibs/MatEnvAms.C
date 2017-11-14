@@ -29,7 +29,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     if (root_file == nullptr || root_file->IsZombie()) return false;
 
     //std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
-    std::string dir_path = "/data1/hchou/material6";
+    std::string dir_path = "/data1/hchou/material7";
    
     // TRACKER
     MatGeoBoxCreator creator_TRL1(MatAms::TRL1_N.at(0), MatAms::TRL1_MIN.at(0), MatAms::TRL1_MAX.at(0), MatAms::TRL1_N.at(1), MatAms::TRL1_MIN.at(1), MatAms::TRL1_MAX.at(1), MatAms::TRL1_N.at(2), MatAms::TRL1_MIN.at(2), MatAms::TRL1_MAX.at(2), CSTR_FMT("%s/AMS02TRL1.bin", dir_path.c_str()));
@@ -289,7 +289,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
     //std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
-    std::string g4mat_dir_path = "/data1/hchou/material6"; // at NCU
+    std::string g4mat_dir_path = "/data1/hchou/material7"; // at NCU
 
     reader_TRL1_.load(STR_FMT("%s/AMS02TRL1.bin" , g4mat_dir_path.c_str()));
     reader_TRL2_.load(STR_FMT("%s/AMS02TRL2.bin" , g4mat_dir_path.c_str()));

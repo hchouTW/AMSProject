@@ -30,7 +30,7 @@ class MatFld {
     public :
         MatFld() { clear(); }
         MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) {}
+        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t elcloud_den = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), elcloud_den_(elcloud_den), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) {}
         ~MatFld() {}
 
         void print() const;
@@ -39,6 +39,7 @@ class MatFld {
         inline const std::array<Bool_t, MatProperty::NUM_ELM>&   elm() const { return elm_; }
         inline const std::array<Double_t, MatProperty::NUM_ELM>& den() const { return den_; }
         inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
+        inline const Double_t& elcloud_den() const { return elcloud_den_; }
         inline const Double_t& real_len() const { return real_len_; }
         inline const Double_t& efft_len() const { return efft_len_; }
         inline const Double_t& efft() const { return efft_; }
@@ -46,24 +47,17 @@ class MatFld {
         inline const Double_t& locsqr() const { return locsqr_; }
 
         inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : MGMath::ZERO); }
-        
-        inline Double_t elcloud_abundance() const { 
-            if (!mat_) return MGMath::ZERO;
-            Double_t elden = MGMath::ZERO;
-            for (Int_t ie = 0; ie < MatProperty::NUM_ELM; ++ie) { 
-                if (elm_.at(ie)) elden += MatProperty::CHRG.at(ie) * den_.at(ie);
-            }
-            return (elden * efft_len_);
-        }
+        inline Double_t elcloud_abundance() const { return (mat_ ? (elcloud_den_ * efft_len_) : MGMath::ZERO); }
 
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; }
+        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; }
 
     private :
         Bool_t                                     mat_;
         std::array<Bool_t, MatProperty::NUM_ELM>   elm_;
         std::array<Double_t, MatProperty::NUM_ELM> den_;
         Double_t                                   inv_rad_len_;
+        Double_t                                   elcloud_den_;
         Double_t                                   real_len_;
         Double_t                                   efft_len_;
         Double_t                                   efft_;
@@ -104,6 +98,7 @@ struct MatGeoBox {
     Bool_t   elm[MatProperty::NUM_ELM];
     Double_t den[MatProperty::NUM_ELM];
     Double_t inv_rad_len;
+    Double_t elcloud_den;
     Bool_t   mat;
 };
 
@@ -122,7 +117,7 @@ class MatGeoBoxCreator {
         void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Double_t den[MatProperty::NUM_ELM]);
 
     protected :
-        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; vol_ = 0.; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; }
+        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; vol_ = 0.; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; elcloud_den_ = 0.; }
 
     private :
         static constexpr Long64_t  DIM_ = 3;
@@ -140,6 +135,7 @@ class MatGeoBoxCreator {
         std::array<Bool_t,   MatProperty::NUM_ELM> elm_;
         std::array<Double_t, MatProperty::NUM_ELM> den_;
         Double_t                                   inv_rad_len_;
+        Double_t                                   elcloud_den_;
 };
 
 
@@ -164,7 +160,7 @@ class MatGeoBoxReader {
         MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
         
     protected :
-        inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mat_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; }
+        inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mat_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; }
 
     private :
         static constexpr Long64_t                  DIM_ = 3;
@@ -184,6 +180,7 @@ class MatGeoBoxReader {
         std::array<Bool_t, MatProperty::NUM_ELM>   elm_;
         std::array<Double_t, MatProperty::NUM_ELM> den_;
         Double_t                                   inv_rad_len_;
+        Double_t                                   elcloud_den_;
 };
 
 
@@ -216,7 +213,7 @@ class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
         MatPhyFld(Double_t len) { clear(); len_ = len; }
-        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_men = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_ion_men_(eloss_ion_men), eloss_brm_men_(eloss_brm_men) {}
+        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t elcloud_den = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_men = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), elcloud_den_(elcloud_den), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_ion_men_(eloss_ion_men), eloss_brm_men_(eloss_brm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
@@ -226,6 +223,7 @@ class MatPhyFld {
         inline const Double_t& locsqr() const { return locsqr_; }
         inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
         inline const Double_t& num_rad_len() const { return num_rad_len_; }
+        inline const Double_t& elcloud_den() const { return elcloud_den_; }
         inline const Double_t& mult_scat_sgm() const { return mult_scat_sgm_; }
         inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
         inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
@@ -244,6 +242,7 @@ class MatPhyFld {
         Double_t locsqr_;
         Double_t inv_rad_len_;   // inverse radiation length [cm^-1]
         Double_t num_rad_len_;   // number of radiation length [1]
+        Double_t elcloud_den_;   // el-cloud density [1/cm^3]
         Double_t mult_scat_sgm_; // multiple-scattering length [1]
         Double_t eloss_ion_kpa_; // ionization-energy-loss KPA [1]
         Double_t eloss_ion_mpv_; // ionization-energy-loss MPV [1]

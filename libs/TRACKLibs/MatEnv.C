@@ -11,6 +11,7 @@ void MatFld::print() const {
     printStr += STR_FMT("========================= MatFld =========================\n");
     printStr += STR_FMT("Mat       %-d\n", mat_);
     printStr += STR_FMT("InvRadLen %-8.6f\n", inv_rad_len_);
+    printStr += STR_FMT("ECloudDen %-8.6f\n", elcloud_den_);
     printStr += STR_FMT("NumRadLen %-8.5f\n", num_rad_len());
     printStr += STR_FMT("RealLen   %-7.2f\n", real_len_);
     printStr += STR_FMT("EfftLen   %-7.2f\n", efft_len_);
@@ -34,6 +35,7 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
     std::array<Bool_t, MatProperty::NUM_ELM>   elm; elm.fill(false);
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.;
+    Double_t                                   elcloud_den = 0.;
     Double_t                                   real_len = 0.;
     Double_t                                   efft_len = 0.;
     Double_t                                   efft = 0.;
@@ -51,9 +53,11 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
         Double_t loclen    = mfld.loc() * mfld.real_len();
         Double_t locsqrlen = mfld.locsqr() * mfld.real_len() * mfld.real_len();
         Double_t num_rad_len = mfld.num_rad_len();
+        Double_t elcloud_abs = mfld.elcloud_abundance();
         loc         += (real_len + loclen) * num_rad_len;
         locsqr      += (real_len * real_len + locsqrlen + MGMath::TWO * real_len * loclen) * num_rad_len;
         inv_rad_len += num_rad_len;
+        elcloud_den += elcloud_abs;
         efft_len += mfld.efft_len();
         real_len += mfld.real_len();
 
@@ -68,10 +72,11 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
         loc         = ((loc / (real_len)) / inv_rad_len);
         locsqr      = ((locsqr / (real_len * real_len)) / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
+        elcloud_den = (elcloud_den / efft_len);
 
         efft = (efft_len / real_len);
         
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc, locsqr);
+        return MatFld(mat, elm, den, inv_rad_len, elcloud_den, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
@@ -83,7 +88,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     if (MGNumc::Compare(xmin, xmax) >= 0 || MGNumc::Compare(ymin, ymax) >= 0 || MGNumc::Compare(zmin, zmax) >= 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Range failure."); return; }
     if (file_path.size() == 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File path not found."); return; }
     
-    Int_t file_len = ((sizeof(Long64_t) + sizeof(Double_t) + sizeof(Double_t)) * DIM_ + (sizeof(Bool_t) + sizeof(Double_t)) * MatProperty::NUM_ELM + sizeof(Double_t) + (xn * yn * zn) * sizeof(Bool_t));
+    Int_t file_len = ((sizeof(Long64_t) + sizeof(Double_t) + sizeof(Double_t)) * DIM_ + (sizeof(Bool_t) + sizeof(Double_t)) * MatProperty::NUM_ELM + (sizeof(Double_t) + sizeof(Double_t)) + (xn * yn * zn) * sizeof(Bool_t));
     Int_t file_des = open(file_path.c_str(), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (file_des < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
 
@@ -107,6 +112,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     elm_.fill(false);
     den_.fill(0);
     inv_rad_len_ = 0.;
+    elcloud_den_ = 0.;
 
     geo_box_->n[0] = xn;
     geo_box_->n[1] = yn;
@@ -127,6 +133,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Lo
     std::fill_n(geo_box_->elm, MatProperty::NUM_ELM, false);
     std::fill_n(geo_box_->den, MatProperty::NUM_ELM, 0.0);
     geo_box_->inv_rad_len = 0.;
+    geo_box_->elcloud_den = 0.;
     std::fill_n(static_cast<Bool_t*>(&(geo_box_->mat)), max_len_, false);
 }
 
@@ -167,6 +174,7 @@ void MatGeoBoxCreator::save_and_close() {
     
     if (cnt_ > 0) {
         Double_t inv_rad_len = 0.;
+        Double_t elcloud_den = 0.;
         for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
             if (!elm_.at(it)) continue;
             den_.at(it) = (den_.at(it) / (vol_ * static_cast<Double_t>(cnt_)));
@@ -174,8 +182,10 @@ void MatGeoBoxCreator::save_and_close() {
             geo_box_->den[it] = den_.at(it);
         
             inv_rad_len += (den_.at(it) * MatProperty::MASS[it] / MatProperty::RAD_LEN[it]);
+            elcloud_den += (den_.at(it) * MatProperty::CHRG.at(it));
         }
         geo_box_->inv_rad_len = inv_rad_len;
+        geo_box_->elcloud_den = elcloud_den;
     }
 
     munmap(file_ptr_, file_len_);
@@ -190,6 +200,7 @@ void MatGeoBoxCreator::save_and_close(Bool_t elm[MatProperty::NUM_ELM], Double_t
     
     Bool_t has_mat = false;
     Double_t inv_rad_len = 0.;
+    Double_t elcloud_den = 0.;
     for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
         if (!elm[it]) continue;
         has_mat = true;
@@ -200,11 +211,13 @@ void MatGeoBoxCreator::save_and_close(Bool_t elm[MatProperty::NUM_ELM], Double_t
         geo_box_->den[it] = den_.at(it);
         
         inv_rad_len += (den_.at(it) * MatProperty::MASS[it] / MatProperty::RAD_LEN[it]);
+        elcloud_den += (den_.at(it) * MatProperty::CHRG.at(it));
     }
 
     if (has_mat) {
         std::fill_n(static_cast<Bool_t*>(&(geo_box_->mat)), max_len_, true);
         geo_box_->inv_rad_len = inv_rad_len;
+        geo_box_->elcloud_den = elcloud_den;
     }
     
     munmap(file_ptr_, file_len_);
@@ -222,6 +235,7 @@ void MatGeoBoxReader::print() const {
     printStr += STR_FMT("BOX Y     (%3d %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
     printStr += STR_FMT("BOX Z     (%3d %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
     printStr += STR_FMT("InvRadLen %-8.6f\n", inv_rad_len_);
+    printStr += STR_FMT("ECloudDen %-8.6f\n", elcloud_den_);
     printStr += STR_FMT("Elm       H(%d) C(%d) N(%d) O(%d) F(%d) Na(%d) Al(%d) Si(%d) Pb(%d)\n", elm_.at(0), elm_.at(1), elm_.at(2), elm_.at(3), elm_.at(4), elm_.at(5), elm_.at(6), elm_.at(7), elm_.at(8));
     printStr += STR_FMT("==========================================================\n");
     COUT(printStr);
@@ -269,6 +283,7 @@ Bool_t MatGeoBoxReader::load(const std::string& file_path) {
     fact_.at(0) = n_.at(1) * n_.at(2);
     fact_.at(1) = n_.at(2);
     inv_rad_len_ = geo_box->inv_rad_len;
+    elcloud_den_ = geo_box->elcloud_den;
     mat_ptr_ = &(geo_box->mat);
     max_len_ = n_.at(0) * n_.at(1) * n_.at(2);
     
@@ -315,7 +330,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo) {
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
     Bool_t mat = mat_ptr_[idx];
 
-    if (mat) return MatFld(mat, elm_, den_, inv_rad_len_);
+    if (mat) return MatFld(mat, elm_, den_, inv_rad_len_, elcloud_den_);
     else     return MatFld();
 }
 
@@ -346,7 +361,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     if (MGNumc::EqualToZero(real_len)) {
         Long64_t idx = (vxi * fact_.at(0) + vyi * fact_.at(1) + vzi);
         Bool_t mat = mat_ptr_[idx];
-        if (mat) return MatFld(mat, elm_, den_, inv_rad_len_);
+        if (mat) return MatFld(mat, elm_, den_, inv_rad_len_, elcloud_den_);
         else     return MatFld();
     }
    
@@ -405,7 +420,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
         Double_t loc    = (avgloc + sftloc);
         Double_t locsqr = (avgsqr + MGMath::TWO * sftloc * avgloc + sftsqr);
 
-        return MatFld(true, elm_, den_, inv_rad_len_, real_len, efft_len, efft, loc, locsqr);
+        return MatFld(true, elm_, den_, inv_rad_len_, elcloud_den_, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
@@ -419,6 +434,7 @@ MatFld MatMgnt::Get(const SVecD<3>& coo) {
     std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.0;
+    Double_t                                   elcloud_den = 0.0;
 
     for (auto&& reader : *reader_) {
         if (!reader->is_in_box(coo)) continue;
@@ -431,10 +447,11 @@ MatFld MatMgnt::Get(const SVecD<3>& coo) {
             den.at(it) += mfld.den().at(it);
         }
         inv_rad_len += mfld.inv_rad_len();
+        elcloud_den += mfld.elcloud_den();
         mat = true;
     }
 
-    if (mat) return MatFld(mat, elm, den, inv_rad_len);
+    if (mat) return MatFld(mat, elm, den, inv_rad_len, elcloud_den);
     else     return MatFld();
 }
     
@@ -449,6 +466,7 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
     std::array<Bool_t,   MatProperty::NUM_ELM> elm; elm.fill(false);
     std::array<Double_t, MatProperty::NUM_ELM> den; den.fill(0.);
     Double_t                                   inv_rad_len = 0.0;
+    Double_t                                   elcloud_den = 0.0;
     Double_t                                   efft_len = 0.0;
     Double_t                                   efft = 0.0;
     Double_t                                   loc = 0.0;
@@ -465,9 +483,11 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
             den.at(it) += (mfld.efft_len() * mfld.den().at(it));
         }
         Double_t num_rad_len = mfld.num_rad_len();
+        Double_t elcloud_abs = mfld.elcloud_abundance();
         loc         += mfld.loc() * num_rad_len;
         locsqr      += mfld.locsqr() * num_rad_len;
         inv_rad_len += num_rad_len;
+        elcloud_den += elcloud_abs;
         efft_len    += mfld.efft_len();
         
         mat = true;
@@ -481,9 +501,10 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
         loc         = (loc / inv_rad_len);
         locsqr      = (locsqr / inv_rad_len);
         inv_rad_len = (inv_rad_len / efft_len);
+        elcloud_den = (elcloud_den / efft_len);
         efft = (efft_len / real_len);
 
-        return MatFld(mat, elm, den, inv_rad_len, real_len, efft_len, efft, loc, locsqr);
+        return MatFld(mat, elm, den, inv_rad_len, elcloud_den, real_len, efft_len, efft, loc, locsqr);
     }
     else return MatFld(real_len);
 }
@@ -525,7 +546,7 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
     std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
 
-    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mfld.elcloud_den(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
 }
 
 
@@ -540,7 +561,7 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
     
-    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mfld.real_len(), mfld.efft(), mfld.loc(), mfld.locsqr(), mfld.inv_rad_len(), mfld.num_rad_len(), mfld.elcloud_den(), mult_scat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
 }
         
 
