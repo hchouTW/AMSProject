@@ -573,21 +573,17 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
     Double_t eta_part = (eta / bta);
-    Double_t log_nrl = std::log(num_rad_len);
+    Double_t sqr_nrl = std::sqrt(num_rad_len);
+    Double_t log_nrl = ((corr_sw_mscat_) ? std::log(corr_mfld_.num_rad_len()) : std::log(num_rad_len));
     
     // Highland-Lynch-Dahl formula
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len) * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
+    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
     
     // Modified Highland-Lynch-Dahl formula
-    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len * (MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl));
-    
-    // Tune by Hsin-Yi Chou
-    //const Double_t pars[3] = { 8.47474822486500079e-01, 6.44047741589626535e-03, -2.74914 }; 
-    //const Double_t tune_sgm = pars[0] * (MGMath::ONE + pars[1] * TMath::Power(bta, pars[2]));
-    //mscat_sgm *= tune_sgm;
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * std::sqrt(MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
     
     //----------------- AMS
-    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * std::sqrt(num_rad_len);
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl;
     //----------------- AMS
     
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
@@ -611,18 +607,19 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t rel_mass    = (MASS_EL_IN_GEV / mass_in_GeV);
         
     // Density Effect Correction
-    std::array<Double_t, MatProperty::NUM_ELM>&& dlt = GetDensityEffectCorrection(mfld, part);
+    std::array<Double_t, MatProperty::NUM_ELM>&& dlt = GetDensityEffectCorrection(((corr_sw_eloss_)?corr_mfld_:mfld), part);
     
     // Calculate Weighted Average
     Double_t avg_dlt = MGMath::ZERO;
     Double_t m_exeng = MGMath::ZERO;
     Double_t ttl_den = MGMath::ZERO;
     for (Int_t it = 0; it < MatProperty::NUM_ELM; ++it) {
-       if (!mfld.elm().at(it)) continue;
-       Double_t den = MatProperty::CHRG.at(it) * mfld.den().at(it);
-       m_exeng += den * MatProperty::NEG_LN_MEAN_EXENG.at(it);
-       avg_dlt += den * dlt.at(it);
-       ttl_den += den;
+        Bool_t elm = ((corr_sw_eloss_) ? corr_mfld_.elm().at(it) : mfld.elm().at(it));
+        Bool_t den = ((corr_sw_eloss_) ? corr_mfld_.den().at(it) : mfld.den().at(it)) * MatProperty::CHRG.at(it);
+        if (!elm) continue;
+        m_exeng += den * MatProperty::NEG_LN_MEAN_EXENG.at(it);
+        avg_dlt += den * dlt.at(it);
+        ttl_den += den;
     }
     avg_dlt /= ttl_den;
     m_exeng /= ttl_den;
@@ -631,31 +628,33 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     if (!MGNumc::Valid(avg_dlt) || MGNumc::Compare(avg_dlt) <= 0) avg_dlt = MGMath::ZERO;
     if (!MGNumc::Valid(m_exeng) || MGNumc::Compare(m_exeng) <= 0) m_exeng = MGMath::ZERO;
     Double_t exeng = std::exp(-m_exeng); // [MeV]
- 
-    // Calculate Matterial Quality
-    Double_t electron_cloud_abundance = (ttl_den * mfld.efft_len());
-    Double_t Bethe_Bloch_fact = (MGMath::HALF * BETHE_BLOCH_K * electron_cloud_abundance * sqr_chrg / sqr_bta);
   
-    // Calculate Eta Trans
-    Double_t eta_trans = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
-    
-    Double_t Bethe_Bloch_eta_trans = (Bethe_Bloch_fact * eta_trans / mass_in_MeV);
-    
+    // Calculate Matterial Quality and Eta Trans
+    Double_t electron_cloud_abundance = mfld.elcloud_abundance();
+    Double_t Bethe_Bloch              = (MGMath::HALF * BETHE_BLOCH_K * electron_cloud_abundance * sqr_chrg / sqr_bta);
+
     // Calculate Sigma
-    Double_t eloss_ion_sgm = Bethe_Bloch_eta_trans;
+    Double_t eta_trans     = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
+    Double_t eloss_ion_sgm = (Bethe_Bloch * eta_trans / mass_in_MeV);
     
     // Calculate Peak
     Double_t trans_eng     = MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta;
     Double_t max_keng_part = std::log(trans_eng / exeng);
-    Double_t ion_keng_part = std::log(Bethe_Bloch_fact / exeng);
-    if (!MGNumc::Valid(max_keng_part) || MGNumc::Compare(max_keng_part) <= 0) max_keng_part = MGMath::ZERO;
-    if (!MGNumc::Valid(ion_keng_part) || MGNumc::Compare(ion_keng_part) <= 0) ion_keng_part = MGMath::ZERO;
-    Double_t eloss_ion_mpv = Bethe_Bloch_eta_trans * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    Double_t ion_keng_part = std::log(Bethe_Bloch / exeng);
+    if (!MGNumc::Valid(max_keng_part)) max_keng_part = MGMath::ZERO;
+    if (!MGNumc::Valid(ion_keng_part)) ion_keng_part = MGMath::ZERO;
+    //Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    
+    // testcode
+    // Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);  // no charge with step length
+    Double_t ion_keng_part2 = std::log(Bethe_Bloch / exeng * corr_mfld_.elcloud_abundance() / electron_cloud_abundance);
+    Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + ion_keng_part2 + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
     
     // Calculate Mean
     Double_t mass_rat = (MASS_EL_IN_GEV / mass_in_GeV);
-    Double_t max_trans_eng_part = std::log((trans_eng / exeng) * (trans_eng / exeng) / (MGMath::ONE + MGMath::TWO * gm * mass_rat + mass_rat * mass_rat));
-    Double_t eloss_ion_men = Bethe_Bloch_eta_trans * (max_trans_eng_part - MGMath::TWO * sqr_bta - avg_dlt);
+    Double_t mass_rel = std::log(MGMath::ONE + MGMath::TWO * gm * mass_rat + mass_rat * mass_rat);
+    Double_t max_trans_eng_part = MGMath::TWO * max_keng_part - mass_rel;
+    Double_t eloss_ion_men = eloss_ion_sgm * (max_trans_eng_part - MGMath::TWO * sqr_bta - avg_dlt);
   
     // Calculate Kappa
     const Double_t eloss_ion_kpa0 = MGMath::SQRT_TWO;
@@ -670,9 +669,10 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     //eloss_ion_mpv *= tune_mpv;
 
     //----------------- AMS
-    eloss_ion_kpa  = MGMath::ONE;
-    eloss_ion_mpv  = eloss_ion_men;
-    eloss_ion_sgm  *= MGMath::TWO;
+    eloss_ion_kpa  = eloss_ion_kpa0;
+    //eloss_ion_kpa  = MGMath::ONE;
+    //eloss_ion_mpv  = eloss_ion_men;
+    //eloss_ion_sgm  *= MGMath::TWO;
     //----------------- AMS
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;

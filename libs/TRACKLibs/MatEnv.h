@@ -270,6 +270,19 @@ class MatPhy {
         static Double_t GetMultipleScattering(const MatFld& mfld, PhySt& part);
         static std::tuple<Double_t, Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part);
+    
+    // EX only testcode
+    public :
+        static void SetCorrFactor(const MatFld* mfld = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true) {
+            Bool_t sw = ((mfld != nullptr) && (*mfld)()) && (sw_mscat || sw_eloss); 
+            if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_mfld_ = *mfld; }
+            else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_mfld_ = std::move(MatFld()); }
+        }
+
+    private :
+        static Bool_t   corr_sw_mscat_;
+        static Bool_t   corr_sw_eloss_;
+        static MatFld   corr_mfld_;
 
     private :
         // Coulomb Multiple Scattering, the Highland-Lynch-Dahl equation
@@ -303,6 +316,11 @@ class MatPhy {
         static constexpr Double_t MEV_TO_GEV = 1.0e-3;
         static constexpr Double_t GEV_TO_MEV = 1.0e+3;
 };
+        
+
+Bool_t   MatPhy::corr_sw_mscat_ = false;
+Bool_t   MatPhy::corr_sw_eloss_ = false;
+MatFld   MatPhy::corr_mfld_;
 
 
 } // namespace TrackSys
