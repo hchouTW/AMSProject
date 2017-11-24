@@ -205,19 +205,18 @@ class HitTRKInfo : public TObject {
 			mult = -1;
 			side =  0;
 			std::fill_n(coo,  3, 0);
-			std::fill_n(chrg, 2, -1);
+			std::fill_n(sig, 2, -1);
+			std::fill_n(loc, 2, -1);
 
-			cofgX = 0;
-			//seedAddrX = -1;
-			//seedIndxX = -1;
-			//stripSigX.clear();
-			//stripSgmX.clear();
+            stripAdrX = -1;
+            stripIdxX = -1;
+			stripSigX.clear();
+			stripSgmX.clear();
 
-			cofgY = 0;
-			//seedAddrY = -1;
-			//seedIndxY = -1;
-			//stripSigY.clear();
-			//stripSgmY.clear();
+            stripAdrY = -1;
+            stripIdxY = -1;
+			stripSigY.clear();
+			stripSgmY.clear();
 		}
 
 	public :
@@ -228,19 +227,18 @@ class HitTRKInfo : public TObject {
 		Short_t mult;     // multiplicity
 		Short_t side;     // side, 1 x, 2 y, 3 xy
 		Float_t coo[3];   // coordinate
-		Float_t chrg[2];  // charge
+		Float_t sig[2];   // signal
+		Float_t loc[2];   // (elc) cofg loc
 		
-		Float_t              cofgX;     // (elc) cofg	
-		//Float_t              seedAddrX; // (elc) seed strip address
-		//Float_t              seedIndxX; // (elc) seed strip index
-		//std::vector<Float_t> stripSigX; // (elc) strip signal (value)
-		//std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
+        Short_t              stripAdrX; // (elc) strip seed address
+        Short_t              stripIdxX; // (elc) strip seed index
+		std::vector<Float_t> stripSigX; // (elc) strip signal (value)
+		std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
 		
-		Float_t              cofgY;     // (elc) cofg	
-		//Float_t              seedAddrY; // (elc) seed strip address
-		//Float_t              seedIndxY; // (elc) seed strip index
-		//std::vector<Float_t> stripSigY; // (elc) strip signal (value)
-		//std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
+        Short_t              stripAdrY; // (elc) strip seed address
+        Short_t              stripIdxY; // (elc) strip seed index
+		std::vector<Float_t> stripSigY; // (elc) strip signal (value)
+		std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
 
 	ClassDef(HitTRKInfo, 6)
 };
@@ -803,8 +801,6 @@ class TRK : public TObject {
 
 			tracks.clear();
 			//vertices.clear();
-
-			//otherHits.clear();
 		}
 
 	public :
@@ -813,8 +809,6 @@ class TRK : public TObject {
 
 		std::vector<TrackInfo> tracks;
 		//std::vector<VertexInfo> vertices;
-
-		//std::vector<HitTRKInfo> otherHits;
 
 	ClassDef(TRK, 5)
 };
