@@ -972,7 +972,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	else if (recEv.iBeta  >= 0) Beta = event->pBeta(recEv.iBeta)->Beta;
 	else                        Beta = 1;
 
-	const int qopt1 = TrClusterR::kAsym | TrClusterR::kAngle;
 	const int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
 	std::map<int, int> trackIDMap;
 	for (int itr = 0; (itr <= event->NTrTrack() && recEv.iTrTrack >= 0); ++itr) {
@@ -1169,7 +1168,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             }
             
             if (ycls != nullptr) {
-                hit.stripAdrX = yseedAddr;
+                hit.stripAdrY = yseedAddr;
                 hit.stripIdxY = yseedIndx - yreg[0];
                 for (int it = yreg[0]; it <= yreg[1]; ++it) {
                     hit.stripSigY.push_back(ystripSig.at(it));
