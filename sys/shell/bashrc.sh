@@ -57,7 +57,7 @@ else
     alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
     alias voms_info='voms-proxy-info -all -file ~/ams02'
     alias voms_init='voms-proxy-init -voms ams02.cern.ch -valid 168:00 -hours 168 -out ~/ams02'
-    alias voms_auto_init='cat ~/.globus/passwd | voms-proxy-init -rfc -voms ams02.cern.ch -cert ~/.globus/usercert.pem -key ~/.globus/userkey.pem -hours 1 -vomslife 1:0 -pwstdin'
+    alias voms_auto_init='cat ~/.globus/passwd | voms-proxy-init -rfc -voms ams02.cern.ch -cert ~/.globus/usercert.pem -key ~/.globus/userkey.pem -hours 168 -vomslife 168:0 -pwstdin'
     export X509_USER_PROXY=~/ams02
 fi
 
@@ -78,7 +78,7 @@ else
 fi
 
 # Local Job Command
-function lj_search {
+function ljsearch {
     if [ $# == 1 ]; then
         ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep
     else
@@ -86,7 +86,7 @@ function lj_search {
     fi
 }
 
-function lj_kill {
+function ljkill {
     if [ $# == 1 ]; then
         ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep | awk '{print $1}' | xargs kill
     else
@@ -94,16 +94,16 @@ function lj_kill {
     fi
 }
 
-function lj_check {
+function ljcheck {
     if [ $# == 1 ]; then
         date_beg=`date`
         while true
         do
             clear
-            jobs_num=`lj_search ${1} | wc -l`
+            jobs_num=`ljsearch ${1} | wc -l`
             echo -e "BEGIN DATE  ${date_beg}"
             echo -e "`date`  NJOBS ${jobs_num}\n"
-            lj_search ${1}
+            ljsearch ${1}
             if (( ${jobs_num} == 0 )); then
                 echo -e "SUCCESS."
                 break

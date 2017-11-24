@@ -45,8 +45,8 @@ class Canvas {
 		Canvas(const std::string& name = "canvas", const std::string& title = "") { setNameTitle(name, title); }
 		~Canvas() {}
 
-		void create(const Window& window = Window(WindowSize::kSlice), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
-		void create(UInt_t ndivx, UInt_t ndivy, const Window& window = Window(WindowSize::kSlice), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
+		void create(const Window& window = Window(WindowSize::kSliceLR), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
+		void create(UInt_t ndivx, UInt_t ndivy, const Window& window = Window(WindowSize::kSliceLR), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 
 		TVirtualPad * cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return SetPadAxis(&canvas_, idx, axis); }
 		void save(const std::string& fullpath = "", Option_t * option = "") { canvas_.Modified(); canvas_.Update(); canvas_.SaveAs(fullpath.c_str(), option); }
@@ -67,7 +67,7 @@ class Canvas {
 //---- PdfEditor ----//
 class PdfEditor {
 	public :
-		PdfEditor(const Window& window = Window(WindowSize::kSlice), const std::string& filename = "", const std::string& filepath = ".");
+		PdfEditor(const Window& window = Window(WindowSize::kSliceLR), const std::string& filename = "", const std::string& filepath = ".");
 		~PdfEditor() { close(); }
 
 		inline Bool_t exist() { return exist_; }
