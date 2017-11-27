@@ -71,6 +71,7 @@ function merge {
 export ICC=`which icc`
 export ICPC=`which icpc`
 export IFORT=`which ifort`
+export CVSROOT=/afs/cern.ch/ams/Offline/CVS
 export G4AMS=1
 export PGTRACK=1
 export CERNDIR=/cvmfs/ams.cern.ch/Offline/AMSsoft/linux_slc6_icc64/2005

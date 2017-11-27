@@ -27,9 +27,6 @@ alias rmfc="/bin/rm"
 # ROOT
 alias root='root -l'
 
-# AMS CVSROOT
-export CVSROOT=/afs/cern.ch/ams/Offline/CVS
-
 # AMSProject
 #export AMSProj=~/AMSProject # define in ~/.bashrc
 export AMSProjLibs=${AMSProj}/libs
