@@ -14,8 +14,8 @@ OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
 #### CERN CVMFS %% GCC Compiler
-#GCCTAG=4.9.1
-GCCTAG=6.2.0
+GCCTAG=4.9.1
+#GCCTAG=6.2.0
 source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
 #### CERN AFS %% INTEL Compiler
@@ -33,7 +33,9 @@ ICCTAG=17
 ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
 source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
 source ${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux/bin/compilervars.sh intel64 
-
+ICC=`which icc`
+ICPC=`which icpc`
+IFORT=`which ifort`
 #export INTEL_LICENSE_FILE=${Offline}/intel/licenses
 
 #### AMS %% ROOT Environment
