@@ -23,9 +23,6 @@ ICCTAG=17
 ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
 source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
 source ${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux/bin/compilervars.sh intel64 
-ICC=`which icc`
-ICPC=`which icpc`
-IFORT=`which ifort`
 
 #### AMS %% ROOT Environment
 AMSSW=root-v5-34-9-gcc64-slc6
