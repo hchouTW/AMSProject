@@ -21,8 +21,9 @@ source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 #### CERN CVMFS %% INTEL Compiler
 ICCTAG=17
 ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
+ICCLUX=${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux
 source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
-source ${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux/bin/compilervars.sh intel64 
+source ${ICCLUX}/bin/compilervars.sh intel64 
 
 #### AMS %% ROOT Environment
 AMSSW=root-v5-34-9-gcc64-slc6
@@ -45,6 +46,7 @@ export LD_LIBRARY_PATH=${AMSLIB}:${LD_LIBRARY_PATH}
 export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
 export AMSDataDirRW=${AMSDataDir}
+export AMSGeoDir=${Offline}/${AMSVersion}/display
 
 alias hadd="${ROOTSYS}/bin/hadd -k"
 function merge {
@@ -55,6 +57,10 @@ function merge {
         echo -e "Error: No Merged Name."
     fi
 }
+
+#### AMS %% CERN Software Environment
+export CERNLIB=${Offline}/AMSsoft/linux_slc6_icc64/2005/lib
+export LD_LIBRARY_PATH=${CERNLIB}:${LD_LIBRARY_PATH}
 
 #### COMPILER
 export COMPILER=GCC
