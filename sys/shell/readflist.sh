@@ -15,7 +15,6 @@ fi
 head=
 if [ $# -eq 3 ]; then
     head=$3
-    head=root://eosams.cern.ch//
 fi
 
 keyWord='root'

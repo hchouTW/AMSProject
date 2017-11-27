@@ -1096,8 +1096,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 			short side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
 
-			float xsig = (xcls) ? xcls->GetTotSignal() : -1.;
-			float ysig = ycls->GetTotSignal();
+			float xsig = (xcls) ? xcls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain) : -1.;
+			float ysig = ycls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain);
 
 			float xloc = (xcls) ? (xcls->GetCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
 			float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
@@ -1120,7 +1120,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 ystripSS.push_back(ycls->GetSignal(it)/ycls->GetNoise(it));
 			}
           
-            const float SigLmt = 2.;
             const float GateTh = 0.3;
             const float LenTh  = 0.082;
 
@@ -1129,18 +1128,18 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             float xlenTh    = (xcls) ? LenTh*xstripSS.at(xseedIndx) : 0.;
             short xreg[2] = { xseedIndx, xseedIndx };
 			for (int it = xseedIndx-1; (xcls!=nullptr) && it >= 0; --it)
-                if (xstripSS.at(it) > SigLmt && xstripSS.at(it) < xstripSS.at(it+1)+GateTh && xstripSS.at(it) > xlenTh) xreg[0] = it; else break;
+                if (xstripSS.at(it) < xstripSS.at(it+1)+GateTh && xstripSS.at(it) > xlenTh) xreg[0] = it; else break;
 			for (int it = xseedIndx+1; (xcls!=nullptr) && it < xstripSS.size(); ++it)
-                if (xstripSS.at(it) > SigLmt && xstripSS.at(it) < xstripSS.at(it-1)+GateTh && xstripSS.at(it) > xlenTh) xreg[1] = it; else break;
+                if (xstripSS.at(it) < xstripSS.at(it-1)+GateTh && xstripSS.at(it) > xlenTh) xreg[1] = it; else break;
             
             short yseedAddr = (ycls) ? ycls->GetSeedAddress() : -1;
             short yseedIndx = (ycls) ? ycls->GetSeedIndex() : -1;
             float ylenTh    = (ycls) ? LenTh*ystripSS.at(yseedIndx) : 0.;
             short yreg[2] = { yseedIndx, yseedIndx };
 			for (int it = yseedIndx-1; (ycls!=nullptr) && it >= 0; --it)
-                if (ystripSS.at(it) > SigLmt && ystripSS.at(it) < ystripSS.at(it+1)+GateTh && ystripSS.at(it) > ylenTh) yreg[0] = it; else break;
+                if (ystripSS.at(it) < ystripSS.at(it+1)+GateTh && ystripSS.at(it) > ylenTh) yreg[0] = it; else break;
 			for (int it = yseedIndx+1; (ycls!=nullptr) && it < ystripSS.size(); ++it)
-                if (ystripSS.at(it) > SigLmt && ystripSS.at(it) < ystripSS.at(it-1)+GateTh && ystripSS.at(it) > ylenTh) yreg[1] = it; else break;
+                if (ystripSS.at(it) < ystripSS.at(it-1)+GateTh && ystripSS.at(it) > ylenTh) yreg[1] = it; else break;
           
 			HitTRKInfo hit;
 			hit.clsId[0] = clsIdX;

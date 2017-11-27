@@ -11,6 +11,7 @@ export GIT_EDITOR=vim
 
 # Remote
 alias ssh='ssh -o "StrictHostKeyChecking no" -Y'
+alias rsync='rsync --ignore-existing --progress --human-readable'
 
 # Sys
 alias dstat='dstat -cdlmnpsy'
@@ -25,6 +26,9 @@ alias rmfc="/bin/rm"
 
 # ROOT
 alias root='root -l'
+
+# AMS CVSROOT
+export CVSROOT=/afs/cern.ch/ams/Offline/CVS
 
 # AMSProject
 #export AMSProj=~/AMSProject # define in ~/.bashrc
