@@ -76,10 +76,9 @@ export LD_LIBRARY_PATH=${CERNLIB}:${LD_LIBRARY_PATH}
 
 ### AMS %% Software Install Environment
 AFSOffline=/afs/cern.ch/ams/Offline
-BASE_ARCH_DIR=${AFSOffline}/AMSsoft/linux_slc6_icc64
 
-export G4INSTALL=${BASE_ARCH_DIR}/geant4_ams
-export G4LIB=${G4INSTALL}/lib/geant4
+export G4INSTALL=${AFSOffline}/geant4.10.01.p01-ams
+export G4LIB=${G4INSTALL}/lib.p02
 export G4SYSTEM=Linux-icc
 
 export CVSEDITOR=vim
