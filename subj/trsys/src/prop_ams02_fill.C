@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data3/hchou/AMSCore/prod/17Oct30/src/ClassDef.h"
-#include "/data3/hchou/AMSCore/prod/17Oct30/src/ClassDef.C"
+#include "/data3/hchou/AMSCore/prod/17Nov24/src/ClassDef.h"
+#include "/data3/hchou/AMSCore/prod/17Nov24/src/ClassDef.C"
 
 using namespace std;
 
@@ -58,36 +58,35 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/prop_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 40, 0.5, 10., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 200, 1.0, 800., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 50, 20., 16000., AxisScale::kLog);
-    Axis AXcos("Cos [1]", 40, 0.9,  1.);
+    //Axis AXmom("Momentum [GeV]", 100, 0.5, 100., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXcos("Cos [1]", 50, 0.7,  1.);
 
     Hist * hCos = Hist::New("hCos", "hCos", HistAxis(AXcos, AXcos));
 
-    Axis AXnrl("Nrl", 800, 0., 0.05);
-    Axis AXelc("Elc", 800, 0., 1.00);
-    Axis AXchg("Chg", 800, 15., 17.);
+    Axis AXnrl("Nrl", 800, 0., 0.5);
+    Axis AXela("Ela", 800, 0., 10.00);
     Hist * hNrl = Hist::New("hNrl", "hNrl", HistAxis(AXnrl));
-    Hist * hElc = Hist::New("hElc", "hElc", HistAxis(AXelc));
-    Hist * hChg = Hist::New("hChg", "hChg", HistAxis(AXchg));
-    Hist * hNrlElc = Hist::New("hNrlElc", "hNrlElc", HistAxis(AXnrl, AXelc));
+    Hist * hEla = Hist::New("hEla", "hEla", HistAxis(AXela));
+
+    // Coo
+    Double_t lcz[9] = { 158.919975, 53.05999756, 29.22800064, 25.21199799, 1.69799840, -2.31800222, -25.21200371, -29.22799873, -135.88198853 };
+    Axis AXLcz("Residual [cm]", 400, -0.01, 0.01);
 
     // Prop
-    Axis AXcoo("Residual [cm * p#beta/Q^{2}]", 400, -4.0, 4.0);
+    Axis AXcoo("Residual [cm * p#beta/Q^{2} * L^-1]", 1200, -0.50, 0.50);
     Hist * hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXmom, AXcoo));
     Hist * hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXmom, AXcoo));
     Hist * hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo));
     Hist * hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo));
     
-    Axis AXagl("Residual [p#beta/Q^{2}]", 400, -0.06, 0.06);
+    Axis AXagl("Residual [p#beta/Q^{2}]", 1200, -0.50, 0.50);
     Hist * hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl));
     Hist * hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl));
     Hist * hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl));
     Hist * hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXmom, AXagl));
    
-    Axis AXels("Eloss [GeV * #beta^{2}/Q^{2}]", 400, 0.0015, 0.015);
+    Axis AXels("Eloss [GeV * #beta^{2}/Q^{2}]", 400, 0.0010, 0.015);
     Hist * hMee = Hist::New("hMee", "hMee", HistAxis(AXmom, AXels));
     Hist * hTee = Hist::New("hTee", "hTee", HistAxis(AXmom, AXels));
     
@@ -100,8 +99,6 @@ int main(int argc, char * argv[]) {
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
-        //if (entry>(dst->GetEntries()/20)) break; // testcode
-        //if (entry%10!=0) continue; // testcode
         dst->GetEntry(entry);
 
         // Propagation Testing
@@ -111,9 +108,8 @@ int main(int argc, char * argv[]) {
             Double_t radius = std::sqrt(hit.coo[0]*hit.coo[0] + hit.coo[1]*hit.coo[1]);
             Double_t maxxy  = std::max(std::fabs(hit.coo[0]), std::fabs(hit.coo[1]));
             Double_t cos    = std::fabs(hit.dir[2]);
-            //if (maxxy > 30.) continue;
-            //if (maxxy > 18.) continue;
-            if (radius > 40.) continue;
+            //if (maxxy > 16.) continue;
+            if (radius > 35.) continue;
             if (hit.layJ == layBeg) mchitU = &hit;
             if (hit.layJ == layEnd) mchitL = &hit;
         }
@@ -139,23 +135,18 @@ int main(int argc, char * argv[]) {
             
             MatFld mfld;
             PropMgnt::PropToZ(mchitL->coo[2], ppst, &mfld);
-            
-            //PropMgnt::PropToZ_AMSLibs(mchitL->coo[2], ppst);
-            //MatFld&& mfld = MatMgnt::Get(SVecD<3>(mchitU->coo[0], mchitU->coo[1], mchitU->coo[2]), SVecD<3>(mchitL->coo[0], mchitL->coo[1], mchitL->coo[2]));
+            Double_t len = std::fabs(mchitL->coo[2]-mchitU->coo[2]);
+            Double_t nrl = mfld.num_rad_len();
+            Double_t ela = mfld.elcloud_abundance();
             
             SVecD<3> refc = ppst.c();
             SVecD<3> refu = ppst.u();
-            
-            Double_t nrl = mfld.num_rad_len();
-            Double_t elc = mfld.elcloud_abundance();
            
             scl_mscat /= std::sqrt(nrl);
-            scl_eloss /= elc;
+            scl_eloss /= ela;
 
             hNrl->fill(nrl);
-            hElc->fill(elc);
-            hChg->fill(elc/nrl);
-            hNrlElc->fill(nrl, elc);
+            hEla->fill(ela);
             
             ppst = part;
             PropMgnt::PropToZWithMC(mchitL->coo[2], ppst);
@@ -165,21 +156,21 @@ int main(int argc, char * argv[]) {
             Double_t tm_resc[2] = { ppst.cx() - refc(0), ppst.cy() - refc(1) };
             Double_t tm_resu[2] = { ppst.ux() - refu(0), ppst.uy() - refu(1) };
             Double_t tm_elsm    = (mchitU->mom - ppst.mom());
-            hMcx->fill(mc_mom, scl_mscat * mc_resc[0]);
-            hMcy->fill(mc_mom, scl_mscat * mc_resc[1]);
+            hMcx->fill(mc_mom, scl_mscat * mc_resc[0] / len);
+            hMcy->fill(mc_mom, scl_mscat * mc_resc[1] / len);
             hMux->fill(mc_mom, scl_mscat * mc_resu[0]);
             hMuy->fill(mc_mom, scl_mscat * mc_resu[1]);
             hMee->fill(mc_mom, scl_eloss * mc_elsm);
-            hTcx->fill(mc_mom, scl_mscat * tm_resc[0]);
-            hTcy->fill(mc_mom, scl_mscat * tm_resc[1]);
+            hTcx->fill(mc_mom, scl_mscat * tm_resc[0] / len);
+            hTcy->fill(mc_mom, scl_mscat * tm_resc[1] / len);
             hTux->fill(mc_mom, scl_mscat * tm_resu[0]);
             hTuy->fill(mc_mom, scl_mscat * tm_resu[1]);
             hTee->fill(mc_mom, scl_eloss * tm_elsm);
             
-            if (mc_mom > 1.0) hMcux->fill(scl_mscat * mc_resc[0], scl_mscat * mc_resu[0]);
-            if (mc_mom > 1.0) hMcuy->fill(scl_mscat * mc_resc[1], scl_mscat * mc_resu[1]);
-            if (mc_mom > 1.0) hTcux->fill(scl_mscat * tm_resc[0], scl_mscat * tm_resu[0]);
-            if (mc_mom > 1.0) hTcuy->fill(scl_mscat * tm_resc[1], scl_mscat * tm_resu[1]);
+            if (mc_mom > 5.0 && mc_mom < 200.) hMcux->fill(scl_mscat * mc_resc[0] / len, scl_mscat * mc_resu[0]);
+            if (mc_mom > 5.0 && mc_mom < 200.) hMcuy->fill(scl_mscat * mc_resc[1] / len, scl_mscat * mc_resu[1]);
+            if (mc_mom > 5.0 && mc_mom < 200.) hTcux->fill(scl_mscat * tm_resc[0] / len, scl_mscat * tm_resu[0]);
+            if (mc_mom > 5.0 && mc_mom < 200.) hTcuy->fill(scl_mscat * tm_resc[1] / len, scl_mscat * tm_resu[1]);
         }
     }
 

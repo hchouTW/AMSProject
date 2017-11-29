@@ -12,36 +12,94 @@ namespace MatAms {
     constexpr Long64_t DIM = 3;
 
     // TRACKER
-    constexpr Float_t INNER_TRACKER_RADIUS = 53.0;
+    constexpr Float_t  INNER_TRACKER_RADIUS = 53.0;
+    constexpr Double_t SILICON_DENSITY      = 8.2592e-02;
+    constexpr Double_t HALF_HEIGHT          = 0.015;
+    constexpr Long64_t TRL_NBIN             =  8;
+    constexpr Double_t CENTRALZ_TRL1        =  158.91997500;
+    constexpr Double_t CENTRALZ_TRL2        =   53.05999756;
+    constexpr Double_t CENTRALZ_TRL3        =   29.22800064;
+    constexpr Double_t CENTRALZ_TRL4        =   25.21199799;
+    constexpr Double_t CENTRALZ_TRL5        =    1.69799840;
+    constexpr Double_t CENTRALZ_TRL6        =   -2.31800222;
+    constexpr Double_t CENTRALZ_TRL7        =  -25.21200371;
+    constexpr Double_t CENTRALZ_TRL8        =  -29.22799873;
+    constexpr Double_t CENTRALZ_TRL9        = -135.88198853;
+   
+    /*
+    constexpr std::array<Long64_t, DIM> TRL1_N   {  260, 180,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL1_MIN {  -65, -45, CENTRALZ_TRL1 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL1_MAX {   65,  45, CENTRALZ_TRL1 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL2_N   {  260, 180,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL2_MIN {  -65, -45, CENTRALZ_TRL2 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL2_MAX {   65,  45, CENTRALZ_TRL2 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL3_N   {  220, 220,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL3_MIN {  -55, -55, CENTRALZ_TRL3 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL3_MAX {   55,  55, CENTRALZ_TRL3 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL4_N   {  220, 220,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL4_MIN {  -55, -55, CENTRALZ_TRL4 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL4_MAX {   55,  55, CENTRALZ_TRL4 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL5_N   {  220, 180,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL5_MIN {  -55, -45, CENTRALZ_TRL5 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL5_MAX {   55,  45, CENTRALZ_TRL5 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL6_N   {  220, 180,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL6_MIN {  -55, -45, CENTRALZ_TRL6 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL6_MAX {   55,  45, CENTRALZ_TRL6 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL7_N   {  220, 220,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL7_MIN {  -55, -55, CENTRALZ_TRL7 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL7_MAX {   55,  55, CENTRALZ_TRL7 + HALF_HEIGHT };
+
+
+    constexpr std::array<Long64_t, DIM> TRL8_N   {  220, 220,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL8_MIN {  -55, -55, CENTRALZ_TRL8 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL8_MAX {   55,  55, CENTRALZ_TRL8 + HALF_HEIGHT };
+
+    
+    constexpr std::array<Long64_t, DIM> TRL9_N   {  200, 120,                    TRL_NBIN };
+    constexpr std::array<Double_t, DIM> TRL9_MIN {  -50, -30, CENTRALZ_TRL9 - HALF_HEIGHT };
+    constexpr std::array<Double_t, DIM> TRL9_MAX {   50,  30, CENTRALZ_TRL9 + HALF_HEIGHT };
+    */
     
     constexpr std::array<Long64_t, DIM> TRL1_N   {  260, 180,       4 };
     constexpr std::array<Double_t, DIM> TRL1_MIN {  -65, -45,  158.90 };
     constexpr std::array<Double_t, DIM> TRL1_MAX {   65,  45,  158.94 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL2_N   {  260, 180,       4 };
     constexpr std::array<Double_t, DIM> TRL2_MIN {  -65, -45,   53.04 };
     constexpr std::array<Double_t, DIM> TRL2_MAX {   65,  45,   53.08 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL3_N   {  220, 220,       4 };
     constexpr std::array<Double_t, DIM> TRL3_MIN {  -55, -55,   29.21 };
     constexpr std::array<Double_t, DIM> TRL3_MAX {   55,  55,   29.25 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL4_N   {  220, 220,       4 };
     constexpr std::array<Double_t, DIM> TRL4_MIN {  -55, -55,   25.19 };
     constexpr std::array<Double_t, DIM> TRL4_MAX {   55,  55,   25.23 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL5_N   {  220, 180,       4 };
     constexpr std::array<Double_t, DIM> TRL5_MIN {  -55, -45,    1.68 };
     constexpr std::array<Double_t, DIM> TRL5_MAX {   55,  45,    1.72 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL6_N   {  220, 180,       4 };
     constexpr std::array<Double_t, DIM> TRL6_MIN {  -55, -45,   -2.34 };
     constexpr std::array<Double_t, DIM> TRL6_MAX {   55,  45,   -2.30 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL7_N   {  220, 220,       4 };
     constexpr std::array<Double_t, DIM> TRL7_MIN {  -55, -55,  -25.23 };
     constexpr std::array<Double_t, DIM> TRL7_MAX {   55,  55,  -25.19 };
-
+    
     constexpr std::array<Long64_t, DIM> TRL8_N   {  220, 220,       4 };
     constexpr std::array<Double_t, DIM> TRL8_MIN {  -55, -55,  -29.25 };
     constexpr std::array<Double_t, DIM> TRL8_MAX {   55,  55,  -29.21 };
@@ -88,16 +146,16 @@ namespace MatAms {
     constexpr std::array<Double_t, DIM> TOFL_MAX {  65,  65, -59.5 };
     
     // RICH
-    constexpr Float_t RICH_BOUND_INNER = 18;
-    constexpr Float_t RICH_BOUND_OUTER = 65;
+    constexpr Float_t RICH_BOUND_INNER = 17.5;
+    constexpr Float_t RICH_BOUND_OUTER = 60.0;
 
-    constexpr std::array<Long64_t, DIM> NAF_N   {  72,  72,     7 };
-    constexpr std::array<Double_t, DIM> NAF_MIN { -18, -18, -76.0 };
-    constexpr std::array<Double_t, DIM> NAF_MAX {  18,  18, -72.5 };
+    constexpr std::array<Long64_t, DIM> NAF_N   {    70,    70,     7 };
+    constexpr std::array<Double_t, DIM> NAF_MIN { -17.5, -17.5, -76.0 };
+    constexpr std::array<Double_t, DIM> NAF_MAX {  17.5,  17.5, -72.5 };
     
-    constexpr std::array<Long64_t, DIM> AGL_N   { 260, 260,     7 };
-    constexpr std::array<Double_t, DIM> AGL_MIN { -65, -65, -76.0 };
-    constexpr std::array<Double_t, DIM> AGL_MAX {  65,  65, -72.5 };
+    constexpr std::array<Long64_t, DIM> AGL_N   { 240, 240,     7 };
+    constexpr std::array<Double_t, DIM> AGL_MIN { -60, -60, -76.0 };
+    constexpr std::array<Double_t, DIM> AGL_MAX {  60,  60, -72.5 };
     
     // ECAL
     constexpr std::array<Long64_t, DIM> ECAL_N   {  168, 168,     22 };
@@ -128,27 +186,27 @@ namespace MatAms {
     constexpr std::array<Double_t, DIM> SUPU3_MAX {   55,  55, 84.0 };
     
     // SUPPORT M
-    constexpr std::array<Long64_t, DIM> SUPM1_N   {  220, 220,     6 };
+    constexpr std::array<Long64_t, DIM> SUPM1_N   {  220, 220,    12 };
     constexpr std::array<Double_t, DIM> SUPM1_MIN {  -55, -55, 28.60 };
     constexpr std::array<Double_t, DIM> SUPM1_MAX {   55,  55, 29.20 };
     
-    constexpr std::array<Long64_t, DIM> SUPM2_N   {  220, 220,     6 };
+    constexpr std::array<Long64_t, DIM> SUPM2_N   {  220, 220,    12 };
     constexpr std::array<Double_t, DIM> SUPM2_MIN {  -55, -55, 25.25 };
     constexpr std::array<Double_t, DIM> SUPM2_MAX {   55,  55, 25.85 };
     
-    constexpr std::array<Long64_t, DIM> SUPM3_N   {  220, 220,     6 };
+    constexpr std::array<Long64_t, DIM> SUPM3_N   {  220, 220,    12 };
     constexpr std::array<Double_t, DIM> SUPM3_MIN {  -55, -55,  1.05 };
     constexpr std::array<Double_t, DIM> SUPM3_MAX {   55,  55,  1.65 };
     
-    constexpr std::array<Long64_t, DIM> SUPM4_N   {  220, 220,     6 };
+    constexpr std::array<Long64_t, DIM> SUPM4_N   {  220, 220,    12 };
     constexpr std::array<Double_t, DIM> SUPM4_MIN {  -55, -55, -2.30 };
     constexpr std::array<Double_t, DIM> SUPM4_MAX {   55,  55, -1.70 };
     
-    constexpr std::array<Long64_t, DIM> SUPM5_N   {  220, 220,      6 };
+    constexpr std::array<Long64_t, DIM> SUPM5_N   {  220, 220,     12 };
     constexpr std::array<Double_t, DIM> SUPM5_MIN {  -55, -55, -25.85 };
     constexpr std::array<Double_t, DIM> SUPM5_MAX {   55,  55, -25.25 };
     
-    constexpr std::array<Long64_t, DIM> SUPM6_N   {  220, 220,      6 };
+    constexpr std::array<Long64_t, DIM> SUPM6_N   {  220, 220,     12 };
     constexpr std::array<Double_t, DIM> SUPM6_MIN {  -55, -55, -29.20 };
     constexpr std::array<Double_t, DIM> SUPM6_MAX {   55,  55, -28.60 };
     

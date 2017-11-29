@@ -29,7 +29,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     if (root_file == nullptr || root_file->IsZombie()) return false;
 
     //std::string dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material";
-    std::string dir_path = "/data1/hchou/material7";
+    std::string dir_path = "/data1/hchou/material9";
    
     // TRACKER
     MatGeoBoxCreator creator_TRL1(MatAms::TRL1_N.at(0), MatAms::TRL1_MIN.at(0), MatAms::TRL1_MAX.at(0), MatAms::TRL1_N.at(1), MatAms::TRL1_MIN.at(1), MatAms::TRL1_MAX.at(1), MatAms::TRL1_N.at(2), MatAms::TRL1_MIN.at(2), MatAms::TRL1_MAX.at(2), CSTR_FMT("%s/AMS02TRL1.bin", dir_path.c_str()));
@@ -237,6 +237,19 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     creator_TRL8.save_and_close();
     creator_TRL9.save_and_close();
     
+    // TRACKER
+    //Bool_t   tr_elm[9] = { 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+    //Double_t tr_den[9] = { 0, 0, 0, 0, 0, 0, 0, MatAms::SILICON_DENSITY, 0 };
+    //creator_TRL1.save_and_close(tr_elm, tr_den);
+    //creator_TRL2.save_and_close(tr_elm, tr_den);
+    //creator_TRL3.save_and_close(tr_elm, tr_den);
+    //creator_TRL4.save_and_close(tr_elm, tr_den);
+    //creator_TRL5.save_and_close(tr_elm, tr_den);
+    //creator_TRL6.save_and_close(tr_elm, tr_den);
+    //creator_TRL7.save_and_close(tr_elm, tr_den);
+    //creator_TRL8.save_and_close(tr_elm, tr_den);
+    //creator_TRL9.save_and_close(tr_elm, tr_den);
+    
     creator_TRDS.save_and_close();
     creator_TRDU.save_and_close();
     creator_TRDM.save_and_close();
@@ -289,7 +302,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
     //std::string g4mat_dir_path = "/afs/cern.ch/work/h/hchou/public/DATABASE/detector/material"; // at CERN
-    std::string g4mat_dir_path = "/data1/hchou/material7"; // at NCU
+    std::string g4mat_dir_path = "/data1/hchou/material9"; // at NCU
 
     reader_TRL1_.load(STR_FMT("%s/AMS02TRL1.bin" , g4mat_dir_path.c_str()));
     reader_TRL2_.load(STR_FMT("%s/AMS02TRL2.bin" , g4mat_dir_path.c_str()));

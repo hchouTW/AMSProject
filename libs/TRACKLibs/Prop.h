@@ -303,6 +303,10 @@ class PropMgnt {
         static Bool_t PropToZWithMC(const Double_t zcoo, PhySt& part, MatFld* mfld = nullptr);
 
     protected :
+        static Bool_t FastProp(const Double_t step, const PhySt& part, MatFld* mfld = nullptr);
+        static Bool_t FastPropToZ(const Double_t zcoo, const PhySt& part, MatFld* mfld = nullptr);
+
+    protected :
         // Step Length
         // step < 0, backward trace
         // step > 0, forward trace
@@ -316,24 +320,25 @@ class PropMgnt {
         
     private :
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
-        static constexpr Double_t LMTL_CURVE = 1.0e-6; // (du/ds threshold)
+        static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
         static constexpr Double_t TUNE_STEP  = 8.0e-4; // (du threshold)
-        static constexpr Double_t PROP_STEP  = 20.0;   // (ds threshold)
-        static constexpr Double_t LMTU_STEP  = 40.0;   // (ds threshold)
-        static constexpr Double_t LMTL_STEP  =  6.0;   // (ds threshold)
-        static constexpr Double_t TUNE_MAT   =  0.1;  // (number radiation length threshold)
+        static constexpr Double_t PROP_STEP  = 25.0;   // (ds threshold)
+        static constexpr Double_t LMTU_STEP  = 35.0;   // (ds threshold)
+        static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
+
+        static constexpr Double_t TUNE_BTA   =  0.3; // (beta threshold)
+        static constexpr Double_t TUNE_NRL   =  0.1; // (number radiation length threshold)
+        static constexpr Double_t TUNE_ELA   = 10.0; // (elcloud abundance threshold)
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
-        
-        //static constexpr Double_t LMTU_STEP  =  200.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  200.0;   // (ds threshold)
-        
-        //static constexpr Double_t LMTU_STEP  =  15.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  15.0;   // (ds threshold)
-        
-        //static constexpr Double_t LMTU_STEP  =  4.1;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  4.0;   // (ds threshold)
+       
+        // testcode
+        //static constexpr Double_t LMTU_STEP  =  0.6;   // (ds threshold)
+        //static constexpr Double_t LMTL_STEP  =  0.5;   // (ds threshold)
+        //static constexpr Double_t TUNE_BTA   =  0.3; // (beta threshold)
+        //static constexpr Double_t TUNE_NRL   =   10.0; // (number radiation length threshold)
+        //static constexpr Double_t TUNE_ELA   =  100.0; // (elcloud abundance threshold)
         
     private :
         static constexpr Short_t X = 0;

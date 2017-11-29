@@ -371,6 +371,9 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     Long64_t   nstp   = static_cast<Long64_t>(std::floor(vwlen / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
     SVecD<3>&& unit   = (vwvec / static_cast<Double_t>(nstp));
     Double_t   ulen   = LA::Mag(unit);
+    
+    SVecD<3> real_unit(unit(0) * dlt_.at(0), unit(1) * dlt_.at(1), unit(2) * dlt_.at(2));
+    Double_t real_ulen = LA::Mag(real_unit);
 
     SVecD<3> itloc((vxloc + MGMath::HALF * unit(0)), (vyloc + MGMath::HALF * unit(1)), (vzloc + MGMath::HALF * unit(2)));
     Long64_t itsat = 0;
@@ -394,6 +397,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
     Long64_t suml = 0;
     Long64_t sumll = 0;
     Long64_t itcnt = 0;
+    std::list<Long64_t> itlist;
     for (Long64_t it = itsat; it < itend; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(std::floor(itloc(2)));
         if (zi < 0 || zi >= n_.at(2)) continue;
@@ -404,6 +408,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         if (mat_ptr_[idx]) {
+            itlist.push_back(it);
             suml += it;
             sumll += it*it;
             itcnt++;
@@ -420,7 +425,27 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t i
         Double_t loc    = (avgloc + sftloc);
         Double_t locsqr = (avgsqr + MGMath::TWO * sftloc * avgloc + sftsqr);
 
-        return MatFld(true, elm_, den_, inv_rad_len_, elcloud_den_, real_len, efft_len, efft, loc, locsqr);
+        Bool_t   section_mat[MatFld::SECTION_N]; std::fill_n(section_mat, MatFld::SECTION_N, false);
+        Double_t section_nrl[MatFld::SECTION_N]; std::fill_n(section_nrl, MatFld::SECTION_N, 0.);
+        Double_t section_ela[MatFld::SECTION_N]; std::fill_n(section_ela, MatFld::SECTION_N, 0.);
+        for (auto&& it : itlist) {
+            Double_t iloc = ((static_cast<Double_t>(it) + MGMath::HALF) / static_cast<Double_t>(nstp));
+            Int_t index = static_cast<Int_t>(std::floor(static_cast<Double_t>(MatFld::SECTION_N) * iloc));
+            if (index <  0)                 index = 0;
+            if (index >= MatFld::SECTION_N) index = MatFld::SECTION_N - 1;
+            section_mat[index]  = true;
+            section_nrl[index] += MGMath::ONE;
+            section_ela[index] += MGMath::ONE;
+        }
+        for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
+            if (!section_mat[is]) continue;
+            Double_t norm_nrl = real_ulen * inv_rad_len_;
+            Double_t norm_ela = real_ulen * elcloud_den_;
+            section_nrl[is] *= norm_nrl;
+            section_ela[is] *= norm_ela;
+        }
+
+        return MatFld(true, elm_, den_, inv_rad_len_, elcloud_den_, real_len, efft_len, efft, loc, locsqr, section_mat, section_nrl, section_ela);
     }
     else return MatFld(real_len);
 }
@@ -471,6 +496,10 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
     Double_t                                   efft = 0.0;
     Double_t                                   loc = 0.0;
     Double_t                                   locsqr = 0.0;
+        
+    Bool_t   section_mat[MatFld::SECTION_N]; std::fill_n(section_mat, MatFld::SECTION_N, false);
+    Double_t section_nrl[MatFld::SECTION_N]; std::fill_n(section_nrl, MatFld::SECTION_N, 0.);
+    Double_t section_ela[MatFld::SECTION_N]; std::fill_n(section_ela, MatFld::SECTION_N, 0.);
 
     for (auto&& reader : *reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
@@ -490,6 +519,13 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
         elcloud_den += elcloud_abs;
         efft_len    += mfld.efft_len();
         
+        for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
+            if (!mfld.section_mat(is)) continue;
+            section_mat[is]  = true;
+            section_nrl[is] += mfld.section_nrl(is);
+            section_ela[is] += mfld.section_ela(is);
+        }
+        
         mat = true;
     }
 
@@ -504,7 +540,7 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std) {
         elcloud_den = (elcloud_den / efft_len);
         efft = (efft_len / real_len);
 
-        return MatFld(mat, elm, den, inv_rad_len, elcloud_den, real_len, efft_len, efft, loc, locsqr);
+        return MatFld(mat, elm, den, inv_rad_len, elcloud_den, real_len, efft_len, efft, loc, locsqr, section_mat, section_nrl, section_ela);
     }
     else return MatFld(real_len);
 }
@@ -602,7 +638,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     
     // Modified Highland-Lynch-Dahl formula
     //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * std::sqrt(MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
-    
+   
+    // testcode
     //----------------- AMS
     //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl;
     //----------------- AMS
@@ -651,12 +688,12 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t exeng = std::exp(-m_exeng); // [MeV]
   
     // Calculate Matterial Quality and Eta Trans
-    Double_t electron_cloud_abundance = mfld.elcloud_abundance();
-    Double_t Bethe_Bloch              = (MGMath::HALF * BETHE_BLOCH_K * electron_cloud_abundance * sqr_chrg / sqr_bta);
+    Double_t elcloud_abundance = mfld.elcloud_abundance(); // [mol cm^-2]
+    Double_t Bethe_Bloch       = (MGMath::HALF * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
 
     // Calculate Sigma
     Double_t eta_trans     = (std::sqrt(sqr_gmbta + MGMath::ONE) / sqr_gmbta);
-    Double_t eloss_ion_sgm = (Bethe_Bloch * eta_trans / mass_in_MeV);
+    Double_t eloss_ion_sgm = (Bethe_Bloch * eta_trans / mass_in_MeV); // [1]
     
     // Calculate Peak
     Double_t trans_eng     = MGMath::TWO * MASS_EL_IN_MEV * sqr_gmbta;
@@ -664,22 +701,24 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t ion_keng_part = std::log(Bethe_Bloch / exeng);
     if (!MGNumc::Valid(max_keng_part)) max_keng_part = MGMath::ZERO;
     if (!MGNumc::Valid(ion_keng_part)) ion_keng_part = MGMath::ZERO;
-    //Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
-    
-    // testcode
-    // Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);  // no charge with step length
-    Double_t ion_keng_part2 = std::log(Bethe_Bloch / exeng * corr_mfld_.elcloud_abundance() / electron_cloud_abundance);
-    Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + ion_keng_part2 + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    Double_t eloss_ion_mpv = eloss_ion_sgm * (max_keng_part + ion_keng_part + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
     
     // Calculate Mean
     Double_t mass_rat = (MASS_EL_IN_GEV / mass_in_GeV);
-    Double_t mass_rel = std::log(MGMath::ONE + MGMath::TWO * gm * mass_rat + mass_rat * mass_rat);
-    Double_t max_trans_eng_part = MGMath::TWO * max_keng_part - mass_rel;
-    Double_t eloss_ion_men = eloss_ion_sgm * (max_trans_eng_part - MGMath::TWO * sqr_bta - avg_dlt);
+    Double_t mass_rel = (MGMath::ONE + MGMath::TWO * gm * mass_rat + mass_rat * mass_rat);
+    Double_t max_trans_keng_part = MGMath::TWO * max_keng_part - std::log(mass_rel);
+    Double_t eloss_ion_men = eloss_ion_sgm * (max_trans_keng_part - MGMath::TWO * sqr_bta - avg_dlt);
   
     // Calculate Kappa
     const Double_t eloss_ion_kpa0 = MGMath::SQRT_TWO;
     Double_t eloss_ion_kpa = eloss_ion_kpa0 / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
+    
+    // testcode
+    //Double_t k = Bethe_Bloch / trans_eng * mass_rel;
+    //if (part.bta() < 0.5) std::cout << Form("BETA %14.8f K %14.8f ELA %14.8f NRL %14.8f MASS %14.8f\n", part.bta(), k, elcloud_abundance, mfld.num_rad_len(), mass_rel);
+    Double_t ion_keng_part2 = std::log(Bethe_Bloch / exeng * corr_mfld_.elcloud_abundance() / elcloud_abundance);
+    Double_t eloss_ion_mpv2 = eloss_ion_sgm * (max_keng_part + ion_keng_part2 + LANDAU_ELOSS_CORR - sqr_bta - avg_dlt);
+    eloss_ion_mpv = eloss_ion_mpv2;
 
     // Tune by Hsin-Yi Chou
     //const Double_t tune_kpa = 1.05379361892339474e+00;
@@ -690,10 +729,10 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     //eloss_ion_mpv *= tune_mpv;
 
     //----------------- AMS
-    eloss_ion_kpa  = eloss_ion_kpa0;
+    eloss_ion_kpa  = MGMath::ONE;
     //eloss_ion_kpa  = MGMath::ONE;
     //eloss_ion_mpv  = eloss_ion_men;
-    //eloss_ion_sgm  *= MGMath::TWO;
+    //eloss_ion_sgm  *= eloss_ion_kpa0;
     //----------------- AMS
 
     if (!MGNumc::Valid(eloss_ion_kpa) || MGNumc::Compare(eloss_ion_kpa) <= 0) eloss_ion_kpa = MGMath::ZERO;

@@ -25,6 +25,8 @@ class MultiGauss {
 
         inline Double_t rndm();
 
+        inline Bool_t is_norm(Double_t r = 0.) { (MGNumc::Compare((std::fabs(r) / bound_.second), ROBUST_) <= 0); }
+
     private :
         std::pair<Double_t, Double_t> bound_;
         std::vector<std::pair<Double_t, Double_t>> multi_gauss_;
@@ -35,7 +37,7 @@ class MultiGauss {
     private :
         static constexpr Int_t    NPX_ = 10000;
         static constexpr Double_t LMTL_PROB_ = 1.0e-6;
-        static constexpr Double_t ROBUST_ = 5.0;
+        static constexpr Double_t ROBUST_ = 2.0;
 };
 
 

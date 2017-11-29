@@ -63,10 +63,12 @@ Double_t MultiGauss::efft_sgm(Double_t r) const {
     }
     
     Double_t sgm = bound_.second * ((MGNumc::Compare(ttl_wgt, LMTL_PROB_) <= 0 || MGNumc::EqualToZero(inv_nrm)) ? MGMath::ONE : std::sqrt(ttl_wgt / inv_nrm));
-    if (!MGNumc::Valid(sgm)) sgm = bound_.second;
-    
-    // Robust estimator
-    if (std::fabs(r / sgm) > ROBUST_) sgm = (ROBUST_ * std::fabs(r));
+    if (!MGNumc::Valid(sgm) || MGNumc::Compare(sgm, bound_.second) > 0 || MGNumc::Compare(sgm) <= 0) sgm = bound_.second;
+   
+    // Robust Method
+    Double_t normr = std::fabs(r) / (ROBUST_ * sgm);
+    if (MGNumc::Compare(normr, MGMath::ONE) > 0)
+        sgm *= std::sqrt(MGMath::ONE + std::log(normr * normr));
 
     return sgm;
 }

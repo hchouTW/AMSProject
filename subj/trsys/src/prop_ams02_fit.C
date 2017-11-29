@@ -1,6 +1,7 @@
 //#define __HAS_TESTPROP__
 //#define __HAS_TESTFIT__
 #define __HAS_AMS_OFFICE_LIBS__
+
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
@@ -75,9 +76,9 @@ int main(int argc, char * argv[]) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);
         part.set_mom(mom);
-        //Double_t val = part.gmbta();
+        Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        Double_t val = part.bta();
+        //Double_t val = part.bta();
         
         gaus->SetParameters(1000, 0, (*vhMcx.at(it))()->GetRMS());
         (*vhMcx.at(it))()->Fit(gaus, "q0", "");
@@ -178,9 +179,9 @@ int main(int argc, char * argv[]) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);
         part.set_mom(mom);
-        //Double_t val = part.gmbta();
+        Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        Double_t val = part.bta();
+        //Double_t val = part.bta();
         
         Double_t sqr_bta = (part.bta() * part.bta());
         Double_t eloss_ion_kpa  = MGMath::SQRT_TWO / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);
@@ -223,8 +224,8 @@ int main(int argc, char * argv[]) {
         double tpeak = (*vhTee.at(it))()->GetXaxis()->GetBinCenter(tpbin);
         
         int tmin = tpbin, tmax = tpbin;
-        for (Int_t bin = tpbin; bin >= 1;                              --bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 1.5e-1*tpval) { tmin = bin; break; } }
-        for (Int_t bin = tpbin; bin <= (*vhTee.at(it))()->GetNbinsX(); ++bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 5.0e-3*tpval) { tmax = bin; break; } }
+        for (Int_t bin = tpbin; bin >= 1;                              --bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 2.0e-1*tpval) { tmin = bin; break; } }
+        for (Int_t bin = tpbin; bin <= (*vhTee.at(it))()->GetNbinsX(); ++bin) { if ((*vhTee.at(it))()->GetBinContent(bin) < 5.0e-2*tpval) { tmax = bin; break; } }
         double tbdmin = vhTee.at(it)->xaxis().center(tmin);
         double tbdmax = vhTee.at(it)->xaxis().center(tmax);
         

@@ -55,6 +55,8 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
     if (field) orth_.reset(part.u(), mag());
     
     if (field && part.arg().eloss()) zeta_e_ = part.arg().tune_ion() * mphy->eloss_ion_mpv();
+    //if (field && part.arg().eloss()) zeta_e_ = part.arg().tune_ion() * (mphy->eloss_ion_mpv() + mphy->eloss_ion_sgm() * Rndm::Landau());  // testcode
+    //if (field && part.arg().eloss()) zeta_e_ = part.arg().tune_ion() * (mphy->eloss_ion_mpv() + mphy->eloss_ion_sgm() * Rndm::Gaus());  // testcode
     else                             zeta_e_ = MGMath::ZERO;
 }
 
@@ -216,13 +218,16 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
         Double_t cov_cLU = MGMath::ZERO;
         for (Int_t it = vec_vac_.size()-1; it >= 0; --it) {
             if (vec_vac_.at(it)) { real_len += vec_len_.at(it); continue; }
-            
+
+            //Double_t est_eftlen = vec_eft_.at(it);
             Double_t est_len    = real_len + vec_invloc_.at(it);
             Double_t est_lensqr = real_len*real_len + MGMath::TWO*real_len*vec_invloc_.at(it) + vec_invlocsqr_.at(it);
             
             Double_t sgm_thasqr = vec_mscatsqr_.at(it);
             Double_t sgm_lentha = est_len * sgm_thasqr;
             Double_t sgm_lensqr = est_lensqr * sgm_thasqr;
+
+            //std::cout << Form("REAL %14.8f EST %14.8f %14.8f\n", real_len, est_len, std::sqrt(est_lensqr)); // testcode
             
             cov_cUU += sgm_thasqr;
             cov_cLL += sgm_lensqr;
@@ -231,30 +236,39 @@ void PropPhyCal::normalized(const MatFld& mfld, const PhySt& part) {
             real_len += vec_len_.at(it);
             efft_len += vec_eft_.at(it);
         }
-        
         vec_vac_.clear();
         vec_len_.clear();
         vec_eft_.clear();
         vec_invloc_.clear();
         vec_invlocsqr_.clear();
         vec_mscatsqr_.clear();
-        
+
+        Double_t efft = (efft_len / real_len);
+
         Double_t sgmU = std::sqrt(cov_cUU);
         Double_t sgmL = std::sqrt(cov_cLL);
         Double_t rel  = (cov_cLU / (sgmL * sgmU));
-        if (!MGNumc::Valid(sgmU) || MGNumc::Compare(sgmU) <= 0)            sgmU = MGMath::ZERO;
-        if (!MGNumc::Valid(sgmL) || MGNumc::Compare(sgmL) <= 0)            sgmL = MGMath::ZERO;
-        if (!MGNumc::Valid(rel)  || MGNumc::Compare(rel, MGMath::ONE) >= 0) rel = MGMath::ONE;
+
+        //std::cout << Form("EFFT %14.8f REL %14.8f SGM %14.8f %14.8f LEN %14.8f\n", efft, rel, sgmU, sgmL, sgmL/sgmU); // testcode
+        if (!MGNumc::Valid(sgmU) || MGNumc::Compare(sgmU) <= 0)             sgmU = MGMath::ZERO;
+        if (!MGNumc::Valid(sgmL) || MGNumc::Compare(sgmL) <= 0)             sgmL = MGMath::ZERO;
+        if (!MGNumc::Valid(rel)  || MGNumc::Compare(rel, MGMath::ONE) >= 0)  rel = MGMath::ONE;
 
         Double_t normu = std::sqrt(MGMath::HALF * (MGMath::ONE + rel)); 
         Double_t norml = std::sqrt(MGMath::HALF * (MGMath::ONE - rel));
         if (!MGNumc::Valid(normu) || MGNumc::Compare(normu) <= 0) normu = MGMath::ZERO;
-        if (!MGNumc::Valid(norml) || MGNumc::Compare(norml) <= 0) normu = MGMath::ZERO;
+        if (!MGNumc::Valid(norml) || MGNumc::Compare(norml) <= 0) norml = MGMath::ZERO;
         
-        mscatuu_ =  sgmU * normu;
-        mscatcu_ =  sgmL * normu;
-        mscatul_ =  sgmU * norml;
-        mscatcl_ = -sgmL * norml;
+        //mscatuu_ =  sgmU * normu;
+        //mscatcu_ =  sgmL * normu;
+        //mscatul_ =  sgmU * norml;
+        //mscatcl_ = -sgmL * norml;
+       
+        // testcode
+        mscatuu_ =  sgmU;
+        mscatcu_ =  rel * sgmL;
+        mscatul_ =  0;
+        mscatcl_ =  std::sqrt(1-rel*rel) * sgmL;
 
         field_ = true;
     }
@@ -364,9 +378,11 @@ void PropPhyCal::set_virtualPhySt(PhySt& part) const {
 
 #ifdef __HAS_AMS_OFFICE_LIBS__
 Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
+    MatPhy::SetCorrFactor();
     Short_t sign = MGNumc::Compare(part.uz());
     if (sign == 0) return false;
     if (MGNumc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0) return true;
+
 
     AMSPoint pos(part.cx(), part.cy(), part.cz());
     AMSDir   dir(part.ux(), part.uy(), part.uz());
@@ -416,8 +432,27 @@ Double_t PropMgnt::GetPropStep(PhySt& part, Short_t ward) {
     
     Double_t step = pred_step;
     if (part.field()) {
-        Double_t num_rad_len = MatPhy::GetNumRadLen((sign * step), part, false);
-        step = std::fabs(step / (MGMath::ONE + (num_rad_len / TUNE_MAT)));
+        Double_t gmbtasqr = part.gm() * ((part.bta() > TUNE_BTA) ? part.bta() * part.bta() : TUNE_BTA * TUNE_BTA);
+        Double_t gmbtaquc = (gmbtasqr * gmbtasqr);
+       
+        // testcode
+        /*
+        Int_t ispred = 0;
+        while (ispred == 0) {
+            Double_t sum_nrl = MGMath::ZERO;
+            Double_t sum_ela = MGMath::ZERO;
+            MatFld&& mfld = MatMgnt::Get((sign * step), part, false);
+            for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
+                if (mfld.section_mat(is)) {
+                    if (part.arg().mscat()) sum_nrl += (mfld.section_nrl(is) / gmbtasqr);
+                    if (part.arg().eloss()) sum_ela += (mfld.section_ela(is) / gmbtaquc);
+                }
+                if (sum_nrl < TUNE_NRL && sum_ela < TUNE_ELA) ispred = (is + 1);
+            }
+            Int_t predsec = (ispred == 0) ? 1 : ispred;
+            step *= (static_cast<Double_t>(predsec) / static_cast<Double_t>(MatFld::SECTION_N));
+        }
+        */
     }
     
     return step; 
@@ -492,9 +527,16 @@ Double_t PropMgnt::GetStepToZ(PhySt& part, Double_t resStepZ) {
         
 
 Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
+    MatPhy::SetCorrFactor();
     Bool_t withMf = (mfld != nullptr);
     Bool_t withJb = (phyJb != nullptr);
     if (withJb) phyJb->init();
+
+    if (part.field()) {
+        MatFld fastscan;
+        if (PropMgnt::FastProp(step, part, &fastscan) && fastscan())
+            MatPhy::SetCorrFactor(&fastscan);
+    }
 
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -534,19 +576,27 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
     }
     MatFld&& mgfld = std::move(MatFld::Merge(mflds));
     if (withMf) *mfld = mgfld;
-    
+        
     ppcal.normalized(mgfld, part);
     ppcal.set_virtualPhySt(part);
     if (withJb) phyJb->set(part);
 
+    MatPhy::SetCorrFactor();
     return is_succ;
 }
 
 
 Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* phyJb) {
+    MatPhy::SetCorrFactor();
     Bool_t withMf = (mfld != nullptr);
     Bool_t withJb = (phyJb != nullptr);
     if (withJb) phyJb->init();
+    
+    if (part.field()) {
+        MatFld fastscan;
+        if (PropMgnt::FastPropToZ(zcoo, part, &fastscan) && fastscan())
+            MatPhy::SetCorrFactor(&fastscan);
+    }
     
     Long64_t iter     = 1;
     Bool_t   is_succ  = false;
@@ -591,6 +641,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
     ppcal.set_virtualPhySt(part);
     if (withJb) phyJb->set(part);
    
+    MatPhy::SetCorrFactor();
     return is_succ;
 }
         
@@ -607,6 +658,66 @@ Bool_t PropMgnt::PropToZWithMC(const Double_t zcoo, PhySt& part, MatFld* mfld) {
     Bool_t is_succ = PropMgnt::PropToZ(zcoo, part, mfld, nullptr);
     if (is_succ) part.symbk(true);
     else         part.zero();
+    return is_succ;
+}
+        
+
+Bool_t PropMgnt::FastProp(const Double_t step, const PhySt& part, MatFld* mfld) {
+    PhySt ppst(part); ppst.arg().reset(false, false);
+    
+    Long64_t iter     = 1;
+    Bool_t   is_succ  = false;
+    Double_t int_step = MGMath::ZERO;
+
+    std::list<MatFld> mflds;
+    PropPhyCal ppcal(ppst, step);
+    while (iter <= LMTU_ITER && !is_succ) {
+        Double_t res_step = step - int_step;
+        Double_t cur_step = GetStep(ppst, res_step);
+
+        MatFld&& curMfld = MatMgnt::Get(cur_step, ppst);
+        Bool_t valid = PropWithEulerHeun(cur_step, ppst, curMfld, ppcal);
+        if (!valid) break;
+
+        mflds.push_back(curMfld);
+        
+        iter++;
+        int_step += cur_step;
+        is_succ = (MGNumc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
+    }
+    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    if (mfld != nullptr) *mfld = mgfld;
+   
+    return is_succ;
+}
+
+
+Bool_t PropMgnt::FastPropToZ(const Double_t zcoo, const PhySt& part, MatFld* mfld) {
+    PhySt ppst(part); ppst.arg().reset(false, false);
+    
+    Long64_t iter     = 1;
+    Bool_t   is_succ  = false;
+    Double_t int_step = MGMath::ZERO;
+
+    std::list<MatFld> mflds;
+    PropPhyCal ppcal(ppst, ppst.uz()*(zcoo-ppst.cz()));
+    while (iter <= LMTU_ITER && !is_succ) {
+        Double_t res_stepz = zcoo - ppst.cz();
+        Double_t cur_step  = GetStepToZ(ppst, res_stepz);
+
+        MatFld&& curMfld = MatMgnt::Get(cur_step, ppst);
+        Bool_t valid = PropWithEulerHeun(cur_step, ppst, curMfld, ppcal);
+        if (!valid) break;
+
+        mflds.push_back(curMfld);
+        
+        iter++;
+        int_step += cur_step;
+        is_succ = (MGNumc::Compare(std::fabs(zcoo - ppst.cz()), CONV_STEP) < 0);
+    }
+    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    if (mfld != nullptr) *mfld = mgfld;
+    
     return is_succ;
 }
 

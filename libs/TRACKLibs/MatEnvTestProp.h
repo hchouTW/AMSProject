@@ -11,19 +11,19 @@ namespace TrackSys {
 namespace MatTestProp {
     constexpr Long64_t DIM = 3;
     
-    constexpr std::array<Long64_t, DIM> TRL1_N   {   400,  400,       2 };
+    constexpr std::array<Long64_t, DIM> TRL1_N   {   400,  400,       8 };
     constexpr std::array<Double_t, DIM> TRL1_MIN {  -100, -100,  57.985 };
     constexpr std::array<Double_t, DIM> TRL1_MAX {   100,  100,  58.015 };
     
-    constexpr std::array<Long64_t, DIM> TRL2_N   {   400,  400,       2 };
+    constexpr std::array<Long64_t, DIM> TRL2_N   {   400,  400,       8 };
     constexpr std::array<Double_t, DIM> TRL2_MIN {  -100, -100,  49.985 };
     constexpr std::array<Double_t, DIM> TRL2_MAX {   100,  100,  50.015 };
     
-    constexpr std::array<Long64_t, DIM> TRL3_N   {   400,  400,      2 };
+    constexpr std::array<Long64_t, DIM> TRL3_N   {   400,  400,      8 };
     constexpr std::array<Double_t, DIM> TRL3_MIN {  -100, -100, -0.015 };
     constexpr std::array<Double_t, DIM> TRL3_MAX {   100,  100,  0.015 };
     
-    constexpr std::array<Long64_t, DIM> MATC_N   {   400,  400,    14 };
+    constexpr std::array<Long64_t, DIM> MATC_N   {   400,  400,    20 };
     constexpr std::array<Double_t, DIM> MATC_MIN {  -100, -100,  50.5 };
     constexpr std::array<Double_t, DIM> MATC_MAX {   100,  100,  57.5 };
 }

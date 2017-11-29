@@ -28,6 +28,7 @@ class PhyTr {
         void   clear();
         Bool_t fit_analysis();
         Bool_t fit_simple();
+        Bool_t fit_semi_simple();
         Bool_t fit_physics();
         
     private :
@@ -45,7 +46,7 @@ class PhyTr {
         static constexpr Int_t    LMTL_ITER = 3;
         static constexpr Int_t    LMTM_ITER = 5;
         static constexpr Int_t    LMTU_ITER = 100;
-        static constexpr Double_t CONVG_EPSILON   = 2.0e-2;
+        static constexpr Double_t CONVG_EPSILON   = 5.0e-2;
         static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
        
         // Dimension

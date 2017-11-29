@@ -30,7 +30,17 @@ class MatFld {
     public :
         MatFld() { clear(); }
         MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t elcloud_den = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), elcloud_den_(elcloud_den), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) {}
+        
+        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t elcloud_den = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0, Bool_t* section_mat = nullptr, Double_t* section_nrl = nullptr, Double_t* section_ela = nullptr) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), elcloud_den_(elcloud_den), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) 
+        {
+            if (section_mat == nullptr) std::fill_n(section_mat_, SECTION_N, false);
+            else                        std::copy_n(section_mat, SECTION_N, section_mat_);
+            if (section_nrl == nullptr) std::fill_n(section_nrl_, SECTION_N, 0.);
+            else                        std::copy_n(section_nrl, SECTION_N, section_nrl_);
+            if (section_ela == nullptr) std::fill_n(section_ela_, SECTION_N, 0.); 
+            else                        std::copy_n(section_ela, SECTION_N, section_ela_);
+        }
+
         ~MatFld() {}
 
         void print() const;
@@ -49,8 +59,12 @@ class MatFld {
         inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : MGMath::ZERO); }
         inline Double_t elcloud_abundance() const { return (mat_ ? (elcloud_den_ * efft_len_) : MGMath::ZERO); }
 
+        inline const Bool_t&   section_mat(Int_t it) const { return section_mat_[it]; }
+        inline const Double_t& section_nrl(Int_t it) const { return section_nrl_[it]; }
+        inline const Double_t& section_ela(Int_t it) const { return section_ela_[it]; }
+
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; }
+        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; std::fill_n(section_mat_, SECTION_N, false); std::fill_n(section_nrl_, SECTION_N, 0.); std::fill_n(section_ela_, SECTION_N, 0.); }
 
     private :
         Bool_t                                     mat_;
@@ -63,6 +77,14 @@ class MatFld {
         Double_t                                   efft_;
         Double_t                                   loc_;
         Double_t                                   locsqr_;
+
+    public :
+        static constexpr Int_t SECTION_N = 5;
+
+    private :
+        Bool_t   section_mat_[SECTION_N];
+        Double_t section_nrl_[SECTION_N];
+        Double_t section_ela_[SECTION_N];
 
     public :
         static MatFld Merge(const std::list<MatFld>& mflds);

@@ -2,8 +2,11 @@
 	gInterpreter->AddIncludePath("${AMSSRC}/include");
 	gSystem->Load("${AMSLIB}/libntuple_slc6_PG_dynamic.so");
 
-	std::cout << Form("Current Version    = %s\n", gROOT->GetVersion());
-	std::cout << Form("Build Architecture = %s\n", gSystem->GetBuildArch());
+    Printf("Current Version    = %s", gROOT->GetVersion());
+	Printf("Build Architecture = %s", gSystem->GetBuildArch());
+    
+    TF1 * f2gs = new TF1("f2gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])");
+    f2gs->SetParameters(10., 10., 10., 30.);
 
     TF1 * f3gs = new TF1("f3gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])");
     f3gs->SetParameters(10., 10., 10., 30., 10., 50.);

@@ -43,6 +43,10 @@ class HitSt {
         
         inline SVecD<2> e(Double_t rx, Double_t ry)              const { return SVecD<2>(ex(rx), ey(ry)); }
         inline SVecD<3> e(Double_t rx, Double_t ry, Double_t rz) const { return SVecD<3>(ex(rx), ey(ry), ez(rz)); }
+
+        inline Bool_t is_norm_x(Double_t r) { return pdf_meas_x_.is_norm( (r/err_(0)) ); }
+        inline Bool_t is_norm_y(Double_t r) { return pdf_meas_y_.is_norm( (r/err_(1)) ); }
+        inline Bool_t is_norm_z(Double_t r) { return pdf_meas_z_.is_norm( (r/err_(2)) ); }
         
     private :
         Short_t    seqID_;
@@ -52,12 +56,11 @@ class HitSt {
         SVecD<3>   err_;  // [cm]
     
     protected :
-        //static constexpr Double_t DEFERR_X_ =  24.0e-4;
-        //static constexpr Double_t DEFERR_Y_ =  10.0e-4;
-        //static constexpr Double_t DEFERR_Z_ = 300.0e-4;
-        static constexpr Double_t DEFERR_X_ =  1.83212e-3;
-        static constexpr Double_t DEFERR_Y_ =  7.30612e-4;
+        //static constexpr Double_t DEFERR_X_ =  1.04562e-3;
+        //static constexpr Double_t DEFERR_Y_ =  7.65345e-4;
         static constexpr Double_t DEFERR_Z_ =  3.00000e-2;
+        static constexpr Double_t DEFERR_X_ =  1.12212e-3;
+        static constexpr Double_t DEFERR_Y_ =  5.33089e-4;
         static MultiGauss pdf_meas_x_;
         static MultiGauss pdf_meas_y_;
         static MultiGauss pdf_meas_z_;
@@ -74,12 +77,12 @@ class HitSt {
         }
 };
         
-//MultiGauss HitSt::pdf_meas_x_(1.0);
-//MultiGauss HitSt::pdf_meas_y_(1.0);
-//MultiGauss HitSt::pdf_meas_z_;
-MultiGauss HitSt::pdf_meas_x_(4.09179469252831607e-01, 1.0, 5.23373315836982100e-01, 1.70439163373578140e+00, 6.74472149101862095e-02, 4.07118529353972392e+00);
-MultiGauss HitSt::pdf_meas_y_(3.63365247299082317e-01, 1.0, 4.96610520364725028e-01, 2.01176547880407108e+00, 1.40024232336192656e-01, 5.07893382534094773e+00);
+//MultiGauss HitSt::pdf_meas_x_(3.11933447340336616e-02, 1.0, 6.05897933730214833e-01, 1.87175073162334304e+00, 3.11933447340336616e-02, 5.60371836804957812e+00);
+//MultiGauss HitSt::pdf_meas_y_(3.17504515061161174e-01, 1.0, 5.04722176029590797e-01, 2.11550346575727266e+00, 1.77773308909248029e-01, 4.22574133234031724e+00);
 MultiGauss HitSt::pdf_meas_z_;
+
+MultiGauss HitSt::pdf_meas_x_(7.72558811989003946e-02, 1.0, 5.65389654829016375e-01, 1.81143727943535460e+00, 3.57354463972083258e-01, 5.44595052222578691e+00);
+MultiGauss HitSt::pdf_meas_y_(1.44671932077881177e-01, 1.0, 4.74432270171227743e-01, 1.80172166373719955e+00, 3.37116091570108967e-01, 3.25272140299274604e+00, 4.37797061807821616e-02, 8.08217764763482194e+00);
 
 
 } // namesapce TrackSys

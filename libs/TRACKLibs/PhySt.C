@@ -6,6 +6,7 @@ namespace TrackSys {
 
         
 void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
+    /*
     if (sw_eloss_) {
         if (MGNumc::EqualToZero(kpa) || MGNumc::EqualToZero(mos)) return;
         if (pdf_eloss_ion_.size() == 0) gRandom->SetSeed(0);
@@ -31,6 +32,11 @@ void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
         else func = it->second;
 
         eloss_ion_ = func->GetRandom();
+    }
+    */
+    // Landau (testcode)
+    if (sw_eloss_) {
+        eloss_ion_ = MGROOT::Rndm::Landau();
     }
 }
         
