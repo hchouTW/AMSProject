@@ -11,6 +11,9 @@
 #pragma link C++ class RunTagInfo;
 #pragma link C++ class std::vector<RunTagInfo>+;
 
+#pragma link C++ class SegPARTMCInfo;
+#pragma link C++ class std::vector<SegPARTMCInfo>+;
+
 #pragma link C++ class HitTRKMCInfo;
 #pragma link C++ class std::vector<HitTRKMCInfo>+;
 

@@ -22,7 +22,8 @@ if !exists("c_no_cern_root")
    syn keyword	cType       TPostScript TSVG TPDF TImageDump THtml TColor TStyle TComplex TPRegexp
    syn keyword	cType       TObjArrayIter TMapIter TClass TEnv TGlobal TCint TROOT TDictionary TTime TTimer
    syn keyword	cType       Double_t Int_t Float_t Long_t Bool_t Byte_t
-   syn keyword	cType      	char_t Marker_t Color_t Size_t Width_t Double32_t Float16_t Long64_t
+   syn keyword	cType      	Double32_t Float16_t Long64_t
+   syn keyword	cType      	char_t Marker_t Color_t Size_t Width_t
    syn keyword	cType       Short_t Stat_t Style_t Text_t UShort_t UInt_t ULong_t ULong64_t
    syn keyword	cConstant   kWhite kBlack kRed kPink kBlue kMagenta kViolet kAzure kCyan kTeal kGreen kSpring kYellow kOrange
 "   syn keyword	cConstant   kSolid kDashed kDotted kDashDotted kDot kPlus kStar kCircle kMultiply kFullDotSmall

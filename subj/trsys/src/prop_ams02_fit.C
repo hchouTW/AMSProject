@@ -33,11 +33,6 @@ int main(int argc, char * argv[]) {
     Hist * hMee = Hist::Head("hMee");
     Hist * hTee = Hist::Head("hTee");
     
-    Hist * hMcux = Hist::Head("hMcux");
-    Hist * hMcuy = Hist::Head("hMcuy");
-    Hist * hTcux = Hist::Head("hTcux");
-    Hist * hTcuy = Hist::Head("hTcuy");
-
     const Axis& AXmom = hMee->xaxis();
     
     TFile * ofle = new TFile("prop_ams02_fit.root", "RECREATE");
@@ -64,6 +59,13 @@ int main(int argc, char * argv[]) {
    
     const Double_t stable = 2.0;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
+    //TF1 * f2gs = new TF1("f2gs", "([1]>0)*([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([3]>0)*([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3])");
+    //f2gs->SetParLimits(1, 0, 100);
+    //f2gs->SetParLimits(3, 0, 100);
+    TF1 * f3gs = new TF1("f3gs", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + ([2]/[3])*TMath::Exp(-0.5*x*x/[3]/[3]) + ([4]/[5])*TMath::Exp(-0.5*x*x/[5]/[5])");
+    f3gs->SetParLimits(1, 0, 10);
+    f3gs->SetParLimits(3, 0, 10);
+    f3gs->SetParLimits(5, 0, 10);
     std::vector<Hist*> vhMcx = Hist::ProjectAll(HistProj::kY, hMcx);
     std::vector<Hist*> vhMcy = Hist::ProjectAll(HistProj::kY, hMcy);
     std::vector<Hist*> vhMux = Hist::ProjectAll(HistProj::kY, hMux);
@@ -83,14 +85,22 @@ int main(int argc, char * argv[]) {
         gaus->SetParameters(1000, 0, (*vhMcx.at(it))()->GetRMS());
         (*vhMcx.at(it))()->Fit(gaus, "q0", "");
         (*vhMcx.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
+    
+        //f2gs->SetParameters(10., (*vhMcx.at(it))()->GetRMS(), 10., 3*(*vhMcx.at(it))()->GetRMS());
+        //(*vhMcx.at(it))()->Fit(f2gs, "q0", "");
+        //(*vhMcx.at(it))()->Fit(f2gs, "q0", "");
+
         gMcx_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMcx_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMcx_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
         gMcx_sgm->SetPointError(it-1,  0., gaus->GetParError(2));
+        //gMcx_sgm->SetPoint     (it-1, val, std::min(f2gs->GetParameter(1), f2gs->GetParameter(3)));
+        //gMcx_sgm->SetPointError(it-1,  0., 0);
         
         gaus->SetParameters(1000, 0, (*vhMcy.at(it))()->GetRMS());
         (*vhMcy.at(it))()->Fit(gaus, "q0", "");
         (*vhMcy.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
+        
         gMcy_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMcy_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMcy_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
@@ -99,10 +109,20 @@ int main(int argc, char * argv[]) {
         gaus->SetParameters(1000, 0, (*vhMux.at(it))()->GetRMS());
         (*vhMux.at(it))()->Fit(gaus, "q0", "");
         (*vhMux.at(it))()->Fit(gaus, "q0", "", -stable*gaus->GetParameter(2), stable*gaus->GetParameter(2));
+        
+        //f3gs->SetParameters(100., (*vhMux.at(it))()->GetRMS(), 30., 2*(*vhMux.at(it))()->GetRMS(), 10., 4*(*vhMux.at(it))()->GetRMS());
+        //(*vhMux.at(it))()->Fit(f3gs, "q0", "");
+        //(*vhMux.at(it))()->Fit(f3gs, "q0", "");
+        //(*vhMux.at(it))()->Fit(f3gs, "q0", "");
+        //(*vhMux.at(it))()->Fit(f3gs, "q0", "");
+        //(*vhMux.at(it))()->Fit(f3gs, "q0", "");
+        
         gMux_men->SetPoint     (it-1, val, gaus->GetParameter(1));
         gMux_men->SetPointError(it-1,  0., gaus->GetParError(1));
         gMux_sgm->SetPoint     (it-1, val, gaus->GetParameter(2));
         gMux_sgm->SetPointError(it-1,  0., gaus->GetParError(2));
+        //gMux_sgm->SetPoint     (it-1, val, std::min(std::min(f3gs->GetParameter(1), f3gs->GetParameter(3)), f3gs->GetParameter(5)));
+        //gMux_sgm->SetPointError(it-1,  0., 0);
         
         gaus->SetParameters(1000, 0, (*vhMuy.at(it))()->GetRMS());
         (*vhMuy.at(it))()->Fit(gaus, "q0", "");

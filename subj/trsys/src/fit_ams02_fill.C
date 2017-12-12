@@ -52,8 +52,8 @@ int main(int argc, char * argv[]) {
     //PhyArg::SetOpt(false, false);
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = true;
-    Bool_t optL9 = true;
+    Bool_t optL1 = false;
+    Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
@@ -114,14 +114,12 @@ int main(int argc, char * argv[]) {
     Hist * hCNresy = Hist::New("hCNresy", "hCNresy", HistAxis(AXmom, AXresy));
     Hist * hHCresy = Hist::New("hHCresy", "hHCresy", HistAxis(AXmom, AXresy));
 
-    Long64_t printRate = dst->GetEntries()/40;
+    Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
        
-        if (fG4mc->primPart.mom < 100.) continue;
-
         if (fTof->betaH < 0.3 || fTof->betaH > 1.3) continue;
         if (fTof->normChisqT > 10.) continue;
         if (fTof->normChisqC > 10.) continue;
@@ -212,18 +210,18 @@ int main(int argc, char * argv[]) {
         Double_t hc_irig = tr.part().irig();
        
         Double_t pow27 = std::pow(100., 1.7) * std::pow(mc_mom, -1.7);
-        if (track.status[0][patt]) hCKflux->fill(ck_irig, pow27);
-        if (track.status[1][patt]) hCNflux->fill(cn_irig, pow27);
-        if (succ) hHCflux->fill(hc_irig, pow27);
+        if (mc_mom > 100. && track.status[0][patt]) hCKflux->fill(ck_irig, pow27);
+        if (mc_mom > 100. && track.status[1][patt]) hCNflux->fill(cn_irig, pow27);
+        if (mc_mom > 100. && succ) hHCflux->fill(hc_irig, pow27);
         
         if (track.status[0][patt]) hCKrso->fill(mc_mom, bincen * (ck_irig - mc_irig));
         if (track.status[1][patt]) hCNrso->fill(mc_mom, bincen * (cn_irig - mc_irig));
         if (succ) hHCrso->fill(mc_mom, bincen * (hc_irig - mc_irig));
         
-        if (mc_mom > 5. && mc_mom < 20.) {
-            if (track.status[0][patt]) hCKrso2->fill(10. * (ck_irig - mc_irig));
-            if (track.status[1][patt]) hCNrso2->fill(10. * (cn_irig - mc_irig));
-            if (succ) hHCrso2->fill(10. * (hc_irig - mc_irig));
+        if (mc_mom > 100.) {
+            if (track.status[0][patt]) hCKrso2->fill(100. * (ck_irig - mc_irig));
+            if (track.status[1][patt]) hCNrso2->fill(100. * (cn_irig - mc_irig));
+            if (succ) hHCrso2->fill(100. * (hc_irig - mc_irig));
         }
         
         if (track.status[0][patt]) hCKresx->fill(mc_mom, cm2um * (track.stateLJ[0][patt][mc_lay][0] - topmc->coo[0]));

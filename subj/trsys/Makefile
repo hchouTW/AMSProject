@@ -18,7 +18,7 @@ all :
 	@cp -fa $(PWD)/src/prop_smc_fill.C $(TagetDir)/src/prop_smc_fill.C 2> /dev/null
 	make $(TagetDir)/prop_ams02_fill
 	make $(TagetDir)/prop_ams02_fit
-	make $(TagetDir)/fit_ams02_fill
+	#make $(TagetDir)/fit_ams02_fill
 	#make $(TagetDir)/prop_smc_fill
 
 $(TagetDir)/obj/prop_ams02_fill.o : $(TagetDir)/src/prop_ams02_fill.C

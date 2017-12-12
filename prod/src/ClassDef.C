@@ -8,6 +8,7 @@
 
 ClassImp(RunTagInfo)
 
+ClassImp(SegPARTMCInfo)
 ClassImp(HitTRKMCInfo)
 ClassImp(HitTRDMCInfo)
 ClassImp(PartMCInfo)

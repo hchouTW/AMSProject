@@ -7,8 +7,8 @@ DataType=MC
 Stream=lst/flist.ncu.mc.pr054000_17Nov24
 OutputDir=dat
 GroupId=0
-#GroupSize=5
 GroupSize=5
+#GroupSize=1
 
 #${RunFile} ${DataType} ${Stream} ${GroupId} ${GroupSize} ${OutputDir}
 

@@ -64,7 +64,7 @@ fi
 
 if [[ "${HOSTNAME}" == *"lxplus"* ]]; then
     export CASTOR=/castor/cern.ch/user/h/hchou
-    export EOS=/eos/ams/user/h/hchou
+    export EOS_HOME=/eos/ams/user/h/hchou
     export AFSWORK=/afs/cern.ch/work/h/hchou
     export ubackup=/afs/cern.ch/ubackup/h/hchou
 else

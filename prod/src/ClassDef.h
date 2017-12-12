@@ -47,6 +47,45 @@ class RunTagInfo : public TObject {
 
 
 // HitTRKMCInfo
+class SegPARTMCInfo : public TObject {
+	public :
+		SegPARTMCInfo() { init(); }
+		~SegPARTMCInfo() {}
+
+		void init() {
+			dec  = -1;
+			lay  = -1;
+			mom  = -1;
+			kEng = -1;
+			std::fill_n(coo, 3, 0);
+			std::fill_n(dir, 3, 0);
+		}
+
+	public :
+        Short_t dec;
+        Short_t lay;
+		Float_t mom;
+		Float_t kEng;
+		Float_t coo[3];
+		Float_t dir[3];
+	
+    ClassDef(SegPARTMCInfo, 1)
+};
+
+struct SegPARTMCInfo_sort {
+	bool operator() (const SegPARTMCInfo & hit1, const SegPARTMCInfo & hit2) {
+		if      (hit1.dec < hit2.dec) return true;
+		else if (hit1.dec > hit2.dec) return false;
+		else {
+			if      (hit1.lay < hit2.lay) return true;
+			else if (hit1.lay > hit2.lay) return false;
+		}
+		return false;
+	}
+};
+
+
+// HitTRKMCInfo
 class HitTRKMCInfo : public TObject {
 	public :
 		HitTRKMCInfo() { init(); }
@@ -57,6 +96,7 @@ class HitTRKMCInfo : public TObject {
 			tkid    = 0;
 			edep    = -1;
 			mom     = -1;
+			kEng    = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
 		}
@@ -66,10 +106,11 @@ class HitTRKMCInfo : public TObject {
 		Short_t tkid;    // tkID
 		Float_t edep;    // edep
 		Float_t mom;     // momentum
+		Float_t kEng;    // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 
-	ClassDef(HitTRKMCInfo, 3)
+	ClassDef(HitTRKMCInfo, 4)
 };
 
 struct HitTRKMCInfo_sort {
@@ -138,6 +179,7 @@ class PartMCInfo : public TObject {
 			kEng     = 0;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
+            segs.clear();
 			hits.clear();
 		}
 
@@ -150,9 +192,10 @@ class PartMCInfo : public TObject {
 		Float_t coo[3];
 		Float_t dir[3];
 
-		std::vector<HitTRKMCInfo> hits;
+        std::vector<SegPARTMCInfo> segs;
+		std::vector<HitTRKMCInfo>  hits;
 
-	ClassDef(PartMCInfo, 5)
+	ClassDef(PartMCInfo, 7)
 };
 
 struct PartMCInfo_sort {
@@ -180,14 +223,23 @@ class VertexMCInfo : public TObject {
 
 		void init() {
 			status = false;
-			std::fill_n(coo, 3, 0.0);
+			std::fill_n(vtx, 3, 0.);
+            numOfPart = 0;
+            partID.clear();
+            kEng.clear();
+            mom.clear();
 		}
 
 	public :
-		Bool_t             status;
-		Float_t            coo[3];
+		Bool_t  status;
+		Float_t vtx[3];
+
+        Short_t              numOfPart;
+        std::vector<Short_t> partID;
+        std::vector<Float_t> kEng;
+        std::vector<Float_t> mom;
 	
-	ClassDef(VertexMCInfo, 3)
+	ClassDef(VertexMCInfo, 5)
 };
 
 
@@ -564,15 +616,13 @@ class G4MC : public TObject {
 			beamID = -1;
 
 			primPart.init();
-			secParts.clear();
 			primVtx.init();
 		}
 
 	public :
 		Short_t beamID; // only for MC Beam Test (400GeV proton)
-		PartMCInfo                 primPart;
-		std::vector<PartMCInfo>    secParts;
-		VertexMCInfo               primVtx;
+		PartMCInfo   primPart;
+		VertexMCInfo primVtx;
 
 	ClassDef(G4MC, 6)
 };

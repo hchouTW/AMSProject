@@ -210,7 +210,6 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 	fList.weight = EventList::Weight;
 
 	// G4MC
-    bool isSaveSecPart = false;
 	if (checkEventMode(EventBase::MC)) {
 		MCEventgR * primary = event->GetPrimaryMC();
 		if (primary == nullptr) return false;
@@ -220,7 +219,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		fG4mc.primPart.chrg     = primary->Charge;
 		fG4mc.primPart.mass     = primary->Mass;
 		fG4mc.primPart.mom      = primary->Momentum;
-		fG4mc.primPart.kEng     = std::sqrt(primary->Momentum * primary->Momentum + primary->Mass * primary->Mass) - primary->Mass;
+		fG4mc.primPart.kEng     = static_cast<Float_t>(std::hypot(static_cast<Double_t>(primary->Momentum), static_cast<Double_t>(primary->Mass)) - static_cast<Double_t>(primary->Mass));
 		fG4mc.primPart.coo[0]   = primary->Coo[0];
 		fG4mc.primPart.coo[1]   = primary->Coo[1];
 		fG4mc.primPart.coo[2]   = primary->Coo[2];
@@ -228,99 +227,101 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		fG4mc.primPart.dir[1]   = primary->Dir[1];
 		fG4mc.primPart.dir[2]   = primary->Dir[2];
 
+        // Only For Primary Particle
+        constexpr Int_t Range[2] = { -1000, -1020 };
+        constexpr Int_t SiLay[9] = { -1000, -1007, -1008, -1009, -1010, -1011, -1012, -1013, -1018 };
+        constexpr Int_t TfLay[4] = { -1004, -1005, -1015, -1016 };
+        constexpr Int_t TdLay[2] = { -1001, -1002 };
+        constexpr Int_t EcLay[2] = { -1019, -1020 };
+		    
+        constexpr Double_t kEngTh = 5.0e-2; 
+        for (int it = 0; it < event->NMCEventg(); it++) {
+		    MCEventgR * mcev = event->pMCEventg(it);
+		    if (mcev == nullptr) continue;
+            Int_t id = (mcev->trkID == primary->trkID) + (mcev->parentID == primary->trkID) * 2;
+            if (id == 0) continue;
+            Double_t keng = std::hypot(static_cast<Double_t>(mcev->Momentum), static_cast<Double_t>(mcev->Mass)) - static_cast<Double_t>(mcev->Mass);
+		    if (keng < kEngTh) continue;
+		   
+            if (id == 1) {
+                Short_t dec = -1, lay = -1;
+                if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
+                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; }
+                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; }
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; }
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; }
+                if (dec < 0 || lay < 0) continue;
 
-		std::set<int> PrimSET;
-        if (isSaveSecPart) {
-		    for (int it = 0; it < event->NMCEventg(); it++) {
-		    	MCEventgR * mcev = event->pMCEventg(it);
-		    	if (mcev == nullptr) continue;
-		    	if (mcev->parentID != 1) continue; // ONLY SAVE PRIM PART
-		    	if (mcev->Momentum < 5.0e-2) continue;
-		    	double momRat = (mcev->Momentum / fG4mc.primPart.mom);
-		    	if (mcev->parentID == primary->trkID && momRat > 5.0e-2) { PrimSET.insert(mcev->trkID); continue; }
-		    	if (momRat < 0.368) continue;
-		    	PrimSET.insert(mcev->trkID);
-		    }
-        }
+                SegPARTMCInfo seg;
+		        seg.dec    = dec;
+		        seg.lay    = lay;
+		        seg.mom    = mcev->Momentum;
+		        seg.kEng   = static_cast<Float_t>(keng);
+		        seg.coo[0] = mcev->Coo[0];
+		        seg.coo[1] = mcev->Coo[1];
+		        seg.coo[2] = mcev->Coo[2];
+		        seg.dir[0] = mcev->Dir[0];
+		        seg.dir[1] = mcev->Dir[1];
+		        seg.dir[2] = mcev->Dir[2];
 
-		std::set<int> TrSET;
-		TrSET.insert(primary->trkID);
-        std::vector<short> SecTrkID;
-        if (isSaveSecPart) {
-		    for (int iev = 0; iev < event->NMCEventg(); iev++) {
-		    	MCEventgR * mcev = event->pMCEventg(iev);
-		    	if (mcev == nullptr) continue;
-		    	if (mcev->Momentum < 5.0e-2) continue;
-		    	if (PrimSET.find(mcev->parentID) == PrimSET.end()) continue;
-		    	TrSET.insert(mcev->trkID);
-		    	SecTrkID.push_back(mcev->trkID);
-		    	
-		    	PartMCInfo part;
-		    	part.partID   = mcev->Particle;
-		    	part.chrg     = mcev->Charge;
-		    	part.mass     = mcev->Mass;
-		    	part.mom      = mcev->Momentum;
-		    	part.kEng     = std::sqrt(mcev->Momentum * mcev->Momentum + mcev->Mass * mcev->Mass) - mcev->Mass;
-		    	part.coo[0]   = mcev->Coo[0];
-		    	part.coo[1]   = mcev->Coo[1];
-		    	part.coo[2]   = mcev->Coo[2];
-		    	part.dir[0]   = mcev->Dir[0];
-		    	part.dir[1]   = mcev->Dir[1];
-		    	part.dir[2]   = mcev->Dir[2];
-		    	
-		    	fG4mc.secParts.push_back(part);
-		    }
+		        fG4mc.primPart.segs.push_back(seg);
+            }
+            else if (id == 2) {
+                if (!fG4mc.primVtx.status) {
+			        fG4mc.primVtx.status = true;
+			        fG4mc.primVtx.vtx[0] = mcev->Coo[0];
+			        fG4mc.primVtx.vtx[1] = mcev->Coo[1];
+			        fG4mc.primVtx.vtx[2] = mcev->Coo[2];
+                }
+                fG4mc.primVtx.numOfPart++;
+                fG4mc.primVtx.partID.push_back(mcev->Particle);
+                fG4mc.primVtx.kEng.push_back(keng);
+                fG4mc.primVtx.mom.push_back(mcev->Momentum);
+            }
         }
-		
+		std::sort(fG4mc.primPart.segs.begin(), fG4mc.primPart.segs.end(), SegPARTMCInfo_sort());
+        if (fG4mc.primVtx.numOfPart < 2) fG4mc.primVtx.init();
+
 		for (int icls = 0; icls < event->NTrMCCluster(); icls++) {
 			TrMCClusterR * cluster = event->pTrMCCluster(icls);
 			if (cluster == nullptr) continue;
-			if (cluster->GetMomentum() < 5.0e-2) continue;
-			if (TrSET.find(cluster->GetGtrkID()) == TrSET.end()) continue;
-			
+			if (cluster->GetGtrkID() != primary->trkID) continue;
+            
+            Int_t chrg = 0;
+            Double_t mass = 0;
+            cluster->GetChargeAndMass(chrg, mass);
+            Double_t keng = std::hypot(static_cast<Double_t>(cluster->GetMomentum()), mass) - mass;
+            if (keng < kEngTh) continue;
+
 			int tkid = cluster->GetTkId();
 			int layJ = TkDBc::Head->GetJFromLayer(std::fabs(cluster->GetTkId()/100));
 			AMSPoint coo = cluster->GetXgl();
 			AMSDir dir = cluster->GetDir();
 
 			HitTRKMCInfo hit;
-			hit.layJ    = layJ;
-			hit.tkid    = tkid;
-			hit.edep    = cluster->GetEdep();
-			hit.mom     = cluster->GetMomentum();
-			hit.coo[0]  = coo[0];
-			hit.coo[1]  = coo[1];
-			hit.coo[2]  = coo[2];
-			hit.dir[0]  = dir[0];
-			hit.dir[1]  = dir[1];
-			hit.dir[2]  = dir[2];
+			hit.layJ   = layJ;
+			hit.tkid   = tkid;
+			hit.edep   = cluster->GetEdep();
+			hit.mom    = cluster->GetMomentum();
+		    hit.kEng   = static_cast<Float_t>(keng);
+			hit.coo[0] = coo[0];
+			hit.coo[1] = coo[1];
+			hit.coo[2] = coo[2];
+			hit.dir[0] = dir[0];
+			hit.dir[1] = dir[1];
+			hit.dir[2] = dir[2];
 			
-			if (cluster->GetGtrkID() == primary->trkID) fG4mc.primPart.hits.push_back(hit);
-			else if (isSaveSecPart) {
-				for (int ipart = 0; ipart < fG4mc.secParts.size(); ++ipart) {
-					if (SecTrkID.at(ipart) != cluster->GetGtrkID()) continue;
-					fG4mc.secParts.at(ipart).hits.push_back(hit);
-					break;
-				}
-			}
+			fG4mc.primPart.hits.push_back(hit);
 		}
-
 		std::sort(fG4mc.primPart.hits.begin(), fG4mc.primPart.hits.end(), HitTRKMCInfo_sort());
-		
-        if (isSaveSecPart) {
-		    std::sort(fG4mc.secParts.begin(), fG4mc.secParts.end(), PartMCInfo_sort());
-		    for (auto && secPart : fG4mc.secParts)
-		    	std::sort(secPart.hits.begin(), secPart.hits.end(), HitTRKMCInfo_sort());
-
-		    if (fG4mc.secParts.size() >= 2) {
-		    	VertexMCInfo vertex;
-		    	vertex.status = true;
-		    	vertex.coo[0] = fG4mc.secParts.at(0).coo[0];
-		    	vertex.coo[1] = fG4mc.secParts.at(0).coo[1];
-		    	vertex.coo[2] = fG4mc.secParts.at(0).coo[2];
-		    	fG4mc.primVtx = vertex;
-		    }
-        }
+        
+        //if (fG4mc.primVtx.status) {
+        //    std::cerr << Form("VTX %14.8f %14.8f %14.8f\n", fG4mc.primVtx.vtx[0], fG4mc.primVtx.vtx[1], fG4mc.primVtx.vtx[2]);
+        //    for (Int_t it = 0; it < fG4mc.primVtx.numOfPart; ++it) std::cerr << Form("ID %4d KENG %14.8f\n", fG4mc.primVtx.partID.at(it),  fG4mc.primVtx.kEng.at(it));
+        //    for (auto&& seg : fG4mc.primPart.segs) std::cerr << Form("SEG Z %14.8f MOM %14.8f\n", seg.coo[2], seg.mom);
+        //    for (auto&& hit : fG4mc.primPart.hits) std::cerr << Form("HIT Z %14.8f MOM %14.8f\n", hit.coo[2], hit.mom);
+        //    std::cerr << std::endl;
+        //}
 	}
 
 	fStopwatch.stop();
