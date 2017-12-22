@@ -97,7 +97,7 @@ Bool_t PhyTr::fit() {
     if (!fit_simple()) return false;
 
     if (sw_mscat_ || sw_eloss_) {
-        if (!fit_physics()) return false;
+        //if (!fit_physics()) return false;
     }
 
     //const Int_t ntimes = 1000;
@@ -243,28 +243,30 @@ Bool_t PhyTr::fit_analysis() {
 
 
 Bool_t PhyTr::fit_simple() {
-    Bool_t succ = false;
+    Bool_t succ    = false;
     Bool_t preSucc = false;
     Bool_t curSucc = false;
     
     Int_t  curIter = 1;
     while (curIter <= LMTU_ITER && !succ) {
         Double_t chi = MGMath::ZERO;
-        Int_t    ndf = -5;
         SVecD<5>    grdG;
         SMtxSymD<5> cvGG;
 
         Int_t cnt_nhit = 0;
         PhySt ppst(part_);
-        ppst.arg().reset(false, false);
+        //ppst.arg().reset(false, false);
         PhyJb::SMtxDGG&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
             PhyJb curjb;
             if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
             ppjb = curjb.gg() * ppjb;
-           
+
             Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
             Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
+            Double_t msl = (ppst.arg().mscat() ? ppst.arg().mscat_ll() : MGMath::ZERO);
+            if (ppst.arg().mscat() && hit.sx()) mex = std::hypot(mex, msl);
+            if (ppst.arg().mscat() && hit.sy()) mey = std::hypot(mey, msl);
 
             SMtxSymD<2> cvM;
             cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
@@ -278,12 +280,8 @@ Bool_t PhyTr::fit_simple() {
             grdG += LA::Transpose(subJbF) * rsM;
             cvGG += LA::SimilarityT(subJbF, cvM);
 
-            if (hit.sx()) { ndf++; chi += rsM(0) * (hit.cx() - ppst.cx()); }
-            if (hit.sy()) { ndf++; chi += rsM(1) * (hit.cy() - ppst.cy()); }
-       
-            // testcode
-            //std::cout << Form("ITER %2d HIT %d CHI %14.8f %14.8f\n", curIter, cnt_nhit, rsM(0) * (hit.cx() - ppst.cx()), rsM(1) * (hit.cy() - ppst.cy()));
-            // /////////
+            if (hit.sx()) { chi += rsM(0) * (hit.cx() - ppst.cx()); }
+            if (hit.sy()) { chi += rsM(1) * (hit.cy() - ppst.cy()); }
 
             cnt_nhit++;
             if (!hit.sx()) hit.set_dummy_x(ppst.cx());
@@ -303,6 +301,7 @@ Bool_t PhyTr::fit_simple() {
         );
         part_.set_eta(part_.eta() + rslG(4));
         
+        Int_t    ndf      = (nseq_ - 5);
         Double_t nchi     = ((chi) / static_cast<Double_t>(ndf));
         Double_t nchi_rat = std::fabs((nchi - nchi_) / (nchi + nchi_ + CONVG_EPSILON));
         Bool_t   sign     = (MGNumc::Compare(nchi - nchi_, std::min(nchi, nchi_) * CONVG_EPSILON) < 0);
@@ -311,14 +310,14 @@ Bool_t PhyTr::fit_simple() {
         ndf_  = ndf;
 
         curSucc = (curIter >= LMTM_ITER && (sign && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0));
-        //std::cout << Form("IT %d (MOM %14.8f CHI %14.8f RAT %14.8f)\n", curIter, part_.mom(), nchi_, nchi_rat); // determinate problem
+        if (curIter > 20) std::cout << Form("IT %d (MOM %14.8f CHI %14.8f RAT %14.8f)\n", curIter, part_.mom(), nchi_, nchi_rat); // determinate problem
         
         succ = (preSucc && curSucc);
         preSucc = curSucc;
         
         curIter++;
     }
-    //if (!succ) std::cout << Form("FAIL. %d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
+    if (!succ) std::cout << Form("FAIL. %d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
     //std::cout << Form("IT %2d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
     
     return succ;
