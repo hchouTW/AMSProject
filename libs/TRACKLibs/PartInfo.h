@@ -32,7 +32,7 @@ class PartInfo {
 
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }
-        inline const Int_t&        chrg() const { return chrg_; }
+        inline const Short_t&      chrg() const { return chrg_; }
         inline const Double_t&     mass() const { return mass_; }
 
         inline const Bool_t& is_chrgless() const { return is_chrgless_; }
@@ -43,16 +43,16 @@ class PartInfo {
 
 
     private :
-        PartType     type_;
-        std::string  name_;
-        Int_t        chrg_;
-        Double_t     mass_;
+        PartType    type_;
+        std::string name_;
+        Short_t     chrg_;
+        Double_t    mass_; // [GeV]
         
-        Bool_t       is_chrgless_;
-        Bool_t       is_massless_;
+        Bool_t      is_chrgless_;
+        Bool_t      is_massless_;
         
-        Double_t     mass_to_chrg_;
-        Double_t     chrg_to_mass_;
+        Double_t    mass_to_chrg_;
+        Double_t    chrg_to_mass_;
 };
 
 

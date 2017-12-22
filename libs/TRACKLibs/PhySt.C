@@ -4,73 +4,54 @@
 
 namespace TrackSys {
 
-        
-void PhyArg::rndm_eloss_ion(Double_t kpa, Double_t mos) {
-    /*
-    if (sw_eloss_) {
-        if (MGNumc::EqualToZero(kpa) || MGNumc::EqualToZero(mos)) return;
-        if (pdf_eloss_ion_.size() == 0) gRandom->SetSeed(0);
 
-        std::string ion_var = "([1]/(x*[0]+[1])/[0]/[0])";
-        std::string ion_fmt = STR_FMT("(x<-%f)?0.0:TMath::Power(%s, %s)/TMath::Gamma(%s)*TMath::Exp(-%s*([0]*x+TMath::Exp(-[0]*x)))", std::min(LMT_SGM_, MGMath::HALF*mos), ion_var.c_str(), ion_var.c_str(), ion_var.c_str(), ion_var.c_str());
-
-        Int_t idx_kpa = static_cast<Int_t>(std::rint(kpa / STEP_KPA_));
-        Int_t idx_mos = static_cast<Int_t>(std::rint(mos / STEP_MOS_));
-        
-        TF1 * func = nullptr;
-        std::pair<Int_t, Int_t> idx(idx_kpa, idx_mos);
-        std::map<std::pair<Int_t, Int_t>, TF1*>::iterator it = pdf_eloss_ion_.find(idx);
-        if (it == pdf_eloss_ion_.end()) {
-            Double_t ref_kpa = idx_kpa * STEP_KPA_;
-            Double_t ref_mos = idx_mos * STEP_MOS_;
-            func = new TF1(CSTR_FMT("fElossIon%06d%06d", idx_kpa, idx_mos), ion_fmt.c_str(), -LMT_SGM_, LMT_SGM_ + MGMath::EIGHT * LMT_SGM_ * ref_kpa);
-            func->SetParameters(ref_kpa, ref_mos);
-            func->SetNpx(NPX_);
-
-            pdf_eloss_ion_[idx] = func; 
-        }
-        else func = it->second;
-
-        eloss_ion_ = func->GetRandom();
-    }
-    */
-    // Landau (testcode)
-    if (sw_eloss_) {
-        eloss_ion_ = MGROOT::Rndm::Landau();
-    }
-}
-        
-
-void VirtualPhySt::reset(Bool_t field) {
-    field_ = field;
+void PhyArg::zero() {
+    mat_ = false;
+    len_ = 0.;
+    nrl_ = 0.;
+    ela_ = 0.;
+    
     sign_ = 1;
-    len_ = MGMath::ZERO;
-    nrl_ = MGMath::ZERO;
-    ela_ = MGMath::ZERO;
-    tau_ = std::move(SVecD<3>(1.0, 0.0, 0.0));
-    rho_ = std::move(SVecD<3>(0.0, -1.0, 0.0));
-    mscatuu_ = MGMath::ZERO;
-    mscatcu_ = MGMath::ZERO;
-    mscatul_ = MGMath::ZERO;
-    mscatcl_ = MGMath::ZERO;
-    eloss_ion_kpa_ = MGMath::ZERO;
-    eloss_ion_mpv_ = MGMath::ZERO;
-    eloss_ion_sgm_ = MGMath::ZERO;
-    eloss_brm_men_ = MGMath::ZERO;
+    orth_tau_ = SVecD<3>(1, 0, 0);
+    orth_rho_ = SVecD<3>(0, 1, 0);
+
+    mscat_uu_ = 0.;
+    mscat_ul_ = 0.;
+    mscat_ll_ = 0.;
+
+    elion_sgm_ = 0.;
+    elbrm_men_ = 0.;
 }
 
 
-void PhySt::reset(const PartType& type, Bool_t sw_mscat, Bool_t sw_eloss) {
+void PhyArg::reset(Bool_t sw_mscat, Bool_t sw_eloss) {
+    sw_mscat_ = sw_mscat;
+    sw_eloss_ = sw_eloss;
+
+    field_ = (sw_mscat || sw_eloss);
+
+    tauu_ = 0.;
+    rhou_ = 0.;
+    taul_ = 0.;
+    rhol_ = 0.;
+    elion_ = 0.;
+    elbrm_ = 0.;
+
+    zero();
+}
+
+
+void PhySt::reset(const PartType& type) {
     info_ = std::move(PartInfo(type));
     mom_ = 0;
     eng_ = 0;
+    ke_  = 0;
     bta_ = 0;
     eta_ = info_.mass();
     irig_ = 0;
     coo_ = std::move(SVecD<3>(0, 0, 0));
     dir_ = std::move(SVecD<3>(0, 0, -1));
-    arg_.reset(sw_mscat, sw_eloss);
-    vst_.reset();
+    arg_.clear();
 }
         
 
@@ -88,8 +69,8 @@ void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t u
 
 void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx, Double_t ty, Double_t uz) {
     Short_t tz = MGNumc::Compare(uz);
-    Double_t norm_uz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + MGMath::ONE);
     if (tz == 0) return;
+    Double_t norm_uz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + MGMath::ONE);
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
@@ -121,6 +102,7 @@ void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double
     if (MGNumc::EqualToZero(norm)) {
         mom_   = MGMath::ZERO;
         eng_   = info_.mass();
+        ke_    = MGMath::ZERO;
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -147,6 +129,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     if (mom_sign == 0) {
         mom_   = MGMath::ZERO;
         eng_   = info_.mass();
+        ke_    = MGMath::ZERO;
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -155,6 +138,9 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     else {
         mom_   = mom;
         eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        //eng_   = std::sqrt(static_cast<long double>(mom_) * static_cast<long double>(mom_) + static_cast<long double>(info_.mass()) * static_cast<long double>(info_.mass()));
+        //eng_   = std::hypot(mom_, info_.mass());
+        ke_    = (eng_ - info_.mass());
         bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
         gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
         eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
@@ -168,6 +154,7 @@ void PhySt::set_eta(Double_t eta) {
     if (eta_sign == 0) {
         mom_   = MGMath::ZERO;
         eng_   = info_.mass();
+        ke_    = MGMath::ZERO;
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -178,7 +165,8 @@ void PhySt::set_eta(Double_t eta) {
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
         irig_  = info_.chrg_to_mass() * eta_;
         mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + MGMath::ONE));
+        ke_    = (eng_ - info_.mass());
         bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
     }
 }
@@ -191,6 +179,7 @@ void PhySt::set_irig(Double_t irig) {
     if (rig_sign == 0) {
         mom_ = MGMath::ZERO;
         eng_   = info_.mass();
+        ke_    = MGMath::ZERO;
         bta_   = MGMath::ZERO;
         gmbta_ = MGMath::ZERO;
         eta_   = MGMath::ZERO;
@@ -201,8 +190,9 @@ void PhySt::set_irig(Double_t irig) {
         eta_   = info_.mass_to_chrg() * irig;
         gmbta_ = (MGMath::ONE / std::fabs(eta_));
         mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
-        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
+        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + MGMath::ONE));
+        ke_    = (eng_ - info_.mass());
+        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(eta_ * eta_ + MGMath::ONE)));
     }
 }
 
@@ -219,14 +209,16 @@ void PhySt::print() const {
     printStr += STR_FMT("============ %-15s ============\n", info_.name().c_str());
     printStr += STR_FMT("Bta %14.8f\n", bta_);
     printStr += STR_FMT("Mom %14.8f\n", mom_);
+    printStr += STR_FMT("Eng %14.8f\n", eng_);
+    printStr += STR_FMT("KE  %14.8f\n", ke_);
     printStr += STR_FMT("Eta %14.8f\n", eta_);
     printStr += STR_FMT("Rig %14.8f\n", rig());
     printStr += STR_FMT("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
     printStr += STR_FMT("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
     if (arg_()) {
-        printStr += STR_FMT("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(), arg_.rhou());
-        printStr += STR_FMT("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(), arg_.rhol());
-        printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.ion(),  arg_.brm());
+        printStr += STR_FMT("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(),  arg_.rhou());
+        printStr += STR_FMT("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(),  arg_.rhol());
+        printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.elion(), arg_.elbrm());
     }
     printStr += STR_FMT("=========================================\n");
     COUT(printStr);
@@ -234,21 +226,21 @@ void PhySt::print() const {
         
 
 void PhySt::symbk(Bool_t is_rndm) {
-    if (!arg_() || !vst_()) { zero(); return; }
-    if (is_rndm) { arg_.rndm(vst_.eloss_ion_kpa(), vst_.eloss_ion_mos(), vst_.nrl()); }
+    if (!arg_()) { arg_.clear(); return; }
+    if (is_rndm) arg_.rndm();
 
     if (arg_.mscat()) {
-        coo_ = std::move(coo_ + vst_.symbk_mscatc(arg_.tauu(), arg_.rhou(), arg_.taul(), arg_.rhol()));
-        dir_ = std::move(LA::Unit(dir_ + vst_.symbk_mscatu(arg_.tauu(), arg_.rhou(), arg_.taul(), arg_.rhol())));
+        coo_ = std::move(coo_ + arg_.symbk_mscatl());
+        dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ * (MGMath::ONE + vst_.symbk_eloss(arg_.ion(), arg_.brm())));
+        set_eta(eta_ * (MGMath::ONE + arg_.symbk_eloss()));
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(MGMath::ZERO);
     }
     
-    zero();
+    arg_.clear();
 }
 
 

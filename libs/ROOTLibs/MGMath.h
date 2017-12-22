@@ -67,7 +67,7 @@ namespace MGROOT {
 	// SVector SMatrix Package
 	template <unsigned int D>
 	using SVecO = ROOT::Math::SVector<Bool_t, D>;
-	
+    
     template <unsigned int D>
 	using SVecI = ROOT::Math::SVector<Int_t, D>;
 	
@@ -91,7 +91,7 @@ namespace MGROOT {
 	
 	template <unsigned int D>
 	using SMtxSymO = ROOT::Math::SMatrix<Bool_t, D, D, ROOT::Math::MatRepSym<Bool_t, D>>;
-
+	
 	template <unsigned int D>
 	using SMtxSymI = ROOT::Math::SMatrix<Int_t, D, D, ROOT::Math::MatRepSym<Int_t, D>>;
 	

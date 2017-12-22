@@ -9,256 +9,178 @@ namespace TrackSys {
 
 
 namespace MatAms {
-    constexpr Long64_t DIM = 3;
-
-    // TRACKER
-    constexpr Float_t  INNER_TRACKER_RADIUS = 53.0;
-    constexpr Double_t SILICON_DENSITY      = 8.2592e-02;
-    constexpr Double_t HALF_HEIGHT          = 0.015;
-    constexpr Long64_t TRL_NBIN             =  8;
-    constexpr Double_t CENTRALZ_TRL1        =  158.91997500;
-    constexpr Double_t CENTRALZ_TRL2        =   53.05999756;
-    constexpr Double_t CENTRALZ_TRL3        =   29.22800064;
-    constexpr Double_t CENTRALZ_TRL4        =   25.21199799;
-    constexpr Double_t CENTRALZ_TRL5        =    1.69799840;
-    constexpr Double_t CENTRALZ_TRL6        =   -2.31800222;
-    constexpr Double_t CENTRALZ_TRL7        =  -25.21200371;
-    constexpr Double_t CENTRALZ_TRL8        =  -29.22799873;
-    constexpr Double_t CENTRALZ_TRL9        = -135.88198853;
-   
-    /*
-    constexpr std::array<Long64_t, DIM> TRL1_N   {  260, 180,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL1_MIN {  -65, -45, CENTRALZ_TRL1 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL1_MAX {   65,  45, CENTRALZ_TRL1 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL2_N   {  260, 180,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL2_MIN {  -65, -45, CENTRALZ_TRL2 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL2_MAX {   65,  45, CENTRALZ_TRL2 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL3_N   {  220, 220,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL3_MIN {  -55, -55, CENTRALZ_TRL3 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL3_MAX {   55,  55, CENTRALZ_TRL3 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL4_N   {  220, 220,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL4_MIN {  -55, -55, CENTRALZ_TRL4 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL4_MAX {   55,  55, CENTRALZ_TRL4 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL5_N   {  220, 180,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL5_MIN {  -55, -45, CENTRALZ_TRL5 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL5_MAX {   55,  45, CENTRALZ_TRL5 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL6_N   {  220, 180,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL6_MIN {  -55, -45, CENTRALZ_TRL6 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL6_MAX {   55,  45, CENTRALZ_TRL6 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL7_N   {  220, 220,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL7_MIN {  -55, -55, CENTRALZ_TRL7 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL7_MAX {   55,  55, CENTRALZ_TRL7 + HALF_HEIGHT };
-
-
-    constexpr std::array<Long64_t, DIM> TRL8_N   {  220, 220,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL8_MIN {  -55, -55, CENTRALZ_TRL8 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL8_MAX {   55,  55, CENTRALZ_TRL8 + HALF_HEIGHT };
-
+    // TRK
+    constexpr Double_t                             TRL1_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL1_N   {  260, 180,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL1_MIN {  -65, -45, 158.90500032 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL1_MAX {   65,  45, 158.93500031 };
     
-    constexpr std::array<Long64_t, DIM> TRL9_N   {  200, 120,                    TRL_NBIN };
-    constexpr std::array<Double_t, DIM> TRL9_MIN {  -50, -30, CENTRALZ_TRL9 - HALF_HEIGHT };
-    constexpr std::array<Double_t, DIM> TRL9_MAX {   50,  30, CENTRALZ_TRL9 + HALF_HEIGHT };
-    */
+    constexpr Double_t                             TRL2_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL2_N   {  260, 180,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL2_MIN {  -65, -45, 53.04499947 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL2_MAX {   65,  45, 53.07499947 };
     
-    constexpr std::array<Long64_t, DIM> TRL1_N   {  260, 180,       4 };
-    constexpr std::array<Double_t, DIM> TRL1_MIN {  -65, -45,  158.90 };
-    constexpr std::array<Double_t, DIM> TRL1_MAX {   65,  45,  158.94 };
+    constexpr Double_t                             TRL3_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL3_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL3_MIN {  -55, -55, 29.21300064 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL3_MAX {   55,  55, 29.24300064 };
     
-    constexpr std::array<Long64_t, DIM> TRL2_N   {  260, 180,       4 };
-    constexpr std::array<Double_t, DIM> TRL2_MIN {  -65, -45,   53.04 };
-    constexpr std::array<Double_t, DIM> TRL2_MAX {   65,  45,   53.08 };
+    constexpr Double_t                             TRL4_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL4_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL4_MIN {  -55, -55, 25.19700061 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL4_MAX {   55,  55, 25.22700061 };
     
-    constexpr std::array<Long64_t, DIM> TRL3_N   {  220, 220,       4 };
-    constexpr std::array<Double_t, DIM> TRL3_MIN {  -55, -55,   29.21 };
-    constexpr std::array<Double_t, DIM> TRL3_MAX {   55,  55,   29.25 };
+    constexpr Double_t                             TRL5_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL5_N   {  220, 220,          1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL5_MIN {  -55, -55, 1.68299995 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL5_MAX {   55,  55, 1.71299995 };
     
-    constexpr std::array<Long64_t, DIM> TRL4_N   {  220, 220,       4 };
-    constexpr std::array<Double_t, DIM> TRL4_MIN {  -55, -55,   25.19 };
-    constexpr std::array<Double_t, DIM> TRL4_MAX {   55,  55,   25.23 };
+    constexpr Double_t                             TRL6_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL6_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL6_MIN {  -55, -55, -2.33300008 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL6_MAX {   55,  55, -2.30300008 };
     
-    constexpr std::array<Long64_t, DIM> TRL5_N   {  220, 180,       4 };
-    constexpr std::array<Double_t, DIM> TRL5_MIN {  -55, -45,    1.68 };
-    constexpr std::array<Double_t, DIM> TRL5_MAX {   55,  45,    1.72 };
+    constexpr Double_t                             TRL7_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL7_N   {  220, 220,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL7_MIN {  -55, -55, -25.22700061 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL7_MAX {   55,  55, -25.19700061 };
     
-    constexpr std::array<Long64_t, DIM> TRL6_N   {  220, 180,       4 };
-    constexpr std::array<Double_t, DIM> TRL6_MIN {  -55, -45,   -2.34 };
-    constexpr std::array<Double_t, DIM> TRL6_MAX {   55,  45,   -2.30 };
+    constexpr Double_t                             TRL8_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL8_N   {  220, 220,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL8_MIN {  -55, -55, -29.24300064 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL8_MAX {   55,  55, -29.21300064 };
     
-    constexpr std::array<Long64_t, DIM> TRL7_N   {  220, 220,       4 };
-    constexpr std::array<Double_t, DIM> TRL7_MIN {  -55, -55,  -25.23 };
-    constexpr std::array<Double_t, DIM> TRL7_MAX {   55,  55,  -25.19 };
+    constexpr Double_t                             TRL9_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRL9_N   {  200, 120,             1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL9_MIN {  -50, -30, -135.89699270 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRL9_MAX {   50,  30, -135.86699270 };
     
-    constexpr std::array<Long64_t, DIM> TRL8_N   {  220, 220,       4 };
-    constexpr std::array<Double_t, DIM> TRL8_MIN {  -55, -55,  -29.25 };
-    constexpr std::array<Double_t, DIM> TRL8_MAX {   55,  55,  -29.21 };
+    // TR Inner
+    constexpr Double_t                             TR34_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TR34_N   {  220, 220,          15 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR34_MIN {  -55, -55, TRL4_MAX[2] };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR34_MAX {   55,  55, TRL3_MIN[2] };
     
-    constexpr std::array<Long64_t, DIM> TRL9_N   {  200, 120,       4 };
-    constexpr std::array<Double_t, DIM> TRL9_MIN {  -50, -30, -135.90 };
-    constexpr std::array<Double_t, DIM> TRL9_MAX {   50,  30, -135.86 };
+    constexpr Double_t                             TR56_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TR56_N   {  220, 220,          15 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR56_MIN {  -55, -55, TRL6_MAX[2] };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR56_MAX {   55,  55, TRL5_MIN[2] };
     
-    // TRD
-    constexpr Float_t TRDL_Z = 85.0;
-    constexpr Float_t TRDU_Z = 145.0;
-    constexpr Float_t TRDL_RADIUS = 65.0;
-    constexpr Float_t TRDU_RADIUS = 105.0;
-    constexpr Float_t TRD_SLOPE = (TRDU_RADIUS - TRDL_RADIUS) / (TRDU_Z - TRDL_Z);
-    constexpr Float_t TRD_FACTOR = 1.5;
+    constexpr Double_t                             TR78_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TR78_N   {  220, 220,          15 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR78_MIN {  -55, -55, TRL8_MAX[2] };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TR78_MAX {   55,  55, TRL7_MIN[2] };
     
-    constexpr std::array<Long64_t, DIM> TRDS_N   {   440,  440,    12 };
-    constexpr std::array<Double_t, DIM> TRDS_MIN {  -110, -110, 144.0 };
-    constexpr std::array<Double_t, DIM> TRDS_MAX {   110,  110, 156.0 };
+    constexpr Double_t                             TRS1_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS1_N   {  260, 180,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS1_MIN {  -65, -45, 158.79500019 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS1_MAX {   65,  45, 158.80500019 };
 
-    constexpr std::array<Long64_t, DIM> TRDU_N   {   440,  440,    12 };
-    constexpr std::array<Double_t, DIM> TRDU_MIN {  -110, -110, 132.0 };
-    constexpr std::array<Double_t, DIM> TRDU_MAX {   110,  110, 144.0 };
+    constexpr Double_t                             TRS2_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS2_N   {  260, 180,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS2_MIN {  -65, -45, 52.93499934 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS2_MAX {   65,  45, 52.94499934 };
     
-    constexpr std::array<Long64_t, DIM> TRDM_N   {   400,  400,    18 };
-    constexpr std::array<Double_t, DIM> TRDM_MIN {  -100, -100, 114.0 };
-    constexpr std::array<Double_t, DIM> TRDM_MAX {   100,  100, 132.0 };
+    constexpr Double_t                             TRS3_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS3_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS3_MIN {  -55, -55, 29.34300065 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS3_MAX {   55,  55, 29.35300065 };
     
-    constexpr std::array<Long64_t, DIM> TRDI_N   {   400,  400,    18 };
-    constexpr std::array<Double_t, DIM> TRDI_MIN {  -100, -100,  96.0 };
-    constexpr std::array<Double_t, DIM> TRDI_MAX {   100,  100, 114.0 };
+    constexpr Double_t                             TRS4_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS4_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS4_MIN {  -55, -55, 25.08700072 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS4_MAX {   55,  55, 25.09700072 };
     
-    constexpr std::array<Long64_t, DIM> TRDL_N   {  360, 360,    12 };
-    constexpr std::array<Double_t, DIM> TRDL_MIN {  -90, -90,  84.0 };
-    constexpr std::array<Double_t, DIM> TRDL_MAX {   90,  90,  96.0 };
+    constexpr Double_t                             TRS5_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS5_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS5_MIN {  -55, -55,  1.81299996 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS5_MAX {   55,  55,  1.82299996 };
 
-    // TOF
-    constexpr std::array<Long64_t, DIM> TOFU_N   { 260, 260,   13 };
-    constexpr std::array<Double_t, DIM> TOFU_MIN { -65, -65, 60.0 };
-    constexpr std::array<Double_t, DIM> TOFU_MAX {  65,  65, 66.5 };
+    constexpr Double_t                             TRS6_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS6_N   {  220, 220,           1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS6_MIN {  -55, -55, -2.44299996 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS6_MAX {   55,  55, -2.43299996 };
     
-    constexpr std::array<Long64_t, DIM> TOFL_N   { 260, 260,    13 };
-    constexpr std::array<Double_t, DIM> TOFL_MIN { -65, -65, -66.5 };
-    constexpr std::array<Double_t, DIM> TOFL_MAX {  65,  65, -59.5 };
+    constexpr Double_t                             TRS7_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS7_N   {  220, 220,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS7_MIN {  -55, -55, -25.09700072 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS7_MAX {   55,  55, -25.08700072 };
     
-    // RICH
-    constexpr Float_t RICH_BOUND_INNER = 17.5;
-    constexpr Float_t RICH_BOUND_OUTER = 60.0;
-
-    constexpr std::array<Long64_t, DIM> NAF_N   {    70,    70,     7 };
-    constexpr std::array<Double_t, DIM> NAF_MIN { -17.5, -17.5, -76.0 };
-    constexpr std::array<Double_t, DIM> NAF_MAX {  17.5,  17.5, -72.5 };
+    constexpr Double_t                             TRS8_STP = MGMath::ONE_TO_SIX;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS8_N   {  220, 220,            1 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS8_MIN {  -55, -55, -29.35300065 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS8_MAX {   55,  55, -29.34300065 };
     
-    constexpr std::array<Long64_t, DIM> AGL_N   { 240, 240,     7 };
-    constexpr std::array<Double_t, DIM> AGL_MIN { -60, -60, -76.0 };
-    constexpr std::array<Double_t, DIM> AGL_MAX {  60,  60, -72.5 };
-    
-    // ECAL
-    constexpr std::array<Long64_t, DIM> ECAL_N   {  168, 168,     22 };
-    constexpr std::array<Double_t, DIM> ECAL_MIN {  -42, -42, -164.0 };
-    constexpr std::array<Double_t, DIM> ECAL_MAX {   42,  42, -142.0 };
+    constexpr Double_t                             TRS9_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRS9_N   {  220, 220,           3 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS9_MIN {  -55, -55, TRL9_MAX[2] };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRS9_MAX {   55,  55,     -134.75 };
 
     // RAD
-    constexpr std::array<Long64_t, DIM> RAD_N   {   480,  480,    10 };
-    constexpr std::array<Double_t, DIM> RAD_MIN {  -120, -120, 163.0 };
-    constexpr std::array<Double_t, DIM> RAD_MAX {   120,  120, 173.0 };
+    constexpr Double_t                             RAD_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> RAD_N    {   480,  480,          10 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> RAD_MIN  {  -120, -120, TRL1_MAX[2] };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> RAD_MAX  {   120,  120,      173.00 };
+    
+    // TRD
+    constexpr Double_t                             TRD_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TRD_N    {   440,  440,    30 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRD_MIN  {  -110, -110,  79.0 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TRD_MAX  {   110,  110, 155.5 };
+    
+    // SUPU
+    constexpr Double_t                             SUPU_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> SUPU_N   {  220, 220,     5 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SUPU_MIN {  -65, -65, 66.74 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SUPU_MAX {   65,  65, 76.70 };
+
+    // TOFU
+    constexpr Double_t                             TOFU_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TOFU_N   { 260, 260,     8 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TOFU_MIN { -65, -65, 60.24 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TOFU_MAX {  65,  65, 66.71 };
+    
+    // SPIU
+    constexpr Double_t                             SPIU_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> SPIU_N   {  220, 220,     5 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SPIU_MIN {  -65, -65, 53.12 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SPIU_MAX {   65,  65, 59.71 };
+    
+    // SPIL
+    constexpr Double_t                             SPIL_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> SPIL_N   {  260, 260,      5 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SPIL_MIN {  -65, -65, -58.21 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SPIL_MAX {   65,  65, -54.07 };
+    
+    // TOFL
+    constexpr Double_t                             TOFL_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> TOFL_N   { 260, 260,      8 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TOFL_MIN { -65, -65, -66.71 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> TOFL_MAX {  65,  65, -60.24 };
+    
+    // SUPL
+    constexpr Double_t                             SUPL_STP = MGMath::ONE_TO_FOUR;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> SUPL_N   {  220, 220,      5 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SUPL_MIN {  -65, -65, -71.67 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> SUPL_MAX {   65,  65, -66.82 };
+    
+    // RICH
+    constexpr Double_t                             RICH_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> RICH_N   { 260, 260,     8 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> RICH_MIN { -65, -65, -75.9 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> RICH_MAX {  65,  65, -72.8 };
     
     // PMT
-    constexpr std::array<Long64_t, DIM> PMT_N   {  260, 260,     10 };
-    constexpr std::array<Double_t, DIM> PMT_MIN {  -65, -65, -132.0 };
-    constexpr std::array<Double_t, DIM> PMT_MAX {   65,  65, -122.0 };
+    constexpr Double_t                             PMT_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> PMT_N    {  260, 260,      5 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> PMT_MIN  {  -65, -65, -132.0 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> PMT_MAX  {   65,  65, -122.8 };
     
-    // SUPPORT U
-    constexpr std::array<Long64_t, DIM> SUPU1_N   {  280, 200,      2 };
-    constexpr std::array<Double_t, DIM> SUPU1_MIN {  -70, -50, 158.98 };
-    constexpr std::array<Double_t, DIM> SUPU1_MAX {   70,  50, 160.00 };
-
-    constexpr std::array<Long64_t, DIM> SUPU2_N   {  280, 200,      1 };
-    constexpr std::array<Double_t, DIM> SUPU2_MIN {  -70, -50, 158.79 };
-    constexpr std::array<Double_t, DIM> SUPU2_MAX {   70,  50, 158.81 };
-
-    constexpr std::array<Long64_t, DIM> SUPU3_N   {  220, 220,    7 };
-    constexpr std::array<Double_t, DIM> SUPU3_MIN {  -55, -55, 66.5 };
-    constexpr std::array<Double_t, DIM> SUPU3_MAX {   55,  55, 84.0 };
-    
-    // SUPPORT M
-    constexpr std::array<Long64_t, DIM> SUPM1_N   {  220, 220,    12 };
-    constexpr std::array<Double_t, DIM> SUPM1_MIN {  -55, -55, 28.60 };
-    constexpr std::array<Double_t, DIM> SUPM1_MAX {   55,  55, 29.20 };
-    
-    constexpr std::array<Long64_t, DIM> SUPM2_N   {  220, 220,    12 };
-    constexpr std::array<Double_t, DIM> SUPM2_MIN {  -55, -55, 25.25 };
-    constexpr std::array<Double_t, DIM> SUPM2_MAX {   55,  55, 25.85 };
-    
-    constexpr std::array<Long64_t, DIM> SUPM3_N   {  220, 220,    12 };
-    constexpr std::array<Double_t, DIM> SUPM3_MIN {  -55, -55,  1.05 };
-    constexpr std::array<Double_t, DIM> SUPM3_MAX {   55,  55,  1.65 };
-    
-    constexpr std::array<Long64_t, DIM> SUPM4_N   {  220, 220,    12 };
-    constexpr std::array<Double_t, DIM> SUPM4_MIN {  -55, -55, -2.30 };
-    constexpr std::array<Double_t, DIM> SUPM4_MAX {   55,  55, -1.70 };
-    
-    constexpr std::array<Long64_t, DIM> SUPM5_N   {  220, 220,     12 };
-    constexpr std::array<Double_t, DIM> SUPM5_MIN {  -55, -55, -25.85 };
-    constexpr std::array<Double_t, DIM> SUPM5_MAX {   55,  55, -25.25 };
-    
-    constexpr std::array<Long64_t, DIM> SUPM6_N   {  220, 220,     12 };
-    constexpr std::array<Double_t, DIM> SUPM6_MIN {  -55, -55, -29.20 };
-    constexpr std::array<Double_t, DIM> SUPM6_MAX {   55,  55, -28.60 };
-    
-    // SUPPORT T
-    constexpr std::array<Long64_t, DIM> SUPT1_N   {  260, 180,     2 };
-    constexpr std::array<Double_t, DIM> SUPT1_MIN {  -65, -45, 52.93 };
-    constexpr std::array<Double_t, DIM> SUPT1_MAX {   65,  45, 52.95 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT2_N   {  220, 220,     2 };
-    constexpr std::array<Double_t, DIM> SUPT2_MIN {  -55, -55, 29.34 };
-    constexpr std::array<Double_t, DIM> SUPT2_MAX {   55,  55, 29.36 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT3_N   {  220, 220,     2 };
-    constexpr std::array<Double_t, DIM> SUPT3_MIN {  -55, -55, 25.08 };
-    constexpr std::array<Double_t, DIM> SUPT3_MAX {   55,  55, 25.10 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT4_N   {  220, 220,     2 };
-    constexpr std::array<Double_t, DIM> SUPT4_MIN {  -55, -55,  1.81 };
-    constexpr std::array<Double_t, DIM> SUPT4_MAX {   55,  55,  1.83 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT5_N   {  220, 220,     2 };
-    constexpr std::array<Double_t, DIM> SUPT5_MIN {  -55, -55, -2.45 };
-    constexpr std::array<Double_t, DIM> SUPT5_MAX {   55,  55, -2.43 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT6_N   {  220, 220,      2 };
-    constexpr std::array<Double_t, DIM> SUPT6_MIN {  -55, -55, -25.10 };
-    constexpr std::array<Double_t, DIM> SUPT6_MAX {   55,  55, -25.08 };
-    
-    constexpr std::array<Long64_t, DIM> SUPT7_N   {  220, 220,      2 };
-    constexpr std::array<Double_t, DIM> SUPT7_MIN {  -55, -55, -29.36 };
-    constexpr std::array<Double_t, DIM> SUPT7_MAX {   55,  55, -29.34 };
-
-    // SUPPORT L
-    constexpr std::array<Long64_t, DIM> SUPL1_N   {   280,  280,     2 };
-    constexpr std::array<Double_t, DIM> SUPL1_MIN {   -70,  -70, -54.2 };
-    constexpr std::array<Double_t, DIM> SUPL1_MAX {    70,   70, -54.0 };
-
-    constexpr std::array<Long64_t, DIM> SUPL2_N   {   240,  240,     1 };
-    constexpr std::array<Double_t, DIM> SUPL2_MIN {   -60,  -60, -60.0 };
-    constexpr std::array<Double_t, DIM> SUPL2_MAX {    60,   60, -59.5 };
-
-    constexpr std::array<Long64_t, DIM> SUPL3_N   {   240,  240,     6 };
-    constexpr std::array<Double_t, DIM> SUPL3_MIN {   -60,  -60, -72.5 };
-    constexpr std::array<Double_t, DIM> SUPL3_MAX {    60,   60, -66.5 };
-    
-    constexpr std::array<Long64_t, DIM> SUPL4_N   {   240,  160,       5 };
-    constexpr std::array<Double_t, DIM> SUPL4_MIN {   -60,  -40, -135.85 };
-    constexpr std::array<Double_t, DIM> SUPL4_MAX {    60,   40, -135.10 };
-
-    constexpr std::array<Long64_t, DIM> SUPL5_N   {   240,  160,      3 };
-    constexpr std::array<Double_t, DIM> SUPL5_MIN {   -60,  -40, -138.9 };
-    constexpr std::array<Double_t, DIM> SUPL5_MAX {    60,   40, -135.9 };
+    // ECAL
+    constexpr Double_t                             ECAL_STP = MGMath::ONE_TO_THREE;
+    constexpr std::array<Long64_t, MATGEOBOX_NDIM> ECAL_N   {  168, 168,          10 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> ECAL_MIN {  -42, -42,      -163.6 };
+    constexpr std::array<Double_t, MATGEOBOX_NDIM> ECAL_MAX {   42,  42, TRL9_MIN[2] };
 }
 
 
@@ -287,48 +209,31 @@ class MatGeoBoxAms {
         static MatGeoBoxReader reader_TRL8_;
         static MatGeoBoxReader reader_TRL9_;
         
-        static MatGeoBoxReader reader_TRDS_;
-        static MatGeoBoxReader reader_TRDU_;
-        static MatGeoBoxReader reader_TRDM_;
-        static MatGeoBoxReader reader_TRDI_;
-        static MatGeoBoxReader reader_TRDL_;
+        static MatGeoBoxReader reader_TR34_;
+        static MatGeoBoxReader reader_TR56_;
+        static MatGeoBoxReader reader_TR78_;
         
-        static MatGeoBoxReader reader_TOFU_;
-        static MatGeoBoxReader reader_TOFL_;
-        
-        static MatGeoBoxReader reader_NAF_;
-        static MatGeoBoxReader reader_AGL_;
-        
-        static MatGeoBoxReader reader_ECAL_;
+        static MatGeoBoxReader reader_TRS1_;
+        static MatGeoBoxReader reader_TRS2_;
+        static MatGeoBoxReader reader_TRS3_;
+        static MatGeoBoxReader reader_TRS4_;
+        static MatGeoBoxReader reader_TRS5_;
+        static MatGeoBoxReader reader_TRS6_;
+        static MatGeoBoxReader reader_TRS7_;
+        static MatGeoBoxReader reader_TRS8_;
+        static MatGeoBoxReader reader_TRS9_;
         
         static MatGeoBoxReader reader_RAD_;
-        
+        static MatGeoBoxReader reader_TRD_;
+        static MatGeoBoxReader reader_SUPU_;
+        static MatGeoBoxReader reader_SPIU_;
+        static MatGeoBoxReader reader_TOFU_;
+        static MatGeoBoxReader reader_TOFL_;
+        static MatGeoBoxReader reader_SPIL_;
+        static MatGeoBoxReader reader_SUPL_;
+        static MatGeoBoxReader reader_RICH_;
         static MatGeoBoxReader reader_PMT_;
-        
-        static MatGeoBoxReader reader_SUPU1_;
-        static MatGeoBoxReader reader_SUPU2_;
-        static MatGeoBoxReader reader_SUPU3_;
-        
-        static MatGeoBoxReader reader_SUPM1_;
-        static MatGeoBoxReader reader_SUPM2_;
-        static MatGeoBoxReader reader_SUPM3_;
-        static MatGeoBoxReader reader_SUPM4_;
-        static MatGeoBoxReader reader_SUPM5_;
-        static MatGeoBoxReader reader_SUPM6_;
-        
-        static MatGeoBoxReader reader_SUPT1_;
-        static MatGeoBoxReader reader_SUPT2_;
-        static MatGeoBoxReader reader_SUPT3_;
-        static MatGeoBoxReader reader_SUPT4_;
-        static MatGeoBoxReader reader_SUPT5_;
-        static MatGeoBoxReader reader_SUPT6_;
-        static MatGeoBoxReader reader_SUPT7_;
-
-        static MatGeoBoxReader reader_SUPL1_;
-        static MatGeoBoxReader reader_SUPL2_;
-        static MatGeoBoxReader reader_SUPL3_;
-        static MatGeoBoxReader reader_SUPL4_;
-        static MatGeoBoxReader reader_SUPL5_;
+        static MatGeoBoxReader reader_ECAL_;
 };
 
 Bool_t MatGeoBoxAms::is_load_ = false;
@@ -344,48 +249,31 @@ MatGeoBoxReader MatGeoBoxAms::reader_TRL7_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRL8_;
 MatGeoBoxReader MatGeoBoxAms::reader_TRL9_;
 
-MatGeoBoxReader MatGeoBoxAms::reader_TRDS_;
-MatGeoBoxReader MatGeoBoxAms::reader_TRDU_;
-MatGeoBoxReader MatGeoBoxAms::reader_TRDM_;
-MatGeoBoxReader MatGeoBoxAms::reader_TRDI_;
-MatGeoBoxReader MatGeoBoxAms::reader_TRDL_;
+MatGeoBoxReader MatGeoBoxAms::reader_TR34_;
+MatGeoBoxReader MatGeoBoxAms::reader_TR56_;
+MatGeoBoxReader MatGeoBoxAms::reader_TR78_;
 
-MatGeoBoxReader MatGeoBoxAms::reader_TOFU_;
-MatGeoBoxReader MatGeoBoxAms::reader_TOFL_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_NAF_;
-MatGeoBoxReader MatGeoBoxAms::reader_AGL_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_ECAL_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS1_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS2_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS3_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS4_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS5_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS6_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS7_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS8_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS9_;
 
 MatGeoBoxReader MatGeoBoxAms::reader_RAD_;
-
+MatGeoBoxReader MatGeoBoxAms::reader_TRD_;
+MatGeoBoxReader MatGeoBoxAms::reader_SUPU_;
+MatGeoBoxReader MatGeoBoxAms::reader_SPIU_;
+MatGeoBoxReader MatGeoBoxAms::reader_TOFU_;
+MatGeoBoxReader MatGeoBoxAms::reader_TOFL_;
+MatGeoBoxReader MatGeoBoxAms::reader_SPIL_;
+MatGeoBoxReader MatGeoBoxAms::reader_SUPL_;
+MatGeoBoxReader MatGeoBoxAms::reader_RICH_;
 MatGeoBoxReader MatGeoBoxAms::reader_PMT_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_SUPU1_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPU2_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPU3_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM1_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM2_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM3_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM4_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM5_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPM6_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT1_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT2_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT3_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT4_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT5_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT6_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPT7_;
-
-MatGeoBoxReader MatGeoBoxAms::reader_SUPL1_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPL2_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPL3_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPL4_;
-MatGeoBoxReader MatGeoBoxAms::reader_SUPL5_;
+MatGeoBoxReader MatGeoBoxAms::reader_ECAL_;
 
 } // namespace TrackSys
 

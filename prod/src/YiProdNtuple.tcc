@@ -41,9 +41,8 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		iTrdHTrack  = (par->iTrdHTrack()  < 0) ? -1 : par->iTrdHTrack() ;
 		iRichRing   = (par->iRichRing()   < 0) ? -1 : par->iRichRing()  ;
 
-		if (!EventBase::checkEventMode(EventBase::MC))
-			for (int it = 0; it < event->NBetaH() && iTrTrack>=0; ++it)
-				if (event->pBetaH(it)->iTrTrack() == iTrTrack) iBetaH = it;
+		for (int it = 0; it < event->NBetaH() && iTrTrack>=0; ++it)
+			if (event->pBetaH(it)->iTrTrack() == iTrTrack) iBetaH = it;
 
 		isParticle = true;
 	}
@@ -218,8 +217,9 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		fG4mc.primPart.partID   = primary->Particle;
 		fG4mc.primPart.chrg     = primary->Charge;
 		fG4mc.primPart.mass     = primary->Mass;
+		fG4mc.primPart.beta     = ((primary->Particle==1) ? 1.0 : 1.0/std::hypot(1.0, (primary->Mass/primary->Momentum)));
 		fG4mc.primPart.mom      = primary->Momentum;
-		fG4mc.primPart.kEng     = static_cast<Float_t>(std::hypot(static_cast<Double_t>(primary->Momentum), static_cast<Double_t>(primary->Mass)) - static_cast<Double_t>(primary->Mass));
+		fG4mc.primPart.kEng     = (std::hypot(primary->Momentum, primary->Mass) - primary->Mass);
 		fG4mc.primPart.coo[0]   = primary->Coo[0];
 		fG4mc.primPart.coo[1]   = primary->Coo[1];
 		fG4mc.primPart.coo[2]   = primary->Coo[2];
@@ -234,29 +234,29 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
         constexpr Int_t TdLay[2] = { -1001, -1002 };
         constexpr Int_t EcLay[2] = { -1019, -1020 };
 		    
-        constexpr Double_t kEngTh = 5.0e-2; 
+        constexpr Float_t kEngTh = 5.0e-2; 
         for (int it = 0; it < event->NMCEventg(); it++) {
 		    MCEventgR * mcev = event->pMCEventg(it);
 		    if (mcev == nullptr) continue;
             Int_t id = (mcev->trkID == primary->trkID) + (mcev->parentID == primary->trkID) * 2;
             if (id == 0) continue;
-            Double_t keng = std::hypot(static_cast<Double_t>(mcev->Momentum), static_cast<Double_t>(mcev->Mass)) - static_cast<Double_t>(mcev->Mass);
+            Float_t keng = (std::hypot(mcev->Momentum, mcev->Mass) - mcev->Mass);
 		    if (keng < kEngTh) continue;
 		   
             if (id == 1) {
                 Short_t dec = -1, lay = -1;
                 if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
-                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; }
-                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; }
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; }
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; }
+                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; } // Silicon
+                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
                 if (dec < 0 || lay < 0) continue;
 
                 SegPARTMCInfo seg;
-		        seg.dec    = dec;
-		        seg.lay    = lay;
-		        seg.mom    = mcev->Momentum;
-		        seg.kEng   = static_cast<Float_t>(keng);
+		        seg.dec = dec;
+		        seg.lay = lay;
+		        seg.mom = mcev->Momentum;
+		        seg.ke  = keng;
 		        seg.coo[0] = mcev->Coo[0];
 		        seg.coo[1] = mcev->Coo[1];
 		        seg.coo[2] = mcev->Coo[2];
@@ -269,14 +269,13 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
             else if (id == 2) {
                 if (!fG4mc.primVtx.status) {
 			        fG4mc.primVtx.status = true;
-			        fG4mc.primVtx.vtx[0] = mcev->Coo[0];
-			        fG4mc.primVtx.vtx[1] = mcev->Coo[1];
-			        fG4mc.primVtx.vtx[2] = mcev->Coo[2];
+			        fG4mc.primVtx.coo[0] = mcev->Coo[0];
+			        fG4mc.primVtx.coo[1] = mcev->Coo[1];
+			        fG4mc.primVtx.coo[2] = mcev->Coo[2];
                 }
                 fG4mc.primVtx.numOfPart++;
                 fG4mc.primVtx.partID.push_back(mcev->Particle);
-                fG4mc.primVtx.kEng.push_back(keng);
-                fG4mc.primVtx.mom.push_back(mcev->Momentum);
+                fG4mc.primVtx.ke.push_back(keng);
             }
         }
 		std::sort(fG4mc.primPart.segs.begin(), fG4mc.primPart.segs.end(), SegPARTMCInfo_sort());
@@ -287,10 +286,10 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			if (cluster == nullptr) continue;
 			if (cluster->GetGtrkID() != primary->trkID) continue;
             
-            Int_t chrg = 0;
-            Double_t mass = 0;
+            int chrg = 0;
+            double mass = 0;
             cluster->GetChargeAndMass(chrg, mass);
-            Double_t keng = std::hypot(static_cast<Double_t>(cluster->GetMomentum()), mass) - mass;
+            double keng = std::hypot(cluster->GetMomentum(), mass) - mass;
             if (keng < kEngTh) continue;
 
 			int tkid = cluster->GetTkId();
@@ -299,29 +298,34 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			AMSDir dir = cluster->GetDir();
 
 			HitTRKMCInfo hit;
-			hit.layJ   = layJ;
-			hit.tkid   = tkid;
-			hit.edep   = cluster->GetEdep();
-			hit.mom    = cluster->GetMomentum();
-		    hit.kEng   = static_cast<Float_t>(keng);
+			hit.layJ = layJ;
+			hit.tkid = tkid;
+			hit.edep = cluster->GetEdep();
+			hit.mom  = cluster->GetMomentum();
+		    hit.ke   = static_cast<Float_t>(keng);
 			hit.coo[0] = coo[0];
 			hit.coo[1] = coo[1];
 			hit.coo[2] = coo[2];
 			hit.dir[0] = dir[0];
 			hit.dir[1] = dir[1];
 			hit.dir[2] = dir[2];
+
+            for (auto&& seg : fG4mc.primPart.segs) {
+                if (seg.dec != 0 || seg.lay != hit.layJ) continue;
+                float dz = (hit.coo[2] - seg.coo[2]);
+                float tx = (seg.dir[0] / seg.dir[2]);
+                float ty = (seg.dir[1] / seg.dir[2]);
+                float cx = seg.coo[0] + dz * tx;
+                float cy = seg.coo[1] + dz * ty;
+                hit.smr[0] = (hit.coo[0] - cx);
+                hit.smr[1] = (hit.coo[1] - cy);
+                hit.coo[0] = cx;
+                hit.coo[1] = cy;
+            }
 			
 			fG4mc.primPart.hits.push_back(hit);
 		}
 		std::sort(fG4mc.primPart.hits.begin(), fG4mc.primPart.hits.end(), HitTRKMCInfo_sort());
-        
-        //if (fG4mc.primVtx.status) {
-        //    std::cerr << Form("VTX %14.8f %14.8f %14.8f\n", fG4mc.primVtx.vtx[0], fG4mc.primVtx.vtx[1], fG4mc.primVtx.vtx[2]);
-        //    for (Int_t it = 0; it < fG4mc.primVtx.numOfPart; ++it) std::cerr << Form("ID %4d KENG %14.8f\n", fG4mc.primVtx.partID.at(it),  fG4mc.primVtx.kEng.at(it));
-        //    for (auto&& seg : fG4mc.primPart.segs) std::cerr << Form("SEG Z %14.8f MOM %14.8f\n", seg.coo[2], seg.mom);
-        //    for (auto&& hit : fG4mc.primPart.hits) std::cerr << Form("HIT Z %14.8f MOM %14.8f\n", hit.coo[2], hit.mom);
-        //    std::cerr << std::endl;
-        //}
 	}
 
 	fStopwatch.stop();
@@ -696,6 +700,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	const short pattIdx[4] = { 1, 2, 4, 8 };
 	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
 		BetaHR * betaH = event->pBetaH(recEv.iBetaH);
+        if (betaH->iTrTrack() != recEv.iTrTrack) break;
 
 		int ncls[4] = {0};
 		fTof.numOfInTimeCluster = event->GetNTofClustersInTime(betaH, ncls);
@@ -703,8 +708,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTof.statusBetaH = true;
 		fTof.betaH = betaH->GetBeta();
 		fTof.betaHBit = ((betaH->pTrTrack   ()) ? 1 : 0) +
-                    ((betaH->pTrdTrack  ()) ? 2 : 0) +
-                    ((betaH->pEcalShower()) ? 4 : 0);
+                        ((betaH->pTrdTrack  ()) ? 2 : 0) +
+                        ((betaH->pEcalShower()) ? 4 : 0);
 		fTof.normChisqT  = betaH->GetNormChi2T();
 		fTof.normChisqC  = betaH->GetNormChi2C();
 
@@ -716,10 +721,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			fTof.T[il] = cls->Time;
 			fTof.E[il] = betaH->GetEdepL(il);
 			fTof.Q[il] = betaH->GetQL(il);
-			fTof.betaHPatt += pattIdx[il];
-
 			if (cls->IsGoodTime())
-				fTof.betaHGoodTime += pattIdx[il];
+			    fTof.betaHPatt += pattIdx[il];
 		}
 		float minTime = (*std::min_element(fTof.T, fTof.T+4));
 		for (int il = 0; il < 4; il++) {
@@ -730,17 +733,10 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		int nlay = 0;
 		float Qall_RMS = 0;
 		fTof.Qall = betaH->GetQ(nlay, Qall_RMS);
-		
-		//float Qupper, Qupper_RMS, Qlower, Qlower_RMS;
-		//Qupper = betaH->GetQ(nlay, Qupper_RMS, 2, TofClusterHR::DefaultQOpt, 1100);
-		//Qlower = betaH->GetQ(nlay, Qlower_RMS, 2, TofClusterHR::DefaultQOpt, 11);
-
-		//TofChargeHR tofQH = betaH->gTofCharge();
-		//float Z[2], Zupper, Zlower, Z_prob[2], Zupper_prob, Zlower_prob;
-		//Z[0] = tofQH.GetZ(nlay, Z_prob[0], 0); // max prob charge (int)
-		//Z[1] = tofQH.GetZ(nlay, Z_prob[1], 1); // next to max prob charge (int)
-		//Zupper = tofQH.GetZ(nlay, Zupper_prob, 0, 1100);
-		//Zlower = tofQH.GetZ(nlay, Zlower_prob, 0, 11);
+        
+        float Zprob = 0;
+        short Zall = betaH->GetZ(nlay, Zprob, 0);
+        fTof.Zall = Zall;
 
 		break;
 	} // while loop - ibetaH > 0
@@ -754,7 +750,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			betaHClsId.at(betaH->pTofClusterH(it)->Layer) = betaH->iTofClusterH(it);
 	}
 	
-    const double ChrgLimit = 0.90;
+    const double ChrgLimit = 0.85;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
 	for (int it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
@@ -767,23 +763,6 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	for (int il = 0; il < 4; ++il) {
 		fTof.extClsN[il] = nearHitNm[il];
 	}
-
-	//bool   isHasTime[2] = { false, false };
-	//double avgTime[2] = {0, 0};
-	////double avgChrg[2] = {0, 0};
-	//for (int it = 0; it < 2; ++it) {
-	//	isHasTime[it] = (betaHClsId.at(2*it+0) >= 0 || betaHClsId.at(2*it+1) >= 0);
-	//	if (isHasTime[it]) {
-	//		TofClusterHR * ucls = (betaHClsId.at(2*it+0) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+0)) : nullptr;
-	//		TofClusterHR * lcls = (betaHClsId.at(2*it+1) >= 0) ? event->pTofClusterH(betaHClsId.at(2*it+1)) : nullptr;
-	//		//double chrg  = (((ucls) ? ucls->GetQSignal() : 0.) + ((lcls) ? lcls->GetQSignal() : 0.)) / ((ucls!=nullptr) + (lcls!=nullptr));
-	//		double wgval = ((ucls) ? (ucls->Time/ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (lcls->Time/lcls->ETime/lcls->ETime) : 0.);
-	//		double sumwg = ((ucls) ? (1./ucls->ETime/ucls->ETime) : 0.) + ((lcls) ? (1./lcls->ETime/lcls->ETime) : 0.);
-	//		double value = wgval / sumwg;
-	//		//avgChrg[it] = chrg;
-	//		avgTime[it] = value;
-	//	}
-	//}
 
 	/*
 	TofRecH::BuildOpt = 1; // TrTrack independent
@@ -808,9 +787,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			fTof.Ts[il] = cls->Time;
 			fTof.Es[il] = betaHs->GetEdepL(il);
 			fTof.Qs[il] = betaHs->GetQL(il);
-			fTof.betaHPatts += pattIdx[il];
 			if (cls->IsGoodTime())
-				fTof.betaHGoodTimes += pattIdx[il];
+			    fTof.betaHPatts += pattIdx[il];
 		}
 		float minTime = (*std::min_element(fTof.Ts, fTof.Ts+4));
 		for (int il = 0; il < 4; il++) {
@@ -821,6 +799,10 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		int nlays = 0;
 		float Qalls_RMS = 0;
 		fTof.Qalls = betaHs->GetQ(nlays, Qalls_RMS);
+        
+        float Zprobs = 0;
+        short Zalls = betaHs->GetZ(nlays, Zprobs, 0);
+        fTof.Zalls = Zalls;
 
 		if ((fTof.betaHBits&2) == 2) {
 			TrdTrackR * trd = betaHs->pTrdTrack();
@@ -973,32 +955,26 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	else if (recEv.iBeta  >= 0) Beta = event->pBeta(recEv.iBeta)->Beta;
 	else                        Beta = 1;
 
+    TrTrackR* trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
+	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, 21) : -1;
+
+	const unsigned short _hasL1  =   1;
+	const unsigned short _hasL2  =   2;
+	const unsigned short _hasL34 =  12;
+	const unsigned short _hasL56 =  48;
+	const unsigned short _hasL78 = 192;
+	const unsigned short _hasL9  = 256;
 	const int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
-	std::map<int, int> trackIDMap;
-	for (int itr = 0; (itr <= event->NTrTrack() && recEv.iTrTrack >= 0); ++itr) {
-		int jtr = itr - 1;
-		if (jtr == recEv.iTrTrack) continue;
-		TrTrackR * trtk = event->pTrTrack( ((jtr==-1)?recEv.iTrTrack:jtr) );
-		if (trtk == nullptr) continue;
-		
-		if (jtr == -1) {
-			double BTdist = 0;
-			fTrk.beamID = event->GetBeamPos(BTdist, trtk);
-			fTrk.beamDist = BTdist;
-		}
+    
+    if (trtk != nullptr && fitidInn) {
+		double BTdist = 0;
+		fTrk.beamID = event->GetBeamPos(BTdist, trtk);
+		fTrk.beamDist = BTdist;
 		
 		TrackInfo track;
-
-		const unsigned short _hasL1  =   1;
-		const unsigned short _hasL2  =   2;
-		const unsigned short _hasL34 =  12;
-		const unsigned short _hasL56 =  48;
-		const unsigned short _hasL78 = 192;
-		const unsigned short _hasL9  = 256;
-	
-		track.bitPattJ = trtk->GetBitPatternJ();
+		track.bitPattJ   = trtk->GetBitPatternJ();
 		track.bitPattXYJ = trtk->GetBitPatternXYJ();
-		
+        
         short isInner   = ((track.bitPattJ&_hasL34) > 0 &&
 		                   (track.bitPattJ&_hasL56) > 0 &&
 						   (track.bitPattJ&_hasL78) > 0) ? 1 : 0;
@@ -1014,12 +990,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		short isL1XY    = ((track.bitPattXYJ&_hasL1) > 0) ?  4 : 0;
 		short isL9XY    = ((track.bitPattXYJ&_hasL9) > 0) ?  8 : 0;
 		short bitPattXY = isInnerXY + isL2XY + isL1XY + isL9XY;
-	
-		short fitidInn = trtk->iTrTrackPar(1, 3, 21);
-		if (fitidInn < 0) continue;
+
 		track.bitPatt   = bitPatt; 
 		track.bitPattXY = bitPattXY; 
-		track.QIn = trtk->GetInnerQ_all(Beta, fitidInn).Mean; 
 		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
@@ -1039,6 +1012,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
 				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
+				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
 				track.state[algo][patt][0] = coo[0];
 				track.state[algo][patt][1] = coo[1];
 				track.state[algo][patt][2] = coo[2];
@@ -1057,21 +1031,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 					track.stateLJ[algo][patt][il][3] = -dirLJ[0];
 					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
 					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
-
-					//TkSens tksens(pntLJ, EventBase::checkEventMode(EventBase::MC));
-					//if (tksens.LadFound()) {
-					//	short tkid = tksens.GetLadTkID();
-					//	short sens = tksens.GetSensor();
-					//	short mult = tksens.GetMultIndex();
-					//	float xloc = (tksens.GetStripX() + tksens.GetImpactPointX() + 640);
-					//	float yloc = (tksens.GetStripY() + tksens.GetImpactPointY());
-					//	
-					//	track.localID[algo][patt][il][0] = tkid;
-					//	track.localID[algo][patt][il][1] = sens;
-					//	track.localID[algo][patt][il][2] = mult;
-					//	track.localLJ[algo][patt][il][0] = xloc;
-					//	track.localLJ[algo][patt][il][1] = yloc;
-					//}
 				}
 			} // for loop - pattern
 		}
@@ -1159,20 +1118,22 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.loc[1]   = yloc;
 		
             if (xcls != nullptr) {
-                hit.stripAdrX = xseedAddr;
-                hit.stripIdxX = xseedIndx - xreg[0];
+                //hit.stripAdrX = xseedAddr;
+                //hit.stripIdxX = xseedIndx - xreg[0];
                 for (int it = xreg[0]; it <= xreg[1]; ++it) {
-                    hit.stripSigX.push_back(xstripSig.at(it));
-                    hit.stripSgmX.push_back(xstripSgm.at(it));
+                    //hit.stripSigX.push_back(xstripSig.at(it));
+                    //hit.stripSgmX.push_back(xstripSgm.at(it));
+                    hit.nsr[0]++;
                 }
             }
             
             if (ycls != nullptr) {
-                hit.stripAdrY = yseedAddr;
-                hit.stripIdxY = yseedIndx - yreg[0];
+                //hit.stripAdrY = yseedAddr;
+                //hit.stripIdxY = yseedIndx - yreg[0];
                 for (int it = yreg[0]; it <= yreg[1]; ++it) {
-                    hit.stripSigY.push_back(ystripSig.at(it));
-                    hit.stripSgmY.push_back(ystripSgm.at(it));
+                    //hit.stripSigY.push_back(ystripSig.at(it));
+                    //hit.stripSgmY.push_back(ystripSgm.at(it));
+                    hit.nsr[1]++;
                 }
             }
 		
@@ -1180,59 +1141,27 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		} // for loop - layer
 		if (track.hits.size() > 1) std::sort(track.hits.begin(), track.hits.end(), HitTRKInfo_sort());
 	
-		int offTrID = ((jtr==-1)?recEv.iTrTrack:jtr);
-		int selTrID = fTrk.tracks.size();
-		trackIDMap[offTrID] = selTrID;
-		
-		fTrk.tracks.push_back(track);
+		fTrk.track = track;
 	}
 
-	// It isnot match with official one.
-	if (fTrk.tracks.size() != event->NTrTrack()) return false;
+    // Haino's tools
+    if (trtk != nullptr && fitidInn) {
+        fTrk.ftL56Dist     = std::min(event->GetTkFeetDist(5), event->GetTkFeetDist(6));
+        fTrk.survHeL56Prob = event->GetHeSurvProbAtL56();
 
-
-	// Vertex
-    /*
-    bool isSaveVertex = false;
-    if (isSaveVertex) {
-	    TrReconQ reconQ(event);
-	    reconQ.BuildVertex();
-	    AMSPoint recQ_CVtx, recQ_DVtx;
-	    int recQ_TrID[2] = { -1, -1 };
-	    if (reconQ.GetVertex(recQ_CVtx, recQ_DVtx, recQ_TrID) != 0) {
-	    	std::map<int, int>::iterator ita = trackIDMap.find(recQ_TrID[0]);
-	    	std::map<int, int>::iterator itb = trackIDMap.find(recQ_TrID[1]);
-	    	if (ita != trackIDMap.end() && itb != trackIDMap.end()) {
-	    		std::pair<int, int> trId = std::minmax(ita->second, itb->second);
-	    		VertexInfo vertex;
-	    		
-	    		vertex.vtxZqu[0] = recQ_CVtx[0];
-	    		vertex.vtxZqu[1] = recQ_CVtx[1];
-	    		vertex.vtxZqu[2] = recQ_CVtx[2];
-	    		vertex.vtxZqu[3] = recQ_DVtx[0];
-	    		vertex.vtxZqu[4] = recQ_DVtx[1];
-
-	    		VertexR vtxR(event->pTrTrack(recQ_TrID[0]), event->pTrTrack(recQ_TrID[1]));
-	    		if (vtxR.IsFilled()) {
-	    			AMSPoint cooR = vtxR.getvert();
-	    			AMSDir   dirR(vtxR.gettheta(), vtxR.getphi());
-	    			vertex.vtxR[0] = cooR[0];
-	    			vertex.vtxR[1] = cooR[1];
-	    			vertex.vtxR[2] = cooR[2];
-	    			vertex.vtxR[3] = -dirR[0];
-	    			vertex.vtxR[4] = -dirR[1];
-	    			vertex.vtxR[5] = -dirR[2];
-	    			vertex.vtxR[6] = vtxR.getmom();
-	    			vertex.vtxR[7] = (vtxR.getchi2() / vtxR.getndof());
-	    		}
-
-	    		vertex.trackID.push_back(trId.first);
-	    		vertex.trackID.push_back(trId.second);
-	    		fTrk.vertices.push_back(vertex);
-	    	}
+        float smin = 0;
+        for (int il = 0; il < 7; il++) { // Loop on inner Layers 2-8
+            // Get a ratio of raw ADC used for the hit over the sum of n=10 strips around.
+            float sr = event->GetTrackerRawSignalRatio(il+2, 10);
+            if (sr > 0 && (smin == 0 || sr < smin)) smin = sr;
+            fTrk.ratN10S[il] = sr;
         }
+        if (smin > 0) fTrk.ratN10Smin = smin;
+
+        fTrk.noiseInTrSH = event->IsTrackPickingUpNoise();
+        fTrk.betaSH      = TrMass::GetBeta(event, 111, trtk); 
+        fTrk.massEstSH   = TrMass::GetMQL(event, trtk);
     }
-    */
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -1284,241 +1213,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr) return false;
 	fStopwatch.start();
 
+	fTrd.numOfCluster = event->NTrdCluster();
+	fTrd.numOfSegment = event->NTrdSegment();
 	fTrd.numOfTrack = event->NTrdTrack();
 	fTrd.numOfHTrack = event->NTrdHTrack();
 		
-	std::vector< std::vector<TrdHSegmentR *> > HSegMap(2, std::vector<TrdHSegmentR *>());
-	for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
-		TrdHSegmentR * seg = event->pTrdHSegment(iseg);
-		HSegMap.at(seg->d).push_back(seg); 
-	}
-	int nsegx = HSegMap.at(0).size();
-	int nsegy = HSegMap.at(1).size();
-	fTrd.numOfHSeg[0] = nsegx;
-	fTrd.numOfHSeg[1] = nsegy;
-
-	// numOfHSegVtx (by HY.Chou)
-	// number of TRDH segments that make a vertex with TrTrack
-	// between Z = 60 cm and 200 cm
-	////int nseg = event->nTrdHSegment();
-	TrTrackR * trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
-	int        trId = (trtk) ? trtk->iTrTrackPar(1, 3, 21) : -1;
-	if (trtk && trId >= 0) {
-		/* Under testing
-		if (event->NTrdHTrack() != 1) return false;
-		if (nsegx != 1 || nsegy != 1) return false;	
-		const double trCooZ = 120.;
-		AMSPoint trPntC; AMSDir trDirC;
-		trtk->Interpolate(trCooZ, trPntC, trDirC);
-		double trNRig = std::fabs(trtk->GetRigidity(trId));
-		if (trNRig < 0.3) trNRig = 0.3;
-		
-		double trR[2] = { trPntC[0], trPntC[1] };
-		double trM[2] = { trDirC[0]/trDirC[2],  trDirC[1]/trDirC[2] };
-		
-		const double MsCooSgmFact = 2.00;
-		const double MsDirSgmFact = 0.02;
-		double msSgmR = (MsCooSgmFact / trNRig + 0.50);
-		double msSgmM = (MsDirSgmFact / trNRig + 0.02);
-		
-		for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
-			TrdHSegmentR * seg = event->pTrdHSegment(iseg);
-			if (seg == nullptr) continue;
-			float tm = trM[seg->d];
-			float tr = (trM[seg->d] * (seg->z - trCooZ) + trR[seg->d]);
-			float dr = std::fabs(seg->r - tr);
-			float dm = std::fabs(seg->m - tm);
-			//if (dr > msSgmR) continue;
-			//if (dm > msSgmM) continue;
-			//std::cout << Form("D%d DR %8.2f (%8.2f) DM %8.2f (%8.2f)\n", seg->d, dr, msSgmR, dm, msSgmM);
-		}
-		*/
-		
-		// Vertex based on TrdHSegment (Old Codes)	
-		//const double trCooZ = 120.;
-		//AMSPoint trPnt; AMSDir trDir;
-		//trtk->Interpolate(trCooZ, trPnt, trDir);
-		//double trX = trPnt[0];
-		//double trY = trPnt[1];
-		//double trTanX = trDir[0] / trDir[2];
-		//double trTanY = trDir[1] / trDir[2];
-		//double trX0   = trX - trTanX * trCooZ;
-		//double trY0   = trY - trTanY * trCooZ;
-		//double trNRig = std::fabs(trtk->GetRigidity(trId));
-		//if (trNRig < 0.8) trNRig = 0.8;
-
-		//const double MsCooSgmFact = 2.843291e-01;
-		//const double MsDirSgmFact = 7.108227e-03;
-		//double msSgmC = MsCooSgmFact / trNRig;
-		//double msSgmM = MsDirSgmFact / trNRig;
-		//double msSgmR = std::sqrt(msSgmC*msSgmC + msSgmM*msSgmM*trCooZ*trCooZ);
-		//
-		//const double SgmLimit = 5.;
-		//const double ZLimit[2] = { 200., 60. };
-
-		//short numOfVtx[2] = { 0, 0 };
-		//std::vector<std::pair<double, double> > vtxCooXZ;
-		//std::vector<std::pair<double, double> > vtxCooYZ;
-		//for (int iseg = 0; iseg < event->NTrdHSegment(); ++iseg) {
-		//	TrdHSegmentR * seg = event->pTrdHSegment(iseg);
-		//	if (seg == nullptr) continue;
-		//	double segR0 = (seg->r - seg->m * seg->z);
-		//	double trR   = ((seg->d==0) ? (trX + trTanX * (seg->z - trCooZ)) : (trY + trTanY * (seg->z - trCooZ)));
-		//	double trM   = ((seg->d==0) ? trTanX : trTanY);
-		//	double dr    = std::fabs((trR - seg->r) / std::sqrt(seg->er*seg->er + msSgmC*msSgmC));
-		//	double dm    = std::fabs((trM - seg->m) / std::sqrt(seg->em*seg->em + msSgmM*msSgmM));
-		//	bool isTrSeg = (dr < SgmLimit && dm < SgmLimit);
-		//	if (isTrSeg) continue;
-		//	
-		//	double sgmSegR = std::sqrt(seg->er*seg->er+seg->em*seg->em*seg->z*seg->z);
-		//	double sgmSegM = seg->em;
-		//	double sgmVtxR = std::sqrt(msSgmR*msSgmR+sgmSegR*sgmSegR);
-		//	double sgmVtxM = std::sqrt(msSgmM*msSgmM+sgmSegM*sgmSegM);
-
-		//	double vtxDR = (segR0  - ((seg->d==0) ? trX0   : trY0));
-		//	double vtxDM = (seg->m - ((seg->d==0) ? trTanX : trTanY));
-
-		//	double vtxZ    = -(vtxDR / vtxDM);
-		//	double sgmVtxZ = std::fabs(vtxZ) * std::sqrt((sgmVtxR*sgmVtxR)/(vtxDR*vtxDR) + (sgmVtxM*sgmVtxM)/(vtxDM*vtxDM+1e-4));
-		//	if (sgmVtxZ > 10.) sgmVtxZ = 10.;
-
-		//	double lmtZu = (ZLimit[0] + sgmVtxZ * SgmLimit);
-		//	double lmtZl = (ZLimit[1] - sgmVtxZ * SgmLimit);
-
-		//	if (vtxZ > lmtZu || vtxZ < lmtZl) continue;
-
-		//	numOfVtx[seg->d]++;
-		//	if (seg->d==0) vtxCooXZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
-		//	else           vtxCooYZ.push_back(std::make_pair(vtxZ, sgmVtxZ));
-		//}
-		//fTrd.numOfHSegVtx[0] = numOfVtx[0];
-		//fTrd.numOfHSegVtx[1] = numOfVtx[1];
-	
-		
-		// Vertex based on TrdHSegment (New Codes)
-        /*
-		short vtxSide = 0;
-        MGROOT::SVecD<3> vtxCoo;
-
-		// full
-		if (nsegx >= 2 && nsegy >= 2) {
-			AMSPoint trPnt; AMSDir trDir;
-			trtk->Interpolate(120., trPnt, trDir);
-			vtxCoo(0) = trPnt[0];
-			vtxCoo(1) = trPnt[1];
-			vtxCoo(2) = trPnt[2];
-
-			int iter = 1;
-			const int maxIter = 8;
-			while (iter <= maxIter) {
-				MGROOT::SVecD<3> grad;
-				MGROOT::SMtxD<3> icov;
-				for (int d = 0; d <= 1; ++d) {
-					MGROOT::SVecD<3> dgrad;
-					MGROOT::SMtxD<3> dicov;
-					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
-						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
-						float dz = (vtxCoo[2] - seg->z);
-						float  m = seg->m;
-						float  r = (seg->m * dz + seg->r);
-						float er  = (seg->em * seg->em * dz * dz + seg->er * seg->er);
-						float er2 = er * er;
-						float dr = (vtxCoo[d] - r);
-						grad(d)    += dr / er2;
-						grad(2)    += -m * dr / er2;
-						icov(d, d) +=  1 / er2;
-						icov(d, 2) += -m / er2;
-						icov(2, d) += -m / er2;
-						icov(2, 2) += m * m / er2;
-					}
-				}
-				bool ret = icov.Invert();
-				if (!ret) break;
-				MGROOT::SVecD<3> rsl = icov * grad;
-				vtxCoo = vtxCoo - rsl;
-				iter++;
-			}
-			vtxSide = 15;	
-		}
-		// part
-		else if (nsegx >= 2 || nsegy >= 2) {
-			MGROOT::SVecD<2> dvtx[2];
-			AMSPoint trPnt; AMSDir trDir;
-			trtk->Interpolate(120., trPnt, trDir);
-			dvtx[0](0) = trPnt[0];
-			dvtx[0](1) = trPnt[2];
-			dvtx[1](0) = trPnt[1];
-			dvtx[1](1) = trPnt[2];
-
-			for (int d = 0; d <= 1; ++d) {
-				if (HSegMap.at(d).size() < 2) continue;
-				for (int iter = 1; iter <= 5; ++iter) {
-					MGROOT::SVecD<2> dgrad;
-					MGROOT::SMtxD<2> dicov;
-					for (int iseg = 0; iseg < HSegMap.at(d).size(); ++iseg) {
-						TrdHSegmentR * seg = HSegMap.at(d).at(iseg);
-						float dz = (dvtx[d](1) - seg->z);
-						float  m = seg->m;
-						float  r = (seg->m * dz + seg->r);
-						float er  = (seg->em * seg->em * dz * dz + seg->er * seg->er);
-						float er2 = er * er;
-						float dr = (dvtx[d](0) - r);
-						dgrad(0)    += dr / er2;
-						dgrad(1)    += -m * dr / er2;
-						dicov(0, 0) +=  1 / er2;
-						dicov(0, 1) += -m / er2;
-						dicov(1, 0) += -m / er2;
-						dicov(1, 1) += m * m / er2;
-					}
-					bool ret = dicov.Invert();
-					if (!ret) break;
-					MGROOT::SVecD<2> drsl = dicov * dgrad;
-					dvtx[d] = dvtx[d] - drsl;
-				}
-			}
-
-			short dd = (nsegx >= 2) ? 0 : 1;
-			AMSPoint dtrPnt; AMSDir dtrDir;
-			trtk->Interpolate(dvtx[dd](1), dtrPnt, dtrDir);
-			
-			vtxCoo(dd) = dvtx[dd](0);
-			vtxCoo(2)  = dvtx[dd](1);
-			if (dd == 0) {
-				vtxSide += 2;
-				if (nsegy == 1) {
-					vtxSide += 4;
-					TrdHSegmentR * seg = HSegMap.at(1).at(0);
-					vtxCoo(1) = (seg->m * (dvtx[dd](1) - seg->z) + seg->r);
-				}
-				else vtxCoo(1) = trPnt[1];
-			}
-			if (dd == 1) {
-				vtxSide += 8;
-				if (nsegx == 1) {
-					vtxSide += 1;
-					TrdHSegmentR * seg = HSegMap.at(0).at(0);
-					vtxCoo(0) = (seg->m * (dvtx[dd](1) - seg->z) + seg->r);
-				}
-				else vtxCoo(0) = trPnt[0];
-			}
-		}
-
-		if (vtxSide != 0) {
-			fTrd.vtxSide = vtxSide;
-			fTrd.vtxCoo[0] = vtxCoo(0);	
-			fTrd.vtxCoo[1] = vtxCoo(1);	
-			fTrd.vtxCoo[2] = vtxCoo(2);	
-			
-			AMSPoint trPnt; AMSDir trDir;
-			trtk->Interpolate(fTrd.vtxCoo[2], trPnt, trDir);
-			fTrd.vtxTrCoo[0] = trPnt[0];
-			fTrd.vtxTrCoo[1] = trPnt[1];
-			fTrd.vtxTrCoo[2] = trPnt[2];
-		}
-        */
-	}
-
-
 	// TrdKCluster
 	float TOF_Beta = 1;
 	if      (recEv.iBetaH >= 0) TOF_Beta = std::fabs(event->pBetaH(recEv.iBetaH)->GetBeta());
@@ -1692,7 +1391,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	fStopwatch.start();
 		
 	// Rich cuts from Javie/Jorge
-	const float richRadZ[2] = {-73.775, -74.6216 };      // aerogel / NaF
+	const float richRadZ[2] = {-74.35, -75.5 };          // aerogel / NaF
 	const float richPMTZ = -121.89;                      // pmt z-axis
 	const float cut_prob = 0.01;                         // Kolmogorov test prob
 	const float cut_pmt = 3;                             // number of PMTs
@@ -1731,8 +1430,9 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
     // Track Info
     double trRigAbs = 0;
 
+    fRich.numOfHit = event->NRichHit();
+
 	// RichVeto - start
-    Bool_t has_RichVeto = false;
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
 		if (trtk == nullptr) break;
@@ -1807,38 +1507,61 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		std::copy(rev, rev+6, fRich.receiving);
 	
 		// Number of photoelectrons expected for a given track, beta and charge.
+        Bool_t has_RichVeto = true;
         if (has_RichVeto) {
-		    const int    npart = 5;
-		    const bool   openCal[npart] = { 1, 0, 0, 1, 1 };
-		    const double chrg[npart] = { 1., 1., 1., 1., 1. };
-		    const double mass[npart] = 
+		    const int    npart = 3;
+		    const double masschrg[npart] = 
 		      { 0.000510999,   // electron
-		        0.1395701835,  // pion
-		        0.493667,      // kaon
 		        0.938272297,   // proton
 		        1.876123915 }; // deuterium
-		    float thetas[npart] = { -1, -1, -1, -1, -1 };
-		    float numOfExpPE[npart] = {0, 0, 0, 0, 0 };
+		    float numOfExpPE[npart] = { 0, 0, 0 };
 		    std::fill_n(numOfExpPE, npart, -1);
 		    trRigAbs = std::fabs(trtk->GetRigidity(fitid));
 		    for (int it = 0; it < npart; ++it) {
-		    	double massChrg = mass[it] / chrg[it];
-		    	double beta = 1. / std::sqrt((massChrg * massChrg / trRigAbs / trRigAbs) + 1); 
-		    	double cos  = 1. / (rfrIndex * beta);
-		    	thetas[it] = (MGNumc::Compare(cos, 1.0) <= 0) ? std::acos(cos) : -1.0;
-		    	if (!openCal[it]) continue;
-		    	double exppe = RichRingR::ComputeNpExp(trtk, beta, chrg[it]);
+		    	double beta = 1. / std::hypot(1.0, (masschrg[it] / trRigAbs)); 
+		    	double exppe = RichRingR::ComputeNpExp(trtk, beta, 1.0);
 		    	numOfExpPE[it] = exppe;
 		    }
-	
-		    //std::copy(numOfExpPE, numOfExpPE+npart, fRich.numOfExpPE);
-		    //std::copy(thetas, thetas+npart, fRich.theta);
+		    std::copy(numOfExpPE, numOfExpPE+npart, fRich.numOfExpPE);
         }
 
         break;
     }
+	// official RichRingR - start
+	while (recEv.iRichRing >= 0 && fRich.kindOfRad >= 0) {
+		// RichRingR
+		RichRingR * rich = event->pRichRing(recEv.iRichRing);
+		int kindOfRad = rich->IsNaF() ? 1 : 0;
+		//int tileOfRad = rich->getTileIndex();
+		if (fRich.kindOfRad != kindOfRad) break;
+
+		fRich.status = true;
+		fRich.beta = rich->getBeta();
+		fRich.Q = rich->getCharge2Estimate(true);
+		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
+
+		fRich.isGoodRecon = true;
+		if (!rich->IsGood() || !rich->IsClean() ||
+            rich->getProb() < cut_prob ||
+			rich->getPMTs() < cut_pmt ||
+			rich->getPMTChargeConsistency() > cut_chargeConsistency) fRich.isGoodRecon = false;
+        
+        if (rich->IsNaF()) {
+			if (rich->getExpectedPhotoelectrons() < cut_expPhe[0] ||
+                rich->getBetaConsistency() > cut_betaConsistency[0] ||
+                rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[0]) fRich.isGoodRecon = false;
+		}
+		else {
+			if (rich->getExpectedPhotoelectrons() < cut_expPhe[1] ||
+                rich->getBetaConsistency() > cut_betaConsistency[1] ||
+				rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[1]) fRich.isGoodRecon = false;
+		}
+		break;
+	}
+	// official RichRingR - end
 	
 	// RICH Hits
+    /*
     if (has_RichVeto && fRich.kindOfRad >= 0) {
         AMSDir   oth(fRich.emission[3], fRich.emission[4], fRich.emission[5]);
         AMSPoint ems(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
@@ -2008,10 +1731,10 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	    
         std::sort(fRich.hits.begin(), fRich.hits.end(), HitRICHInfo_sort());
     }
-
+    */
     /*
     if (fRich.hits.size() != 0) {
-		const int    npart = 5;
+		const int    npart = 3;
         AMSPoint ems_coo(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
         AMSPoint pmt_coo(fRich.receiving[0], fRich.receiving[1], fRich.receiving[2]);
 		const double thetaLimit   = std::acos(1./fRich.rfrIndex) * 1.05;
@@ -2059,39 +1782,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
     }
     */
 	// RichVeto - end
-	
-	// official RichRingR - start
-	while (recEv.iRichRing >= 0 && fRich.kindOfRad >= 0) {
-		// RichRingR
-		RichRingR * rich = event->pRichRing(recEv.iRichRing);
-		int kindOfRad = rich->IsNaF() ? 1 : 0;
-		//int tileOfRad = rich->getTileIndex();
-		if (fRich.kindOfRad != kindOfRad) break;
-
-		fRich.status = true;
-		fRich.beta = rich->getBeta();
-		fRich.Q = rich->getCharge2Estimate(true);
-		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
-
-		fRich.isGoodRecon = true;
-		if (!rich->IsGood() || !rich->IsClean() ||
-            rich->getProb() < cut_prob ||
-			rich->getPMTs() < cut_pmt ||
-			rich->getPMTChargeConsistency() > cut_chargeConsistency) fRich.isGoodRecon = false;
-        
-        if (rich->IsNaF()) {
-			if (rich->getExpectedPhotoelectrons() < cut_expPhe[0] ||
-                rich->getBetaConsistency() > cut_betaConsistency[0] ||
-                rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[0]) fRich.isGoodRecon = false;
-		}
-		else {
-			if (rich->getExpectedPhotoelectrons() < cut_expPhe[1] ||
-                rich->getBetaConsistency() > cut_betaConsistency[1] ||
-				rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[1]) fRich.isGoodRecon = false;
-		}
-		break;
-	}
-	// official RichRingR - end
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -2138,18 +1828,10 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr)	return false;
 	fStopwatch.start();
 
-	// threshold : remove MIPs and low energy particles (lepton study 0.250)
-	// threshold : remove very low energy particles (proton study 0.050)
-	//float threshold = 0.050;
-
 	fEcal.numOfShower = event->NEcalShower();
 
-	for (int ish = 0; (recEv.iEcalShower >= 0) && (ish < event->NEcalShower()+1); ++ish) {
-		int jsh = ish - 1;
-		if (jsh == recEv.iEcalShower) continue;
-		EcalShowerR * ecal = event->pEcalShower( ((jsh==-1)?recEv.iEcalShower:jsh) );
-		if (ecal == nullptr) continue;
-	
+    EcalShowerR* ecal = ((recEv.iEcalShower >= 0) ? event->pEcalShower(recEv.iEcalShower) : nullptr);
+	if (ecal != nullptr) {
 		ShowerInfo shower;
 	
 		shower.energyD = 1.e-3 * ecal->EnergyD;
@@ -2177,47 +1859,27 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		// hadron shower
 		int zeh = 1;
-		if (jsh == -1) {
-			if (recEv.iTrTrack >= 0) {
-				TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-				std::vector<like_t> probLvl;
-				trtk->GetInnerZ(probLvl);
-    	  if (probLvl.size() != 0)
+		if (recEv.iTrTrack >= 0) {
+			TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
+			std::vector<like_t> probLvl;
+			trtk->GetInnerZ(probLvl);
+            if (probLvl.size() != 0)
     	    zeh = probLvl.at(0).Z;
-			}
-			else if (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != 0) {
-				BetaHR * betaH = event->pBetaH(recEv.iBetaH);
-				int nlay = 0; float prob = 0;
-				TofChargeHR tofQH = betaH->gTofCharge();
-				zeh = tofQH.GetZ(nlay, prob, 0);
-			}
+		}
+		else if (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != 0) {
+			BetaHR * betaH = event->pBetaH(recEv.iBetaH);
+			int nlay = 0; float prob = 0;
+			TofChargeHR tofQH = betaH->gTofCharge();
+			zeh = tofQH.GetZ(nlay, prob, 0);
 		}
 
 		EcalHadron::Build(ecal, zeh);
 		shower.hadronApex = EcalHadron::EcalApex;
 		shower.hadronEnergy = EcalHadron::EcalRigidity;
 
-		fEcal.showers.push_back(shower);
+		fEcal.shower = shower;
 	}
 
-
-	/* Raw Hits
-	for (int ih = 0; ih < event->NEcalHit(); ++ih) {
-		EcalHitR * ecalHit = event->pEcalHit(ih);
-		if (ecalHit == nullptr) continue;
-
-		HitECALInfo hit;
-		hit.id = ecalHit->Plane * 100 + ecalHit->Cell;
-		hit.side = ecalHit->Proj;
-		hit.edep = ecalHit->Edep;
-		hit.coo[0] = ecalHit->Coo[0];
-		hit.coo[1] = ecalHit->Coo[1];
-		hit.coo[2] = ecalHit->Coo[2];
-		fEcal.rawHits.push_back(hit);
-	}
-	std::sort(fEcal.rawHits.begin(), fEcal.rawHits.end(), HitECALInfo_sort());
-	*/
-	
 	fStopwatch.stop();
 	return selectEvent(event);
 }
@@ -2293,7 +1955,7 @@ void DataSelection::setEnvironment() {
 	ecal.setEnvironment();
 
   // set scale function
-  DataSelection::gScaleFact = 0.01;
+  DataSelection::gScaleFact = 0.02;
   DataSelection::gScaleFunc1D.SetParameter(0, DataSelection::gScaleFact);
   DataSelection::gScaleFunc2D.SetParameter(0, DataSelection::gScaleFact);
 }
@@ -2402,16 +2064,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	//COUT("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
 
 	// ~1~ (Based on BetaH(Beta))
-	bool isDownBeta = false;
-	for (int ibta = 0; ibta < event->NBeta(); ++ibta)
-		if (event->pBeta(ibta)->Beta > 1.0e-2) { isDownBeta = true; break; }
-
 	TofRecH::BuildOpt = 0; // normal
-	bool isDownBetaH = false;
-	for (int ibta = 0; ibta < event->NBetaH(); ++ibta)
-		if (event->pBetaH(ibta)->GetBeta() > 1.0e-2) { isDownBetaH = true; break; }
-	
-	if (!isDownBeta && !isDownBetaH) return -1001;
 	
 	// ~2~ (Based on TrTrack)
 	if (event->NTrTrack() != 1) return -2001;
@@ -2432,8 +2085,8 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	// ~5~ (Based on BetaH)
 	if (event->NBetaH() != 1) return -5001;
 	if (btahSIG->GetBetaPattern() != 4444) return -5002;
-	if (btahSIG->GetBeta() < 0.3 || btahSIG->GetBeta() > 1.3) return -5003;
 	double betah = btahSIG->GetBeta();
+    short  btahSign = MGNumc::Compare(betah);
 
 	// ~6~ (Based on Track Hits)
 	const unsigned short TrPtL34 =  12; //  4 +   8
@@ -2456,75 +2109,65 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		if (hasXY) numOfTrInX++;
 	}
 	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
-/*    
-	// ~7~ (Based on Track Pattern)
-	const unsigned short TrPtL1  =   1;
-	const unsigned short TrPtL2  =   2;
-	const unsigned short TrPtL9  = 256;
-	bool isTrIn = ((trBitPattJ&TrPtL2)==TrPtL2);
-	bool isTrL1 = ((trBitPattJ&TrPtL2)==TrPtL2 && (trBitPattXYJ&TrPtL1)==TrPtL1);
-	bool isTrL9 = ((trBitPattJ&TrPtL2)==TrPtL2 && (trBitPattXYJ&TrPtL9)==TrPtL9);
-	bool isTrFs = ((trBitPattXYJ&TrPtL1)==TrPtL1 && (trBitPattXYJ&TrPtL9)==TrPtL9);
-	bool isTrPt = (isTrIn || isTrL1 || isTrL9 || isTrFs);
-	if (!isTrPt) return -6003;
-
-	// ~8~ (Only for Antiproton to Proton Flux Ratio Study)
-	bool isAppStudy = true;
-	if (isAppStudy) {
-		//isAppStudy = EventBase::checkEventMode(EventBase::ISS);
-		isAppStudy = ( EventBase::checkEventMode(EventBase::ISS) || (officialDir.find("pr.pl1.flux.l1a9.2016000") != std::string::npos) || (officialDir.find("pr.pl1.flux.l1o9.2016000") != std::string::npos) );
-	}
+	
+    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
+	if (fitidInn < 0) return -6003;
 		
-	if (isAppStudy) {
-		bool   hasTr   = false;
-		bool   isScale = true;
-		double sclRig = 0.0;
+    double trQIn = trtkSIG->GetInnerQ_all(betah, fitidInn).Mean;
+	if (MGNumc::Compare(trQIn) <= 0) return -6004;
+
+	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
+	bool isSclStudy = true;
+	if (EventBase::checkEventMode(EventBase::ISS) && isSclStudy) {
 		const int npatt = 4;
 		const int spatt[npatt] = { 3, 5, 6, 7 };
+        short  sign[npatt] = { 0, 0, 0 , 0 };
+        double rig[npatt] = { 0, 0, 0, 0 };
 		for (int ip = 0; ip < npatt; ++ip) {
 			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 21);
 			if (fitid < 0) continue;
-			hasTr = true;
-			sclRig = trtkSIG->GetRigidity(fitid);
-			if (sclRig < 0.0) { isScale = false; break; }
+			rig[ip] = trtkSIG->GetRigidity(fitid);
+            sign[ip] = MGNumc::Compare(rig[ip]);
 		}
-		
-		int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
-		if (fitidInn < 0) return -7001;
-		double trQIn = trtkSIG->GetInnerQ_all(betah, fitidInn).Mean;
-		if (MGNumc::Compare(trQIn) <= 0) return -7002;
 
-		if (hasTr && isScale) {
+        short efts = 0;
+        double sclRig = 0;
+        for (int ip = 0; ip < npatt; ++ip) {
+            if (sign[ip] == 0) continue;
+            if (efts == 0 || efts == sign[ip]) efts = sign[ip];
+            else { efts = 0; break; }
+            sclRig = rig[ip];
+        }
+		
+        bool isScale = ((btahSign * efts) > 0);
+		if (isScale) {
 			//double scaleProb = gScaleFunc1D.Eval(sclRig); // (by Rigidity)
-			double scaleProb = gScaleFunc2D.Eval(sclRig, trQIn); // (by Rigidity & Charge)
-			if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7003;
+			double scaleProb = gScaleFunc2D.Eval(std::fabs(sclRig), trQIn); // (by Rigidity & Charge)
+			if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7001;
 			else EventList::Weight *= (1. / scaleProb);
 		}
 	}
-*/	
-	// ~9~ (Based on RTI)
-	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
+	
+	// ~8~ (Based on RTI)
+	bool isOverCfStudy = false;
+	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI) && isOverCfStudy) {
 		if (!rti.processEvent(event)) return -8001;
-        
-        /*
-		double minStormer = *std::min_element(rti.fRti.cutoffStormer, rti.fRti.cutoffStormer+4);
+		
+        double minStormer = *std::min_element(rti.fRti.cutoffStormer, rti.fRti.cutoffStormer+4);
 		double minIGRF    = *std::min_element(rti.fRti.cutoffIGRF, rti.fRti.cutoffIGRF+4);
 		double minCf      =  std::min(minStormer, minIGRF);
 		double maxRig     = 0.0;
 
-		bool hasTr = false;
 		const int npatt = 4;
 		const int spatt[npatt] = { 3, 5, 6, 7 };
 		for (int ip = 0; ip < npatt; ++ip) {
 			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 21);
 			if (fitid < 0) continue;
-			hasTr = true;
 			maxRig = std::max(maxRig, std::fabs(trtkSIG->GetRigidity(fitid)));
 		}
 
-		const double minFact = 1.2;
-		if ( hasTr && (maxRig < (minFact * minCf)) ) return -8002;
-        */
+		const double stableFact = 0.8;
+		if (maxRig < (stableFact * minCf)) return -8002;
 	}
 	
     //--------------------------//

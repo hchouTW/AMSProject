@@ -3,42 +3,42 @@
 
 namespace TrackSys {
 
-namespace MatProperty {
-    constexpr Int_t NUM_ELM = 9;
-    const     std::array<const std::string, NUM_ELM> NAME { "Hydrogen(H)", "Carbon(C)", "Nitrogen(N)", "Oxygen(O)", "Fluorine(F)", "Sodium(Na)", "Aluminum(Al)", "Silicon(Si)", "Lead(Pb)" };
-    constexpr std::array<Int_t, NUM_ELM>             CHRG { 1, 6, 7, 8, 9, 11, 13, 14, 82 };
-    constexpr std::array<Double_t, NUM_ELM>          MASS { 1.007947, 12.01078, 14.00672, 15.99943, 18.99840325, 22.989769282, 26.98153868, 28.08553, 207.21 }; // [g mol^-1]
-
-    constexpr std::array<Double_t, NUM_ELM> RAD_LEN { 63.04, 42.70, 37.99, 34.24, 32.93, 27.74, 24.01, 21.82, 6.37 }; // [g cm^-2]
-
-    // Mean Excitation Energy I = 16eV * Z^0.9 [eV]
-    constexpr std::array<Double_t, NUM_ELM> MEAN_EXENG        {  1.92e-05,  8.10e-05,  8.20e-05,  9.50e-05,  1.15e-04,  1.49e-04,  1.66e-04,  1.73e-04,  8.23e-04 }; // [MeV] From NIST, ESTART
-    constexpr std::array<Double_t, NUM_ELM> NEG_LN_MEAN_EXENG { 1.086e+01, 9.421e+00, 9.409e+00, 9.262e+00, 9.071e+00, 8.812e+00, 8.704e+00, 8.662e+00, 7.103e+00 }; // [MeV] From NIST, ESTART
-
-    // Density Effect Correction
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_C    { 3.2632,  2.9925, 10.5400, 10.7004, 10.9653, 5.0526, 4.2395, 4.4351, 6.2018 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X0   { 0.4759, -0.0351,  1.7378,  1.7541,  1.8433, 0.2880, 0.1708, 0.2014, 0.3776 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X1   { 1.9215,  2.4860,  4.1323,  4.3213,  4.4096, 3.1962, 3.0127, 2.8715, 3.8073 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_A    { 0.1348,  0.2024,  0.1535,  0.1178,  0.1108, 0.0777, 0.0802, 0.1492, 0.0936 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_K    { 5.6249,  3.0036,  3.2125,  3.2913,  3.2962, 3.6452, 3.6345, 3.2546, 3.1608 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLT0 {   0.13,     0.1,    0.19,    0.11,    0.11,   0.08,   0.12,   0.14,   0.14 }; // Form Geant4
-    constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLTM {  0.021,   0.038,  0.086,  0.101,     0.121,  0.098,  0.061,  0.059,  0.019 }; // Form Geant4
-}
+// namespace MatProperty {
+//     constexpr Int_t NUM_ELM = 9;
+//     const     std::array<const std::string, NUM_ELM> NAME { "Hydrogen(H)", "Carbon(C)", "Nitrogen(N)", "Oxygen(O)", "Fluorine(F)", "Sodium(Na)", "Aluminum(Al)", "Silicon(Si)", "Lead(Pb)" };
+//     constexpr std::array<Int_t, NUM_ELM>             CHRG { 1, 6, 7, 8, 9, 11, 13, 14, 82 };
+//     constexpr std::array<Double_t, NUM_ELM>          MASS { 1.007947, 12.01078, 14.00672, 15.99943, 18.99840325, 22.989769282, 26.98153868, 28.08553, 207.21 }; // [g mol^-1]
+// 
+//     constexpr std::array<Double_t, NUM_ELM> RAD_LEN { 63.04, 42.70, 37.99, 34.24, 32.93, 27.74, 24.01, 21.82, 6.37 }; // [g cm^-2]
+// 
+//     // Mean Excitation Energy I = 16eV * Z^0.9 [eV]
+//     constexpr std::array<Double_t, NUM_ELM> MEAN_EXENG        {  1.92e-05,  8.10e-05,  8.20e-05,  9.50e-05,  1.15e-04,  1.49e-04,  1.66e-04,  1.73e-04,  8.23e-04 }; // [MeV] From NIST, ESTART
+//     constexpr std::array<Double_t, NUM_ELM> NEG_LN_MEAN_EXENG { 1.086e+01, 9.421e+00, 9.409e+00, 9.262e+00, 9.071e+00, 8.812e+00, 8.704e+00, 8.662e+00, 7.103e+00 }; // [MeV] From NIST, ESTART
+// 
+//     // Density Effect Correction
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_C    { 3.2632,  2.9925, 10.5400, 10.7004, 10.9653, 5.0526, 4.2395, 4.4351, 6.2018 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X0   { 0.4759, -0.0351,  1.7378,  1.7541,  1.8433, 0.2880, 0.1708, 0.2014, 0.3776 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_X1   { 1.9215,  2.4860,  4.1323,  4.3213,  4.4096, 3.1962, 3.0127, 2.8715, 3.8073 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_A    { 0.1348,  0.2024,  0.1535,  0.1178,  0.1108, 0.0777, 0.0802, 0.1492, 0.0936 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_K    { 5.6249,  3.0036,  3.2125,  3.2913,  3.2962, 3.6452, 3.6345, 3.2546, 3.1608 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLT0 {   0.13,     0.1,    0.19,    0.11,    0.11,   0.08,   0.12,   0.14,   0.14 }; // Form Geant4
+//     constexpr std::array<Double_t, NUM_ELM> DEN_EFF_CORR_DLTM {  0.021,   0.038,  0.086,  0.101,     0.121,  0.098,  0.061,  0.059,  0.019 }; // Form Geant4
+// }
 
 
 class MatFld {
     public :
         MatFld() { clear(); }
-        MatFld(Double_t real_len) { clear(); real_len_ = real_len; }
+        MatFld(Double_t rlen) { clear(); rlen_ = rlen; }
         
-        MatFld(Bool_t mat, const std::array<Bool_t, MatProperty::NUM_ELM>& elm, const std::array<Double_t, MatProperty::NUM_ELM>& den, Double_t inv_rad_len = 0.0, Double_t elcloud_den = 0.0, Double_t real_len = 0.0, Double_t efft_len = 0.0, Double_t efft = 0.0, Double_t loc = 0.0, Double_t locsqr = 0.0, Bool_t* section_mat = nullptr, Double_t* section_nrl = nullptr, Double_t* section_ela = nullptr) : mat_(mat), elm_(elm), den_(den), inv_rad_len_(inv_rad_len), elcloud_den_(elcloud_den), real_len_(real_len), efft_len_(efft_len), efft_(efft), loc_(loc), locsqr_(locsqr) 
+        MatFld(Bool_t mat, Double_t irl = 0, Double_t eld = 0, Double_t lme = 0, Double_t dec = 0, Double_t rlen = 0, Double_t elen = 0, Double_t efft = 0, Double_t loc1 = 0, Double_t loc2 = 0, Bool_t* sec_mat = nullptr, Double_t* sec_nrl = nullptr, Double_t* sec_ela = nullptr) : mat_(mat), irl_(irl), eld_(eld), lme_(lme), dec_(dec), rlen_(rlen), elen_(elen), efft_(efft), loc1_(loc1), loc2_(loc2) 
         {
-            if (section_mat == nullptr) std::fill_n(section_mat_, SECTION_N, false);
-            else                        std::copy_n(section_mat, SECTION_N, section_mat_);
-            if (section_nrl == nullptr) std::fill_n(section_nrl_, SECTION_N, 0.);
-            else                        std::copy_n(section_nrl, SECTION_N, section_nrl_);
-            if (section_ela == nullptr) std::fill_n(section_ela_, SECTION_N, 0.); 
-            else                        std::copy_n(section_ela, SECTION_N, section_ela_);
+            if (sec_mat == nullptr) std::fill_n(sec_mat_, SECTION_N, false);
+            else                    std::copy_n(sec_mat,  SECTION_N, sec_mat_);
+            if (sec_nrl == nullptr) std::fill_n(sec_nrl_, SECTION_N, 0.);
+            else                    std::copy_n(sec_nrl,  SECTION_N, sec_nrl_);
+            if (sec_ela == nullptr) std::fill_n(sec_ela_, SECTION_N, 0.); 
+            else                    std::copy_n(sec_ela,  SECTION_N, sec_ela_);
         }
 
         ~MatFld() {}
@@ -46,45 +46,51 @@ class MatFld {
         void print() const;
 
         inline const Bool_t& operator() () const { return mat_; }
-        inline const std::array<Bool_t, MatProperty::NUM_ELM>&   elm() const { return elm_; }
-        inline const std::array<Double_t, MatProperty::NUM_ELM>& den() const { return den_; }
-        inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
-        inline const Double_t& elcloud_den() const { return elcloud_den_; }
-        inline const Double_t& real_len() const { return real_len_; }
-        inline const Double_t& efft_len() const { return efft_len_; }
+        inline const Double_t& irl() const { return irl_; }
+        inline const Double_t& eld() const { return eld_; }
+        inline const Double_t& lme() const { return lme_; }
+        inline const Double_t& dec() const { return dec_; }
+        
+        inline const Double_t& rlen() const { return rlen_; }
+        inline const Double_t& elen() const { return elen_; }
         inline const Double_t& efft() const { return efft_; }
-        inline const Double_t& loc() const { return loc_; }
-        inline const Double_t& locsqr() const { return locsqr_; }
+        inline const Double_t& loc1() const { return loc1_; }
+        inline const Double_t& loc2() const { return loc2_; }
 
-        inline Double_t num_rad_len() const { return (mat_ ? (inv_rad_len_ * efft_len_) : MGMath::ZERO); }
-        inline Double_t elcloud_abundance() const { return (mat_ ? (elcloud_den_ * efft_len_) : MGMath::ZERO); }
+        inline Double_t nrl() const { return (mat_ ? (irl_ * elen_) : MGMath::ZERO); }
+        inline Double_t ela() const { return (mat_ ? (eld_ * elen_) : MGMath::ZERO); }
 
-        inline const Bool_t&   section_mat(Int_t it) const { return section_mat_[it]; }
-        inline const Double_t& section_nrl(Int_t it) const { return section_nrl_[it]; }
-        inline const Double_t& section_ela(Int_t it) const { return section_ela_[it]; }
+        inline const Bool_t&   sec_mat(Int_t it) const { return sec_mat_[it]; }
+        inline const Double_t& sec_nrl(Int_t it) const { return sec_nrl_[it]; }
+        inline const Double_t& sec_ela(Int_t it) const { return sec_ela_[it]; }
 
     protected :
-        inline void clear() { mat_ = false; elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; real_len_ = 0.; efft_len_ = 0.; efft_ = 0.; loc_ = 0.; locsqr_ = 0.; std::fill_n(section_mat_, SECTION_N, false); std::fill_n(section_nrl_, SECTION_N, 0.); std::fill_n(section_ela_, SECTION_N, 0.); }
+        inline void clear() {
+            mat_ = false; irl_ = 0; eld_ = 0; lme_ = 0; dec_ = 0;
+            rlen_ = 0; elen_ = 0; efft_ = 0; loc1_ = 0; loc2_ = 0;
+            std::fill_n(sec_mat_, SECTION_N, false); std::fill_n(sec_nrl_, SECTION_N, 0); std::fill_n(sec_ela_, SECTION_N, 0); 
+        }
 
     private :
-        Bool_t                                     mat_;
-        std::array<Bool_t, MatProperty::NUM_ELM>   elm_;
-        std::array<Double_t, MatProperty::NUM_ELM> den_;
-        Double_t                                   inv_rad_len_;
-        Double_t                                   elcloud_den_;
-        Double_t                                   real_len_;
-        Double_t                                   efft_len_;
-        Double_t                                   efft_;
-        Double_t                                   loc_;
-        Double_t                                   locsqr_;
+        Bool_t   mat_;
+        Double_t irl_;
+        Double_t eld_;
+        Double_t lme_;
+        Double_t dec_;
+
+        Double_t rlen_;
+        Double_t elen_;
+        Double_t efft_;
+        Double_t loc1_;
+        Double_t loc2_;
 
     public :
         static constexpr Int_t SECTION_N = 5;
 
     private :
-        Bool_t   section_mat_[SECTION_N];
-        Double_t section_nrl_[SECTION_N];
-        Double_t section_ela_[SECTION_N];
+        Bool_t   sec_mat_[SECTION_N];
+        Double_t sec_nrl_[SECTION_N];
+        Double_t sec_ela_[SECTION_N];
 
     public :
         static MatFld Merge(const std::list<MatFld>& mflds);
@@ -95,69 +101,126 @@ class MatFld {
 // MatGeoBox - Data Format                                              //
 //----------------------------------------------------------------------//
 // Header :                                                             //
-// Long64_t N[3]                                                        //
-// Double_t MIN[3]                                                      //
-// Double_t MAX[3]                                                      //
-// Bool_t   ELM[NUM_ELM]                                                //
-// Double_t DEN[NUM_ELM]                                                //
-// Double_t INV_RAD_LEN                                                 //
+// Long64_t n[3]       [1]        n-cell                                //
+// Double_t min[3]     [cm]       boundary                              //
+// Double_t max[3]     [cm]       boundary                              //
+// Double_t stp        [1]        n-cell per step                       //
 // Content :                                                            //
-// Bool_t   MAT[index]                                                  //
 // ## Index = ( xi*YN*ZN + yi*ZN + zi )                                 //
 // ##         xi[0 XN-1] yi[0 YN-1] zi[0 ZN-1]                          //
+// Bool_t   mat[index]                                                  //
+// Double_t var[npar*index+elm]                                         //
+// elm_0: [1/cm]     inverse radiation length                           //
+// elm_1: [mole/cm3] electron density                                   //
+// elm_2: [MeV]      log mean excitation energy                         //
 //======================================================================//
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <TTree.h>
+
+class G4MatStep {
+    public :
+        G4MatStep(TTree* tree = nullptr) : x(0), y(0), area(0), nstp(0), min(nullptr), max(nullptr), irl(nullptr), eld(nullptr), lme(nullptr), dcC(nullptr), dcM(nullptr), dcA(nullptr), dcX0(nullptr), dcX1(nullptr) { SetBranchAddress(tree); }
+        ~G4MatStep() {}
+
+        void SetBranchAddress(TTree* tree) {
+            if (tree == nullptr) return;
+            tree->SetBranchAddress("x",    &x);
+            tree->SetBranchAddress("y",    &y);
+            tree->SetBranchAddress("area", &area);
+            tree->SetBranchAddress("nstp", &nstp);
+            tree->SetBranchAddress("min",  &min);
+            tree->SetBranchAddress("max",  &max);
+            tree->SetBranchAddress("irl",  &irl);
+            tree->SetBranchAddress("eld",  &eld);
+            tree->SetBranchAddress("lme",  &lme);
+            
+            tree->SetBranchAddress("dcC",  &dcC);
+            tree->SetBranchAddress("dcM",  &dcM);
+            tree->SetBranchAddress("dcA",  &dcA);
+            tree->SetBranchAddress("dcX0", &dcX0);
+            tree->SetBranchAddress("dcX1", &dcX1);
+        }
+
+    public :
+        Double_t x;
+        Double_t y;
+        Double_t area;
+        Long64_t nstp;
+        std::vector<Double_t>* min;
+        std::vector<Double_t>* max;
+        std::vector<Double_t>* irl;
+        std::vector<Double_t>* eld;
+        std::vector<Double_t>* lme;
+        
+        std::vector<Double_t>* dcC;
+        std::vector<Double_t>* dcM;
+        std::vector<Double_t>* dcA;
+        std::vector<Double_t>* dcX0;
+        std::vector<Double_t>* dcX1;
+};
 
 
-struct MatGeoBox {
-    Long64_t n[3];
-    Double_t min[3];
-    Double_t max[3];
-    Bool_t   elm[MatProperty::NUM_ELM];
-    Double_t den[MatProperty::NUM_ELM];
-    Double_t inv_rad_len;
-    Double_t elcloud_den;
-    Bool_t   mat;
+constexpr Long64_t MATGEOBOX_NDIM = 3;
+constexpr Long64_t MATGEOBOX_NPAR = 8;
+constexpr Long64_t MATVAR_IRL = 0;
+constexpr Long64_t MATVAR_ELD = 1;
+constexpr Long64_t MATVAR_LME = 2;
+constexpr Long64_t MATVAR_C   = 3;
+constexpr Long64_t MATVAR_M   = 4;
+constexpr Long64_t MATVAR_A   = 5;
+constexpr Long64_t MATVAR_X0  = 6;
+constexpr Long64_t MATVAR_X1  = 7;
+
+struct MatGeoBoxInf {
+    Long64_t  n[3];
+    Double_t  min[3];
+    Double_t  max[3];
+    Double_t  stp;
+    Bool_t    mat;
+};
+
+struct MatGeoBoxVar {
+    Double_t  var;
 };
 
 
 class MatGeoBoxCreator {
     public :
-        MatGeoBoxCreator(Long64_t xn, Double_t xmin, Double_t xmax, Long64_t yn, Double_t ymin, Double_t ymax, Long64_t zn, Double_t zmin, Double_t zmax, const std::string& file_path = "MatGeoBox.bin");
+        MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp = MGMath::ONE_TO_THREE, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
         ~MatGeoBoxCreator() { save_and_close(); }
 
-        void fill(Double_t coo[3], Bool_t elm[MatProperty::NUM_ELM], Double_t mol[MatProperty::NUM_ELM], Bool_t calculated = true);
+        void fill(const G4MatStep& g4mat);
 
         inline Bool_t is_open() { return is_open_; }
        
         void save_and_close();
 
-        void save_and_close(Bool_t elm[MatProperty::NUM_ELM], Double_t den[MatProperty::NUM_ELM]);
-
     protected :
-        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; vol_ = 0.; dlt_.fill(0); fact_.fill(0); cnt_ = 0; elm_.fill(false); den_.fill(0); inv_rad_len_ = 0.; elcloud_den_ = 0.; }
+        inline void clear() { is_open_ = false; fdes_inf_ = -1; flen_inf_ = 0; fptr_inf_ = reinterpret_cast<void*>(-1); gbox_inf_ = nullptr; fdes_var_ = -1; flen_var_ = 0; fptr_var_ = reinterpret_cast<void*>(-1); gbox_var_ = nullptr; mat_ptr_ = nullptr; var_ptr_ = nullptr; max_len_ = 0; area_ = 0; dlt_.fill(0); fact_.fill(0); }
 
     private :
-        static constexpr Long64_t  DIM_ = 3;
-        Bool_t                     is_open_;
-        std::string                file_path_;
-        Int_t                      file_des_;
-        Int_t                      file_len_;
-        void*                      file_ptr_;
-        Long64_t                   max_len_;
-        MatGeoBox*                 geo_box_;
-        Double_t                   vol_;
-        std::array<Double_t, DIM_> dlt_;
-        std::array<Long64_t, 2>    fact_;
-        Long64_t                                   cnt_;
-        std::array<Bool_t,   MatProperty::NUM_ELM> elm_;
-        std::array<Double_t, MatProperty::NUM_ELM> den_;
-        Double_t                                   inv_rad_len_;
-        Double_t                                   elcloud_den_;
+        Bool_t                               is_open_;
+        
+        Int_t                                fdes_inf_;
+        Int_t                                flen_inf_;
+        void*                                fptr_inf_;
+        MatGeoBoxInf*                        gbox_inf_;
+        
+        Int_t                                fdes_var_;
+        Int_t                                flen_var_;
+        void*                                fptr_var_;
+        MatGeoBoxVar*                        gbox_var_;
+        
+        Bool_t*                              mat_ptr_;
+        Double_t*                            var_ptr_;
+        Long64_t                             max_len_;
+        Double_t                             area_;
+        std::array<Double_t, MATGEOBOX_NDIM> dlt_;
+        std::array<Long64_t, 2>              fact_;
 };
 
 
@@ -165,44 +228,46 @@ class MatGeoBoxCreator {
 class MatGeoBoxReader {
     public :
         MatGeoBoxReader() { clear(); }
-        MatGeoBoxReader(const std::string& file_path) { clear(); load(file_path); }
+        MatGeoBoxReader(const std::string& fname, const std::string& dpath) { clear(); load(fname, dpath); }
         ~MatGeoBoxReader() { clear(); }
 
         inline Bool_t exist() { return is_load_; }
 
         void print() const;
 
-        Bool_t load(const std::string& file_path);
+        Bool_t load(const std::string& fname, const std::string& dpath);
         
         inline Bool_t is_in_box(const SVecD<3>& coo);
 
         inline Bool_t is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo);
         
-        MatFld get(const SVecD<3>& coo);
-        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        MatFld get(const SVecD<3>& coo, Double_t log10gb = -10);
+        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);
         
     protected :
-        inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mat_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); elm_.fill(false); den_.fill(0.); inv_rad_len_ = 0.; elcloud_den_ = 0.; }
+        inline void clear() { is_load_ = false; mat_ptr_ = nullptr; var_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; }
+        
+        inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
     private :
-        static constexpr Long64_t                  DIM_ = 3;
-        static constexpr Double_t                  STD_STEP_LEN_ = MGMath::ONE_TO_THREE;
-        static constexpr Double_t                  FST_STEP_LEN_ = MGMath::ONE_TO_THREE + MGMath::ONE;
-        Bool_t                                     is_load_;
-        std::string                                file_path_;
-        void*                                      file_ptr_;
-        Bool_t*                                    mat_ptr_;
-        Long64_t                                   max_len_;
-        std::array<Long64_t, DIM_>                 n_;
-        std::array<Double_t, DIM_>                 min_;
-        std::array<Double_t, DIM_>                 max_;
-        std::array<Double_t, DIM_>                 len_;
-        std::array<Double_t, DIM_>                 dlt_;
-        std::array<Long64_t, 2>                    fact_;
-        std::array<Bool_t, MatProperty::NUM_ELM>   elm_;
-        std::array<Double_t, MatProperty::NUM_ELM> den_;
-        Double_t                                   inv_rad_len_;
-        Double_t                                   elcloud_den_;
+        static constexpr Double_t STD_STEP_LEN_ = MGMath::ONE_TO_THREE;
+        static constexpr Double_t FST_STEP_LEN_ = MGMath::ONE_TO_THREE + MGMath::ONE;
+
+        Bool_t                               is_load_;
+        Bool_t*                              mat_ptr_;
+        Double_t*                            var_ptr_;
+        Long64_t                             max_len_;
+        std::array<Long64_t, MATGEOBOX_NDIM> n_;
+        std::array<Double_t, MATGEOBOX_NDIM> min_;
+        std::array<Double_t, MATGEOBOX_NDIM> max_;
+        std::array<Double_t, MATGEOBOX_NDIM> len_;
+        std::array<Double_t, MATGEOBOX_NDIM> dlt_;
+        std::array<Long64_t, 2>              fact_;
+        Double_t                             stp_;
+
+    private :
+        std::pair<Long64_t, Double_t> tmp_dec_; // for speed up
+        inline void reset_tmp_dec() { tmp_dec_.first = -1; tmp_dec_.second = 0.; }
 };
 
 
@@ -217,8 +282,8 @@ class MatMgnt {
         static Bool_t Load() { return false; }
 #endif
 
-        static MatFld Get(const SVecD<3>& coo);
-        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Bool_t is_std = true);
+        static MatFld Get(const SVecD<3>& coo, Double_t log10gb = -10);
+        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);
         
         static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
 
@@ -234,43 +299,26 @@ std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
-        MatPhyFld(Double_t len) { clear(); len_ = len; }
-        MatPhyFld(Bool_t mat, Double_t len = 0., Double_t efft = 0, Double_t loc = 0., Double_t locsqr = 0., Double_t inv_rad_len = 0., Double_t num_rad_len = 0., Double_t elcloud_den = 0., Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_mpv = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_men = 0., Double_t eloss_brm_men = 0.) : mat_(mat), len_(len), efft_(efft), loc_(loc), locsqr_(locsqr), inv_rad_len_(inv_rad_len), num_rad_len_(num_rad_len), elcloud_den_(elcloud_den), mult_scat_sgm_(mult_scat_sgm), eloss_ion_kpa_(eloss_ion_kpa), eloss_ion_mpv_(eloss_ion_mpv), eloss_ion_sgm_(eloss_ion_sgm), eloss_ion_men_(eloss_ion_men), eloss_brm_men_(eloss_brm_men) {}
+        MatPhyFld(Bool_t mat, Double_t mscat_sgm = 0, Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elion_men = 0, Double_t elbrm_men = 0) : mat_(mat), mscat_sgm_(mscat_sgm), elion_mpv_(elion_mpv), elion_sgm_(elion_sgm), elion_men_(elion_men), elbrm_men_(elbrm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
-        inline const Double_t& len() const { return len_; }
-        inline const Double_t& efft() const { return efft_; }
-        inline const Double_t& loc() const { return loc_; }
-        inline const Double_t& locsqr() const { return locsqr_; }
-        inline const Double_t& inv_rad_len() const { return inv_rad_len_; }
-        inline const Double_t& num_rad_len() const { return num_rad_len_; }
-        inline const Double_t& elcloud_den() const { return elcloud_den_; }
-        inline const Double_t& mult_scat_sgm() const { return mult_scat_sgm_; }
-        inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
-        inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
-        inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
-        inline const Double_t& eloss_ion_men() const { return eloss_ion_men_; }
-        inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
+        inline const Double_t& mscat_sgm() const { return mscat_sgm_; }
+        inline const Double_t& elion_mpv() const { return elion_mpv_; }
+        inline const Double_t& elion_sgm() const { return elion_sgm_; }
+        inline const Double_t& elion_men() const { return elion_men_; }
+        inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
     protected :
-        inline void clear() { mat_ = false; len_ = 0.; efft_ - 0.; loc_ = 0.; locsqr_ = 0.; inv_rad_len_ = 0.; num_rad_len_ = 0.; mult_scat_sgm_ = 0.; eloss_ion_kpa_ = 0.; eloss_ion_mpv_ = 0.; eloss_ion_sgm_ = 0.; eloss_brm_men_ = 0.; }
+        inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elbrm_men_ = 0; }
 
     private :
-        Bool_t   mat_;           // has matter?
-        Double_t len_;
-        Double_t efft_;
-        Double_t loc_;
-        Double_t locsqr_;
-        Double_t inv_rad_len_;   // inverse radiation length [cm^-1]
-        Double_t num_rad_len_;   // number of radiation length [1]
-        Double_t elcloud_den_;   // el-cloud density [1/cm^3]
-        Double_t mult_scat_sgm_; // multiple-scattering length [1]
-        Double_t eloss_ion_kpa_; // ionization-energy-loss KPA [1]
-        Double_t eloss_ion_mpv_; // ionization-energy-loss MPV [1]
-        Double_t eloss_ion_sgm_; // ionization-energy-loss SGM [1]
-        Double_t eloss_ion_men_; // ionization-energy-loss MEN [1]
-        Double_t eloss_brm_men_; // bremsstrahlung-energy-loss Mean [1]
+        Bool_t   mat_;       // has matter?
+        Double_t mscat_sgm_; // multiple-scattering [1]
+        Double_t elion_mpv_; // ionization-energy-loss MPV [1]
+        Double_t elion_sgm_; // ionization-energy-loss SGM [1]
+        Double_t elion_men_; // ionization-energy-loss MEN [1]
+        Double_t elbrm_men_; // bremsstrahlung-energy-loss MEN [1]
 };
 
 
@@ -279,17 +327,12 @@ class MatPhy {
         MatPhy() {}
         ~MatPhy() {}
 
-        static Double_t GetNumRadLen(const Double_t stp_len, const PhySt& part, Bool_t is_std = true);
-
         static MatPhyFld Get(const Double_t stp_len, PhySt& part, Bool_t is_std = true);
-        
         static MatPhyFld Get(const MatFld& mfld, PhySt& part);
 
     protected :
-        static std::array<Double_t, MatProperty::NUM_ELM> GetDensityEffectCorrection(const MatFld& mfld, PhySt& part);
-        
         static Double_t GetMultipleScattering(const MatFld& mfld, PhySt& part);
-        static std::tuple<Double_t, Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part);
     
     // EX only testcode
@@ -301,9 +344,9 @@ class MatPhy {
         }
 
     private :
-        static Bool_t   corr_sw_mscat_;
-        static Bool_t   corr_sw_eloss_;
-        static MatFld   corr_mfld_;
+        static Bool_t corr_sw_mscat_;
+        static Bool_t corr_sw_eloss_;
+        static MatFld corr_mfld_;
 
     private :
         // Coulomb Multiple Scattering, the Highland-Lynch-Dahl equation
@@ -314,8 +357,6 @@ class MatPhy {
         static constexpr Double_t NRL_CORR_FACT  = 0.0380; // [1]
         static constexpr Double_t NRL_CORR_FACT1 = 0.1050; // [1]
         static constexpr Double_t NRL_CORR_FACT2 = 0.0035; // [1]
-        static constexpr Double_t LMTL_NUM_RAD_LEN = 1.0e-3;
-        static constexpr Double_t LMTU_NUM_RAD_LEN = 100.;
         
         // Energy Loss from ionization, the Bethe-Bloch equation
         static constexpr Double_t BETHE_BLOCH_K = 0.307075; // [MeV mol^-1 cm^2]

@@ -12,6 +12,7 @@ export GIT_EDITOR=vim
 # Remote
 alias ssh='ssh -o "StrictHostKeyChecking no" -Y'
 alias rsync='rsync --ignore-existing --progress --human-readable'
+alias rsync_cern="~/AMSProject/sys/shell/rsync_cern.sh"
 
 # Sys
 alias dstat='dstat -cdlmnpsy'
@@ -102,8 +103,8 @@ function ljcheck {
         do
             clear
             jobs_num=`ljsearch ${1} | wc -l`
-            echo -e "BEGIN DATE  ${date_beg}"
-            echo -e "`date`  NJOBS ${jobs_num}\n"
+            echo -e "DATE BEGIN ${date_beg} NOW `date`"
+            echo -e "NJOBS ${jobs_num}\n"
             ljsearch ${1}
             if (( ${jobs_num} == 0 )); then
                 echo -e "SUCCESS."

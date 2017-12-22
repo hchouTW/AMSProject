@@ -7,7 +7,7 @@ namespace TrackSys {
 
 class PhyArg {
     public :
-        static void SetOpt(Bool_t opt_mscat = true, Bool_t opt_eloss = true) { opt_mscat_ = opt_mscat; opt_eloss_ = opt_eloss; }
+        static void SetOpt(Bool_t opt_mscat = false, Bool_t opt_eloss = false) { opt_mscat_ = opt_mscat; opt_eloss_ = opt_eloss; }
         static void SetOptMscat(Bool_t opt_mscat = true) { opt_mscat_ = opt_mscat; }
         static void SetOptEloss(Bool_t opt_eloss = true) { opt_eloss_ = opt_eloss; }
 
@@ -22,158 +22,124 @@ class PhyArg {
         PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
-        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { field_ = (sw_mscat || sw_eloss); sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; mscatl_tau_ = 0.0; mscatl_rho_ = 0.0; eloss_ion_ = 0.0; eloss_brm_ = 0.0; tune_eloss_ion_ = MGMath::ONE; } 
-        
-        inline void set_mscat(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) { if (sw_mscat_) { mscatu_tau_ = tauu; mscatu_rho_ = rhou; mscatl_tau_ = taul; mscatl_rho_ = rhol; } }
-        
-        inline void set_eloss(Double_t ion = 0.0, Double_t brm = 0.0, Double_t ionlmt = 0.0) { if (sw_eloss_) { eloss_ion_ = (ion<-std::max(LMT_SGM_, ionlmt)?-std::max(LMT_SGM_, ionlmt):ion); eloss_brm_ = ((brm<0.0)?0.0:brm); } }
-        
-        inline void set(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0, Double_t ion = 0.0, Double_t brm = 0.0) { set_mscat(tauu, rhou, taul, rhol); set_eloss(ion, brm); }
+        inline void zero();
+        inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss());
+        inline void clear() { reset(sw_mscat_, sw_eloss_); }
 
-        void rndm_mscatu() { mscatu_tau_ = 0.0; mscatu_rho_ = 0.0; if (sw_mscat_) { mscatu_tau_ = pdf_mscat_.rndm(); mscatu_rho_ = pdf_mscat_.rndm(); } }
-        void rndm_mscatl() { mscatl_tau_ = 0.0; mscatl_rho_ = 0.0; if (sw_mscat_) { mscatl_tau_ = pdf_mscat_.rndm(); mscatl_rho_ = pdf_mscat_.rndm(); } }
-        void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
-
-        void rndm_eloss_ion(Double_t kpa = 0.0, Double_t mos = 0.0);
-        void rndm_eloss_brm(Double_t nrl = 0.0) { if (sw_eloss_) { Double_t bremslen = nrl / MGMath::LOG_TWO; eloss_brm_=((bremslen<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
-        void rndm_eloss(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
-
-        void rndm(Double_t kpa = 0.0, Double_t mos = 0.0, Double_t nrl = 0.0) { rndm_mscatu(); rndm_mscatl(); rndm_eloss_ion(kpa, mos); rndm_eloss_brm(nrl); }
-
-        inline const Bool_t& operator() () const { return field_; }
+        inline Bool_t operator() () const { return (field_ && mat_); }
 
         inline const Bool_t& mscat() const { return sw_mscat_; }
         inline const Bool_t& eloss() const { return sw_eloss_; }
 
-        inline const Double_t& tauu() const { return mscatu_tau_; }
-        inline const Double_t& rhou() const { return mscatu_rho_; }
-        inline const Double_t& taul() const { return mscatl_tau_; }
-        inline const Double_t& rhol() const { return mscatl_rho_; }
-        
-        inline const Double_t& ion() const { return eloss_ion_; }
-        inline const Double_t& brm() const { return eloss_brm_; }
-       
-        inline Double_t etauu() const { return pdf_mscat_.efft_sgm(mscatu_tau_); }
-        inline Double_t erhou() const { return pdf_mscat_.efft_sgm(mscatu_rho_); }
-        inline Double_t etaul() const { return pdf_mscat_.efft_sgm(mscatl_tau_); }
-        inline Double_t erhol() const { return pdf_mscat_.efft_sgm(mscatl_rho_); }
-      
-        // Note: Expert Tool
-        inline void set_tune_ion(Double_t tune = 1.0) { if (sw_eloss_) { 
-            if      (tune < MGMath::ZERO) tune_eloss_ion_ = MGMath::ZERO;
-            else if (tune > MGMath::ONE)  tune_eloss_ion_ = MGMath::ONE;
-            else                          tune_eloss_ion_ = tune;
-        } }
-        inline const Double_t& tune_ion() const { return tune_eloss_ion_; }
+        inline const Bool_t& field() const { return field_; }
+        inline const Bool_t& mat() const { return mat_; }
 
-        inline static MultiGauss& pdf_mscat() { return pdf_mscat_; }
-
-    private :
-        Bool_t   field_;
-        Bool_t   sw_mscat_;
-        Bool_t   sw_eloss_;
-        Double_t mscatu_tau_;
-        Double_t mscatu_rho_;
-        Double_t mscatl_tau_;
-        Double_t mscatl_rho_;
-        Double_t eloss_ion_;
-        Double_t eloss_brm_;
-
-        // Note: Expert Tool
-        Double_t tune_eloss_ion_;
-        
-    protected :
-        static MultiGauss pdf_mscat_;
-
-    protected :
-        static constexpr Int_t    NPX_      = 400;
-        static constexpr Double_t LMT_SGM_  = 4.0;
-        static constexpr Double_t STEP_KPA_ = 0.02;
-        static constexpr Double_t STEP_MOS_ = 0.2;
-        static std::map<std::pair<Int_t, Int_t>, TF1 *> pdf_eloss_ion_;
-};
-
-Bool_t PhyArg::opt_mscat_ = true;
-Bool_t PhyArg::opt_eloss_ = true;
-
-MultiGauss PhyArg::pdf_mscat_(8.931154e-01, 1.000000e+00, 9.211506e-02, 1.851060e+00, 1.167630e-02, 4.478370e+00, 3.093243e-03, 2.390957e+01);
-
-std::map<std::pair<Int_t, Int_t>, TF1 *> PhyArg::pdf_eloss_ion_;
-
-
-class VirtualPhySt {
-    public :
-        VirtualPhySt() { reset(); }
-        ~VirtualPhySt() {}
-
-        inline void reset(Bool_t field = false);
-       
-        inline const Bool_t& operator() () const { return field_; }
-
-        inline void set_sign(Short_t sign = 1) { sign_ = ((sign>=0)?1:-1); }
-    
-        inline const Short_t& sign() { return sign_; }
-
-        inline void set_len(Double_t len) { len_ = len; }
-        inline void set_nrl(Double_t nrl) { nrl_ = nrl; }
-        inline void set_ela(Double_t ela) { ela_ = ela; }
-        
         inline const Double_t& len() const { return len_; }
         inline const Double_t& nrl() const { return nrl_; }
         inline const Double_t& ela() const { return ela_; }
 
-        inline void set_orth(const SVecD<3>& tau, const SVecD<3>& rho) { tau_ = tau; rho_ = rho; }
-        inline const SVecD<3>& tau() const { return tau_; }
-        inline const SVecD<3>& rho() const { return rho_; }
-        inline const Double_t& tau(Int_t idx) const { return tau_(idx); }
-        inline const Double_t& rho(Int_t idx) const { return rho_(idx); }
-
-        inline void set_mscatu(Double_t mscatuu, Double_t mscatcu) { mscatuu_ = mscatuu; mscatcu_ = mscatcu; }
-        inline void set_mscatl(Double_t mscatul, Double_t mscatcl) { mscatul_ = mscatul; mscatcl_ = mscatcl; } 
-
-        inline const Double_t& mscatuu() const { return mscatuu_; }
-        inline const Double_t& mscatcu() const { return mscatcu_; }
-        inline const Double_t& mscatul() const { return mscatul_; }
-        inline const Double_t& mscatcl() const { return mscatcl_; }
-
-        inline SVecD<3> symbk_mscatu(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) const { return (field_ ? ((tauu*mscatuu_+taul*mscatul_)*tau_ + (rhou*mscatuu_+rhol*mscatul_)*rho_) : SVecD<3>()); }
-        inline SVecD<3> symbk_mscatc(Double_t tauu = 0.0, Double_t rhou = 0.0, Double_t taul = 0.0, Double_t rhol = 0.0) const { return (field_ ? ((tauu*mscatcu_+taul*mscatcl_)*tau_ + (rhou*mscatcu_+rhol*mscatcl_)*rho_) : SVecD<3>()); }
-       
-        inline void set_eloss_ion(Double_t kpa, Double_t mpv, Double_t sgm) { eloss_ion_kpa_ = kpa; eloss_ion_mpv_ = mpv; eloss_ion_sgm_ = sgm; }
-        inline void set_eloss_brm(Double_t men) { eloss_brm_men_ = men; }
+        inline const Double_t& tauu() const { return tauu_; }
+        inline const Double_t& rhou() const { return rhou_; }
+        inline const Double_t& taul() const { return taul_; }
+        inline const Double_t& rhol() const { return rhol_; }
         
-        inline const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
-        inline const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
-        inline const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
-        inline Double_t        eloss_ion_mos() const { return ( MGNumc::EqualToZero(eloss_ion_sgm_) ? MGMath::ZERO : (eloss_ion_mpv_/eloss_ion_sgm_) ); }
-        inline Double_t        eloss_ion_lmt() const { Double_t lmt = (eloss_ion_mpv_/(eloss_ion_kpa_*eloss_ion_sgm_)); return ((MGNumc::Valid(lmt) && MGNumc::Compare(lmt)>0) ? lmt : MGMath::ZERO); }
+        inline const Double_t& elion() const { return elion_; }
+        inline const Double_t& elbrm() const { return elbrm_; }
+       
+        inline Double_t etauu() const { return pdf_mscatu_.efft_sgm(tauu_); }
+        inline Double_t erhou() const { return pdf_mscatu_.efft_sgm(rhou_); }
+        inline Double_t etaul() const { return pdf_mscatl_.efft_sgm(taul_); }
+        inline Double_t erhol() const { return pdf_mscatl_.efft_sgm(rhol_); }
+   
+        inline const SVecD<3>& orth_tau() const { return orth_tau_; }
+        inline const SVecD<3>& orth_rho() const { return orth_rho_; }
+        inline const Double_t& orth_tau(Int_t i) const { return orth_tau_(i); }
+        inline const Double_t& orth_rho(Int_t i) const { return orth_rho_(i); }
+        
+        inline const Double_t& mscat_uu() const { return mscat_uu_; }
+        inline const Double_t& mscat_ul() const { return mscat_ul_; }
+        inline const Double_t& mscat_ll() const { return mscat_ll_; }
 
-        inline const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
+        inline const Double_t& elion_sgm() const { return elion_sgm_; }
+        inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
-        inline Double_t symbk_eloss(Double_t ion = 0.0, Double_t brm = 0.0) const { return (field_ ? (sign_ * (ion * (eloss_ion_kpa_*eloss_ion_sgm_) + brm * eloss_brm_men_)) : MGMath::ZERO); }
+    public :
+        // Set Parameters
+        void set_mscat(Double_t tauu = 0, Double_t rhou = 0, Double_t taul = 0, Double_t rhol = 0) { if (sw_mscat_) { tauu_ = tauu; rhou_ = rhou; taul_ = taul; rhol_ = rhol; } }
+        void set_eloss(Double_t ion = 0, Double_t brm = 0) { if (sw_eloss_) { elion_ = ion; elbrm_ = ((brm<0.0)?0.0:brm); } }
+
+        // Rndm Parameters
+        void rndm_mscatu() { tauu_ = 0.; rhou_ = 0.; if (sw_mscat_) { tauu_ = pdf_mscatu_.rndm(); rhou_ = pdf_mscatu_.rndm(); } }
+        void rndm_mscatl() { taul_ = 0.; rhol_ = 0.; if (sw_mscat_) { taul_ = pdf_mscatl_.rndm(); rhol_ = pdf_mscatl_.rndm(); } }
+        void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
+
+        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGROOT::Rndm::Landau(); } }
+        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / MGMath::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
+        void rndm_eloss() { rndm_elion(); rndm_elbrm(); }
+
+        void rndm() { if (field_) { rndm_mscatu(); rndm_mscatl(); rndm_elion(); rndm_elbrm(); } }
+
+        // Set Variables
+        void setvar_len(Double_t len = 0) { len_ = ((len>=0.)?len:0.); }
+        void setvar_mat(Bool_t mat = false, Double_t nrl = 0, Double_t ela = 0) { if (mat) { mat_ = mat; nrl_ = nrl; ela_ = ela; } }
+        void setvar_orth(Short_t sign = 1, const SVecD<3>& orth_tau = SVecD<3>(1, 0, 0), const SVecD<3>& orth_rho = SVecD<3>(0, 1, 0)) { if (field_) { sign_=((sign>=0)?1:-1); orth_tau_ = orth_tau; orth_rho_ = orth_rho; } }
+        void setvar_mscat(Double_t mscat_uu = 0, Double_t mscat_ul = 0, Double_t mscat_ll = 0) { if (sw_mscat_) { mscat_uu_ = mscat_uu; mscat_ul_ = mscat_ul; mscat_ll_ = mscat_ll; } }
+        void setvar_eloss(Double_t elion_sgm = 0, Double_t elbrm_men = 0) { if (sw_eloss_) { elion_sgm_ = elion_sgm; elbrm_men_ = elbrm_men; } }
+        
+        // Symbk
+        SVecD<3> symbk_mscatu() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_uu_) * orth_tau_ + (rhou_*mscat_uu_) * orth_rho_) : SVecD<3>()); }
+        SVecD<3> symbk_mscatl() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_ul_ + taul_*mscat_ll_) * orth_tau_ + (rhou_*mscat_ul_ + rhol_*mscat_ll_) * orth_rho_) : SVecD<3>()); }
+        Double_t symbk_eloss() const  { return ((sw_eloss_ && mat_) ? (sign_ * (elion_*elion_sgm_ + elbrm_*elbrm_men_)) : MGMath::ZERO); }
 
     private :
+        Bool_t   sw_mscat_;
+        Bool_t   sw_eloss_;
+        
         Bool_t   field_;
-        Short_t  sign_;
-
+        Bool_t   mat_;
         Double_t len_;
         Double_t nrl_;
         Double_t ela_;
 
-        SVecD<3> tau_;
-        SVecD<3> rho_;
+        Double_t tauu_;
+        Double_t rhou_;
+        Double_t taul_;
+        Double_t rhol_;
+        Double_t elion_;
+        Double_t elbrm_;
+        
+        Short_t  sign_;      // sign(step)
+        SVecD<3> orth_tau_;  // default (1, 0, 0)
+        SVecD<3> orth_rho_;  // default (0, 1, 0)
 
-        Double_t mscatuu_;
-        Double_t mscatcu_;
-        Double_t mscatul_;
-        Double_t mscatcl_;
+        Double_t mscat_uu_;
+        Double_t mscat_ul_;
+        Double_t mscat_ll_;
 
-        Double_t eloss_ion_kpa_;
-        Double_t eloss_ion_mpv_;
-        Double_t eloss_ion_sgm_;
+        Double_t elion_sgm_;
+        Double_t elbrm_men_;
 
-        Double_t eloss_brm_men_;
+    protected :
+        static MultiGauss pdf_mscatu_;
+        static MultiGauss pdf_mscatl_;
 };
+
+Bool_t PhyArg::opt_mscat_ = false;
+Bool_t PhyArg::opt_eloss_ = false;
+
+MultiGauss PhyArg::pdf_mscatu_(
+    MultiGauss::Opt::NOROBUST,
+    7.93621542964197957e-01, 1.22595e-02/1.22595e-02,
+    1.47262250776109577e-01, 1.89058e-02/1.22595e-02,
+    1.30185649405573714e-02, 5.35799e-02/1.22595e-02,
+    4.38646448670061487e-02, 1.52299e-01/1.22595e-02,
+    2.23299645212899451e-03, 4.34778e-01/1.22595e-02
+);
+
+MultiGauss PhyArg::pdf_mscatl_(
+    MultiGauss::Opt::NOROBUST,
+    1.0
+);
 
 
 class PhySt {
@@ -182,7 +148,7 @@ class PhySt {
         PhySt(const PartInfo& info, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info.type()); }
         ~PhySt() {}
 
-        void reset(const PartType& type = PartType::Proton, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
+        void reset(const PartType& type = PartType::Proton);
         
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
@@ -204,12 +170,18 @@ class PhySt {
 
         void print() const;
 
+    public :
+        inline PhyArg&       arg() { return arg_; }
+        inline const Bool_t& field() const { return arg_.field(); }
+        inline const Bool_t& mat()   const { return arg_.mat(); }
+
         inline const PartInfo& info() const { return info_; }
-        inline const Int_t&    chrg() const { return (info_.chrg()); }
+        inline const Short_t&  chrg() const { return (info_.chrg()); }
         inline const Double_t& mass() const { return (info_.mass()); }
 
         inline const Double_t& mom()   const { return mom_; }
         inline const Double_t& eng()   const { return eng_; } 
+        inline const Double_t& ke()    const { return ke_; }
         inline const Double_t& bta()   const { return bta_; }
         inline const Double_t& gmbta() const { return gmbta_; }
         inline const Double_t& eta()   const { return eta_; }
@@ -231,28 +203,19 @@ class PhySt {
         inline const Double_t& ux() const { return dir_(0); } 
         inline const Double_t& uy() const { return dir_(1); } 
         inline const Double_t& uz() const { return dir_(2); } 
-        
-        inline Double_t tx() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
-        inline Double_t ty() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
+        inline Double_t        tx() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
+        inline Double_t        ty() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
 
-        inline void set_st(const SVecD<5>& st) { set_state_with_uxy(SVecD<3>(st(0), st(1), coo_(2)), SVecD<3>(st(2), st(3), MGNumc::Compare(dir_(2)))); set_eta(st(4)); }
-        inline SVecD<5> st() const { return SVecD<5>(coo_(0), coo_(1), dir_(0), dir_(1), eta_); }
-
-        inline PhyArg&       arg() { return arg_; }
-        inline VirtualPhySt& vst() { return vst_; }
-        
-        inline const Bool_t& field() const { return arg_(); }
-
-        void zero() { arg_.reset(arg_.mscat(), arg_.eloss()); vst_.reset(); }
         void symbk(Bool_t is_rndm = false);
 
     private :
         PartInfo info_;
+        PhyArg   arg_;
 
         Double_t mom_;
         Double_t eng_;
+        Double_t ke_;
         Double_t bta_;
-        
         Double_t gmbta_;
         Double_t eta_;
         
@@ -260,9 +223,6 @@ class PhySt {
         
         SVecD<3> coo_;
         SVecD<3> dir_;
-
-        PhyArg       arg_;
-        VirtualPhySt vst_;
 };
         
 

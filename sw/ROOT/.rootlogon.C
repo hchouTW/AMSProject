@@ -25,6 +25,18 @@
     f5gs->SetParameters(10., 10., 10., 30., 10., 50., 10., 70., 10., 100);
     f5gs->SetNpx(100000);
     
+    TF1 * f1ags = new TF1("f1ags", "([0]/[1])*(TMath::Exp(-0.5*(x-[2])*(x-[2])/[1]/[1])+TMath::Exp(-0.5*(x+[2])*(x+[2])/[1]/[1]))");
+    f1ags->SetParameters(10., 10., 0.);
+    f1ags->SetNpx(100000);
+    
+    //TF1 * f1nags = new TF1("f1nags", "([0]/[1])*TMath::Exp(-0.5*x*x/[1]/[1]) + (0.5*[2]/[3])*(TMath::Exp(-0.5*(x-[4])*(x-[4])/[3]/[3])+TMath::Exp(-0.5*(x+[4])*(x+[4])/[3]/[3]))");
+    //f1nags->SetParameters(10., 10., 10., 30., 0.);
+    //f1nags->SetNpx(100000);
+    
+    TF1 * f1nags = new TF1("f1nags", "([0]/[3])*([1]*TMath::Exp(-0.5*x*x/[3]/[3]) + TMath::Sqrt(2)*(TMath::Exp(-(x-[2])*(x-[2])/[3]/[3]) + TMath::Exp(-(x+[2])*(x+[2])/[3]/[3])))");
+    f1nags->SetParameters(10., 1., 0., 10.);
+    f1nags->SetNpx(100000);
+    
     TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
     feloss->SetParameters(1000., 1.0, 0.0015, 0.0002); 
     

@@ -53,19 +53,19 @@ class SegPARTMCInfo : public TObject {
 		~SegPARTMCInfo() {}
 
 		void init() {
-			dec  = -1;
-			lay  = -1;
-			mom  = -1;
-			kEng = -1;
+			dec = -1;
+			lay = -1;
+			mom = -1;
+			ke  = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
 		}
 
 	public :
-        Short_t dec;
+        Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL
         Short_t lay;
 		Float_t mom;
-		Float_t kEng;
+		Float_t ke;     // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 	
@@ -92,13 +92,15 @@ class HitTRKMCInfo : public TObject {
 		~HitTRKMCInfo() {}
 
 		void init() {
-			layJ    = 0;
-			tkid    = 0;
-			edep    = -1;
-			mom     = -1;
-			kEng    = -1;
+			layJ = 0;
+			tkid = 0;
+			edep = -1;
+			mom  = -1;
+			ke   = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
+			
+            std::fill_n(smr, 2, 0);
 		}
 
 	public :
@@ -106,11 +108,13 @@ class HitTRKMCInfo : public TObject {
 		Short_t tkid;    // tkID
 		Float_t edep;    // edep
 		Float_t mom;     // momentum
-		Float_t kEng;    // kinetic energy
+		Float_t ke;      // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 
-	ClassDef(HitTRKMCInfo, 4)
+        Float_t smr[2];
+
+	ClassDef(HitTRKMCInfo, 5)
 };
 
 struct HitTRKMCInfo_sort {
@@ -175,6 +179,7 @@ class PartMCInfo : public TObject {
 			partID   = 0;
 			chrg     = 0;
 			mass     = 0;
+            beta     = 0;
 			mom      = 0;
 			kEng     = 0;
 			std::fill_n(coo, 3, 0);
@@ -187,6 +192,7 @@ class PartMCInfo : public TObject {
 		Short_t partID;
 		Float_t chrg;
 		Float_t mass;
+        Float_t beta;
 		Float_t mom;
 		Float_t kEng; // kinetic energy
 		Float_t coo[3];
@@ -195,7 +201,7 @@ class PartMCInfo : public TObject {
         std::vector<SegPARTMCInfo> segs;
 		std::vector<HitTRKMCInfo>  hits;
 
-	ClassDef(PartMCInfo, 7)
+	ClassDef(PartMCInfo, 8)
 };
 
 struct PartMCInfo_sort {
@@ -223,23 +229,21 @@ class VertexMCInfo : public TObject {
 
 		void init() {
 			status = false;
-			std::fill_n(vtx, 3, 0.);
+			std::fill_n(coo, 3, 0.);
             numOfPart = 0;
             partID.clear();
-            kEng.clear();
-            mom.clear();
+            ke.clear();
 		}
 
 	public :
 		Bool_t  status;
-		Float_t vtx[3];
+		Float_t coo[3];
 
         Short_t              numOfPart;
         std::vector<Short_t> partID;
-        std::vector<Float_t> kEng;
-        std::vector<Float_t> mom;
+        std::vector<Float_t> ke;
 	
-	ClassDef(VertexMCInfo, 5)
+	ClassDef(VertexMCInfo, 6)
 };
 
 
@@ -256,19 +260,20 @@ class HitTRKInfo : public TObject {
 			sens = -1;
 			mult = -1;
 			side =  0;
-			std::fill_n(coo,  3, 0);
+			std::fill_n(coo, 3, 0);
+			std::fill_n(nsr, 2, 0);
 			std::fill_n(sig, 2, -1);
 			std::fill_n(loc, 2, -1);
 
-            stripAdrX = -1;
-            stripIdxX = -1;
-			stripSigX.clear();
-			stripSgmX.clear();
+            //stripAdrX = -1;
+            //stripIdxX = -1;
+			//stripSigX.clear();
+			//stripSgmX.clear();
 
-            stripAdrY = -1;
-            stripIdxY = -1;
-			stripSigY.clear();
-			stripSgmY.clear();
+            //stripAdrY = -1;
+            //stripIdxY = -1;
+			//stripSigY.clear();
+			//stripSgmY.clear();
 		}
 
 	public :
@@ -279,20 +284,21 @@ class HitTRKInfo : public TObject {
 		Short_t mult;     // multiplicity
 		Short_t side;     // side, 1 x, 2 y, 3 xy
 		Float_t coo[3];   // coordinate
-		Float_t sig[2];   // signal
+        Short_t nsr[2];   // (elc) n-stripe
+		Float_t sig[2];   // (elc) signal
 		Float_t loc[2];   // (elc) cofg loc
 		
-        Short_t              stripAdrX; // (elc) strip seed address
-        Short_t              stripIdxX; // (elc) strip seed index
-		std::vector<Float_t> stripSigX; // (elc) strip signal (value)
-		std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
+        //Short_t              stripAdrX; // (elc) strip seed address
+        //Short_t              stripIdxX; // (elc) strip seed index
+		//std::vector<Float_t> stripSigX; // (elc) strip signal (value)
+		//std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
 		
-        Short_t              stripAdrY; // (elc) strip seed address
-        Short_t              stripIdxY; // (elc) strip seed index
-		std::vector<Float_t> stripSigY; // (elc) strip signal (value)
-		std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
+        //Short_t              stripAdrY; // (elc) strip seed address
+        //Short_t              stripIdxY; // (elc) strip seed index
+		//std::vector<Float_t> stripSigY; // (elc) strip signal (value)
+		//std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
 
-	ClassDef(HitTRKInfo, 6)
+	ClassDef(HitTRKInfo, 7)
 };
 
 struct HitTRKInfo_sort {
@@ -475,12 +481,10 @@ class TrackInfo : public TObject {
 			
 			std::fill_n(status[0], 2 * 4, false);
 			std::fill_n(rigidity[0], 2 * 4, 0);
-			std::fill_n(chisq[0][0], 2 * 4 * 2, -1);
+			std::fill_n(chisq[0][0], 2 * 4 * 3, -1);
 			std::fill_n(state[0][0], 2 * 4 * 6, 0);
 			
 			std::fill_n(stateLJ[0][0][0], 2 * 4 * 9 * 6, 0);
-			//std::fill_n(localID[0][0][0], 2 * 4 * 9 * 3, 0);
-			//std::fill_n(localLJ[0][0][0], 2 * 4 * 9 * 2, -1);
 			
 			hits.clear();
 		}
@@ -489,14 +493,8 @@ class TrackInfo : public TObject {
 		UShort_t bitPattJ;
 		UShort_t bitPattXYJ;
 		
-		// bitPatt   := hasInner   * 1 +
-		//              hasL2      * 2 +
-		//              hasL1      * 4 +
-		//              hasL9      * 8
-		// bitPattXY := hasInnerXY * 1 +
-		//              hasL2XY    * 2 +
-		//              hasL1XY    * 4 +
-		//              hasL9XY    * 8
+		// bitPatt   := hasInner   * 1 + hasL2   * 2 + hasL1   * 4 + hasL9   * 8
+		// bitPattXY := hasInnerXY * 1 + hasL2XY * 2 + hasL1XY * 4 + hasL9XY * 8
 		// Inner    (XY) := ((bitPattXY&  1)==  1)
 		// InnerL1  (XY) := ((bitPattXY&  5)==  5)
 		// InnerL9  (XY) := ((bitPattXY&  9)==  9)
@@ -514,17 +512,14 @@ class TrackInfo : public TObject {
 		// Track Pattern (Inn, InnL1, InnL9, FS)
 		Bool_t  status[2][4];
 		Float_t rigidity[2][4];
-		Float_t chisq[2][4][2];
-		Float_t state[2][4][6];
-		
-		Float_t stateLJ[2][4][9][6]; // (x y z dirx diry dirz)
-		//Short_t localID[2][4][9][3]; // (tkid sens mult)
-		//Float_t localLJ[2][4][9][2]; // (xloc yloc)
+		Float_t chisq[2][4][3]; // normalized chisq (X, Y, XY)
+		Float_t state[2][4][6]; // track state at Z = 0
+		Float_t stateLJ[2][4][9][6]; // track state at ecah layer (x y z dirx diry dirz)
 	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
 
-	ClassDef(TrackInfo, 6)
+	ClassDef(TrackInfo, 7)
 };
 
 
@@ -579,7 +574,7 @@ class ShowerInfo : public TObject {
 		Short_t hadronApex; // reject high-apex events (say, Apex > 12)
 		Float_t hadronEnergy;
 
-		ClassDef(ShowerInfo, 2)
+		ClassDef(ShowerInfo, 3)
 };
 
 
@@ -620,7 +615,7 @@ class G4MC : public TObject {
 		}
 
 	public :
-		Short_t beamID; // only for MC Beam Test (400GeV proton)
+		Short_t      beamID; // only for MC Beam Test (400GeV proton)
 		PartMCInfo   primPart;
 		VertexMCInfo primVtx;
 
@@ -750,7 +745,6 @@ class TOF : public TObject {
 			statusBetaH = false;
 			betaHBit = 0;
 			betaHPatt = 0;
-			betaHGoodTime = 0;
 			betaH = 0;
 			normChisqT = -1;
 			normChisqC = -1;
@@ -758,13 +752,13 @@ class TOF : public TObject {
 			std::fill_n(E, 4,  0);
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
+            Zall = -1;
 
 			std::fill_n(extClsN, 4, 0);
 
 			//statusBetaHs = false;
 			//betaHBits = 0;
 			//betaHPatts = 0;
-			//betaHGoodTimes = 0;
 			//betaHs = 0;
 			//normChisqTs = -1;
 			//normChisqCs = -1;
@@ -772,6 +766,7 @@ class TOF : public TObject {
 			//std::fill_n(Es, 4,  0);
 			//std::fill_n(Qs, 4, -1);
 			//Qalls = -1;
+			//Zalls = -1;
 			//std::fill_n(betaHStates, 6, 0);
 		}
 
@@ -789,7 +784,6 @@ class TOF : public TObject {
 		Bool_t  statusBetaH;
 		Short_t betaHBit;
 		Short_t betaHPatt;
-		Short_t betaHGoodTime;
 		Float_t betaH;
 		Float_t normChisqT;
 		Float_t normChisqC;
@@ -797,6 +791,7 @@ class TOF : public TObject {
         Float_t E[4];
 		Float_t Q[4];
 		Float_t Qall;
+        Short_t Zall;
 
 		// extern clusters
 		Short_t extClsN[4];
@@ -805,7 +800,6 @@ class TOF : public TObject {
 		//Bool_t  statusBetaHs;
 		//Short_t betaHBits;
 		//Short_t betaHPatts;
-		//Short_t betaHGoodTimes;
 		//Float_t betaHs;
 		//Float_t normChisqTs;
 		//Float_t normChisqCs;
@@ -813,9 +807,10 @@ class TOF : public TObject {
 		//Float_t Es[4];
 		//Float_t Qs[4];
 		//Float_t Qalls;
+		//Short_t Zalls;
 		//Float_t betaHStates[6];
 
-	ClassDef(TOF, 6)
+	ClassDef(TOF, 7)
 };
 
 
@@ -848,19 +843,34 @@ class TRK : public TObject {
 		void init() {
 			beamID = -1;
 			beamDist = -1;
+			track.init();
 
-			tracks.clear();
-			//vertices.clear();
+            ftL56Dist = -1;
+            survHeL56Prob = -1;
+            ratN10Smin = -1;
+            std::fill_n(ratN10S, 7, -1);
+            
+            noiseInTrSH = -1;
+            betaSH = -1;
+            massEstSH = -99;
 		}
 
 	public :
-		Short_t beamID;
-		Float_t beamDist;
+		Short_t   beamID;
+		Float_t   beamDist;
+		TrackInfo track;
 
-		std::vector<TrackInfo> tracks;
-		//std::vector<VertexInfo> vertices;
+        // Haino's tools
+        Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
+        Float_t survHeL56Prob; // The variable you can play with on cuts (typical cut is hsv<0.26)
+        Float_t ratN10Smin;    //
+        Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)
+        
+        Short_t noiseInTrSH;   // keep (noiseInTrSH == 0) events
+        Float_t betaSH;        // from dE/dx by Tracker, TOF and/or TRD
+        Float_t massEstSH;     // mass estimator log-likelihood
 
-	ClassDef(TRK, 5)
+	ClassDef(TRK, 6)
 };
 
 
@@ -871,13 +881,10 @@ class TRD : public TObject {
 		~TRD() {}
 
 		void init() {
+            numOfCluster = 0;
+            numOfSegment = 0;
 			numOfTrack = 0;
 			numOfHTrack = 0;
-			std::fill_n(numOfHSeg, 2, 0);
-			
-			//vtxSide = 0;
-			//std::fill_n(vtxCoo, 3, 0);
-			//std::fill_n(vtxTrCoo, 3, 0);
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(Q, 2, -1);
@@ -889,14 +896,10 @@ class TRD : public TObject {
 		}
 
 	public :
+        Short_t numOfCluster;
+        Short_t numOfSegment;
 		Short_t numOfTrack;
 		Short_t numOfHTrack;
-		Short_t numOfHSeg[2];
-
-		// (TrTrack, TrdSegment) Vertex
-		//Short_t vtxSide;
-		//Float_t vtxCoo[3];
-		//Float_t vtxTrCoo[3];
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
@@ -919,6 +922,8 @@ class RICH : public TObject {
 		~RICH() {}
 
 		void init() {
+            numOfHit = 0;
+
 			kindOfRad  = -1;
 			tileOfRad  = -1;
 			isGoodTile = false;
@@ -927,54 +932,42 @@ class RICH : public TObject {
 			isInFiducialVolume = false;
 			std::fill_n(emission, 6, 0);
 			std::fill_n(receiving, 6, 0);
-
-            hits.clear();
+            std::fill_n(numOfExpPE, 3, -1);
 			
-            //std::fill_n(numOfExpPE, 5, -1);
-			//std::fill_n(theta, 5, -1);
-		
-			//std::fill_n(numOfCrossHit, 2, 0);
-			//std::fill_n(numOfRingHit[0], 5*3, 0);
-
-			status = false;
+            status = false;
 			isGoodRecon = false;
 			beta = -1;
 			Q = -1;
+
+            //hits.clear();
 		}
 
 	public :
+        Short_t numOfHit;
+
 		// Rich Veto
 		Short_t kindOfRad;     // -1, None, 0, Aerogel 1, NaF
 		Short_t tileOfRad;     // tile id
-		Bool_t isGoodTile;
+		Bool_t  isGoodTile;
 		Float_t rfrIndex;      // refractive index
 		Float_t distToBorder;  // dist To Border Edge
-		Bool_t isInFiducialVolume;
-		Float_t emission[6];
-        Float_t receiving[6];
-
-		// Rich Hits
-        std::vector<HitRICHInfo> hits;
+		Bool_t  isInFiducialVolume;
+		Float_t emission[6];   // emission (x, y, z, dx, dy, dz) at RAD
+        Float_t receiving[6];  // receiving (x, y, z, dx, dy, dz) at PMT
         
-        // [0] electron [1] pion [2] kaon [3] proton [4] deuterium
-		//Float_t numOfExpPE[5]; // number of photoelectrons expected for a given track, beta and charge.
-        //Float_t theta[5];      // theta for a given track, beta and charge.
-
-		//Short_t numOfCrossHit[2];   // CrossHit[selected, others]
-		//Short_t numOfRingHit[5][3]; // RingHit[particle][selected, inside, outside]
-                                    // [0] electron
-                                    // [1] pion
-                                    // [2] kaon
-                                    // [3] proton
-                                    // [4] deuterium
-
-		// Official RichRingR
+        // [0] electron [1] proton [2] deuterium
+		Float_t numOfExpPE[3]; // number of photoelectrons expected for a given track, beta and charge.
+		
+        // Official RichRingR
 		Bool_t  status;
 		Bool_t  isGoodRecon;
 		Float_t beta;
 		Float_t Q;
 
-	ClassDef(RICH, 6)
+		// Rich Hits
+        //std::vector<HitRICHInfo> hits;
+
+	ClassDef(RICH, 7)
 };
 
 
@@ -986,20 +979,14 @@ class ECAL : public TObject {
 
 		void init() {
 			numOfShower = 0;
-
-			showers.clear();
-
-			//rawHits.clear();
+            shower.init();
 		}
 
 	public :
-		Short_t numOfShower;
-		
-		std::vector<ShowerInfo> showers;
+		Short_t    numOfShower;
+		ShowerInfo shower;
 
-		//std::vector<HitECALInfo> rawHits;
-
-	ClassDef(ECAL, 4)
+	ClassDef(ECAL, 5)
 };
 
 #endif // __ClassDef_H__

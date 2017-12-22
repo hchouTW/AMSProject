@@ -72,9 +72,9 @@ class MotionFunc {
         
         OrthCoord orth_;
         
-        SVecD<3> zeta_c_;
-        SVecD<3> zeta_u_;
-        Double_t zeta_e_;
+        SVecD<3> zeta_c_; // dc/ds
+        SVecD<3> zeta_u_; // du/ds
+        Double_t zeta_e_; // de/ds
 };
 
 
@@ -97,7 +97,7 @@ class TransferFunc {
     private :
         static constexpr Double_t PROP_FACT = 2.99792458e-04;
         
-        SVecD<3>    kappa_cu_; // d(dp/ds) / du
+        SVecD<3>    kappa_cu_; // d(dc/ds) / du
         
         SMtxD<3, 3> kappa_uu_; // d(du/ds) / du
         SVecD<3>    kappa_ue_; // d(du/ds) / de
@@ -109,7 +109,7 @@ class TransferFunc {
 class PhyJb {
     public :
         static constexpr Int_t DIM_G = 5;
-        static constexpr Int_t DIM_L = 4;
+        static constexpr Int_t DIM_L = 2;
 
         using SMtxDGG = SMtxD<DIM_G, DIM_G>;
         using SMtxDGL = SMtxD<DIM_G, DIM_L>;
@@ -124,18 +124,18 @@ class PhyJb {
         inline static SMtxDXYL SubXYL(const SMtxDGL& jb) { return jb.Sub<SMtxDXYL>(0, 0); }
 
     public :
-        PhyJb() { init(); }
+        PhyJb(Double_t step = 0.) { init(step); }
         ~PhyJb() {}
 
-        inline void init();
+        inline void init(Double_t step = 0.);
         
         inline void set(PhySt& part);
 
         inline void multiplied(PhyJb& phyJb);
 
-        inline void print() const;
+        //inline void print() const;
 
-        inline const Bool_t& field() const { return field_; }
+        inline const Bool_t&   field() const { return field_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
@@ -145,15 +145,11 @@ class PhyJb {
 
         inline SMtxDXYG xyg() { return jb_gg_.Sub<SMtxDXYG>(0, 0); }
         inline SMtxDXYL xyl() { return jb_gl_.Sub<SMtxDXYL>(0, 0); }
-        
-        inline const SMtxSymD<DIM_G>& covll() const { return covll_; }
 
     private :
-        Bool_t    field_;
-        SMtxDGG   jb_gg_;
-        SMtxDGL   jb_gl_;
-
-        SMtxSymD<DIM_G> covll_;
+        Bool_t   field_;
+        SMtxDGG  jb_gg_;
+        SMtxDGL  jb_gl_;
 
     private :
         static constexpr Short_t X = 0;
@@ -165,11 +161,9 @@ class PhyJb {
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
         static constexpr Short_t JTAUU = 0;
-        static constexpr Short_t JTAUL = 1;
-        static constexpr Short_t JRHOU = 2;
+        static constexpr Short_t JRHOU = 1;
+        static constexpr Short_t JTAUL = 2;
         static constexpr Short_t JRHOL = 3;
-        static constexpr Short_t JION  = 4;
-        static constexpr Short_t JBRM  = 5;
 };
 
 
@@ -209,69 +203,40 @@ class PropPhyCal {
         ~PropPhyCal() {}
 
         void init(); 
-        void normalized(const MatFld& mfld, const PhySt& part);
-
-        void push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, const SVecD<3>& rho, Double_t mult_scat_sgm = 0., Double_t eloss_ion_kpa = 0., Double_t eloss_ion_sgm = 0., Double_t eloss_ion_mpv = 0.);
-
-        const Short_t& sign() const { return sign_; }
         
-        const Double_t& len() const { return len_; }
-        const Double_t& nrl() const { return nrl_; }
-        const Double_t& ela() const { return ela_; }
-
-        const SVecD<3>& tau() const { return tau_; }
-        const SVecD<3>& rho() const { return rho_; }
+        void push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, const SVecD<3>& rho, Double_t mscat_sgm = 0);
+        void normalized(const MatFld& mfld, PhySt& part);
         
-        const Double_t& mscatuu() const { return mscatuu_; }
-        const Double_t& mscatul() const { return mscatul_; }
-        const Double_t& mscatcu() const { return mscatcu_; }
-        const Double_t& mscatcl() const { return mscatcl_; }
-
-        const Double_t& eloss_ion_kpa() const { return eloss_ion_kpa_; }
-        const Double_t& eloss_ion_sgm() const { return eloss_ion_sgm_; }
-        const Double_t& eloss_ion_mpv() const { return eloss_ion_mpv_; }
-
-        const Double_t& eloss_brm_men() const { return eloss_brm_men_; }
-
-        inline void set_virtualPhySt(PhySt& part) const;
+        void set_PhyArg(PhySt& part) const;
 
     private :
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
+
         Double_t eta_abs_sat_;
         Double_t eta_abs_end_;
        
-        Bool_t   field_;
-        Short_t  sign_;
+        Bool_t   mat_;
         Double_t len_;
         Double_t nrl_;
         Double_t ela_;
-
-        std::vector<Bool_t>   vec_vac_;
-        std::vector<Double_t> vec_len_;
-        std::vector<Double_t> vec_eft_;
-        std::vector<Double_t> vec_invloc_;
-        std::vector<Double_t> vec_invlocsqr_;
-        std::vector<Double_t> vec_mscatsqr_;
-
-        SVecD<3> tau_;
-        SVecD<3> rho_;
         
-        Bool_t   mscat_;
-        Double_t mscatuu_;
-        Double_t mscatul_;
-        Double_t mscatcu_;
-        Double_t mscatcl_;
-        
-        std::vector<Double_t> vec_ion_kpa_;
-        std::vector<Double_t> vec_ion_sgm_;
-        std::vector<Double_t> vec_ion_mpv_;
+        Short_t  sign_;
+        SVecD<3> orth_tau_;
+        SVecD<3> orth_rho_;
 
-        Double_t eloss_ion_kpa_;
-        Double_t eloss_ion_sgm_;
-        Double_t eloss_ion_mpv_;
+        Double_t mscat_uu_;
+        Double_t mscat_ul_;
+        Double_t mscat_ll_;
 
-        Double_t eloss_brm_men_;
+        Double_t elion_sgm_;
+        Double_t elbrm_men_;
+
+    private :
+        std::vector<Double_t> vec_path_;
+        std::vector<Double_t> vec_mscatw_;
+        std::vector<Double_t> vec_invloc1_;
+        std::vector<Double_t> vec_invloc2_;
 };
 
 
@@ -332,13 +297,6 @@ class PropMgnt {
         
         static constexpr Long64_t LMTU_ITER  = 100;
         static constexpr Double_t CONV_STEP  = 1.0e-4; // [cm]
-       
-        // testcode
-        //static constexpr Double_t LMTU_STEP  =  0.6;   // (ds threshold)
-        //static constexpr Double_t LMTL_STEP  =  0.5;   // (ds threshold)
-        //static constexpr Double_t TUNE_BTA   =  0.3; // (beta threshold)
-        //static constexpr Double_t TUNE_NRL   =   10.0; // (number radiation length threshold)
-        //static constexpr Double_t TUNE_ELA   =  100.0; // (elcloud abundance threshold)
         
     private :
         static constexpr Short_t X = 0;

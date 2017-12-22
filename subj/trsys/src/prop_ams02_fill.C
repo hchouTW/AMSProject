@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data3/hchou/AMSCore/prod/17Nov24/src/ClassDef.h"
-#include "/data3/hchou/AMSCore/prod/17Nov24/src/ClassDef.C"
+#include "/data3/hchou/AMSCore/prod/17Dec12/src/ClassDef.h"
+#include "/data3/hchou/AMSCore/prod/17Dec12/src/ClassDef.C"
 
 using namespace std;
 
@@ -61,46 +61,66 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
-    Int_t laySat = 4;
-    Int_t layEnd = 5;
+    Int_t laySat = 1;
+    Int_t layEnd = 2;
     
     TFile * ofle = new TFile(Form("%s/prop_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
-
-    Axis AXnrl("Nrl", 800, 0.005, 0.02);
-    Axis AXela("Ela", 800, 0.1, 0.3);
-    Hist * hNrl = Hist::New("hNrl", "hNrl", HistAxis(AXmom, AXnrl)); // (TH2D) Number of Radiator Length [1]
-    Hist * hEla = Hist::New("hEla", "hEla", HistAxis(AXmom, AXela)); // (TH2D) Electron Abundance [mol/cm^2]
+    Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
     
-    // Number of Radiation Length Map
     Axis AXcxy("Coo [cm]", 260, -65., 65.);
     Hist * hEvt = Hist::New("hEvt", "hEvt", HistAxis(AXcxy, AXcxy));
-    Hist * hMap = Hist::New("hMap", "hMap", HistAxis(AXcxy, AXcxy));
+    Hist * hVtx = Hist::New("hVtx", "hVtx", HistAxis(AXcxy, AXcxy));
+
+    // Coo
+    Axis AXres("res [#mum]", 1600, -300., 300.);
+    Hist * hMrx = Hist::New("hMrx", "hMrx", HistAxis(AXmom, AXres));
+    Hist * hMry = Hist::New("hMry", "hMry", HistAxis(AXmom, AXres));
+    
+    Hist * hMrxNN = Hist::New("hMrxNN", "hMrxNN", HistAxis(AXres));
+    Hist * hMryNN = Hist::New("hMryNN", "hMryNN", HistAxis(AXres));
+    Hist * hMrxN1 = Hist::New("hMrxN1", "hMrxN1", HistAxis(AXres));
+    Hist * hMryN1 = Hist::New("hMryN1", "hMryN1", HistAxis(AXres));
+    Hist * hMrxN2 = Hist::New("hMrxN2", "hMrxN2", HistAxis(AXres));
+    Hist * hMryN2 = Hist::New("hMryN2", "hMryN2", HistAxis(AXres));
+    Hist * hMrxN3 = Hist::New("hMrxN3", "hMrxN3", HistAxis(AXres));
+    Hist * hMryN3 = Hist::New("hMryN3", "hMryN3", HistAxis(AXres));
+    Hist * hMryN4 = Hist::New("hMryN4", "hMryN4", HistAxis(AXres));
 
     // Prop
-    Axis AXcoo("Residual [cm * p#beta/Q * L^-1]", 2000, -0.70, 0.70);
+    Axis AXcoo("Residual [cm * p#beta/Q * L^-1]", 800, -0.2, 0.2);
+    Axis AXagl("Residual [p#beta/Q]", 800, -0.2, 0.2);
+    Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 1200, 0.2, 18);
+    
     Hist * hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXmom, AXcoo)); // (TH2D) MC: residual x
     Hist * hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXmom, AXcoo)); // (TH2D) MC: residual y
     Hist * hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo)); // (TH2D) ToyMC: residual x
     Hist * hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo)); // (TH2D) ToyMC: residual y
-    
-    Axis AXagl("Residual [p#beta/Q]", 2000, -0.70, 0.70);
+
     Hist * hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl)); // (TH2D) MC: cosine angle x
     Hist * hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl)); // (TH2D) MC: cosine angle y
     Hist * hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl)); // (TH2D) ToyMC: cosine angle x
     Hist * hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXmom, AXagl)); // (TH2D) ToyMC: cosine angle y
-   
-    Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 600, 0.2, 15);
+    
+    Hist * hMcux = Hist::New("hMcux", "hMcux", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual x vs. cosine angle x
+    Hist * hMcuy = Hist::New("hMcuy", "hMcuy", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual y vs. cosine angle y
+    Hist * hTcux = Hist::New("hTcux", "hTcux", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual x vs. cosine angle x
+    Hist * hTcuy = Hist::New("hTcuy", "hTcuy", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual y vs. cosine angle y
+
     Hist * hMee = Hist::New("hMee", "hMee", HistAxis(AXmom, AXels)); // (TH2D) MC: kinetic energy difference
     Hist * hTee = Hist::New("hTee", "hTee", HistAxis(AXmom, AXels)); // (TH2D) ToyMC: kinetic energy difference
     
-    Axis AXcoo2("Residual [cm * p#beta/Q * L^-1]", 600, -0.10, 0.10);
-    Axis AXagl2("Residual [p#beta/Q]", 600, -0.10, 0.10);
-    Hist * hMcux = Hist::New("hMcux", "hMcux", HistAxis(AXcoo2, AXagl2)); // (TH2D) MC: residual x vs. cosine angle x
-    Hist * hMcuy = Hist::New("hMcuy", "hMcuy", HistAxis(AXcoo2, AXagl2)); // (TH2D) MC: residual y cosine angle y
-    Hist * hTcux = Hist::New("hTcux", "hTcux", HistAxis(AXcoo2, AXagl2)); // (TH2D) ToyMC: residual x vs. cosine angle x
-    Hist * hTcuy = Hist::New("hTcuy", "hTcuy", HistAxis(AXcoo2, AXagl2)); // (TH2D) ToyMC: residual y vs. cosine angle y
+    Axis AXcoo2("Residual [cm * p#beta/Q * L^-1]", 2000, -0.5, 0.5);
+    Axis AXagl2("Residual [p#beta/Q]", 2000, -0.5, 0.5);
+    Hist * hMcx2 = Hist::New("hMcx2", "hMcx2", HistAxis(AXcoo2)); // (TH1D) MC: residual x
+    Hist * hMcy2 = Hist::New("hMcy2", "hMcy2", HistAxis(AXcoo2)); // (TH1D) MC: residual y
+    Hist * hTcx2 = Hist::New("hTcx2", "hTcx2", HistAxis(AXcoo2)); // (TH1D) ToyMC: residual x
+    Hist * hTcy2 = Hist::New("hTcy2", "hTcy2", HistAxis(AXcoo2)); // (TH1D) ToyMC: residual y
+    
+    Hist * hMux2 = Hist::New("hMux2", "hMux2", HistAxis(AXagl2)); // (TH1D) MC: cosine angle x
+    Hist * hMuy2 = Hist::New("hMuy2", "hMuy2", HistAxis(AXagl2)); // (TH1D) MC: cosine angle y
+    Hist * hTux2 = Hist::New("hTux2", "hTux2", HistAxis(AXagl2)); // (TH1D) ToyMC: cosine angle x
+    Hist * hTuy2 = Hist::New("hTuy2", "hTuy2", HistAxis(AXagl2)); // (TH1D) ToyMC: cosine angle y
 
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -108,34 +128,76 @@ int main(int argc, char * argv[]) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
 
-        // MC hit from primary particle
-        // HitTRKMCInfo from TrMCClusterR (GetGtrkID == AMSEventR->GetPrimaryMC->trkID)
-        HitTRKMCInfo * mchitU = nullptr; // MC starting hit (SiTr-layerJ = laySat)
-        HitTRKMCInfo * mchitL = nullptr; // MC ending   hit (SiTr-layerJ = layEnd)
-        Double_t       kEngU  = 0; // kinetic energy
-        Double_t       kEngL  = 0; // kinetic energy
-        for (auto&& hit : fG4mc->primPart.hits) {
-            Double_t radius = std::sqrt(hit.coo[0]*hit.coo[0] + hit.coo[1]*hit.coo[1]);
-            Double_t maxxy  = std::max(std::fabs(hit.coo[0]), std::fabs(hit.coo[1]));
-            Double_t keng   = std::sqrt(hit.mom * hit.mom + fG4mc->primPart.mass * fG4mc->primPart.mass) - fG4mc->primPart.mass;
-            //if (maxxy > 16.) continue;
-            //if (radius > 35.) continue;
-            if (hit.layJ == laySat) { mchitU = &hit; kEngU = keng; }
-            if (hit.layJ == layEnd) { mchitL = &hit; kEngL = keng; }
+        // No Interaction
+        if (fG4mc->primVtx.status) {
+            if (std::fabs(fG4mc->primVtx.vtx[2]) < 40.) hVtx->fill(fG4mc->primVtx.vtx[0], fG4mc->primVtx.vtx[1]);
         }
-        if (mchitU && mchitL) {
+        else continue;
+
+        // REC hit
+        HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
+        HitTRKInfo * recU = nullptr;
+        HitTRKInfo * recL = nullptr;
+        if (fTrk->tracks.size() > 0) {
+            TrackInfo& track = fTrk->tracks.at(0);
+            for (auto&& hit : track.hits) {
+                if (hit.layJ == laySat) recU = &hit;
+                if (hit.layJ == layEnd) recL = &hit;
+                rec[hit.layJ-1] = &hit;
+            }
+        }
+
+        // MC seg from primary particle
+        SegPARTMCInfo * mcseg[9]; std::fill_n(mcseg, 9, nullptr);
+        SegPARTMCInfo * mcsegU = nullptr;
+        SegPARTMCInfo * mcsegL = nullptr;
+        for (auto&& seg : fG4mc->primPart.segs) {
+            if (seg.dec != 0) continue;
+            if (seg.lay == laySat) mcsegU = &seg;
+            if (seg.lay == layEnd) mcsegL = &seg;
+            mcseg[seg.lay-1] = &seg;
+        }
+
+        for (Int_t it = 2; it < 8; ++it) {
+            if (!rec[it] || !mcseg[it]) continue;
+            Double_t dz = (rec[it]->coo[2] - mcseg[it]->coo[2]);
+            Double_t tx = (mcseg[it]->dir[0] / mcseg[it]->dir[2]);
+            Double_t ty = (mcseg[it]->dir[1] / mcseg[it]->dir[2]);
+            Double_t cxy[2] = { mcseg[it]->coo[0] + (dz * tx), mcseg[it]->coo[1] + (dz * ty) };
+           
+            Short_t  ntp[2] = { rec[it]->stripSigX.size(), rec[it]->stripSigY.size() };
+            Double_t res[2] = { rec[it]->coo[0] - cxy[0], rec[it]->coo[1] - cxy[1] };
+            
+            constexpr Double_t CM2UM = 1.0e4;
+            if (ntp[0]!=0) hMrx->fill(mcseg[it]->mom, CM2UM * res[0]);
+            if (ntp[1]!=0) hMry->fill(mcseg[it]->mom, CM2UM * res[1]);
+           
+            if (mcseg[it]->mom > 5.0) {
+                if (ntp[0]>=1) hMrxNN->fill(CM2UM * res[0]);
+                if (ntp[1]>=1) hMryNN->fill(CM2UM * res[1]);
+                if (ntp[0]==1) hMrxN1->fill(CM2UM * res[0]);
+                if (ntp[1]==1) hMryN1->fill(CM2UM * res[1]);
+                if (ntp[0]==2) hMrxN2->fill(CM2UM * res[0]);
+                if (ntp[1]==2) hMryN2->fill(CM2UM * res[1]);
+                if (ntp[0]>=3) hMrxN3->fill(CM2UM * res[0]);
+                if (ntp[1]==3) hMryN3->fill(CM2UM * res[1]);
+                if (ntp[1]>=4) hMryN4->fill(CM2UM * res[1]);
+            }
+        }
+
+        if (mcsegU && mcsegL) {
             PhySt part(PartType::Proton);
-            part.set_state(
-                mchitU->coo[0], mchitU->coo[1], mchitU->coo[2],
-                mchitU->dir[0], mchitU->dir[1], mchitU->dir[2]
+            part.set_state_with_cos(
+                mcsegU->coo[0], mcsegU->coo[1], mcsegU->coo[2],
+                mcsegU->dir[0], mcsegU->dir[1], mcsegU->dir[2]
             );
-            part.set_mom(mchitU->mom);
+            part.set_mom(mcsegU->mom);
             Double_t mc_mom = part.mom();
             
             MatFld mfld;       // Material information
             PhySt ppst(part);  // Particle Status
-            PropMgnt::PropToZ(mchitL->coo[2], ppst, &mfld); // Propagate to Z with magnetic field
-            Double_t len = std::fabs(mchitL->coo[2]-mchitU->coo[2]); // Delta Z
+            PropMgnt::PropToZ(mcsegL->coo[2], ppst, &mfld); // Propagate to Z with magnetic field
+            Double_t len = std::fabs(mcsegL->coo[2]-mcsegU->coo[2]); // Delta Z
             Double_t nrl = mfld.nrl();  // Number of Radiator Length [1]
             Double_t ela = mfld.ela();  // Electron Abundance [mol/cm^2]
             SVecD<3> refc = ppst.c();   // coord
@@ -145,14 +207,11 @@ int main(int argc, char * argv[]) {
             Double_t scl_eloss = (part.bta() * part.bta()) / (part.chrg() * part.chrg()) / ela;       // normalized factor (energy loss)
             Double_t scl_mscat = (part.mom() * part.bta()) / std::fabs(part.chrg()) / std::sqrt(nrl); // normalized factor (multiple-scattering)
             
-            hNrl->fill(mc_mom, nrl);
-            hEla->fill(mc_mom, ela);
-            
             ppst = part;
-            PropMgnt::PropToZWithMC(mchitL->coo[2], ppst);
-            Double_t mc_resc[2] = { mchitL->coo[0] - refc(0), mchitL->coo[1] - refc(1) }; // MC: residual xy [cm]
-            Double_t mc_resu[2] = { mchitL->dir[0] - refu(0), mchitL->dir[1] - refu(1) }; // MC: cosine angle xy [1]
-            Double_t mc_elsm    = GeV2MeV * (kEngU - kEngL);                              // MC: kinetic energy difference [GeV]
+            PropMgnt::PropToZWithMC(mcsegL->coo[2], ppst);
+            Double_t mc_resc[2] = { mcsegL->coo[0] - refc(0), mcsegL->coo[1] - refc(1) }; // MC: residual xy [cm]
+            Double_t mc_resu[2] = { mcsegL->dir[0] - refu(0), mcsegL->dir[1] - refu(1) }; // MC: cosine angle xy [1]
+            Double_t mc_elsm    = GeV2MeV * (mcsegU->kEng - mcsegL->kEng);                // MC: kinetic energy difference [GeV]
             Double_t tm_resc[2] = { ppst.cx() - refc(0), ppst.cy() - refc(1) };           // ToyMC: residual xy [cm]
             Double_t tm_resu[2] = { ppst.ux() - refu(0), ppst.uy() - refu(1) };           // ToyMC: cosine angle xy [1]
             Double_t tm_elsm    = GeV2MeV * (part.ke() - ppst.ke());                      // ToyMC: kinetic energy difference [GeV]
@@ -168,15 +227,23 @@ int main(int argc, char * argv[]) {
             hTuy->fill(mc_mom, scl_mscat * tm_resu[1]);
             hTee->fill(mc_mom, scl_eloss * tm_elsm);
             
-            if (mc_mom > 5.0 && mc_mom < 100.) hMcux->fill(scl_mscat * mc_resc[0] / len, scl_mscat * mc_resu[0]);
-            if (mc_mom > 5.0 && mc_mom < 100.) hMcuy->fill(scl_mscat * mc_resc[1] / len, scl_mscat * mc_resu[1]);
-            if (mc_mom > 5.0 && mc_mom < 100.) hTcux->fill(scl_mscat * tm_resc[0] / len, scl_mscat * tm_resu[0]);
-            if (mc_mom > 5.0 && mc_mom < 100.) hTcuy->fill(scl_mscat * tm_resc[1] / len, scl_mscat * tm_resu[1]);
-
-            Double_t cx = 0.5 * (mchitU->coo[0] + mchitL->coo[0]);
-            Double_t cy = 0.5 * (mchitU->coo[1] + mchitL->coo[1]);
+            if (mc_mom > 5.0) hMcux->fill(scl_mscat * mc_resc[0] / len, scl_mscat * mc_resu[0]);
+            if (mc_mom > 5.0) hMcuy->fill(scl_mscat * mc_resc[1] / len, scl_mscat * mc_resu[1]);
+            if (mc_mom > 5.0) hTcux->fill(scl_mscat * tm_resc[0] / len, scl_mscat * tm_resu[0]);
+            if (mc_mom > 5.0) hTcuy->fill(scl_mscat * tm_resc[1] / len, scl_mscat * tm_resu[1]);
+            
+            if (mc_mom > 5.0) hMcx2->fill(scl_mscat * mc_resc[0] / len);
+            if (mc_mom > 5.0) hMcy2->fill(scl_mscat * mc_resc[1] / len);
+            if (mc_mom > 5.0) hMux2->fill(scl_mscat * mc_resu[0]);
+            if (mc_mom > 5.0) hMuy2->fill(scl_mscat * mc_resu[1]);
+            if (mc_mom > 5.0) hTcx2->fill(scl_mscat * tm_resc[0] / len);
+            if (mc_mom > 5.0) hTcy2->fill(scl_mscat * tm_resc[1] / len);
+            if (mc_mom > 5.0) hTux2->fill(scl_mscat * tm_resu[0]);
+            if (mc_mom > 5.0) hTuy2->fill(scl_mscat * tm_resu[1]);
+            
+            Double_t cx = 0.5 * (mcsegU->coo[0] + mcsegL->coo[0]);
+            Double_t cy = 0.5 * (mcsegU->coo[1] + mcsegL->coo[1]);
             hEvt->fill(cx, cy);
-            hMap->fill(cx, cy, nrl);
         }
     }
 
