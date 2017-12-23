@@ -20,6 +20,9 @@ int main(int argc, char * argv[]) {
     Hist * hCKRrso = Hist::Head("hCKRrso");
     Hist * hHCRrso = Hist::Head("hHCRrso");
     
+    Hist * hCKRrsoCut = Hist::Head("hCKRrsoCut");
+    Hist * hHCRrsoCut = Hist::Head("hHCRrsoCut");
+    
     const Axis& AXmom = hCKRrso->xaxis();
     
     TFile * ofle = new TFile("fit_ams02_fit.root", "RECREATE");
@@ -38,8 +41,10 @@ int main(int argc, char * argv[]) {
    
     const Double_t stable = 1.5;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
-    std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
-    std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrso);
+    //std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
+    //std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrso);
+    std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrsoCut);
+    std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrsoCut);
     for (int it = 1; it <= AXmom.nbin(); ++it) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);

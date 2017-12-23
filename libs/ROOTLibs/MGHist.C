@@ -250,6 +250,40 @@ void Hist::fill(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e) {
 }
 
 
+void Hist::fillH(Double_t a, Double_t b, Double_t c, Double_t d) {
+	if (!exist() || (info_.first != HistType::kHist)) return;
+	switch (info_.second) {
+		case HistDim::k1D :
+			dynamic_cast<TH1D*>(hist_)->Fill(a, b); 
+			break;
+		case HistDim::k2D :
+			dynamic_cast<TH2D*>(hist_)->Fill(a, b, c); 
+			break;
+		case HistDim::k3D :
+			dynamic_cast<TH3D*>(hist_)->Fill(a, b, c, d); 
+			break;
+		default : break;
+	}
+}
+
+
+void Hist::fillP(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e) {
+	if (!exist() || (info_.first != HistType::kProfile)) return;
+	switch (info_.second) {
+		case HistDim::k1D :
+			dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); 
+			break;
+		case HistDim::k2D :
+			dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); 
+			break;
+		case HistDim::k3D :
+			dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); 
+			break;
+		default : break;
+	}
+}
+
+
 void Hist::push() {
 	hist_map_[name_] = this;
 	unique_id_ = ++counter_;

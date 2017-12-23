@@ -176,12 +176,12 @@ class PartMCInfo : public TObject {
 		~PartMCInfo() {}
 
 		void init() {
-			partID   = 0;
-			chrg     = 0;
-			mass     = 0;
-            beta     = 0;
-			mom      = 0;
-			kEng     = 0;
+			partID = 0;
+			chrg   = 0;
+			mass   = 0;
+            beta   = 0;
+			mom    = 0;
+			ke     = 0;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
             segs.clear();
@@ -194,7 +194,7 @@ class PartMCInfo : public TObject {
 		Float_t mass;
         Float_t beta;
 		Float_t mom;
-		Float_t kEng; // kinetic energy
+		Float_t ke;    // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 
@@ -732,12 +732,12 @@ class TOF : public TObject {
 		~TOF() {}
 
 		void init() {
-			numOfCluster = 0;
-			numOfClusterH = 0;
+			numOfCls = 0;
+			numOfClsH = 0;
 			numOfBeta = 0;
 			numOfBetaH = 0;
 
-			numOfInTimeCluster = -1;
+			numOfInTimeCls = -1;
 
 			statusBeta = false;
 			beta = 0;
@@ -771,12 +771,12 @@ class TOF : public TObject {
 		}
 
 	public :
-		Short_t numOfCluster;
-		Short_t numOfClusterH;
+		Short_t numOfCls;
+		Short_t numOfClsH;
 		Short_t numOfBeta;
 		Short_t numOfBetaH;
 
-		Short_t numOfInTimeCluster;
+		Short_t numOfInTimeCls;
 
 		Bool_t  statusBeta;
 		Float_t beta;
@@ -821,12 +821,12 @@ class ACC : public TObject {
 		~ACC() {}
 
 		void init() {
-			numOfCluster = 0;
+			numOfCls = 0;
 			clusters.clear();
 		}
 
 	public :
-		Short_t numOfCluster;
+		Short_t numOfCls;
 
 		std::vector<ClsACCInfo> clusters;
 
@@ -881,22 +881,24 @@ class TRD : public TObject {
 		~TRD() {}
 
 		void init() {
-            numOfCluster = 0;
+            numOfCls = 0;
             numOfSegment = 0;
 			numOfTrack = 0;
 			numOfHTrack = 0;
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(Q, 2, -1);
-			std::fill_n(LLR[0], 6, -1);
-			std::fill_n(LLR_nhit, 2, 0);
+			std::fill_n(LLRep, 2, -1);
+			std::fill_n(LLReh, 2, -1);
+			std::fill_n(LLRph, 2, -1);
+			std::fill_n(LLRnhit, 2, -1);
 
 			trackStatus = false;
 			std::fill_n(trackState, 6, 0);
 		}
 
 	public :
-        Short_t numOfCluster;
+        Short_t numOfCls;
         Short_t numOfSegment;
 		Short_t numOfTrack;
 		Short_t numOfHTrack;
@@ -904,14 +906,16 @@ class TRD : public TObject {
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
 		Float_t Q[2];
-		Float_t LLR[2][3]; // eP eH PH
-		Short_t LLR_nhit[2];
+		Float_t LLRep[2];
+		Float_t LLReh[2];
+		Float_t LLRph[2];
+		Short_t LLRnhit[2];
 
 		// TrdTrack or TrdHTrack (first TrdH, second Trd)
 		Bool_t  trackStatus;
 		Float_t trackState[6]; // coo, dir
 
-	ClassDef(TRD, 5)
+	ClassDef(TRD, 6)
 };
 
 

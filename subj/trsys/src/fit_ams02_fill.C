@@ -48,7 +48,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    PhyArg::SetOpt(true, true);
+    PhyArg::SetOpt(false, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
@@ -95,6 +95,24 @@ int main(int argc, char * argv[]) {
     Hist * hCNRchiI3 = Hist::New("hCNRchiI3", "hCNRchiI3", HistAxis(AXmom, AXRchi));
     Hist * hHCRchiI3 = Hist::New("hHCRchiI3", "hHCRchiI3", HistAxis(AXmom, AXRchi));
     
+    Hist * hCKRrsoCut = Hist::New("hCKRrsoCut", "hCKRrsoCut", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCut = Hist::New("hCNRrsoCut", "hCNRrsoCut", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCut = Hist::New("hHCRrsoCut", "hHCRrsoCut", HistAxis(AXmom, AXRrso));
+    
+    Hist * hCKRrsoCutI0 = Hist::New("hCKRrsoCutI0", "hCKRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI0 = Hist::New("hCNRrsoCutI0", "hCNRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI0 = Hist::New("hHCRrsoCutI0", "hHCRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI1 = Hist::New("hCKRrsoCutI1", "hCKRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI1 = Hist::New("hCNRrsoCutI1", "hCNRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI1 = Hist::New("hHCRrsoCutI1", "hHCRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI2 = Hist::New("hCKRrsoCutI2", "hCKRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI2 = Hist::New("hCNRrsoCutI2", "hCNRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI2 = Hist::New("hHCRrsoCutI2", "hHCRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI3 = Hist::New("hCKRrsoCutI3", "hCKRrsoCutI3", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI3 = Hist::New("hCNRrsoCutI3", "hCNRrsoCutI3", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI3 = Hist::New("hHCRrsoCutI3", "hHCRrsoCutI3", HistAxis(AXmom, AXRrso));
+    
+/*    
     Axis AXTOFrso("#betat/#betam-1 [1]", 2000, -0.5, 1.5);
     Hist * hTOFrso = Hist::New("hTOFrso", "hTOFrso", HistAxis(AXmom, AXTOFrso));
     
@@ -176,7 +194,7 @@ int main(int argc, char * argv[]) {
     Hist * hCKMRrsoI3 = Hist::New("hCKMRrsoI3", "hCKMRrsoI3", HistAxis(AXmom, AXMRrso));
     Hist * hCNMRrsoI3 = Hist::New("hCNMRrsoI3", "hCNMRrsoI3", HistAxis(AXmom, AXMRrso));
     Hist * hHCMRrsoI3 = Hist::New("hHCMRrsoI3", "hHCMRrsoI3", HistAxis(AXmom, AXMRrso));
-    
+*/    
     Hist * hCKRrso2 = Hist::New("hCKRrso2", "hCKRrso2", HistAxis(AXRrso));
     Hist * hCNRrso2 = Hist::New("hCNRrso2", "hCNRrso2", HistAxis(AXRrso));
     Hist * hHCRrso2 = Hist::New("hHCRrso2", "hHCRrso2", HistAxis(AXRrso));
@@ -184,6 +202,9 @@ int main(int argc, char * argv[]) {
     Hist * hCKflux = Hist::New("hCKflux", "hCKflux", HistAxis(AXimm));
     Hist * hCNflux = Hist::New("hCNflux", "hCNflux", HistAxis(AXimm));
     Hist * hHCflux = Hist::New("hHCflux", "hHCflux", HistAxis(AXimm));
+    Hist * hCKflux2 = Hist::New("hCKflux2", "hCKflux2", HistAxis(AXimm));
+    Hist * hCNflux2 = Hist::New("hCNflux2", "hCNflux2", HistAxis(AXimm));
+    Hist * hHCflux2 = Hist::New("hHCflux2", "hHCflux2", HistAxis(AXimm));
 
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -198,7 +219,6 @@ int main(int argc, char * argv[]) {
             else if (fG4mc->primVtx.vtx[2] > 55.)            IntType = 2;
             else if (fG4mc->primVtx.vtx[2] > -80.)           IntType = 3;
         }
-        //if (IntType != 0) continue;
        
         if (fTof->betaH < 0.3 || fTof->betaH > 1.3) continue;
         if (fTof->normChisqT > 10.) continue;
@@ -272,6 +292,11 @@ int main(int argc, char * argv[]) {
         Double_t cn_lchi = ((track.status[1][patt]) ? std::log(track.chisq[1][patt][1]) : 0.); 
         Double_t hc_lchi = (                 (succ) ? std::log(tr.nchi())               : 0.); 
 
+        Double_t ck_cut = ((track.status[0][patt]) ? (ck_lchi < 2.0) : false); // 96%
+        Double_t cn_cut = ((track.status[1][patt]) ? (cn_lchi < 2.0) : false); // 96%
+        Double_t hc_cut = (                 (succ) ? (hc_lchi < 0.9) : false); // 96%
+
+/*
         Double_t mc_mass = fG4mc->primPart.mass;
         Double_t mc_ibta = std::sqrt(1.0 + (mc_mass/mc_mom)*(mc_mass/mc_mom));
         Double_t tofibta = (1.0 / fTof->betaH);
@@ -299,41 +324,59 @@ int main(int argc, char * argv[]) {
         if (fRich->status && fRich->kindOfRad == 0 && IntType == 1) hRICHrsoI1->fill(mc_mom, (richibta/mc_ibta - 1.0));
         if (fRich->status && fRich->kindOfRad == 0 && IntType == 2) hRICHrsoI2->fill(mc_mom, (richibta/mc_ibta - 1.0));
         if (fRich->status && fRich->kindOfRad == 0 && IntType == 3) hRICHrsoI3->fill(mc_mom, (richibta/mc_ibta - 1.0));
-
-        if (track.status[0][patt]) hCKRrso->fill(mc_mom, bincen * (ck_irig - mc_irig));
-        if (track.status[1][patt]) hCNRrso->fill(mc_mom, bincen * (cn_irig - mc_irig));
-        if (                 succ) hHCRrso->fill(mc_mom, bincen * (hc_irig - mc_irig));
+*/
+        if (track.status[0][patt]) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (track.status[1][patt]) hCNRrso->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (                 succ) hHCRrso->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
-        if (track.status[0][patt] && IntType == 0) hCKRrsoI0->fill(mc_mom, bincen * (ck_irig - mc_irig));
-        if (track.status[1][patt] && IntType == 0) hCNRrsoI0->fill(mc_mom, bincen * (cn_irig - mc_irig));
-        if (                 succ && IntType == 0) hHCRrsoI0->fill(mc_mom, bincen * (hc_irig - mc_irig));
-        if (track.status[0][patt] && IntType == 1) hCKRrsoI1->fill(mc_mom, bincen * (ck_irig - mc_irig));
-        if (track.status[1][patt] && IntType == 1) hCNRrsoI1->fill(mc_mom, bincen * (cn_irig - mc_irig));
-        if (                 succ && IntType == 1) hHCRrsoI1->fill(mc_mom, bincen * (hc_irig - mc_irig));
-        if (track.status[0][patt] && IntType == 2) hCKRrsoI2->fill(mc_mom, bincen * (ck_irig - mc_irig));
-        if (track.status[1][patt] && IntType == 2) hCNRrsoI2->fill(mc_mom, bincen * (cn_irig - mc_irig));
-        if (                 succ && IntType == 2) hHCRrsoI2->fill(mc_mom, bincen * (hc_irig - mc_irig));
-        if (track.status[0][patt] && IntType == 3) hCKRrsoI3->fill(mc_mom, bincen * (ck_irig - mc_irig));
-        if (track.status[1][patt] && IntType == 3) hCNRrsoI3->fill(mc_mom, bincen * (cn_irig - mc_irig));
-        if (                 succ && IntType == 3) hHCRrsoI3->fill(mc_mom, bincen * (hc_irig - mc_irig));
+        if (track.status[0][patt] && IntType == 0) hCKRrsoI0->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (track.status[1][patt] && IntType == 0) hCNRrsoI0->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (                 succ && IntType == 0) hHCRrsoI0->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (track.status[0][patt] && IntType == 1) hCKRrsoI1->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (track.status[1][patt] && IntType == 1) hCNRrsoI1->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (                 succ && IntType == 1) hHCRrsoI1->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (track.status[0][patt] && IntType == 2) hCKRrsoI2->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (track.status[1][patt] && IntType == 2) hCNRrsoI2->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (                 succ && IntType == 2) hHCRrsoI2->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (track.status[0][patt] && IntType == 3) hCKRrsoI3->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (track.status[1][patt] && IntType == 3) hCNRrsoI3->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (                 succ && IntType == 3) hHCRrsoI3->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
-        if (track.status[0][patt]) hCKRchi->fill(mc_mom, ck_lchi);
-        if (track.status[1][patt]) hCNRchi->fill(mc_mom, cn_lchi);
-        if (                 succ) hHCRchi->fill(mc_mom, hc_lchi);
+        if (track.status[0][patt]) hCKRchi->fillH2D(mc_mom, ck_lchi);
+        if (track.status[1][patt]) hCNRchi->fillH2D(mc_mom, cn_lchi);
+        if (                 succ) hHCRchi->fillH2D(mc_mom, hc_lchi);
         
-        if (track.status[0][patt] && IntType == 0) hCKRchiI0->fill(mc_mom, ck_lchi);
-        if (track.status[1][patt] && IntType == 0) hCNRchiI0->fill(mc_mom, cn_lchi);
-        if (                 succ && IntType == 0) hHCRchiI0->fill(mc_mom, hc_lchi);
-        if (track.status[0][patt] && IntType == 1) hCKRchiI1->fill(mc_mom, ck_lchi);
-        if (track.status[1][patt] && IntType == 1) hCNRchiI1->fill(mc_mom, cn_lchi);
-        if (                 succ && IntType == 1) hHCRchiI1->fill(mc_mom, hc_lchi);
-        if (track.status[0][patt] && IntType == 2) hCKRchiI2->fill(mc_mom, ck_lchi);
-        if (track.status[1][patt] && IntType == 2) hCNRchiI2->fill(mc_mom, cn_lchi);
-        if (                 succ && IntType == 2) hHCRchiI2->fill(mc_mom, hc_lchi);
-        if (track.status[0][patt] && IntType == 3) hCKRchiI3->fill(mc_mom, ck_lchi);
-        if (track.status[1][patt] && IntType == 3) hCNRchiI3->fill(mc_mom, cn_lchi);
-        if (                 succ && IntType == 3) hHCRchiI3->fill(mc_mom, hc_lchi);
+        if (track.status[0][patt] && IntType == 0) hCKRchiI0->fillH2D(mc_mom, ck_lchi);
+        if (track.status[1][patt] && IntType == 0) hCNRchiI0->fillH2D(mc_mom, cn_lchi);
+        if (                 succ && IntType == 0) hHCRchiI0->fillH2D(mc_mom, hc_lchi);
+        if (track.status[0][patt] && IntType == 1) hCKRchiI1->fillH2D(mc_mom, ck_lchi);
+        if (track.status[1][patt] && IntType == 1) hCNRchiI1->fillH2D(mc_mom, cn_lchi);
+        if (                 succ && IntType == 1) hHCRchiI1->fillH2D(mc_mom, hc_lchi);
+        if (track.status[0][patt] && IntType == 2) hCKRchiI2->fillH2D(mc_mom, ck_lchi);
+        if (track.status[1][patt] && IntType == 2) hCNRchiI2->fillH2D(mc_mom, cn_lchi);
+        if (                 succ && IntType == 2) hHCRchiI2->fillH2D(mc_mom, hc_lchi);
+        if (track.status[0][patt] && IntType == 3) hCKRchiI3->fillH2D(mc_mom, ck_lchi);
+        if (track.status[1][patt] && IntType == 3) hCNRchiI3->fillH2D(mc_mom, cn_lchi);
+        if (                 succ && IntType == 3) hHCRchiI3->fillH2D(mc_mom, hc_lchi);
         
+        if (ck_cut) hCKRrsoCut->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (cn_cut) hCNRrsoCut->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (hc_cut) hHCRrsoCut->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        
+        if (ck_cut && IntType == 0) hCKRrsoCutI0->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (cn_cut && IntType == 0) hCNRrsoCutI0->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (hc_cut && IntType == 0) hHCRrsoCutI0->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (ck_cut && IntType == 1) hCKRrsoCutI1->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (cn_cut && IntType == 1) hCNRrsoCutI1->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (hc_cut && IntType == 1) hHCRrsoCutI1->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (ck_cut && IntType == 2) hCKRrsoCutI2->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (cn_cut && IntType == 2) hCNRrsoCutI2->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (hc_cut && IntType == 2) hHCRrsoCutI2->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        if (ck_cut && IntType == 3) hCKRrsoCutI3->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
+        if (cn_cut && IntType == 3) hCNRrsoCutI3->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
+        if (hc_cut && IntType == 3) hHCRrsoCutI3->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        
+/*        
         if (track.status[0][patt]) hCKMrso->fill(mc_mom, ck_mass);
         if (track.status[1][patt]) hCNMrso->fill(mc_mom, cn_mass);
         if (                 succ) hHCMrso->fill(mc_mom, hc_mass);
@@ -367,16 +410,20 @@ int main(int argc, char * argv[]) {
         if (track.status[0][patt] && fRich->status && fRich->kindOfRad == 0 && IntType == 3) hCKMRrsoI3->fill(mc_mom, ck_massr);
         if (track.status[1][patt] && fRich->status && fRich->kindOfRad == 0 && IntType == 3) hCNMRrsoI3->fill(mc_mom, cn_massr);
         if (                 succ && fRich->status && fRich->kindOfRad == 0 && IntType == 3) hHCMRrsoI3->fill(mc_mom, hc_massr);
-
+*/
         Double_t pow27 = std::pow(10., 1.7) * std::pow(mc_mom, -1.7);
-        if (mc_mom > 10. && track.status[0][patt]) hCKflux->fill(ck_irig, pow27);
-        if (mc_mom > 10. && track.status[1][patt]) hCNflux->fill(cn_irig, pow27);
-        if (mc_mom > 10. &&                  succ) hHCflux->fill(hc_irig, pow27);
+        if (mc_mom > 10. && track.status[0][patt]) hCKflux->fillH1D(ck_irig, pow27);
+        if (mc_mom > 10. && track.status[1][patt]) hCNflux->fillH1D(cn_irig, pow27);
+        if (mc_mom > 10. &&                  succ) hHCflux->fillH1D(hc_irig, pow27);
+        
+        if (mc_mom > 10. && ck_cut) hCKflux2->fillH1D(ck_irig, pow27);
+        if (mc_mom > 10. && cn_cut) hCNflux2->fillH1D(cn_irig, pow27);
+        if (mc_mom > 10. && hc_cut) hHCflux2->fillH1D(hc_irig, pow27);
         
         if (mc_mom > 10. && mc_mom < 20.) {
-            if (track.status[0][patt]) hCKRrso2->fill(10. * (ck_irig - mc_irig));
-            if (track.status[1][patt]) hCNRrso2->fill(10. * (cn_irig - mc_irig));
-            if (                 succ) hHCRrso2->fill(10. * (hc_irig - mc_irig));
+            if (track.status[0][patt]) hCKRrso2->fillH1D(10. * (ck_irig - mc_irig));
+            if (track.status[1][patt]) hCNRrso2->fillH1D(10. * (cn_irig - mc_irig));
+            if (                 succ) hHCRrso2->fillH1D(10. * (hc_irig - mc_irig));
         }
     }
 

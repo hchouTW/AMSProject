@@ -219,7 +219,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		fG4mc.primPart.mass     = primary->Mass;
 		fG4mc.primPart.beta     = ((primary->Particle==1) ? 1.0 : 1.0/std::hypot(1.0, (primary->Mass/primary->Momentum)));
 		fG4mc.primPart.mom      = primary->Momentum;
-		fG4mc.primPart.kEng     = (std::hypot(primary->Momentum, primary->Mass) - primary->Mass);
+		fG4mc.primPart.ke       = (std::hypot(primary->Momentum, primary->Mass) - primary->Mass);
 		fG4mc.primPart.coo[0]   = primary->Coo[0];
 		fG4mc.primPart.coo[1]   = primary->Coo[1];
 		fG4mc.primPart.coo[2]   = primary->Coo[2];
@@ -679,8 +679,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr)	return false;
 	fStopwatch.start();
 
-	fTof.numOfCluster = event->NTofCluster();
-	fTof.numOfClusterH = event->NTofClusterH();
+	fTof.numOfCls = event->NTofCluster();
+	fTof.numOfClsH = event->NTofClusterH();
 	fTof.numOfBeta = event->NBeta();
 	fTof.numOfBetaH = event->NBetaH();
 
@@ -703,7 +703,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
         if (betaH->iTrTrack() != recEv.iTrTrack) break;
 
 		int ncls[4] = {0};
-		fTof.numOfInTimeCluster = event->GetNTofClustersInTime(betaH, ncls);
+		fTof.numOfInTimeCls = event->GetNTofClustersInTime(betaH, ncls);
 
 		fTof.statusBetaH = true;
 		fTof.betaH = betaH->GetBeta();
@@ -860,7 +860,7 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 	fStopwatch.start();
 	
 	//event->RebuildAntiClusters();
-	fAcc.numOfCluster = event->NAntiCluster();
+	fAcc.numOfCls = event->NAntiCluster();
 
 	const double TimeOfOneM = 3.335640e+00; // (speed of light)
 	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
@@ -951,8 +951,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	// Beta Info
 	float Beta = 0;
-	if      (recEv.iBetaH >= 0) Beta = event->pBetaH(recEv.iBetaH)->GetBeta();
-	else if (recEv.iBeta  >= 0) Beta = event->pBeta(recEv.iBeta)->Beta;
+	if      (recEv.iBetaH >= 0) Beta = std::fabs(event->pBetaH(recEv.iBetaH)->GetBeta());
+	else if (recEv.iBeta  >= 0) Beta = std::fabs(event->pBeta(recEv.iBeta)->Beta);
 	else                        Beta = 1;
 
     TrTrackR* trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
@@ -993,6 +993,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		track.bitPatt   = bitPatt; 
 		track.bitPattXY = bitPattXY; 
+        track.QIn = trtk->GetInnerQ_all(Beta, fitidInn).Mean;
 		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
@@ -1213,7 +1214,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr) return false;
 	fStopwatch.start();
 
-	fTrd.numOfCluster = event->NTrdCluster();
+	fTrd.numOfCls = event->NTrdCluster();
 	fTrd.numOfSegment = event->NTrdSegment();
 	fTrd.numOfTrack = event->NTrdTrack();
 	fTrd.numOfHTrack = event->NTrdHTrack();
@@ -1293,10 +1294,10 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		fTrd.statusKCls[kindOfFit] = true;
 		fTrd.Q[kindOfFit]          = Q;
-		fTrd.LLR[kindOfFit][0]     = llr[0];
-		fTrd.LLR[kindOfFit][1]     = llr[1];
-		fTrd.LLR[kindOfFit][2]     = llr[2];
-		fTrd.LLR_nhit[kindOfFit]   = numberOfHit;
+		fTrd.LLRep[kindOfFit]      = llr[0];
+		fTrd.LLReh[kindOfFit]      = llr[1];
+		fTrd.LLRph[kindOfFit]      = llr[2];
+		fTrd.LLRnhit[kindOfFit]    = numberOfHit;
 	}
 
 	short trdIdx = -1;
@@ -2113,7 +2114,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6003;
 		
-    double trQIn = trtkSIG->GetInnerQ_all(betah, fitidInn).Mean;
+    double trQIn = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
 	if (MGNumc::Compare(trQIn) <= 0) return -6004;
 
 	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)

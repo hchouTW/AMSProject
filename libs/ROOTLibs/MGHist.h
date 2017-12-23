@@ -83,7 +83,7 @@ class Hist {
 		Hist(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist);
 		~Hist() { clear(); }
 
-		inline Bool_t exist() const { return (hist_ != nullptr && info_.first != HistType::kNone && info_.second != HistDim::kNone); }
+		inline Bool_t exist() const { return !(hist_ == nullptr || info_.first == HistType::kNone || info_.second == HistDim::kNone); }
 		
 		inline const std::string& name()       const { return name_; }
 		inline const std::string& title()      const { return title_; }
@@ -104,6 +104,17 @@ class Hist {
 		void style(const TAttFill& fill = Fill(), const TAttLine& line = Line(), const TAttMarker& marker = Marker());
 
 		void fill(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
+        
+		void fillH(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0);
+        inline void fillH1D(Double_t a, Double_t b = 1.0) { if (exist()) dynamic_cast<TH1D*>(hist_)->Fill(a, b); }
+        inline void fillH2D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist()) dynamic_cast<TH2D*>(hist_)->Fill(a, b, c); }
+        inline void fillH3D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist()) dynamic_cast<TH3D*>(hist_)->Fill(a, b, c, d); }
+        
+		void fillP(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
+        inline void fillP1D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist()) dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); }
+        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist()) dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); }
+        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e = 1.0) { if (exist()) dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); }
+
 		void draw(Option_t * option = "") { if (exist()) hist_->Draw(option); }
 		void write(const std::string& name = "") { if (exist()) hist_->Write(name.c_str(), 0, 0); }
 		
