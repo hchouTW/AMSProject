@@ -841,6 +841,8 @@ class TRK : public TObject {
 		~TRK() {}
 
 		void init() {
+            numOfTrack = 0;
+
 			beamID = -1;
 			beamDist = -1;
 			track.init();
@@ -856,6 +858,8 @@ class TRK : public TObject {
 		}
 
 	public :
+        Short_t   numOfTrack;
+
 		Short_t   beamID;
 		Float_t   beamDist;
 		TrackInfo track;

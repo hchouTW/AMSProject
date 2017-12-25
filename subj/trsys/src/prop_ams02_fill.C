@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data3/hchou/AMSCore/prod/17Dec12/src/ClassDef.h"
-#include "/data3/hchou/AMSCore/prod/17Dec12/src/ClassDef.C"
+#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
+#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
 
 using namespace std;
 
@@ -61,8 +61,8 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
-    Int_t laySat = 1;
-    Int_t layEnd = 2;
+    Int_t laySat = 5;
+    Int_t layEnd = 6;
     
     TFile * ofle = new TFile(Form("%s/prop_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
@@ -127,24 +127,43 @@ int main(int argc, char * argv[]) {
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
+        
+        if (fTof->numOfBetaH != 1) continue;
+        if (!fTof->statusBetaH) continue;
+        if (fTof->normChisqT > 10.) continue;
+        if (fTof->normChisqC > 10.) continue;
+        if (fTof->betaHPatt != 15) continue;
+        //if (fTof->numOfInTimeCls > 4) continue;
+        //if ((fTof->extClsN[0]+fTof->extClsN[1]) > 0 || 
+        //    (fTof->extClsN[2]+fTof->extClsN[3]) > 1) continue; 
+        if (fTof->Zall != 1) continue;
+        if (fTof->betaH < 0.) continue;
+        
+        if (fAcc->clusters.size() != 0) continue;
+        
+        if ((fTrg->bit&8) != 8) continue;
+        
+        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        if (!fTrd->statusKCls[0]) continue;
+        if (fTrd->LLReh[0] > 0.3) continue;
+        
+        TrackInfo& track = fTrk->track;
 
         // No Interaction
-        if (fG4mc->primVtx.status) {
-            if (std::fabs(fG4mc->primVtx.vtx[2]) < 40.) hVtx->fill(fG4mc->primVtx.vtx[0], fG4mc->primVtx.vtx[1]);
-        }
-        else continue;
+        //if (fG4mc->primVtx.status) {
+        //    if (std::fabs(fG4mc->primVtx.coo[2]) < 40.) hVtx->fill(fG4mc->primVtx.coo[0], fG4mc->primVtx.coo[1]);
+        //}
+        //else continue;
 
         // REC hit
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
         HitTRKInfo * recU = nullptr;
         HitTRKInfo * recL = nullptr;
-        if (fTrk->tracks.size() > 0) {
-            TrackInfo& track = fTrk->tracks.at(0);
-            for (auto&& hit : track.hits) {
-                if (hit.layJ == laySat) recU = &hit;
-                if (hit.layJ == layEnd) recL = &hit;
-                rec[hit.layJ-1] = &hit;
-            }
+
+        for (auto&& hit : track.hits) {
+            if (hit.layJ == laySat) recU = &hit;
+            if (hit.layJ == layEnd) recL = &hit;
+            rec[hit.layJ-1] = &hit;
         }
 
         // MC seg from primary particle
@@ -157,20 +176,20 @@ int main(int argc, char * argv[]) {
             if (seg.lay == layEnd) mcsegL = &seg;
             mcseg[seg.lay-1] = &seg;
         }
+        
+        HitTRKMCInfo * mchit[9]; std::fill_n(mchit, 9, nullptr);
+        for (auto&& hit : fG4mc->primPart.hits) {
+            mchit[hit.layJ-1] = &hit;
+        }
 
         for (Int_t it = 2; it < 8; ++it) {
-            if (!rec[it] || !mcseg[it]) continue;
-            Double_t dz = (rec[it]->coo[2] - mcseg[it]->coo[2]);
-            Double_t tx = (mcseg[it]->dir[0] / mcseg[it]->dir[2]);
-            Double_t ty = (mcseg[it]->dir[1] / mcseg[it]->dir[2]);
-            Double_t cxy[2] = { mcseg[it]->coo[0] + (dz * tx), mcseg[it]->coo[1] + (dz * ty) };
-           
-            Short_t  ntp[2] = { rec[it]->stripSigX.size(), rec[it]->stripSigY.size() };
-            Double_t res[2] = { rec[it]->coo[0] - cxy[0], rec[it]->coo[1] - cxy[1] };
+            if (!rec[it] || !mchit[it]) continue;
+            Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
+            Double_t res[2] = { rec[it]->coo[0] - mchit[it]->coo[0], rec[it]->coo[1] - mchit[it]->coo[1] };
             
             constexpr Double_t CM2UM = 1.0e4;
-            if (ntp[0]!=0) hMrx->fill(mcseg[it]->mom, CM2UM * res[0]);
-            if (ntp[1]!=0) hMry->fill(mcseg[it]->mom, CM2UM * res[1]);
+            if (ntp[0]!=0) hMrx->fill(mchit[it]->mom, CM2UM * res[0]);
+            if (ntp[1]!=0) hMry->fill(mchit[it]->mom, CM2UM * res[1]);
            
             if (mcseg[it]->mom > 5.0) {
                 if (ntp[0]>=1) hMrxNN->fill(CM2UM * res[0]);
@@ -211,7 +230,7 @@ int main(int argc, char * argv[]) {
             PropMgnt::PropToZWithMC(mcsegL->coo[2], ppst);
             Double_t mc_resc[2] = { mcsegL->coo[0] - refc(0), mcsegL->coo[1] - refc(1) }; // MC: residual xy [cm]
             Double_t mc_resu[2] = { mcsegL->dir[0] - refu(0), mcsegL->dir[1] - refu(1) }; // MC: cosine angle xy [1]
-            Double_t mc_elsm    = GeV2MeV * (mcsegU->kEng - mcsegL->kEng);                // MC: kinetic energy difference [GeV]
+            Double_t mc_elsm    = GeV2MeV * (mcsegU->ke - mcsegL->ke);                    // MC: kinetic energy difference [GeV]
             Double_t tm_resc[2] = { ppst.cx() - refc(0), ppst.cy() - refc(1) };           // ToyMC: residual xy [cm]
             Double_t tm_resu[2] = { ppst.ux() - refu(0), ppst.uy() - refu(1) };           // ToyMC: cosine angle xy [1]
             Double_t tm_elsm    = GeV2MeV * (part.ke() - ppst.ke());                      // ToyMC: kinetic energy difference [GeV]

@@ -52,25 +52,22 @@ class PhyTr {
         Double_t ndf_;
 
     protected :
-        // Minimization
-        static constexpr Int_t    LMTL_ITER = 3;
-        static constexpr Int_t    LMTM_ITER = 5;
-        static constexpr Int_t    LMTU_ITER = 50;
-        static constexpr Double_t CONVG_EPSILON   = 1.0e-2;
-        static constexpr Double_t CONVG_TOLERANCE = 5.0e-3;
-       
         // Dimension
         static constexpr Int_t DIM_G = 5;
         static constexpr Int_t DIM_L = 4;
 
-        // Levenberg-Marquardt Method
-        static constexpr Double_t LMTU_LAMBDA = 1.0e+4;
-        static constexpr Double_t LMTL_LAMBDA = 1.0e-4;
-        static constexpr Double_t LAMBDA_UP_FAC = 6.0;
-        static constexpr Double_t LAMBDA_DN_FAC = 5.0;
+        // Minimization (Levenberg-Marquardt Method)
+        static constexpr Int_t    LMTL_ITER = 3;
+        static constexpr Int_t    LMTU_ITER = 30;
+        
         static constexpr Double_t LAMBDA0 = 1.0e-2;
-
-        static constexpr Double_t EPSILON = 0.1;
+        static constexpr Double_t LAMBDA_DN_FAC = 7.0;
+        static constexpr Double_t LAMBDA_UP_FAC = 9.0;
+        static constexpr Double_t LMTL_LAMBDA = 1.0e-4;
+        static constexpr Double_t LMTU_LAMBDA = 1.0e+3;
+        
+        static constexpr Double_t CONVG_EPSILON   = 1.0e-3;
+        static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
 };
 
 

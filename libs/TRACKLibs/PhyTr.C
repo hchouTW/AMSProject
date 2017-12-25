@@ -246,16 +246,22 @@ Bool_t PhyTr::fit_simple() {
     Bool_t succ    = false;
     Bool_t preSucc = false;
     Bool_t curSucc = false;
-    
-    Int_t  curIter = 1;
+
+    Double_t    curLmRhoDen = MGMath::ONE;
+    Double_t    lambda = LAMBDA0;
+    PhySt       rltSt(part_);
+    SVecD<5>    curGrdG;
+    SMtxSymD<5> curCvGG;
+
+    Int_t  updIter = 0;
+    Int_t  curIter = 0;
     while (curIter <= LMTU_ITER && !succ) {
         Double_t chi = MGMath::ZERO;
         SVecD<5>    grdG;
         SMtxSymD<5> cvGG;
 
         Int_t cnt_nhit = 0;
-        PhySt ppst(part_);
-        //ppst.arg().reset(false, false);
+        PhySt ppst(rltSt);
         PhyJb::SMtxDGG&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
             PhyJb curjb;
@@ -287,38 +293,69 @@ Bool_t PhyTr::fit_simple() {
             if (!hit.sx()) hit.set_dummy_x(ppst.cx());
         }
         if (cnt_nhit != hits_.size()) break;
-            
-        if (!cvGG.Invert()) break;
-        SVecD<5>&& rslG = (cvGG * grdG);
+        Double_t nchi = ((chi) / static_cast<Double_t>(nseq_ - 5));
 
-        part_.set_state_with_uxy(
-            part_.cx() + rslG(0),
-            part_.cy() + rslG(1),
-            part_.cz(),
-            part_.ux() + rslG(2),
-            part_.uy() + rslG(3),
+        Bool_t isSucc   = false;
+        Bool_t isUpdate = false;
+        if (curIter != 0) {
+            Double_t lmRho = (nchi_ - nchi) / curLmRhoDen;
+            Bool_t   isLmt = (MGNumc::Compare(lambda, LMTU_LAMBDA) >= 0);
+            Double_t convg = std::sqrt(MGMath::ONE + lambda);
+            isSucc = (MGNumc::Compare(std::fabs((nchi_ - nchi) / (nchi_ + nchi + CONVG_TOLERANCE)) * convg, CONVG_TOLERANCE) <= 0);
+
+            if (MGNumc::Compare(lmRho, CONVG_EPSILON) < 0) {
+                lambda = std::min(lambda*LAMBDA_UP_FAC, LMTU_LAMBDA); 
+                grdG   = curGrdG;
+                cvGG   = curCvGG;
+                rltSt  = part_;
+                if      (isSucc) updIter++;
+                else if (isLmt)  break;
+            }
+            else {
+                lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
+                ndf_     = (nseq_ - 5);
+                nchi_    = nchi;
+                part_    = rltSt;
+                isUpdate = true;
+                updIter++;
+            }
+        }
+        else { nchi_ = nchi; }
+
+        SMtxSymD<5> lmCvGG(cvGG);
+        SVecD<5>&&  diagCvGG = (lambda * cvGG.Diagonal());
+        lmCvGG.SetDiagonal(SVecD<5>(lmCvGG.Diagonal() + diagCvGG));
+
+        if (!lmCvGG.Invert()) break;
+        SVecD<5>&& rslG = (lmCvGG * grdG);
+       
+        curLmRhoDen = MGMath::ZERO;
+        for (Int_t p = 0; p < 5; ++p)
+            curLmRhoDen += (rslG(p) * (diagCvGG(p)*rslG(p) + grdG(p)));
+        
+        if (curIter == 0 || isUpdate) {
+            curGrdG = grdG;
+            curCvGG = cvGG;
+        }
+
+        rltSt.set_state_with_uxy(
+            rltSt.cx() + rslG(0),
+            rltSt.cy() + rslG(1),
+            rltSt.cz(),
+            rltSt.ux() + rslG(2),
+            rltSt.uy() + rslG(3),
             ((ortt_ == Orientation::kDownward) ? -1 : 1)
         );
-        part_.set_eta(part_.eta() + rslG(4));
+        rltSt.set_eta(rltSt.eta() + rslG(4));
         
-        Int_t    ndf      = (nseq_ - 5);
-        Double_t nchi     = ((chi) / static_cast<Double_t>(ndf));
-        Double_t nchi_rat = std::fabs((nchi - nchi_) / (nchi + nchi_ + CONVG_EPSILON));
-        Bool_t   sign     = (MGNumc::Compare(nchi - nchi_, std::min(nchi, nchi_) * CONVG_EPSILON) < 0);
-        
-        nchi_ = nchi;
-        ndf_  = ndf;
-
-        curSucc = (curIter >= LMTM_ITER && (sign && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0));
-        if (curIter > 20) std::cout << Form("IT %d (MOM %14.8f CHI %14.8f RAT %14.8f)\n", curIter, part_.mom(), nchi_, nchi_rat); // determinate problem
-        
-        succ = (preSucc && curSucc);
         preSucc = curSucc;
+        curSucc = (isSucc && updIter >= LMTL_ITER);
+        succ    = (preSucc && curSucc);
         
         curIter++;
     }
-    if (!succ) std::cout << Form("FAIL. %d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
-    //std::cout << Form("IT %2d (MOM %14.8f CHI %14.8f)\n", curIter, part_.mom(), nchi_);
+    //if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    //else       std::cout << Form("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     
     return succ;
 }
@@ -335,6 +372,173 @@ Bool_t PhyTr::fit_simple() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Bool_t PhyTr::fit_physics() {
+    Bool_t succ    = false;
+    Bool_t preSucc = false;
+    Bool_t curSucc = false;
+
+    Double_t    curLmRhoDen = MGMath::ONE;
+    Double_t    lambda = LAMBDA0;
+    PhySt       rltSt(part_);
+    SVecD<5>    curGrdG;
+    SMtxSymD<5> curCvGG;
+
+    Int_t  updIter = 0;
+    Int_t  curIter = 0;
+    while (curIter <= LMTU_ITER && !succ) {
+        Double_t chi = MGMath::ZERO;
+        SVecD<5>    grdG;
+        SMtxSymD<5> cvGG;
+
+        Int_t cnt_nhit = 0;
+        PhySt ppst(rltSt);
+        PhyJb::SMtxDGG&& ppjb = SMtxId();
+        for (auto&& hit : hits_) {
+            PhyJb curjb;
+            if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+            ppjb = curjb.gg() * ppjb;
+
+            Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
+            Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
+            Double_t msl = (ppst.arg().mscat() ? ppst.arg().mscat_ll() : MGMath::ZERO);
+            if (ppst.arg().mscat() && hit.sx()) mex = std::hypot(mex, msl);
+            if (ppst.arg().mscat() && hit.sy()) mey = std::hypot(mey, msl);
+
+            SMtxSymD<2> cvM;
+            cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
+            cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
+            
+            SVecD<2> rsM;
+            rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
+            rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
+            
+            PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+            grdG += LA::Transpose(subJbF) * rsM;
+            cvGG += LA::SimilarityT(subJbF, cvM);
+
+            if (hit.sx()) { chi += rsM(0) * (hit.cx() - ppst.cx()); }
+            if (hit.sy()) { chi += rsM(1) * (hit.cy() - ppst.cy()); }
+
+            cnt_nhit++;
+            if (!hit.sx()) hit.set_dummy_x(ppst.cx());
+        }
+        if (cnt_nhit != hits_.size()) break;
+        Double_t nchi = ((chi) / static_cast<Double_t>(nseq_ - 5));
+
+        Bool_t isSucc   = false;
+        Bool_t isUpdate = false;
+        if (curIter != 0) {
+            Double_t lmRho = (nchi_ - nchi) / curLmRhoDen;
+            Bool_t   isLmt = (MGNumc::Compare(lambda, LMTU_LAMBDA) >= 0);
+            Double_t convg = std::cbrt((MGMath::ONE + lambda) * (MGMath::ONE + lambda));
+            isSucc = (MGNumc::Compare(((nchi_ - nchi) / (nchi_ + nchi + CONVG_TOLERANCE)) * convg, CONVG_TOLERANCE) <= 0);
+
+            if (MGNumc::Compare(lmRho, CONVG_EPSILON) < 0) {
+                lambda = std::min(lambda*LAMBDA_UP_FAC, LMTU_LAMBDA); 
+                grdG   = curGrdG;
+                cvGG   = curCvGG;
+                rltSt  = part_;
+                if (isSucc && isLmt) updIter++;
+            }
+            else {
+                lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
+                ndf_     = (nseq_ - 5);
+                nchi_    = nchi;
+                part_    = rltSt;
+                isUpdate = true;
+                updIter++;
+            }
+        }
+        else { nchi_ = nchi; }
+
+        SMtxSymD<5> lmCvGG(cvGG);
+        SVecD<5>&&  diagCvGG = (lambda * cvGG.Diagonal());
+        lmCvGG.SetDiagonal(SVecD<5>(lmCvGG.Diagonal() + diagCvGG));
+
+        if (!lmCvGG.Invert()) break;
+        SVecD<5>&& rslG = (lmCvGG * grdG);
+       
+        curLmRhoDen = MGMath::ZERO;
+        for (Int_t p = 0; p < 5; ++p)
+            curLmRhoDen += (rslG(p) * (diagCvGG(p)*rslG(p) + grdG(p)));
+        
+        if (curIter == 0 || isUpdate) {
+            curGrdG = grdG;
+            curCvGG = cvGG;
+        }
+
+        rltSt.set_state_with_uxy(
+            rltSt.cx() + rslG(0),
+            rltSt.cy() + rslG(1),
+            rltSt.cz(),
+            rltSt.ux() + rslG(2),
+            rltSt.uy() + rslG(3),
+            ((ortt_ == Orientation::kDownward) ? -1 : 1)
+        );
+        rltSt.set_eta(rltSt.eta() + rslG(4));
+        
+        preSucc = curSucc;
+        curSucc = (isSucc && updIter >= LMTL_ITER);
+        succ    = (preSucc && curSucc);
+        
+        curIter++;
+    }
+    //if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    //else       std::cout << Form("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    
+    return succ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 Bool_t PhyTr::fit_physics() {
     Bool_t succ = false;
     Bool_t preSucc = false;
@@ -394,7 +598,6 @@ Bool_t PhyTr::fit_physics() {
         }
         if (cnt_nhit != hits_.size()) break;
 
-        /*
         for (Int_t im = 0; im < hits_.size(); ++im) {
             if (seqx_.at(im) >= 0) {
                 for (Int_t is = seqx_.at(im)+1; is < maps_.size(); ++is) {
@@ -415,7 +618,6 @@ Bool_t PhyTr::fit_physics() {
                 }
             }
         }
-        */
         Double_t detCvM = 0.0;
         CvM.Invert(&detCvM);
 
@@ -445,7 +647,7 @@ Bool_t PhyTr::fit_physics() {
         nchi_ = nchi;
         ndf_  = ndf;
 
-        curSucc = (curIter >= LMTM_ITER && (sign && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0));
+        curSucc = (curIter >= LMTL_ITER && (sign && MGNumc::Compare(nchi_rat, CONVG_TOLERANCE) < 0));
         
         succ = (preSucc && curSucc);
         preSucc = curSucc;
@@ -458,7 +660,7 @@ Bool_t PhyTr::fit_physics() {
     
     return succ;
 }
-
+*/
 
 
 

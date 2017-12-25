@@ -251,7 +251,7 @@ void Hist::fill(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e) {
 
 
 void Hist::fillH(Double_t a, Double_t b, Double_t c, Double_t d) {
-	if (!exist() || (info_.first != HistType::kHist)) return;
+	if (!exist(HistType::kHist)) return;
 	switch (info_.second) {
 		case HistDim::k1D :
 			dynamic_cast<TH1D*>(hist_)->Fill(a, b); 
@@ -268,7 +268,7 @@ void Hist::fillH(Double_t a, Double_t b, Double_t c, Double_t d) {
 
 
 void Hist::fillP(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e) {
-	if (!exist() || (info_.first != HistType::kProfile)) return;
+	if (!exist(HistType::kProfile)) return;
 	switch (info_.second) {
 		case HistDim::k1D :
 			dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); 

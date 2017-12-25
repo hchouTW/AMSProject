@@ -77,6 +77,9 @@ else
     # user
     export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
     export DPM_HOME=/dpm/phy.ncu.edu.tw/home
+    export EOS_AMS_HOST=eosams.cern.ch
+
+    alias xrdcp_cern='sh ${AMSProj}/sys/shell/xrdcp_cern.sh'
 fi
 
 # Local Job Command

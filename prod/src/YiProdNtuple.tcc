@@ -954,6 +954,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	if      (recEv.iBetaH >= 0) Beta = std::fabs(event->pBetaH(recEv.iBetaH)->GetBeta());
 	else if (recEv.iBeta  >= 0) Beta = std::fabs(event->pBeta(recEv.iBeta)->Beta);
 	else                        Beta = 1;
+    
+    fTrk.numOfTrack = event->NTrTrack();
 
     TrTrackR* trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
 	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, 21) : -1;

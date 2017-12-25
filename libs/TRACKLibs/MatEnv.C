@@ -14,9 +14,9 @@ void MatFld::print() const {
     printStr += STR_FMT("LogMenExc %-8.5f\n", lme_);
     printStr += STR_FMT("DenEftCor %-8.5f\n", dec_);
     printStr += STR_FMT("NumRadLen %-8.5f\n", nrl());
+    printStr += STR_FMT("ECloudAbs %-8.5f\n", ela());
     printStr += STR_FMT("RealLen   %-7.2f\n", rlen_);
     printStr += STR_FMT("EfftLen   %-7.2f\n", elen_);
-    printStr += STR_FMT("Efft      %-6.4f\n", efft_);
     printStr += STR_FMT("Loc       %-6.4f\n", loc1_);
     printStr += STR_FMT("LocSqr    %-6.4f\n", loc2_);
     printStr += STR_FMT("==========================================================\n");
@@ -35,7 +35,6 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
     Double_t dec  = 0.;
     Double_t rlen = 0.;
     Double_t elen = 0.;
-    Double_t efft = 0.;
     Double_t loc1 = 0.;
     Double_t loc2 = 0.;
     
@@ -62,13 +61,12 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
     if (mat && !MGNumc::EqualToZero(elen)) {
         loc1 = (loc1 / irl) / (rlen);
         loc2 = (loc2 / irl) / (rlen * rlen);
-        efft = (elen / rlen);
         lme  = (lme / eld);
         dec  = (dec / eld);
         irl  = (irl / elen);
         eld  = (eld / elen);
         
-        return MatFld(mat, irl, eld, lme, dec, rlen, elen, efft, loc1, loc2);
+        return MatFld(mat, irl, eld, lme, dec, rlen, elen, loc1, loc2);
     }
     else return MatFld(rlen);
 }
@@ -365,12 +363,12 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
     Long64_t xi = static_cast<Long64_t>(std::floor((coo(0) - min_.at(0)) / dlt_.at(0)));
     if (xi < 0 || xi >= n_.at(0)) return MatFld();
 
-    Long64_t idx  = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-    Bool_t   mat  = mat_ptr_[idx];
-    Double_t irl  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-    Double_t eld  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-    Double_t lme  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
-    Double_t dec  = get_density_effect_correction(idx, log10gb);
+    Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
+    Bool_t   mat = mat_ptr_[idx];
+    Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
+    Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
+    Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+    Double_t dec = get_density_effect_correction(idx, log10gb);
 
     reset_tmp_dec();
     if (mat) return MatFld(mat, irl, eld, lme, dec);
@@ -401,12 +399,12 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
 
     Double_t rlen = LA::Mag((wcoo - vcoo));
     if (MGNumc::EqualToZero(rlen)) {
-        Long64_t idx  = (vxi * fact_.at(0) + vyi * fact_.at(1) + vzi);
-        Bool_t   mat  = mat_ptr_[idx];
-        Double_t irl  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-        Double_t eld  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-        Double_t lme  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
-        Double_t dec  = get_density_effect_correction(idx, log10gb);
+        Long64_t idx = (vxi * fact_.at(0) + vyi * fact_.at(1) + vzi);
+        Bool_t   mat = mat_ptr_[idx];
+        Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
+        Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
+        Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+        Double_t dec = get_density_effect_correction(idx, log10gb);
         
         reset_tmp_dec();
         if (mat) return MatFld(mat, irl, eld, lme, dec);
@@ -415,10 +413,10 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
    
     SVecD<3> vwvec((wxloc - vxloc), (wyloc - vyloc), (wzloc - vzloc));
     
-    Double_t   vwlen  = LA::Mag(vwvec);
-    Long64_t   nstp   = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
-    SVecD<3>&& unit   = (vwvec / static_cast<Double_t>(nstp));
-    Double_t   ulen   = LA::Mag(unit);
+    Double_t   vwlen = LA::Mag(vwvec);
+    Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
+    SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
+    Double_t   ulen  = LA::Mag(unit);
     
     SVecD<3> real_unit(unit(0) * dlt_.at(0), unit(1) * dlt_.at(1), unit(2) * dlt_.at(2));
     Double_t real_ulen = LA::Mag(real_unit);
@@ -449,10 +447,6 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t sum_dec  = 0;
     Double_t sum_loc1 = 0;
     Double_t sum_loc2 = 0;
-    Long64_t sec_cnt[MatFld::SECTION_N]; std::fill_n(sec_cnt, MatFld::SECTION_N, 0);
-    Bool_t   sec_mat[MatFld::SECTION_N]; std::fill_n(sec_mat, MatFld::SECTION_N, false);
-    Double_t sec_nrl[MatFld::SECTION_N]; std::fill_n(sec_nrl, MatFld::SECTION_N, 0.);
-    Double_t sec_ela[MatFld::SECTION_N]; std::fill_n(sec_ela, MatFld::SECTION_N, 0.);
     for (Long64_t it = itsat; it < itend; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(std::floor(itloc(2)));
         if (zi < 0 || zi >= n_.at(2)) continue;
@@ -465,11 +459,10 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
         Bool_t   mat = mat_ptr_[idx];
         if (mat) {
             Double_t itrat = ((MGMath::HALF + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
-            Long64_t issec = static_cast<Long64_t>(std::floor(static_cast<Double_t>(MatFld::SECTION_N) * itrat));
-            Double_t irl  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-            Double_t eld  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-            Double_t lme  = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
-            Double_t dec  = get_density_effect_correction(idx, log10gb);
+            Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
+            Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
+            Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+            Double_t dec = get_density_effect_correction(idx, log10gb);
     
             sum_irl  += irl;
             sum_eld  += eld;
@@ -478,13 +471,6 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
             sum_loc1 += irl * (itrat);
             sum_loc2 += irl * (itrat * itrat);
             itcnt++;
-
-            for (Int_t is = 0; is <= issec; ++is) {
-                sec_mat[is]  = true;
-                sec_nrl[is] += irl;
-                sec_ela[is] += eld;
-                sec_cnt[is]++;
-            }
         }
     }
     reset_tmp_dec();
@@ -499,16 +485,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
         Double_t loc1 = (sum_loc1 / sum_irl);
         Double_t loc2 = (sum_loc2 / sum_irl);
 
-        for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
-            if (!sec_mat[is]) continue;
-            Double_t elen = rlen * (static_cast<Double_t>(sec_cnt[is]) / static_cast<Double_t>(nstp));
-            Double_t irl  = (sec_nrl[is] / static_cast<Double_t>(sec_cnt[is]));
-            Double_t eld  = (sec_ela[is] / static_cast<Double_t>(sec_cnt[is]));
-            sec_nrl[is] = (irl * elen);
-            sec_ela[is] = (eld * elen);
-        }
-
-        return MatFld(true, irl, eld, lme, dec, rlen, elen, efft, loc1, loc2, sec_mat, sec_nrl, sec_ela);
+        return MatFld(true, irl, eld, lme, dec, rlen, elen, loc1, loc2);
     }
     else return MatFld(rlen);
 }
@@ -556,14 +533,9 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb
     Double_t lme  = 0.0;
     Double_t dec  = 0.0;
     Double_t elen = 0.0;
-    Double_t efft = 0.0;
     Double_t loc1 = 0.0;
     Double_t loc2 = 0.0;
         
-    Bool_t   sec_mat[MatFld::SECTION_N]; std::fill_n(sec_mat, MatFld::SECTION_N, false);
-    Double_t sec_nrl[MatFld::SECTION_N]; std::fill_n(sec_nrl, MatFld::SECTION_N, 0.0);
-    Double_t sec_ela[MatFld::SECTION_N]; std::fill_n(sec_ela, MatFld::SECTION_N, 0.0);
-
     for (auto&& reader : *reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
         MatFld&& mfld = reader->get(vcoo, wcoo, log10gb, is_std);
@@ -579,13 +551,6 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb
         dec  += mfld.dec() * ela;
         elen += mfld.elen();
         
-        for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
-            if (!mfld.sec_mat(is)) continue;
-            sec_mat[is]  = true;
-            sec_nrl[is] += mfld.sec_nrl(is);
-            sec_ela[is] += mfld.sec_ela(is);
-        }
-        
         mat = true;
     }
 
@@ -596,9 +561,8 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb
         dec  = (dec / eld);
         irl  = (irl / elen);
         eld  = (eld / elen);
-        efft = (elen / rlen);
 
-        return MatFld(mat, irl, eld, lme, dec, rlen, elen, efft, loc1, loc2, sec_mat, sec_nrl, sec_ela);
+        return MatFld(mat, irl, eld, lme, dec, rlen, elen, loc1, loc2);
     }
     else return MatFld(rlen);
 }

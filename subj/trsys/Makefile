@@ -2,7 +2,7 @@
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
-Version=17Dec12
+Version=17Dec23
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 
 all :
@@ -13,16 +13,25 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(PWD)/src/hit_ams02_fill.C $(TagetDir)/src/hit_ams02_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_ams02_fill.C $(TagetDir)/src/prop_ams02_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_ams02_fit.C $(TagetDir)/src/prop_ams02_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit_ams02_fill.C $(TagetDir)/src/fit_ams02_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit_ams02_fit.C $(TagetDir)/src/fit_ams02_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_smc_fill.C $(TagetDir)/src/prop_smc_fill.C 2> /dev/null
+	#make $(TagetDir)/hit_ams02_fill
 	#make $(TagetDir)/prop_ams02_fill
 	#make $(TagetDir)/prop_ams02_fit
 	make $(TagetDir)/fit_ams02_fill
 	make $(TagetDir)/fit_ams02_fit
 	#make $(TagetDir)/prop_smc_fill
+
+$(TagetDir)/obj/hit_ams02_fill.o : $(TagetDir)/src/hit_ams02_fill.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+-include $(TagetDir)/obj/hit_ams02_fill.d
+
+$(TagetDir)/hit_ams02_fill : $(TagetDir)/obj/hit_ams02_fill.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/prop_ams02_fill.o : $(TagetDir)/src/prop_ams02_fill.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
@@ -66,6 +75,7 @@ clean :
 	@rm -fv $(TagetDir)/lst/*
 	@rm -fv $(TagetDir)/prop
 	@rm -fv $(TagetDir)/fit
+	@rm -fv $(TagetDir)/hit_ams02_fill
 	@rm -fv $(TagetDir)/prop_ams02_fill
 	@rm -fv $(TagetDir)/prop_ams02_fit
 	@rm -fv $(TagetDir)/fit_ams02_fill

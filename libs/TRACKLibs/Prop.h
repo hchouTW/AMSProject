@@ -204,7 +204,7 @@ class PropPhyCal {
 
         void init(); 
         
-        void push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, const SVecD<3>& rho, Double_t mscat_sgm = 0);
+        void push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm = 0);
         void normalized(const MatFld& mfld, PhySt& part);
         
         void set_PhyArg(PhySt& part) const;
@@ -286,11 +286,11 @@ class PropMgnt {
     private :
         static constexpr Double_t PROP_FACT  = 2.99792458e-04;
         static constexpr Double_t LMTL_CURVE = 2.0e-6; // (du/ds threshold)
-        static constexpr Double_t TUNE_STEP  = 8.0e-4; // (du threshold)
+        static constexpr Double_t TUNE_STEP  = 1.0e-3; // (du threshold)
         static constexpr Double_t PROP_STEP  = 25.0;   // (ds threshold)
         static constexpr Double_t LMTU_STEP  = 35.0;   // (ds threshold)
         static constexpr Double_t LMTL_STEP  =  8.0;   // (ds threshold)
-
+        
         static constexpr Double_t TUNE_BTA   =  0.3; // (beta threshold)
         static constexpr Double_t TUNE_NRL   =  0.1; // (number radiation length threshold)
         static constexpr Double_t TUNE_ELA   = 10.0; // (elcloud abundance threshold)
