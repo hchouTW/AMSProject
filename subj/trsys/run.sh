@@ -3,17 +3,30 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
 RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
+
+CurDir=${PWD}
+
 DataType=MC
-Stream=lst/flist.ncu.mc.pr054000_17Dec23
-#Stream=lst/flist.ncu.mc.el025200_17Dec23
-OutputDir=dat
-GroupId=0
-#GroupSize=15
-GroupSize=35
+#Stream=${CurDir}/lst/flist.ncu.mc.pr054000_17Dec23
+#Stream=${CurDir}/lst/flist.ncu.mc.el025200_17Dec23
+Stream=${CurDir}/lst/flist.ncu.mc.el2004000_17Dec23
 
-#${RunFile} ${DataType} ${Stream} ${GroupId} ${GroupSize} ${OutputDir}
+OutputDir=${CurDir}/dat
 
-for id in `seq 0 20`
+#Hit
+#GroupSize=18
+#Nseq=40
+
+#Fit
+#GroupSize=4
+#Nseq=180
+GroupSize=4
+Nseq=80
+
+for id in `seq 0 ${Nseq}`
 do
-    ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
+    echo "%!/bin/bash
+source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir}" | qsub -q ams -N JOB${id} -j oe
+    #${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done

@@ -108,6 +108,16 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JUY, JRHOU) = arg.mscat_uu() * arg.orth_rho(Y);
         jb_gl_(JPX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
+
+        Double_t eta  = part.eta_abs() / (MGMath::ONE + arg.sign() * arg.elion_mpv());
+        Double_t ibta = std::sqrt(MGMath::ONE + eta * eta);
+        Double_t crr  = ((eta*eta/ibta) + ibta) / (eta*ibta);
+        jb_gg_(JPX, JEA) += crr * (arg.tauu()*jb_gl_(JPX, JTAUU) + arg.rhou()*jb_gl_(JPX, JRHOU));
+        jb_gg_(JPY, JEA) += crr * (arg.tauu()*jb_gl_(JPY, JTAUU) + arg.rhou()*jb_gl_(JPY, JRHOU));
+        jb_gg_(JUX, JEA) += crr * (arg.tauu()*jb_gl_(JUX, JTAUU) + arg.rhou()*jb_gl_(JUX, JRHOU));
+        jb_gg_(JUY, JEA) += crr * (arg.tauu()*jb_gl_(JUY, JTAUU) + arg.rhou()*jb_gl_(JUY, JRHOU));
+    }
+    if (arg.eloss()) {
     }
 }
 
@@ -164,6 +174,7 @@ void PropPhyCal::init() {
     mscat_uu_  = 0.;
     mscat_ul_  = 0.;
     mscat_ll_  = 0.;
+    elion_mpv_ = 0.;
     elion_sgm_ = 0.;
     elbrm_men_ = 0.;
 
@@ -250,9 +261,11 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
     }
     if (sw_eloss_) {
         MatPhyFld&& mphy = MatPhy::Get(mfld, part);
+        elion_mpv_ = std::fabs((eta_abs_end_ / eta_abs_sat_) - MGMath::ONE);
         elion_sgm_ = mphy.elion_sgm();
         elbrm_men_ = mphy.elbrm_men();
 
+        if (!MGNumc::Valid(elion_mpv_) || MGNumc::Compare(elion_mpv_) <= 0) elion_mpv_ = MGMath::ZERO;
         if (!MGNumc::Valid(elion_sgm_) || MGNumc::Compare(elion_sgm_) <= 0) elion_sgm_ = MGMath::ZERO;
         if (!MGNumc::Valid(elbrm_men_) || MGNumc::Compare(elbrm_men_) <= 0) elbrm_men_ = MGMath::ZERO;
     }
@@ -265,7 +278,7 @@ void PropPhyCal::set_PhyArg(PhySt& part) const {
     part.arg().setvar_mat(mat_, nrl_, ela_);
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
     part.arg().setvar_mscat(mscat_uu_, mscat_ul_, mscat_ll_);
-    part.arg().setvar_eloss(elion_sgm_, elbrm_men_);
+    part.arg().setvar_eloss(elion_mpv_, elion_sgm_, elbrm_men_);
 }
 
 

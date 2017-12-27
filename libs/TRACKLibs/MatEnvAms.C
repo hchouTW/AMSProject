@@ -161,7 +161,8 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
-    std::string dpath = "/data1/hchou/material15"; // at NCU
+    //std::string dpath = "/data1/hchou/material15"; // at NCU
+    std::string dpath = "/ams_home/hchou/AMSData/material"; // at NCU
 
     reader_TRL1_.load("AMS02TRL1" , dpath);
     reader_TRL2_.load("AMS02TRL2" , dpath);

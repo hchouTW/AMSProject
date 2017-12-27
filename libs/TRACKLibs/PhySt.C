@@ -19,6 +19,7 @@ void PhyArg::zero() {
     mscat_ul_ = 0.;
     mscat_ll_ = 0.;
 
+    elion_mpv_ = 0.;
     elion_sgm_ = 0.;
     elbrm_men_ = 0.;
 }

@@ -19,7 +19,7 @@ Bool_t PhyTr::HitCheck(const std::vector<HitSt>& hits) {
 }
 
 
-std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Short_t>> PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
+std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Short_t>, Short_t, Short_t> PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
     if (ortt == Orientation::kDownward) HitSt::Sort(hits, HitSt::Orientation::kDownward);
     else                                HitSt::Sort(hits, HitSt::Orientation::kUpward);
     
@@ -28,6 +28,8 @@ std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Shor
     std::vector<Short_t> seqx;
     std::vector<Short_t> seqy;
     std::vector<Short_t> maps;
+    Short_t              nhtx;
+    Short_t              nhty;
     for (auto&& hit : hits) {
         hit.set_seqID(nseq);
         if (hit.sx()) { seqx.push_back(nseq); maps.push_back(0 * hits.size() + hID); } 
@@ -41,8 +43,10 @@ std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Shor
 
         hID++;
         nseq += (hit.sx() + hit.sy());
+        nhtx += hit.sx();
+        nhty += hit.sy();
     }
-    return std::make_tuple(nseq, seqx, seqy, maps);
+    return std::make_tuple(nseq, seqx, seqy, maps, nhtx, nhty);
 }
 
 
@@ -53,15 +57,20 @@ void PhyTr::clear() {
     type_ = PartType::Proton;
     ortt_ = Orientation::kDownward;
     nseq_ = 0;
-    hits_.clear();
     seqx_.clear();
     seqy_.clear();
     maps_.clear();
+    hits_.clear();
+    nhtx_ = 0;
+    nhty_ = 0;
 
     succ_ = false;
     part_.reset(type_);
+    ndfx_ = 0;
+    ndfy_ = 0;
+    chix_ = 0.;
+    chiy_ = 0.;
     nchi_ = 0.;
-    ndf_ = 0;
 }
         
 
@@ -87,6 +96,8 @@ PhyTr::PhyTr(const std::vector<HitSt>& hits, const PartType& type, const Orienta
     seqx_ = std::move(std::get<1>(sort)); 
     seqy_ = std::move(std::get<2>(sort)); 
     maps_ = std::move(std::get<3>(sort)); 
+    nhtx_ = std::move(std::get<4>(sort)); 
+    nhty_ = std::move(std::get<5>(sort)); 
     
     part_.reset(type);
 }
@@ -256,7 +267,8 @@ Bool_t PhyTr::fit_simple() {
     Int_t  updIter = 0;
     Int_t  curIter = 0;
     while (curIter <= LMTU_ITER && !succ) {
-        Double_t chi = MGMath::ZERO;
+        Double_t chix = MGMath::ZERO;
+        Double_t chiy = MGMath::ZERO;
         SVecD<5>    grdG;
         SMtxSymD<5> cvGG;
 
@@ -286,13 +298,14 @@ Bool_t PhyTr::fit_simple() {
             grdG += LA::Transpose(subJbF) * rsM;
             cvGG += LA::SimilarityT(subJbF, cvM);
 
-            if (hit.sx()) { chi += rsM(0) * (hit.cx() - ppst.cx()); }
-            if (hit.sy()) { chi += rsM(1) * (hit.cy() - ppst.cy()); }
+            if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+            if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
 
             cnt_nhit++;
             if (!hit.sx()) hit.set_dummy_x(ppst.cx());
         }
         if (cnt_nhit != hits_.size()) break;
+        Double_t chi  = (chix + chiy);
         Double_t nchi = ((chi) / static_cast<Double_t>(nseq_ - 5));
 
         Bool_t isSucc   = false;
@@ -313,7 +326,10 @@ Bool_t PhyTr::fit_simple() {
             }
             else {
                 lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
-                ndf_     = (nseq_ - 5);
+                ndfx_    = (nhtx_ - 2);
+                ndfy_    = (nhty_ - 3);
+                chix_    = chix;
+                chiy_    = chiy;
                 nchi_    = nchi;
                 part_    = rltSt;
                 isUpdate = true;
@@ -457,7 +473,8 @@ Bool_t PhyTr::fit_physics() {
             }
             else {
                 lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
-                ndf_     = (nseq_ - 5);
+                ndfx_    = (nseq_ - 5);
+                ndfy_    = (nseq_ - 5);
                 nchi_    = nchi;
                 part_    = rltSt;
                 isUpdate = true;

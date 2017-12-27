@@ -50,7 +50,8 @@ class PhyArg {
         inline Double_t erhou() const { return pdf_mscatu_.efft_sgm(rhou_); }
         inline Double_t etaul() const { return pdf_mscatl_.efft_sgm(taul_); }
         inline Double_t erhol() const { return pdf_mscatl_.efft_sgm(rhol_); }
-   
+  
+        inline const Short_t&  sign() const { return sign_; }
         inline const SVecD<3>& orth_tau() const { return orth_tau_; }
         inline const SVecD<3>& orth_rho() const { return orth_rho_; }
         inline const Double_t& orth_tau(Int_t i) const { return orth_tau_(i); }
@@ -60,6 +61,7 @@ class PhyArg {
         inline const Double_t& mscat_ul() const { return mscat_ul_; }
         inline const Double_t& mscat_ll() const { return mscat_ll_; }
 
+        inline const Double_t& elion_mpv() const { return elion_mpv_; }
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
@@ -84,7 +86,7 @@ class PhyArg {
         void setvar_mat(Bool_t mat = false, Double_t nrl = 0, Double_t ela = 0) { if (mat) { mat_ = mat; nrl_ = nrl; ela_ = ela; } }
         void setvar_orth(Short_t sign = 1, const SVecD<3>& tau = SVecD<3>(1, 0, 0), const SVecD<3>& rho = SVecD<3>(0, 1, 0)) { sign_=((sign>=0)?1:-1); orth_tau_ = tau; orth_rho_ = rho; }
         void setvar_mscat(Double_t mscat_uu = 0, Double_t mscat_ul = 0, Double_t mscat_ll = 0) { if (sw_mscat_) { mscat_uu_ = mscat_uu; mscat_ul_ = mscat_ul; mscat_ll_ = mscat_ll; } }
-        void setvar_eloss(Double_t elion_sgm = 0, Double_t elbrm_men = 0) { if (sw_eloss_) { elion_sgm_ = elion_sgm; elbrm_men_ = elbrm_men; } }
+        void setvar_eloss(Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elbrm_men = 0) { if (sw_eloss_) { elion_mpv_ = elion_mpv; elion_sgm_ = elion_sgm; elbrm_men_ = elbrm_men; } }
         
         // Symbk
         SVecD<3> symbk_mscatu() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_uu_) * orth_tau_ + (rhou_*mscat_uu_) * orth_rho_) : SVecD<3>()); }
@@ -116,6 +118,7 @@ class PhyArg {
         Double_t mscat_ul_;
         Double_t mscat_ll_;
 
+        Double_t elion_mpv_;
         Double_t elion_sgm_;
         Double_t elbrm_men_;
 

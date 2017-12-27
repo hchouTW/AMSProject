@@ -12,7 +12,7 @@ class PhyTr {
         };
 
         inline static Bool_t HitCheck(const std::vector<HitSt>& hits);
-        inline static std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Short_t>> HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
+        inline static std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Short_t>, Short_t, Short_t> HitSort(std::vector<HitSt>& hits, Orientation ortt = Orientation::kDownward);
         
     public :
         PhyTr(const std::vector<HitSt>& hits, const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
@@ -24,6 +24,8 @@ class PhyTr {
 
         inline const PhySt& part() const { return part_; }
         inline const Double_t& nchi() const { return nchi_; }
+        inline Double_t nchix() const { return (chix_/ndfx_); }
+        inline Double_t nchiy() const { return (chiy_/ndfy_); }
 
     protected :
         void clear();
@@ -44,12 +46,17 @@ class PhyTr {
         std::vector<Short_t> seqy_; // y -> seq
         std::vector<Short_t> maps_; // seq -> (x=0 or y=1) * nhit + hitID
         std::vector<HitSt>   hits_;
+        Short_t              nhtx_;
+        Short_t              nhty_;
 
         // Fitting
         Bool_t   succ_;
         PhySt    part_;
+        Double_t ndfx_;
+        Double_t ndfy_;
+        Double_t chix_;
+        Double_t chiy_;
         Double_t nchi_;
-        Double_t ndf_;
 
     protected :
         // Dimension

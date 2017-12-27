@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
-#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
+#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
 
 using namespace std;
 
@@ -48,76 +48,100 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
+    //PartType type = PartType::Proton;
+    PartType type = PartType::Electron;
     PhyArg::SetOpt(false, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 10, 20., 100., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 40, 0.25, 200., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
     Axis AXimm("1/Momentum [1/GeV]", AXmom, 1, true);
+
+    // Eloss Frac
+    Axis AXfrac("Eloss Frac [1]", 50, 0., 1.);
+    Hist * hMCfrac = Hist::New("hMCfrac", HistAxis(AXmom, AXfrac));
 
     // Fit
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -10.0, 10.0);
-    Hist * hCKRrso = Hist::New("hCKRrso", "hCKRrso", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrso = Hist::New("hCNRrso", "hCNRrso", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrso = Hist::New("hHCRrso", "hHCRrso", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrso = Hist::New("hCNRrso", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
-    Hist * hCKRrsoI0 = Hist::New("hCKRrsoI0", "hCKRrsoI0", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoI0 = Hist::New("hCNRrsoI0", "hCNRrsoI0", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoI0 = Hist::New("hHCRrsoI0", "hHCRrsoI0", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoI1 = Hist::New("hCKRrsoI1", "hCKRrsoI1", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoI1 = Hist::New("hCNRrsoI1", "hCNRrsoI1", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoI1 = Hist::New("hHCRrsoI1", "hHCRrsoI1", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoI2 = Hist::New("hCKRrsoI2", "hCKRrsoI2", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoI2 = Hist::New("hCNRrsoI2", "hCNRrsoI2", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoI2 = Hist::New("hHCRrsoI2", "hHCRrsoI2", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoI3 = Hist::New("hCKRrsoI3", "hCKRrsoI3", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoI3 = Hist::New("hCNRrsoI3", "hCNRrsoI3", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoI3 = Hist::New("hHCRrsoI3", "hHCRrsoI3", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoI0 = Hist::New("hCKRrsoI0", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoI0 = Hist::New("hCNRrsoI0", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoI0 = Hist::New("hHCRrsoI0", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoI1 = Hist::New("hCKRrsoI1", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoI1 = Hist::New("hCNRrsoI1", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoI1 = Hist::New("hHCRrsoI1", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoI2 = Hist::New("hCKRrsoI2", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoI2 = Hist::New("hCNRrsoI2", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoI2 = Hist::New("hHCRrsoI2", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoI3 = Hist::New("hCKRrsoI3", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoI3 = Hist::New("hCNRrsoI3", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoI3 = Hist::New("hHCRrsoI3", HistAxis(AXmom, AXRrso));
     
     Axis AXRchi("Log-Chi-square [1]", 800, -8.0, 8.0);
-    Hist * hCKRchi = Hist::New("hCKRchi", "hCKRchi", HistAxis(AXmom, AXRchi));
-    Hist * hCNRchi = Hist::New("hCNRchi", "hCNRchi", HistAxis(AXmom, AXRchi));
-    Hist * hHCRchi = Hist::New("hHCRchi", "hHCRchi", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchix = Hist::New("hCKRchix", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchix = Hist::New("hCNRchix", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchix = Hist::New("hHCRchix", HistAxis(AXmom, AXRchi));
     
-    Hist * hCKRchiI0 = Hist::New("hCKRchiI0", "hCKRchiI0", HistAxis(AXmom, AXRchi));
-    Hist * hCNRchiI0 = Hist::New("hCNRchiI0", "hCNRchiI0", HistAxis(AXmom, AXRchi));
-    Hist * hHCRchiI0 = Hist::New("hHCRchiI0", "hHCRchiI0", HistAxis(AXmom, AXRchi));
-    Hist * hCKRchiI1 = Hist::New("hCKRchiI1", "hCKRchiI1", HistAxis(AXmom, AXRchi));
-    Hist * hCNRchiI1 = Hist::New("hCNRchiI1", "hCNRchiI1", HistAxis(AXmom, AXRchi));
-    Hist * hHCRchiI1 = Hist::New("hHCRchiI1", "hHCRchiI1", HistAxis(AXmom, AXRchi));
-    Hist * hCKRchiI2 = Hist::New("hCKRchiI2", "hCKRchiI2", HistAxis(AXmom, AXRchi));
-    Hist * hCNRchiI2 = Hist::New("hCNRchiI2", "hCNRchiI2", HistAxis(AXmom, AXRchi));
-    Hist * hHCRchiI2 = Hist::New("hHCRchiI2", "hHCRchiI2", HistAxis(AXmom, AXRchi));
-    Hist * hCKRchiI3 = Hist::New("hCKRchiI3", "hCKRchiI3", HistAxis(AXmom, AXRchi));
-    Hist * hCNRchiI3 = Hist::New("hCNRchiI3", "hCNRchiI3", HistAxis(AXmom, AXRchi));
-    Hist * hHCRchiI3 = Hist::New("hHCRchiI3", "hHCRchiI3", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchixI0 = Hist::New("hCKRchixI0", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchixI0 = Hist::New("hCNRchixI0", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchixI0 = Hist::New("hHCRchixI0", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchixI1 = Hist::New("hCKRchixI1", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchixI1 = Hist::New("hCNRchixI1", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchixI1 = Hist::New("hHCRchixI1", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchixI2 = Hist::New("hCKRchixI2", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchixI2 = Hist::New("hCNRchixI2", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchixI2 = Hist::New("hHCRchixI2", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchixI3 = Hist::New("hCKRchixI3", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchixI3 = Hist::New("hCNRchixI3", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchixI3 = Hist::New("hHCRchixI3", HistAxis(AXmom, AXRchi));
     
-    Hist * hCKRrsoCut = Hist::New("hCKRrsoCut", "hCKRrsoCut", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoCut = Hist::New("hCNRrsoCut", "hCNRrsoCut", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoCut = Hist::New("hHCRrsoCut", "hHCRrsoCut", HistAxis(AXmom, AXRrso));
+    Hist * hCKRchiy = Hist::New("hCKRchiy", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchiy = Hist::New("hCNRchiy", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
     
-    Hist * hCKRrsoCutI0 = Hist::New("hCKRrsoCutI0", "hCKRrsoCutI0", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoCutI0 = Hist::New("hCNRrsoCutI0", "hCNRrsoCutI0", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoCutI0 = Hist::New("hHCRrsoCutI0", "hHCRrsoCutI0", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoCutI1 = Hist::New("hCKRrsoCutI1", "hCKRrsoCutI1", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoCutI1 = Hist::New("hCNRrsoCutI1", "hCNRrsoCutI1", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoCutI1 = Hist::New("hHCRrsoCutI1", "hHCRrsoCutI1", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoCutI2 = Hist::New("hCKRrsoCutI2", "hCKRrsoCutI2", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoCutI2 = Hist::New("hCNRrsoCutI2", "hCNRrsoCutI2", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoCutI2 = Hist::New("hHCRrsoCutI2", "hHCRrsoCutI2", HistAxis(AXmom, AXRrso));
-    Hist * hCKRrsoCutI3 = Hist::New("hCKRrsoCutI3", "hCKRrsoCutI3", HistAxis(AXmom, AXRrso));
-    Hist * hCNRrsoCutI3 = Hist::New("hCNRrsoCutI3", "hCNRrsoCutI3", HistAxis(AXmom, AXRrso));
-    Hist * hHCRrsoCutI3 = Hist::New("hHCRrsoCutI3", "hHCRrsoCutI3", HistAxis(AXmom, AXRrso));
+    Hist * hCKRchiyI0 = Hist::New("hCKRchiyI0", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchiyI0 = Hist::New("hCNRchiyI0", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchiyI0 = Hist::New("hHCRchiyI0", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchiyI1 = Hist::New("hCKRchiyI1", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchiyI1 = Hist::New("hCNRchiyI1", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchiyI1 = Hist::New("hHCRchiyI1", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchiyI2 = Hist::New("hCKRchiyI2", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchiyI2 = Hist::New("hCNRchiyI2", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchiyI2 = Hist::New("hHCRchiyI2", HistAxis(AXmom, AXRchi));
+    Hist * hCKRchiyI3 = Hist::New("hCKRchiyI3", HistAxis(AXmom, AXRchi));
+    Hist * hCNRchiyI3 = Hist::New("hCNRchiyI3", HistAxis(AXmom, AXRchi));
+    Hist * hHCRchiyI3 = Hist::New("hHCRchiyI3", HistAxis(AXmom, AXRchi));
     
-    Hist * hCKflux = Hist::New("hCKflux", "hCKflux", HistAxis(AXimm));
-    Hist * hCNflux = Hist::New("hCNflux", "hCNflux", HistAxis(AXimm));
-    Hist * hHCflux = Hist::New("hHCflux", "hHCflux", HistAxis(AXimm));
-    Hist * hCKflux2 = Hist::New("hCKflux2", "hCKflux2", HistAxis(AXimm));
-    Hist * hCNflux2 = Hist::New("hCNflux2", "hCNflux2", HistAxis(AXimm));
-    Hist * hHCflux2 = Hist::New("hHCflux2", "hHCflux2", HistAxis(AXimm));
+    Hist * hCKRrsoCut = Hist::New("hCKRrsoCut", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCut = Hist::New("hCNRrsoCut", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCut = Hist::New("hHCRrsoCut", HistAxis(AXmom, AXRrso));
+    
+    Hist * hCKRrsoCutI0 = Hist::New("hCKRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI0 = Hist::New("hCNRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI0 = Hist::New("hHCRrsoCutI0", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI1 = Hist::New("hCKRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI1 = Hist::New("hCNRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI1 = Hist::New("hHCRrsoCutI1", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI2 = Hist::New("hCKRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI2 = Hist::New("hCNRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI2 = Hist::New("hHCRrsoCutI2", HistAxis(AXmom, AXRrso));
+    Hist * hCKRrsoCutI3 = Hist::New("hCKRrsoCutI3", HistAxis(AXmom, AXRrso));
+    Hist * hCNRrsoCutI3 = Hist::New("hCNRrsoCutI3", HistAxis(AXmom, AXRrso));
+    Hist * hHCRrsoCutI3 = Hist::New("hHCRrsoCutI3", HistAxis(AXmom, AXRrso));
+    
+    Hist * hCKflux = Hist::New("hCKflux", HistAxis(AXimm));
+    Hist * hCNflux = Hist::New("hCNflux", HistAxis(AXimm));
+    Hist * hHCflux = Hist::New("hHCflux", HistAxis(AXimm));
+    Hist * hCKflux2 = Hist::New("hCKflux2", HistAxis(AXimm));
+    Hist * hCNflux2 = Hist::New("hCNflux2", HistAxis(AXimm));
+    Hist * hHCflux2 = Hist::New("hHCflux2", HistAxis(AXimm));
 
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -161,6 +185,7 @@ int main(int argc, char * argv[]) {
             if      (std::fabs(fG4mc->primVtx.coo[2]) < 55.) IntType = 1;
             else if (fG4mc->primVtx.coo[2] > 55.)            IntType = 2;
             else if (fG4mc->primVtx.coo[2] > -80.)           IntType = 3;
+            hMCfrac->fillH2D(fG4mc->primPart.mom, fG4mc->primVtx.ke.at(0)/fG4mc->primPart.ke);
         }
             
         Bool_t hasMCL1 = false;
@@ -176,7 +201,7 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : track.hits) {
             HitSt mhit(hit.side%2==1, hit.side/2==1);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            mhit.set_err(hit.nsr[0], hit.nsr[1]);
+            mhit.set_err(hit.nsr[0], hit.nsr[1], type);
           
             if (hit.layJ >= 2 && hit.layJ <= 8) mhits.push_back(mhit);
             else {
@@ -199,7 +224,7 @@ int main(int argc, char * argv[]) {
         Double_t bincen = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //-------------------------------------//
-        PhyTr tr(mhits);
+        PhyTr tr(mhits, type);
         Bool_t hc_succ = tr.fit();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
@@ -211,13 +236,17 @@ int main(int argc, char * argv[]) {
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);
         
-        Double_t ck_lchi = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
-        Double_t cn_lchi = (cn_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
-        Double_t hc_lchi = (hc_succ ? std::log(tr.nchi())               : 0.); 
+        Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
+        Double_t cn_chix = (cn_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
+        Double_t hc_chix = (hc_succ ? std::log(tr.nchix())              : 0.); 
+        
+        Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
+        Double_t cn_chiy = (cn_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
+        Double_t hc_chiy = (hc_succ ? std::log(tr.nchiy())              : 0.); 
 
-        Double_t ck_cut = (ck_succ ? (ck_lchi < 2.0) : false); // 96%
-        Double_t cn_cut = (cn_succ ? (cn_lchi < 2.0) : false); // 96%
-        Double_t hc_cut = (hc_succ ? (hc_lchi < 0.9) : false); // 96%
+        Double_t ck_cut = (ck_succ ? (ck_chiy < 2.0) : false); // 96%
+        Double_t cn_cut = (cn_succ ? (cn_chiy < 2.0) : false); // 96%
+        Double_t hc_cut = (hc_succ ? (hc_chiy < 1.0) : false); // 96%
 
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (cn_succ) hCNRrso->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
@@ -236,22 +265,39 @@ int main(int argc, char * argv[]) {
         if (cn_succ && IntType == 3) hCNRrsoI3->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
         if (hc_succ && IntType == 3) hHCRrsoI3->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
-        if (ck_succ) hCKRchi->fillH2D(mc_mom, ck_lchi);
-        if (cn_succ) hCNRchi->fillH2D(mc_mom, cn_lchi);
-        if (hc_succ) hHCRchi->fillH2D(mc_mom, hc_lchi);
+        if (ck_succ) hCKRchix->fillH2D(mc_mom, ck_chix);
+        if (cn_succ) hCNRchix->fillH2D(mc_mom, cn_chix);
+        if (hc_succ) hHCRchix->fillH2D(mc_mom, hc_chix);
         
-        if (ck_succ && IntType == 0) hCKRchiI0->fillH2D(mc_mom, ck_lchi);
-        if (cn_succ && IntType == 0) hCNRchiI0->fillH2D(mc_mom, cn_lchi);
-        if (hc_succ && IntType == 0) hHCRchiI0->fillH2D(mc_mom, hc_lchi);
-        if (ck_succ && IntType == 1) hCKRchiI1->fillH2D(mc_mom, ck_lchi);
-        if (cn_succ && IntType == 1) hCNRchiI1->fillH2D(mc_mom, cn_lchi);
-        if (hc_succ && IntType == 1) hHCRchiI1->fillH2D(mc_mom, hc_lchi);
-        if (ck_succ && IntType == 2) hCKRchiI2->fillH2D(mc_mom, ck_lchi);
-        if (cn_succ && IntType == 2) hCNRchiI2->fillH2D(mc_mom, cn_lchi);
-        if (hc_succ && IntType == 2) hHCRchiI2->fillH2D(mc_mom, hc_lchi);
-        if (ck_succ && IntType == 3) hCKRchiI3->fillH2D(mc_mom, ck_lchi);
-        if (cn_succ && IntType == 3) hCNRchiI3->fillH2D(mc_mom, cn_lchi);
-        if (hc_succ && IntType == 3) hHCRchiI3->fillH2D(mc_mom, hc_lchi);
+        if (ck_succ && IntType == 0) hCKRchixI0->fillH2D(mc_mom, ck_chix);
+        if (cn_succ && IntType == 0) hCNRchixI0->fillH2D(mc_mom, cn_chix);
+        if (hc_succ && IntType == 0) hHCRchixI0->fillH2D(mc_mom, hc_chix);
+        if (ck_succ && IntType == 1) hCKRchixI1->fillH2D(mc_mom, ck_chix);
+        if (cn_succ && IntType == 1) hCNRchixI1->fillH2D(mc_mom, cn_chix);
+        if (hc_succ && IntType == 1) hHCRchixI1->fillH2D(mc_mom, hc_chix);
+        if (ck_succ && IntType == 2) hCKRchixI2->fillH2D(mc_mom, ck_chix);
+        if (cn_succ && IntType == 2) hCNRchixI2->fillH2D(mc_mom, cn_chix);
+        if (hc_succ && IntType == 2) hHCRchixI2->fillH2D(mc_mom, hc_chix);
+        if (ck_succ && IntType == 3) hCKRchixI3->fillH2D(mc_mom, ck_chix);
+        if (cn_succ && IntType == 3) hCNRchixI3->fillH2D(mc_mom, cn_chix);
+        if (hc_succ && IntType == 3) hHCRchixI3->fillH2D(mc_mom, hc_chix);
+        
+        if (ck_succ) hCKRchiy->fillH2D(mc_mom, ck_chiy);
+        if (cn_succ) hCNRchiy->fillH2D(mc_mom, cn_chiy);
+        if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
+        
+        if (ck_succ && IntType == 0) hCKRchiyI0->fillH2D(mc_mom, ck_chiy);
+        if (cn_succ && IntType == 0) hCNRchiyI0->fillH2D(mc_mom, cn_chiy);
+        if (hc_succ && IntType == 0) hHCRchiyI0->fillH2D(mc_mom, hc_chiy);
+        if (ck_succ && IntType == 1) hCKRchiyI1->fillH2D(mc_mom, ck_chiy);
+        if (cn_succ && IntType == 1) hCNRchiyI1->fillH2D(mc_mom, cn_chiy);
+        if (hc_succ && IntType == 1) hHCRchiyI1->fillH2D(mc_mom, hc_chiy);
+        if (ck_succ && IntType == 2) hCKRchiyI2->fillH2D(mc_mom, ck_chiy);
+        if (cn_succ && IntType == 2) hCNRchiyI2->fillH2D(mc_mom, cn_chiy);
+        if (hc_succ && IntType == 2) hHCRchiyI2->fillH2D(mc_mom, hc_chiy);
+        if (ck_succ && IntType == 3) hCKRchiyI3->fillH2D(mc_mom, ck_chiy);
+        if (cn_succ && IntType == 3) hCNRchiyI3->fillH2D(mc_mom, cn_chiy);
+        if (hc_succ && IntType == 3) hHCRchiyI3->fillH2D(mc_mom, hc_chiy);
         
         if (ck_cut) hCKRrsoCut->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (cn_cut) hCNRrsoCut->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
@@ -270,14 +316,16 @@ int main(int argc, char * argv[]) {
         if (cn_cut && IntType == 3) hCNRrsoCutI3->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
         if (hc_cut && IntType == 3) hHCRrsoCutI3->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
-        Double_t pow27 = std::pow(20., 1.7) * std::pow(mc_mom, -1.7);
-        if (mc_mom > 20. && ck_succ) hCKflux->fillH1D(ck_irig, pow27);
-        if (mc_mom > 20. && cn_succ) hCNflux->fillH1D(cn_irig, pow27);
-        if (mc_mom > 20. && hc_succ) hHCflux->fillH1D(hc_irig, pow27);
+        Double_t pow27 = std::pow((mc_mom/20.), -1.7);
+        Double_t pow30 = std::pow((mc_mom/200.), -2.0);
+        Double_t powf = pow30;
+        if (mc_mom > 20. && ck_succ) hCKflux->fillH1D(ck_irig, powf);
+        if (mc_mom > 20. && cn_succ) hCNflux->fillH1D(cn_irig, powf);
+        if (mc_mom > 20. && hc_succ) hHCflux->fillH1D(hc_irig, powf);
         
-        if (mc_mom > 20. && ck_cut) hCKflux2->fillH1D(ck_irig, pow27);
-        if (mc_mom > 20. && cn_cut) hCNflux2->fillH1D(cn_irig, pow27);
-        if (mc_mom > 20. && hc_cut) hHCflux2->fillH1D(hc_irig, pow27);
+        if (mc_mom > 20. && ck_cut) hCKflux2->fillH1D(ck_irig, powf);
+        if (mc_mom > 20. && cn_cut) hCNflux2->fillH1D(cn_irig, powf);
+        if (mc_mom > 20. && hc_cut) hHCflux2->fillH1D(hc_irig, powf);
     }
 
     ofle->Write();

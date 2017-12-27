@@ -5,8 +5,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
-#include "/data3/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
+#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
 
 using namespace std;
 
@@ -61,27 +61,39 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 50, 0.25, 200., AxisScale::kLog);
    
     // MC
     Axis AXcut("Cut", 8, 0., 8.);
-    Hist* hCut = Hist::New("hCut", "hCut", HistAxis(AXmom, AXcut));
-    Hist* hEvt = Hist::New("hEvt", "hEvt", HistAxis(AXmom, AXcut));
+    Hist* hCut = Hist::New("hCut", HistAxis(AXmom, AXcut));
+    Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
 
     // Coo
     Axis AXres("res [#mum]", 1600, -300., 300.);
-    Hist* hMrx = Hist::New("hMrx", "", HistAxis(AXmom, AXres));
-    Hist* hMry = Hist::New("hMry", "", HistAxis(AXmom, AXres));
+    Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
+    Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
     
-    Hist* hMrxNN = Hist::New("hMrxNN", "", HistAxis(AXres));
-    Hist* hMryNN = Hist::New("hMryNN", "", HistAxis(AXres));
-    Hist* hMrxN1 = Hist::New("hMrxN1", "", HistAxis(AXres));
-    Hist* hMryN1 = Hist::New("hMryN1", "", HistAxis(AXres));
-    Hist* hMrxN2 = Hist::New("hMrxN2", "", HistAxis(AXres));
-    Hist* hMryN2 = Hist::New("hMryN2", "", HistAxis(AXres));
-    Hist* hMrxN3 = Hist::New("hMrxN3", "", HistAxis(AXres));
-    Hist* hMryN3 = Hist::New("hMryN3", "", HistAxis(AXres));
-    Hist* hMryN4 = Hist::New("hMryN4", "", HistAxis(AXres));
+    Axis AXloc("loc [1]", 40, -0.5, 0.5);
+    Hist* hMlrxNN = Hist::New("hMlrxNN", HistAxis(AXloc, AXres));
+    Hist* hMlryNN = Hist::New("hMlryNN", HistAxis(AXloc, AXres));
+    Hist* hMlrxN1 = Hist::New("hMlrxN1", HistAxis(AXloc, AXres));
+    Hist* hMlryN1 = Hist::New("hMlryN1", HistAxis(AXloc, AXres));
+    Hist* hMlrxN2 = Hist::New("hMlrxN2", HistAxis(AXloc, AXres));
+    Hist* hMlryN2 = Hist::New("hMlryN2", HistAxis(AXloc, AXres));
+    Hist* hMlrxN3 = Hist::New("hMlrxN3", HistAxis(AXloc, AXres));
+    Hist* hMlryN3 = Hist::New("hMlryN3", HistAxis(AXloc, AXres));
+    Hist* hMlryN4 = Hist::New("hMlryN4", HistAxis(AXloc, AXres));
+    
+    Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres));
+    Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres));
+    Hist* hMrxN1 = Hist::New("hMrxN1", HistAxis(AXres));
+    Hist* hMryN1 = Hist::New("hMryN1", HistAxis(AXres));
+    Hist* hMrxN2 = Hist::New("hMrxN2", HistAxis(AXres));
+    Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres));
+    Hist* hMrxN3 = Hist::New("hMrxN3", HistAxis(AXres));
+    Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres));
+    Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres));
 
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -143,15 +155,28 @@ int main(int argc, char * argv[]) {
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it]) continue;
             Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
+            Double_t loc[2] = { rec[it]->loc[0] - std::lrint(rec[it]->loc[0]), rec[it]->loc[1] - std::lrint(rec[it]->loc[1]) };
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
             
             constexpr Double_t CM2UM = 1.0e4;
             if (ntp[0]!=0) hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
             if (ntp[1]!=0) hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
+            
+            if (ntp[0]!=0) hMlrxNN->fillH2D(loc[0], CM2UM * res[0]);
+            if (ntp[1]!=0) hMlryNN->fillH2D(loc[1], CM2UM * res[1]);
+            
+            if (ntp[0]!=0) hMrxNN->fillH1D(CM2UM * res[0]);
+            if (ntp[1]!=0) hMryNN->fillH1D(CM2UM * res[1]);
            
             if (mch[it]->mom > 20.0 && mch[it]->mom < 400.) {
-                if (ntp[0]>=1) hMrxNN->fillH1D(CM2UM * res[0]);
-                if (ntp[1]>=1) hMryNN->fillH1D(CM2UM * res[1]);
+                if (ntp[0]==1) hMlrxN1->fillH2D(loc[0], CM2UM * res[0]);
+                if (ntp[1]==1) hMlryN1->fillH2D(loc[1], CM2UM * res[1]);
+                if (ntp[0]==2) hMlrxN2->fillH2D(loc[0], CM2UM * res[0]);
+                if (ntp[1]==2) hMlryN2->fillH2D(loc[1], CM2UM * res[1]);
+                if (ntp[0]>=3) hMlrxN3->fillH2D(loc[0], CM2UM * res[0]);
+                if (ntp[1]==3) hMlryN3->fillH2D(loc[1], CM2UM * res[1]);
+                if (ntp[1]>=4) hMlryN4->fillH2D(loc[1], CM2UM * res[1]);
+                
                 if (ntp[0]==1) hMrxN1->fillH1D(CM2UM * res[0]);
                 if (ntp[1]==1) hMryN1->fillH1D(CM2UM * res[1]);
                 if (ntp[0]==2) hMrxN2->fillH1D(CM2UM * res[0]);
