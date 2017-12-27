@@ -80,10 +80,13 @@ class Hist {
 		Hist(const TH1 * hist, Bool_t reset = false) : Hist("", "", hist, reset) {}
 		Hist(const std::string& name, const TH1 * hist, Bool_t reset = false) : Hist(name, "", hist, reset) {}
 		Hist(const std::string& name, const std::string& title, const TH1 * hist, Bool_t reset = false);
-		Hist(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist);
+        Hist(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist);
+        Hist(const std::string& name, const HistAxis& axis, HistType type = HistType::kHist) : Hist(name, "", axis, type) {}
 		~Hist() { clear(); }
 
-		inline Bool_t exist() const { return !(hist_ == nullptr || info_.first == HistType::kNone || info_.second == HistDim::kNone); }
+		inline Bool_t exist() const { return (hist_ != nullptr && info_.first != HistType::kNone && info_.second != HistDim::kNone); }
+		inline Bool_t exist(const HistType& type) const { return (hist_ != nullptr && info_.first == type); }
+		inline Bool_t exist(const HistType& type, const HistDim& dim) const { return (hist_ != nullptr && info_.first == type && info_.second == dim); }
 		
 		inline const std::string& name()       const { return name_; }
 		inline const std::string& title()      const { return title_; }
@@ -106,14 +109,14 @@ class Hist {
 		void fill(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
         
 		void fillH(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0);
-        inline void fillH1D(Double_t a, Double_t b = 1.0) { if (exist()) dynamic_cast<TH1D*>(hist_)->Fill(a, b); }
-        inline void fillH2D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist()) dynamic_cast<TH2D*>(hist_)->Fill(a, b, c); }
-        inline void fillH3D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist()) dynamic_cast<TH3D*>(hist_)->Fill(a, b, c, d); }
+        inline void fillH1D(Double_t a, Double_t b = 1.0) { if (exist(HistType::kHist, HistDim::k1D)) dynamic_cast<TH1D*>(hist_)->Fill(a, b); }
+        inline void fillH2D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist(HistType::kHist, HistDim::k2D)) dynamic_cast<TH2D*>(hist_)->Fill(a, b, c); }
+        inline void fillH3D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist(HistType::kHist, HistDim::k3D)) dynamic_cast<TH3D*>(hist_)->Fill(a, b, c, d); }
         
 		void fillP(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
-        inline void fillP1D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist()) dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); }
-        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist()) dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); }
-        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e = 1.0) { if (exist()) dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); }
+        inline void fillP1D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist(HistType::kProfile, HistDim::k1D)) dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); }
+        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist(HistType::kProfile, HistDim::k2D)) dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); }
+        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e = 1.0) { if (exist(HistType::kProfile, HistDim::k3D)) dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); }
 
 		void draw(Option_t * option = "") { if (exist()) hist_->Draw(option); }
 		void write(const std::string& name = "") { if (exist()) hist_->Write(name.c_str(), 0, 0); }
@@ -130,7 +133,7 @@ class Hist {
 		std::string                  name_;
 		std::string                  title_;
 		std::pair<HistType, HistDim> info_;
-		TH1 *                        hist_;
+		TH1*                         hist_;
 		HistAxis                     axis_;
 
 	public :
@@ -139,7 +142,8 @@ class Hist {
 		static Hist * New(const TH1 * hist, Bool_t reset = false) { return (new Hist("", "", hist, reset)); }
 		static Hist * New(const std::string& name, const TH1 * hist, Bool_t reset = false) { return (new Hist(name, "", hist, reset)); }
 		static Hist * New(const std::string& name, const std::string& title, const TH1 * hist, Bool_t reset = false) { return (new Hist(name, title, hist, reset)); }
-		static Hist * New(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, title, axis, type)); }
+        static Hist * New(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, title, axis, type)); }
+        static Hist * New(const std::string& name, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, axis, type)); }
 		
 		static void Delete(Hist* hist) { if (hist != nullptr) delete hist; hist = nullptr; }
 		static void Delete(Hist& hist) { hist.clear(); }

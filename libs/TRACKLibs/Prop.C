@@ -108,12 +108,6 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JUY, JRHOU) = arg.mscat_uu() * arg.orth_rho(Y);
         jb_gl_(JPX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
-        
-        //jb_gl_(JPX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
-        //jb_gl_(JPY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
-        //
-        //jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
-        //jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
     }
 }
 
@@ -180,7 +174,7 @@ void PropPhyCal::init() {
 }
 
 
-void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, const SVecD<3>& rho, Double_t mscat_sgm) {
+void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm) {
     eta_abs_end_ = part.eta_abs();
     len_ += mfld.rlen();
     if (mfld()) {
@@ -192,9 +186,6 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, cons
 
     if (sw_mscat_) {
         Double_t mscatw = (mscat_sgm * mscat_sgm);
-        orth_tau_ += mscatw * tau;
-        orth_rho_ += mscatw * rho;
-        
         Double_t rlen    = mfld.rlen();
         Double_t elen    = mfld.elen();
         Double_t invloc1 = (rlen       ) * (MGMath::ONE - mfld.loc1());
@@ -212,13 +203,15 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, const SVecD<3>& tau, cons
 
 
 void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
+    OrthCoord orth(part.u());
+    orth_tau_ = orth.tau();
+    orth_rho_ = orth.rho();
+    
     if (!mfld()) return;
     if (sw_mscat_) {
         mscat_uu_ = 0.;
         mscat_ul_ = 0.;
         mscat_ll_ = 0.;
-        orth_tau_.Unit();
-        orth_rho_.Unit();
 
         Double_t cvThaSqr = 0.;
         Double_t cvLenSqr = 0.;
@@ -329,30 +322,8 @@ Double_t PropMgnt::GetPropStep(PhySt& part, Short_t ward) {
 
     if (MGNumc::EqualToZero(cur_mag) && MGNumc::EqualToZero(pred_mag)) pred_step = PROP_STEP;
     
+    if (part.field()) { pred_step *= std::sqrt((part.bta() > TUNE_BTA) ? part.bta() : TUNE_BTA); }
     Double_t step = pred_step;
-    if (part.field()) {
-        Double_t gmbtasqr = part.gm() * ((part.bta() > TUNE_BTA) ? part.bta() * part.bta() : TUNE_BTA * TUNE_BTA);
-        Double_t gmbtaquc = (gmbtasqr * gmbtasqr);
-       
-        // testcode
-        /*
-        Int_t ispred = 0;
-        while (ispred == 0) {
-            Double_t sum_nrl = MGMath::ZERO;
-            Double_t sum_ela = MGMath::ZERO;
-            MatFld&& mfld = MatMgnt::Get((sign * step), part, false);
-            for (Int_t is = 0; is < MatFld::SECTION_N; ++is) {
-                if (mfld.section_mat(is)) {
-                    if (part.arg().mscat()) sum_nrl += (mfld.section_nrl(is) / gmbtasqr);
-                    if (part.arg().eloss()) sum_ela += (mfld.section_ela(is) / gmbtaquc);
-                }
-                if (sum_nrl < TUNE_NRL && sum_ela < TUNE_ELA) ispred = (is + 1);
-            }
-            Int_t predsec = (ispred == 0) ? 1 : ispred;
-            step *= (static_cast<Double_t>(predsec) / static_cast<Double_t>(MatFld::SECTION_N));
-        }
-        */
-    }
     
     return step; 
 }
@@ -657,7 +628,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
     Double_t mscat_sgm = (mfld() && part.arg().mscat()) ? 
                           mp0.mscat_sgm() : MGMath::ZERO;
     
-    ppcal.push(part, mfld, mn0.orth().tau(), mn0.orth().rho(), mscat_sgm);
+    ppcal.push(part, mfld, mscat_sgm);
 
 
     if (withJb) {
@@ -750,7 +721,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
                                   ) * MGMath::ONE_TO_TWO) :
                           MGMath::ZERO;
     
-    ppcal.push(part, mfld, mn0.orth().tau(), mn0.orth().rho(), mscat_sgm);
+    ppcal.push(part, mfld, mscat_sgm);
    
 
     if (withJb) {
@@ -910,7 +881,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
                                   ) * MGMath::ONE_TO_SIX) :
                           MGMath::ZERO;
     
-    ppcal.push(part, mfld, mn0.orth().tau(), mn0.orth().rho(), mscat_sgm);
+    ppcal.push(part, mfld, mscat_sgm);
    
 
     if (withJb) {

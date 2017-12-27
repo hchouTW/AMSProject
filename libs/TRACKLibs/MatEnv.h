@@ -31,16 +31,8 @@ class MatFld {
         MatFld() { clear(); }
         MatFld(Double_t rlen) { clear(); rlen_ = rlen; }
         
-        MatFld(Bool_t mat, Double_t irl = 0, Double_t eld = 0, Double_t lme = 0, Double_t dec = 0, Double_t rlen = 0, Double_t elen = 0, Double_t efft = 0, Double_t loc1 = 0, Double_t loc2 = 0, Bool_t* sec_mat = nullptr, Double_t* sec_nrl = nullptr, Double_t* sec_ela = nullptr) : mat_(mat), irl_(irl), eld_(eld), lme_(lme), dec_(dec), rlen_(rlen), elen_(elen), efft_(efft), loc1_(loc1), loc2_(loc2) 
-        {
-            if (sec_mat == nullptr) std::fill_n(sec_mat_, SECTION_N, false);
-            else                    std::copy_n(sec_mat,  SECTION_N, sec_mat_);
-            if (sec_nrl == nullptr) std::fill_n(sec_nrl_, SECTION_N, 0.);
-            else                    std::copy_n(sec_nrl,  SECTION_N, sec_nrl_);
-            if (sec_ela == nullptr) std::fill_n(sec_ela_, SECTION_N, 0.); 
-            else                    std::copy_n(sec_ela,  SECTION_N, sec_ela_);
-        }
-
+        MatFld(Bool_t mat, Double_t irl = 0, Double_t eld = 0, Double_t lme = 0, Double_t dec = 0, Double_t rlen = 0, Double_t elen = 0, Double_t loc1 = 0, Double_t loc2 = 0) : mat_(mat), irl_(irl), eld_(eld), lme_(lme), dec_(dec), rlen_(rlen), elen_(elen), loc1_(loc1), loc2_(loc2) {}
+        
         ~MatFld() {}
 
         void print() const;
@@ -53,22 +45,16 @@ class MatFld {
         
         inline const Double_t& rlen() const { return rlen_; }
         inline const Double_t& elen() const { return elen_; }
-        inline const Double_t& efft() const { return efft_; }
         inline const Double_t& loc1() const { return loc1_; }
         inline const Double_t& loc2() const { return loc2_; }
 
         inline Double_t nrl() const { return (mat_ ? (irl_ * elen_) : MGMath::ZERO); }
         inline Double_t ela() const { return (mat_ ? (eld_ * elen_) : MGMath::ZERO); }
 
-        inline const Bool_t&   sec_mat(Int_t it) const { return sec_mat_[it]; }
-        inline const Double_t& sec_nrl(Int_t it) const { return sec_nrl_[it]; }
-        inline const Double_t& sec_ela(Int_t it) const { return sec_ela_[it]; }
-
     protected :
         inline void clear() {
             mat_ = false; irl_ = 0; eld_ = 0; lme_ = 0; dec_ = 0;
-            rlen_ = 0; elen_ = 0; efft_ = 0; loc1_ = 0; loc2_ = 0;
-            std::fill_n(sec_mat_, SECTION_N, false); std::fill_n(sec_nrl_, SECTION_N, 0); std::fill_n(sec_ela_, SECTION_N, 0); 
+            rlen_ = 0; elen_ = 0; loc1_ = 0; loc2_ = 0;
         }
 
     private :
@@ -80,17 +66,8 @@ class MatFld {
 
         Double_t rlen_;
         Double_t elen_;
-        Double_t efft_;
         Double_t loc1_;
         Double_t loc2_;
-
-    public :
-        static constexpr Int_t SECTION_N = 5;
-
-    private :
-        Bool_t   sec_mat_[SECTION_N];
-        Double_t sec_nrl_[SECTION_N];
-        Double_t sec_ela_[SECTION_N];
 
     public :
         static MatFld Merge(const std::list<MatFld>& mflds);
@@ -113,6 +90,11 @@ class MatFld {
 // elm_0: [1/cm]     inverse radiation length                           //
 // elm_1: [mole/cm3] electron density                                   //
 // elm_2: [MeV]      log mean excitation energy                         //
+// elm_3: [1]        density effect correction C                        //
+// elm_4: [1]        density effect correction M                        //
+// elm_5: [1]        density effect correction A                        //
+// elm_6: [1]        density effect correction X0                       //
+// elm_7: [1]        density effect correction X1                       //
 //======================================================================//
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -250,8 +232,8 @@ class MatGeoBoxReader {
         inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
     private :
-        static constexpr Double_t STD_STEP_LEN_ = MGMath::ONE_TO_THREE;
-        static constexpr Double_t FST_STEP_LEN_ = MGMath::ONE_TO_THREE + MGMath::ONE;
+        static constexpr Double_t STD_STEP_LEN_ = MGMath::ONE;
+        static constexpr Double_t FST_STEP_LEN_ = MGMath::ONE + MGMath::HALF;
 
         Bool_t                               is_load_;
         Bool_t*                              mat_ptr_;
