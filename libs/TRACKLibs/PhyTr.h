@@ -73,8 +73,8 @@ class PhyTr {
         static constexpr Double_t LMTL_LAMBDA = 1.0e-4;
         static constexpr Double_t LMTU_LAMBDA = 1.0e+3;
         
-        static constexpr Double_t CONVG_EPSILON   = 1.0e-3;
-        static constexpr Double_t CONVG_TOLERANCE = 1.0e-2;
+        static constexpr Double_t CONVG_EPSILON   = 3.0e-3;
+        static constexpr Double_t CONVG_TOLERANCE = 6.0e-3;
 };
 
 

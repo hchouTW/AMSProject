@@ -274,6 +274,7 @@ Bool_t PhyTr::fit_simple() {
 
         Int_t cnt_nhit = 0;
         PhySt ppst(rltSt);
+        ppst.arg().reset(false, false);
         PhyJb::SMtxDGG&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
             PhyJb curjb;
@@ -282,9 +283,9 @@ Bool_t PhyTr::fit_simple() {
 
             Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
             Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-            Double_t msl = (ppst.arg().mscat() ? ppst.arg().mscat_ll() : MGMath::ZERO);
-            if (ppst.arg().mscat() && hit.sx()) mex = std::hypot(mex, msl);
-            if (ppst.arg().mscat() && hit.sy()) mey = std::hypot(mey, msl);
+            //Double_t msl = (ppst.arg().mscat() ? std::hypot(ppst.arg().mscat_ll(), ppst.arg().mscat_ul()) : MGMath::ZERO);
+            //if (ppst.arg().mscat() && hit.sx()) mex = std::hypot(mex, msl);
+            //if (ppst.arg().mscat() && hit.sy()) mey = std::hypot(mey, msl);
 
             SMtxSymD<2> cvM;
             cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
@@ -368,28 +369,13 @@ Bool_t PhyTr::fit_simple() {
         curSucc = (isSucc && updIter >= LMTL_ITER);
         succ    = (preSucc && curSucc);
         
-        curIter++;
+        if (!succ) curIter++;
     }
-    //if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     //else       std::cout << Form("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     
     return succ;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -417,10 +403,15 @@ Bool_t PhyTr::fit_physics() {
     Int_t  updIter = 0;
     Int_t  curIter = 0;
     while (curIter <= LMTU_ITER && !succ) {
-        Double_t chi = MGMath::ZERO;
-        SVecD<5>    grdG;
-        SMtxSymD<5> cvGG;
+        Double_t chix = MGMath::ZERO;
+        Double_t chiy = MGMath::ZERO;
+        
+        TMtxD JbFJ(nseq_, DIM_G);
+        TMtxD CvML(nseq_, nseq_);
+        TVecD RsML(nseq_);
 
+        /*
+        Int_t cnt_nseq = 0;
         Int_t cnt_nhit = 0;
         PhySt ppst(rltSt);
         PhyJb::SMtxDGG&& ppjb = SMtxId();
@@ -429,31 +420,49 @@ Bool_t PhyTr::fit_physics() {
             if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
             ppjb = curjb.gg() * ppjb;
 
-            Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
-            Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-            Double_t msl = (ppst.arg().mscat() ? ppst.arg().mscat_ll() : MGMath::ZERO);
-            if (ppst.arg().mscat() && hit.sx()) mex = std::hypot(mex, msl);
-            if (ppst.arg().mscat() && hit.sy()) mey = std::hypot(mey, msl);
+            Double_t msl = (ppst.arg().mscat() ? (ppst.arg().mscat_ll() * ppst.arg().mscat_ll()) : MGMath::ZERO);
 
-            SMtxSymD<2> cvM;
-            cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
-            cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
-            
-            SVecD<2> rsM;
-            rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
-            rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
+            if (hit.sx()) {
+                Double_t mrx = (hit.cx() - ppst.cx());
+                Double_t mex = hit.ex(mrx);
+               
+                RsML(cnt_nseq) = mrx;
+                for (Int_t ie = 0; ie < 5; ++ie)
+                    JbFJ(cnt_nseq, ie) = ppjb(0, ie);
+                CvML(cnt_nseq, cnt_nseq) = (mex * mex);
+                if (ppst.arg().mscat())
+                    for (Int_t is = cnt_nseq+1; is < nseq_; ++is) {
+                        CvML(cnt_nseq, is) = msl;
+                        CvML(is, cnt_nseq) = msl;
+                    }
+                cnt_nseq++;
+            }
             
             PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-            grdG += LA::Transpose(subJbF) * rsM;
-            cvGG += LA::SimilarityT(subJbF, cvM);
+            GrdG += LA::Transpose(subJbF) * RsM;
+            CvGG += LA::SimilarityT(subJbF, cvM);
 
-            if (hit.sx()) { chi += rsM(0) * (hit.cx() - ppst.cx()); }
-            if (hit.sy()) { chi += rsM(1) * (hit.cy() - ppst.cy()); }
+            if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+            if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
 
             cnt_nhit++;
             if (!hit.sx()) hit.set_dummy_x(ppst.cx());
         }
         if (cnt_nhit != hits_.size()) break;
+        
+        Double_t detCvM = 0.0;
+        CvM.Invert(&detCvM);
+
+        TMtxD JbFTrans(TMtxD::kTransposed, JbF);
+        TVecD GdF = JbFTrans * CvM * RsM;
+        TMtxD CvF = JbFTrans * CvM * JbF;
+        chi = CvM.Similarity(RsM);
+
+        Double_t detCvF = 0.0;
+        CvF.Invert(&detCvF);
+        
+        
+        Double_t chi  = (chix + chiy);
         Double_t nchi = ((chi) / static_cast<Double_t>(nseq_ - 5));
 
         Bool_t isSucc   = false;
@@ -461,20 +470,23 @@ Bool_t PhyTr::fit_physics() {
         if (curIter != 0) {
             Double_t lmRho = (nchi_ - nchi) / curLmRhoDen;
             Bool_t   isLmt = (MGNumc::Compare(lambda, LMTU_LAMBDA) >= 0);
-            Double_t convg = std::cbrt((MGMath::ONE + lambda) * (MGMath::ONE + lambda));
-            isSucc = (MGNumc::Compare(((nchi_ - nchi) / (nchi_ + nchi + CONVG_TOLERANCE)) * convg, CONVG_TOLERANCE) <= 0);
+            Double_t convg = std::sqrt(MGMath::ONE + lambda);
+            isSucc = (MGNumc::Compare(std::fabs((nchi_ - nchi) / (nchi_ + nchi + CONVG_TOLERANCE)) * convg, CONVG_TOLERANCE) <= 0);
 
             if (MGNumc::Compare(lmRho, CONVG_EPSILON) < 0) {
                 lambda = std::min(lambda*LAMBDA_UP_FAC, LMTU_LAMBDA); 
                 grdG   = curGrdG;
                 cvGG   = curCvGG;
                 rltSt  = part_;
-                if (isSucc && isLmt) updIter++;
+                if      (isSucc) updIter++;
+                else if (isLmt)  break;
             }
             else {
                 lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
-                ndfx_    = (nseq_ - 5);
-                ndfy_    = (nseq_ - 5);
+                ndfx_    = (nhtx_ - 2);
+                ndfy_    = (nhty_ - 3);
+                chix_    = chix;
+                chiy_    = chiy;
                 nchi_    = nchi;
                 part_    = rltSt;
                 isUpdate = true;
@@ -512,14 +524,38 @@ Bool_t PhyTr::fit_physics() {
         preSucc = curSucc;
         curSucc = (isSucc && updIter >= LMTL_ITER);
         succ    = (preSucc && curSucc);
-        
-        curIter++;
+
+        */
+        if (!succ) curIter++;
     }
-    //if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     //else       std::cout << Form("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     
     return succ;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -48,18 +48,18 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    //PartType type = PartType::Proton;
-    PartType type = PartType::Electron;
-    PhyArg::SetOpt(false, true);
+    PartType type = PartType::Proton;
+    //PartType type = PartType::Electron;
+    PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 40, 0.25, 200., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
-    Axis AXimm("1/Momentum [1/GeV]", AXmom, 1, true);
+    //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
+    Axis AXimm("1/Rigidity [1/GV]", AXmom, 1, true);
 
     // Eloss Frac
     Axis AXfrac("Eloss Frac [1]", 50, 0., 1.);

@@ -120,3 +120,42 @@ function ljcheck {
         echo -e "Error: No Keyword."
     fi
 }
+
+function showcom {
+    # ANSI escape codes
+    GREEN='\033[0;32m'
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+    echo -e ""
+    echo -e "${GREEN}AMS Software Command:${NC}"
+    echo -e "  ${BLUE}amsenv${NC}"
+    echo -e "  ${BLUE}root${NC}"
+    echo -e "${GREEN}VOM Command: [NCU]${NC}"
+    echo -e "  ${BLUE}voms_info${NC}"
+    echo -e "  ${BLUE}voms_auto_init${NC}"
+    echo -e "${GREEN}EOS Command:${NC}"
+    echo -e "  ${BLUE}eos${NC}"
+    echo -e "${GREEN}DPM Command:${NC}"
+    echo -e "${GREEN}[NCU_URL  root://grid71.phy.ncu.edu.tw]${NC}"
+    echo -e "${GREEN}[NCU_HOST /dpm/phy.ncu.edu.tw/home]${NC}"
+    echo -e "  ${BLUE}dpm-listspaces${NC}"
+    echo -e "  ${BLUE}dpm-qryconf${NC}"
+    echo -e "  ${BLUE}dpns-rm${NC}"
+    echo -e "  ${BLUE}dpns-ls${NC}"
+    echo -e "  ${BLUE}dpns-mkdir${NC}"
+    echo -e "${GREEN}Local Jobs Command:${NC}"
+    echo -e "  ${BLUE}ljsearch${NC}"
+    echo -e "  ${BLUE}ljkill${NC}"
+    echo -e "  ${BLUE}ljcheck${NC}"
+    echo -e "${GREEN}PBS Jobs Command: [NCU]${NC}"
+    echo -e "  ${BLUE}qsub qstat qselect qdel${NC}"
+    echo -e "${GREEN}LSF Jobs Command: [CERN]${NC}"
+    echo -e "  ${BLUE}bsub bjobs bpeek${NC}"
+    echo -e "${GREEN}SelfJobs Command:${NC}"
+    echo -e "  ${BLUE}mkjob${NC}"
+    echo -e "  ${BLUE}submit${NC}"
+    echo -e "${GREEN}Copy Command: [From CERN to NCU]${NC}"
+    echo -e "  ${BLUE}xrdcp_cern${NC} in out [key]"
+    echo -e "  ${BLUE}rsync_cern${NC} pw in out"
+    echo -e ""
+}

@@ -1000,28 +1000,20 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
 
-		const short _nalgo = 2;
-		const short _algo[_nalgo] = { 1, 3 };
+		const short _nalgo = 4;
+		const short _algo[_nalgo] = { 1, 3, 5, 6 };
 		const short _npatt = 4;
 		const short _patt[_npatt] = { 3, 5, 6, 7 };
 		for (int algo = 0; algo < _nalgo; algo++) {
 			for (int patt = 0; patt < _npatt; patt++) {
 				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 21);
 				if (fitid < 0) continue;
-				AMSPoint coo = trtk->GetP0(fitid);
-				AMSDir   dir = trtk->GetDir(fitid);
-	
-				track.status[algo][patt] = true;
+				
+                track.status[algo][patt] = true;
 				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
 				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
 				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
-				track.state[algo][patt][0] = coo[0];
-				track.state[algo][patt][1] = coo[1];
-				track.state[algo][patt][2] = coo[2];
-				track.state[algo][patt][3] = -dir[0];
-				track.state[algo][patt][4] = -dir[1];
-				track.state[algo][patt][5] = -dir[2];
 			
 				for (int il = 0; il < 9; ++il) {
 					AMSPoint pntLJ;
