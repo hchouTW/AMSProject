@@ -30,5 +30,7 @@ using namespace MGROOT;
 #include "HitSt.h"
 #include "HitSt.C"
 
-#include "PhyTr.h"
-#include "PhyTr.C"
+//#include "PhyTr.h"
+//#include "PhyTr.C"
+#include "PhyFit.h"
+#include "PhyFit.C"

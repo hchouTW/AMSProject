@@ -197,20 +197,20 @@ int main(int argc, char * argv[]) {
         
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        std::vector<HitSt> mhits;
+        TrFitPar fitPar(type);
         for (auto&& hit : track.hits) {
             HitSt mhit(hit.side%2==1, hit.side/2==1);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_err(hit.nsr[0], hit.nsr[1], type);
           
-            if (hit.layJ >= 2 && hit.layJ <= 8) mhits.push_back(mhit);
+            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
-                if (optL1 && hit.layJ == 1) { hasL1 = true; mhits.push_back(mhit); }
-                if (optL9 && hit.layJ == 9) { hasL9 = true; mhits.push_back(mhit); }
+                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); }
+                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); }
             }
         }
         Short_t cutNHit = 4 + optL1 + optL9;
-        if (mhits.size() <= cutNHit) continue;
+        if (fitPar.numOfHit() <= cutNHit) continue;
 
         if (optL1 && !(hasL1 && hasMCL1)) continue;
         if (optL9 && !(hasL9 && hasMCL9)) continue;
@@ -224,8 +224,8 @@ int main(int argc, char * argv[]) {
         Double_t bincen = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //-------------------------------------//
-        PhyTr tr(mhits, type);
-        Bool_t hc_succ = tr.fit();
+        SimpleTrFit tr(fitPar);
+        Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
         //-------------------------------------//

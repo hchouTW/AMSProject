@@ -2063,7 +2063,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	
 	// ~2~ (Based on TrTrack)
 	if (event->NTrTrack() != 1) return -2001;
-
+/*
 	// ~3~ (Based on TrdTrack)
 	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
@@ -2164,11 +2164,11 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		const double stableFact = 0.8;
 		if (maxRig < (stableFact * minCf)) return -8002;
 	}
-	
+*/	
     //--------------------------//
 	//----  Reconstruction  ----//
 	//--------------------------//
-	if (!recEv.rebuild(event)) return -9999;
+	//if (!recEv.rebuild(event)) return -9999;
 
 	return 0;
 }
@@ -2446,7 +2446,7 @@ void YiNtuple::loopEventChain() {
 
 		int preselectEventStatus = fData->preselectEvent(event, fFileDir);
 		if (preselectEventStatus < 0) continue;
-
+/*
 		if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
 			int processEventStatus = fData->processEvent(event, fChain);
 			if (processEventStatus < 0) continue;
@@ -2462,7 +2462,7 @@ void YiNtuple::loopEventChain() {
 		else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 			fChain->SaveCurrentEvent();
 		}
-		
+*/		
 		npassed++;
 	}
 
