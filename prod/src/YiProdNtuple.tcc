@@ -2045,7 +2045,7 @@ void DataSelection::fill() {
 int DataSelection::preselectEvent(AMSEventR * event, const std::string& officialDir) {
 	if (event == nullptr)	return -1;
 	EventList::Weight = 1.;
-
+/*
 	// Resolution tuning
 	if (EventBase::checkEventMode(EventBase::MC)) {
 		event->SetDefaultMCTuningParameters();
@@ -2063,7 +2063,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	
 	// ~2~ (Based on TrTrack)
 	if (event->NTrTrack() != 1) return -2001;
-/*
+
 	// ~3~ (Based on TrdTrack)
 	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
@@ -2378,13 +2378,13 @@ void YiNtuple::loopEventChain() {
 	TFile * file = 0;
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
 		file = new TFile(fFileName.c_str(), "RECREATE");
-		fData->setEventTree();
+		//fData->setEventTree();
 	}
 	else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 		fChain->OpenOutputFile(fFileName.c_str());
 	}
 
-	fData->setEnvironment(); // it must be before event loop. (before get event !)
+	//fData->setEnvironment(); // it must be before event loop. (before get event !)
 
 	// check event type
 	if (fChain->GetEntries() <= 0)
@@ -2438,14 +2438,31 @@ void YiNtuple::loopEventChain() {
 		}
 		nprocessed++;
 
-		AMSEventR * event = fChain->GetEvent(ientry);
+		//AMSEventR * event = fChain->GetEvent(ientry);
+		//AMSEventR * event = fChain->GetEvent();
+		AMSEventR * event = fChain->GetEvent(0);
+
+
+        CERR("Entry %ld\n", ientry);
+        CERR("NTrack %ld %ld\n", event->NTrTrack(), event->NTrTrackQu());
+        //CERR("NTrack %ld %ld %ld\n", event->NTrTrack(), event->NTrTrackQu(), event->NTrTrackG());
+        CERR("Entry %ld\n", ientry);
+		
+        AMSEventR * event2 = fChain->GetEvent(1);
+        
+        CERR("Entry %ld\n", ientry);
+        CERR("NTrack %ld\n", event->NTrTrack());
+        CERR("Entry %ld\n", ientry);
+        CERR("NTrack %ld\n", event2->NTrTrack());
+        CERR("Entry %ld\n", ientry);
+		
 
 		//if (nprocessed > 10000) break; // testcode
 		
-		fRunTagOp->processEvent(event, fChain);
+		//fRunTagOp->processEvent(event, fChain);
 
-		int preselectEventStatus = fData->preselectEvent(event, fFileDir);
-		if (preselectEventStatus < 0) continue;
+		//int preselectEventStatus = fData->preselectEvent(event, fFileDir);
+		//if (preselectEventStatus < 0) continue;
 /*
 		if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
 			int processEventStatus = fData->processEvent(event, fChain);

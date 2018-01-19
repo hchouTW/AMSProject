@@ -12,15 +12,24 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(PWD)/src/testing.C $(TagetDir)/src/testing.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.C $(TagetDir)/src/ClassDef.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.h $(TagetDir)/src/ClassDef.h 2> /dev/null
 	@cp -fa $(PWD)/src/LinkDef.h $(TagetDir)/src/LinkDef.h 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.h $(TagetDir)/src/YiProdNtuple.h 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.tcc 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.C 2> /dev/null
-	make $(TagetDir)/obj/dict.o
-	make $(TagetDir)/lib/libClassDef.so
-	make $(TagetDir)/YiProdNtuple
+	make $(TagetDir)/testing
+	#make $(TagetDir)/obj/dict.o
+	#make $(TagetDir)/lib/libClassDef.so
+	#make $(TagetDir)/YiProdNtuple
+
+$(TagetDir)/obj/testing.o : $(TagetDir)/src/testing.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD
+-include $(TagetDir)/obj/testing.d
+
+$(TagetDir)/testing : $(TagetDir)/obj/testing.o
+	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $(TagetDir)/src/LinkDef.h
 	rootcint -f $@ -c -p $(FLGS) $+
@@ -46,4 +55,5 @@ clean :
 	@rm -fv $(TagetDir)/obj/*
 	@rm -fv $(TagetDir)/src/*
 	@rm -fv $(TagetDir)/lst/*
+	@rm -fv $(TagetDir)/testing
 	@rm -fv $(TagetDir)/YiProdNtuple
