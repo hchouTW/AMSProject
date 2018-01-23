@@ -20,9 +20,9 @@ all :
 	@cp -fa $(PWD)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.tcc 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.C 2> /dev/null
 	make $(TagetDir)/testing
-	#make $(TagetDir)/obj/dict.o
-	#make $(TagetDir)/lib/libClassDef.so
-	#make $(TagetDir)/YiProdNtuple
+	make $(TagetDir)/obj/dict.o
+	make $(TagetDir)/lib/libClassDef.so
+	make $(TagetDir)/YiProdNtuple
 
 $(TagetDir)/obj/testing.o : $(TagetDir)/src/testing.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD

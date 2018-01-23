@@ -478,12 +478,12 @@ class TrackInfo : public TObject {
 			QL2 = -1;
 			QL1 = -1;
 			QL9 = -1;
-			
-			std::fill_n(status[0], 4 * 4, false);
-			std::fill_n(rigidity[0], 4 * 4, 0);
-			std::fill_n(chisq[0][0], 4 * 4 * 3, -1);
-			
-			std::fill_n(stateLJ[0][0][0], 4 * 4 * 9 * 6, 0);
+		
+            constexpr int naglo = 3;
+			std::fill_n(status[0], naglo * 4, false);
+			std::fill_n(rigidity[0], naglo * 4, 0);
+			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
+			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 6, 0);
 			
 			hits.clear();
 		}
@@ -507,12 +507,12 @@ class TrackInfo : public TObject {
 		Float_t QL2;
 		Float_t QL9;
 
-		// Algorithm     (CHOUTKO, CHIKANIANF, DAF, KALMAN)
+		// Algorithm     (CHOUTKO, CHIKANIANF, KALMAN)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
-		Bool_t  status[4][4];
-		Float_t rigidity[4][4];
-		Float_t chisq[4][4][3]; // normalized chisq (X, Y, XY)
-		Float_t stateLJ[4][4][9][6]; // track state at ecah layer (x y z dirx diry dirz)
+		Bool_t  status[3][4];
+		Float_t rigidity[3][4];
+		Float_t chisq[3][4][3]; // normalized chisq (X, Y, XY)
+		Float_t stateLJ[3][4][9][6]; // track state at ecah layer (x y z dirx diry dirz)
 	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;

@@ -5,8 +5,11 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
+//#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
+
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
 
 using namespace std;
 

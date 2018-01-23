@@ -30,7 +30,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
 	/** Particle **/
 	bool isParticle = false;
-	if (event->NParticle() > 0 && event->pParticle(0) != 0) {
+	if (event->NParticle() > 0 && event->pParticle(0) != nullptr) {
 		ParticleR * par = event->pParticle(0);
 
 		iBeta       = (par->iBeta()       < 0) ? -1 : par->iBeta()      ;
@@ -62,71 +62,48 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		for (int layJ = 1; layJ <= 9; layJ++)
 			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
 
-	TrTrackR * TkStPar = 0;
-	int        TkStID = -1;
+	int       TkStID = -1;
+	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
 		TkStID = TkStPar->iTrTrackPar(1, 3, 21);
-		if (TkStID < 0) {
-            fStopwatch.stop(); 
-            return false;
-        }
 	}
+	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
 		
 	// ECAL Information
 	// pre-selection (ECAL)
 	if (TkStID >= 0 && iEcalShower >= 0) {
 		EcalShowerR * ecal = event->pEcalShower(iEcalShower);
-		AMSPoint EPnt(ecal->CofG);
-		AMSPoint EPntP;
-		AMSDir   EPntD;
-		TkStPar->Interpolate(EPnt.z(), EPntP, EPntD, TkStID);
-		
-		float dxPnt = std::fabs(EPntP.x() - EPnt.x());
-		float dyPnt = std::fabs(EPntP.y() - EPnt.y());
-
-		float lmtx = 5, lmty = 5; // 5 cm, 5 cm
-		if (dxPnt > lmtx || dyPnt > lmty) iEcalShower = -1;
+		AMSPoint EcalPnt(ecal->CofG);
+		AMSPoint pnt; AMSDir dir;
+		TkStPar->Interpolate(EcalPnt.z(), pnt, dir, TkStID);
+		float drPnt = std::hypot(pnt.x() - EcalPnt.x(), pnt.y() - EcalPnt.y());
+		float lmtr = 7; // 7 cm
+		if (drPnt > lmtr) { iEcalShower = -1; CERR("ECAL\n"); }
 	}
 
 	// TRD Information
 	// pre-selection (TRD)
 	if (TkStID >= 0 && iTrdTrack >= 0) {
-		AMSPoint TrdP(event->pTrdTrack(iTrdTrack)->Coo);
-		AMSDir   TrdD(event->pTrdTrack(iTrdTrack)->Theta, event->pTrdTrack(iTrdTrack)->Phi);
-
-		AMSPoint TrdEP;
-		AMSDir   TrdED;
-		TkStPar->Interpolate(TrdP.z(), TrdEP, TrdED, TkStID);
-		float dxP = std::fabs(TrdEP.x() - TrdP.x());
-		float dyP = std::fabs(TrdEP.y() - TrdP.y());
-		
-		float lmtx = 5, lmty = 5; // 5 cm, 5 cm
-		if (dxP > lmtx || dyP > lmty) iTrdTrack = -1;
+		AMSPoint TrdPnt(event->pTrdTrack(iTrdTrack)->Coo);
+		AMSPoint pnt; AMSDir dir;
+		TkStPar->Interpolate(TrdPnt.z(), pnt, dir, TkStID);
+		float drPnt = std::hypot(pnt.x() - TrdPnt.x(), pnt.y() - TrdPnt.y());
+		float lmtr = 5; // 5 cm
+		if (drPnt > lmtr) { iTrdTrack = -1; }
 	}
 
 	if (TkStID >= 0 && iTrdHTrack >= 0) {
-		AMSPoint TrdHP(event->pTrdHTrack(iTrdHTrack)->Coo);
-		AMSDir   TrdHD(event->pTrdHTrack(iTrdHTrack)->Dir);
-
-		AMSPoint TrdHEP;
-		AMSDir   TrdHED;
-		TkStPar->Interpolate(TrdHP.z(), TrdHEP, TrdHED, TkStID);
-		float dxHP = std::fabs(TrdHEP.x() - TrdHP.x());
-		float dyHP = std::fabs(TrdHEP.y() - TrdHP.y());
-		
-		float lmtx = 5, lmty = 5; // 5 cm, 5 cm
-		if (dxHP > lmtx || dyHP > lmty) iTrdHTrack = -1;
+		AMSPoint TrdHPnt(event->pTrdHTrack(iTrdHTrack)->Coo);
+		AMSPoint pnt; AMSDir dir;
+		TkStPar->Interpolate(TrdHPnt.z(), pnt, dir, TkStID);
+		float drPnt = std::hypot(pnt.x() - TrdHPnt.x(), pnt.y() - TrdHPnt.y());
+		float lmtr = 5; // 5 cm
+		if (drPnt > lmtr) { iTrdHTrack = -1; }
 	}
-
-	if (isParticle) {
-		fStopwatch.stop();
-		return true;
-	}
-	else init();
 	
 	fStopwatch.stop();
-	return false;
+	return true;
 }
 
 
@@ -1000,8 +977,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
 
-		const short _nalgo = 4;
-		const short _algo[_nalgo] = { 1, 3, 5, 6 };
+		const short _nalgo = 3;
+		const short _algo[_nalgo] = { 1, 3, 6 };
 		const short _npatt = 4;
 		const short _patt[_npatt] = { 3, 5, 6, 7 };
 		for (int algo = 0; algo < _nalgo; algo++) {
@@ -2045,7 +2022,7 @@ void DataSelection::fill() {
 int DataSelection::preselectEvent(AMSEventR * event, const std::string& officialDir) {
 	if (event == nullptr)	return -1;
 	EventList::Weight = 1.;
-/*
+
 	// Resolution tuning
 	if (EventBase::checkEventMode(EventBase::MC)) {
 		event->SetDefaultMCTuningParameters();
@@ -2060,7 +2037,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 
 	// ~1~ (Based on BetaH(Beta))
 	TofRecH::BuildOpt = 0; // normal
-	
+
 	// ~2~ (Based on TrTrack)
 	if (event->NTrTrack() != 1) return -2001;
 
@@ -2164,11 +2141,11 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		const double stableFact = 0.8;
 		if (maxRig < (stableFact * minCf)) return -8002;
 	}
-*/	
+
     //--------------------------//
 	//----  Reconstruction  ----//
 	//--------------------------//
-	//if (!recEv.rebuild(event)) return -9999;
+	if (!recEv.rebuild(event)) return -9999;
 
 	return 0;
 }
@@ -2378,13 +2355,13 @@ void YiNtuple::loopEventChain() {
 	TFile * file = 0;
 	if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
 		file = new TFile(fFileName.c_str(), "RECREATE");
-		//fData->setEventTree();
+		fData->setEventTree();
 	}
 	else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 		fChain->OpenOutputFile(fFileName.c_str());
 	}
 
-	//fData->setEnvironment(); // it must be before event loop. (before get event !)
+	fData->setEnvironment(); // it must be before event loop. (before get event !)
 
 	// check event type
 	if (fChain->GetEntries() <= 0)
@@ -2438,32 +2415,15 @@ void YiNtuple::loopEventChain() {
 		}
 		nprocessed++;
 
-		//AMSEventR * event = fChain->GetEvent(ientry);
-		//AMSEventR * event = fChain->GetEvent();
-		AMSEventR * event = fChain->GetEvent(0);
-
-
-        CERR("Entry %ld\n", ientry);
-        CERR("NTrack %ld %ld\n", event->NTrTrack(), event->NTrTrackQu());
-        //CERR("NTrack %ld %ld %ld\n", event->NTrTrack(), event->NTrTrackQu(), event->NTrTrackG());
-        CERR("Entry %ld\n", ientry);
+		AMSEventR * event = fChain->GetEvent(ientry);
 		
-        AMSEventR * event2 = fChain->GetEvent(1);
-        
-        CERR("Entry %ld\n", ientry);
-        CERR("NTrack %ld\n", event->NTrTrack());
-        CERR("Entry %ld\n", ientry);
-        CERR("NTrack %ld\n", event2->NTrTrack());
-        CERR("Entry %ld\n", ientry);
-		
-
 		//if (nprocessed > 10000) break; // testcode
 		
-		//fRunTagOp->processEvent(event, fChain);
+		fRunTagOp->processEvent(event, fChain);
 
-		//int preselectEventStatus = fData->preselectEvent(event, fFileDir);
-		//if (preselectEventStatus < 0) continue;
-/*
+		int preselectEventStatus = fData->preselectEvent(event, fFileDir);
+		if (preselectEventStatus < 0) continue;
+
 		if (YiNtuple::checkSelectionMode(YiNtuple::NORM)) {
 			int processEventStatus = fData->processEvent(event, fChain);
 			if (processEventStatus < 0) continue;
@@ -2479,7 +2439,7 @@ void YiNtuple::loopEventChain() {
 		else if (YiNtuple::checkSelectionMode(YiNtuple::COPY)) {
 			fChain->SaveCurrentEvent();
 		}
-*/		
+		
 		npassed++;
 	}
 

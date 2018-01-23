@@ -1,6 +1,7 @@
 #ifndef __TRACKLibs_PhyFit_H__
 #define __TRACKLibs_PhyFit_H__
 
+#include "Minuit2/Minuit2Minimizer.h"
 
 namespace TrackSys {
 
@@ -86,7 +87,7 @@ class SimpleTrFit : public TrFitPar {
 };
 
 
-#include "Minuit2/Minuit2Minimizer.h"
+
 //#include "Math/Minimizer.h"
 //#include "Math/Factory.h"
 //#include "Math/Functor.h"
