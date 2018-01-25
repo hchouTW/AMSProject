@@ -79,7 +79,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		TkStPar->Interpolate(EcalPnt.z(), pnt, dir, TkStID);
 		float drPnt = std::hypot(pnt.x() - EcalPnt.x(), pnt.y() - EcalPnt.y());
 		float lmtr = 7; // 7 cm
-		if (drPnt > lmtr) { iEcalShower = -1; CERR("ECAL\n"); }
+		if (drPnt > lmtr) { iEcalShower = -1; }
 	}
 
 	// TRD Information
