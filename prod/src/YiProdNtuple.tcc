@@ -1479,7 +1479,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		std::copy(rev, rev+6, fRich.receiving);
 	
 		// Number of photoelectrons expected for a given track, beta and charge.
-        Bool_t has_RichVeto = true;
+        Bool_t has_RichVeto = false;
         if (has_RichVeto) {
 		    const int    npart = 3;
 		    const double masschrg[npart] = 
