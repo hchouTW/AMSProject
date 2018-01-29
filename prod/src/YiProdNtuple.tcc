@@ -2365,7 +2365,7 @@ void YiNtuple::loopEventChain() {
 
 	// check event type
 	if (fChain->GetEntries() <= 0)
-		MGSys::ShowErrorAndExit(LOC_ADDR(), "ERROR : Don't have event! Exiting ...");
+		MGSys::ShowErrorAndExit(LOC_ADDR(), "Don't have event! Exiting ...");
 
 	AMSEventR * ev = fChain->GetEvent(0);
 
