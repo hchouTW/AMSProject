@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  17Dec23
-PROJTITLE    =  pr054000
+PROJVERSION  =  18Jan29
+PROJTITLE    =  PR054000.B1119
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.mc.pr.pl1.l1.054000.B1119
 EVENTTYPE    =  MC
@@ -13,5 +13,5 @@ EXEENDID     =  720
 [QUEUE]
 QUEUE      =  ams1nd
 STORAGE    =  EOS
-EXEPERJOB  =  4
+EXEPERJOB  =  2
 CONFIRM    =  NONE
