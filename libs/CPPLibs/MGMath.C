@@ -101,17 +101,6 @@ inline double Quantile(double prob) {
     return quantile;
 }
 
-
-inline double Quantile(double prob, double wgtA, double sgmA, double wgtB, double sgmB) {
-    double _wgtA = wgtA / (wgtA + wgtB);
-    double _wgtB = wgtB / (wgtA + wgtB);
-    double _sgmA = (sgmA / sgmA);
-    double _sgmB = (sgmB / sgmA);
-
-    return 0.0;
-}
-
-
 }
 
 

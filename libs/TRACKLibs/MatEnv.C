@@ -82,8 +82,6 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
     Long64_t flen_inf = (MATGEOBOX_NDIM*(sizeof(Long64_t)+sizeof(Double_t)+sizeof(Double_t)) + sizeof(Double_t) + (n[0]*n[1]*n[2])*sizeof(Bool_t));
     Long64_t fdes_inf = open(CSTR_FMT("%s/%s.inf", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_inf < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
-
-    off_t sret_inf = lseek(fdes_inf, flen_inf, SEEK_SET);
     write(fdes_inf, "\0", 1);
 
     void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_inf, 0);
@@ -93,8 +91,6 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
     Long64_t flen_var = (MATGEOBOX_NPAR * (n[0]*n[1]*n[2]) * sizeof(Double_t));
     Long64_t fdes_var = open(CSTR_FMT("%s/%s.var", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_var < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
-
-    off_t sret_var = lseek(fdes_var, flen_var, SEEK_SET);
     write(fdes_var, "\0", 1);
 
     void* fptr_var = mmap(nullptr, flen_var, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_var, 0);
@@ -416,10 +412,6 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t   vwlen = LA::Mag(vwvec);
     Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
     SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
-    Double_t   ulen  = LA::Mag(unit);
-    
-    SVecD<3> real_unit(unit(0) * dlt_.at(0), unit(1) * dlt_.at(1), unit(2) * dlt_.at(2));
-    Double_t real_ulen = LA::Mag(real_unit);
 
     SVecD<3> itloc((vxloc + MGMath::HALF * unit(0)), (vyloc + MGMath::HALF * unit(1)), (vzloc + MGMath::HALF * unit(2)));
     Long64_t itsat = 0;

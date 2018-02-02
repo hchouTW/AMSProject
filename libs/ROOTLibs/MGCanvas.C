@@ -95,7 +95,7 @@ void Canvas::create(UInt_t ndivx, UInt_t ndivy, const Window& window, const PadM
 	canvas_.SetCanvasSize(window.width, window.height);
 	canvas_.Divide((ndivx<1?1:ndivx), (ndivy<1?1:ndivy), wmargin, hmargin, border.color);
 	
-	for (Int_t it = 1; it <= npad; ++it) {
+	for (UInt_t it = 1; it <= npad; ++it) {
 		SetPadMargin(&canvas_, it, margin);
 		SetPadBorder(&canvas_, it, border);
 	}

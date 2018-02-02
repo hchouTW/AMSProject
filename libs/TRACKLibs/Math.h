@@ -17,20 +17,20 @@ class MultiGauss {
 
     public :
         MultiGauss() : robust_(Opt::NOROBUST), rand_func_(nullptr) {}
-        MultiGauss(Opt opt, Double_t sgm);
-        MultiGauss(Opt opt, Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2);
-        MultiGauss(Opt opt, Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3);
-        MultiGauss(Opt opt, Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4);
-        MultiGauss(Opt opt, Double_t wgt1, Double_t sgm1, Double_t wgt2, Double_t sgm2, Double_t wgt3, Double_t sgm3, Double_t wgt4, Double_t sgm4, Double_t wgt5, Double_t sgm5);
+        MultiGauss(Opt opt, long double sgm);
+        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
+        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
+        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
+        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
         ~MultiGauss() { robust_ = Opt::NOROBUST; if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
         inline Int_t num() const { return multi_gauss_.size(); }
         inline const long double& wgt(Int_t i) const { return multi_gauss_.at(i).first; }
         inline const long double& sgm(Int_t i) const { return multi_gauss_.at(i).second; }
 
-        inline Double_t efft_sgm(Double_t r = 0.) const; 
+        inline long double efft_sgm(long double r = 0.) const; 
 
-        inline Double_t rndm();
+        inline long double rndm();
 
     private :
         std::pair<long double, long double> bound_;
@@ -45,7 +45,7 @@ class MultiGauss {
 
         static constexpr Long64_t    NPX_ = 100000;
         static constexpr long double LMTL_PROB_ = 1.0e-8;
-        static constexpr long double ROBUST_ = 2.0;
+        static constexpr long double ROBUST_SGM_ = 2.0;
 };
 
 TRandom* MultiGauss::rndm_gen_ = nullptr;

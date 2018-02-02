@@ -45,8 +45,8 @@ class HistBin {
 class HistAxis {
 	public :
 		HistAxis() : dim_(HistDim::kNone) {}
-		HistAxis(const Axis& xaxis) : HistAxis() { if (!xaxis.exist()) return; dim_ = HistDim::k1D; xaxis_ = xaxis; }
-		HistAxis(const Axis& xaxis, const Axis& yaxis) : HistAxis() { if (!xaxis.exist() || !yaxis.exist()) return; dim_ = HistDim::k2D; xaxis_ = xaxis; yaxis_ = yaxis; }
+		HistAxis(const Axis& xaxis, const std::string& ytitle = "") : HistAxis() { if (!xaxis.exist()) return; dim_ = HistDim::k1D; xaxis_ = xaxis; yaxis_ = Axis(ytitle); }
+		HistAxis(const Axis& xaxis, const Axis& yaxis, const std::string& ztitle = "") : HistAxis() { if (!xaxis.exist() || !yaxis.exist()) return; dim_ = HistDim::k2D; xaxis_ = xaxis; yaxis_ = yaxis; zaxis_ = Axis(ztitle); }
 		HistAxis(const Axis& xaxis, const Axis& yaxis, const Axis& zaxis) : HistAxis() { if (!xaxis.exist() || !yaxis.exist() || !zaxis.exist()) return; dim_ = HistDim::k3D; xaxis_ = xaxis; yaxis_ = yaxis; zaxis_ = zaxis; }
 		~HistAxis() {}
 

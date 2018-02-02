@@ -2,7 +2,7 @@
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
-Version=17Dec23
+Version=18Jan29
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 
 all :

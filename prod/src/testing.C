@@ -43,8 +43,8 @@ int main(int argc, const char ** argv) {
     // Event-Loop
     for (Long64_t ientry = 0; ientry < fChain.GetEntries(); ++ientry){
 		AMSEventR* event = fChain.GetEvent(ientry);
-        COUT("Entry %ld Event %ld\n", ientry, event->Event());
-        COUT("NTrTrack %ld\n", event->NTrTrack());
+        if (event == nullptr) continue;
+        if (event->NTrTrack() != 1) continue;
     }
 
     return 1;

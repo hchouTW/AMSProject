@@ -7,9 +7,7 @@ RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
 CurDir=${PWD}
 
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.pr054000_17Dec23
-#Stream=${CurDir}/lst/flist.ncu.mc.el025200_17Dec23
-#Stream=${CurDir}/lst/flist.ncu.mc.el2004000_17Dec23
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Jan29
 
 OutputDir=${CurDir}/dat
 
@@ -18,10 +16,8 @@ OutputDir=${CurDir}/dat
 #Nseq=40
 
 #Fit
-GroupSize=4
-Nseq=180
-#GroupSize=8
-#Nseq=40
+GroupSize=9
+Nseq=80
 
 for id in `seq 0 ${Nseq}`
 do

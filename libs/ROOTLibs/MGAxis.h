@@ -65,8 +65,9 @@ class BinSet {
 /****************/
 class Axis {
 	public :
-		Axis() {}
-		Axis(const Axis& axis, UInt_t mergeFT = 1, Bool_t invert = false);
+		Axis(const std::string& title = "") : title_(title) {}
+		
+        Axis(const Axis& axis, UInt_t mergeFT = 1, Bool_t invert = false);
 		Axis(std::initializer_list<Double_t> list) { binset_ = BinSet(list); }
 		Axis(const std::string& title, const Axis& axis, UInt_t mergeFT = 1, Bool_t invert = false);
 		Axis(const std::string& title, const std::vector<Double_t>& list, UInt_t mergeFT = 1, Bool_t invert = false);

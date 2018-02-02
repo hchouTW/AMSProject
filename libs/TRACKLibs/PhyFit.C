@@ -326,338 +326,220 @@ Bool_t SimpleTrFit::simpleFit() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-Bool_t PhyTr::HitCheck(const std::vector<HitSt>& hits) {
-    // Number of Hit Requirement
-    const Int_t LMTL_NHIT_X = 3;
-    const Int_t LMTL_NHIT_Y = 4;
-    Short_t nx = 0, ny = 0;
-    for (auto&& hit : hits) {
-        if (hit.sx()) nx++;
-        if (hit.sy()) ny++;
-    }
-
-    return (nx >= LMTL_NHIT_X && ny >= LMTL_NHIT_Y);
+#ifdef __CeresSolver__
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+VirtualPhyTrFit::VirtualPhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
+    if (!checkHit()) { clear(); return; }
+    clear();
 }
 
-
-std::tuple<Short_t, std::vector<Short_t>, std::vector<Short_t>, std::vector<Short_t>, Short_t, Short_t> PhyTr::HitSort(std::vector<HitSt>& hits, Orientation ortt) {
-    if (ortt == Orientation::kDownward) HitSt::Sort(hits, HitSt::Orientation::kDownward);
-    else                                HitSt::Sort(hits, HitSt::Orientation::kUpward);
-    
-    Short_t hID = 0;
-    Short_t nseq = 0;
-    std::vector<Short_t> seqx;
-    std::vector<Short_t> seqy;
-    std::vector<Short_t> maps;
-    Short_t              nhtx;
-    Short_t              nhty;
-    for (auto&& hit : hits) {
-        hit.set_seqID(nseq);
-        if (hit.sx()) { seqx.push_back(nseq); maps.push_back(0 * hits.size() + hID); } 
-        else          { seqx.push_back(-1); }
-        if (hit.sy()) {
-            if (hit.sx()) seqy.push_back(nseq+1);
-            else          seqy.push_back(nseq);
-            maps.push_back(1 * hits.size() + hID);
-        }
-        else seqy.push_back(-1);
-
-        hID++;
-        nseq += (hit.sx() + hit.sy());
-        nhtx += hit.sx();
-        nhty += hit.sy();
-    }
-    return std::make_tuple(nseq, seqx, seqy, maps, nhtx, nhty);
-}
-
-
-void PhyTr::clear() {
-    sw_mscat_ = false;
-    sw_eloss_ = false;
-    
-    type_ = PartType::Proton;
-    ortt_ = Orientation::kDownward;
-    nseq_ = 0;
-    seqx_.clear();
-    seqy_.clear();
-    maps_.clear();
-    hits_.clear();
-    nhtx_ = 0;
-    nhty_ = 0;
-
+void VirtualPhyTrFit::clear() {
     succ_ = false;
     part_.reset(type_);
-    ndfx_ = 0;
-    ndfy_ = 0;
-    chix_ = 0.;
-    chiy_ = 0.;
-    nchi_ = 0.;
+    part_.arg().reset(sw_mscat_, sw_eloss_);
+
+    ndof_ = 0;
+    nchi_ = 0;
 }
         
+bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* gradient) const {
+    Double_t chix = MGMath::ZERO;
+    Double_t chiy = MGMath::ZERO;
+    SVecD<5>    grdG;
+    SMtxSymD<5> cvGG;
 
-void PhyTr::print() const {
-    std::cerr << "\n======================================\n";
-    part_.print();
-    for (auto&& hit : hits_) hit.print();
-    std::cerr << "======================================\n";
-}
+    PhySt ppst(part_);
+    ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
 
+    Int_t cnt_nhit = 0;
+    PhyJb::SMtxDGG&& ppjb = SMtxId();
+    for (auto&& hit : hits_) {
+        PhyJb curjb;
+        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+        ppjb = curjb.gg() * ppjb;
 
-PhyTr::PhyTr(const std::vector<HitSt>& hits, const PartType& type, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
-    clear();
-    if (!HitCheck(hits)) return;
-    sw_mscat_ = sw_mscat;
-    sw_eloss_ = sw_eloss;
+        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
 
-    type_ = type;
-    ortt_ = ortt;
-    hits_ = hits;
-    auto&& sort = HitSort(hits_);
-    nseq_ = std::move(std::get<0>(sort)); 
-    seqx_ = std::move(std::get<1>(sort)); 
-    seqy_ = std::move(std::get<2>(sort)); 
-    maps_ = std::move(std::get<3>(sort)); 
-    nhtx_ = std::move(std::get<4>(sort)); 
-    nhty_ = std::move(std::get<5>(sort)); 
-    
-    part_.reset(type);
-}
-
-
-Bool_t PhyTr::fit() {
-    return true; 
-}
-
-Bool_t PhyTr::fit_physics() {
-    Bool_t succ    = false;
-    Bool_t preSucc = false;
-    Bool_t curSucc = false;
-
-    Double_t    curLmRhoDen = MGMath::ONE;
-    Double_t    lambda = LAMBDA0;
-    PhySt       rltSt(part_);
-    SVecD<5>    curGrdG;
-    SMtxSymD<5> curCvGG;
-
-    Int_t  updIter = 0;
-    Int_t  curIter = 0;
-    while (curIter <= LMTU_ITER && !succ) {
-        Double_t chix = MGMath::ZERO;
-        Double_t chiy = MGMath::ZERO;
+        SMtxSymD<2> cvM;
+        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
+        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
         
-        TMtxD JbFJ(nseq_, DIM_G);
-        TMtxD CvML(nseq_, nseq_);
-        TVecD RsML(nseq_);
-
-        /*
-        Int_t cnt_nseq = 0;
-        Int_t cnt_nhit = 0;
-        PhySt ppst(rltSt);
-        PhyJb::SMtxDGG&& ppjb = SMtxId();
-        for (auto&& hit : hits_) {
-            PhyJb curjb;
-            if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-            ppjb = curjb.gg() * ppjb;
-
-            Double_t msl = (ppst.arg().mscat() ? (ppst.arg().mscat_ll() * ppst.arg().mscat_ll()) : MGMath::ZERO);
-
-            if (hit.sx()) {
-                Double_t mrx = (hit.cx() - ppst.cx());
-                Double_t mex = hit.ex(mrx);
-               
-                RsML(cnt_nseq) = mrx;
-                for (Int_t ie = 0; ie < 5; ++ie)
-                    JbFJ(cnt_nseq, ie) = ppjb(0, ie);
-                CvML(cnt_nseq, cnt_nseq) = (mex * mex);
-                if (ppst.arg().mscat())
-                    for (Int_t is = cnt_nseq+1; is < nseq_; ++is) {
-                        CvML(cnt_nseq, is) = msl;
-                        CvML(is, cnt_nseq) = msl;
-                    }
-                cnt_nseq++;
-            }
-            
-            PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-            GrdG += LA::Transpose(subJbF) * RsM;
-            CvGG += LA::SimilarityT(subJbF, cvM);
-
-            if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
-            if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
-
-            cnt_nhit++;
-            if (!hit.sx()) hit.set_dummy_x(ppst.cx());
-        }
-        if (cnt_nhit != hits_.size()) break;
+        SVecD<2> rsM;
+        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
         
-        Double_t detCvM = 0.0;
-        CvM.Invert(&detCvM);
+        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+        grdG += LA::Transpose(subJbF) * rsM;
+        cvGG += LA::SimilarityT(subJbF, cvM);
 
-        TMtxD JbFTrans(TMtxD::kTransposed, JbF);
-        TVecD GdF = JbFTrans * CvM * RsM;
-        TMtxD CvF = JbFTrans * CvM * JbF;
-        chi = CvM.Similarity(RsM);
+        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
 
-        Double_t detCvF = 0.0;
-        CvF.Invert(&detCvF);
-        
-        
-        Double_t chi  = (chix + chiy);
-        Double_t nchi = ((chi) / static_cast<Double_t>(nseq_ - 5));
-
-        Bool_t isSucc   = false;
-        Bool_t isUpdate = false;
-        if (curIter != 0) {
-            Double_t lmRho = (nchi_ - nchi) / curLmRhoDen;
-            Bool_t   isLmt = (MGNumc::Compare(lambda, LMTU_LAMBDA) >= 0);
-            Double_t convg = std::sqrt(MGMath::ONE + lambda);
-            isSucc = (MGNumc::Compare(std::fabs((nchi_ - nchi) / (nchi_ + nchi + CONVG_TOLERANCE)) * convg, CONVG_TOLERANCE) <= 0);
-
-            if (MGNumc::Compare(lmRho, CONVG_EPSILON) < 0) {
-                lambda = std::min(lambda*LAMBDA_UP_FAC, LMTU_LAMBDA); 
-                grdG   = curGrdG;
-                cvGG   = curCvGG;
-                rltSt  = part_;
-                if      (isSucc) updIter++;
-                else if (isLmt)  break;
-            }
-            else {
-                lambda   = std::max(lambda/LAMBDA_DN_FAC, LMTL_LAMBDA);
-                ndfx_    = (nhtx_ - 2);
-                ndfy_    = (nhty_ - 3);
-                chix_    = chix;
-                chiy_    = chiy;
-                nchi_    = nchi;
-                part_    = rltSt;
-                isUpdate = true;
-                updIter++;
-            }
-        }
-        else { nchi_ = nchi; }
-
-        SMtxSymD<5> lmCvGG(cvGG);
-        SVecD<5>&&  diagCvGG = (lambda * cvGG.Diagonal());
-        lmCvGG.SetDiagonal(SVecD<5>(lmCvGG.Diagonal() + diagCvGG));
-
-        if (!lmCvGG.Invert()) break;
-        SVecD<5>&& rslG = (lmCvGG * grdG);
-       
-        curLmRhoDen = MGMath::ZERO;
-        for (Int_t p = 0; p < 5; ++p)
-            curLmRhoDen += (rslG(p) * (diagCvGG(p)*rslG(p) + grdG(p)));
-        
-        if (curIter == 0 || isUpdate) {
-            curGrdG = grdG;
-            curCvGG = cvGG;
-        }
-
-        rltSt.set_state_with_uxy(
-            rltSt.cx() + rslG(0),
-            rltSt.cy() + rslG(1),
-            rltSt.cz(),
-            rltSt.ux() + rslG(2),
-            rltSt.uy() + rslG(3),
-            ((ortt_ == Orientation::kDownward) ? -1 : 1)
-        );
-        rltSt.set_eta(rltSt.eta() + rslG(4));
-        
-        preSucc = curSucc;
-        curSucc = (isSucc && updIter >= LMTL_ITER);
-        succ    = (preSucc && curSucc);
-
-        */
-        if (!succ) curIter++;
+        cnt_nhit++;
     }
-    if (!succ) std::cout << Form("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
-    //else       std::cout << Form("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
-    
-    return succ;
+    if (cnt_nhit != hits_.size()) return false;
+    Double_t chi  = (chix + chiy);
+    Double_t nchi = ((chi) / static_cast<Double_t>(ndof_));
+
+    cost[0] = nchi;
+    if (gradient != nullptr) {
+        gradient[0] = grdG(0);
+        gradient[1] = grdG(1);
+        gradient[2] = grdG(2);
+        gradient[3] = grdG(3);
+        gradient[4] = grdG(4);
+    }
+    return true;
 }
 
 
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
+    if (!checkHit()) { clear(); return; }
+    clear();
+    
+    succ_ = physicalFit();
+    if (!succ_) clear();
+}
 
 
+void PhyTrFit::clear() {
+    succ_ = false;
+    part_.reset(type_);
+    part_.arg().reset(sw_mscat_, sw_eloss_);
+
+    ndof_ = 0;
+    nchi_ = 0;
+}
 
 
+Bool_t PhyTrFit::simpleFit() {
+    SimpleTrFit simple(dynamic_cast<TrFitPar&>(*this));
+    if (!simple.status()) { clear(); return false; }
+
+    succ_ = true;
+    part_ = simple.part();
+    ndof_ = simple.ndof();
+    nchi_ = simple.nchi();
+
+    return true;
+}
 
 
+Bool_t PhyTrFit::physicalFit() {
+    if (!simpleFit()) return false;
+    part_.arg().reset(sw_mscat_, sw_eloss_);
+    //mnz_part_ = part_;
+/*
+    ROOT::Minuit2::Minuit2Minimizer minimizer(ROOT::Minuit2::kMigrad);
+
+    minimizer.SetFunction(dynamic_cast<ROOT::Math::IMultiGradFunction&>(*this));
+    //
+    //ROOT::Math::Functor func(&(this->Chisq), 5);
+    //minimizer.SetFunction(func);
+    //
+    minimizer.SetLimitedVariable(0, "cx",  mnz_part_.cx(), 0.001, -400., 400.);
+    minimizer.SetLimitedVariable(1, "cy",  mnz_part_.cy(), 0.001, -400., 400.);
+    minimizer.SetLimitedVariable(2, "ux",  mnz_part_.ux(), 0.001, -1., 1.);
+    minimizer.SetLimitedVariable(3, "uy",  mnz_part_.uy(), 0.001, -1., 1.);
+    minimizer.SetVariable(4, "eta", mnz_part_.eta(), 0.001);
+   
+    minimizer.SetMaxFunctionCalls(1000000);
+    minimizer.SetMaxIterations(100000);
+    minimizer.SetTolerance(0.001);
+
+    COUT("ORG CX %8.4f CY %8.4f DX %8.4f DY %8.4f ETA %14.8f\n", mnz_part_.cx(), mnz_part_.cy(), mnz_part_.ux(), mnz_part_.uy(), mnz_part_.eta());
+    Bool_t          succ = minimizer.Minimize();
+    const Double_t* xvar = minimizer.X();
+    COUT("FIT CX %8.4f CY %8.4f DX %8.4f DY %8.4f ETA %14.8f\n", xvar[0], xvar[1], xvar[2], xvar[3], xvar[4]);
+*/
+    return true;
+}
+
+/*
+void PhyTrFit::FdF(const double *x, double &est, double *grad) {
+//double PhyTrFit::Chisq(const double* x) {
+    mnz_part_.set_state_with_uxy(x[0], x[1], part_.cz(), x[2], x[3], MGNumc::Compare(-1));
+    mnz_part_.set_eta(x[4]);
+
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    Double_t chix = MGMath::ZERO;
+    Double_t chiy = MGMath::ZERO;
+    SVecD<5>    grdG;
+    SMtxSymD<5> cvGG;
+
+    Int_t cnt_nhit = 0;
+    PhySt ppst(mnz_part_);
+    PhyJb::SMtxDGG&& ppjb = SMtxId();
+    for (auto&& hit : hits_) {
+        PhyJb curjb;
+        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+        ppjb = curjb.gg() * ppjb;
+
+        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
+
+        SMtxSymD<2> cvM;
+        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
+        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
+        
+        SVecD<2> rsM;
+        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
+        
+        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+        grdG += LA::Transpose(subJbF) * rsM;
+        cvGG += LA::SimilarityT(subJbF, cvM);
+
+        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
+
+        cnt_nhit++;
+        if (!hit.sx()) hit.set_dummy_x(ppst.cx());
+    }
+    //if (cnt_nhit != hits_.size()) break;
+    Double_t chi  = (chix + chiy);
+    Double_t nchi = ((chi) / static_cast<Double_t>(ndof_));
 
 
+    est = nchi;
+    grad[0] = grdG(0);
+    grad[1] = grdG(1);
+    grad[2] = grdG(2);
+    grad[3] = grdG(3);
+    grad[4] = grdG(4);
+    //return nchi;
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+}
+*/
+#endif
 
-
-
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } // namespace TrackSys

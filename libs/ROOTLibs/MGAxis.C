@@ -32,7 +32,7 @@ Bool_t BinSet::check_sequence(const std::vector<Double_t>& list) {
 	for (auto&& elem : list)
 		if (!MGNumc::Valid(elem))
 			return false;
-	for (Int_t it = 1; it < list.size(); ++it)
+	for (UInt_t it = 1; it < list.size(); ++it)
 		if (MGNumc::Compare(list.at(it), list.at(it-1)) <= 0)
 			return false;
 	return true;
@@ -46,7 +46,6 @@ Int_t BinSet::find(Double_t val) const {
 	if (bdl) return 0;
 	if (bdu) return bins_.size();
 
-	Int_t iter = 0;
 	Int_t range[2] = { 0, nbin() };
 	while ((range[1] - range[0]) != 1) {
 		Int_t mid = (range[0] + range[1]) /2;
@@ -78,17 +77,17 @@ std::vector<Double_t> BinSet::merge_bins(const std::vector<Double_t>& bins, UInt
 
 Bool_t BinSet::invert_bins() {
     Bool_t result = (bins_.size() != 0);
-	for (Int_t idx = 0; result && idx < bins_.size(); ++idx)
+	for (UInt_t idx = 0; result && idx < bins_.size(); ++idx)
 		if (MGNumc::Compare(bins_.at(idx)) <= 0) result = false;
 
     if (result) {
 		std::vector<Double_t> list(2*bins_.size()+1);
 		list.at(bins_.size()) = 0.0;
 		UInt_t nbin = list.size() - 1;
-		for (Int_t it = 0; it < bins_.size(); ++it) {
+		for (UInt_t it = 0; it < bins_.size(); ++it) {
 			Double_t inv = 1. / bins_.at(it);
-			list.at(it)        = -1. * inv;
-			list.at(nbin - it) = inv;
+			list.at(it)                                                = -1. * inv;
+			list.at(static_cast<Int_t>(nbin) - static_cast<Int_t>(it)) = inv;
 		}
         bins_ = list;
         return true;
@@ -166,7 +165,7 @@ Bool_t Axis::init_TAxis(const TAxis * axis, UInt_t mergeFT, Bool_t copyNT) {
 	if (axis == nullptr) return false;
 	UInt_t nbin = axis->GetNbins();
 	std::vector<Double_t> list(nbin+1);
-	for (Int_t ibin = 1; ibin <= nbin+1; ++ibin)
+	for (UInt_t ibin = 1; ibin <= nbin+1; ++ibin)
 		list.at(ibin-1) = axis->GetBinLowEdge(ibin);
 	binset_ = BinSet(list, mergeFT);	
 	if (copyNT) set_name_and_title(axis);
@@ -199,8 +198,8 @@ Bool_t Axis::init_TObject(const TObject * obj, AxisDim dim, UInt_t mergeFT, Bool
 
 Double_t Axis::center(UInt_t ibin, AxisScale scl) const {
 	if (!exist()) return 0.0;
-	if      (ibin ==        0) return binset_.min();
-	else if (ibin == nbin()+1) return binset_.max();
+	if      (ibin ==                             0) return binset_.min();
+	else if (ibin == static_cast<UInt_t>(nbin()+1)) return binset_.max();
 	else {
 		switch (scl) {
 			case AxisScale::kLinear : 
