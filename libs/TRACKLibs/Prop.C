@@ -26,8 +26,6 @@ void OrthCoord::reset(const SVecD<3>& org, const SVecD<3>& seed) {
             Double_t doty = std::fabs(LA::Dot(uorg, tag));
             if (MGNumc::Compare(doty, MGMath::ONE) == 0) {
                 tag = std::move(AXIS_Z);
-                Double_t dotz = std::fabs(LA::Dot(uorg, tag));
-                if (MGNumc::Compare(doty, MGMath::ONE) == 0) return;
             }
         }
     }
@@ -610,7 +608,6 @@ Bool_t PropMgnt::FastPropToZ(const Double_t zcoo, const PhySt& part, MatFld* mfl
 Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
     Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
-    Bool_t        withMf = (part.field() && mfld());
     Bool_t     withEloss = (part.arg().eloss() && mfld());
     Bool_t        withJb = (phyJb != nullptr);
     
@@ -678,7 +675,6 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
 Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
     Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
-    Bool_t        withMf = (part.field() && mfld());
     Bool_t     withEloss = (part.arg().eloss() && mfld());
     Bool_t        withJb = (phyJb != nullptr);
    
@@ -797,7 +793,6 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
 Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, const MatFld& mfld, PropPhyCal& ppcal, PhyJb* phyJb) {
     Short_t    prop_sign = MGNumc::Compare(step);
     Short_t     eta_sign = part.eta_sign();
-    Bool_t        withMf = (part.field() && mfld());
     Bool_t     withEloss = (part.arg().eloss() && mfld());
     Bool_t        withJb = (phyJb != nullptr);
 
