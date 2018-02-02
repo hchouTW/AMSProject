@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Jan29
+PROJTITLE    =  PR1800.B1042
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.mc.pr.pl1.1800.B1042
+EVENTTYPE    =  MC
+FILEPEREXE   =  6
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  720
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  2
+CONFIRM    =  NONE
