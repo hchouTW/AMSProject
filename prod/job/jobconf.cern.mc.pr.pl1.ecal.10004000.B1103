@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Jan29
+PROJTITLE    =  PR10004000.B1103
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.mc.pr.pl1.ecal.10004000.B1103
+EVENTTYPE    =  MC
+FILEPEREXE   =  25
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  720
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  3
+CONFIRM    =  NONE
