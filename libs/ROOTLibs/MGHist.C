@@ -74,6 +74,7 @@ Hist::Hist(const std::string& name, const std::string& title, const HistAxis& ax
 					hist_ = new TProfile(name.c_str(), title.c_str(), axis.x().nbin(), &axis.x(0));
 				
 				hist_->GetXaxis()->SetNameTitle(axis.x().name().c_str(), axis.x().title().c_str());
+				hist_->GetYaxis()->SetNameTitle(axis.y().name().c_str(), axis.y().title().c_str());
 				break;
 			}
 		case HistDim::k2D :
@@ -85,6 +86,7 @@ Hist::Hist(const std::string& name, const std::string& title, const HistAxis& ax
 				
 				hist_->GetXaxis()->SetNameTitle(axis.x().name().c_str(), axis.x().title().c_str());
 				hist_->GetYaxis()->SetNameTitle(axis.y().name().c_str(), axis.y().title().c_str());
+				hist_->GetZaxis()->SetNameTitle(axis.z().name().c_str(), axis.z().title().c_str());
 				break;
 			}
 		case HistDim::k3D : 
@@ -431,7 +433,6 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 		return nullptr;
 	}
 
-	Int_t  dim   = static_cast<Int_t>(hMom->dim());
 	Int_t  vProj = static_cast<Int_t>(proj);
 	Bool_t optProj = (vProj <= 3);
 	if (optProj && vProj > static_cast<Int_t>(hMom->dim())) {

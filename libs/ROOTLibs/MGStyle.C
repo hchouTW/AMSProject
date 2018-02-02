@@ -165,6 +165,7 @@ void LoadDefaultEnvironment() {
 
 
 void SetColorPalette(Int_t pattern) {
+    Printf("MGROOT::Style : Set New Color Palette.");
 	if (pattern >= 0) {
 		style.SetPalette(pattern, 0, 1);
 	}
