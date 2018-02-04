@@ -24,10 +24,13 @@ void TrFitPar::clear() {
     hits_.clear();
     nhtx_ = 0;
     nhty_ = 0;
+
+    is_check_ = false;
 }
 
 
 Bool_t TrFitPar::checkHit() {
+    if (is_check_) return true;
     if (hits_.size() == 0) return false;
     if (ortt_ == Orientation::kDownward) HitSt::Sort(hits_, HitSt::Orientation::kDownward);
     else                                 HitSt::Sort(hits_, HitSt::Orientation::kUpward);
@@ -39,24 +42,27 @@ Bool_t TrFitPar::checkHit() {
     }
     if (nx < LMTL_NHIT_X && ny < LMTL_NHIT_Y) return false;
     
-    for (Int_t it = 0; it < hits_.size(); ++it)
+    for (Int_t it = 0; it < hits_.size(); ++it) {
+        hits_.at(it).set_err(type_);
         hits_.at(it).set_seqID(it);
+    }
     nhtx_ = nx;
     nhty_ = ny;
 
+    is_check_ = true;
     return true;
 }
         
 
 SimpleTrFit::SimpleTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
-    if (!checkHit()) { clear(); return; }
-    clear();
-    
+    SimpleTrFit::clear();
+    if (!checkHit()) return;
+   
     ndfx_ = nhtx_ - 2;
     ndfy_ = nhty_ - 3;
     ndof_ = ndfx_ + ndfy_;
     succ_ = (analyticalFit() ? simpleFit() : false);
-    if (!succ_) clear();
+    if (!succ_) SimpleTrFit::clear();
 }
 
 
@@ -115,6 +121,7 @@ Bool_t SimpleTrFit::analyticalFit() {
             hit.set_dummy_x(px);
         }
     }
+    
 
     // Curve Fit on Y
     // Equation of Motion
@@ -152,6 +159,7 @@ Bool_t SimpleTrFit::analyticalFit() {
                 MagFld&&   mfld  = MagMgnt::Get(ref_m);
                 mfldv += mfld();
             }
+            
             mfldv /= static_cast<Double_t>(nstp);
             Double_t mucrs = Lambda * (ref_u(2) * mfldv(0) - ref_u(0) * mfldv(2));
 
@@ -190,6 +198,7 @@ Bool_t SimpleTrFit::analyticalFit() {
         prefit_uy = rsl(1);
         prefit_ea = rsl(2);
     }
+    
    
     // Merge Fitting Result
     Double_t prefit_ortt = ((ortt_ == Orientation::kDownward) ? MGMath::NEG : MGMath::ONE);
@@ -200,7 +209,7 @@ Bool_t SimpleTrFit::analyticalFit() {
         prefit_ux, prefit_uy, prefit_uz
     );
     part_.set_eta(prefit_ea);
-
+    
     return true;
 }
 
@@ -328,18 +337,9 @@ Bool_t SimpleTrFit::simpleFit() {
 
 #ifdef __CeresSolver__
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-VirtualPhyTrFit::VirtualPhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
-    if (!checkHit()) { clear(); return; }
-    clear();
-}
-
 void VirtualPhyTrFit::clear() {
-    succ_ = false;
     part_.reset(type_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
-
-    ndof_ = 0;
-    nchi_ = 0;
 }
         
 bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* gradient) const {
@@ -349,7 +349,9 @@ bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* g
     SMtxSymD<5> cvGG;
 
     PhySt ppst(part_);
-    ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
+    ppst.arg().reset(false, false);
+    //ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
+    ppst.set_eta(parameters[0]);
 
     Int_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& ppjb = SMtxId();
@@ -380,16 +382,20 @@ bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* g
     }
     if (cnt_nhit != hits_.size()) return false;
     Double_t chi  = (chix + chiy);
-    Double_t nchi = ((chi) / static_cast<Double_t>(ndof_));
+    Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-NumParameters()));
 
     cost[0] = nchi;
     if (gradient != nullptr) {
-        gradient[0] = grdG(0);
-        gradient[1] = grdG(1);
-        gradient[2] = grdG(2);
-        gradient[3] = grdG(3);
-        gradient[4] = grdG(4);
+        //gradient[0] = grdG(0);
+        //gradient[1] = grdG(1);
+        //gradient[2] = grdG(2);
+        //gradient[3] = grdG(3);
+        //gradient[4] = grdG(4);
+        gradient[0] = 0.1*grdG(4);
     }
+
+    std::cerr << Form("============= GRAD %d CHI %14.8f  ETA %14.8f\n", gradient!=nullptr, nchi, parameters[0]);
+
     return true;
 }
 
@@ -434,110 +440,23 @@ Bool_t PhyTrFit::simpleFit() {
 Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
-    //mnz_part_ = part_;
-/*
-    ROOT::Minuit2::Minuit2Minimizer minimizer(ROOT::Minuit2::kMigrad);
+    //double parameters[5] = { part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() };
+    double parameters[1] = { part_.eta() * 2 };
 
-    minimizer.SetFunction(dynamic_cast<ROOT::Math::IMultiGradFunction&>(*this));
-    //
-    //ROOT::Math::Functor func(&(this->Chisq), 5);
-    //minimizer.SetFunction(func);
-    //
-    minimizer.SetLimitedVariable(0, "cx",  mnz_part_.cx(), 0.001, -400., 400.);
-    minimizer.SetLimitedVariable(1, "cy",  mnz_part_.cy(), 0.001, -400., 400.);
-    minimizer.SetLimitedVariable(2, "ux",  mnz_part_.ux(), 0.001, -1., 1.);
-    minimizer.SetLimitedVariable(3, "uy",  mnz_part_.uy(), 0.001, -1., 1.);
-    minimizer.SetVariable(4, "eta", mnz_part_.eta(), 0.001);
-   
-    minimizer.SetMaxFunctionCalls(1000000);
-    minimizer.SetMaxIterations(100000);
-    minimizer.SetTolerance(0.001);
+    ceres::GradientProblemSolver::Options options;
+    options.minimizer_progress_to_stdout = true;
+    ceres::GradientProblemSolver::Summary summary;
+    ceres::GradientProblem problem(new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_));
+    ceres::Solve(options, problem, parameters, &summary);
+    std::cout << summary.FullReport() << "\n";
+    
+    std::cout << Form("Valid %d ETA %14.8f %14.8f\n", part_.eta(), parameters[0]);
+    //std::cout << Form("Valid %d ETA %14.8f %14.8f\n", options.IsValid(), part_.eta(), parameters[0]);
 
-    COUT("ORG CX %8.4f CY %8.4f DX %8.4f DY %8.4f ETA %14.8f\n", mnz_part_.cx(), mnz_part_.cy(), mnz_part_.ux(), mnz_part_.uy(), mnz_part_.eta());
-    Bool_t          succ = minimizer.Minimize();
-    const Double_t* xvar = minimizer.X();
-    COUT("FIT CX %8.4f CY %8.4f DX %8.4f DY %8.4f ETA %14.8f\n", xvar[0], xvar[1], xvar[2], xvar[3], xvar[4]);
-*/
     return true;
 }
-
-/*
-void PhyTrFit::FdF(const double *x, double &est, double *grad) {
-//double PhyTrFit::Chisq(const double* x) {
-    mnz_part_.set_state_with_uxy(x[0], x[1], part_.cz(), x[2], x[3], MGNumc::Compare(-1));
-    mnz_part_.set_eta(x[4]);
-
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    Double_t chix = MGMath::ZERO;
-    Double_t chiy = MGMath::ZERO;
-    SVecD<5>    grdG;
-    SMtxSymD<5> cvGG;
-
-    Int_t cnt_nhit = 0;
-    PhySt ppst(mnz_part_);
-    PhyJb::SMtxDGG&& ppjb = SMtxId();
-    for (auto&& hit : hits_) {
-        PhyJb curjb;
-        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-        ppjb = curjb.gg() * ppjb;
-
-        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
-        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-
-        SMtxSymD<2> cvM;
-        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
-        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
-        
-        SVecD<2> rsM;
-        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
-        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
-        
-        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-        grdG += LA::Transpose(subJbF) * rsM;
-        cvGG += LA::SimilarityT(subJbF, cvM);
-
-        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
-        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
-
-        cnt_nhit++;
-        if (!hit.sx()) hit.set_dummy_x(ppst.cx());
-    }
-    //if (cnt_nhit != hits_.size()) break;
-    Double_t chi  = (chix + chiy);
-    Double_t nchi = ((chi) / static_cast<Double_t>(ndof_));
-
-
-    est = nchi;
-    grad[0] = grdG(0);
-    grad[1] = grdG(1);
-    grad[2] = grdG(2);
-    grad[3] = grdG(3);
-    grad[4] = grdG(4);
-    //return nchi;
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////
-}
-*/
 #endif
 
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 

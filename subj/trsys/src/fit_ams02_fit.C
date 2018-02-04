@@ -283,6 +283,12 @@ int main(int argc, char * argv[]) {
             (*vhHCcc.at(jt))()->SetBinContent(it, nm/refnm);
         }
     }
+    
+    hCKrat->style(Fill(), Line(kGreen));
+    hKFrat->style(Fill(), Line(kBlue));
+    hHCrat->style(Fill(), Line(kRed));
+    THStack* chrat = Hist::Collect("chrat", "", HistList({ hCKrat, hKFrat, hHCrat }));
+    chrat->Write();
 
     hKFCKnm  ->style(Fill(), Line(kBlue));
     hKFCKnm99->style(Fill(), Line(kBlue));

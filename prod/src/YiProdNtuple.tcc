@@ -66,7 +66,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
-		TkStID = TkStPar->iTrTrackPar(1, 3, 21);
+		TkStID = TkStPar->iTrTrackPar(1, 3, 22);
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
 		
@@ -403,7 +403,7 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 		TrTrackR * trtk = part->pTrTrack();
 		BetaHR * betaH = part->pBetaH();
 		if (trtk == nullptr || betaH == nullptr) break;
-		int fitid = trtk->iTrTrackPar(1, 3, 21);
+		int fitid = trtk->iTrTrackPar(1, 3, 22);
 		if (fitid < 0) break;
 	
 		double AMSTheta = part->Theta;
@@ -911,9 +911,8 @@ void EventTrk::setEnvironment() {
 #endif
 
 	// Disable overwriting of datacards from file
-	TRMCFFKEY_DEF::ReadFromFile = 0;
-	TRFITFFKEY_DEF::ReadFromFile = 0;
-	TRFITFFKEY.magtemp = 0;
+	TRMCFFKEY.ReadFromFile = 0;
+	TRFITFFKEY.ReadFromFile = 0;
 
 	// Enable latest alignment
 	if (checkEventMode(EventBase::ISS)) {
@@ -935,7 +934,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
     fTrk.numOfTrack = event->NTrTrack();
 
     TrTrackR* trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
-	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, 21) : -1;
+	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, 22) : -1;
 
 	const unsigned short _hasL1  =   1;
 	const unsigned short _hasL2  =   2;
@@ -976,36 +975,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		track.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, Beta) : -1;
 		track.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, Beta) : -1;
 		track.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, Beta) : -1;
-
-		const short _nalgo = 3;
-		const short _algo[_nalgo] = { 1, 3, 6 };
-		const short _npatt = 4;
-		const short _patt[_npatt] = { 3, 5, 6, 7 };
-		for (int algo = 0; algo < _nalgo; algo++) {
-			for (int patt = 0; patt < _npatt; patt++) {
-				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 21);
-				if (fitid < 0) continue;
-				
-                track.status[algo][patt] = true;
-				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
-				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
-				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
-				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
-			
-				for (int il = 0; il < 9; ++il) {
-					AMSPoint pntLJ;
-					AMSDir   dirLJ;
-					trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
-					
-					track.stateLJ[algo][patt][il][0] = pntLJ[0];
-					track.stateLJ[algo][patt][il][1] = pntLJ[1];
-					track.stateLJ[algo][patt][il][2] = pntLJ[2];
-					track.stateLJ[algo][patt][il][3] = -dirLJ[0];
-					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
-					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
-				}
-			} // for loop - pattern
-		}
 
 		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
@@ -1112,7 +1081,92 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.hits.push_back(hit);
 		} // for loop - layer
 		if (track.hits.size() > 1) std::sort(track.hits.begin(), track.hits.end(), HitTRKInfo_sort());
-	
+
+		const short _nalgo = 3;
+		const short _algo[_nalgo] = { 1, 3, 6 };
+		const short _npatt = 4;
+		const short _patt[_npatt] = { 3, 5, 6, 7 };
+        
+        Int_t zin  = (track.QIn < 1.) ? 1 : std::lrint(track.QIn);
+        float mass = (zin < 2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
+		for (int algo = 0; algo < _nalgo; algo++) {
+			for (int patt = 0; patt < _npatt; patt++) {
+                MGClock::HrsStopwatch sw; sw.start();
+				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 22, mass, zin);
+                sw.stop();
+				if (fitid < 0) continue;
+				
+                track.status[algo][patt] = true;
+				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
+				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
+				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
+				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
+			
+				for (int il = 0; il < 9; ++il) {
+					AMSPoint pntLJ;
+					AMSDir   dirLJ;
+                    trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
+					
+					track.stateLJ[algo][patt][il][0] = pntLJ[0];
+					track.stateLJ[algo][patt][il][1] = pntLJ[1];
+					track.stateLJ[algo][patt][il][2] = pntLJ[2];
+					track.stateLJ[algo][patt][il][3] = -dirLJ[0];
+					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
+					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
+				}
+
+                track.cpuTime[algo][patt] = sw.time() * 1.0e3;
+			} // for loop - pattern
+		}
+
+        // HChou Fitting
+        TrackSys::TrFitPar fitPar(TrackSys::PartType::Proton);
+        TrackSys::HitSt mhitL1;
+        TrackSys::HitSt mhitL9;
+        for (auto&& hit : track.hits) {
+            TrackSys::HitSt mhit(hit.side%2==1, hit.side/2==1);
+            mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
+            mhit.set_err(hit.nsr[0], hit.nsr[1]);
+            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
+            else {
+                if (hit.layJ == 1) mhitL1 = mhit;
+                if (hit.layJ == 9) mhitL9 = mhit;
+            }
+        }
+
+		for (int patt = 0; patt < _npatt; patt++) {
+            const int algo = 3;
+            TrackSys::TrFitPar _fitPar = fitPar;
+            if (_patt[patt] == 5 || _patt[patt] == 7) { if (!mhitL1()) continue; _fitPar.addHit(mhitL1); }
+            if (_patt[patt] == 6 || _patt[patt] == 7) { if (!mhitL9()) continue; _fitPar.addHit(mhitL9); }
+           
+            MGClock::HrsStopwatch sw; sw.start();
+            TrackSys::SimpleTrFit hctr(_fitPar);
+            //PhyTrFit tr(fitPar);
+            sw.stop();
+            
+            if (!hctr.status()) continue;
+
+            track.status[algo][patt] = true;
+			track.rigidity[algo][patt] = hctr.part().rig();
+			track.chisq[algo][patt][0] = hctr.nchix();
+			track.chisq[algo][patt][1] = hctr.nchiy();
+			track.chisq[algo][patt][2] = hctr.nchi();
+
+            TrackSys::PhySt ppst(hctr.part());
+            for (int il = 0; il < 9; ++il) {
+                TrackSys::PropMgnt::PropToZ(recEv.trackerZJ[il], ppst);
+				track.stateLJ[algo][patt][il][0] = ppst.cx();
+				track.stateLJ[algo][patt][il][1] = ppst.cy();
+				track.stateLJ[algo][patt][il][2] = ppst.cz();
+				track.stateLJ[algo][patt][il][3] = ppst.ux();
+				track.stateLJ[algo][patt][il][4] = ppst.uy();
+				track.stateLJ[algo][patt][il][5] = ppst.uz();
+            }
+            
+            track.cpuTime[algo][patt] = sw.time() * 1.0e3;
+        }
+
 		fTrk.track = track;
 	}
 
@@ -1219,7 +1273,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				{
 				  if (recEv.iTrTrack < 0) break;
 				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-				  int fitid_max = trtk->iTrTrackPar(1, 0, 21);
+				  int fitid_max = trtk->iTrTrackPar(1, 0, 22);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
 				  isOK = true;
@@ -2024,10 +2078,15 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	EventList::Weight = 1.;
 
 	// Resolution tuning
-	if (EventBase::checkEventMode(EventBase::MC)) {
-		event->SetDefaultMCTuningParameters();
-		TrExtAlignDB::SmearExtAlign();
-		TRCLFFKEY.UseSensorAlign = 0;
+	if (EventBase::checkEventMode(EventBase::ISS)) {
+        TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
+        TRFITFFKEY.Zshift = 2; // Enable the dZ correction
+    }
+    else if (EventBase::checkEventMode(EventBase::MC)) {
+        TrExtAlignDB::SmearExtAlign();
+        TRCLFFKEY.UseSensorAlign = 0;
+        TRCLFFKEY.ClusterCofGOpt = 1;
+        TRFITFFKEY.Zshift = -1; // // Disable the dZ correction
 	}
 
 	//-----------------------------//
@@ -2082,7 +2141,8 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	}
 	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
 	
-    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
+    int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
+    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 22);
 	if (fitidInn < 0) return -6003;
 		
     double trQIn = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
@@ -2096,7 +2156,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
         short  sign[npatt] = { 0, 0, 0 , 0 };
         double rig[npatt] = { 0, 0, 0, 0 };
 		for (int ip = 0; ip < npatt; ++ip) {
-			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 21);
+			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 22);
 			if (fitid < 0) continue;
 			rig[ip] = trtkSIG->GetRigidity(fitid);
             sign[ip] = MGNumc::Compare(rig[ip]);
@@ -2133,7 +2193,7 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 		const int npatt = 4;
 		const int spatt[npatt] = { 3, 5, 6, 7 };
 		for (int ip = 0; ip < npatt; ++ip) {
-			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 21);
+			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 22);
 			if (fitid < 0) continue;
 			maxRig = std::max(maxRig, std::fabs(trtkSIG->GetRigidity(fitid)));
 		}
@@ -2388,10 +2448,10 @@ void YiNtuple::loopEventChain() {
 
 	Long64_t npassed = 0;
 	Long64_t nprocessed = 0;
-	const Long64_t printLimit = 10000;
+	const Long64_t printLimit = 2000;
 	Long64_t printRate = loop_entries / 200;
 	if (printRate < printLimit) printRate = printLimit;
-	if (printRate > printLimit * 5) printRate = printLimit * 5;
+	if (printRate > printLimit * 20) printRate = printLimit * 20;
 	for (Long64_t ientry = first_entry; ientry < last_entry; ++ientry){
 		if (nprocessed%printRate == 0) {
 			fStopwatch.stop();
@@ -2416,8 +2476,8 @@ void YiNtuple::loopEventChain() {
 		nprocessed++;
 
 		AMSEventR * event = fChain->GetEvent(ientry);
-		
-		//if (nprocessed > 10000) break; // testcode
+	
+		//if (nprocessed > 1000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);
 

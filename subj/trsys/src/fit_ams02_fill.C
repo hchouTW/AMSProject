@@ -58,19 +58,22 @@ int main(int argc, char * argv[]) {
     //PartType type = PartType::Electron;
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
-    Bool_t optL9 = true;
+    Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 40, 0.25, 200., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 50, 1.0, 800., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 25, 1000., 4000., AxisScale::kLog);
     
     Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 50, 1.0, 800., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 25, 1000., 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXmom, 1, true);
 
     // Time
-    Axis AXtme("Time [ms]", 200, 0., 3.5);
+    Axis AXtme("Time [ms]", 400, 0., 3.0);
+    Hist * hCKtme = Hist::New("hCKtme", HistAxis(AXmom, AXtme));
     Hist * hHCtme = Hist::New("hHCtme", HistAxis(AXmom, AXtme));
     
     // Fit Eff
@@ -203,15 +206,16 @@ int main(int argc, char * argv[]) {
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
         TrFitPar fitPar(type);
+        TrFit trFit;
         for (auto&& hit : track.hits) {
             HitSt mhit(hit.side%2==1, hit.side/2==1);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_err(hit.nsr[0], hit.nsr[1], type);
           
-            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
+            if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
             else {
-                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); }
-                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); }
+                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
+                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
             }
         }
         Short_t cutNHit = 4 + optL1 + optL9;
@@ -228,12 +232,21 @@ int main(int argc, char * argv[]) {
         Double_t mc_mom  = topmc->mom;
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
-       
+      
+
+        /////////////////////////////////////////
+        MGClock::HrsStopwatch swCK; swCK.start();
+        Double_t rltTrFit = trFit.DoFit(TrFit::CHOUTKO);
+        swCK.stop();
+        if (rltTrFit < 0) { COUT("FAIL. CHOUTKO\n"); continue; }
+        hCKtme->fillH2D(mc_mom, swCK.time()*1.0e3);
+        /////////////////////////////////////////
+
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         SimpleTrFit tr(fitPar);
-        sw.stop();
         //PhyTrFit tr(fitPar);
+        sw.stop();
         Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
@@ -249,7 +262,8 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFnum->fillH1D(mc_mom);
         if (hc_succ) hHCnum->fillH1D(mc_mom);
 
-        Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
+        //Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
+        Double_t ck_irig = (1./trFit.GetRigidity());
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);
         Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rigidity[2][patt] : 0.);
 
@@ -258,12 +272,14 @@ int main(int argc, char * argv[]) {
         Double_t kf_rig = (kf_succ ? 1.0/kf_irig : 0.);
         Double_t hc_rig = (hc_succ ? 1.0/hc_irig : 0.);
         
-        Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
+        //Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
+        Double_t ck_chix = trFit.GetChisqX() / trFit.GetNdofX(); 
         Double_t cn_chix = (cn_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(track.chisq[2][patt][0]) : 0.); 
         Double_t hc_chix = (hc_succ ? std::log(tr.nchix())              : 0.); 
         
-        Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
+        //Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
+        Double_t ck_chiy = trFit.GetChisqY() / trFit.GetNdofY(); 
         Double_t cn_chiy = (cn_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
         Double_t hc_chiy = (hc_succ ? std::log(tr.nchiy())              : 0.); 
@@ -311,6 +327,7 @@ int main(int argc, char * argv[]) {
         if (hc_succ && IntType == 1) hHCRchiyI1->fillH2D(mc_mom, hc_chiy);
         
         const Double_t initR = 30.;
+        //const Double_t initR = 1000.;
         Double_t pow27 = std::pow((mc_mom/initR), -1.7);
         Double_t powf = pow27;
         

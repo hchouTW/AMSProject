@@ -6,7 +6,9 @@ namespace TrackSys {
 
 class HitSt {
     public :
-        HitSt(Bool_t sx = true, Bool_t sy = true) : seqID_(-1), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
+        HitSt(Bool_t sx = false, Bool_t sy = false) : seqID_(-1), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
+        
+        inline Bool_t operator()() const { return (side_(0) || side_(1)); }
 
         void print() const;
         
@@ -14,9 +16,13 @@ class HitSt {
 
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx; coo_(1) = cy; coo_(2) = cz; }
         
-        inline void set_err(Int_t nx = 0, Int_t ny = 0, const PartType& type = PartType::Proton) { 
+        inline void set_err(Int_t nx, Int_t ny, const PartType& type = PartType::Proton) { 
             nsr_(0) = (nx > 0) ? nx : 0;
             nsr_(1) = (ny > 0) ? ny : 0;
+            set_err(type);
+        }
+        
+        inline void set_err(const PartType& type = PartType::Proton) {
             if (type == PartType::Proton) {
                 pdf_x_ = &PDF_PR_X_NN_;
                 pdf_y_ = &PDF_PR_Y_NN_;
@@ -63,7 +69,7 @@ class HitSt {
         SVecO<2>   side_;
         SVecI<2>   nsr_;
         SVecD<2>   err_;  // [cm]
-   
+
         MultiGauss* pdf_x_;
         MultiGauss* pdf_y_;
 

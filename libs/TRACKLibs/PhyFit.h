@@ -1,10 +1,6 @@
 #ifndef __TRACKLibs_PhyFit_H__
 #define __TRACKLibs_PhyFit_H__
 
-
-#include "Minuit2/Minuit2Minimizer.h"
-#include "Math/Functor.h"
-
 // Ceres Solver
 #ifdef __CeresSolver__
 #include "ceres/ceres.h"
@@ -24,7 +20,8 @@ class TrFitPar {
         TrFitPar(const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { clear(); }
    
-        inline void addHit(HitSt& hit) { hits_.push_back(hit); }
+        inline void addHit(HitSt& hit) { hits_.push_back(hit); is_check_ = false; }
+        inline void delHit(Int_t it) { if (it >= 0 && it < static_cast<Int_t>(hits_.size())) { hits_.erase(hits_.begin()+it); is_check_ = false; } }
         inline Short_t numOfHit() const { return hits_.size(); }
     
     protected :
@@ -40,6 +37,9 @@ class TrFitPar {
         std::vector<HitSt> hits_;
         Short_t            nhtx_;
         Short_t            nhty_;
+
+    private :
+        Bool_t is_check_;
 
     protected :
         // Number of Hit Requirement
@@ -100,40 +100,19 @@ class SimpleTrFit : public TrFitPar {
 #ifdef __CeresSolver__
 class VirtualPhyTrFit : public TrFitPar, public ceres::FirstOrderFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar);
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { clear(); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
         virtual bool Evaluate(const double* parameters, double* cost, double* gradient) const;
-        virtual int NumParameters() const { return 5; }
-        
-    public :
-        inline const Bool_t& status() { return succ_; }
-        inline const PhySt& part() const { return part_; }
-        
-        inline const Int_t& ndof() const { return ndof_; }
-        inline const Double_t& nchi() const { return nchi_; }
+        virtual int NumParameters() const { return 1; }
     
     protected :
         void clear();
     
     protected :
-        Bool_t   succ_;
-        PhySt    part_;
-        
-        Int_t    ndof_;
-        Double_t nchi_;
+        PhySt part_;
 };
-
-
-
-
-
-
-
-
-
-
 
 
 class PhyTrFit : public TrFitPar {

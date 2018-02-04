@@ -19,11 +19,13 @@ all :
 	@cp -fa $(PWD)/src/fit_ams02_fill.C $(TagetDir)/src/fit_ams02_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit_ams02_fit.C $(TagetDir)/src/fit_ams02_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_smc_fill.C $(TagetDir)/src/prop_smc_fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/ceres_test.C $(TagetDir)/src/ceres_test.C 2> /dev/null
 	#make $(TagetDir)/hit_ams02_fill
 	#make $(TagetDir)/prop_ams02_fill
 	#make $(TagetDir)/prop_ams02_fit
 	make $(TagetDir)/fit_ams02_fill
 	make $(TagetDir)/fit_ams02_fit
+	#make $(TagetDir)/ceres_test
 	#make $(TagetDir)/prop_smc_fill
 
 $(TagetDir)/obj/hit_ams02_fill.o : $(TagetDir)/src/hit_ams02_fill.C
@@ -67,6 +69,14 @@ $(TagetDir)/obj/prop_smc_fill.o : $(TagetDir)/src/prop_smc_fill.C
 
 $(TagetDir)/prop_smc_fill : $(TagetDir)/obj/prop_smc_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+$(TagetDir)/obj/ceres_test.o : $(TagetDir)/src/ceres_test.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+-include $(TagetDir)/obj/ceres_test.d
+
+$(TagetDir)/ceres_test : $(TagetDir)/obj/ceres_test.o
+	$(LD) -o $@ $+ $(LIBP)
+
 
 clean :
 	@rm -fv $(TagetDir)/env/*
