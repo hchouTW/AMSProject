@@ -100,7 +100,7 @@ class SimpleTrFit : public TrFitPar {
 
 
 #ifdef __CeresSolver__
-
+/*
 class VirtualPhyTrFit : public TrFitPar, public ceres::FirstOrderFunction {
     public :
         VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); }
@@ -116,11 +116,11 @@ class VirtualPhyTrFit : public TrFitPar, public ceres::FirstOrderFunction {
     protected :
         PhySt part_;
 };
+*/
 
-/*
 class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(1); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(3); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
@@ -132,7 +132,7 @@ class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     protected :
         PhySt part_;
 };
-*/
+
 
 
 

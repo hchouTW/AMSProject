@@ -31,8 +31,8 @@ int main(int argc, char * argv[]) {
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
 
     LIST * fList = new LIST;
-    G4MC * fG4mc = (opt.type() == "MC" ) ? new G4MC : nullptr;
-    RTI  * fRti  = (opt.type() == "ISS") ? new RTI  : nullptr;
+    G4MC * fG4mc = (opt.mode() == MGConfig::JobOpt::MODE::MC ) ? new G4MC : nullptr;
+    RTI  * fRti  = (opt.mode() == MGConfig::JobOpt::MODE::ISS) ? new RTI  : nullptr;
     TRG  * fTrg  = new TRG ;
     TOF  * fTof  = new TOF ;
     ACC  * fAcc  = new ACC ;
@@ -42,9 +42,9 @@ int main(int argc, char * argv[]) {
     ECAL * fEcal = new ECAL;
 
     dst->SetBranchAddress("list", &fList);
-    if (opt.type() == "MC")
+    if (opt.mode() == MGConfig::JobOpt::MODE::MC)
         dst->SetBranchAddress("g4mc", &fG4mc);
-    if (opt.type() == "ISS")
+    if (opt.mode() == MGConfig::JobOpt::MODE::ISS)
         dst->SetBranchAddress("rti",  &fRti);
     dst->SetBranchAddress("trg",  &fTrg);
     dst->SetBranchAddress("tof",  &fTof);

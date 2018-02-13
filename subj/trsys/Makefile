@@ -1,5 +1,15 @@
 -include $(AMSMKfile)
 
+
+# Test Ceres Solver
+FLGS += -I/usr/include/eigen3 -I/usr/include/ceres/internal/miniglog
+LIBP += -L/usr/lib64 -lceres -lgflags
+ICCCXX += -D__CeresSolver__
+GCCCXX += -D__CeresSolver__
+LD += -D__CeresSolver__
+LDS += -D__CeresSolver__
+
+
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
 #Version=18Jan29

@@ -391,6 +391,7 @@ Bool_t SimpleTrFit::simpleFit() {
 
 
 #ifdef __CeresSolver__
+/*
 bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* gradient) const {
     Double_t chix = MGMath::ZERO;
     Double_t chiy = MGMath::ZERO;
@@ -465,8 +466,8 @@ bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* g
 
     return true;
 }
+*/
 
-/*
 bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
     Double_t chix = MGMath::ZERO;
     Double_t chiy = MGMath::ZERO;
@@ -475,13 +476,11 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     PhySt ppst(part_);
     ppst.arg().reset(false, false);
-    //ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
-    //ppst.set_eta(parameters[4]);
     
-    //ppst.set_state_with_uxy(part_.cx(), part_.cy(), part_.cz(), parameters[0], parameters[1], MGNumc::Compare(-1));
-    //ppst.set_eta(parameters[2]);
+    ppst.set_state_with_uxy(part_.cx(), part_.cy(), part_.cz(), parameters[0][0], parameters[0][1], MGNumc::Compare(-1));
+    ppst.set_eta(parameters[0][2]);
     
-    ppst.set_eta(parameters[0][0]);
+    //ppst.set_eta(parameters[0][0]);
 
 
     Int_t cnt_nhit = 0;
@@ -513,8 +512,15 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hit.sy()) residuals[hit.seqIDy()] = (hit.cy() - ppst.cy()) / mey;
 
         if (jacobians != nullptr && jacobians[0] != nullptr) {
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 4) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 4) / mey;
+            //if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 4) / mex; 
+            //if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 4) / mey;
+            
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 2) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 2) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 1] = -subJbF(0, 3) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 1] = -subJbF(1, 3) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 2] = -subJbF(0, 4) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 2] = -subJbF(1, 4) / mey;
 
         }
             //CERR("LAY %d X Y %14.8f %14.8f\n", cnt_nhit, residuals[hit.seqIDx()], residuals[hit.seqIDy()]);
@@ -525,10 +531,11 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     Double_t chi  = (chix + chiy);
     Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
 
-    std::cerr << Form("============= CHI %14.8f  ETA %14.8f\n", nchi, parameters[0][0]);
+    std::cerr << Form("============= CHI %14.8f  UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2]);
+    //std::cerr << Form("============= CHI %14.8f  ETA %14.8f\n", nchi, parameters[0][0]);
     return true;
 }
-*/
+
 
 
 
@@ -591,7 +598,7 @@ Bool_t PhyTrFit::simpleFit() {
 
 
 
-
+/*
 Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
@@ -625,15 +632,15 @@ Bool_t PhyTrFit::physicalFit() {
 
     return true;
 }
+*/
 
-/*
 Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
     //double parameters[5] = { part_.cx()+0.1, part_.cy()-0.1, 0.5*part_.ux(), 2.*part_.uy(), 0.4*part_.eta() };
     //double parameters[2] = { 0.5*part_.ux(), 1.5*part_.uy() };
-    //double parameters[3] = { 0.5*part_.ux(), 1.5*part_.uy(), 2.*part_.eta() };
-    double parameters[1] = { part_.eta() * 1.1 };
+    double parameters[3] = { 0.5*part_.ux(), 1.5*part_.uy(), 2.*part_.eta() };
+    //double parameters[1] = { part_.eta() * 2.0 };
 
     MGClock::HrsStopwatch sw; sw.start();
 
@@ -644,6 +651,7 @@ Bool_t PhyTrFit::physicalFit() {
     problem.AddResidualBlock(cost_function, NULL, parameters);
 
     ceres::Solver::Options options;
+    options.minimizer_type = ceres::TRUST_REGION;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
@@ -654,16 +662,16 @@ Bool_t PhyTrFit::physicalFit() {
     
     //std::cout << Form("CX  %14.8f\n", part_.cx()- parameters[0]);
     //std::cout << Form("CY  %14.8f\n", part_.cy()- parameters[1]);
-    //std::cout << Form("UX  %14.8f\n", part_.ux()- parameters[0]);
-    //std::cout << Form("UY  %14.8f\n", part_.uy()- parameters[1]);
-    std::cerr << Form("ETA %14.8f %14.8f\n", part_.eta(), part_.eta() - parameters[0]);
+    std::cout << Form("UX  %14.8f  %14.8f\n", part_.ux(), part_.ux() - parameters[0]);
+    std::cout << Form("UY  %14.8f  %14.8f\n", part_.uy(), part_.uy() - parameters[1]);
+    std::cerr << Form("ETA %14.8f  %14.8f\n", part_.eta(), part_.eta() - parameters[2]);
     std::cerr << Form("TME %14.8f ms\n", sw.time() * 1.0e3);
 
     //std::cout << Form("Valid %d ETA %14.8f %14.8f\n", options.IsValid(), part_.eta(), parameters[0]);
 
     return true;
 }
-*/
+
 
 
 
