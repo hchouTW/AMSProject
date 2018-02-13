@@ -929,7 +929,7 @@ class RICH : public TObject {
 			beta = -1;
 			Q = -1;
 
-            //hits.clear();
+            hits.clear();
 		}
 
 	public :
@@ -955,7 +955,7 @@ class RICH : public TObject {
 		Float_t Q;
 
 		// Rich Hits
-        //std::vector<HitRICHInfo> hits;
+        std::vector<HitRICHInfo> hits;
 
 	ClassDef(RICH, 7)
 };

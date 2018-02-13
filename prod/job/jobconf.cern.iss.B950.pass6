@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Feb05
+PROJTITLE    =  TEST
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.iss.B950.pass6
+EVENTTYPE    =  ISS
+FILEPEREXE   =  3
+JOBREGION    =  PART
+EXESATID     =  35000
+EXEENDID     =  40660
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  5
+CONFIRM    =  NONE

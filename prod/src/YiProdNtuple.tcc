@@ -1444,7 +1444,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		std::copy(rev, rev+6, fRich.receiving);
 	
 		// Number of photoelectrons expected for a given track, beta and charge.
-        Bool_t has_RichVeto = false;
+        Bool_t has_RichVeto = true;
         if (has_RichVeto) {
 		    const int    npart = 3;
 		    const double masschrg[npart] = 
@@ -1498,8 +1498,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	// official RichRingR - end
 	
 	// RICH Hits
-    /*
-    if (has_RichVeto && fRich.kindOfRad >= 0) {
+    if (fRich.kindOfRad >= 0) {
         AMSDir   oth(fRich.emission[3], fRich.emission[4], fRich.emission[5]);
         AMSPoint ems(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
         AMSPoint rev(fRich.receiving[0], fRich.receiving[1], fRich.receiving[2]);
@@ -1668,7 +1667,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	    
         std::sort(fRich.hits.begin(), fRich.hits.end(), HitRICHInfo_sort());
     }
-    */
+    
     /*
     if (fRich.hits.size() != 0) {
 		const int    npart = 3;
@@ -1709,13 +1708,13 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             }
         }
 		
-        fRich.numOfCrossHit[0] = countCross[0];
-		fRich.numOfCrossHit[1] = countCross[1];
-		for (int it = 0; it < npart; ++it) {
-			fRich.numOfRingHit[it][0] = countCKV[it][0];
-			fRich.numOfRingHit[it][1] = countCKV[it][1];
-			fRich.numOfRingHit[it][2] = countCKV[it][2];
-		}
+        //fRich.numOfCrossHit[0] = countCross[0];
+		//fRich.numOfCrossHit[1] = countCross[1];
+		//for (int it = 0; it < npart; ++it) {
+		//	fRich.numOfRingHit[it][0] = countCKV[it][0];
+		//	fRich.numOfRingHit[it][1] = countCKV[it][1];
+		//	fRich.numOfRingHit[it][2] = countCKV[it][2];
+		//}
     }
     */
 	// RichVeto - end
