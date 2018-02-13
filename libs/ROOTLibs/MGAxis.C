@@ -213,6 +213,22 @@ Double_t Axis::center(UInt_t ibin, AxisScale scl) const {
 }
 
 
+Double_t Axis::center(UInt_t ibin, Double_t power) const {
+	if (!exist()) return 0.0;
+	if      (ibin ==                             0) return binset_.min();
+	else if (ibin == static_cast<UInt_t>(nbin()+1)) return binset_.max();
+    else if (MGNumc::Compare(power)       == 0) return center(ibin, AxisScale::kLinear);
+    else if (MGNumc::Compare(power, -1.0) == 0) return center(ibin, AxisScale::kLog);
+	else {
+		Double_t lw = binset_(ibin-1);
+        Double_t up = binset_(ibin);
+        if (MGNumc::Compare(lw) <= 0 || MGNumc::Compare(up) <= 0) return 0.0;
+        return std::sqrt(lw * up);
+    }
+    return 0.0;
+}
+
+
 void Axis::print() const {
 	if (!exist()) return;
 	COUT("************************************  Axis  ************************************\n");

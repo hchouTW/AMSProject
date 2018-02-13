@@ -2,7 +2,8 @@
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
-Version=18Jan29
+#Version=18Jan29
+Version=18Feb05
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 
 all :
@@ -24,7 +25,7 @@ all :
 	#make $(TagetDir)/prop_ams02_fill
 	#make $(TagetDir)/prop_ams02_fit
 	make $(TagetDir)/fit_ams02_fill
-	make $(TagetDir)/fit_ams02_fit
+	#make $(TagetDir)/fit_ams02_fit
 	#make $(TagetDir)/ceres_test
 	#make $(TagetDir)/prop_smc_fill
 

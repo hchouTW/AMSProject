@@ -655,10 +655,12 @@ std::vector<Hist*> Hist::ProjectAll(const HistProj& proj, Hist * hMom) {
 }
 
 
-THStack * Hist::Collect(const std::string& name, const std::string& title, const std::vector<std::string>& list) {
+//THStack * Hist::Collect(const std::string& name, const std::string& title, const std::vector<std::string>& list) {
+THStack * Hist::Collect(const std::string& name, const std::vector<std::string>& list) {
 	if (list.size() == 0) return nullptr;
 	THStack * coll = new THStack();
-	coll->SetNameTitle(name.c_str(), title.c_str());
+	//coll->SetNameTitle(name.c_str(), title.c_str());
+	coll->SetName(name.c_str());
 	for (auto&& elem : list) {
 		Hist * hist = Hist::Head(elem);
 		if (hist == nullptr) continue;
@@ -668,10 +670,12 @@ THStack * Hist::Collect(const std::string& name, const std::string& title, const
 }
 
 
-THStack * Hist::Collect(const std::string& name, const std::string& title, const std::vector<Hist*>& list) {
+//THStack * Hist::Collect(const std::string& name, const std::string& title, const std::vector<Hist*>& list) {
+THStack * Hist::Collect(const std::string& name, const std::vector<Hist*>& list) {
 	if (list.size() == 0) return nullptr;
 	THStack * coll = new THStack();
-	coll->SetNameTitle(name.c_str(), title.c_str());
+	//coll->SetNameTitle(name.c_str(), title.c_str());
+	coll->SetName(name.c_str());
 	for (auto&& hist : list) {
 		if (hist == nullptr) continue;
 		coll->Add((*hist)());

@@ -22,8 +22,10 @@ class TrFitPar {
    
         inline void addHit(HitSt& hit) { hits_.push_back(hit); is_check_ = false; }
         inline void delHit(Int_t it) { if (it >= 0 && it < static_cast<Int_t>(hits_.size())) { hits_.erase(hits_.begin()+it); is_check_ = false; } }
+        
         inline Short_t numOfHit() const { return hits_.size(); }
-    
+        inline Short_t numOfSeq() const { return (nhtx_ + nhty_); }
+
     protected :
         Bool_t checkHit();
         void clear();
@@ -98,21 +100,43 @@ class SimpleTrFit : public TrFitPar {
 
 
 #ifdef __CeresSolver__
+
 class VirtualPhyTrFit : public TrFitPar, public ceres::FirstOrderFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { clear(); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
         virtual bool Evaluate(const double* parameters, double* cost, double* gradient) const;
-        virtual int NumParameters() const { return 1; }
+        virtual int NumParameters() const { return 2; }
     
     protected :
-        void clear();
+        void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); }
     
     protected :
         PhySt part_;
 };
+
+/*
+class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
+    public :
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(1); }
+        ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
+    
+    public :
+        virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
+    
+    protected :
+        void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); }
+    
+    protected :
+        PhySt part_;
+};
+*/
+
+
+
+
 
 
 class PhyTrFit : public TrFitPar {
@@ -141,25 +165,8 @@ class PhyTrFit : public TrFitPar {
         
         Int_t    ndof_;
         Double_t nchi_;
-/*
-    // Used to Minimizer
-    protected :
-        //double Chisq(const double* x);
-
-        void FdF(const double *x, double &est, double *grad);
-    private :
-        IBaseFunctionMultiDim * Clone() const { return nullptr; }
-        unsigned int NDim() const { return 5; }
-        double DoEval(const double* x) const { return 0; }
-        double DoDerivative(const double * x, unsigned int icoord ) const { return 0; }
-
-    protected :
-        PhySt               mnz_part_;
-        std::vector<PhyArg> mnz_args_;
-*/
 };
 #endif
-
 
 
 } // namespace TrackSys

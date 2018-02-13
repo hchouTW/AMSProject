@@ -66,7 +66,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
-		TkStID = TkStPar->iTrTrackPar(1, 3, 22);
+		TkStID = TkStPar->iTrTrackPar(1, 3, recEv.trRft(0, 0));
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
 		
@@ -216,24 +216,21 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		    MCEventgR * mcev = event->pMCEventg(it);
 		    if (mcev == nullptr) continue;
             Int_t id = (mcev->trkID == primary->trkID) + (mcev->parentID == primary->trkID) * 2;
+		  
             if (id == 0) continue;
-            Float_t keng = (std::hypot(mcev->Momentum, mcev->Mass) - mcev->Mass);
-		    if (keng < kEngTh) continue;
-		   
             if (id == 1) {
                 Short_t dec = -1, lay = -1;
                 if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
                 for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; } // Silicon
-                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
+                //for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
+                //for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
+                //for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
                 if (dec < 0 || lay < 0) continue;
 
                 SegPARTMCInfo seg;
 		        seg.dec = dec;
 		        seg.lay = lay;
 		        seg.mom = mcev->Momentum;
-		        seg.ke  = keng;
 		        seg.coo[0] = mcev->Coo[0];
 		        seg.coo[1] = mcev->Coo[1];
 		        seg.coo[2] = mcev->Coo[2];
@@ -244,15 +241,19 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		        fG4mc.primPart.segs.push_back(seg);
             }
             else if (id == 2) {
+                Float_t keng = (std::hypot(mcev->Momentum, mcev->Mass) - mcev->Mass);
+		        if (keng < kEngTh) continue;
                 if (!fG4mc.primVtx.status) {
 			        fG4mc.primVtx.status = true;
 			        fG4mc.primVtx.coo[0] = mcev->Coo[0];
 			        fG4mc.primVtx.coo[1] = mcev->Coo[1];
 			        fG4mc.primVtx.coo[2] = mcev->Coo[2];
                 }
+                if (keng > fG4mc.primVtx.partKe) {
+                    fG4mc.primVtx.partId = mcev->Particle;
+                    fG4mc.primVtx.partKe = keng;
+                }
                 fG4mc.primVtx.numOfPart++;
-                fG4mc.primVtx.partID.push_back(mcev->Particle);
-                fG4mc.primVtx.ke.push_back(keng);
             }
         }
 		std::sort(fG4mc.primPart.segs.begin(), fG4mc.primPart.segs.end(), SegPARTMCInfo_sort());
@@ -272,20 +273,15 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			int tkid = cluster->GetTkId();
 			int layJ = TkDBc::Head->GetJFromLayer(std::fabs(cluster->GetTkId()/100));
 			AMSPoint coo = cluster->GetXgl();
-			AMSDir dir = cluster->GetDir();
 
 			HitTRKMCInfo hit;
 			hit.layJ = layJ;
 			hit.tkid = tkid;
 			hit.edep = cluster->GetEdep();
 			hit.mom  = cluster->GetMomentum();
-		    hit.ke   = static_cast<Float_t>(keng);
 			hit.coo[0] = coo[0];
 			hit.coo[1] = coo[1];
 			hit.coo[2] = coo[2];
-			hit.dir[0] = dir[0];
-			hit.dir[1] = dir[1];
-			hit.dir[2] = dir[2];
 
             for (auto&& seg : fG4mc.primPart.segs) {
                 if (seg.dec != 0 || seg.lay != hit.layJ) continue;
@@ -393,95 +389,12 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 	}
 	fRti.isInShadow = isInShadow;
 
-	/* Backtracing (based on particle)
-	int isFromSpace = -1;
-	int backtrace[2][3] = { {-1, -1, -1}, {-1, -1, -1} };
-	bool isOpenBacktrace = false;
-	while (setup != 0) {
-		if (event->NParticle() == 0 || event->pParticle(0) == nullptr) break;
-		ParticleR * part = event->pParticle(0);
-		TrTrackR * trtk = part->pTrTrack();
-		BetaHR * betaH = part->pBetaH();
-		if (trtk == nullptr || betaH == nullptr) break;
-		int fitid = trtk->iTrTrackPar(1, 3, 22);
-		if (fitid < 0) break;
-	
-		double AMSTheta = part->Theta;
-		double AMSPhi   = part->Phi;
-		int Chrg[2]     = { 1, -1 };
-		double Mom      = std::fabs(trtk->GetRigidity(fitid));
-		double Beta     = std::fabs(betaH->GetBeta());
-
-		HeaderR header;
-		double RPTO[3] = {0}; // particle final GTOD coo (R, Phi, Theta)
-		double GalLong = 0, GalLat = 0; // Galctic coo
-		double TraceTime = 0; // time of flight
-		double GPT[2] = {0}; // particle final GTOD direction (Phi, Theta)
-		int result = -1; // 0 unercutoff (i.e. atmospheric origin), 1 over cutoff (i.e. coming from space), 2 trapped, -1 error
-		
-		const int nStable = 3;
-		double stableFT[nStable] = { 1.00, 1.15, 1.30 };
-		int    isOver[nStable] = { -1, -1, -1 }; // -1 error, 0 other, 1 weak, 2 strong
-		if (isOpenBacktrace) {
-			for (int ift = 0; ift < nStable; ++ift) {
-				result = header.do_backtracing(GalLong, GalLat, TraceTime, RPTO, GPT, // output
-				                               AMSTheta, AMSPhi, Mom/stableFT[ift], Beta, Chrg[0], // input particle info
-																			 RPT, VelPT, YPR, fRti.uTime // input ISS info
-																			);
-				backtrace[0][ift] = result;
-
-				result = header.do_backtracing(GalLong, GalLat, TraceTime, RPTO, GPT, // output
-				                               AMSTheta, AMSPhi, Mom/stableFT[ift], Beta, Chrg[1], // input particle info
-																			 RPT, VelPT, YPR, fRti.uTime // input ISS info
-																			);
-				backtrace[1][ift] = result;
-
-				if      (backtrace[0][ift] == -1 || backtrace[1][ift] == -1) isOver[ift] = -1;
-				else if (backtrace[0][ift] ==  1 && backtrace[1][ift] ==  1) isOver[ift] =  2;
-				else if (backtrace[0][ift] ==  1 || backtrace[1][ift] ==  1) isOver[ift] =  1;
-				else                                                         isOver[ift] =  0;
-			}
-		}
-	
-		int successTrails = 0;
-		int countFromSpace = 0;
-		for (int ift = 0; ift < nStable; ++ift) {
-			if (isOver[ift] != -1) successTrails++;
-			if (isOver[ift] ==  2) countFromSpace++;
-		}
-
-		if (successTrails == 3) {
-			if      (countFromSpace == 0) isFromSpace = 0;
-			else if (countFromSpace == 1) isFromSpace = 1;
-			else if (countFromSpace == 2) isFromSpace = 2;
-			else if (countFromSpace == 3) isFromSpace = 3;
-		}
-
-		break;
-	}
-
-	fRti.isFromSpace     = isFromSpace;
-	fRti.backtrace[0][0] = backtrace[0][0];
-	fRti.backtrace[0][1] = backtrace[0][1];
-	fRti.backtrace[0][2] = backtrace[0][2];
-	fRti.backtrace[1][0] = backtrace[1][0];
-	fRti.backtrace[1][1] = backtrace[1][1];
-	fRti.backtrace[1][2] = backtrace[1][2];
-	*/
-
 	if (!rebuildRTI) return selectEvent(event);
 
 	initEvent();
 	fStopwatch.start();
 
-	fRti.isInShadow      = isInShadow;
-	//fRti.isFromSpace     = isFromSpace;
-	//fRti.backtrace[0][0] = backtrace[0][0];
-	//fRti.backtrace[0][1] = backtrace[0][1];
-	//fRti.backtrace[0][2] = backtrace[0][2];
-	//fRti.backtrace[1][0] = backtrace[1][0];
-	//fRti.backtrace[1][1] = backtrace[1][1];
-	//fRti.backtrace[1][2] = backtrace[1][2];
+	fRti.isInShadow = isInShadow;
 
 	fRti.flagRun = true;
 	if (event->GetRTIStat() != 0) fRti.flagRun = false;
@@ -501,21 +414,21 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 
 	fRti.zenith = rti.zenith;
 	for (int i = 0; i < 4; i++) {
-		fRti.cutoffStormer[i] = (std::fabs(rti.cf[i][0]) > std::fabs(rti.cf[i][1])) ?
+		fRti.cfStormer[i] = (std::fabs(rti.cf[i][0]) > std::fabs(rti.cf[i][1])) ?
 			std::fabs(rti.cf[i][0]) : std::fabs(rti.cf[i][1]);
-		fRti.cutoffIGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
+		fRti.cfIGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
 			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
 	}
 	fRti.radiusGTOD = rti.r;
 	fRti.thetaGTOD  = rti.theta;
 	fRti.phiGTOD    = rti.phi;
-	fRti.latGXY     = rti.glat * TMath::DegToRad();
-	fRti.longGXY    = rti.glong * TMath::DegToRad();
+	fRti.latGAT     = rti.glat * TMath::DegToRad();
+	fRti.longGAT    = rti.glong * TMath::DegToRad();
 	fRti.isInSAA    = rti.IsInSAA();
 	fRti.uTime      = event->UTime();
 	fRti.liveTime   = rti.lf * rti.nev / (rti.nev + rti.nerr);
-	fRti.thetaMAG   = rti.getthetam();
-	fRti.phiMAG     = rti.getphim();
+	fRti.latMAG     = rti.getthetam();
+	fRti.longMAG    = rti.getphim();
 	
 	for (int dir = 0; dir < 3; ++dir) {
 		fRti.rptISS[dir] = RPT[dir];
@@ -668,10 +581,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (beta == nullptr) break;
 		fTof.statusBeta = true;
 		fTof.beta = beta->Beta;
-		//short betaPatt = beta->Pattern;
 		break;
 	}
-
 
 	TofRecH::BuildOpt = 0; // normal
 	const short pattIdx[4] = { 1, 2, 4, 8 };
@@ -727,7 +638,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			betaHClsId.at(betaH->pTofClusterH(it)->Layer) = betaH->iTofClusterH(it);
 	}
 	
-    const double ChrgLimit = 0.85;
+    const double ChrgLimit = 0.875;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
 	for (int it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
@@ -934,7 +845,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
     fTrk.numOfTrack = event->NTrTrack();
 
     TrTrackR* trtk = (recEv.iTrTrack >= 0) ? event->pTrTrack(recEv.iTrTrack) : nullptr;
-	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, 22) : -1;
+	short fitidInn = (trtk != nullptr) ? trtk->iTrTrackPar(1, 3, recEv.trRft(0, 0)) : -1;
 
 	const unsigned short _hasL1  =   1;
 	const unsigned short _hasL2  =   2;
@@ -984,8 +895,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			int tkid = recHit->GetTkId();
 			int mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
 			                                             // > 0 requested multiplicty coordinates
-			AMSPoint coo = recHit->GetCoord(mult, 3); // (CIEMAT+PG)/2
-  		
+            AMSPoint coo = (ilay==0 || ilay==8) ? (trtk->GetHitCooLJ(ilay+1, 0) + trtk->GetHitCooLJ(ilay+1, 1))*0.5 : trtk->GetHitCooLJ(ilay+1); // (CIEMAT+PG)/2
+
 			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
 			int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
 		
@@ -1092,12 +1003,12 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (int algo = 0; algo < _nalgo; algo++) {
 			for (int patt = 0; patt < _npatt; patt++) {
                 MGClock::HrsStopwatch sw; sw.start();
-				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], 22, mass, zin);
+				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], recEv.trRft(algo, patt), mass, zin);
                 sw.stop();
 				if (fitid < 0) continue;
 				
                 track.status[algo][patt] = true;
-				track.rigidity[algo][patt] = trtk->GetRigidity(fitid);
+				track.rig[algo][patt] = trtk->GetRigidity(fitid);
 				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
 				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
@@ -1148,7 +1059,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             if (!hctr.status()) continue;
 
             track.status[algo][patt] = true;
-			track.rigidity[algo][patt] = hctr.part().rig();
+			track.rig[algo][patt] = hctr.part().rig();
 			track.chisq[algo][patt][0] = hctr.nchix();
 			track.chisq[algo][patt][1] = hctr.nchiy();
 			track.chisq[algo][patt][2] = hctr.nchi();
@@ -1462,7 +1373,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
 		if (trtk == nullptr) break;
-		int fitid = trtk->iTrTrackPar(1, 3, 21);
+		int fitid = trtk->iTrTrackPar(1, 3, recEv.trRft(0, 0));
 		if (fitid < 0) break;
 
 		AMSPoint ems_coo;
@@ -2074,13 +1985,14 @@ void DataSelection::fill() {
 }
 
 int DataSelection::preselectEvent(AMSEventR * event, const std::string& officialDir) {
-	if (event == nullptr)	return -1;
+	if (event == nullptr) return -1;
 	EventList::Weight = 1.;
+    recEv.initTrRft();
 
 	// Resolution tuning
 	if (EventBase::checkEventMode(EventBase::ISS)) {
         TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
-        TRFITFFKEY.Zshift = 2; // Enable the dZ correction
+        TRFITFFKEY.Zshift = -1; // Enable the dZ correction
     }
     else if (EventBase::checkEventMode(EventBase::MC)) {
         TrExtAlignDB::SmearExtAlign();
@@ -2130,6 +2042,8 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	                   (trBitPattJ&TrPtL56) > 0 && 
 					   (trBitPattJ&TrPtL78) > 0);
 	if (!isTrInner) return -6001;
+	bool hasTrPtL1 = ((trBitPattJ&  1) > 0);
+	bool hasTrPtL9 = ((trBitPattJ&256) > 0);
 	
 	Int_t numOfTrInX = 0;
 	Int_t numOfTrInY = 0;
@@ -2142,65 +2056,63 @@ int DataSelection::preselectEvent(AMSEventR * event, const std::string& official
 	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
 	
     int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
-    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 22);
+    int fitidInn = trtkSIG->iTrTrackPar(1, 3, recEv.trRft(0, 0));
 	if (fitidInn < 0) return -6003;
 		
-    double trQIn = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
-	if (MGNumc::Compare(trQIn) <= 0) return -6004;
+    double trRin = trtkSIG->GetRigidity(fitidInn);
+    double trQin = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
+	if (MGNumc::Compare(trQin) <= 0) return -6004;
 
-	// ~7~ (Only for Antiproton to Proton Flux Ratio Study)
-	bool isSclStudy = true;
-	if (EventBase::checkEventMode(EventBase::ISS) && isSclStudy) {
-		const int npatt = 4;
-		const int spatt[npatt] = { 3, 5, 6, 7 };
-        short  sign[npatt] = { 0, 0, 0 , 0 };
-        double rig[npatt] = { 0, 0, 0, 0 };
-		for (int ip = 0; ip < npatt; ++ip) {
-			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 22);
-			if (fitid < 0) continue;
-			rig[ip] = trtkSIG->GetRigidity(fitid);
-            sign[ip] = MGNumc::Compare(rig[ip]);
-		}
+    // ~7~ (Scale Events by Track)
+    if (EventBase::checkEventMode(EventBase::ISS) && MGNumc::Compare(trRin) > 0) {
+        int fitidIn = trtkSIG->iTrTrackPar(1, 3, recEv.trRft(0, 0));
+        int fitidL1 = trtkSIG->iTrTrackPar(1, 5, recEv.trRft(0, 1));
+        int fitidL9 = trtkSIG->iTrTrackPar(1, 6, recEv.trRft(0, 2));
+        int fitidFs = trtkSIG->iTrTrackPar(1, 7, recEv.trRft(0, 3));
+        
+        bool   isPosRig = true;
+	    if (fitidIn >= 0 && trtkSIG->GetRigidity(fitidIn) < 0) isPosRig = false;
+	    if (fitidL1 >= 0 && trtkSIG->GetRigidity(fitidL1) < 0) isPosRig = false;
+	    if (fitidL9 >= 0 && trtkSIG->GetRigidity(fitidL9) < 0) isPosRig = false;
+	    if (fitidFs >= 0 && trtkSIG->GetRigidity(fitidFs) < 0) isPosRig = false;
 
-        short efts = 0;
-        double sclRig = 0;
-        for (int ip = 0; ip < npatt; ++ip) {
-            if (sign[ip] == 0) continue;
-            if (efts == 0 || efts == sign[ip]) efts = sign[ip];
-            else { efts = 0; break; }
-            sclRig = rig[ip];
+        if (isPosRig) { // Scale Events by Positive Rigidity
+            double maxR = 0;
+            if (fitidIn >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidIn));
+            if (fitidL1 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL1));
+            if (fitidL9 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL9));
+            if (fitidFs >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidFs));
+	    	
+            double survivorProb = gScaleFunc1D.Eval(maxR);
+            //double survivorProb = gScaleFunc2D.Eval(maxR, trQin);
+	        if (MGNumc::Compare(MGRndm::DecimalUniform(), survivorProb) > 0) return -8001;
+	        else EventList::Weight *= (1. / survivorProb);
         }
-		
-        bool isScale = ((btahSign * efts) > 0);
-		if (isScale) {
-			//double scaleProb = gScaleFunc1D.Eval(sclRig); // (by Rigidity)
-			double scaleProb = gScaleFunc2D.Eval(std::fabs(sclRig), trQIn); // (by Rigidity & Charge)
-			if (MGNumc::Compare(MGRndm::DecimalUniform(), scaleProb) > 0) return -7001;
-			else EventList::Weight *= (1. / scaleProb);
-		}
-	}
+    }
 	
-	// ~8~ (Based on RTI)
-	bool isOverCfStudy = false;
-	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI) && isOverCfStudy) {
-		if (!rti.processEvent(event)) return -8001;
-		
-        double minStormer = *std::min_element(rti.fRti.cutoffStormer, rti.fRti.cutoffStormer+4);
-		double minIGRF    = *std::min_element(rti.fRti.cutoffIGRF, rti.fRti.cutoffIGRF+4);
-		double minCf      =  std::min(minStormer, minIGRF);
-		double maxRig     = 0.0;
+    // ~8~ (Based on RTI)
+	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
+        if (!rti.processEvent(event)) return -8001;
 
-		const int npatt = 4;
-		const int spatt[npatt] = { 3, 5, 6, 7 };
-		for (int ip = 0; ip < npatt; ++ip) {
-			int fitid = trtkSIG->iTrTrackPar(1, spatt[ip], 22);
-			if (fitid < 0) continue;
-			maxRig = std::max(maxRig, std::fabs(trtkSIG->GetRigidity(fitid)));
-		}
+	    const double cfSF = 0.8;
+        double minStormer = *std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4);
+		double minIGRF    = *std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4);
+		double minCf      = cfSF * std::min(minStormer, minIGRF);
 
-		const double stableFact = 0.8;
-		if (maxRig < (stableFact * minCf)) return -8002;
-	}
+        int fitidIn = trtkSIG->iTrTrackPar(1, 3, recEv.trRft(0, 0));
+        int fitidL1 = trtkSIG->iTrTrackPar(1, 5, recEv.trRft(0, 1));
+        int fitidL9 = trtkSIG->iTrTrackPar(1, 6, recEv.trRft(0, 2));
+        int fitidFs = trtkSIG->iTrTrackPar(1, 7, recEv.trRft(0, 3));
+
+        double maxR = 0.0;
+        if (fitidIn >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidIn)));
+        if (fitidL1 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL1)));
+        if (fitidL9 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL9)));
+        if (fitidFs >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidFs)));
+        if (maxR < cfSF) maxR = cfSF; // [GV]
+    
+		if (maxR < minCf) return -8002;
+    }
 
     //--------------------------//
 	//----  Reconstruction  ----//

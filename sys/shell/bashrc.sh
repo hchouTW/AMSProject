@@ -28,6 +28,10 @@ alias rmfc="/bin/rm"
 # ROOT
 alias root='root -l'
 
+# TEX
+alias texmake="sh /home/hchou/AMSProject/sw/tex/texmake.sh"
+alias texclean="sh /home/hchou/AMSProject/sw/tex/texclean.sh"
+
 # AMSProject
 #export AMSProj=~/AMSProject # define in ~/.bashrc
 export AMSProjLibs=${AMSProj}/libs
@@ -70,7 +74,7 @@ if [[ "${HOSTNAME}" == *"lxplus"* ]]; then
     export ubackup=/afs/cern.ch/ubackup/h/hchou
 else
     # system
-    export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
+    export EOS_MGM_URL=root://tw-eos01.grid.sinica.edu.tw
     export EOS_HOME=/eos/ams
     export DPM_HOST=grid71.phy.ncu.edu.tw
     export DPNS_HOST=grid71.phy.ncu.edu.tw

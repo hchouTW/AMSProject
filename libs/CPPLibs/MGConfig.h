@@ -7,12 +7,17 @@ namespace MGConfig {
 
 class JobOpt {
     public :
+        enum class MODE {
+            ISS, BT, MC, NONE
+        };
+
+    public :
         JobOpt(int argc, char* argv[]);
         ~JobOpt() {}
         
         const bool& operator() () const { return succ_; }
 
-        const std::string& type() const { return type_; }
+        const MODE& mode() const { return mode_; }
         const std::string& ipath() const { return ipath_; }
         const std::string& opath() const { return opath_; }
         
@@ -25,7 +30,7 @@ class JobOpt {
 
     private :
         bool        succ_;
-        std::string type_;
+        MODE        mode_;
         std::string ipath_;
         std::string opath_;
         long        gi_;

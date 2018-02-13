@@ -94,6 +94,7 @@ class Axis {
 		inline Double_t max()   const { return binset_.max(); }
 
 		Double_t center(UInt_t ibin, AxisScale scl = AxisScale::kLinear) const;
+		Double_t center(UInt_t ibin, Double_t power = -2.7) const;
 		inline Double_t width(UInt_t ibin) const { return binset_.width(ibin); }
 		inline Int_t find(Double_t val) const { return binset_.find(val); }
 		inline const Double_t& operator()(UInt_t idx) const { return binset_().at(idx); }

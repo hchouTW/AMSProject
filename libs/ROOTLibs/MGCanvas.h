@@ -19,7 +19,7 @@ struct PadWindow {
 inline TVirtualPad * SetPadWindow(TCanvas * canvas, UInt_t idx = 0, const PadWindow& window = PadWindow());
 
 struct PadMargin {
-	PadMargin(Double_t _top = 0.12, Double_t _bottom = 0.12, Double_t _left = 0.15, Double_t _right = 0.15) : top(_top), bottom(_bottom), left(_left), right(_right) {}
+	PadMargin(Double_t _top = 0.10, Double_t _bottom = 0.10, Double_t _left = 0.12, Double_t _right = 0.12) : top(_top), bottom(_bottom), left(_left), right(_right) {}
 	Double_t top, bottom;
 	Double_t left, right;
 };
@@ -49,7 +49,7 @@ class Canvas {
 		void create(UInt_t ndivx, UInt_t ndivy, const Window& window = Window(WindowSize::kSliceLR), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 
 		TVirtualPad * cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return SetPadAxis(&canvas_, idx, axis); }
-		void save(const std::string& fullpath = "", Option_t * option = "") { canvas_.Modified(); canvas_.Update(); canvas_.SaveAs(fullpath.c_str(), option); }
+		void save(const std::string& fullpath, Option_t* option = "") { canvas_.Modified(); canvas_.Update(); canvas_.SaveAs(fullpath.c_str(), option); }
 		void write(const std::string& name = "", Int_t option = 0, Int_t bufsize = 0) { canvas_.Modified(); canvas_.Update(); canvas_.Write(name.c_str(), option, bufsize); }
 		void clear(Option_t * option = "") { canvas_.Clear(option); canvas_.Modified(); canvas_.Update(); }
 		void update() { canvas_.Modified(); canvas_.Update(); }
@@ -59,8 +59,24 @@ class Canvas {
 		inline Window& window() { return window_; }
 
 	protected :
-		TCanvas canvas_;
-		Window  window_;
+		TCanvas     canvas_;
+		Window      window_;
+};
+
+
+//---- Legend ----//
+class Legend {
+    public :
+        Legend(const std::string& header = "", const PadWindow& window = PadWindow(0.15, 0.40, 0.6, 0.87)) : header_(header), legend_(nullptr) { legend_ = new TLegend(window.xl, window.yl, window.xu, window.yu); }
+        ~Legend() { header_ = ""; if (legend_) { legend_->Delete(); legend_ = nullptr; } }
+
+        void draw(Option_t* option = "brNDC") { if (legend_) legend_->Draw(option); }
+
+        inline TLegend* operator()() { return legend_; }
+
+    protected :
+        TLegend*    legend_;
+        std::string header_;
 };
 
 
@@ -91,6 +107,7 @@ class PdfEditor {
 		std::string file_path_;
 		UInt_t      file_page_;
 };
+
 
 }
 

@@ -72,6 +72,7 @@ long double MultiGauss::efft_sgm(long double r) const {
     long double absr = std::abs(r);
     if (multi_gauss_.size() == 1) sigma = multi_gauss_.at(0).second;
     else {
+        // Note: inv_sgm_sqr = sum(prb * inv_sgm_sqr) / sum(prb)
         long double ttl_wgt = MGMath::ZERO;
         long double inv_nrm = MGMath::ZERO;
         for (auto&& gauss : multi_gauss_) {

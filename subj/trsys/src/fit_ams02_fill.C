@@ -5,8 +5,11 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
+//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
+
+#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
 
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
@@ -63,25 +66,23 @@ int main(int argc, char * argv[]) {
     TFile * ofle = new TFile(Form("%s/fit_ams02_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 50, 1.0, 800., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 25, 1000., 4000., AxisScale::kLog);
     
     Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
-    //Axis AXrig("Rigidity [GV]", 50, 1.0, 800., AxisScale::kLog);
-    //Axis AXrig("Rigidity [GV]", 25, 1000., 4000., AxisScale::kLog);
-    Axis AXirig("1/Rigidity [1/GV]", AXmom, 1, true);
+    Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Time
-    Axis AXtme("Time [ms]", 400, 0., 3.0);
+    Axis AXtme("Time [ms]", 400, 0., 2.);
     Hist * hCKtme = Hist::New("hCKtme", HistAxis(AXmom, AXtme));
+    Hist * hCNtme = Hist::New("hCNtme", HistAxis(AXmom, AXtme));
+    Hist * hKFtme = Hist::New("hKFtme", HistAxis(AXmom, AXtme));
     Hist * hHCtme = Hist::New("hHCtme", HistAxis(AXmom, AXtme));
     
     // Fit Eff
-    Hist * hevt = Hist::New("hevt", HistAxis(AXmom));
-    Hist * hCKnum = Hist::New("hCKnum", HistAxis(AXmom));
-    Hist * hCNnum = Hist::New("hCNnum", HistAxis(AXmom));
-    Hist * hKFnum = Hist::New("hKFnum", HistAxis(AXmom));
-    Hist * hHCnum = Hist::New("hHCnum", HistAxis(AXmom));
+    Hist * hevt = Hist::New("hevt", HistAxis(AXmom, "Events/Bin"));
+    Hist * hCKnum = Hist::New("hCKnum", HistAxis(AXmom, "Events/Bin"));
+    Hist * hCNnum = Hist::New("hCNnum", HistAxis(AXmom, "Events/Bin"));
+    Hist * hKFnum = Hist::New("hKFnum", HistAxis(AXmom, "Events/Bin"));
+    Hist * hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit Res
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -10.0, 10.0);
@@ -128,20 +129,30 @@ int main(int argc, char * argv[]) {
     Hist * hKFRchiyI1 = Hist::New("hKFRchiyI1", HistAxis(AXmom, AXRchi));
     Hist * hHCRchiyI1 = Hist::New("hHCRchiyI1", HistAxis(AXmom, AXRchi));
     
-    Hist * hCKMCflux = Hist::New("hCKMCflux", HistAxis(AXrig));
-    Hist * hCNMCflux = Hist::New("hCNMCflux", HistAxis(AXrig));
-    Hist * hKFMCflux = Hist::New("hKFMCflux", HistAxis(AXrig));
-    Hist * hHCMCflux = Hist::New("hHCMCflux", HistAxis(AXrig));
+    Hist * hCKMCflux = Hist::New("hCKMCflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hCNMCflux = Hist::New("hCNMCflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hKFMCflux = Hist::New("hKFMCflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hHCMCflux = Hist::New("hHCMCflux", HistAxis(AXrig, "Events/Bin"));
     
-    Hist * hCKIRflux = Hist::New("hCKIRflux", HistAxis(AXirig));
-    Hist * hCNIRflux = Hist::New("hCNIRflux", HistAxis(AXirig));
-    Hist * hKFIRflux = Hist::New("hKFIRflux", HistAxis(AXirig));
-    Hist * hHCIRflux = Hist::New("hHCIRflux", HistAxis(AXirig));
+    Hist * hCKIRflux = Hist::New("hCKIRflux", HistAxis(AXirig, AXRchi));
+    Hist * hCNIRflux = Hist::New("hCNIRflux", HistAxis(AXirig, AXRchi));
+    Hist * hKFIRflux = Hist::New("hKFIRflux", HistAxis(AXirig, AXRchi));
+    Hist * hHCIRflux = Hist::New("hHCIRflux", HistAxis(AXirig, AXRchi));
     
-    Hist * hCKRflux = Hist::New("hCKRflux", HistAxis(AXrig));
-    Hist * hCNRflux = Hist::New("hCNRflux", HistAxis(AXrig));
-    Hist * hKFRflux = Hist::New("hKFRflux", HistAxis(AXrig));
-    Hist * hHCRflux = Hist::New("hHCRflux", HistAxis(AXrig));
+    Hist * hCKRflux = Hist::New("hCKRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hCNRflux = Hist::New("hCNRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hKFRflux = Hist::New("hKFRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist * hHCRflux = Hist::New("hHCRflux", HistAxis(AXrig, "Events/Bin"));
+    
+    Hist * hCKMCfluxCut = Hist::New("hCKMCfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hCNMCfluxCut = Hist::New("hCNMCfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hKFMCfluxCut = Hist::New("hKFMCfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hHCMCfluxCut = Hist::New("hHCMCfluxCut", HistAxis(AXrig, "Events/Bin"));
+    
+    Hist * hCKRfluxCut = Hist::New("hCKRfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hCNRfluxCut = Hist::New("hCNRfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hKFRfluxCut = Hist::New("hKFRfluxCut", HistAxis(AXrig, "Events/Bin"));
+    Hist * hHCRfluxCut = Hist::New("hHCRfluxCut", HistAxis(AXrig, "Events/Bin"));
     
     Axis AXRchi2("Log-Chi-square [1]", 2000, -8.0, 8.0);
     Hist * hCKPflux = Hist::New("hCKPflux", HistAxis(AXrig, AXRchi2));
@@ -206,16 +217,15 @@ int main(int argc, char * argv[]) {
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
         TrFitPar fitPar(type);
-        TrFit trFit;
         for (auto&& hit : track.hits) {
             HitSt mhit(hit.side%2==1, hit.side/2==1);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_err(hit.nsr[0], hit.nsr[1], type);
           
-            if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
+            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
-                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
-                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); trFit.Add(hit.coo[0], hit.coo[1], hit.coo[2], (hit.nsr[0]>0)?24.e-4:1000.e-4, 10.e-4, 300e-4); }
+                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); }
+                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); }
             }
         }
         Short_t cutNHit = 4 + optL1 + optL9;
@@ -233,55 +243,53 @@ int main(int argc, char * argv[]) {
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
       
-
-        /////////////////////////////////////////
-        MGClock::HrsStopwatch swCK; swCK.start();
-        Double_t rltTrFit = trFit.DoFit(TrFit::CHOUTKO);
-        swCK.stop();
-        if (rltTrFit < 0) { COUT("FAIL. CHOUTKO\n"); continue; }
-        hCKtme->fillH2D(mc_mom, swCK.time()*1.0e3);
-        /////////////////////////////////////////
-
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        SimpleTrFit tr(fitPar);
-        //PhyTrFit tr(fitPar);
+        //SimpleTrFit tr(fitPar);
+        PhyTrFit tr(fitPar);
         sw.stop();
         Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
         hHCtme->fillH2D(mc_mom, sw.time()*1.0e3);
         //-------------------------------------//
+        
         Bool_t ck_succ = track.status[0][patt];
         Bool_t cn_succ = track.status[1][patt];
         Bool_t kf_succ = track.status[2][patt];
+        //Bool_t hc_succ = track.status[3][patt];
 
         hevt->fillH1D(mc_mom);
         if (ck_succ) hCKnum->fillH1D(mc_mom);
         if (cn_succ) hCNnum->fillH1D(mc_mom);
         if (kf_succ) hKFnum->fillH1D(mc_mom);
         if (hc_succ) hHCnum->fillH1D(mc_mom);
+        
+        if (ck_succ) hCKtme->fillH2D(mc_mom, track.cpuTime[0][patt]);
+        if (cn_succ) hCNtme->fillH2D(mc_mom, track.cpuTime[1][patt]*0.1);
+        if (kf_succ) hKFtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.01);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]);
 
-        //Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
-        Double_t ck_irig = (1./trFit.GetRigidity());
+        Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);
         Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rigidity[2][patt] : 0.);
+        //Double_t hc_irig = (hc_succ ? MGMath::ONE/track.rigidity[3][patt] : 0.);
 
         Double_t ck_rig = (ck_succ ? 1.0/ck_irig : 0.);
         Double_t cn_rig = (cn_succ ? 1.0/cn_irig : 0.);
         Double_t kf_rig = (kf_succ ? 1.0/kf_irig : 0.);
         Double_t hc_rig = (hc_succ ? 1.0/hc_irig : 0.);
         
-        //Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
-        Double_t ck_chix = trFit.GetChisqX() / trFit.GetNdofX(); 
+        Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
         Double_t cn_chix = (cn_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(track.chisq[2][patt][0]) : 0.); 
+        //Double_t hc_chix = (hc_succ ? std::log(track.chisq[3][patt][0]) : 0.); 
         Double_t hc_chix = (hc_succ ? std::log(tr.nchix())              : 0.); 
         
-        //Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
-        Double_t ck_chiy = trFit.GetChisqY() / trFit.GetNdofY(); 
+        Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
         Double_t cn_chiy = (cn_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
+        //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[3][patt][1]) : 0.); 
         Double_t hc_chiy = (hc_succ ? std::log(tr.nchiy())              : 0.); 
 
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
@@ -336,25 +344,35 @@ int main(int argc, char * argv[]) {
         if (mc_mom > initR && kf_succ) hKFMCflux->fillH1D(mc_mom, powf);
         if (mc_mom > initR && hc_succ) hHCMCflux->fillH1D(mc_mom, powf);
         
-        if (mc_mom > initR && ck_succ) hCKIRflux->fillH1D(ck_irig, powf);
-        if (mc_mom > initR && cn_succ) hCNIRflux->fillH1D(cn_irig, powf);
-        if (mc_mom > initR && kf_succ) hKFIRflux->fillH1D(kf_irig, powf);
-        if (mc_mom > initR && hc_succ) hHCIRflux->fillH1D(hc_irig, powf);
+        if (mc_mom > initR && ck_succ) hCKIRflux->fillH2D(ck_irig, ck_chiy, powf);
+        if (mc_mom > initR && cn_succ) hCNIRflux->fillH2D(cn_irig, cn_chiy, powf);
+        if (mc_mom > initR && kf_succ) hKFIRflux->fillH2D(kf_irig, kf_chiy, powf);
+        if (mc_mom > initR && hc_succ) hHCIRflux->fillH2D(hc_irig, hc_chiy, powf);
         
-        if (mc_mom > initR && ck_succ) hCKRflux->fillH1D(ck_rig, powf);
-        if (mc_mom > initR && cn_succ) hCNRflux->fillH1D(cn_rig, powf);
-        if (mc_mom > initR && kf_succ) hKFRflux->fillH1D(kf_rig, powf);
-        if (mc_mom > initR && hc_succ) hHCRflux->fillH1D(hc_rig, powf);
+        if (mc_mom > initR && ck_succ && ck_rig > 0) hCKRflux->fillH1D(ck_rig, powf);
+        if (mc_mom > initR && cn_succ && cn_rig > 0) hCNRflux->fillH1D(cn_rig, powf);
+        if (mc_mom > initR && kf_succ && kf_rig > 0) hKFRflux->fillH1D(kf_rig, powf);
+        if (mc_mom > initR && hc_succ && hc_rig > 0) hHCRflux->fillH1D(hc_rig, powf);
+        
+        if (mc_mom > initR && ck_succ && ck_chiy < 1.90) hCKMCfluxCut->fillH1D(mc_mom, powf);
+        if (mc_mom > initR && cn_succ && cn_chiy < 1.90) hCNMCfluxCut->fillH1D(mc_mom, powf);
+        if (mc_mom > initR && kf_succ && kf_chiy < 1.90) hKFMCfluxCut->fillH1D(mc_mom, powf);
+        if (mc_mom > initR && hc_succ && hc_chiy < 1.15) hHCMCfluxCut->fillH1D(mc_mom, powf);
+        
+        if (mc_mom > initR && ck_succ && ck_rig > 0 && ck_chiy < 1.90) hCKRfluxCut->fillH1D(ck_rig, powf);
+        if (mc_mom > initR && cn_succ && cn_rig > 0 && cn_chiy < 1.90) hCNRfluxCut->fillH1D(cn_rig, powf);
+        if (mc_mom > initR && kf_succ && kf_rig > 0 && kf_chiy < 1.90) hKFRfluxCut->fillH1D(kf_rig, powf);
+        if (mc_mom > initR && hc_succ && hc_rig > 0 && hc_chiy < 1.15) hHCRfluxCut->fillH1D(hc_rig, powf);
 
         if (mc_mom > initR && ck_succ && ck_rig > 0) hCKPflux->fillH2D(ck_rig, ck_chiy, powf);
-        if (mc_mom > initR && cn_succ && ck_rig > 0) hCNPflux->fillH2D(cn_rig, cn_chiy, powf);
-        if (mc_mom > initR && kf_succ && ck_rig > 0) hKFPflux->fillH2D(kf_rig, kf_chiy, powf);
-        if (mc_mom > initR && hc_succ && ck_rig > 0) hHCPflux->fillH2D(hc_rig, hc_chiy, powf);
+        if (mc_mom > initR && cn_succ && cn_rig > 0) hCNPflux->fillH2D(cn_rig, cn_chiy, powf);
+        if (mc_mom > initR && kf_succ && kf_rig > 0) hKFPflux->fillH2D(kf_rig, kf_chiy, powf);
+        if (mc_mom > initR && hc_succ && hc_rig > 0) hHCPflux->fillH2D(hc_rig, hc_chiy, powf);
         
         if (mc_mom > initR && ck_succ && ck_rig < 0) hCKNflux->fillH2D(-ck_rig, ck_chiy, powf);
-        if (mc_mom > initR && cn_succ && ck_rig < 0) hCNNflux->fillH2D(-cn_rig, cn_chiy, powf);
-        if (mc_mom > initR && kf_succ && ck_rig < 0) hKFNflux->fillH2D(-kf_rig, kf_chiy, powf);
-        if (mc_mom > initR && hc_succ && ck_rig < 0) hHCNflux->fillH2D(-hc_rig, hc_chiy, powf);
+        if (mc_mom > initR && cn_succ && cn_rig < 0) hCNNflux->fillH2D(-cn_rig, cn_chiy, powf);
+        if (mc_mom > initR && kf_succ && kf_rig < 0) hKFNflux->fillH2D(-kf_rig, kf_chiy, powf);
+        if (mc_mom > initR && hc_succ && hc_rig < 0) hHCNflux->fillH2D(-hc_rig, hc_chiy, powf);
     }
 
     ofle->Write();

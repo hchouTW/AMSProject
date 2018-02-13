@@ -1,13 +1,14 @@
 #!/bin/bash
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_ams02_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
-RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
+RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
+#RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
 
 CurDir=${PWD}
 
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Jan29
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Feb05cv
+#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Jan29
 #Stream=${CurDir}/lst/flist.ncu.mc.PR1800_B1042_18Jan29
 #Stream=${CurDir}/lst/flist.ncu.mc.PR10004000_B1103_18Jan29
 
@@ -18,10 +19,10 @@ OutputDir=${CurDir}/dat
 #Nseq=40
 
 #Fit
-GroupSize=9
-Nseq=80
-#GroupSize=18
-#Nseq=55
+#GroupSize=9
+#Nseq=80
+GroupSize=8
+Nseq=70
 
 for id in `seq 0 ${Nseq}`
 do

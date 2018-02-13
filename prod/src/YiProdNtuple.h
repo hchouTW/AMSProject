@@ -100,6 +100,19 @@ class RecEvent {
 	public :
 		double trackerZJ[9];
 
+    // Track Refit Option
+	// Algorithm     (CHOUTKO, CHIKANIANF, KALMAN)
+	// Track Pattern (Inn, InnL1, InnL9, FS)
+    public :
+        inline void initTrRft() { std::fill_n(_trRft[0], 4*4, 22); }
+        inline int trRft(int i, int j) { 
+            if (_trRft[i][j]==22) { _trRft[i][j] = 21; return 22; }
+            else return _trRft[i][j];
+        }
+
+    protected :
+        int _trRft[4][4];
+
 	protected :
 		MGClock::HrsStopwatch fStopwatch;
 };
@@ -352,16 +365,16 @@ class DataSelection {
 		EventEcal ecal;
 
 	public :
-		static Float_t  gScaleFact;
-		static TF1      gScaleFunc1D; // (rig)
-		//static TF1      gScaleFunc1D; // (chrg)
-		static TF2      gScaleFunc2D; // (rig, chrg)
+		static Float_t gScaleFact;
+		//static TF1     gScaleFunc1D; // (chrg)
+		static TF1     gScaleFunc1D; // (rig)
+		static TF2     gScaleFunc2D; // (rig, chrg)
 };
 
-Float_t  DataSelection::gScaleFact = 0.01;
-TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-5.0)))*(x>0)+(x<=0)", -2000, 2000);
-//TF1      DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
-TF2      DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-5.0)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
+Float_t DataSelection::gScaleFact = 0.02;
+//TF1     DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
+TF1     DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
+TF2     DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
 
 
 //---- RunTagOperator ----//

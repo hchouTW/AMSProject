@@ -46,7 +46,7 @@ class RunTagInfo : public TObject {
 };
 
 
-// HitTRKMCInfo
+// SegPARTMCInfo
 class SegPARTMCInfo : public TObject {
 	public :
 		SegPARTMCInfo() { init(); }
@@ -56,7 +56,6 @@ class SegPARTMCInfo : public TObject {
 			dec = -1;
 			lay = -1;
 			mom = -1;
-			ke  = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
 		}
@@ -65,7 +64,6 @@ class SegPARTMCInfo : public TObject {
         Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL
         Short_t lay;
 		Float_t mom;
-		Float_t ke;     // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 	
@@ -96,10 +94,7 @@ class HitTRKMCInfo : public TObject {
 			tkid = 0;
 			edep = -1;
 			mom  = -1;
-			ke   = -1;
 			std::fill_n(coo, 3, 0);
-			std::fill_n(dir, 3, 0);
-			
             std::fill_n(smr, 2, 0);
 		}
 
@@ -108,13 +103,10 @@ class HitTRKMCInfo : public TObject {
 		Short_t tkid;    // tkID
 		Float_t edep;    // edep
 		Float_t mom;     // momentum
-		Float_t ke;      // kinetic energy
 		Float_t coo[3];
-		Float_t dir[3];
-
         Float_t smr[2];
 
-	ClassDef(HitTRKMCInfo, 5)
+	ClassDef(HitTRKMCInfo, 6)
 };
 
 struct HitTRKMCInfo_sort {
@@ -231,19 +223,19 @@ class VertexMCInfo : public TObject {
 			status = false;
 			std::fill_n(coo, 3, 0.);
             numOfPart = 0;
-            partID.clear();
-            ke.clear();
+            partId = -1;
+            partKe = -1;
 		}
 
 	public :
 		Bool_t  status;
 		Float_t coo[3];
 
-        Short_t              numOfPart;
-        std::vector<Short_t> partID;
-        std::vector<Float_t> ke;
+        Short_t numOfPart;
+        Short_t partId;
+        Float_t partKe;
 	
-	ClassDef(VertexMCInfo, 6)
+	ClassDef(VertexMCInfo, 7)
 };
 
 
@@ -481,7 +473,7 @@ class TrackInfo : public TObject {
 		
             constexpr int naglo = 4;
 			std::fill_n(status[0], naglo * 4, false);
-			std::fill_n(rigidity[0], naglo * 4, 0);
+			std::fill_n(rig[0], naglo * 4, 0);
 			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
 			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 6, 0);
 			
@@ -514,7 +506,7 @@ class TrackInfo : public TObject {
 		// Algorithm     (CHOUTKO, CHIKANIANF, KALMAN)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
 		Bool_t  status[4][4];
-		Float_t rigidity[4][4];
+		Float_t rig[4][4];
 		Float_t chisq[4][4][3]; // normalized chisq (X, Y, XY)
 		Float_t stateLJ[4][4][9][6]; // track state at ecah layer (x y z dirx diry dirz)
         
@@ -638,15 +630,15 @@ class RTI : public TObject {
 			flagRun = true;
 			isGoodSecond = true;
 			zenith = -1;
-			std::fill_n(cutoffStormer, 4, -1);
-			std::fill_n(cutoffIGRF, 4, -1);
+			std::fill_n(cfStormer, 4, -1);
+			std::fill_n(cfIGRF, 4, -1);
 			radiusGTOD = -1;
 			thetaGTOD = -99;
 			phiGTOD = -99;
-			thetaMAG = -99;
-			phiMAG = -99;
-			latGXY = -999;
-			longGXY = -999;
+		    latMAG = -99;
+			longMAG = -99;
+			latGAT = -99;
+			longGAT = -99;
 			std::fill_n(rptISS, 3, 0);
 			std::fill_n(velISS, 3, 0);
 			std::fill_n(yprISS, 3, 0);
@@ -658,23 +650,21 @@ class RTI : public TObject {
 			std::fill_n(trackerAlign[0], 4, 0);
 			trackerTemp = 0;
 			isInShadow  = -1;
-			//isFromSpace = -1;
-			//std::fill_n(backtrace[0], 2*3, -1);
 		}
 
 	public :
 		Bool_t  flagRun;             // true, if good
 		Bool_t  isGoodSecond;        // true, if good
 		Float_t zenith;              // ams zenith (z-axis) angle [degrees]
-		Float_t cutoffStormer[4];    // max Stormer cutoff for 25, 30, 35, 40 degrees [GeV]
-		Float_t cutoffIGRF[4];       // max IGRF cutoff for 25, 30, 35, 40 degrees [GeV]
+		Float_t cfStormer[4];        // max Stormer cutoff for 25, 30, 35, 40 degrees [GeV]
+		Float_t cfIGRF[4];           // max IGRF cutoff for 25, 30, 35, 40 degrees [GeV]
 		Float_t radiusGTOD;          // distance from earth to ams [cm]
 		Float_t thetaGTOD;           // earth coordinate [rad]
 		Float_t phiGTOD;             // earth coordinate [rad]
-		Float_t thetaMAG;            // geomagnetic latitude [rad]
-		Float_t phiMAG;              // geomagnetic longitude [rad]
-		Float_t latGXY;              // ams pointing galatic latitude [rad]
-		Float_t longGXY;             // ams pointing galatic longitude [rad]
+		Float_t latMAG;              // geomagnetic latitude [rad]
+		Float_t longMAG;             // geomagnetic longitude [rad]
+		Float_t latGAT;              // ams pointing galatic latitude [rad]
+		Float_t longGAT;             // ams pointing galatic longitude [rad]
 		Float_t rptISS[3];           // ISS coordinates (R, Phi, Theta) (GTOD)
 		Float_t velISS[3];           // ISS velocity (Vel rad/sec, VelPhi rad, VelTheta rad)
 		Float_t yprISS[3];           // ISS attitude (Yaw, Pitch, Roll)
@@ -691,21 +681,8 @@ class RTI : public TObject {
 									 //  -1, no particle information
 									 //   0, not in shadow
 									 //   1, in shadow
-		//Short_t isFromSpace;     // particle coming from space
-		                             // return
-									 //  -1, no particle information
-									 //   0, particle isnot coming from space
-									 //   1, particle is coming from space (weak)
-									 //   2, particle is coming from space (middle)
-									 //   3, particle is coming from space (strong)
-		//Short_t backtrace[2][3];   // charge { 1, -1 }  (stable fact 1.00, 1.15, 1.30)
-		                             // return
-		                             //   0, unercutoff (i.e. atmospheric origin), 
-							       //   1, over cutoff (i.e. coming from space), 
-							       //   2, trapped, 
-							       //  -1, error
 
-	ClassDef(RTI, 7)
+	ClassDef(RTI, 8)
 };
 
 

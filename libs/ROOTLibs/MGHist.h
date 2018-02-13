@@ -49,6 +49,10 @@ class HistAxis {
 		HistAxis(const Axis& xaxis, const Axis& yaxis, const std::string& ztitle = "") : HistAxis() { if (!xaxis.exist() || !yaxis.exist()) return; dim_ = HistDim::k2D; xaxis_ = xaxis; yaxis_ = yaxis; zaxis_ = Axis(ztitle); }
 		HistAxis(const Axis& xaxis, const Axis& yaxis, const Axis& zaxis) : HistAxis() { if (!xaxis.exist() || !yaxis.exist() || !zaxis.exist()) return; dim_ = HistDim::k3D; xaxis_ = xaxis; yaxis_ = yaxis; zaxis_ = zaxis; }
 		~HistAxis() {}
+		
+        HistAxis(const std::string& xtitle) : HistAxis() { xaxis_ = Axis(xtitle); }
+        HistAxis(const std::string& xtitle, const std::string& ytitle) : HistAxis() { xaxis_ = Axis(xtitle); yaxis_ = Axis(ytitle); }
+        HistAxis(const std::string& xtitle, const std::string& ytitle, const std::string& ztitle) : HistAxis() { xaxis_ = Axis(xtitle); yaxis_ = Axis(ytitle); zaxis_ = Axis(ztitle); }
 
 		inline const HistDim& dim() const { return dim_; }
 		
@@ -115,8 +119,8 @@ class Hist {
         
 		void fillP(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
         inline void fillP1D(Double_t a, Double_t b, Double_t c = 1.0) { if (exist(HistType::kProfile, HistDim::k1D)) dynamic_cast<TProfile*>(hist_)->Fill(a, b, c); }
-        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist(HistType::kProfile, HistDim::k2D)) dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); }
-        inline void fillP1D(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e = 1.0) { if (exist(HistType::kProfile, HistDim::k3D)) dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); }
+        inline void fillP2D(Double_t a, Double_t b, Double_t c, Double_t d = 1.0) { if (exist(HistType::kProfile, HistDim::k2D)) dynamic_cast<TProfile2D*>(hist_)->Fill(a, b, c, d); }
+        inline void fillP3D(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e = 1.0) { if (exist(HistType::kProfile, HistDim::k3D)) dynamic_cast<TProfile3D*>(hist_)->Fill(a, b, c, d, e); }
 
 		void draw(Option_t * option = "") { if (exist()) hist_->Draw(option); }
 		void write(const std::string& name = "") { if (exist()) hist_->Write(name.c_str(), 0, 0); }
@@ -161,8 +165,11 @@ class Hist {
 		static Hist * Project(const HistProj& proj, Hist * hMom, Int_t isb = -1, Int_t ieb = -1, Int_t jsb = -1, Int_t jeb = -1);
 		static std::vector<Hist*> ProjectAll(const HistProj& proj, Hist * hMom);
 		
-		static THStack * Collect(const std::string& name, const std::string& title, const std::vector<std::string>& list);
-		static THStack * Collect(const std::string& name, const std::string& title, const std::vector<Hist*>& list);
+		//static THStack * Collect(const std::string& name, const std::string& title, const std::vector<std::string>& list);
+		//static THStack * Collect(const std::string& name, const std::string& title, const std::vector<Hist*>& list);
+		
+        static THStack * Collect(const std::string& name, const std::vector<std::string>& list);
+		static THStack * Collect(const std::string& name, const std::vector<Hist*>& list);
 
 	protected :
 		static Long64_t                     counter_;

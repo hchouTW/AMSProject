@@ -49,6 +49,15 @@ void TextDraw(const std::string& text, const TextStyle& style, const TextAlign& 
 	ltx.DrawLatex(align.x, align.y, text.c_str());
 }
 
+void TextDraw(const std::vector<Text>& text, const TextAlign& align) {
+    Double_t aligny = align.y;
+    for (auto&& tt : text) {
+        if (aligny > 1. || aligny < 0.) continue;
+        TextDraw(tt.text, tt.style, TextAlign(align.x, aligny, align.align, align.angle));
+        aligny -= (tt.style).size;
+    }
+}
+
 
 // Window
 Window::Window(WindowSize size) {

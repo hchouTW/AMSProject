@@ -37,7 +37,7 @@ inline TAttMarker Marker(Color_t color = kBlack, Style_t style = MarkerStyle(), 
 
 //---- Text ----//
 struct TextStyle {
-	TextStyle(Color_t _color = kBlack, Double_t _size = 0.04, Int_t _font = 42) : color(_color), size(_size), font(_font) {}
+	TextStyle(Color_t _color = kBlack, Double_t _size = 0.035, Int_t _font = 42) : color(_color), size(_size), font(_font) {}
 	Color_t     color;
 	Double_t    size;
 	Int_t       font;
@@ -49,8 +49,18 @@ struct TextAlign {
 	Int_t    align;
 	Double_t angle;
 };
+struct Text {
+    Text(const std::string& _text = "", const TextStyle& _style = TextStyle()) : text(_text), style(_style) {}
+    Text(const std::string& _text, Color_t _color, Double_t _size = 0.035, Int_t _font = 42) : text(_text), style(_color, _size, _font) {}
+    std::string text;
+    TextStyle   style;
+};
 
 inline void TextDraw(const std::string& text, const TextStyle& style = TextStyle(), const TextAlign& align = TextAlign());
+inline void TextDraw(const std::vector<Text>& text, const TextAlign& align = TextAlign(0.15, 0.85, 12));
+inline void TitleDraw(const std::string& text) { TextDraw(text, TextStyle(kBlack, 0.04), TextAlign(0.5, 0.95)); }
+
+using TextList = std::vector<Text>;
 
 
 //---- Window ----//

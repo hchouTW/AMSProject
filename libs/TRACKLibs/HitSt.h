@@ -6,13 +6,13 @@ namespace TrackSys {
 
 class HitSt {
     public :
-        HitSt(Bool_t sx = false, Bool_t sy = false) : seqID_(-1), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
+        HitSt(Bool_t sx = false, Bool_t sy = false) : seqID_(-1), seqIDx_(-1), seqIDy_(-1), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
         
         inline Bool_t operator()() const { return (side_(0) || side_(1)); }
 
         void print() const;
         
-        inline void set_seqID(Short_t id) { seqID_ = id; }
+        inline void set_seqID(Short_t id) { seqID_ = id; if (side_(0)) seqIDx_ = id; if (side_(1)) seqIDy_ = id+side_(0); }
 
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx; coo_(1) = cy; coo_(2) = cz; }
         
@@ -25,25 +25,23 @@ class HitSt {
         inline void set_err(const PartType& type = PartType::Proton) {
             if (type == PartType::Proton) {
                 pdf_x_ = &PDF_PR_X_NN_;
+                if      (nsr_(0) == 1) pdf_x_ = &PDF_PR_X_N1_;
+                else if (nsr_(0) == 2) pdf_x_ = &PDF_PR_X_N2_;
+                else if (nsr_(0) >= 3) pdf_x_ = &PDF_PR_X_N3_;
+                
                 pdf_y_ = &PDF_PR_Y_NN_;
                 if      (nsr_(1) == 1) pdf_y_ = &PDF_PR_Y_N1_;
                 else if (nsr_(1) == 2) pdf_y_ = &PDF_PR_Y_N2_;
                 else if (nsr_(1) == 3) pdf_y_ = &PDF_PR_Y_N3_;
                 else if (nsr_(1) >= 4) pdf_y_ = &PDF_PR_Y_N4_;
             }
-            else if (type == PartType::Electron) {
-                pdf_x_ = &PDF_EL_X_NN_;
-                pdf_y_ = &PDF_EL_Y_NN_;
-                if      (nsr_(1) == 1) pdf_y_ = &PDF_EL_Y_N1_;
-                else if (nsr_(1) == 2) pdf_y_ = &PDF_EL_Y_N2_;
-                else if (nsr_(1) == 3) pdf_y_ = &PDF_EL_Y_N3_;
-                else if (nsr_(1) >= 4) pdf_y_ = &PDF_EL_Y_N4_;
-            }
         }
         
-        inline void set_dummy_x(Double_t cx) { coo_(0) = cx; }
+        inline void set_dummy_x(Double_t cx) { if (!side_(0)) coo_(0) = cx; }
 
         inline const Short_t&  seqID() const { return seqID_; }
+        inline const Short_t&  seqIDx() const { return seqIDx_; }
+        inline const Short_t&  seqIDy() const { return seqIDy_; }
         
         inline const Double_t& cx() const { return coo_(0); }
         inline const Double_t& cy() const { return coo_(1); }
@@ -64,6 +62,8 @@ class HitSt {
 
     private :
         Short_t    seqID_;
+        Short_t    seqIDx_;
+        Short_t    seqIDy_;
         SVecD<3>   coo_;  // [cm]
         
         SVecO<2>   side_;
@@ -74,28 +74,23 @@ class HitSt {
         MultiGauss* pdf_y_;
 
     protected :
-        static constexpr Double_t NORMFT_X_ =  2.00000e+1; // Normalized Factor X
-        static constexpr Double_t NORMFT_Y_ =  7.00000e+0; // Normalized Factor Y
+        static constexpr Double_t NORMFT_X_ =  1.80000e+1; // Normalized Factor X
+        static constexpr Double_t NORMFT_Y_ =  8.00000e+0; // Normalized Factor Y
         static constexpr Double_t DEFERR_X_ =  NORMFT_X_ * 1.0e-4; // [cm]
         static constexpr Double_t DEFERR_Y_ =  NORMFT_Y_ * 1.0e-4; // [cm]
 
         static constexpr MultiGauss::Opt PDF_OPT_ = MultiGauss::Opt::ROBUST;
 
         static MultiGauss PDF_PR_X_NN_;
-        static MultiGauss PDF_PR_Y_NN_;
+        static MultiGauss PDF_PR_X_N1_;
+        static MultiGauss PDF_PR_X_N2_;
+        static MultiGauss PDF_PR_X_N3_;
         
+        static MultiGauss PDF_PR_Y_NN_;
         static MultiGauss PDF_PR_Y_N1_;
         static MultiGauss PDF_PR_Y_N2_;
         static MultiGauss PDF_PR_Y_N3_;
         static MultiGauss PDF_PR_Y_N4_;
-        
-        static MultiGauss PDF_EL_X_NN_;
-        static MultiGauss PDF_EL_Y_NN_;
-        
-        static MultiGauss PDF_EL_Y_N1_;
-        static MultiGauss PDF_EL_Y_N2_;
-        static MultiGauss PDF_EL_Y_N3_;
-        static MultiGauss PDF_EL_Y_N4_;
         
     public :
         enum class Orientation {
@@ -112,11 +107,63 @@ class HitSt {
 
 MultiGauss HitSt::PDF_PR_X_NN_(
     PDF_OPT_,
-    5.48271239075105554e-01, 2.00679e+01/HitSt::NORMFT_X_,
-    3.91208480516637092e-01, 3.35472e+01/HitSt::NORMFT_X_,
-    6.05202804082573195e-02, 7.84590e+01/HitSt::NORMFT_X_
+    3.31376712664997630e-01, 1.77875e+01/HitSt::NORMFT_X_,
+    5.10255425401639595e-01, 2.65271e+01/HitSt::NORMFT_X_,
+    1.58367861933362775e-01, 5.15837e+01/HitSt::NORMFT_X_
 );
 
+MultiGauss HitSt::PDF_PR_X_N1_(
+    PDF_OPT_,
+    2.75608e+01/HitSt::NORMFT_X_
+);
+
+MultiGauss HitSt::PDF_PR_X_N2_(
+    PDF_OPT_,
+    6.02616961110044480e-01, 1.82559e+01/HitSt::NORMFT_X_,
+    3.97383038889955520e-01, 4.18164e+01/HitSt::NORMFT_X_
+);
+
+MultiGauss HitSt::PDF_PR_X_N3_(
+    PDF_OPT_,
+    6.75185841999877190e-01, 1.84066e+01/HitSt::NORMFT_X_,
+    3.24814158000122755e-01, 4.90605e+01/HitSt::NORMFT_X_
+);
+
+MultiGauss HitSt::PDF_PR_Y_NN_(
+    PDF_OPT_,
+    5.50759994181610257e-01, 7.90750e+00/HitSt::NORMFT_Y_,
+    3.74341189078839287e-01, 1.52916e+01/HitSt::NORMFT_Y_,
+    7.48988167395504278e-02, 3.63939e+01/HitSt::NORMFT_Y_
+);
+
+MultiGauss HitSt::PDF_PR_Y_N1_(
+    PDF_OPT_,
+    5.45247134760751928e-01, 9.87256e+00/HitSt::NORMFT_Y_,
+    4.54752865239248016e-01, 1.65822e+01/HitSt::NORMFT_Y_
+);
+
+MultiGauss HitSt::PDF_PR_Y_N2_(
+    PDF_OPT_,
+    4.53177772355239150e-01, 7.32341e+00/HitSt::NORMFT_Y_,
+    4.29177717623073274e-01, 1.19994e+01/HitSt::NORMFT_Y_,
+    1.17644510021687618e-01, 2.17922e+01/HitSt::NORMFT_Y_
+);
+
+MultiGauss HitSt::PDF_PR_Y_N3_(
+    PDF_OPT_,
+    5.08190182558828307e-01, 7.74660e+00/HitSt::NORMFT_Y_,
+    3.39669567581713017e-01, 1.56378e+01/HitSt::NORMFT_Y_,
+    1.52140249859458648e-01, 3.18597e+01/HitSt::NORMFT_Y_
+);
+
+MultiGauss HitSt::PDF_PR_Y_N4_(
+    PDF_OPT_,
+    5.19847432537280163e-01, 7.84945e+00/HitSt::NORMFT_Y_,
+    3.39808551148078952e-01, 1.72969e+01/HitSt::NORMFT_Y_,
+    1.40344016314640940e-01, 3.85202e+01/HitSt::NORMFT_Y_
+);
+
+/*
 MultiGauss HitSt::PDF_PR_Y_NN_(
     PDF_OPT_,
     5.19876182951942711e-01, 7.86516e+00/HitSt::NORMFT_Y_,
@@ -150,48 +197,7 @@ MultiGauss HitSt::PDF_PR_Y_N4_(
     3.32706018621177213e-01, 1.60200e+01/HitSt::NORMFT_Y_,
     1.78643299324075799e-01, 3.46379e+01/HitSt::NORMFT_Y_
 );
-
-MultiGauss HitSt::PDF_EL_X_NN_(
-    PDF_OPT_,
-    4.90367238845688835e-01, 1.78009e+01/HitSt::NORMFT_X_,
-    4.19610147048469273e-01, 3.07299e+01/HitSt::NORMFT_X_,
-    9.00226141058418916e-02, 7.41417e+01/HitSt::NORMFT_X_
-);
-
-MultiGauss HitSt::PDF_EL_Y_NN_(
-    PDF_OPT_,
-    8.17635422755448177e-02, 6.40831e+00/HitSt::NORMFT_Y_,
-    3.63444524802599644e-01, 1.01454e+01/HitSt::NORMFT_Y_,
-    4.12569226349108864e-01, 1.89414e+01/HitSt::NORMFT_Y_,
-    1.42222706572746688e-01, 3.83582e+01/HitSt::NORMFT_Y_
-);
-
-MultiGauss HitSt::PDF_EL_Y_N1_(
-    PDF_OPT_,
-    5.42873754514996754e-01, 1.29452e+01/HitSt::NORMFT_Y_,
-    4.57126245485003302e-01, 2.27731e+01/HitSt::NORMFT_Y_
-);
-
-MultiGauss HitSt::PDF_EL_Y_N2_(
-    PDF_OPT_,
-    3.81917809984631318e-01, 8.25102e+00/HitSt::NORMFT_Y_,
-    4.72266303759200257e-01, 1.47049e+01/HitSt::NORMFT_Y_,
-    1.45815886256168481e-01, 3.02496e+01/HitSt::NORMFT_Y_
-);
-
-MultiGauss HitSt::PDF_EL_Y_N3_(
-    PDF_OPT_,
-    2.77673900370674909e-01, 8.09881e+00/HitSt::NORMFT_Y_,
-    4.17652201534524536e-01, 1.49974e+01/HitSt::NORMFT_Y_,
-    3.04673898094800610e-01, 3.07942e+01/HitSt::NORMFT_Y_
-);
-
-MultiGauss HitSt::PDF_EL_Y_N4_(
-    PDF_OPT_,
-    1.80015708511331168e-01, 8.50074e+00/HitSt::NORMFT_Y_,
-    6.85271203717613742e-01, 2.14625e+01/HitSt::NORMFT_Y_,
-    1.34713087771054979e-01, 4.79361e+01/HitSt::NORMFT_Y_
-);
+*/
 
 } // namesapce TrackSys
 

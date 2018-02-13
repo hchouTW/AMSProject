@@ -1,4 +1,5 @@
-\documentclass[review]{elsarticle}
+%\documentclass[review]{elsarticle}
+\documentclass[review]{/home/hchou/AMSProject/sw/tex/elsarticle-template/elsarticle}
 
 \usepackage{lineno,hyperref}
 \usepackage[utf8]{inputenc}
@@ -41,7 +42,7 @@
 %\usepackage{numcompress}\bibliographystyle{model6-num-names}
 
 %% `Elsevier LaTeX' style
-\bibliographystyle{elsarticle-num}
+\bibliographystyle{/home/hchou/AMSProject/sw/tex/elsarticle-template/elsarticle-num}
 %%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -428,12 +429,9 @@ The Levenberg-Marquardt Method
         \Delta\xi=\left(C_{\xi}+c\cdot diag\left(C_{\xi}\right)\right)\cdot H_{\xi}\ where\ c\ is\ constant
 \end{alignedat} \end{equation} 
 
-
-
-
-
-
 \section{The Elsevier article class}
+
+%\paragraph{Propagation} It uses Runge-K
 
 \paragraph{Installation} If the document class \emph{elsarticle} is not available on your computer, you can download and install the system package \emph{texlive-publishers} (Linux) or install the \LaTeX\ package \emph{elsarticle} using the package manager of your \TeX\ installation, which is typically \TeX\ Live or Mik\TeX.
 
@@ -463,10 +461,24 @@ See the front matter of this document for examples. You are recommended to confo
 
 There are various bibliography styles available. You can select the style of your choice in the preamble of this document. These styles are Elsevier styles based on standard styles like Harvard and Vancouver. Please use Bib\TeX\ to generate your bibliography and include DOIs whenever available.
 
+<<<<<<< HEAD
 %Here are two sample references: \cite{Feynman1963118,Dirac1953888}.
+%Here are two sample references: \cite{Strandlie2010}.
+=======
+Here are two sample references: \cite{Feynman1963118,Dirac1953888}.
+Here are two sample references: \cite{Strandlie2010}.
+>>>>>>> origin/master
 
-\section*{References}
+\paragraph{Propagation} It uses RK4 method.
 
-%\bibliography{note.bib}
+<<<<<<< HEAD
+%\bibliography{note}
+=======
+%\section*{References}
+
+%\bibliographystyle{~/AMSProject/sw/tex/elsarticle-template/elsarticle-num}
+%\bibliographystyle{/home/hchou/AMSProject/sw/tex/elsarticle-template/elsarticle-num}
+\bibliography{note}
+>>>>>>> origin/master
 
 \end{document}
