@@ -1,7 +1,7 @@
 #!/bin/bash
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_ams02_fill
-RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
+#RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
+RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
 
 CurDir=${PWD}
@@ -22,7 +22,7 @@ OutputDir=${CurDir}/dat
 #GroupSize=9
 #Nseq=80
 GroupSize=8
-Nseq=70
+Nseq=20
 
 for id in `seq 0 ${Nseq}`
 do

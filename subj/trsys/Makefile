@@ -2,19 +2,21 @@
 
 
 # Test Ceres Solver
-FLGS += -I/usr/include/eigen3 -I/usr/include/ceres/internal/miniglog
-LIBP += -L/usr/lib64 -lceres -lgflags
+FLGS += -I${AMSProjLibs}/external/eigen3/include
+#FLGS += -I/usr/include/eigen3 -I/usr/local/include
+#LIBP += -L/usr/local/lib -lglog -L/usr/local/lib64 -lceres -lgflags
+LIBP += -lgflags -lglog -L${AMSProjLibs}/external/google/ceres/lib64 -lceres
 ICCCXX += -D__CeresSolver__
 GCCCXX += -D__CeresSolver__
-LD += -D__CeresSolver__
-LDS += -D__CeresSolver__
-
+LD += -D__CeresSolver__    
+LDS += -D__CeresSolver__   
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
 #Version=18Jan29
 Version=18Feb05
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
+#ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
 all :
 	@mkdir -p $(TagetDir)

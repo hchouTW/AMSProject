@@ -9,7 +9,7 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
 
 #include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
+//#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
 
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
@@ -24,7 +24,23 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
+
+    google::InitGoogleLogging(argv[0]);
+
+    COUT("GOOGLE_STRIP_LOG %d\n", GOOGLE_STRIP_LOG);
+    VLOG(-1) << "VLOG(-1) Found cookies";
+    VLOG(0) << "VLOG(0) Found cookies";
+    VLOG(1) << "VLOG(1) Found cookies";
+    VLOG(2) << "VLOG(2) Found cookies";
+    VLOG(3) << "VLOG(3) Found cookies";
+    VLOG(4) << "VLOG(4) Found cookies";
     
+    LOG(INFO)  << "INFO Found cookies";
+    LOG(WARNING) << "WARNING Found cookies";
+    LOG(ERROR) << "ERROR Found cookies";
+    //LOG(FATAL) << "FATAL Found cookies";
+
+
     MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
@@ -170,7 +186,10 @@ int main(int argc, char * argv[]) {
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
-     
+   
+        // testcode
+        //if (entry > 4) break;
+
         TrackInfo& track = fTrk->track;
         
         // Geometry (TOF)
@@ -392,5 +411,6 @@ int main(int argc, char * argv[]) {
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
 
+    google::ShutdownGoogleLogging();
     return 0;
 }
