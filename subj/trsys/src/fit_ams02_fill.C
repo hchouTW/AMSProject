@@ -27,20 +27,6 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    COUT("GOOGLE_STRIP_LOG %d\n", GOOGLE_STRIP_LOG);
-    VLOG(-1) << "VLOG(-1) Found cookies";
-    VLOG(0) << "VLOG(0) Found cookies";
-    VLOG(1) << "VLOG(1) Found cookies";
-    VLOG(2) << "VLOG(2) Found cookies";
-    VLOG(3) << "VLOG(3) Found cookies";
-    VLOG(4) << "VLOG(4) Found cookies";
-    
-    LOG(INFO)  << "INFO Found cookies";
-    LOG(WARNING) << "WARNING Found cookies";
-    LOG(ERROR) << "ERROR Found cookies";
-    //LOG(FATAL) << "FATAL Found cookies";
-
-
     MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
@@ -287,7 +273,7 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKtme->fillH2D(mc_mom, track.cpuTime[0][patt]);
         if (cn_succ) hCNtme->fillH2D(mc_mom, track.cpuTime[1][patt]*0.1);
         if (kf_succ) hKFtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.01);
-        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]*0.1);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);

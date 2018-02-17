@@ -25,47 +25,51 @@ alias ll="ls --color=auto -al -h --group-directories-first"
 alias rm="sh ~/AMSProject/sys/shell/rmsoft.sh"
 alias rmfc="/bin/rm"
 
-# ROOT
-alias root='root -l'
-
-# TEX
-source ${AMSProj}/sw/tex/tex.sh
-
 # AMSProject
-#export AMSProj=~/AMSProject # define in ~/.bashrc
+if [[ "${AMSProj}" == "" ]]; then AMSProj="~/AMSProject"; fi
 export AMSProjLibs=${AMSProj}/libs
 export AMSProjProd=${AMSProj}/prod
 export AMSProjSubj=${AMSProj}/subj
 export AMSProjJobs=${AMSProj}/jobs
 
 # AMSCore
-#export AMSCore=~/AMSCore # define in ~/.bashrc
+if [[ "${AMSCore}" == "" ]]; then AMSCore="~/AMSCore"; fi
 export AMSCoreProd=${AMSCore}/prod
 export AMSCoreSubj=${AMSCore}/subj
 
+# AMSJobs
+if [[ "${AMSJobs}" == "" ]]; then AMSJobs="~/AMSJobs"; fi
+
+# AMSData
+if [[ "${AMSData}" == "" ]]; then AMSData="~/AMSData"; fi
+
+# TEX
+source ${AMSProj}/sw/tex/tex.sh
+
+# Google Libs
+source ${AMSProjLibs}/external/google/bin/google.sh
+
 # AMS Software
-export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 alias amsenv=amsenv_root5gcc
 
-# Read ROOT file list
-#alias readflist="sh ${AMSProj}/sys/shell/readflist.sh"
+export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 
-# Job Config
-source ${AMSProj}/sys/shell/ini_parser.sh
-if [[ "$HOSTNAME" == *"lxplus"* ]]; then
-    source ${AMSProjJobs}/CERN/cern.sh
-else
-    source ${AMSProjJobs}/NCU/ncu.sh
-fi
+# ROOT
+alias root='root -l'
 
 # Local Job Command
 source ${AMSProjJobs}/LOCAL/local.sh
 
-# Google
-source ${AMSProjLibs}/external/google/bin/google.sh
-
+## Job Config
+source ${AMSProj}/sys/shell/ini_parser.sh
+if [[ "$HOSTNAME" == *"lxplus"* ]]; then
+    source ${AMSProjJobs}/CERN/cern.sh
+    alias scphep='scp -r -oProxyCommand="ssh -W %h:%p cms01.phy.ncu.edu.tw" hep068.phy.ncu.edu.tw:'
+elif [[ "$HOSTNAME" == *"hep068"* ]]; then
+    source ${AMSProjJobs}/NCU/ncu.sh
+fi
 
 function showcmd {
     # ANSI escape codes

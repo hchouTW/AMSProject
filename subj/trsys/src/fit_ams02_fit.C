@@ -153,12 +153,12 @@ int main(int argc, char * argv[]) {
     hCKRrsoM->style(Fill(), Line(kGreen), Marker(kGreen));
     hKFRrsoM->style(Fill(), Line(kBlue), Marker(kBlue));
     hHCRrsoM->style(Fill(), Line(kRed), Marker(kRed));
-    THStack* chRrsoM = Hist::Collect("chRrsoM", "", HistList({ hCKRrsoM, hKFRrsoM, hHCRrsoM }));
+    THStack* chRrsoM = Hist::Collect("chRrsoM", HistList({ hCKRrsoM, hKFRrsoM, hHCRrsoM }));
     chRrsoM->Write();
     
     hKFCKRrsoS->style(Fill(), Line(kBlue), Marker(kBlue));
     hHCCKRrsoS->style(Fill(), Line(kRed), Marker(kRed));
-    THStack* chRrsoS = Hist::Collect("chRrsoS", "", HistList({ hKFCKRrsoS, hHCCKRrsoS }));
+    THStack* chRrsoS = Hist::Collect("chRrsoS", HistList({ hKFCKRrsoS, hHCCKRrsoS }));
     chRrsoS->Write();
 
     const Axis& AXrig = hCKPflux->xaxis();
@@ -317,13 +317,13 @@ int main(int argc, char * argv[]) {
     hCKrat->style(Fill(), Line(kGreen));
     hKFrat->style(Fill(), Line(kBlue));
     hHCrat->style(Fill(), Line(kRed));
-    THStack* chrat = Hist::Collect("chrat", "", HistList({ hCKrat, hKFrat, hHCrat }));
+    THStack* chrat = Hist::Collect("chrat", HistList({ hCKrat, hKFrat, hHCrat }));
     chrat->Write();
     
     hCKratc->style(Fill(), Line(kGreen));
     hKFratc->style(Fill(), Line(kBlue));
     hHCratc->style(Fill(), Line(kRed));
-    THStack* chratc = Hist::Collect("chratc", "", HistList({ hCKratc, hKFratc, hHCratc }));
+    THStack* chratc = Hist::Collect("chratc", HistList({ hCKratc, hKFratc, hHCratc }));
     chratc->Write();
 
     hKFCKnm  ->style(Fill(), Line(kBlue));
@@ -334,10 +334,10 @@ int main(int argc, char * argv[]) {
     hHCCKnm99->style(Fill(), Line(kRed));
     hHCCKnm97->style(Fill(), Line(kRed));
     hHCCKnm95->style(Fill(), Line(kRed));
-    THStack* chnm   = Hist::Collect("chnm"  , "", HistList({ hKFCKnm  , hHCCKnm   }));
-    THStack* chnm99 = Hist::Collect("chnm99", "", HistList({ hKFCKnm99, hHCCKnm99 }));
-    THStack* chnm97 = Hist::Collect("chnm97", "", HistList({ hKFCKnm97, hHCCKnm97 }));
-    THStack* chnm95 = Hist::Collect("chnm95", "", HistList({ hKFCKnm95, hHCCKnm95 }));
+    THStack* chnm   = Hist::Collect("chnm"  , HistList({ hKFCKnm  , hHCCKnm   }));
+    THStack* chnm99 = Hist::Collect("chnm99", HistList({ hKFCKnm99, hHCCKnm99 }));
+    THStack* chnm97 = Hist::Collect("chnm97", HistList({ hKFCKnm97, hHCCKnm97 }));
+    THStack* chnm95 = Hist::Collect("chnm95", HistList({ hKFCKnm95, hHCCKnm95 }));
     chnm  ->Write();
     chnm99->Write();
     chnm97->Write();
@@ -356,17 +356,17 @@ int main(int argc, char * argv[]) {
     hHCcc97->style(Fill(), Line(kRed));
     hHCcc95->style(Fill(), Line(kRed));
     
-    THStack* chcc   = Hist::Collect("chcc"  , "", HistList({ hCKcc  , hKFcc  , hHCcc   }));
-    THStack* chcc99 = Hist::Collect("chcc99", "", HistList({ hCKcc99, hKFcc99, hHCcc99 }));
-    THStack* chcc97 = Hist::Collect("chcc97", "", HistList({ hCKcc97, hKFcc97, hHCcc97 }));
-    THStack* chcc95 = Hist::Collect("chcc95", "", HistList({ hCKcc95, hKFcc95, hHCcc95 }));
+    THStack* chcc   = Hist::Collect("chcc"  , HistList({ hCKcc  , hKFcc  , hHCcc   }));
+    THStack* chcc99 = Hist::Collect("chcc99", HistList({ hCKcc99, hKFcc99, hHCcc99 }));
+    THStack* chcc97 = Hist::Collect("chcc97", HistList({ hCKcc97, hKFcc97, hHCcc97 }));
+    THStack* chcc95 = Hist::Collect("chcc95", HistList({ hCKcc95, hKFcc95, hHCcc95 }));
     chcc  ->Write();
     chcc99->Write();
     chcc97->Write();
     chcc95->Write();
     
     for (Int_t it = 0; it < vhHCcc.size(); ++it) vhHCcc.at(it)->style(Fill(), Line(it+2));
-    THStack* chHCcc = Hist::Collect("chHCcc"  , "", vhHCcc);
+    THStack* chHCcc = Hist::Collect("chHCcc", vhHCcc);
     chHCcc->Write();
     
     ofle->Write();

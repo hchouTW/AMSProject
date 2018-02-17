@@ -22,7 +22,7 @@ OutputDir=${CurDir}/dat
 #GroupSize=9
 #Nseq=80
 GroupSize=8
-Nseq=20
+Nseq=70
 
 for id in `seq 0 ${Nseq}`
 do

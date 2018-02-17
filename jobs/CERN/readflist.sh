@@ -12,7 +12,7 @@ if [ $# -lt 2 ] && [ $# -ne 3 ]; then
     exit
 fi
 
-head=
+head=root://eosams.cern.ch/
 if [ $# -eq 3 ]; then
     head=$3
 fi
