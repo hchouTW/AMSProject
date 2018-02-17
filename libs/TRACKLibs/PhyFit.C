@@ -400,44 +400,28 @@ Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
     double parameters[5] = { part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() };
-    //double parameters[3] = { 0.5*part_.ux(), 1.5*part_.uy(), 2.*part_.eta() };
 
-    //MGClock::HrsStopwatch sw; sw.start();
-
-    ceres::CostFunction* cost_function(new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_));
-    //cost_function.set_num_residuals();
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, NULL, parameters);
-
+    
     ceres::Solver::Options options;
-    //options.minimizer_type = ceres::TRUST_REGION;
-    //options.logging_type = ceres::SILENT;
     ceres::Solver::Summary summary;
+
     ceres::Solve(options, &problem, &summary);
-
-    //sw.stop();
-
+    
     //std::cout << summary.FullReport() << "\n";
     //std::cout << summary.BriefReport() << "\n";
-   
-    //std::string str;
-    //std::cout << Form("==== Valid %d\n", options.IsValid(&str));
-    //std::cout << Form("==== CX  %14.8f  %14.8f\n", part_.cx(), part_.cx() - parameters[0]);
-    //std::cout << Form("==== CY  %14.8f  %14.8f\n", part_.cy(), part_.cy() - parameters[1]);
-    //std::cout << Form("==== UX  %14.8f  %14.8f\n", part_.ux(), part_.ux() - parameters[2]);
-    //std::cout << Form("==== UY  %14.8f  %14.8f\n", part_.uy(), part_.uy() - parameters[3]);
-    //std::cerr << Form("==== ETA %14.8f  %14.8f\n", part_.eta(), part_.eta() - parameters[4]);
-    //std::cerr << Form("==== TME %14.8f ms\n", sw.time() * 1.0e3);
 
     succ_ = summary.IsSolutionUsable();
     if (succ_) {
-        part_.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
+        part_.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(part_.uz()));
         part_.set_eta(parameters[4]);
     }
-
-    return summary.IsSolutionUsable();
-    //return true;
+    else { clear(); }
+    
+    return succ_;
 }
 
 
@@ -448,10 +432,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     SMtxSymD<5> cvGG;
 
     PhySt ppst(part_);
-    //ppst.arg().reset(false, false);
-    ppst.arg().reset(false, true);
-    
-    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], MGNumc::Compare(-1));
+    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], MGNumc::Compare(part_.uz()));
     ppst.set_eta(parameters[0][4]);
 
     Int_t cnt_nhit = 0;

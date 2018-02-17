@@ -3,12 +3,6 @@
 
 // Ceres Solver
 #ifdef __CeresSolver__
-//#undef MINIGLOG_MAX_LOG_LEVEL
-//#define MINIGLOG_MAX_LOG_LEVEL 0
-//#undef MAX_LOG_LEVEL
-//#define MAX_LOG_LEVEL -3
-#include "gflags/gflags.h"
-#include "glog/logging.h"
 #include "ceres/ceres.h"
 #endif
 

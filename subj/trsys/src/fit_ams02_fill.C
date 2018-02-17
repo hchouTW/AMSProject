@@ -172,9 +172,6 @@ int main(int argc, char * argv[]) {
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
-   
-        // testcode
-        //if (entry > 4) break;
 
         TrackInfo& track = fTrk->track;
         
@@ -211,7 +208,7 @@ int main(int argc, char * argv[]) {
         if (fG4mc->primVtx.status) {
             if (fG4mc->primVtx.coo[2] > -55.) IntType = 1;
         }
-            
+           
         Bool_t hasMCL1 = false;
         Bool_t hasMCL9 = false;
         for (auto&& mchit : fG4mc->primPart.hits) {
