@@ -98,6 +98,9 @@ class SimpleTrFit : public TrFitPar {
 
 
 #ifdef __CeresSolver__
+using EMtxXD = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+using EVecXD = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+
 class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(5); }

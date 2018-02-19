@@ -425,6 +425,7 @@ Bool_t PhyTrFit::physicalFit() {
 }
 
 
+/*
 bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
     Double_t chix = MGMath::ZERO;
     Double_t chiy = MGMath::ZERO;
@@ -437,6 +438,76 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     Int_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& ppjb = SMtxId();
+    for (auto&& hit : hits_) {
+        PhyJb curjb;
+        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+        ppjb = curjb.gg() * ppjb;
+
+        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
+
+        SMtxSymD<2> cvM;
+        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
+        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
+        
+        SVecD<2> rsM;
+        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
+        
+        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+        grdG += LA::Transpose(subJbF) * rsM;
+        cvGG += LA::SimilarityT(subJbF, cvM);
+
+        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
+
+        if (hit.sx()) residuals[hit.seqIDx()] = (hit.cx() - ppst.cx()) / mex;
+        if (hit.sy()) residuals[hit.seqIDy()] = (hit.cy() - ppst.cy()) / mey;
+
+        if (jacobians != nullptr && jacobians[0] != nullptr) {
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 0) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 0) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 1] = -subJbF(0, 1) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 1] = -subJbF(1, 1) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 2] = -subJbF(0, 2) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 2] = -subJbF(1, 2) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 3] = -subJbF(0, 3) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 3] = -subJbF(1, 3) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 4] = -subJbF(0, 4) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 4] = -subJbF(1, 4) / mey;
+        }
+        cnt_nhit++;
+    }
+    if (cnt_nhit != hits_.size()) return false;
+    Double_t chi  = (chix + chiy);
+    Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
+
+    //std::cerr << Form("============= CHI %14.8f  X %14.8f Y %14.8f UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4]);
+    return true;
+}
+*/
+
+
+
+bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    Double_t chix = MGMath::ZERO;
+    Double_t chiy = MGMath::ZERO;
+    SVecD<5>    grdG;
+    SMtxSymD<5> cvGG;
+
+    PhySt ppst(part_);
+    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], MGNumc::Compare(part_.uz()));
+    ppst.set_eta(parameters[0][4]);
+
+    Int_t cnt_nhit = 0;
+    PhyJb::SMtxDGG&& ppjb = SMtxId();
+    
+    EVecXD resM(numOfSeq());
+    EMtxXD cvGL(numOfSeq(), numOfSeq());
+    
+    
+    LLT<EMtxXD> lltCv(cv);
+    lltCv.matrixU();
     for (auto&& hit : hits_) {
         PhyJb curjb;
         if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;

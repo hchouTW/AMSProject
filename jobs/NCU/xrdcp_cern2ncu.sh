@@ -9,7 +9,7 @@ if [[ ${output} == "" ]]; then exit; fi
 dpmurl=root://${DPNS_HOST}/${output}
 dpmhost=${DPM_HOME}/${output}
 dpns-mkdir -p ${dpmhost}
-for file in `xrdfs ${EOS_AMS_HOST} ls ${input}`
+for file in `xrdfs eosams.cern.ch ls ${input}`
 do
     if [[ `echo ${file} | grep ${keyword}` == "" ]]; then continue; fi
     filename=${file##*/}
