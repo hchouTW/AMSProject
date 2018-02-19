@@ -1,10 +1,17 @@
 -include $(AMSMKfile)
 
+# Test Ceres Solver
+FLGS += -I${AMSProjLibs}/external/eigen3/include
+LIBP += -lgflags -lglog -L${AMSProjLibs}/external/google/ceres/lib64 -lceres
+CXX += -D__CeresSolver__
+LD  += -D__CeresSolver__    
+
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
 #Version=18Jan29
 Version=18Feb05
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
+#ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
 all :
 	@mkdir -p $(TagetDir)
@@ -25,54 +32,54 @@ all :
 	#make $(TagetDir)/prop_ams02_fill
 	#make $(TagetDir)/prop_ams02_fit
 	make $(TagetDir)/fit_ams02_fill
-	#make $(TagetDir)/fit_ams02_fit
+	make $(TagetDir)/fit_ams02_fit
 	#make $(TagetDir)/ceres_test
 	#make $(TagetDir)/prop_smc_fill
 
 $(TagetDir)/obj/hit_ams02_fill.o : $(TagetDir)/src/hit_ams02_fill.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/hit_ams02_fill.d
 
 $(TagetDir)/hit_ams02_fill : $(TagetDir)/obj/hit_ams02_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/prop_ams02_fill.o : $(TagetDir)/src/prop_ams02_fill.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/prop_ams02_fill.d
 
 $(TagetDir)/prop_ams02_fill : $(TagetDir)/obj/prop_ams02_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/prop_ams02_fit.o : $(TagetDir)/src/prop_ams02_fit.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/prop_ams02_fit.d
 
 $(TagetDir)/prop_ams02_fit : $(TagetDir)/obj/prop_ams02_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/obj/fit_ams02_fill.o : $(TagetDir)/src/fit_ams02_fill.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/fit_ams02_fill.d
 
 $(TagetDir)/fit_ams02_fill : $(TagetDir)/obj/fit_ams02_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/fit_ams02_fit.o : $(TagetDir)/src/fit_ams02_fit.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/fit_ams02_fit.d
 
 $(TagetDir)/fit_ams02_fit : $(TagetDir)/obj/fit_ams02_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/obj/prop_smc_fill.o : $(TagetDir)/src/prop_smc_fill.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/prop_smc_fill.d
 
 $(TagetDir)/prop_smc_fill : $(TagetDir)/obj/prop_smc_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/ceres_test.o : $(TagetDir)/src/ceres_test.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
 -include $(TagetDir)/obj/ceres_test.d
 
 $(TagetDir)/ceres_test : $(TagetDir)/obj/ceres_test.o

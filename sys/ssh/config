@@ -1,13 +1,16 @@
 Host lxplus
 Hostname lxplus.cern.ch
 
+Host lxplus7
+Hostname lxplus7.cern.ch
+
 Host cms01
 Hostname cms01.phy.ncu.edu.tw
 
 Host dirac
 Hostname dirac.phys.ncku.edu.tw
 
-Host hep
+Host hep068
 Hostname hep068.phy.ncu.edu.tw
 
 #personal account

@@ -25,107 +25,53 @@ alias ll="ls --color=auto -al -h --group-directories-first"
 alias rm="sh ~/AMSProject/sys/shell/rmsoft.sh"
 alias rmfc="/bin/rm"
 
-# ROOT
-alias root='root -l'
-
-# TEX
-alias texmake="sh /home/hchou/AMSProject/sw/tex/texmake.sh"
-alias texclean="sh /home/hchou/AMSProject/sw/tex/texclean.sh"
-
 # AMSProject
-#export AMSProj=~/AMSProject # define in ~/.bashrc
+if [[ "${AMSProj}" == "" ]]; then AMSProj="~/AMSProject"; fi
 export AMSProjLibs=${AMSProj}/libs
 export AMSProjProd=${AMSProj}/prod
 export AMSProjSubj=${AMSProj}/subj
 export AMSProjJobs=${AMSProj}/jobs
 
 # AMSCore
-#export AMSCore=~/AMSCore # define in ~/.bashrc
+if [[ "${AMSCore}" == "" ]]; then AMSCore="~/AMSCore"; fi
 export AMSCoreProd=${AMSCore}/prod
 export AMSCoreSubj=${AMSCore}/subj
 
+# AMSJobs
+if [[ "${AMSJobs}" == "" ]]; then AMSJobs="~/AMSJobs"; fi
+
+# AMSData
+if [[ "${AMSData}" == "" ]]; then AMSData="~/AMSData"; fi
+
+# TEX
+source ${AMSProj}/sw/tex/tex.sh
+
+# Google Libs
+source ${AMSProjLibs}/external/google/bin/google.sh
+
 # AMS Software
-export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 alias amsenv=amsenv_root5gcc
 
-# Read ROOT file list
-alias readflist="sh ${AMSProj}/sys/shell/readflist.sh"
+export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 
-# Job Config
-source ${AMSProj}/sys/shell/ini_parser.sh
-if [[ "$HOSTNAME" == *"lxplus"* ]]; then
-    alias mkjob='sh ${AMSProj}/jobs/CERN/mkjob.sh'
-    alias submit='sh ${AMSProj}/jobs/CERN/submit.sh'
-else
-    alias mkjob='sh ${AMSProj}/jobs/NCU/mkjob.sh'
-    alias submit='sh ${AMSProj}/jobs/NCU/submit.sh'
-    alias voms_info='voms-proxy-info -all -file ~/.ams02'
-    alias voms_init='voms-proxy-init -voms ams02.cern.ch -valid 168:00 -hours 168 -out ~/.ams02'
-    alias voms_auto_init='cat ~/.globus/passwd | voms-proxy-init -rfc -voms ams02.cern.ch -cert ~/.globus/usercert.pem -key ~/.globus/userkey.pem -hours 168 -vomslife 168:0 -pwstdin'
-    export X509_USER_PROXY=~/.ams02
-fi
-
-if [[ "${HOSTNAME}" == *"lxplus"* ]]; then
-    export CASTOR=/castor/cern.ch/user/h/hchou
-    export EOS_HOME=/eos/ams/user/h/hchou
-    export AFSWORK=/afs/cern.ch/work/h/hchou
-    export ubackup=/afs/cern.ch/ubackup/h/hchou
-else
-    # system
-    export EOS_MGM_URL=root://tw-eos01.grid.sinica.edu.tw
-    export EOS_HOME=/eos/ams
-    export DPM_HOST=grid71.phy.ncu.edu.tw
-    export DPNS_HOST=grid71.phy.ncu.edu.tw
-    # user
-    export VMOS_WEB=https://voms.grid.sinica.edu.tw:8443
-    export DPM_HOME=/dpm/phy.ncu.edu.tw/home
-    export EOS_AMS_HOST=eosams.cern.ch
-
-    alias xrdcp_cern='sh ${AMSProj}/sys/shell/xrdcp_cern.sh'
-fi
+# ROOT
+alias root='root -l'
 
 # Local Job Command
-function ljsearch {
-    if [ $# == 1 ]; then
-        ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep
-    else
-        ps -U $USER -o pid -o s -o time -o command
-    fi
-}
+source ${AMSProjJobs}/LOCAL/local.sh
 
-function ljkill {
-    if [ $# == 1 ]; then
-        ps -U $USER -o pid -o s -o time -o command | grep ${1} | grep -v grep | awk '{print $1}' | xargs kill
-    else
-        echo -e "Error: No Keyword."
-    fi
-}
+## Job Config
+source ${AMSProj}/sys/shell/ini_parser.sh
+if [[ "$HOSTNAME" == *"lxplus"* ]]; then
+    source ${AMSProjJobs}/CERN/cern.sh
+    alias scphep='scp -r -oProxyCommand="ssh -W %h:%p cms01.phy.ncu.edu.tw" hep068.phy.ncu.edu.tw:'
+elif [[ "$HOSTNAME" == *"hep068"* ]]; then
+    source ${AMSProjJobs}/NCU/ncu.sh
+fi
 
-function ljcheck {
-    if [ $# == 1 ]; then
-        date_beg=`date`
-        while true
-        do
-            clear
-            jobs_num=`ljsearch ${1} | wc -l`
-            echo -e "DATE BEGIN ${date_beg} NOW `date`"
-            echo -e "NJOBS ${jobs_num}\n"
-            ljsearch ${1}
-            if (( ${jobs_num} == 0 )); then
-                echo -e "SUCCESS."
-                break
-            else
-                sleep 30
-            fi
-        done
-    else
-        echo -e "Error: No Keyword."
-    fi
-}
-
-function showcom {
+function showcmd {
     # ANSI escape codes
     GREEN='\033[0;32m'
     BLUE='\033[0;34m'

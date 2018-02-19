@@ -14,7 +14,6 @@ OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
 #### CERN CVMFS %% GCC Compiler
-#GCCTAG=4.9.1
 GCCTAG=6.2.0
 source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
@@ -49,7 +48,7 @@ export AMSDataDirRW=${AMSDataDir}
 export AMSGeoDir=${Offline}/${AMSVersion}/display
 
 alias hadd="${ROOTSYS}/bin/hadd -k"
-function merge {
+function hadd2 {
     if [ $# == 1 ]; then
         if [ -f ${1}.root ]; then /bin/rm ${1}.root; fi
         ${ROOTSYS}/bin/hadd -k ${1}.root ${1}*.root

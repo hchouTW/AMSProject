@@ -4,7 +4,6 @@
 // Ceres Solver
 #ifdef __CeresSolver__
 #include "ceres/ceres.h"
-#include "glog/logging.h"
 #endif
 
 namespace TrackSys {
@@ -98,29 +97,10 @@ class SimpleTrFit : public TrFitPar {
 };
 
 
-
 #ifdef __CeresSolver__
-
-class VirtualPhyTrFit : public TrFitPar, public ceres::FirstOrderFunction {
-    public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); }
-        ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
-    
-    public :
-        virtual bool Evaluate(const double* parameters, double* cost, double* gradient) const;
-        virtual int NumParameters() const { return 2; }
-    
-    protected :
-        void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); }
-    
-    protected :
-        PhySt part_;
-};
-
-/*
 class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(1); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(5); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
@@ -132,11 +112,6 @@ class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     protected :
         PhySt part_;
 };
-*/
-
-
-
-
 
 
 class PhyTrFit : public TrFitPar {

@@ -1,14 +1,14 @@
 #!/bin/bash
-Version=18Feb13
+Version=vdev
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
 RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 
 DataType=ISS
-#Stream=lst/flist.asgc.iss.B950.pass6
+Stream=lst/flist.asgc.iss.B950.pass6
 #Stream=lst/flist.ncu.iss.B950.pass6
-Stream=lst/flist.cern.iss.B950.pass6
+#Stream=lst/flist.cern.iss.B950.pass6
 #DataType=MC
 #Stream=lst/flist.ncu.mc.pr.pl1.l1.054000.B1119
 #Stream=lst/flist.cern.mc.pr.pl1.ecal.10004000.B1103
@@ -17,7 +17,7 @@ Stream=lst/flist.cern.iss.B950.pass6
 #Stream=lst/flist.cern.mc.el.pl1.0_25200.B1119
 #Stream=lst/flist.cern.mc.el.pl1.2004000.B1119
 
-GroupId=10001
+GroupId=1001
 GroupSize=1
 OutputDir=.
 

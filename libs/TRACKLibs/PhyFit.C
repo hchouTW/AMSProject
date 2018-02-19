@@ -363,187 +363,7 @@ Bool_t SimpleTrFit::simpleFit() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #ifdef __CeresSolver__
-bool VirtualPhyTrFit::Evaluate(const double* parameters, double* cost, double* gradient) const {
-    Double_t chix = MGMath::ZERO;
-    Double_t chiy = MGMath::ZERO;
-    SVecD<5>    grdG;
-    SMtxSymD<5> cvGG;
-
-    PhySt ppst(part_);
-    ppst.arg().reset(false, false);
-    //ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
-    //ppst.set_eta(parameters[4]);
-   
-    double uz = -1 * (1. - parameters[0]*parameters[0] + parameters[1]*parameters[1]);
-    if (uz > 0) return false;
-
-    //ppst.set_state_with_uxy(part_.cx(), part_.cy(), part_.cz(), parameters[0], parameters[1], MGNumc::Compare(-1));
-    ppst.set_state_with_cos(part_.cx(), part_.cy(), part_.cz(), parameters[0], parameters[1], uz);
-    ppst.print();
-    //ppst.set_eta(parameters[2]);
-
-
-    Int_t cnt_nhit = 0;
-    PhyJb::SMtxDGG&& ppjb = SMtxId();
-    for (auto&& hit : hits_) {
-        PhyJb curjb;
-        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-        ppjb = curjb.gg() * ppjb;
-
-        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
-        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-
-        SMtxSymD<2> cvM;
-        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
-        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
-        
-        SVecD<2> rsM;
-        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
-        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
-        
-        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-        grdG += LA::Transpose(subJbF) * rsM;
-        cvGG += LA::SimilarityT(subJbF, cvM);
-
-        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
-        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
-
-        cnt_nhit++;
-    }
-    if (cnt_nhit != hits_.size()) return false;
-    Double_t chi  = (chix + chiy);
-    Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-NumParameters()));
-        
-    if (!cvGG.Invert()) false;
-    SVecD<5>&& rslG = (cvGG * grdG);
-
-    cost[0] = nchi;
-    if (gradient != nullptr) {
-        //gradient[0] = grdG(0);
-        //gradient[1] = grdG(1);
-        //gradient[2] = grdG(2);
-        //gradient[3] = grdG(3);
-        //gradient[4] = grdG(4);
-        //gradient[0] = grdG(2);
-        //gradient[1] = grdG(3);
-        //gradient[2] = 0.1*grdG(4);
-        gradient[0] = rslG(2);
-        gradient[1] = rslG(3);
-    }
-
-    CERR("====== CHI  %14.8f\n", cost[0]);
-    CERR("====== U    %14.8f %14.8f\n", parameters[0], parameters[1]);
-    CERR("====== GRAD %14.8f %14.8f\n", gradient[0], gradient[1]);
-
-    return true;
-}
-
-/*
-bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
-    Double_t chix = MGMath::ZERO;
-    Double_t chiy = MGMath::ZERO;
-    SVecD<5>    grdG;
-    SMtxSymD<5> cvGG;
-
-    PhySt ppst(part_);
-    ppst.arg().reset(false, false);
-    //ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(-1));
-    //ppst.set_eta(parameters[4]);
-    
-    //ppst.set_state_with_uxy(part_.cx(), part_.cy(), part_.cz(), parameters[0], parameters[1], MGNumc::Compare(-1));
-    //ppst.set_eta(parameters[2]);
-    
-    ppst.set_eta(parameters[0][0]);
-
-
-    Int_t cnt_nhit = 0;
-    PhyJb::SMtxDGG&& ppjb = SMtxId();
-    for (auto&& hit : hits_) {
-        PhyJb curjb;
-        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-        ppjb = curjb.gg() * ppjb;
-
-        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
-        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-
-        SMtxSymD<2> cvM;
-        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
-        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
-        
-        SVecD<2> rsM;
-        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
-        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
-        
-        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-        grdG += LA::Transpose(subJbF) * rsM;
-        cvGG += LA::SimilarityT(subJbF, cvM);
-
-        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
-        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
-
-        if (hit.sx()) residuals[hit.seqIDx()] = (hit.cx() - ppst.cx()) / mex;
-        if (hit.sy()) residuals[hit.seqIDy()] = (hit.cy() - ppst.cy()) / mey;
-
-        if (jacobians != nullptr && jacobians[0] != nullptr) {
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 4) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 4) / mey;
-
-        }
-            //CERR("LAY %d X Y %14.8f %14.8f\n", cnt_nhit, residuals[hit.seqIDx()], residuals[hit.seqIDy()]);
-
-        cnt_nhit++;
-    }
-    if (cnt_nhit != hits_.size()) return false;
-    Double_t chi  = (chix + chiy);
-    Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
-
-    std::cerr << Form("============= CHI %14.8f  ETA %14.8f\n", nchi, parameters[0][0]);
-    return true;
-}
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
 PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (!checkHit()) { clear(); return; }
     clear();
@@ -574,102 +394,98 @@ Bool_t PhyTrFit::simpleFit() {
 
     return true;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
-    //double parameters[5] = { part_.cx()+0.1, part_.cy()-0.1, 0.5*part_.ux(), 2.*part_.uy(), 0.4*part_.eta() };
-    double parameters[2] = { 0.75*part_.ux(), 1.25*part_.uy() };
-    //double parameters[3] = { 0.5*part_.ux(), 1.5*part_.uy(), 2.*part_.eta() };
-    //double parameters[1] = { part_.eta() * 2 };
+    double parameters[5] = { part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() };
 
-    MGClock::HrsStopwatch sw; sw.start();
-
-    ceres::GradientProblemSolver::Options options;
-    //options.minimizer_progress_to_stdout = true;
-    options.line_search_type = ceres::WOLFE;
-    
-    ceres::GradientProblemSolver::Summary summary;
-    ceres::GradientProblem problem(new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_));
-    ceres::Solve(options, problem, parameters, &summary);
-
-    sw.stop();
-
-    std::cout << summary.FullReport() << "\n";
-    
-    //std::cout << Form("CX  %14.8f\n", part_.cx()- parameters[0]);
-    //std::cout << Form("CY  %14.8f\n", part_.cy()- parameters[1]);
-    std::cout << Form("UX  %14.8f   %14.8f\n", part_.ux(), part_.ux()-parameters[0]);
-    std::cout << Form("UY  %14.8f   %14.8f\n", part_.uy(), part_.uy()-parameters[1]);
-    //std::cout << Form("ETA %14.8f\n", part_.eta()- parameters[2]);
-    std::cout << Form("TME %14.8f ms\n", sw.time() * 1.0e3);
-
-    //std::cout << Form("Valid %d ETA %14.8f %14.8f\n", options.IsValid(), part_.eta(), parameters[0]);
-
-    return true;
-}
-
-/*
-Bool_t PhyTrFit::physicalFit() {
-    if (!simpleFit()) return false;
-    part_.arg().reset(sw_mscat_, sw_eloss_);
-    //double parameters[5] = { part_.cx()+0.1, part_.cy()-0.1, 0.5*part_.ux(), 2.*part_.uy(), 0.4*part_.eta() };
-    //double parameters[2] = { 0.5*part_.ux(), 1.5*part_.uy() };
-    //double parameters[3] = { 0.5*part_.ux(), 1.5*part_.uy(), 2.*part_.eta() };
-    double parameters[1] = { part_.eta() * 1.1 };
-
-    MGClock::HrsStopwatch sw; sw.start();
-
-    ceres::CostFunction* cost_function(new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_));
-    //cost_function.set_num_residuals();
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, NULL, parameters);
-
+    
     ceres::Solver::Options options;
     ceres::Solver::Summary summary;
+
     ceres::Solve(options, &problem, &summary);
-
-    sw.stop();
-
-    std::cout << summary.FullReport() << "\n";
-    //std::cout << summary.BriefReport() << "\n";
     
-    //std::cout << Form("CX  %14.8f\n", part_.cx()- parameters[0]);
-    //std::cout << Form("CY  %14.8f\n", part_.cy()- parameters[1]);
-    //std::cout << Form("UX  %14.8f\n", part_.ux()- parameters[0]);
-    //std::cout << Form("UY  %14.8f\n", part_.uy()- parameters[1]);
-    std::cerr << Form("ETA %14.8f %14.8f\n", part_.eta(), part_.eta() - parameters[0]);
-    std::cerr << Form("TME %14.8f ms\n", sw.time() * 1.0e3);
+    //std::cout << summary.FullReport() << "\n";
+    //std::cout << summary.BriefReport() << "\n";
 
-    //std::cout << Form("Valid %d ETA %14.8f %14.8f\n", options.IsValid(), part_.eta(), parameters[0]);
+    succ_ = summary.IsSolutionUsable();
+    if (succ_) {
+        part_.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(part_.uz()));
+        part_.set_eta(parameters[4]);
+    }
+    else { clear(); }
+    
+    return succ_;
+}
 
+
+bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    Double_t chix = MGMath::ZERO;
+    Double_t chiy = MGMath::ZERO;
+    SVecD<5>    grdG;
+    SMtxSymD<5> cvGG;
+
+    PhySt ppst(part_);
+    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], MGNumc::Compare(part_.uz()));
+    ppst.set_eta(parameters[0][4]);
+
+    Int_t cnt_nhit = 0;
+    PhyJb::SMtxDGG&& ppjb = SMtxId();
+    for (auto&& hit : hits_) {
+        PhyJb curjb;
+        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+        ppjb = curjb.gg() * ppjb;
+
+        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
+
+        SMtxSymD<2> cvM;
+        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
+        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
+        
+        SVecD<2> rsM;
+        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
+        
+        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+        grdG += LA::Transpose(subJbF) * rsM;
+        cvGG += LA::SimilarityT(subJbF, cvM);
+
+        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
+        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
+
+        if (hit.sx()) residuals[hit.seqIDx()] = (hit.cx() - ppst.cx()) / mex;
+        if (hit.sy()) residuals[hit.seqIDy()] = (hit.cy() - ppst.cy()) / mey;
+
+        if (jacobians != nullptr && jacobians[0] != nullptr) {
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 0) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 0) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 1] = -subJbF(0, 1) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 1] = -subJbF(1, 1) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 2] = -subJbF(0, 2) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 2] = -subJbF(1, 2) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 3] = -subJbF(0, 3) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 3] = -subJbF(1, 3) / mey;
+            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 4] = -subJbF(0, 4) / mex; 
+            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 4] = -subJbF(1, 4) / mey;
+        }
+        cnt_nhit++;
+    }
+    if (cnt_nhit != hits_.size()) return false;
+    Double_t chi  = (chix + chiy);
+    Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
+
+    //std::cerr << Form("============= CHI %14.8f  X %14.8f Y %14.8f UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4]);
     return true;
 }
-*/
-
-
-
-
-
 #endif
+
 
 } // namespace TrackSys
 

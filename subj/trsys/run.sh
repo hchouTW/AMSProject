@@ -1,7 +1,7 @@
 #!/bin/bash
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_ams02_fill
-RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
+#RunFile=${AMSCore}/subj/trsys/vdev/prop_ams02_fill
+RunFile=${AMSCore}/subj/trsys/vdev/fit_ams02_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
 
 CurDir=${PWD}

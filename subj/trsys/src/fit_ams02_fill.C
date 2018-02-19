@@ -9,7 +9,7 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
 
 #include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
+//#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
 
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
@@ -24,15 +24,17 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
-    
+
+    google::InitGoogleLogging(argv[0]);
+
     MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
 
     LIST * fList = new LIST;
-    G4MC * fG4mc = (opt.type() == "MC" ) ? new G4MC : nullptr;
-    RTI  * fRti  = (opt.type() == "ISS") ? new RTI  : nullptr;
+    G4MC * fG4mc = (opt.mode() == MGConfig::JobOpt::MODE::MC ) ? new G4MC : nullptr;
+    RTI  * fRti  = (opt.mode() == MGConfig::JobOpt::MODE::ISS) ? new RTI  : nullptr;
     TRG  * fTrg  = new TRG ;
     TOF  * fTof  = new TOF ;
     ACC  * fAcc  = new ACC ;
@@ -42,9 +44,9 @@ int main(int argc, char * argv[]) {
     ECAL * fEcal = new ECAL;
 
     dst->SetBranchAddress("list", &fList);
-    if (opt.type() == "MC")
+    if (opt.mode() == MGConfig::JobOpt::MODE::MC)
         dst->SetBranchAddress("g4mc", &fG4mc);
-    if (opt.type() == "ISS")
+    if (opt.mode() == MGConfig::JobOpt::MODE::ISS)
         dst->SetBranchAddress("rti",  &fRti);
     dst->SetBranchAddress("trg",  &fTrg);
     dst->SetBranchAddress("tof",  &fTof);
@@ -170,7 +172,7 @@ int main(int argc, char * argv[]) {
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
-     
+
         TrackInfo& track = fTrk->track;
         
         // Geometry (TOF)
@@ -206,7 +208,7 @@ int main(int argc, char * argv[]) {
         if (fG4mc->primVtx.status) {
             if (fG4mc->primVtx.coo[2] > -55.) IntType = 1;
         }
-            
+           
         Bool_t hasMCL1 = false;
         Bool_t hasMCL9 = false;
         for (auto&& mchit : fG4mc->primPart.hits) {
@@ -268,7 +270,7 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKtme->fillH2D(mc_mom, track.cpuTime[0][patt]);
         if (cn_succ) hCNtme->fillH2D(mc_mom, track.cpuTime[1][patt]*0.1);
         if (kf_succ) hKFtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.01);
-        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]*0.1);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);
@@ -392,5 +394,6 @@ int main(int argc, char * argv[]) {
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
 
+    google::ShutdownGoogleLogging();
     return 0;
 }

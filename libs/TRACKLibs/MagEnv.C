@@ -209,6 +209,7 @@ MagFld MagGeoBoxAms::Get(const SVecD<3>& coo) {
     Float_t incoo[3] = { static_cast<Float_t>(coo[0]), static_cast<Float_t>(coo[1]), static_cast<Float_t>(coo[2]) };
     Float_t outmag[3] = { 0, 0, 0 };
     mag_field_->GuFld(incoo, outmag);
+    
     return MagFld(outmag);
 }
         
