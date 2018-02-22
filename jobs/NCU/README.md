@@ -59,12 +59,12 @@ https://voms.grid.sinica.edu.tw:8443/
 ### Init VOMS
 In ~/.bashrc file
 ```bash
-export X509_USER_PROXY=~/ams02
+export X509_USER_PROXY=~/.ams02
 ```
 Init voms
 ```bash
-voms-proxy-init -voms ams02.cern.ch -valid 24:0 -hours 24 -out ~/ams02
-voms-proxy-info -all -file ~/ams02
+voms-proxy-init -voms ams02.cern.ch -valid 24:0 -hours 24 -out ~/.ams02
+voms-proxy-info -all -file ~/.ams02
 ```
 
 ## PBS (Portable Batch System)
