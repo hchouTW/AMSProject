@@ -26,22 +26,22 @@ alias rm="sh ~/AMSProject/sys/shell/rmsoft.sh"
 alias rmfc="/bin/rm"
 
 # AMSProject
-if [[ "${AMSProj}" == "" ]]; then AMSProj="~/AMSProject"; fi
+if [[ "${AMSProj}" == "" ]]; then export AMSProj=~/AMSProject; fi
 export AMSProjLibs=${AMSProj}/libs
 export AMSProjProd=${AMSProj}/prod
 export AMSProjSubj=${AMSProj}/subj
 export AMSProjJobs=${AMSProj}/jobs
 
 # AMSCore
-if [[ "${AMSCore}" == "" ]]; then AMSCore="~/AMSCore"; fi
+if [[ "${AMSCore}" == "" ]]; then export AMSCore=~/AMSCore; fi
 export AMSCoreProd=${AMSCore}/prod
 export AMSCoreSubj=${AMSCore}/subj
 
 # AMSJobs
-if [[ "${AMSJobs}" == "" ]]; then AMSJobs="~/AMSJobs"; fi
+if [[ "${AMSJobs}" == "" ]]; then export AMSJobs=~/AMSJobs; fi
 
 # AMSData
-if [[ "${AMSData}" == "" ]]; then AMSData="~/AMSData"; fi
+if [[ "${AMSData}" == "" ]]; then export AMSData=~/AMSData; fi
 
 # TEX
 source ${AMSProj}/sw/tex/tex.sh
