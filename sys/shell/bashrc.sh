@@ -67,7 +67,7 @@ source ${AMSProj}/sys/shell/ini_parser.sh
 if [[ "$HOSTNAME" == *"lxplus"* ]]; then
     source ${AMSProjJobs}/CERN/cern.sh
     alias scphep='scp -r -oProxyCommand="ssh -W %h:%p cms01.phy.ncu.edu.tw" hep068.phy.ncu.edu.tw:'
-elif [[ "$HOSTNAME" == *"hep068"* ]]; then
+elif [[ "$HOSTNAME" == *"hep068"* || "$HOSTNAME" == *"cms01"* ]]; then
     source ${AMSProjJobs}/NCU/ncu.sh
 fi
 
