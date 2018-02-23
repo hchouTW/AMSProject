@@ -104,7 +104,7 @@ using EVecXD = Eigen::VectorXd;
 class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     public :
         //VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(5); }
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part), numOfRes_(0), numOfPar_(0) { checkHit(); setvar(numOfSeq()+numOfHit()*PhyJb::DIM_L, 5+numOfHit()*PhyJb::DIM_L); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part), numOfRes_(0), numOfPar_(0) { checkHit(); setvar(numOfSeq()+numOfHit()*PhyJb::DIM_L, PhyJb::DIM_G+numOfHit()*PhyJb::DIM_L); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :

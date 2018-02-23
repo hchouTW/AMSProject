@@ -429,13 +429,15 @@ Bool_t PhyTrFit::physicalFit() {
     if (succ_) {
         part_.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(part_.uz()));
         part_.set_eta(parameters[4]);
-        std::cout << summary.FullReport() << "\n";
-        COUT("\n==========SUCC===========\n");
-        part_.print();
-        for (Int_t it = 0; it < numOfHit(); ++it) {
-            COUT("IT %d MSCAT %14.8f %14.8f\n", it, parameters[5+it*PhyJb::DIM_L+0], parameters[5+it*PhyJb::DIM_L+1]);
-        }
-        COUT("========================\n");
+        //std::cout << summary.FullReport() << "\n";
+        //COUT("\n==========SUCC===========\n");
+        //part_.print();
+        //for (Int_t it = 0; it < numOfHit(); ++it) {
+        //    COUT("IT %d MSCAT %14.8f %14.8f\n", it, 
+        //            parameters[PhyJb::DIM_G+it*PhyJb::DIM_L+0], 
+        //            parameters[PhyJb::DIM_G+it*PhyJb::DIM_L+1]);
+        //}
+        //COUT("========================\n");
     }
     //else { std::cout << summary.FullReport() << "\n"; clear(); }
     else { clear(); }
@@ -628,11 +630,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     std::vector<PhyJb::SMtxDGG> jbGG(hits_.size());
     std::vector<PhyJb::SMtxDGL> jbGL(hits_.size());
 
-    Double_t mscat_ll = 0;
     for (auto&& hit : hits_) {
         PhyJb curjb;
         if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
-        ppst.arg().set_mscat(parameters[0][5+cnt_nhit*PhyJb::DIM_L+0], parameters[0][5+cnt_nhit*PhyJb::DIM_L+1]);
+        ppst.arg().set_mscat(
+            parameters[0][PhyJb::DIM_G+cnt_nhit*PhyJb::DIM_L+0], 
+            parameters[0][PhyJb::DIM_G+cnt_nhit*PhyJb::DIM_L+1]);
         PhyArg curArg = ppst.arg();
         ppst.symbk();
 
@@ -647,10 +650,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         Double_t mex = (hit.sx() ? hit.ex(rmx) : MGMath::ZERO);
         Double_t mey = (hit.sy() ? hit.ey(rmy) : MGMath::ZERO);
        
-        //mscat_ll = std::hypot(mscat_ll, curArg.mscat_ll());
-        mex = std::hypot(mex, mscat_ll);
-        mey = std::hypot(mey, mscat_ll);
-
         if (hit.sx()) rs(hit.seqIDx()) += rmx / mex;
         if (hit.sy()) rs(hit.seqIDy()) += rmy / mey;
         rs(numOfSeq()+cnt_nhit*PhyJb::DIM_L+0) += -curArg.tauu();
@@ -661,15 +660,14 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hit.sy()) jb(hit.seqIDy(), it) += -ppjb(1, it) / mey;
         }
 
-        //for (Int_t ih = 0; ih <= cnt_nhit; ++ih) {
-        //    const HitSt& ihit = hits_.at(ih);
-        //    for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-        //        if (ihit.sx()) jb(ihit.seqIDx(), 5+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(0, jl) / mex;
-        //        if (ihit.sy()) jb(ihit.seqIDy(), 5+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(1, jl) / mey;
-        //    }
-        //}
+        for (Int_t ih = 0; ih <= cnt_nhit; ++ih) {
+            for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+                if (hit.sx()) jb(hit.seqIDx(), PhyJb::DIM_G+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(0, jl) / mex;
+                if (hit.sy()) jb(hit.seqIDy(), PhyJb::DIM_G+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(1, jl) / mey;
+            }
+        }
         for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl)
-            jb(numOfSeq()+cnt_nhit*PhyJb::DIM_L+jl, 5+cnt_nhit*PhyJb::DIM_L+jl) += -1.0;
+            jb(numOfSeq()+cnt_nhit*PhyJb::DIM_L+jl, PhyJb::DIM_G+cnt_nhit*PhyJb::DIM_L+jl) += -1.0;
 
         cnt_nhit++;
     }
@@ -693,7 +691,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     Double_t chi  = (chix + chiy);
     chi = xxx;
-    //Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
     Double_t nchi = ((chi) / static_cast<Double_t>(numOfRes_-numOfPar_));
 
     //std::cerr << Form("============= CHI %14.8f  X %14.8f Y %14.8f UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4]);
