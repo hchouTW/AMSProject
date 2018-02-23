@@ -98,21 +98,32 @@ class SimpleTrFit : public TrFitPar {
 
 
 #ifdef __CeresSolver__
-using EMtxXD = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
-using EVecXD = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+using EMtxXD = Eigen::MatrixXd;
+using EVecXD = Eigen::VectorXd;
 
 class VirtualPhyTrFit : public TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(5); }
+        //VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part) { checkHit(); set_num_residuals(numOfSeq()); mutable_parameter_block_sizes()->push_back(5); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part), numOfRes_(0), numOfPar_(0) { checkHit(); setvar(numOfSeq()+numOfHit()*PhyJb::DIM_L, 5+numOfHit()*PhyJb::DIM_L); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
     
     protected :
-        void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); }
+        inline void setvar(Int_t num_of_residual = 0, Int_t num_of_parameter = 0) {
+            numOfRes_ = 0;
+            numOfPar_ = 0;
+            mutable_parameter_block_sizes()->clear(); 
+            if (num_of_residual  > 0) { numOfRes_ = num_of_residual;  set_num_residuals(num_of_residual); }
+            if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
+        }
+
+        inline void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
     
     protected :
+        Int_t numOfRes_;
+        Int_t numOfPar_;
         PhySt part_;
 };
 

@@ -106,6 +106,13 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JUY, JRHOU) = arg.mscat_uu() * arg.orth_rho(Y);
         jb_gl_(JPX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
+       
+        // testcode
+        //jb_gl_(JPX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
+        //jb_gl_(JPY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
+        //jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
+        //jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
+        //
 
         Double_t eta  = part.eta_abs() / (MGMath::ONE + arg.sign() * arg.elion_mpv());
         Double_t ibta = std::sqrt(MGMath::ONE + eta * eta);
@@ -114,6 +121,11 @@ void PhyJb::set(PhySt& part) {
         jb_gg_(JPY, JEA) += crr * (arg.tauu()*jb_gl_(JPY, JTAUU) + arg.rhou()*jb_gl_(JPY, JRHOU));
         jb_gg_(JUX, JEA) += crr * (arg.tauu()*jb_gl_(JUX, JTAUU) + arg.rhou()*jb_gl_(JUX, JRHOU));
         jb_gg_(JUY, JEA) += crr * (arg.tauu()*jb_gl_(JUY, JTAUU) + arg.rhou()*jb_gl_(JUY, JRHOU));
+        
+        // testcode
+        //jb_gg_(JPX, JEA) += crr * (arg.taul()*jb_gl_(JPX, JTAUL) + arg.rhol()*jb_gl_(JPX, JRHOL));
+        //jb_gg_(JPY, JEA) += crr * (arg.taul()*jb_gl_(JPY, JTAUL) + arg.rhol()*jb_gl_(JPY, JRHOL));
+        //
     }
     if (arg.eloss()) {
     }
@@ -124,19 +136,6 @@ void PhyJb::multiplied(PhyJb& phyJb) {
     jb_gg_  = std::move(phyJb.gg() * jb_gg_);
     if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
 }
-
-
-//void PhyJb::print() const {
-//    std::string printStr;
-//    printStr += STR_FMT("============================================= PhyJb =============================================\n");
-//    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPX, JPX), jb_gg_(JPX, JPY), jb_gg_(JPX, JUX), jb_gg_(JPX, JUY), jb_gg_(JPX, JEA), jb_gl_(JPX, JTAUU), jb_gl_(JPX, JTAUL), jb_gl_(JPX, JRHOU), jb_gl_(JPX, JRHOL));
-//    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JPY, JPX), jb_gg_(JPY, JPY), jb_gg_(JPY, JUX), jb_gg_(JPY, JUY), jb_gg_(JPY, JEA), jb_gl_(JPY, JTAUU), jb_gl_(JPY, JTAUL), jb_gl_(JPY, JRHOU), jb_gl_(JPY, JRHOL));
-//    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUX, JPX), jb_gg_(JUX, JPY), jb_gg_(JUX, JUX), jb_gg_(JUX, JUY), jb_gg_(JUX, JEA), jb_gl_(JUX, JTAUU), jb_gl_(JUX, JTAUL), jb_gl_(JUX, JRHOU), jb_gl_(JUX, JRHOL));
-//    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JUY, JPX), jb_gg_(JUY, JPY), jb_gg_(JUY, JUX), jb_gg_(JUY, JUY), jb_gg_(JUY, JEA), jb_gl_(JUY, JTAUU), jb_gl_(JUY, JTAUL), jb_gl_(JUY, JRHOU), jb_gl_(JUY, JRHOL));
-//    printStr += STR_FMT("%12.7f %12.7f %12.7f %12.7f %12.7f        %12.7f %12.7f %12.7f %12.7f\n", jb_gg_(JEA, JPX), jb_gg_(JEA, JPY), jb_gg_(JEA, JUX), jb_gg_(JEA, JUY), jb_gg_(JEA, JEA), jb_gl_(JEA, JTAUU), jb_gl_(JEA, JTAUL), jb_gl_(JEA, JRHOU), jb_gl_(JEA, JRHOL));
-//    printStr += STR_FMT("=================================================================================================\n");
-//    COUT(printStr); 
-//}
 
 
 TransferPhyJb::TransferPhyJb(const TransferFunc& tf, PhyJb& jb) {

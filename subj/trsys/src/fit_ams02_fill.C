@@ -73,7 +73,7 @@ int main(int argc, char * argv[]) {
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Time
-    Axis AXtme("Time [ms]", 400, 0., 2.);
+    Axis AXtme("Time [ms]", 800, 0., 4.);
     Hist * hCKtme = Hist::New("hCKtme", HistAxis(AXmom, AXtme));
     Hist * hCNtme = Hist::New("hCNtme", HistAxis(AXmom, AXtme));
     Hist * hKFtme = Hist::New("hKFtme", HistAxis(AXmom, AXtme));
@@ -253,7 +253,7 @@ int main(int argc, char * argv[]) {
         Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
-        hHCtme->fillH2D(mc_mom, sw.time()*1.0e3);
+        Double_t hc_tme  = sw.time()*1.0e3; 
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -270,7 +270,8 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKtme->fillH2D(mc_mom, track.cpuTime[0][patt]);
         if (cn_succ) hCNtme->fillH2D(mc_mom, track.cpuTime[1][patt]*0.1);
         if (kf_succ) hKFtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.01);
-        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]*0.1);
+        //if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[3][patt]*0.1);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme*0.1);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rigidity[0][patt] : 0.);
         Double_t cn_irig = (cn_succ ? MGMath::ONE/track.rigidity[1][patt] : 0.);

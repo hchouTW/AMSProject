@@ -13,11 +13,8 @@ export DPNS_HOST=grid71.phy.ncu.edu.tw
 export DPM_HOME=/dpm/phy.ncu.edu.tw/home
 
 # AS EOS
-export EOS_MGM_URL=root://tw-eos01.grid.sinica.edu.tw
+export EOS_MGM_URL=root://tw-eos03.grid.sinica.edu.tw
 export EOS_HOME=/eos/ams
-
-# Libs
-source ${AMSProjLibs}/external/castor/bin/castor.sh
 
 # Submit Script
 alias mkjob='sh ${AMSProjJobs}/NCU/mkjob.sh'

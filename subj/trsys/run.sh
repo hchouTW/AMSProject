@@ -21,13 +21,13 @@ OutputDir=${CurDir}/dat
 #Fit
 #GroupSize=9
 #Nseq=80
-GroupSize=8
-Nseq=70
+GroupSize=4
+Nseq=180
 
 for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir}" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}" | qsub -q ams -N JOB${id} -j oe
 #    ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done

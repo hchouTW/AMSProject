@@ -133,8 +133,6 @@ class PhyJb {
 
         inline void multiplied(PhyJb& phyJb);
 
-        //inline void print() const;
-
         inline const Bool_t&   field() const { return field_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }

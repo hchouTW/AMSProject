@@ -399,12 +399,23 @@ Bool_t PhyTrFit::simpleFit() {
 Bool_t PhyTrFit::physicalFit() {
     if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
-    double parameters[5] = { part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() };
+    std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
+    for (Int_t it = 0; it < numOfHit()*PhyJb::DIM_L; ++it) parameters.push_back(MGRndm::NormalGaussian());
+
+    //COUT("\n==========INIT===========\n");
+    //part_.print();
+    //for (Int_t it = 0; it < numOfHit(); ++it) {
+    //    COUT("IT %d MSCAT %14.8f %14.8f\n", it, parameters[5+it*PhyJb::DIM_L+0], parameters[5+it*PhyJb::DIM_L+1]);
+    //}
 
     ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     ceres::Problem problem;
-    problem.AddResidualBlock(cost_function, NULL, parameters);
+    problem.AddResidualBlock(cost_function, NULL, parameters.data());
+    //problem.SetParameterLowerBound(parameters, 2, -1.0);
+    //problem.SetParameterUpperBound(parameters, 2,  1.0);
+    //problem.SetParameterLowerBound(parameters, 3, -1.0);
+    //problem.SetParameterUpperBound(parameters, 3,  1.0);
     
     ceres::Solver::Options options;
     ceres::Solver::Summary summary;
@@ -418,7 +429,15 @@ Bool_t PhyTrFit::physicalFit() {
     if (succ_) {
         part_.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], MGNumc::Compare(part_.uz()));
         part_.set_eta(parameters[4]);
+        std::cout << summary.FullReport() << "\n";
+        COUT("\n==========SUCC===========\n");
+        part_.print();
+        for (Int_t it = 0; it < numOfHit(); ++it) {
+            COUT("IT %d MSCAT %14.8f %14.8f\n", it, parameters[5+it*PhyJb::DIM_L+0], parameters[5+it*PhyJb::DIM_L+1]);
+        }
+        COUT("========================\n");
     }
+    //else { std::cout << summary.FullReport() << "\n"; clear(); }
     else { clear(); }
     
     return succ_;
@@ -427,6 +446,10 @@ Bool_t PhyTrFit::physicalFit() {
 
 /*
 bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    std::fill_n(residuals, numOfRes_, 0.);
+    Bool_t hasJacb = (jacobians != nullptr && jacobians[0] != nullptr);
+    if (hasJacb) std::fill_n(jacobians[0], numOfRes_*numOfPar_, 0.);
+    
     Double_t chix = MGMath::ZERO;
     Double_t chiy = MGMath::ZERO;
     SVecD<5>    grdG;
@@ -488,8 +511,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 */
 
 
-
+/*
 bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    std::fill_n(residuals, numOfRes_, 0.);
+    Bool_t hasJacb = (jacobians != nullptr && jacobians[0] != nullptr);
+    if (hasJacb) std::fill_n(jacobians[0], numOfRes_*numOfPar_, 0.);
+    
     Double_t chix = MGMath::ZERO;
     Double_t chiy = MGMath::ZERO;
     SVecD<5>    grdG;
@@ -501,60 +528,179 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     Int_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& ppjb = SMtxId();
-    
-    EVecXD resM(numOfSeq());
-    EMtxXD cvGL(numOfSeq(), numOfSeq());
-    
-    
-    LLT<EMtxXD> lltCv(cv);
-    lltCv.matrixU();
+
+    EVecXD rsM = EVecXD::Zero(numOfSeq());
+    EMtxXD cvR = EMtxXD::Zero(numOfSeq(), numOfSeq());
+    EMtxXD jbG = EMtxXD::Zero(numOfSeq(), PhyJb::DIM_G);
+    EMtxXD jbL = EMtxXD::Zero(numOfSeq(), PhyJb::DIM_L * hits_.size());
+    std::vector<PhyJb::SMtxDGG> jbGG(hits_.size());
+    std::vector<PhyJb::SMtxDGL> jbGL(hits_.size());
+
     for (auto&& hit : hits_) {
         PhyJb curjb;
         if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
         ppjb = curjb.gg() * ppjb;
+        jbGG.at(cnt_nhit) = ppjb;
+        jbGL.at(cnt_nhit) = curjb.gl();
+        for (Int_t it = 0; it < cnt_nhit; ++it)
+            jbGL.at(it) = PhyJb::Multiply(curjb.gg(), jbGL.at(it));
 
-        Double_t mex = (hit.sx() ? hit.ex(hit.cx() - ppst.cx()) : MGMath::ZERO);
-        Double_t mey = (hit.sy() ? hit.ey(hit.cy() - ppst.cy()) : MGMath::ZERO);
-
-        SMtxSymD<2> cvM;
-        cvM(0, 0) = (hit.sx() ? (MGMath::ONE / mex / mex) : MGMath::ZERO);
-        cvM(1, 1) = (hit.sy() ? (MGMath::ONE / mey / mey) : MGMath::ZERO);
+        Double_t rmx = (hit.sx() ? (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t rmy = (hit.sy() ? (hit.cy() - ppst.cy()) : MGMath::ZERO);
+        Double_t mex = (hit.sx() ? hit.ex(rmx) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(rmy) : MGMath::ZERO);
         
-        SVecD<2> rsM;
-        rsM(0) = (hit.sx() ? cvM(0, 0) * (hit.cx() - ppst.cx()) : MGMath::ZERO);
-        rsM(1) = (hit.sy() ? cvM(1, 1) * (hit.cy() - ppst.cy()) : MGMath::ZERO);
-        
-        PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-        grdG += LA::Transpose(subJbF) * rsM;
-        cvGG += LA::SimilarityT(subJbF, cvM);
+        if (hit.sx()) rsM(hit.seqIDx()) = rmx;
+        if (hit.sy()) rsM(hit.seqIDy()) = rmy;
 
-        if (hit.sx()) { chix += rsM(0) * (hit.cx() - ppst.cx()); }
-        if (hit.sy()) { chiy += rsM(1) * (hit.cy() - ppst.cy()); }
-
-        if (hit.sx()) residuals[hit.seqIDx()] = (hit.cx() - ppst.cx()) / mex;
-        if (hit.sy()) residuals[hit.seqIDy()] = (hit.cy() - ppst.cy()) / mey;
-
-        if (jacobians != nullptr && jacobians[0] != nullptr) {
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 0] = -subJbF(0, 0) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 0] = -subJbF(1, 0) / mey;
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 1] = -subJbF(0, 1) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 1] = -subJbF(1, 1) / mey;
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 2] = -subJbF(0, 2) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 2] = -subJbF(1, 2) / mey;
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 3] = -subJbF(0, 3) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 3] = -subJbF(1, 3) / mey;
-            if (hit.sx()) jacobians[0][hit.seqIDx() * parameter_block_sizes().at(0) + 4] = -subJbF(0, 4) / mex; 
-            if (hit.sy()) jacobians[0][hit.seqIDy() * parameter_block_sizes().at(0) + 4] = -subJbF(1, 4) / mey;
+        if (hit.sx()) cvR(hit.seqIDx(), hit.seqIDx()) += mex * mex;
+        if (hit.sy()) cvR(hit.seqIDy(), hit.seqIDy()) += mey * mey;
+            
+        for (Int_t it = 0; it < PhyJb::DIM_G; ++it) {
+            if (hit.sx()) jbG(hit.seqIDx(), it) = ppjb(0, it);
+            if (hit.sy()) jbG(hit.seqIDy(), it) = ppjb(1, it);
         }
+
+        //for (Int_t ih = 0; ih <= cnt_nhit; ++ih) {
+        //    const HitSt& ihit = hits_.at(ih);
+        //    for (Int_t jl = ih*PhyJb::DIM_L; jl < (ih+1)*PhyJb::DIM_L; ++jl) {
+        //        if (ihit.sx()) jbL(ihit.seqIDx(), jl) = jbGL.at(ih)(0, jl);
+        //        if (ihit.sy()) jbL(ihit.seqIDy(), jl) = jbGL.at(ih)(1, jl);
+        //    }
+        //}
+
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
+    
+    //cvR += (jbL * jbL.transpose());
+    
+    EMtxXD&& invR = cvR.inverse();
+    Eigen::LLT<EMtxXD> lltInv(invR);
+    EMtxXD&& orth = lltInv.matrixU();
+    
+    double xxx = 0;
+    EMtxXD&& res = orth * rsM;
+    for (Int_t it = 0; it < numOfSeq(); ++it) {
+        residuals[it] = res(it);
+        xxx += res(it) * res(it);
+    }
+    
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
+        EMtxXD&& jb = -(orth * jbG);
+        for (Int_t it = 0; it < numOfSeq(); ++it) {
+            for (Int_t jt = 0; jt < PhyJb::DIM_G; ++jt) {
+                jacobians[0][it * parameter_block_sizes().at(0) + jt] = jb(it, jt); 
+            }
+        }
+    }
+
+
+
     Double_t chi  = (chix + chiy);
+    chi = xxx;
     Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
 
     //std::cerr << Form("============= CHI %14.8f  X %14.8f Y %14.8f UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4]);
     return true;
 }
+*/
+
+bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    std::fill_n(residuals, numOfRes_, 0.);
+    Bool_t hasJacb = (jacobians != nullptr && jacobians[0] != nullptr);
+    if (hasJacb) std::fill_n(jacobians[0], numOfRes_*numOfPar_, 0.);
+
+    Double_t chix = MGMath::ZERO;
+    Double_t chiy = MGMath::ZERO;
+    SVecD<5>    grdG;
+    SMtxSymD<5> cvGG;
+
+    PhySt ppst(part_);
+    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], MGNumc::Compare(part_.uz()));
+    ppst.set_eta(parameters[0][4]);
+
+    Int_t cnt_nhit = 0;
+    PhyJb::SMtxDGG&& ppjb = SMtxId();
+
+    EVecXD rs = EVecXD::Zero(numOfRes_);
+    EMtxXD jb = EMtxXD::Zero(numOfRes_, numOfPar_);
+    std::vector<PhyJb::SMtxDGG> jbGG(hits_.size());
+    std::vector<PhyJb::SMtxDGL> jbGL(hits_.size());
+
+    Double_t mscat_ll = 0;
+    for (auto&& hit : hits_) {
+        PhyJb curjb;
+        if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, &curjb)) break;
+        ppst.arg().set_mscat(parameters[0][5+cnt_nhit*PhyJb::DIM_L+0], parameters[0][5+cnt_nhit*PhyJb::DIM_L+1]);
+        PhyArg curArg = ppst.arg();
+        ppst.symbk();
+
+        ppjb = curjb.gg() * ppjb;
+        jbGG.at(cnt_nhit) = ppjb;
+        jbGL.at(cnt_nhit) = curjb.gl();
+        for (Int_t it = 0; it < cnt_nhit; ++it)
+            jbGL.at(it) = PhyJb::Multiply(curjb.gg(), jbGL.at(it));
+
+        Double_t rmx = (hit.sx() ? (hit.cx() - ppst.cx()) : MGMath::ZERO);
+        Double_t rmy = (hit.sy() ? (hit.cy() - ppst.cy()) : MGMath::ZERO);
+        Double_t mex = (hit.sx() ? hit.ex(rmx) : MGMath::ZERO);
+        Double_t mey = (hit.sy() ? hit.ey(rmy) : MGMath::ZERO);
+       
+        //mscat_ll = std::hypot(mscat_ll, curArg.mscat_ll());
+        mex = std::hypot(mex, mscat_ll);
+        mey = std::hypot(mey, mscat_ll);
+
+        if (hit.sx()) rs(hit.seqIDx()) += rmx / mex;
+        if (hit.sy()) rs(hit.seqIDy()) += rmy / mey;
+        rs(numOfSeq()+cnt_nhit*PhyJb::DIM_L+0) += -curArg.tauu();
+        rs(numOfSeq()+cnt_nhit*PhyJb::DIM_L+1) += -curArg.rhou();
+
+        for (Int_t it = 0; it < PhyJb::DIM_G; ++it) {
+            if (hit.sx()) jb(hit.seqIDx(), it) += -ppjb(0, it) / mex;
+            if (hit.sy()) jb(hit.seqIDy(), it) += -ppjb(1, it) / mey;
+        }
+
+        //for (Int_t ih = 0; ih <= cnt_nhit; ++ih) {
+        //    const HitSt& ihit = hits_.at(ih);
+        //    for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+        //        if (ihit.sx()) jb(ihit.seqIDx(), 5+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(0, jl) / mex;
+        //        if (ihit.sy()) jb(ihit.seqIDy(), 5+ih*PhyJb::DIM_L+jl) += -jbGL.at(ih)(1, jl) / mey;
+        //    }
+        //}
+        for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl)
+            jb(numOfSeq()+cnt_nhit*PhyJb::DIM_L+jl, 5+cnt_nhit*PhyJb::DIM_L+jl) += -1.0;
+
+        cnt_nhit++;
+    }
+    if (cnt_nhit != hits_.size()) return false;
+    
+    double xxx = 0;
+    for (Int_t it = 0; it < numOfRes_; ++it) {
+        residuals[it] = rs(it);
+        xxx += rs(it) * rs(it);
+    }
+    
+    if (hasJacb) {
+        for (Int_t it = 0; it < numOfRes_; ++it) {
+            for (Int_t jt = 0; jt < numOfPar_; ++jt) {
+                jacobians[0][it * parameter_block_sizes().at(0) + jt] = jb(it, jt); 
+            }
+        }
+    }
+
+
+
+    Double_t chi  = (chix + chiy);
+    chi = xxx;
+    //Double_t nchi = ((chi) / static_cast<Double_t>(nhtx_+nhty_-5));
+    Double_t nchi = ((chi) / static_cast<Double_t>(numOfRes_-numOfPar_));
+
+    //std::cerr << Form("============= CHI %14.8f  X %14.8f Y %14.8f UX %14.8f UY %14.8f ETA %14.8f\n", nchi, parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4]);
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 #endif
 
 

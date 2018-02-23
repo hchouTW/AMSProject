@@ -59,6 +59,9 @@ export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 # ROOT
 alias root='root -l'
 
+# Castor Libs
+source ${AMSProjLibs}/external/castor/bin/castor.sh
+
 # Local Job Command
 source ${AMSProjJobs}/LOCAL/local.sh
 
@@ -67,7 +70,8 @@ source ${AMSProj}/sys/shell/ini_parser.sh
 if [[ "$HOSTNAME" == *"lxplus"* ]]; then
     source ${AMSProjJobs}/CERN/cern.sh
     alias scphep='scp -r -oProxyCommand="ssh -W %h:%p cms01.phy.ncu.edu.tw" hep068.phy.ncu.edu.tw:'
-elif [[ "$HOSTNAME" == *"hep068"* || "$HOSTNAME" == *"cms01"* ]]; then
+#elif [[ "$HOSTNAME" == *"hep068"* || "$HOSTNAME" == *"cms01"* ]]; then
+else
     source ${AMSProjJobs}/NCU/ncu.sh
 fi
 
