@@ -20,7 +20,7 @@
 #sh /ams_home/hchou/AMSProject/sys/shell/xrdcp_cern.sh /eos/ams/user/h/hchou/AMSData/prod/18Jan29/PR10004000.B1103 /ams02/user/hchou/Pr10004000_B1103_18Jan29 YiNtuple_MC.00008 &
 #sh /ams_home/hchou/AMSProject/sys/shell/xrdcp_cern.sh /eos/ams/user/h/hchou/AMSData/prod/18Jan29/PR10004000.B1103 /ams02/user/hchou/Pr10004000_B1103_18Jan29 YiNtuple_MC.00009 &
 
-for id in `seq 180 250`
+for id in `seq 180 249`
 do
     sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb13/CERN_TESTp3 /ams02/user/hchou/ISS_PASS6_CERN_TEST YiNtuple_ISS.00${id} &
 done

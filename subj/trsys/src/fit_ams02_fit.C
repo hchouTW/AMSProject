@@ -231,7 +231,7 @@ int main(int argc, char * argv[]) {
 
     for (int it = 1; it <= AXrig.nbin(); ++it) {
         double rig = AXrig.center(it, AxisScale::kLog);
-        if (rig < 60.) continue;
+        if (rig < 50.) continue;
 
         Double_t CKnum = (*vhCKPflux.at(it))()->Integral(0, (*vhCKPflux.at(it))()->GetNbinsX()+1);
         TGraph grCKcc, grCKnm, grCKvl;

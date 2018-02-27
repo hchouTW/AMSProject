@@ -5,17 +5,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
-
 #include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Feb05/src/ClassDef.C"
-
-//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jan29/src/ClassDef.C"
-
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/17Dec23/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/17Dec23/src/ClassDef.C"
 
 using namespace std;
 
@@ -61,7 +51,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     PartType type = PartType::Proton;
     //PartType type = PartType::Electron;
-    PhyArg::SetOpt(true, true);
+    PhyArg::SetOpt(true, false);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
@@ -130,6 +120,12 @@ int main(int argc, char * argv[]) {
     Hist * hCNRchiyI1 = Hist::New("hCNRchiyI1", HistAxis(AXmom, AXRchi));
     Hist * hKFRchiyI1 = Hist::New("hKFRchiyI1", HistAxis(AXmom, AXRchi));
     Hist * hHCRchiyI1 = Hist::New("hHCRchiyI1", HistAxis(AXmom, AXRchi));
+    
+    Axis AXRchir("Rat [1]", 800, 0., 1.);
+    Hist * hHCMchit = Hist::New("hHCMchit", HistAxis(AXmom, AXRchir));
+    Hist * hHCMchir = Hist::New("hHCMchir", HistAxis(AXmom, AXRchir));
+    Hist * hHCRchit = Hist::New("hHCRchit", HistAxis(AXirig, AXRchir));
+    Hist * hHCRchir = Hist::New("hHCRchir", HistAxis(AXirig, AXRchir));
     
     Hist * hCKMCflux = Hist::New("hCKMCflux", HistAxis(AXrig, "Events/Bin"));
     Hist * hCNMCflux = Hist::New("hCNMCflux", HistAxis(AXrig, "Events/Bin"));
@@ -253,7 +249,19 @@ int main(int argc, char * argv[]) {
         Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;
         Double_t hc_irig = tr.part().irig();
-        Double_t hc_tme  = sw.time()*1.0e3; 
+        Double_t hc_tme  = sw.time()*1.0e3;
+
+        //Double_t nrl = 0;
+        //Double_t ela = 0;
+        //for (Int_t it = 0; it < tr.nargs(); ++it) {
+        //    nrl += tr.args(it)->nrl();
+        //    ela += tr.args(it)->ela();
+        //}
+        //CERR("NRL %14.8f  ELA %14.8f\n", nrl, ela);
+        //for (Int_t it = 0; it < tr.nhits(); ++it) {
+        //    Double_t dz = tr.hits(it)->cz() - tr.stts(it)->cz();
+        //    CERR("DZ %14.8f\n", dz);
+        //}
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -294,6 +302,11 @@ int main(int argc, char * argv[]) {
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
         //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[3][patt][1]) : 0.); 
         Double_t hc_chiy = (hc_succ ? std::log(tr.nchiy())              : 0.); 
+        
+        if (hc_succ) hHCMchit->fillH2D(mc_mom, tr.nchit()/tr.nchix());
+        if (hc_succ) hHCMchir->fillH2D(mc_mom, tr.nchir()/tr.nchiy());
+        if (hc_succ) hHCRchit->fillH2D(hc_irig, tr.nchit()/tr.nchix());
+        if (hc_succ) hHCRchir->fillH2D(hc_irig, tr.nchir()/tr.nchiy());
 
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (cn_succ) hCNRrso->fillH2D(mc_mom, bincen * (cn_irig - mc_irig));
@@ -338,7 +351,6 @@ int main(int argc, char * argv[]) {
         if (hc_succ && IntType == 1) hHCRchiyI1->fillH2D(mc_mom, hc_chiy);
         
         const Double_t initR = 30.;
-        //const Double_t initR = 1000.;
         Double_t pow27 = std::pow((mc_mom/initR), -1.7);
         Double_t powf = pow27;
         
@@ -376,6 +388,11 @@ int main(int argc, char * argv[]) {
         if (mc_mom > initR && cn_succ && cn_rig < 0) hCNNflux->fillH2D(-cn_rig, cn_chiy, powf);
         if (mc_mom > initR && kf_succ && kf_rig < 0) hKFNflux->fillH2D(-kf_rig, kf_chiy, powf);
         if (mc_mom > initR && hc_succ && hc_rig < 0) hHCNflux->fillH2D(-hc_rig, hc_chiy, powf);
+        
+        if (hc_succ) hHCMchit->fillH2D(mc_mom, tr.nchit()/tr.nchix());
+        if (hc_succ) hHCMchir->fillH2D(mc_mom, tr.nchir()/tr.nchiy());
+        if (hc_succ) hHCRchit->fillH2D(hc_irig, tr.nchit()/tr.nchix(), powf);
+        if (hc_succ) hHCRchir->fillH2D(hc_irig, tr.nchir()/tr.nchiy(), powf);
     }
 
     ofle->Write();
