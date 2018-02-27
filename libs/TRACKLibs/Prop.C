@@ -107,25 +107,11 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JPX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
        
-        // testcode
-        //jb_gl_(JPX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
-        //jb_gl_(JPY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
-        //jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
-        //jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
-        //
-
-        Double_t eta  = part.eta_abs() / (MGMath::ONE + arg.sign() * arg.elion_mpv());
-        Double_t ibta = std::sqrt(MGMath::ONE + eta * eta);
-        Double_t crr  = ((eta*eta/ibta) + ibta) / (eta*ibta);
-        jb_gg_(JPX, JEA) += crr * (arg.tauu()*jb_gl_(JPX, JTAUU) + arg.rhou()*jb_gl_(JPX, JRHOU));
-        jb_gg_(JPY, JEA) += crr * (arg.tauu()*jb_gl_(JPY, JTAUU) + arg.rhou()*jb_gl_(JPY, JRHOU));
-        jb_gg_(JUX, JEA) += crr * (arg.tauu()*jb_gl_(JUX, JTAUU) + arg.rhou()*jb_gl_(JUX, JRHOU));
-        jb_gg_(JUY, JEA) += crr * (arg.tauu()*jb_gl_(JUY, JTAUU) + arg.rhou()*jb_gl_(JUY, JRHOU));
+        jb_gl_(JPX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
+        jb_gl_(JPY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
         
-        // testcode
-        //jb_gg_(JPX, JEA) += crr * (arg.taul()*jb_gl_(JPX, JTAUL) + arg.rhol()*jb_gl_(JPX, JRHOL));
-        //jb_gg_(JPY, JEA) += crr * (arg.taul()*jb_gl_(JPY, JTAUL) + arg.rhol()*jb_gl_(JPY, JRHOL));
-        //
+        jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
+        jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
     }
     if (arg.eloss()) {
     }

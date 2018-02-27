@@ -229,7 +229,7 @@ void PhySt::print() const {
 void PhySt::symbk(Bool_t is_rndm) {
     if (!arg_()) { arg_.clear(); return; }
     if (is_rndm) arg_.rndm();
-
+    
     if (arg_.mscat()) {
         coo_ = std::move(coo_ + arg_.symbk_mscatl());
         dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));
@@ -240,7 +240,7 @@ void PhySt::symbk(Bool_t is_rndm) {
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(MGMath::ZERO);
     }
-    
+
     arg_.clear();
 }
 

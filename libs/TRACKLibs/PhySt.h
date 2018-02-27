@@ -140,8 +140,7 @@ MultiGauss PhyArg::pdf_mscatu_(
 );
 
 MultiGauss PhyArg::pdf_mscatl_(
-    MultiGauss::Opt::NOROBUST,
-    1.0
+    MultiGauss::Opt::NOROBUST, 1.0
 );
 
 
