@@ -135,12 +135,15 @@ class PhyTrFit : protected TrFitPar {
 
         inline const Int_t nargs() const { return args_.size(); }
         inline const PhyArg* args(Int_t it) const { return ((succ_ && it>=0 && it<args_.size()) ? &args_.at(it) : nullptr); }
+        inline const std::vector<PhyArg>& args() const { return args_; }
 
         inline const Int_t nstts() const { return stts_.size(); }
         inline const PhySt* stts(Int_t it) const { return ((succ_ && it>=0 && it<stts_.size()) ? &stts_.at(it) : nullptr); }
+        inline const std::vector<PhySt>& stts() const { return stts_; }
         
         inline const Int_t nhits() const { return hits_.size(); }
         inline const HitSt* hits(Int_t it) const { return ((succ_ && it>=0 && it<hits_.size()) ? &hits_.at(it) : nullptr); }
+        inline const std::vector<HitSt>& hits() const { return hits_; }
 
         inline const Int_t& ndof() const { return ndof_; }
         inline const Double_t& nchi() const { return nchi_; }

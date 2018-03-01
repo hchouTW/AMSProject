@@ -20,12 +20,13 @@
 #sh /ams_home/hchou/AMSProject/sys/shell/xrdcp_cern.sh /eos/ams/user/h/hchou/AMSData/prod/18Jan29/PR10004000.B1103 /ams02/user/hchou/Pr10004000_B1103_18Jan29 YiNtuple_MC.00008 &
 #sh /ams_home/hchou/AMSProject/sys/shell/xrdcp_cern.sh /eos/ams/user/h/hchou/AMSData/prod/18Jan29/PR10004000.B1103 /ams02/user/hchou/Pr10004000_B1103_18Jan29 YiNtuple_MC.00009 &
 
-for id in `seq 180 249`
-do
-    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb13/CERN_TESTp3 /ams02/user/hchou/ISS_PASS6_CERN_TEST YiNtuple_ISS.00${id} &
-done
-
-#for id in `seq 0 9`
+#for id in `seq 180 249`
 #do
-#    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb13/PR054000.B1119 /ams02/user/hchou/PR054000.B1119_18Feb13 YiNtuple_MC.000${id} &
+#    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb13/CERN_TESTp3 /ams02/user/hchou/ISS_PASS6_CERN_TEST YiNtuple_ISS.00${id} &
 #done
+
+for id in `seq 0 14`
+do
+    ii=`printf "%02d" $id`
+    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb27/PR054000.B1119 /ams02/user/hchou/PR054000.B1119_18Feb27p2 YiNtuple_MC.000${ii} &
+done

@@ -19,5 +19,5 @@ export EOS_HOME=/eos/ams
 # Submit Script
 alias mkjob='sh ${AMSProjJobs}/NCU/mkjob.sh'
 alias submit='sh ${AMSProjJobs}/NCU/submit.sh'
-alias readflist='sh ${AMSProjJobs}/readflist.sh'
+alias readflist='sh ${AMSProjJobs}/NCU/readflist.sh'
 alias xrdcp_cern2ncu='sh ${AMSProjJobs}/NCU/xrdcp_cern2ncu.sh'

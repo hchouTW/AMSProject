@@ -88,14 +88,6 @@ long double MultiGauss::efft_sgm(long double r) const {
     }
    
     // Robust Method (Modify-Cauchy)
-    //if (robust_ == Opt::ROBUST) {
-    //    long double nrmr   = absr / (ROBUST_SGM_ * sigma);
-    //    long double cauchy = ((MGNumc::EqualToZero(nrmr)) ? 1.0L : (nrmr / std::sqrt(std::log1p(nrmr * nrmr))));
-    //    long double corr   = std::pow(cauchy, ROBUST_POW_);
-    //    if (MGNumc::Valid(corr) && MGNumc::Compare(corr, 1.0L) > 0) sigma *= corr;
-    //}
-   
-    // Robust Method (Modify-Cauchy)
     if (robust_ == Opt::ROBUST) {
         long double sftnrmr = (absr / sigma) - ROBUST_SGM_;
         if (MGNumc::Compare(sftnrmr) > 0) {
