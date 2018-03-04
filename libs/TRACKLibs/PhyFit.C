@@ -356,6 +356,9 @@ void PhyTrFit::clear() {
     args_.clear();
     stts_.clear();
 
+    map_hits_.clear();
+    map_stts_.clear();
+
     ndfx_ = 0;
     ndfy_ = 0;
     chix_ = 0;
@@ -458,6 +461,11 @@ Bool_t PhyTrFit::evolve() {
     for (Int_t it = 0; it < stts_.size()-1; ++it) {
         stts_.at(it).arg() = args_.at(it);
         stts_.at(it).arg().zero();
+    }
+    
+    for (Int_t it = 0; it < hits_.size(); ++it) {
+        map_hits_[hits_.at(it).lay()] = &hits_.at(it);
+        map_stts_[hits_.at(it).lay()] = &stts_.at(it);
     }
 
     Double_t chi  = (chix + chiy + chit + chir);

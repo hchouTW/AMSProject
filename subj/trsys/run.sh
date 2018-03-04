@@ -1,5 +1,7 @@
 #!/bin/bash
+#RunFile=${AMSCore}/subj/trsys/vdev/landau
 RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
+#RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/fit_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
@@ -22,8 +24,8 @@ OutputDir=${CurDir}/dat
 #Fit
 #GroupSize=9
 #Nseq=80
-GroupSize=50
-Nseq=28
+GroupSize=5
+Nseq=300
 
 for id in `seq 0 ${Nseq}`
 do
@@ -31,4 +33,7 @@ do
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
 ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}" | qsub -q ams -N JOB${id} -j oe
 #    ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
+#    echo "%!/bin/bash
+#source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+#${RunFile} ${id} > ${CurDir}/log/JOB${id}" | qsub -q ams -N JOB${id} -j oe
 done

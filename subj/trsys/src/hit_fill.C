@@ -49,10 +49,10 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
-    Axis AXeta("1/GammaBeta [1]", 50, mass/4000., mass/0.5, AxisScale::kLog);
+    Axis AXeta("1/GammaBeta [1]", 100, mass/4000., mass/0.5, AxisScale::kLog);
 
     // MC
     Axis AXcut("Cut", 8, 0., 8.);
@@ -64,9 +64,13 @@ int main(int argc, char * argv[]) {
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
     Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
     
-    Axis AXadc("ADC", 800, 0., 200.);
+    Axis AXadc("ADC", 1200, 0., 400.);
     Hist* hMax = Hist::New("hMax", HistAxis(AXeta, AXadc));
     Hist* hMay = Hist::New("hMay", HistAxis(AXeta, AXadc));
+    
+    Axis AXedep("Edep", 1600, 0., 1.0);
+    Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
+    Hist* hMedep2 = Hist::New("hMedep2", HistAxis(AXeta, AXedep));
     
     Axis AXloc("loc [1]", 40, -0.5, 0.5);
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
@@ -136,9 +140,12 @@ int main(int argc, char * argv[]) {
         // MC hit
         HitTRKMCInfo * mch[9]; std::fill_n(mch, 9, nullptr);
         for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
+        
+        SegPARTMCInfo * mcs[9]; std::fill_n(mcs, 9, nullptr);
+        for (auto&& seg : fG4mc->primPart.segs) { mcs[seg.lay-1] = &seg; }
 
         for (Int_t it = 2; it < 8; ++it) {
-            if (!rec[it] || !mch[it]) continue;
+            if (!rec[it] || !mch[it] || !mcs[it]) continue;
             Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
             Double_t loc[2] = { rec[it]->loc[0] - std::lrint(rec[it]->loc[0]), rec[it]->loc[1] - std::lrint(rec[it]->loc[1]) };
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
@@ -150,7 +157,10 @@ int main(int argc, char * argv[]) {
             
             if (ntp[0]!=0) hMax->fillH2D(mass/mch[it]->mom, adc[0]);
             if (ntp[1]!=0) hMay->fillH2D(mass/mch[it]->mom, adc[1]);
-           
+            
+            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3);
+            if (ntp[0]!=0 && ntp[1]!=0) hMedep2->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3*std::fabs(mcs[it]->dir[2]));
+
             if (mch[it]->mom > 50.0) {
                 if (ntp[0]!=0) hMrxNN->fillH1D(CM2UM * res[0]);
                 if (ntp[0]==1) hMrxN1->fillH1D(CM2UM * res[0]);

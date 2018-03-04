@@ -1,6 +1,6 @@
 -include $(AMSMKfile)
 
-Version = 18Feb27
+Version = vdev
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :

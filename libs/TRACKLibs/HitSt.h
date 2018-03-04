@@ -6,7 +6,7 @@ namespace TrackSys {
 
 class HitSt {
     public :
-        HitSt(Bool_t sx = false, Bool_t sy = false) : seqID_(-1), seqIDx_(-1), seqIDy_(-1), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
+        HitSt(Bool_t sx = false, Bool_t sy = false) : seqID_(-1), seqIDx_(-1), seqIDy_(-1), lay_(0), coo_(0., 0., 0.), side_(sx, sy), nsr_(0, 0), err_(DEFERR_X_, DEFERR_Y_), pdf_x_(&PDF_PR_X_NN_), pdf_y_(&PDF_PR_Y_NN_) {}
         
         inline Bool_t operator()() const { return (side_(0) || side_(1)); }
 
@@ -14,7 +14,7 @@ class HitSt {
         
         inline void set_seqID(Short_t id) { seqID_ = id; if (side_(0)) seqIDx_ = id; if (side_(1)) seqIDy_ = id+side_(0); }
 
-        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx; coo_(1) = cy; coo_(2) = cz; }
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz, Int_t lay = 0) { coo_(0) = cx; coo_(1) = cy; coo_(2) = cz; lay_ = lay; }
         
         inline void set_err(Int_t nx, Int_t ny, const PartType& type = PartType::Proton) { 
             nsr_(0) = (nx > 0) ? nx : 0;
@@ -43,6 +43,8 @@ class HitSt {
         inline const Short_t&  seqIDx() const { return seqIDx_; }
         inline const Short_t&  seqIDy() const { return seqIDy_; }
         
+        inline const Short_t&  lay() const { return lay_; }
+
         inline const Double_t& cx() const { return coo_(0); }
         inline const Double_t& cy() const { return coo_(1); }
         inline const Double_t& cz() const { return coo_(2); }
@@ -64,6 +66,8 @@ class HitSt {
         Short_t    seqID_;
         Short_t    seqIDx_;
         Short_t    seqIDy_;
+
+        Short_t    lay_;
         SVecD<3>   coo_;  // [cm]
         
         SVecO<2>   side_;

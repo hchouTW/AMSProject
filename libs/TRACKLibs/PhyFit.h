@@ -134,23 +134,23 @@ class PhyTrFit : protected TrFitPar {
         inline const PhySt& part() const { return part_; }
 
         inline const Int_t nargs() const { return args_.size(); }
-        inline const PhyArg* args(Int_t it) const { return ((succ_ && it>=0 && it<args_.size()) ? &args_.at(it) : nullptr); }
         inline const std::vector<PhyArg>& args() const { return args_; }
+        inline const PhyArg* args(Int_t it) const { return ((succ_ && it>=0 && it<args_.size()) ? &args_.at(it) : nullptr); }
 
         inline const Int_t nstts() const { return stts_.size(); }
-        inline const PhySt* stts(Int_t it) const { return ((succ_ && it>=0 && it<stts_.size()) ? &stts_.at(it) : nullptr); }
         inline const std::vector<PhySt>& stts() const { return stts_; }
+        inline const PhySt* stts(Int_t lay) const { auto&& stt = map_stts_.find(lay); return ((succ_ && stt!=map_stts_.end()) ? stt->second : nullptr); }
         
         inline const Int_t nhits() const { return hits_.size(); }
-        inline const HitSt* hits(Int_t it) const { return ((succ_ && it>=0 && it<hits_.size()) ? &hits_.at(it) : nullptr); }
         inline const std::vector<HitSt>& hits() const { return hits_; }
+        inline const HitSt* hits(Int_t lay) const { auto&& hit = map_hits_.find(lay); return ((succ_ && hit!=map_hits_.end()) ? hit->second : nullptr); }
 
         inline const Int_t& ndof() const { return ndof_; }
         inline const Double_t& nchi() const { return nchi_; }
         inline Double_t nchix() const { return succ_?((chix_+chit_)/ndfx_):0; }
         inline Double_t nchiy() const { return succ_?((chiy_+chir_)/ndfy_):0; }
-        inline Double_t nchit() const { return succ_?(chit_/ndfx_):0; }
-        inline Double_t nchir() const { return succ_?(chir_/ndfy_):0; }
+        //inline Double_t nchit() const { return succ_?(chit_/ndfx_):0; }
+        //inline Double_t nchir() const { return succ_?(chir_/ndfy_):0; }
 
     protected :
         void clear();
@@ -175,6 +175,10 @@ class PhyTrFit : protected TrFitPar {
         
         Int_t    ndof_;
         Double_t nchi_;
+
+    protected :
+        std::map<Int_t, HitSt*> map_hits_;
+        std::map<Int_t, PhySt*> map_stts_;
 };
 #endif
 
