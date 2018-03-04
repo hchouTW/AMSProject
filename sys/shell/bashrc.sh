@@ -46,6 +46,9 @@ if [[ "${AMSData}" == "" ]]; then export AMSData=~/AMSData; fi
 # TEX
 source ${AMSProj}/sw/tex/tex.sh
 
+# Eigen3 Libs
+source ${AMSProjLibs}/external/eigen3/bin/eigen3.sh 
+
 # Google Libs
 source ${AMSProjLibs}/external/google/bin/google.sh
 

@@ -52,10 +52,10 @@ int main(int argc, char * argv[]) {
     PartType type = PartType::Proton;
     //PartType type = PartType::Electron;
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = true;
-    Bool_t optL9 = true;
+    Bool_t optL1 = false;
+    Bool_t optL9 = false;
     
-    TFile * ofle = new TFile(Form("%s/track_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
+    TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
     
