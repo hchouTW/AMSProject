@@ -1,7 +1,7 @@
 # Compiled Object files
 *.slo
 *.lo
-*.so
+#*.so
 *.o
 *.obj
 
@@ -10,7 +10,7 @@
 *.pch
 
 # Compiled Dynamic libraries
-*.so
+#*.so
 *.dylib
 *.dll
 
@@ -21,7 +21,7 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+#*.a
 *.lib
 
 # Executables
