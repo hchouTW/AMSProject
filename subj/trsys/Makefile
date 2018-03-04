@@ -1,7 +1,7 @@
 -include $(AMSMKfile)
 
 # Test Ceres Solver
-LIBP += -lgflags -lglog -L${AMSProjLibs}/external/google/ceres/lib64 -lceres
+LIBP += -lgflags -lglog -lceres
 CXX += -D__CeresSolver__
 LD  += -D__CeresSolver__    
 
@@ -29,9 +29,9 @@ all :
 	@cp -fa $(PWD)/src/fit_fit.C $(TagetDir)/src/fit_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_smc_fill.C $(TagetDir)/src/prop_smc_fill.C 2> /dev/null
 	#make $(TagetDir)/landau
-	make $(TagetDir)/track_fill
-	make $(TagetDir)/track_fit
-	#make $(TagetDir)/hit_fill
+	#make $(TagetDir)/track_fill
+	#make $(TagetDir)/track_fit
+	make $(TagetDir)/hit_fill
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	#make $(TagetDir)/fit_fill
