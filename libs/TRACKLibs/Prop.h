@@ -116,9 +116,6 @@ class PhyJb {
         
         using SMtxDXYG = SMtxD<2, DIM_G>;
         using SMtxDXYL = SMtxD<2, DIM_L>;
-
-        inline static SMtxDGG Multiply(const SMtxDGG& jb, const SMtxDGG& jbG) { return (jb * jbG); }
-        inline static SMtxDGL Multiply(const SMtxDGG& jb, const SMtxDGL& jbL) { return (jb * jbL); }
         
         inline static SMtxDXYG SubXYG(const SMtxDGG& jb) { return jb.Sub<SMtxDXYG>(0, 0); }
         inline static SMtxDXYL SubXYL(const SMtxDGL& jb) { return jb.Sub<SMtxDXYL>(0, 0); }

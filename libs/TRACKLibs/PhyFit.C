@@ -412,6 +412,8 @@ Bool_t PhyTrFit::physicalFit() {
                 interaction_parameters.at(it*PhyJb::DIM_L+1), 
                 interaction_parameters.at(it*PhyJb::DIM_L+2), 
                 interaction_parameters.at(it*PhyJb::DIM_L+3));
+        //args_.at(it).set_eloss(
+        //        interaction_parameters.at(it*PhyJb::DIM_L+4));
     }
     
     if (!evolve()) return false;
@@ -500,12 +502,15 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     for (auto&& hit : hits_) {
         PhyJb curjb;
         if (!PropMgnt::PropToZ(hit.cz(), ppst, nullptr, ((hasJacb)?&curjb:nullptr)))  break;
-        if (cnt_nhit != 0)
+        if (cnt_nhit != 0) {
             ppst.arg().set_mscat(
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+0], 
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+1], 
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+2], 
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+3]);
+            //ppst.arg().set_eloss(
+            //    parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+4]);
+        }
         PhyArg curArg = ppst.arg();
         ppst.symbk();
 
@@ -527,16 +532,14 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
         
         if (cnt_nhit != 0) {
-            rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+0) += intm(0) / inte(0);
-            rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+1) += intm(1) / inte(1);
-            rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+2) += intm(2) / inte(2);
-            rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+3) += intm(3) / inte(3);
+            for (Int_t it = 0; it < PhyJb::DIM_L; ++it)
+                rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it) += intm(it) / inte(it);
         }
         
         if (cnt_nhit != 0 && hasJacb) {
             jbGL.at(cnt_nhit-1) = curjb.gl();
             for (Int_t it = 0; it < cnt_nhit-1; ++it)
-                jbGL.at(it) = PhyJb::Multiply(curjb.gg(), jbGL.at(it));
+                jbGL.at(it) = curjb.gg() * jbGL.at(it);
 
             for (Int_t it = 0; it < cnt_nhit; ++it) {
                 for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
@@ -545,10 +548,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                 }
             }
             
-            jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+0, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+0) += -1.0 / inte(0);
-            jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+1, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+1) += -1.0 / inte(1);
-            jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+2, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+2) += -1.0 / inte(2);
-            jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+3, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+3) += -1.0 / inte(3);
+            for (Int_t it = 0; it < PhyJb::DIM_L; ++it)
+                jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+it) += -1.0 / inte(it);
         }
 
         cnt_nhit++;

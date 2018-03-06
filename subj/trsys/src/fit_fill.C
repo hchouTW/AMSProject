@@ -51,7 +51,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     PartType type = PartType::Proton;
     //PartType type = PartType::Electron;
-    PhyArg::SetOpt(true, false);
+    PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     

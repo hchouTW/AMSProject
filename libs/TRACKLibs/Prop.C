@@ -52,8 +52,8 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
     
     if (field) orth_.reset(part.u(), mag());
     
-    //if (field && part.arg().eloss()) zeta_e_ = mphy->elion_mpv();
-    if (field && part.arg().eloss()) zeta_e_ = mphy->elion_men();
+    if (field && part.arg().eloss()) zeta_e_ = mphy->elion_mpv();
+    //if (field && part.arg().eloss()) zeta_e_ = mphy->elion_men();
     else                             zeta_e_ = MGMath::ZERO;
 }
 
@@ -79,8 +79,8 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
  
     kappa_ue_ = std::move(Lambda * crsub);
 
-    //if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_mpv();
-    if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_men();
+    if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_mpv();
+    //if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_men();
     else                             kappa_ee_ = MGMath::ZERO;
 }
  
@@ -116,12 +116,18 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
     }
     if (arg.eloss()) {
+        //Double_t elion = part.eta() * (arg.sign() * arg.elion_sgm());
+        //jb_gl_(JPX, JION) = jb_gg_(JPX, JEA) * elion;
+        //jb_gl_(JPY, JION) = jb_gg_(JPY, JEA) * elion;
+        //jb_gl_(JUX, JION) = jb_gg_(JUX, JEA) * elion;
+        //jb_gl_(JUY, JION) = jb_gg_(JUY, JEA) * elion;
+        //jb_gl_(JEA, JION) = jb_gg_(JEA, JEA) * elion;
     }
 }
 
 
 void PhyJb::multiplied(PhyJb& phyJb) {
-    jb_gg_  = std::move(phyJb.gg() * jb_gg_);
+    jb_gg_ = std::move(phyJb.gg() * jb_gg_);
     if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
 }
 

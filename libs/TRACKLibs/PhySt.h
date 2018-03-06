@@ -50,6 +50,8 @@ class PhyArg {
         inline Double_t erhou() const { return pdf_mscatu_.efft_sgm(rhou_); }
         inline Double_t etaul() const { return pdf_mscatl_.efft_sgm(taul_); }
         inline Double_t erhol() const { return pdf_mscatl_.efft_sgm(rhol_); }
+        
+        inline Double_t eelion() const { return pdf_elion_.efft_sgm(elion_); }
   
         inline const Short_t&  sign() const { return sign_; }
         inline const SVecD<3>& orth_tau() const { return orth_tau_; }
@@ -75,7 +77,8 @@ class PhyArg {
         void rndm_mscatl() { taul_ = 0.; rhol_ = 0.; if (sw_mscat_) { taul_ = pdf_mscatl_.rndm(); rhol_ = pdf_mscatl_.rndm(); } }
         void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
 
-        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGROOT::Rndm::Landau(); } }
+        //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGROOT::Rndm::Landau(); } }
+        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGRndm::NormalGaussian(); } } // testcode
         void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / MGMath::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
         void rndm_eloss() { rndm_elion(); rndm_elbrm(); }
 
@@ -125,6 +128,7 @@ class PhyArg {
     protected :
         static MultiGauss pdf_mscatu_;
         static MultiGauss pdf_mscatl_;
+        static MultiGauss pdf_elion_;
 };
 
 Bool_t PhyArg::opt_mscat_ = false;
@@ -132,14 +136,17 @@ Bool_t PhyArg::opt_eloss_ = false;
 
 MultiGauss PhyArg::pdf_mscatu_(
     MultiGauss::Opt::NOROBUST,
-    7.93621542964197957e-01, 1.22595e-02/1.22595e-02,
-    1.47262250776109577e-01, 1.89058e-02/1.22595e-02,
-    1.30185649405573714e-02, 5.35799e-02/1.22595e-02,
-    4.38646448670061487e-02, 1.52299e-01/1.22595e-02,
-    2.23299645212899451e-03, 4.34778e-01/1.22595e-02
+    7.99549384311964539e-01, 1.000000e+00,
+    1.78119391133381794e-01, 1.579653e+00,
+    1.94920516860290043e-02, 3.418158e+00,
+    2.83917286862460675e-03, 9.314250e+00
 );
 
 MultiGauss PhyArg::pdf_mscatl_(
+    MultiGauss::Opt::NOROBUST, 1.0
+);
+
+MultiGauss PhyArg::pdf_elion_(
     MultiGauss::Opt::NOROBUST, 1.0
 );
 

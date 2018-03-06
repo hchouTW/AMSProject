@@ -47,12 +47,12 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    TFile * ofle = new TFile(Form("%s/hit_fill%03ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
+    TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
-    Axis AXeta("1/GammaBeta [1]", 100, mass/4000., mass/0.5, AxisScale::kLog);
+    Axis AXeta("1/GammaBeta [1]", 100, mass/4000., mass/0.35, AxisScale::kLog);
 
     // MC
     Axis AXcut("Cut", 8, 0., 8.);
@@ -70,7 +70,6 @@ int main(int argc, char * argv[]) {
     
     Axis AXedep("Edep", 1600, 0., 1.0);
     Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
-    Hist* hMedep2 = Hist::New("hMedep2", HistAxis(AXeta, AXedep));
     
     Axis AXloc("loc [1]", 40, -0.5, 0.5);
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
@@ -84,7 +83,7 @@ int main(int argc, char * argv[]) {
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
 
-    Long64_t printRate = dst->GetEntries();
+    Long64_t printRate = static_cast<Long64_t>(0.02*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
@@ -151,15 +150,16 @@ int main(int argc, char * argv[]) {
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
             Double_t adc[2] = { rec[it]->sig[0], rec[it]->sig[1] };
             
+            Double_t dsdz = std::fabs(mcs[it]->dir[2]);
+
             constexpr Double_t CM2UM = 1.0e4;
             if (ntp[0]!=0) hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
             if (ntp[1]!=0) hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
             
-            if (ntp[0]!=0) hMax->fillH2D(mass/mch[it]->mom, adc[0]);
-            if (ntp[1]!=0) hMay->fillH2D(mass/mch[it]->mom, adc[1]);
+            if (ntp[0]!=0) hMax->fillH2D(mass/mch[it]->mom, adc[0]*dsdz);
+            if (ntp[1]!=0) hMay->fillH2D(mass/mch[it]->mom, adc[1]*dsdz);
             
-            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3);
-            if (ntp[0]!=0 && ntp[1]!=0) hMedep2->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3*std::fabs(mcs[it]->dir[2]));
+            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3*dsdz);
 
             if (mch[it]->mom > 50.0) {
                 if (ntp[0]!=0) hMrxNN->fillH1D(CM2UM * res[0]);

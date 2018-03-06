@@ -92,31 +92,31 @@ int main(int argc, char * argv[]) {
     std::vector<Hist*> hCKresx(9, nullptr);
     std::vector<Hist*> hKFresx(9, nullptr);
     std::vector<Hist*> hHCresx(9, nullptr);
-    for (Int_t it = 0; it < hCKresx.size(); ++it) hCKresx[it] = Hist::New(STR_FMT("hCKresxL%d", it+1), HistAxis(AXmom, AXRres));
-    for (Int_t it = 0; it < hKFresx.size(); ++it) hKFresx[it] = Hist::New(STR_FMT("hKFresxL%d", it+1), HistAxis(AXmom, AXRres));
-    for (Int_t it = 0; it < hHCresx.size(); ++it) hHCresx[it] = Hist::New(STR_FMT("hHCresxL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hCKresx.size(); ++it) hCKresx[it] = Hist::New(STR_FMT("hCKresxL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hKFresx.size(); ++it) hKFresx[it] = Hist::New(STR_FMT("hKFresxL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hHCresx.size(); ++it) hHCresx[it] = Hist::New(STR_FMT("hHCresxL%d", it+1), HistAxis(AXmom, AXRres));
     
     std::vector<Hist*> hCKresy(9, nullptr);
     std::vector<Hist*> hKFresy(9, nullptr);
     std::vector<Hist*> hHCresy(9, nullptr);
-    for (Int_t it = 0; it < hCKresy.size(); ++it) hCKresy[it] = Hist::New(STR_FMT("hCKresyL%d", it+1), HistAxis(AXmom, AXRres));
-    for (Int_t it = 0; it < hKFresy.size(); ++it) hKFresy[it] = Hist::New(STR_FMT("hKFresyL%d", it+1), HistAxis(AXmom, AXRres));
-    for (Int_t it = 0; it < hHCresy.size(); ++it) hHCresy[it] = Hist::New(STR_FMT("hHCresyL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hCKresy.size(); ++it) hCKresy[it] = Hist::New(STR_FMT("hCKresyL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hKFresy.size(); ++it) hKFresy[it] = Hist::New(STR_FMT("hKFresyL%d", it+1), HistAxis(AXmom, AXRres));
+    for (UInt_t it = 0; it < hHCresy.size(); ++it) hHCresy[it] = Hist::New(STR_FMT("hHCresyL%d", it+1), HistAxis(AXmom, AXRres));
     
     Axis AXRcos("Residual [10^{-4}]", 3000, -30, 30);
     std::vector<Hist*> hCKcosx(9, nullptr);
     std::vector<Hist*> hKFcosx(9, nullptr);
     std::vector<Hist*> hHCcosx(9, nullptr);
-    for (Int_t it = 0; it < hCKcosx.size(); ++it) hCKcosx[it] = Hist::New(STR_FMT("hCKcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (Int_t it = 0; it < hKFcosx.size(); ++it) hKFcosx[it] = Hist::New(STR_FMT("hKFcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (Int_t it = 0; it < hHCcosx.size(); ++it) hHCcosx[it] = Hist::New(STR_FMT("hHCcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hCKcosx.size(); ++it) hCKcosx[it] = Hist::New(STR_FMT("hCKcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hKFcosx.size(); ++it) hKFcosx[it] = Hist::New(STR_FMT("hKFcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hHCcosx.size(); ++it) hHCcosx[it] = Hist::New(STR_FMT("hHCcosxL%d", it+1), HistAxis(AXmom, AXRcos));
     
     std::vector<Hist*> hCKcosy(9, nullptr);
     std::vector<Hist*> hKFcosy(9, nullptr);
     std::vector<Hist*> hHCcosy(9, nullptr);
-    for (Int_t it = 0; it < hCKcosy.size(); ++it) hCKcosy[it] = Hist::New(STR_FMT("hCKcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (Int_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR_FMT("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (Int_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR_FMT("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hCKcosy.size(); ++it) hCKcosy[it] = Hist::New(STR_FMT("hCKcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR_FMT("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    for (UInt_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR_FMT("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
 
     Long64_t printRate = static_cast<Long64_t>(0.02 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());

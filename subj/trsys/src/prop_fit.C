@@ -17,7 +17,7 @@ int main(int argc, char * argv[]) {
     //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
     //return 0;
    
-    Hist::Load("prop_ams02_fill.root", "dat");
+    Hist::Load("prop_fill.root", "dat");
 
     // Prop
     Hist * hMcx = Hist::Head("hMcx");
@@ -35,7 +35,7 @@ int main(int argc, char * argv[]) {
     
     const Axis& AXmom = hMee->xaxis();
     
-    TFile * ofle = new TFile("prop_ams02_fit.root", "RECREATE");
+    TFile * ofle = new TFile("prop_fit.root", "RECREATE");
     ofle->cd();
     
     Hist::AddDirectory();
@@ -78,9 +78,9 @@ int main(int argc, char * argv[]) {
         double mom = AXmom.center(it+1, AxisScale::kLog);
         PhySt part(PartType::Proton);
         part.set_mom(mom);
-        Double_t val = part.gmbta();
+        //Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        //Double_t val = part.bta();
+        Double_t val = part.bta();
         
         gaus->SetParameters(1000, 0, (*vhMcx.at(it))()->GetRMS());
         (*vhMcx.at(it))()->Fit(gaus, "q0", "");
@@ -201,7 +201,7 @@ int main(int argc, char * argv[]) {
         part.set_mom(mom);
         Double_t val = part.gmbta();
         //Double_t val = part.gm();
-        //Double_t val = part.bta();
+        ///Double_t val = part.bta();
         
         Double_t sqr_bta = (part.bta() * part.bta());
         Double_t eloss_ion_kpa  = MGMath::SQRT_TWO / (MGMath::HALF * (sqr_bta - MGMath::ONE) + MGMath::ONE/sqr_bta);

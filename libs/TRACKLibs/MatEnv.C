@@ -621,7 +621,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * (MGMath::ONE + NRL_CORR_FACT * log_nrl);
     
     // Modified Highland-Lynch-Dahl formula
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * std::sqrt(MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
+    Double_t corr_fact = (1.02246 + 0.0282457 * TMath::Erfc(3.38323 * (part.bta() - 0.691661))); // testcode
+    Double_t mscat_sgm = corr_fact * RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * std::sqrt(MGMath::ONE + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
    
     if (!MGNumc::Valid(mscat_sgm) || MGNumc::Compare(mscat_sgm) <= 0) mscat_sgm = MGMath::ZERO;
     return mscat_sgm;

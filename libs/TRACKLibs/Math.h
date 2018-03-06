@@ -43,8 +43,8 @@ class MultiGauss {
     private :
         static TRandom* rndm_gen_;
 
-        static constexpr Long64_t    NPX_ = 100000;
-        static constexpr long double LMTL_PROB_ = 1.0e-8;
+        static constexpr Long64_t    NPX_ = 1000000;
+        static constexpr long double LMTL_PROB_ = 1.0e-20;
         static constexpr long double ROBUST_SGM_ = 2.0;
 };
 
