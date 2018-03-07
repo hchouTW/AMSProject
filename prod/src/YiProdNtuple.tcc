@@ -222,14 +222,17 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 Short_t dec = -1, lay = -1;
                 if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
                 for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; } // Silicon
-                //for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
-                //for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
-                //for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
+                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
                 if (dec < 0 || lay < 0) continue;
+                Float_t eta = (fG4mc.primPart.mass / mcev->Momentum);
+                Float_t bta = (MGNumc::EqualToZero(fG4mc.primPart.mass) ? 1.0 : 1.0/(1.0+eta*eta));
 
                 SegPARTMCInfo seg;
 		        seg.dec = dec;
 		        seg.lay = lay;
+                seg.bta = bta;
 		        seg.mom = mcev->Momentum;
 		        seg.coo[0] = mcev->Coo[0];
 		        seg.coo[1] = mcev->Coo[1];
@@ -573,8 +576,6 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	fTof.numOfClsH = event->NTofClusterH();
 	fTof.numOfBeta = event->NBeta();
 	fTof.numOfBetaH = event->NBetaH();
-
-	//int tofLayerProj[4] = {0, 1, 1, 0}; // 0,1 := x,y
 		
 	while (recEv.iBeta >= 0) {
 		BetaR * beta = event->pBeta(recEv.iBeta);
@@ -585,9 +586,11 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	}
 
 	TofRecH::BuildOpt = 0; // normal
+
+    const int qopt = TofRecH::kThetaCor|TofRecH::kBirkCor|TofRecH::kReAttCor|TofRecH::kDAWeight|TofRecH::kQ2Q;
 	const short pattIdx[4] = { 1, 2, 4, 8 };
 	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
-		BetaHR * betaH = event->pBetaH(recEv.iBetaH);
+		BetaHR* betaH = event->pBetaH(recEv.iBetaH);
         if (betaH->iTrTrack() != recEv.iTrTrack) break;
 
 		int ncls[4] = {0};
@@ -604,18 +607,17 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTof.betaHPatt = 0;
 		for (int il = 0; il < 4; il++) {
 			if (!betaH->TestExistHL(il)) continue;
-			TofClusterHR * cls = betaH->GetClusterHL(il);
+			TofClusterHR* cls = betaH->GetClusterHL(il);
 			if (cls == nullptr) continue;
-			fTof.T[il] = cls->Time;
-			fTof.E[il] = betaH->GetEdepL(il);
-			fTof.Q[il] = betaH->GetQL(il);
-			if (cls->IsGoodTime())
-			    fTof.betaHPatt += pattIdx[il];
-		}
-		float minTime = (*std::min_element(fTof.T, fTof.T+4));
-		for (int il = 0; il < 4; il++) {
-			if (fTof.Q[il] < 0) continue;
-			fTof.T[il] -= minTime; 
+			if (!cls->IsGoodTime()) continue;
+            fTof.coo[il][0] = cls->Coo[0];
+            fTof.coo[il][1] = cls->Coo[1];
+            fTof.coo[il][2] = cls->Coo[2];
+            fTof.err[il][0] = cls->ECoo[0];
+            fTof.err[il][1] = cls->ECoo[1];
+            fTof.err[il][2] = cls->ECoo[2];
+			fTof.Q[il] = betaH->GetQL(il, 2, qopt);
+			fTof.betaHPatt += pattIdx[il];
 		}
 
 		int nlay = 0;
@@ -649,61 +651,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (chrg > ChrgLimit) nearHitNm[lay]++;
 	}
 	for (int il = 0; il < 4; ++il) {
-		fTof.extClsN[il] = nearHitNm[il];
+		fTof.numOfExtCls[il] = nearHitNm[il];
 	}
-
-	/*
-	TofRecH::BuildOpt = 1; // TrTrack independent
-	TofRecH::ReBuild(0);
-	while (event->NBetaH() > 0) {
-		BetaHR * betaHs = event->pBetaH(0);
-		if (betaHs == nullptr) break;
-
-		fTof.statusBetaHs = true;
-		fTof.betaHs = betaHs->GetBeta();
-		fTof.betaHBits = ((betaHs->pTrTrack   ()) ? 1 : 0) +
-                     ((betaHs->pTrdTrack  ()) ? 2 : 0) +
-                     ((betaHs->pEcalShower()) ? 4 : 0);
-		fTof.normChisqTs  = betaHs->GetNormChi2T();
-		fTof.normChisqCs  = betaHs->GetNormChi2C();
-
-		fTof.betaHPatts = 0;
-		for (int il = 0; il < 4; il++) {
-			if (!betaHs->TestExistHL(il)) continue;
-			TofClusterHR * cls = betaHs->GetClusterHL(il);
-			if (cls == nullptr) continue;
-			fTof.Ts[il] = cls->Time;
-			fTof.Es[il] = betaHs->GetEdepL(il);
-			fTof.Qs[il] = betaHs->GetQL(il);
-			if (cls->IsGoodTime())
-			    fTof.betaHPatts += pattIdx[il];
-		}
-		float minTime = (*std::min_element(fTof.Ts, fTof.Ts+4));
-		for (int il = 0; il < 4; il++) {
-			if (fTof.Qs[il] < 0) continue;
-			fTof.Ts[il] -= minTime; 
-		}
-
-		int nlays = 0;
-		float Qalls_RMS = 0;
-		fTof.Qalls = betaHs->GetQ(nlays, Qalls_RMS);
-        
-        float Zprobs = 0;
-        short Zalls = betaHs->GetZ(nlays, Zprobs, 0);
-        fTof.Zalls = Zalls;
-
-		if ((fTof.betaHBits&2) == 2) {
-			TrdTrackR * trd = betaHs->pTrdTrack();
-			AMSDir trd_dir(trd->Theta, trd->Phi); trd_dir = trd_dir * -1;
-			float dir[3] = { float(trd_dir[0]), float(trd_dir[1]), float(trd_dir[2]) };
-			float stt[6] = { trd->Coo[0], trd->Coo[1], trd->Coo[2], -dir[0], -dir[1], -dir[2] };
-			std::copy(stt, stt+6, fTof.betaHStates);
-		}
-
-		break;
-	}
-	TofRecH::BuildOpt = 0; // normal
-	*/
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -908,8 +857,12 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 			short side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
 
-			float xsig = (xcls) ? xcls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain) : -1.;
-			float ysig = ycls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain);
+			//float xsig = (xcls) ? xcls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain) : -1.;
+			//float ysig = ycls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain);
+            //
+			float xsig = (TrCharge::GoodChargeReconHit(recHit, 0) ? recHit->GetSignalCombination(0, qopt, 1, 0, 0) : 0.); 
+			float ysig = (TrCharge::GoodChargeReconHit(recHit, 1) ? recHit->GetSignalCombination(1, qopt, 1, 0, 0) : 0.); 
+            //
 
 			float xloc = (xcls) ? (xcls->GetCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
 			float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
@@ -1035,9 +988,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         TrackSys::HitSt mhitL1;
         TrackSys::HitSt mhitL9;
         for (auto&& hit : track.hits) {
-            TrackSys::HitSt mhit(hit.side%2==1, hit.side/2==1);
+            TrackSys::HitSt mhit(hit.side%2==1, hit.side/2==1, hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            mhit.set_err(hit.nsr[0], hit.nsr[1]);
+            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
                 if (hit.layJ == 1) mhitL1 = mhit;
@@ -1229,11 +1182,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		if (numberOfHit <= 0) continue;
 
 		fTrd.statusKCls[kindOfFit] = true;
-		fTrd.Q[kindOfFit]          = Q;
 		fTrd.LLRep[kindOfFit]      = llr[0];
 		fTrd.LLReh[kindOfFit]      = llr[1];
 		fTrd.LLRph[kindOfFit]      = llr[2];
 		fTrd.LLRnhit[kindOfFit]    = numberOfHit;
+		fTrd.Q[kindOfFit]          = Q;
 	}
 
 	short trdIdx = -1;
@@ -1754,7 +1707,6 @@ void EventEcal::setEnvironment() {
 	std::cerr << "Debug : Now, EventEcal::setEnvironment()\n";
 #endif
 
-	//EcalShowerR::enableAutomaticRecoveryOfBrokenBuilds = true;
 	EcalShowerR::enableAutomaticRecoveryOfBrokenBuilds = false;
 	EcalHadron::InitParameters();
 }
@@ -1772,12 +1724,6 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 	
 		shower.energyD = 1.e-3 * ecal->EnergyD;
 		shower.energyE = ecal->EnergyE;
-		float energyC = ecal->EnergyC;
-		shower.energyP = ecal->EnergyP(2);
-		if (energyC > 1.0e10 || shower.energyP < 0) {
-			shower.energyP = -1;
-		}
-		
 		shower.PisaBDT = ecal->GetEcalBDT();
 		
 		// Charge estimator based on ECAl-only;
@@ -1785,13 +1731,6 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 		// and to use events having only one EcalShower.
 		shower.Q = ecal->EcalChargeEstimator();
 		if (shower.Q < 1e-3) shower.Q = -1;
-
-		shower.showerAxis[0] = ecal->CofG[0];
-		shower.showerAxis[1] = ecal->CofG[1];
-		shower.showerAxis[2] = ecal->CofG[2];
-		shower.showerAxis[3] = ecal->Dir[0];
-		shower.showerAxis[4] = ecal->Dir[1];
-		shower.showerAxis[5] = ecal->Dir[2];
 
 		// hadron shower
 		int zeh = 1;

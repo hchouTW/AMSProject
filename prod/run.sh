@@ -10,14 +10,14 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 #Stream=lst/flist.ncu.iss.B950.pass6
 #Stream=lst/flist.cern.iss.B950.pass6
 DataType=MC
-#Stream=lst/flist.ncu.mc.pr.pl1.l1.054000.B1119
+Stream=lst/flist.ncu.mc.pr.pl1.l1.054000.B1119
 #Stream=lst/flist.cern.mc.pr.pl1.ecal.10004000.B1103
 #Stream=lst/flist.cern.mc.pr.pl1.1800.B1042
-Stream=lst/flist.cern.mc.pr.pl1.l1.054000.B1119
+#Stream=lst/flist.cern.mc.pr.pl1.l1.054000.B1119
 #Stream=lst/flist.cern.mc.el.pl1.0_25200.B1119
 #Stream=lst/flist.cern.mc.el.pl1.2004000.B1119
 
-GroupId=1001
+GroupId=11
 GroupSize=1
 OutputDir=.
 

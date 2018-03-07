@@ -55,6 +55,7 @@ class SegPARTMCInfo : public TObject {
 		void init() {
 			dec = -1;
 			lay = -1;
+			bta = -1;
 			mom = -1;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
@@ -63,11 +64,12 @@ class SegPARTMCInfo : public TObject {
 	public :
         Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL
         Short_t lay;
+		Float_t bta;
 		Float_t mom;
 		Float_t coo[3];
 		Float_t dir[3];
 	
-    ClassDef(SegPARTMCInfo, 1)
+    ClassDef(SegPARTMCInfo, 2)
 };
 
 struct SegPARTMCInfo_sort {
@@ -551,10 +553,8 @@ class ShowerInfo : public TObject {
 		void init() {
 			energyD = -1;
 			energyE = -1;
-			energyP = -1;
 			PisaBDT = -2;
 			Q = -1;
-			std::fill_n(showerAxis, 6, 0);
 
 			hadronApex = -1;
 			hadronEnergy = -1;
@@ -563,15 +563,13 @@ class ShowerInfo : public TObject {
 	public :
 		Float_t energyD;  // energy deposit [GeV]
 		Float_t energyE;  // Pisa
-		Float_t energyP;  // Choutko - base on energyC
 		Float_t PisaBDT;  // Pisa
 		Float_t Q;        // ecal charge
-		Float_t showerAxis[6];
 
 		Short_t hadronApex; // reject high-apex events (say, Apex > 12)
 		Float_t hadronEnergy;
 
-		ClassDef(ShowerInfo, 3)
+		ClassDef(ShowerInfo, 4)
 };
 
 
@@ -730,26 +728,13 @@ class TOF : public TObject {
 			betaH = 0;
 			normChisqT = -1;
 			normChisqC = -1;
-			std::fill_n(T, 4,  0);
-			std::fill_n(E, 4,  0);
+			std::fill_n(coo[0], 4*3, 0);
+			std::fill_n(err[0], 4*3, 0);
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
             Zall = -1;
 
-			std::fill_n(extClsN, 4, 0);
-
-			//statusBetaHs = false;
-			//betaHBits = 0;
-			//betaHPatts = 0;
-			//betaHs = 0;
-			//normChisqTs = -1;
-			//normChisqCs = -1;
-			//std::fill_n(Ts, 4,  0);
-			//std::fill_n(Es, 4,  0);
-			//std::fill_n(Qs, 4, -1);
-			//Qalls = -1;
-			//Zalls = -1;
-			//std::fill_n(betaHStates, 6, 0);
+			std::fill_n(numOfExtCls, 4, 0);
 		}
 
 	public :
@@ -769,30 +754,16 @@ class TOF : public TObject {
 		Float_t betaH;
 		Float_t normChisqT;
 		Float_t normChisqC;
-		Float_t T[4];
-        Float_t E[4];
+        Float_t coo[4][3];
+        Float_t err[4][3];
 		Float_t Q[4];
 		Float_t Qall;
         Short_t Zall;
 
 		// extern clusters
-		Short_t extClsN[4];
+		Short_t numOfExtCls[4];
 
-		// TRK Track independent
-		//Bool_t  statusBetaHs;
-		//Short_t betaHBits;
-		//Short_t betaHPatts;
-		//Float_t betaHs;
-		//Float_t normChisqTs;
-		//Float_t normChisqCs;
-		//Float_t Ts[4];
-		//Float_t Es[4];
-		//Float_t Qs[4];
-		//Float_t Qalls;
-		//Short_t Zalls;
-		//Float_t betaHStates[6];
-
-	ClassDef(TOF, 7)
+	ClassDef(TOF, 9)
 };
 
 
@@ -873,11 +844,11 @@ class TRD : public TObject {
 			numOfHTrack = 0;
 
 			std::fill_n(statusKCls, 2, false);
-			std::fill_n(Q, 2, -1);
 			std::fill_n(LLRep, 2, -1);
 			std::fill_n(LLReh, 2, -1);
 			std::fill_n(LLRph, 2, -1);
 			std::fill_n(LLRnhit, 2, -1);
+			std::fill_n(Q, 2, -1);
 
 			trackStatus = false;
 			std::fill_n(trackState, 6, 0);
@@ -891,11 +862,11 @@ class TRD : public TObject {
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
-		Float_t Q[2];
 		Float_t LLRep[2];
 		Float_t LLReh[2];
 		Float_t LLRph[2];
 		Short_t LLRnhit[2];
+		Float_t Q[2];
 
 		// TrdTrack or TrdHTrack (first TrdH, second Trd)
 		Bool_t  trackStatus;
