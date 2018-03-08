@@ -126,7 +126,6 @@ namespace MGROOT {
 		using ROOT::Math::fabs;
 		using ROOT::Math::sqr;
 		using ROOT::Math::sqrt;
-        using ROOT::Math::Unit;
         using ROOT::Math::TensorProd;
 		
 		// SMatrix Template Function 
