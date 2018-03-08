@@ -57,9 +57,9 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 50, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 50, 0.5, 4000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.35, 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Time
@@ -165,9 +165,10 @@ int main(int argc, char * argv[]) {
         Bool_t hasL9 = false;
         TrFitPar fitPar(type);
         for (auto&& hit : track.hits) {
-            HitSt mhit(hit.side%2==1, hit.side/2==1);
-            mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2], hit.layJ);
-            mhit.set_err(hit.nsr[0], hit.nsr[1]);
+            HitSt mhit(hit.side%2==1, hit.side/2==1, hit.layJ);
+            mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
+            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
+            mhit.set_adc(hit.sig[0], hit.sig[1]);
           
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {

@@ -61,17 +61,16 @@
 
 // User defination library
 #include <CPPLibs/CPPLibs.h>
-
 #include <ROOTLibs/ROOTLibs.h>
 
 #define __HAS_AMS_OFFICE_LIBS__
 #include <TRACKLibs/TRACKLibs.h>
 
-#include <AMSLibs/EcalHadron/EcalHadron.h>
-#include <AMSLibs/EcalHadron/EcalHadron.C>
+#include <EcalHadron.h>
+#include <EcalHadron.C>
+#include <TRDVertex.h>
 
 #include "ClassDef.h"
-#include "ClassDef.C"
 
 // User defination macro
 #define Debug true
@@ -101,17 +100,17 @@ class RecEvent {
 		double trackerZJ[9];
 
     // Track Refit Option
-	// Algorithm     (CHOUTKO, CHIKANIANF, KALMAN)
+	// Algorithm     (CHOUTKO, KALMAN, HCHOU)
 	// Track Pattern (Inn, InnL1, InnL9, FS)
     public :
-        inline void initTrRft() { std::fill_n(_trRft[0], 4*4, 22); }
+        inline void initTrRft() { std::fill_n(_trRft[0], 3*4, 22); }
         inline int trRft(int i, int j) { 
             if (_trRft[i][j]==22) { _trRft[i][j] = 21; return 22; }
             else return _trRft[i][j];
         }
 
     protected :
-        int _trRft[4][4];
+        int _trRft[3][4];
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;

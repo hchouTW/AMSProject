@@ -276,7 +276,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			int tkid = cluster->GetTkId();
 			int layJ = TkDBc::Head->GetJFromLayer(std::fabs(cluster->GetTkId()/100));
 			AMSPoint coo = cluster->GetXgl();
-
+			
 			HitTRKMCInfo hit;
 			hit.layJ = layJ;
 			hit.tkid = tkid;
@@ -297,6 +297,13 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 hit.smr[1] = (hit.coo[1] - cy);
                 hit.coo[0] = cx;
                 hit.coo[1] = cy;
+           
+                AMSPoint loc(hit.coo[0], hit.coo[1], hit.coo[2]);
+                TkSens tksens(loc, EventBase::checkEventMode(EventBase::MC));
+                double xloc = (!tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointX()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointX();
+                double yloc = (!tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointY()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointY();
+                hit.loc[0] = xloc;
+                hit.loc[1] = yloc;
             }
 			
 			fG4mc.primPart.hits.push_back(hit);
@@ -802,13 +809,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	const unsigned short _hasL56 =  48;
 	const unsigned short _hasL78 = 192;
 	const unsigned short _hasL9  = 256;
-	const int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
-    
+
     if (trtk != nullptr && fitidInn) {
-		double BTdist = 0;
-		fTrk.beamID = event->GetBeamPos(BTdist, trtk);
-		fTrk.beamDist = BTdist;
-		
 		TrackInfo track;
 		track.bitPattJ   = trtk->GetBitPatternJ();
 		track.bitPattXYJ = trtk->GetBitPatternXYJ();
@@ -843,29 +845,22 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 			int tkid = recHit->GetTkId();
 			int mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
-			                                             // > 0 requested multiplicty coordinates
+			                                              // > 0 requested multiplicty coordinates
             AMSPoint coo = (ilay==0 || ilay==8) ? (trtk->GetHitCooLJ(ilay+1, 0) + trtk->GetHitCooLJ(ilay+1, 1))*0.5 : trtk->GetHitCooLJ(ilay+1); // (CIEMAT+PG)/2
-
+			
+            TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
+			TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
+			
 			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
 			int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
-		
-			TrClusterR * xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
-			TrClusterR * ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
-			short clsIdX = (xcls) ? recHit->GetXClusterIndex() : -1;
-			short clsIdY = (ycls) ? recHit->GetYClusterIndex() : -1;
+            double xloc = (xcls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointX()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointX();
+            double yloc = (ycls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointY()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointY();
 
-			short side = (xcls ? 1 : 0) + (ycls ? 2 : 0);
+	        const int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+			float xadc = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
+			float yadc = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
 
-			//float xsig = (xcls) ? xcls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain) : -1.;
-			//float ysig = ycls->GetTotSignal(TrClusterR::kAsym|TrClusterR::kGain);
-            //
-			float xsig = (TrCharge::GoodChargeReconHit(recHit, 0) ? recHit->GetSignalCombination(0, qopt, 1, 0, 0) : 0.); 
-			float ysig = (TrCharge::GoodChargeReconHit(recHit, 1) ? recHit->GetSignalCombination(1, qopt, 1, 0, 0) : 0.); 
-            //
-
-			float xloc = (xcls) ? (xcls->GetCofG() + xcls->GetSeedAddress()) : (recHit->GetDummyX() + 640);
-			float yloc = (ycls->GetCofG() + ycls->GetSeedAddress());
 
 			std::vector<float> xstripSig;
 			std::vector<float> xstripSgm;
@@ -907,77 +902,69 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 if (ystripSS.at(it) < ystripSS.at(it-1)+GateTh && ystripSS.at(it) > ylenTh) yreg[1] = it; else break;
           
 			HitTRKInfo hit;
-			hit.clsId[0] = clsIdX;
-			hit.clsId[1] = clsIdY;
-			hit.layJ     = ilay+1;
-			hit.tkid     = tkid;
-			hit.sens     = sens;
-			hit.mult     = mult; 
-			hit.side     = side;
-			hit.coo[0]   = coo[0];
-			hit.coo[1]   = coo[1];
-			hit.coo[2]   = coo[2];
-			hit.sig[0]   = xsig;
-			hit.sig[1]   = ysig;
-			hit.loc[0]   = xloc;
-			hit.loc[1]   = yloc;
-		
-            if (xcls != nullptr) {
-                //hit.stripAdrX = xseedAddr;
-                //hit.stripIdxX = xseedIndx - xreg[0];
-                for (int it = xreg[0]; it <= xreg[1]; ++it) {
-                    //hit.stripSigX.push_back(xstripSig.at(it));
-                    //hit.stripSgmX.push_back(xstripSgm.at(it));
-                    hit.nsr[0]++;
-                }
-            }
-            
-            if (ycls != nullptr) {
-                //hit.stripAdrY = yseedAddr;
-                //hit.stripIdxY = yseedIndx - yreg[0];
-                for (int it = yreg[0]; it <= yreg[1]; ++it) {
-                    //hit.stripSigY.push_back(ystripSig.at(it));
-                    //hit.stripSgmY.push_back(ystripSgm.at(it));
-                    hit.nsr[1]++;
-                }
-            }
+			hit.layJ    = ilay+1;
+			hit.tkid    = tkid;
+			hit.sens    = sens;
+			hit.mult    = mult; 
+			hit.side[0] = (xcls != nullptr);
+			hit.side[1] = (ycls != nullptr);
+			hit.coo[0]  = coo[0];
+			hit.coo[1]  = coo[1];
+			hit.coo[2]  = coo[2];
+			hit.adc[0]  = xadc;
+			hit.adc[1]  = yadc;
+			hit.loc[0]  = xloc;
+			hit.loc[1]  = yloc;
+            hit.nsr[0]  = (xcls != nullptr) ? (xreg[1]-xreg[0]+1) : -1;
+            hit.nsr[1]  = (ycls != nullptr) ? (yreg[1]-yreg[0]+1) : -1;
 		
 			track.hits.push_back(hit);
 		} // for loop - layer
 		if (track.hits.size() > 1) std::sort(track.hits.begin(), track.hits.end(), HitTRKInfo_sort());
 
-		const short _nalgo = 3;
-		const short _algo[_nalgo] = { 1, 3, 6 };
+		const short _nalgo = 2;
+		const short _algo[_nalgo] = { 1, 6 };
 		const short _npatt = 4;
 		const short _patt[_npatt] = { 3, 5, 6, 7 };
         
         Int_t zin  = (track.QIn < 1.) ? 1 : std::lrint(track.QIn);
         float mass = (zin < 2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
-		for (int algo = 0; algo < _nalgo; algo++) {
-			for (int patt = 0; patt < _npatt; patt++) {
+		for (int algo = 0; algo < _nalgo; ++algo) {
+			for (int patt = 0; patt < _npatt; ++patt) {
                 MGClock::HrsStopwatch sw; sw.start();
-				int fitid = trtk->iTrTrackPar(_algo[algo], _patt[patt], recEv.trRft(algo, patt), mass, zin);
+                TrFit trFit;
+				int fitid = trtk->iTrTrackPar(trFit, _algo[algo], _patt[patt], recEv.trRft(algo, patt), mass, zin);
                 sw.stop();
 				if (fitid < 0) continue;
 				
                 track.status[algo][patt] = true;
-				track.rig[algo][patt] = trtk->GetRigidity(fitid);
+				track.rig[algo][patt] = trtk->GetRigidity(fitid, 0);
 				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
 				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
 			
+
+                const int ustate = 0; // KALMAN
 				for (int il = 0; il < 9; ++il) {
-					AMSPoint pntLJ;
-					AMSDir   dirLJ;
-                    trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
-					
-					track.stateLJ[algo][patt][il][0] = pntLJ[0];
-					track.stateLJ[algo][patt][il][1] = pntLJ[1];
-					track.stateLJ[algo][patt][il][2] = pntLJ[2];
-					track.stateLJ[algo][patt][il][3] = -dirLJ[0];
-					track.stateLJ[algo][patt][il][4] = -dirLJ[1];
-					track.stateLJ[algo][patt][il][5] = -dirLJ[2];
-				}
+				    AMSPoint pntLJ;
+				    AMSDir   dirLJ;
+                    double   rig = track.rig[algo][patt];
+                        
+                    if (_algo[algo] == 6) // KALMAN
+                        trFit.InterpolateKalman(recEv.trackerZJ[il], pntLJ, dirLJ, rig, ustate);
+                    else
+                        trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
+				   
+                    if (MGNumc::EqualToZero(rig)) continue;
+                    
+                    track.stateLJ[algo][patt][il][0] = pntLJ[0];
+				    track.stateLJ[algo][patt][il][1] = pntLJ[1];
+				    track.stateLJ[algo][patt][il][2] = pntLJ[2];
+				    track.stateLJ[algo][patt][il][3] = -dirLJ[0];
+				    track.stateLJ[algo][patt][il][4] = -dirLJ[1];
+				    track.stateLJ[algo][patt][il][5] = -dirLJ[2];
+				    track.stateLJ[algo][patt][il][6] = rig;
+                }
 
                 track.cpuTime[algo][patt] = sw.time() * 1.0e3;
 			} // for loop - pattern
@@ -988,9 +975,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         TrackSys::HitSt mhitL1;
         TrackSys::HitSt mhitL9;
         for (auto&& hit : track.hits) {
-            TrackSys::HitSt mhit(hit.side%2==1, hit.side/2==1, hit.layJ);
+            TrackSys::HitSt mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
+            mhit.set_adc(hit.adc[0], hit.adc[1]);
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
                 if (hit.layJ == 1) mhitL1 = mhit;
@@ -999,7 +987,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
 
 		for (int patt = 0; patt < _npatt; patt++) {
-            const int algo = 3;
+            const int algo = 2;
             TrackSys::TrFitPar _fitPar = fitPar;
             if (_patt[patt] == 5 || _patt[patt] == 7) { if (!mhitL1()) continue; _fitPar.addHit(mhitL1); }
             if (_patt[patt] == 6 || _patt[patt] == 7) { if (!mhitL9()) continue; _fitPar.addHit(mhitL9); }
@@ -1049,7 +1037,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         if (smin > 0) fTrk.ratN10Smin = smin;
 
         fTrk.noiseInTrSH = event->IsTrackPickingUpNoise();
-        fTrk.betaSH      = TrMass::GetBeta(event, 111, trtk); 
+        fTrk.betaSH[0]   = TrMass::GetBeta(event, 1, trtk); 
+        fTrk.betaSH[1]   = TrMass::GetBeta(event, 11, trtk); 
+        fTrk.betaSH[2]   = TrMass::GetBeta(event, 111, trtk); 
         fTrk.massEstSH   = TrMass::GetMQL(event, trtk);
     }
 
@@ -1228,6 +1218,19 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		break;
 	} // while loop --- trd track
 
+    TRDVertex trdVtx;
+    trdVtx.Reconstruction(event);
+
+    fTrd.vtxNum[0] = trdVtx.nvertex_3d;
+    fTrd.vtxNum[1] = trdVtx.nvertex_2d_y;
+    fTrd.vtxNum[2] = trdVtx.nvertex_2d_x;
+    fTrd.vtxNTrk   = trdVtx.vertex_ntrack;
+    fTrd.vtxNHit   = trdVtx.vertex_nhit;
+    fTrd.vtxChi2   = trdVtx.vertex_chi2;
+    fTrd.vtxCoo[0] = trdVtx.vertex_x;
+    fTrd.vtxCoo[1] = trdVtx.vertex_y;
+    fTrd.vtxCoo[2] = trdVtx.vertex_z;
+
 	fStopwatch.stop();
 	return selectEvent(event);
 }
@@ -1279,50 +1282,60 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
 	if (event == nullptr)	return false;
 	fStopwatch.start();
-		
-	// Rich cuts from Javie/Jorge
-	const float richRadZ[2] = {-74.35, -75.5 };          // aerogel / NaF
-	const float richPMTZ = -121.89;                      // pmt z-axis
-	const float cut_prob = 0.01;                         // Kolmogorov test prob
-	const float cut_pmt = 3;                             // number of PMTs
-	const float cut_collPhe[2] = {0.6, 0.4};             // ring phe / total phe (NaF, Aerogel)
-	const float cut_chargeConsistency = 5;               // hit / PMT charge consistency test
-	const float cut_betaConsistency[2] = {0.01, 0.005};  // beta_lip vs beta_ciemat consistency (NaF, Aerogel)
-	const float cut_expPhe[2] = {1, 2};                  // expected number of phe (NaF, Aerogel)
-	const float cut_aerogelExternalBorder = 3350;        // aerogel external border (r**2)
-	// modify 3500 -> 3360 (by S.H.)
-	// modify 3500 -> 3350 (by HY.Chou)
-	//const float cut_PMTExternalBorder = 4050;             // PMT external border (r**2) (by HY.Chou)
-	const float cut_aerogelNafBorder[2] = {17.4, 17.6}; // aerogel/NaF border (NaF, Aerogel)
-	// modify (17, 18) -> (17.25, 17.75) (by HY.Chou)
-	//const float cut_distToTileBorder[2] = {0.08, 0.05};   // distance to tile border 
+
+	// official RichRingR - start
+    fRich.numOfHit = event->NRichHit();
+	while (recEv.iRichRing >= 0) {
+		RichRingR* rich = event->pRichRing(recEv.iRichRing);
+        if (rich == nullptr) break;
+		int kindOfRad = rich->IsNaF() ? 1 : 0;
+		int tileOfRad = rich->getTileIndex();
+
+		fRich.status = true;
+		fRich.beta = rich->getBeta();
+        fRich.kind = kindOfRad;
+        fRich.tile = tileOfRad;
+		fRich.Q = rich->getCharge2Estimate(true);
+		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
 	
-	const int nBadTile = 5;
-	//const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
+	    // Rich cuts from Javie/Jorge
+        const float cut_prob = 0.01;     // Kolmogorov test prob
+        const float cut_pmt = 3;         // number of PMTs
+	    const float cut_chrgConsistency = 5; // hit/PMT charge consistency test
+	    const float cut_betaConsistency[2] = {0.01, 0.005};  // beta_lip vs beta_ciemat consistency (NaF, Aerogel)
+	    const float cut_collPhe[2] = {0.6, 0.4};             // ring phe / total phe (NaF, Aerogel)
+	    const float cut_expPhe[2] = {1, 2};                  // expected number of phe (NaF, Aerogel)
+
+		fRich.isGood =
+            (rich->IsGood() &&
+             rich->getPMTs() >= cut_pmt &&
+             rich->getProb() > cut_prob &&
+             rich->getPMTChargeConsistency() < cut_chrgConsistency &&
+             rich->getBetaConsistency() < cut_betaConsistency[kindOfRad]);
+
+        fRich.numOfExpPE = rich->getExpectedPhotoelectrons();
+        fRich.eftOfColPE = rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons();
+
+		break;
+	}
+	// official RichRingR - end
+
+    
+    // RichVeto - start
+	const float richPMTZ = -121.89;                      // pmt z-axis
+	const float richRadZ[2] = {-74.35, -75.5 };             // aerogel / NaF
+	const float cut_aerogelExternalBorder = 3350;           // aerogel external border (r**2)
+	const float cut_aerogelNafBorder[2] = {17.475, 17.525}; // aerogel/NaF border (NaF, Aerogel)
+	
+    const int nBadTile = 5;
+	const int kBadTile_Offical[nBadTile]  = { 3, 7, 87, 100, 108 }; // tiles with bad beta reconstruction
 	const int kBadTile_MgntTile[nBadTile] = { 13, 23, 58, 86, 91 }; // tiles with bad beta reconstruction
 
-    // light guide : channel id
-    //  12 | 13 | 14 | 15
-    //  -----------------
-    //   8 |  9 | 10 | 11
-    //  -----------------
-    //   4 |  5 |  6 |  7
-    //  -----------------
-    //   0 |  1 |  2 |  3
-    const float lg_rfrIndex      = 1.49; // light guide refractive index
-    //const float lg_height        = 3.00;
-    //const float lg_top_length    = 3.40;
-    //const float lg_bottom_length = 1.77;
-
-    // noise npe
-    const float noise_npe = 0.4;
-
-    // Track Info
-    double trRigAbs = 0;
-
-    fRich.numOfHit = event->NRichHit();
-
-	// RichVeto - start
+    AMSDir   oth; // emission
+    AMSPoint ems; // emission
+    AMSPoint rev; // receiving
+	double trRigAbs = 0;
+    double trTheta[3] = {0};
 	while (recEv.iTrTrack >= 0) {
 		TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
 		if (trtk == nullptr) break;
@@ -1342,292 +1355,240 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 			tmp_tile = tmp_mgntTile.getcurrenttile();
 		}
 		
-		// Radiator tile manager
+        // Radiator tile manager
 		RichOffline::TrTrack richTrack(ems_coo, ems_dir);
 		RichOffline::RichRadiatorTileManager mgntTile(&richTrack);
 		if (mgntTile.getkind() < 1 || mgntTile.getkind() > 2) break;
 		if (tmp_kind != mgntTile.getkind()) break;
 		if (tmp_tile != mgntTile.getcurrenttile()) break;
-
-		float ems[6] = {0};
-		ems_dir = ems_dir * -1.0;
-		ems[0] = ems_coo[0]; ems[1] = ems_coo[1]; ems[2] = ems_coo[2];
-		ems[3] = ems_dir[0]; ems[4] = ems_dir[1]; ems[5] = ems_dir[2];
-
-		AMSPoint pmt_coo;
-		AMSDir   pmt_dir;
-		trtk->Interpolate(richPMTZ, pmt_coo, pmt_dir, fitid);
-
-        float rev[6] = {0};
-		pmt_dir = pmt_dir * -1.0;
-        rev[0] = pmt_coo[0]; rev[1] = pmt_coo[1]; rev[2] = pmt_coo[2];
-        rev[3] = pmt_dir[0]; rev[4] = pmt_dir[1]; rev[5] = pmt_dir[2];
-
-		short kindOfRad    = mgntTile.getkind() - 1;
-		short tileOfRad    = mgntTile.getcurrenttile();
-		float rfrIndex     = mgntTile.getindex();
-		AMSPoint richems   = mgntTile.getemissionpoint();
-		float distToBorder = mgntTile.getdistance();
 		
-		int countKB = 0;
-		for (int kb = 0; kb < nBadTile; kb++) {
-			if (tileOfRad == kBadTile_MgntTile[kb]) break;
-			countKB++;
-		}
-		bool isGoodTile = (countKB == nBadTile);
-
-		// geometry cut
+        AMSPoint rev_coo;
+		AMSDir   rev_dir;
+		trtk->Interpolate(richPMTZ, rev_coo, rev_dir, fitid);
+        
+        oth = AMSDir(-ems_dir[0], -ems_dir[1], -ems_dir[2]);
+        ems = ems_coo;
+        rev = rev_coo;
+        
+        fRich.vetoKind         = mgntTile.getkind() - 1;
+		fRich.vetoTile         = mgntTile.getcurrenttile();
+		fRich.vetoRfrIndex     = mgntTile.getindex();
+		fRich.vetoDistToBorder = mgntTile.getdistance();
+		
+        // geometry cut
 		bool isStruct = false;
-		if (kindOfRad == 1) {
-			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) > cut_aerogelNafBorder[0]) isStruct = false;
-		}
-		if (kindOfRad == 0) {
-			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) < cut_aerogelNafBorder[1]) isStruct = false;
+		AMSPoint richems = mgntTile.getemissionpoint();
+		if (fRich.vetoKind == 0) {
 			if ((richems[0]*richems[0]+richems[1]*richems[1]) > cut_aerogelExternalBorder)        isStruct = true;
+			if (std::max(std::fabs(richems[0]), std::fabs(richems[1])) < cut_aerogelNafBorder[1]) isStruct = true;
 		}
-		bool isInFiducialVolume = !isStruct;
+        else if (fRich.vetoKind == 1 && std::max(std::fabs(richems[0]), std::fabs(richems[1])) > cut_aerogelNafBorder[0]) isStruct = true;
 		
-        fRich.kindOfRad  = kindOfRad;
-		fRich.tileOfRad  = tileOfRad;
-		fRich.isGoodTile = isGoodTile; 
-		fRich.rfrIndex   = rfrIndex;
-		fRich.distToBorder = distToBorder;
-		fRich.isInFiducialVolume = isInFiducialVolume;
-		std::copy(ems, ems+6, fRich.emission);
-		std::copy(rev, rev+6, fRich.receiving);
-	
-		// Number of photoelectrons expected for a given track, beta and charge.
-        Bool_t has_RichVeto = true;
-        if (has_RichVeto) {
-		    const int    npart = 3;
-		    const double masschrg[npart] = 
-		      { 0.000510999,   // electron
-		        0.938272297,   // proton
-		        1.876123915 }; // deuterium
-		    float numOfExpPE[npart] = { 0, 0, 0 };
-		    std::fill_n(numOfExpPE, npart, -1);
-		    trRigAbs = std::fabs(trtk->GetRigidity(fitid));
-		    for (int it = 0; it < npart; ++it) {
-		    	double beta = 1. / std::hypot(1.0, (masschrg[it] / trRigAbs)); 
-		    	double exppe = RichRingR::ComputeNpExp(trtk, beta, 1.0);
-		    	numOfExpPE[it] = exppe;
-		    }
-		    std::copy(numOfExpPE, numOfExpPE+npart, fRich.numOfExpPE);
-        }
+        fRich.vetoIsInFiducialVolume = !isStruct;
+
+		trRigAbs = std::fabs(trtk->GetRigidity(fitid, 0));
+		
+        const int    npart = 3;
+		const double masschrg[npart] = 
+		  { 0.000510999,   // electron
+		    0.938272297,   // proton
+		    1.876123915 }; // deuterium
+
+		float numOfExpPE[npart] = { 0, 0, 0 };
+		for (int it = 0; it < npart; ++it) {
+		    double beta = 1.0 / std::hypot(1.0, (masschrg[it] / trRigAbs));
+            double theta = std::acos(1.0/fRich.vetoRfrIndex/beta);
+		    double exppe = RichRingR::ComputeNpExp(trtk, beta, 1.0);
+		    numOfExpPE[it] = exppe;
+            trTheta[it] = (MGNumc::Valid(theta) ? theta : -1.0);
+		}
+		std::copy(numOfExpPE, numOfExpPE+npart, fRich.vetoNumOfExpPE);
 
         break;
-    }
-	// official RichRingR - start
-	while (recEv.iRichRing >= 0 && fRich.kindOfRad >= 0) {
-		// RichRingR
-		RichRingR * rich = event->pRichRing(recEv.iRichRing);
-		int kindOfRad = rich->IsNaF() ? 1 : 0;
-		//int tileOfRad = rich->getTileIndex();
-		if (fRich.kindOfRad != kindOfRad) break;
+    }	
 
-		fRich.status = true;
-		fRich.beta = rich->getBeta();
-		fRich.Q = rich->getCharge2Estimate(true);
-		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
+    //---- RICH HIT ----//
+    //------------------------------------------------------------//
+	// Calculate reflective point
+	// Iterator Mothod :
+	// emission point : e{x, y, z}
+	// hit      point : h{x, y, z}
+	// bisector point : b{x, y, z}
+	// bisector coord : (parameter 0 <= bt <= 1)
+	//     b{x, y, z} = (1 - bt) * e{x, y, z} + (bt) * h{x, y, z}
+	//     br = sqrt(bx^2 + by^2)
+	//
+	// =============mirror=============
+	//                /|\
+	//               / | \
+	//              /  |  \
+	//             /   |   \
+	//            /    |    \
+	//           /     |     \
+	//          /      |      \
+	//         /       |       \
+	//        /        |        \
+	//       /         |         \
+	//     "e"---(t)--"b"-(1-t)--"h"
+	//
+	// Angle bisector theorem :
+	// mirror eq : (mz*z + mr*r + m0 = 0)
+	//     mz = -1.489637e-01
+	//     mr = -1.00
+	//     m0 =  4.891730e+01
+	// reflective point :
+	//     fz = ( mr*(mr*bz - mz*br) - mz*m0) / (mz*mz + mr*mr)
+	//     fr = (-mz*(mr*bz - mz*br) - mr*m0) / (mz*mz + mr*mr)
+	//     fx = fr * (bx / sqrt(bx^2 + by^2))
+	//     fy = fr * (by / sqrt(bx^2 + by^2))
+	// length of emission to reflective : elen
+	//     elen = sqrt((fx-ex)^2 + (fy-ey)^2 + (fz-ez)^2)
+	// length of hit      to reflective : hlen
+	//     hlen = sqrt((fx-hx)^2 + (fy-hy)^2 + (fz-hz)^2)
+	// bisector parameter : bt (initial value 0.5)
+	//     bt = elen / (elen + hlen)
+    //------------------------------------------------------------//
+    
+    // light guide : channel id
+    //  12 | 13 | 14 | 15
+    //  -----------------
+    //   8 |  9 | 10 | 11
+    //  -----------------
+    //   4 |  5 |  6 |  7
+    //  -----------------
+    //   0 |  1 |  2 |  3
+    const float lg_rfrIndex      = 1.49; // light guide refractive index
+    const float lg_height        = 3.00;
+    const float lg_top_length    = 3.40;
+    const float lg_bottom_length = 1.77;
 
-		fRich.isGoodRecon = true;
-		if (!rich->IsGood() || !rich->IsClean() ||
-            rich->getProb() < cut_prob ||
-			rich->getPMTs() < cut_pmt ||
-			rich->getPMTChargeConsistency() > cut_chargeConsistency) fRich.isGoodRecon = false;
-        
-        if (rich->IsNaF()) {
-			if (rich->getExpectedPhotoelectrons() < cut_expPhe[0] ||
-                rich->getBetaConsistency() > cut_betaConsistency[0] ||
-                rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[0]) fRich.isGoodRecon = false;
-		}
-		else {
-			if (rich->getExpectedPhotoelectrons() < cut_expPhe[1] ||
-                rich->getBetaConsistency() > cut_betaConsistency[1] ||
-				rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collPhe[1]) fRich.isGoodRecon = false;
-		}
-		break;
-	}
-	// official RichRingR - end
-	
-	// RICH Hits
-    if (fRich.kindOfRad >= 0) {
-        AMSDir   oth(fRich.emission[3], fRich.emission[4], fRich.emission[5]);
-        AMSPoint ems(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
-        AMSPoint rev(fRich.receiving[0], fRich.receiving[1], fRich.receiving[2]);
+    for (int it = 0; fRich.vetoKind >= 0 && it < event->NRichHit(); ++it) {
+		RichHitR* hit = event->pRichHit(it);
+		if (hit == nullptr) continue;
+        double dist = rev.dist(hit->Coo);
 		
-        for (int it = 0; it < event->NRichHit(); ++it) {
-			RichHitR * hit = event->pRichHit(it);
-			if (hit == nullptr) continue;
-			AMSPoint coo(hit->Coo);
-			
-            // dist
-            double dist = rev.dist(coo);
-			
-            // dtha
-            double dtha = -1.;
-            double dphi = -1.;
+        // dtha
+        double dtha = -1.;
+        double dphi = -1.;
+		{
+			AMSDir vacph(AMSPoint(hit->Coo) - ems);
+            double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.vetoRfrIndex);
+            if (rdtha < 1.0) {
+			    double theta = TMath::Pi() - std::asin(rdtha);
+			    double phi   = vacph.getphi();
+			    AMSDir emsph(theta, phi);
+			    dtha = 2.0*std::asin(0.5*oth.dist(emsph));
+                dphi = std::asin(std::sin(TMath::Pi() - vacph.gettheta()) / lg_rfrIndex);
+            }
+		}
+        // rtha
+        double rtha = -1.;
+        double rphi = -1.;
+		{
+			const double mParZ = -1.489637e-01;
+			const double mParR = -1.00;
+			const double mPar0 = 4.891730e+01;
+			double epnt[3] = { ems[0], ems[1], ems[2] };
+			double hpnt[3] = { hit->Coo[0], hit->Coo[1], hit->Coo[2] };
+			double initbt = 0.5;
 			{
-				AMSDir vacph(coo - ems);
-                double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
+				double ez = epnt[2];
+				double er = std::sqrt(epnt[0]*epnt[0] + epnt[1]*epnt[1]);
+				double distbe = std::fabs(mParZ * ez + mParR * er + mPar0) / std::sqrt(ez*ez + er*er); 
+				double hz = hpnt[2];
+				double hr = std::sqrt(hpnt[0]*hpnt[0] + hpnt[1]*hpnt[1]);
+				double distbh = std::fabs(mParZ * hz + mParR * hr + mPar0) / std::sqrt(hz*hz + hr*hr);
+				initbt = distbe/(distbe+distbh);
+			}
+			double rflz = 0;
+			double bt = initbt;
+			double fineph[3] = { 0, 0, 0 };
+            double pmtph[3] = { 0, 0, 0 };
+
+			const int MaxIter = 30;
+			const double ToleranceLimit = 0.005;
+			int iter = 1;
+			double tolerance = 1.0;
+			while (iter <= MaxIter && tolerance > ToleranceLimit) {
+				double bpnt[3] = {
+					(1 - bt) * epnt[0] + bt * hpnt[0],
+					(1 - bt) * epnt[1] + bt * hpnt[1],
+					(1 - bt) * epnt[2] + bt * hpnt[2],
+				};
+				double bz = bpnt[2];
+				double br = std::sqrt(bpnt[0]*bpnt[0] + bpnt[1]*bpnt[1]);
+				if (MGNumc::EqualToZero(br)) break;
+
+				double fz = ( mParR*(mParR*bz - mParZ*br) - mParZ*mPar0) / (mParZ*mParZ + mParR*mParR);
+				double fr = (-mParZ*(mParR*bz - mParZ*br) - mParR*mPar0) / (mParZ*mParZ + mParR*mParR);
+				double fpnt[3] = {
+					fr * bpnt[0] / br,
+					fr * bpnt[1] / br,
+					fz
+				};
+
+				double edlen[3] = { (fpnt[0]-epnt[0]), (fpnt[1]-epnt[1]), (fpnt[2]-epnt[2]) };
+				double elen = std::sqrt(edlen[0]*edlen[0] + edlen[1]*edlen[1] + edlen[2]*edlen[2]);
+				
+				double hdlen[3] = { (fpnt[0]-hpnt[0]), (fpnt[1]-hpnt[1]), (fpnt[2]-hpnt[2]) };
+				double hlen = std::sqrt(hdlen[0]*hdlen[0] + hdlen[1]*hdlen[1] + hdlen[2]*hdlen[2]);
+
+				double predbt = elen / (elen + hlen);
+				tolerance = std::fabs(predbt - bt);
+				iter++;
+				
+				if (tolerance < ToleranceLimit) {
+					rflz = fz;
+					fineph[0] = (fpnt[0] - epnt[0]);
+					fineph[1] = (fpnt[1] - epnt[1]);
+					fineph[2] = (fpnt[2] - epnt[2]);
+                    pmtph[0]  = (hpnt[0] - fpnt[0]);
+                    pmtph[1]  = (hpnt[1] - fpnt[1]);
+                    pmtph[2]  = (hpnt[2] - fpnt[2]);
+				}
+				else bt = predbt;
+			}
+			
+            bool success = (tolerance < ToleranceLimit && rflz < epnt[2] && rflz > hpnt[2]);
+			if (success) {
+				AMSDir vacph(fineph[0], fineph[1], fineph[2]);
+                double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.vetoRfrIndex);
                 if (rdtha < 1.0) {
 				    double theta = TMath::Pi() - std::asin(rdtha);
 				    double phi   = vacph.getphi();
 				    AMSDir emsph(theta, phi);
-				    dtha = 2.0*std::asin(0.5*oth.dist(emsph));
-                    dphi = std::asin(std::sin(TMath::Pi() - vacph.gettheta()) / lg_rfrIndex);
+				    rtha = 2.0*std::asin(0.5*oth.dist(emsph));
+
+                    AMSDir revph(pmtph[0], pmtph[1], pmtph[2]);
+                    rphi = std::asin(std::sin(TMath::Pi() - revph.gettheta()) / lg_rfrIndex);
                 }
+                else success = false;
 			}
-			
-			// Calculate reflective point
-			// Iterator Mothod :
-			// emission point : e{x, y, z}
-			// hit      point : h{x, y, z}
-			// bisector point : b{x, y, z}
-			// bisector coord : (parameter 0 <= bt <= 1)
-			//     b{x, y, z} = (1 - bt) * e{x, y, z} + (bt) * h{x, y, z}
-			//     br = sqrt(bx^2 + by^2)
-			//
-			// =============mirror=============
-			//                /|\
-			//               / | \
-			//              /  |  \
-			//             /   |   \
-			//            /    |    \
-			//           /     |     \
-			//          /      |      \
-			//         /       |       \
-			//        /        |        \
-			//       /         |         \
-			//     "e"---(t)--"b"-(1-t)--"h"
-			//
-			// Angle bisector theorem :
-			// mirror eq : (mz*z + mr*r + m0 = 0)
-			//     mz = -1.489637e-01
-			//     mr = -1.00
-			//     m0 =  4.891730e+01
-			// reflective point :
-			//     fz = ( mr*(mr*bz - mz*br) - mz*m0) / (mz*mz + mr*mr)
-			//     fr = (-mz*(mr*bz - mz*br) - mr*m0) / (mz*mz + mr*mr)
-			//     fx = fr * (bx / sqrt(bx^2 + by^2))
-			//     fy = fr * (by / sqrt(bx^2 + by^2))
-			// length of emission to reflective : elen
-			//     elen = sqrt((fx-ex)^2 + (fy-ey)^2 + (fz-ez)^2)
-			// length of hit      to reflective : hlen
-			//     hlen = sqrt((fx-hx)^2 + (fy-hy)^2 + (fz-hz)^2)
-			// bisector parameter : bt (initial value 0.5)
-			//     bt = elen / (elen + hlen)
-            double rtha = -1.;
-            double rphi = -1.;
-			{
-				const double mParZ = -1.489637e-01;
-				const double mParR = -1.00;
-				const double mPar0 = 4.891730e+01;
-				double epnt[3] = { ems[0], ems[1], ems[2] };
-				double hpnt[3] = { coo[0], coo[1], coo[2] };
-				double initbt = 0.5;
-				{
-					double ez = epnt[2];
-					double er = std::sqrt(epnt[0]*epnt[0] + epnt[1]*epnt[1]);
-					double distbe = std::fabs(mParZ * ez + mParR * er + mPar0) / std::sqrt(ez*ez + er*er); 
-					double hz = hpnt[2];
-					double hr = std::sqrt(hpnt[0]*hpnt[0] + hpnt[1]*hpnt[1]);
-					double distbh = std::fabs(mParZ * hz + mParR * hr + mPar0) / std::sqrt(hz*hz + hr*hr);
-					initbt = distbe/(distbe+distbh);
-				}
-				double rflz = 0;
-				double bt = initbt;
-				double fineph[3] = { 0, 0, 0 };
-                double pmtph[3] = { 0, 0, 0 };
+		} // rtha
+        
+        HitRICHInfo hinfo;
+        hinfo.status  = hit->Status;
+        hinfo.cross   = hit->IsCrossed();
+		hinfo.channel = hit->Channel;
+        hinfo.npe     = hit->Npe;
+		hinfo.coo[0]  = hit->Coo[0];
+		hinfo.coo[1]  = hit->Coo[1];
+		hinfo.coo[2]  = hit->Coo[2];
+        hinfo.dist    = dist;
+        hinfo.dtha    = dtha;
+        hinfo.dphi    = dphi;
+        hinfo.rtha    = rtha;
+        hinfo.rphi    = rphi;
 
-				const int MaxIter = 30;
-				const double ToleranceLimit = 0.005;
-				int iter = 1;
-				double tolerance = 1.0;
-				while (iter <= MaxIter && tolerance > ToleranceLimit) {
-					double bpnt[3] = {
-						(1 - bt) * epnt[0] + bt * hpnt[0],
-						(1 - bt) * epnt[1] + bt * hpnt[1],
-						(1 - bt) * epnt[2] + bt * hpnt[2],
-					};
-					double bz = bpnt[2];
-					double br = std::sqrt(bpnt[0]*bpnt[0] + bpnt[1]*bpnt[1]);
-					if (MGNumc::EqualToZero(br)) break;
+        fRich.hits.push_back(hinfo);
+    } // hit - for loop
+    if (fRich.hits.size() > 2) std::sort(fRich.hits.begin(), fRich.hits.end(), HitRICHInfo_sort());
+   
 
-					double fz = ( mParR*(mParR*bz - mParZ*br) - mParZ*mPar0) / (mParZ*mParZ + mParR*mParR);
-					double fr = (-mParZ*(mParR*bz - mParZ*br) - mParR*mPar0) / (mParZ*mParZ + mParR*mParR);
-					double fpnt[3] = {
-						fr * bpnt[0] / br,
-						fr * bpnt[1] / br,
-						fz
-					};
-
-					double edlen[3] = { (fpnt[0]-epnt[0]), (fpnt[1]-epnt[1]), (fpnt[2]-epnt[2]) };
-					double elen = std::sqrt(edlen[0]*edlen[0] + edlen[1]*edlen[1] + edlen[2]*edlen[2]);
-					
-					double hdlen[3] = { (fpnt[0]-hpnt[0]), (fpnt[1]-hpnt[1]), (fpnt[2]-hpnt[2]) };
-					double hlen = std::sqrt(hdlen[0]*hdlen[0] + hdlen[1]*hdlen[1] + hdlen[2]*hdlen[2]);
-
-					double predbt = elen / (elen + hlen);
-					tolerance = std::fabs(predbt - bt);
-					iter++;
-					
-					if (tolerance < ToleranceLimit) {
-						rflz = fz;
-						fineph[0] = (fpnt[0] - epnt[0]);
-						fineph[1] = (fpnt[1] - epnt[1]);
-						fineph[2] = (fpnt[2] - epnt[2]);
-                        pmtph[0]  = (hpnt[0] - fpnt[0]);
-                        pmtph[1]  = (hpnt[1] - fpnt[1]);
-                        pmtph[2]  = (hpnt[2] - fpnt[2]);
-					}
-					else bt = predbt;
-				}
-				
-                bool success = (tolerance < ToleranceLimit && rflz < epnt[2] && rflz > hpnt[2]);
-				if (success) {
-					AMSDir vacph(fineph[0], fineph[1], fineph[2]);
-                    double rdtha = (std::sin(TMath::Pi() - vacph.gettheta()) / fRich.rfrIndex);
-                    if (rdtha < 1.0) {
-					    double theta = TMath::Pi() - std::asin(rdtha);
-					    double phi   = vacph.getphi();
-					    AMSDir emsph(theta, phi);
-					    rtha = 2.0*std::asin(0.5*oth.dist(emsph));
-
-                        AMSDir revph(pmtph[0], pmtph[1], pmtph[2]);
-                        rphi = std::asin(std::sin(TMath::Pi() - revph.gettheta()) / lg_rfrIndex);
-                    }
-                    else success = false;
-				}
-			} // rtha
-
-            HitRICHInfo hinfo;
-            hinfo.status  = hit->Status;
-            hinfo.cross   = hit->IsCrossed();
-			hinfo.channel = hit->Channel;
-            hinfo.npe     = hit->Npe;
-			hinfo.coo[0]  = hit->Coo[0];
-			hinfo.coo[1]  = hit->Coo[1];
-			hinfo.coo[2]  = hit->Coo[2];
-            hinfo.dist = dist;
-            hinfo.dtha = dtha;
-            hinfo.dphi = dphi;
-            hinfo.rtha = rtha;
-            hinfo.rphi = rphi;
-
-            fRich.hits.push_back(hinfo);
-        } // hit - for loop
-	    
-        std::sort(fRich.hits.begin(), fRich.hits.end(), HitRICHInfo_sort());
-    }
-    
-    /*
+    const float noise_npe = 0.4; // noise npe
     if (fRich.hits.size() != 0) {
-		const int    npart = 3;
-        AMSPoint ems_coo(fRich.emission[0], fRich.emission[1], fRich.emission[2]);
-        AMSPoint pmt_coo(fRich.receiving[0], fRich.receiving[1], fRich.receiving[2]);
-		const double thetaLimit   = std::acos(1./fRich.rfrIndex) * 1.05;
-		double       linedist     = ems_coo.dist(pmt_coo);
+		const double thetaLimit   = std::acos(1./fRich.vetoRfrIndex) * 1.05;
+		double       linedist     = ems.dist(rev);
 		double       mscatDirFluc = 0.0136 / ((trRigAbs>0.3)?trRigAbs:0.3);
 		double       mscatCooFluc = mscatDirFluc * linedist;
 		const double measDirFluc  = 0.01;
@@ -1635,41 +1596,34 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		double       dirSgm       = 3.5 * std::sqrt(mscatDirFluc * mscatDirFluc + measDirFluc * measDirFluc);
 		double       cooSgm       = 5.0 * std::sqrt(mscatCooFluc * mscatCooFluc + measCooFluc * measCooFluc);
    
-		int countCross[2] = { 0, 0 };
-		int countCKV[5][3];
-		std::fill_n(countCKV[0], 5*3, 0);
+		const int npart = 3;
+		int cntCrs = 0;;
+		int cntCkv[npart][3];
+        std::fill_n(cntCkv[0], npart*3, 0);
         for (auto&& hit : fRich.hits) {
             if (hit.npe < noise_npe) continue;
-
-            if (hit.cross) {
-                if (hit.dist < cooSgm) countCross[0]++;
-                else                   countCross[1]++;
-            }
+            if (hit.dist < cooSgm) cntCrs++;
             else {
-				bool isInsideDIR = (hit.dtha > 0.0 && hit.dtha < thetaLimit);
-				bool isInsideRFL = (hit.rtha > 0.0 && hit.rtha < thetaLimit);
-				bool isOutside = (!isInsideDIR && !isInsideRFL);
+			    bool isInsideDIR = (hit.dtha > 0.0 && hit.dtha < thetaLimit);
+			    bool isInsideRFL = (hit.rtha > 0.0 && hit.rtha < thetaLimit);
+			    bool nonPhys = (!isInsideDIR && !isInsideRFL);
 
-				for (int it = 0; it < npart; ++it) {
-					bool isThetaDIR = (std::fabs(hit.dtha-fRich.theta[it]) < dirSgm);
-					bool isThetaRFL = (std::fabs(hit.rtha-fRich.theta[it]) < dirSgm);
-					bool isTheta = (isThetaDIR || isThetaRFL);
-					if      (isTheta)   countCKV[it][0]++;
-					else if (isOutside) countCKV[it][2]++;
-					else                countCKV[it][1]++;
-				}
+			    for (int it = 0; it < npart; ++it) {
+                    if (trTheta[it] < 0.0) continue;
+			    	bool isThetaDIR = (std::fabs(hit.dtha-trTheta[it]) < dirSgm);
+			    	bool isThetaRFL = (std::fabs(hit.rtha-trTheta[it]) < dirSgm);
+			    	bool isTheta = (isThetaDIR || isThetaRFL);
+			    	if      (isTheta) cntCkv[it][0]++;
+			    	else if (nonPhys) cntCkv[it][2]++;
+			    	else              cntCkv[it][1]++;
+			    }
             }
         }
-		
-        //fRich.numOfCrossHit[0] = countCross[0];
-		//fRich.numOfCrossHit[1] = countCross[1];
-		//for (int it = 0; it < npart; ++it) {
-		//	fRich.numOfRingHit[it][0] = countCKV[it][0];
-		//	fRich.numOfRingHit[it][1] = countCKV[it][1];
-		//	fRich.numOfRingHit[it][2] = countCKV[it][2];
-		//}
+
+        fRich.vetoNumOfCrsHit = cntCrs;
+		for (int it = 0; it < npart; ++it)
+            fRich.vetoNumOfCkvHit[it][0] = cntCkv[it][0];
     }
-    */
 	// RichVeto - end
 
 	fStopwatch.stop();

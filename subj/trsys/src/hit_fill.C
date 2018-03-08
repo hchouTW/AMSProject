@@ -49,10 +49,10 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 200, 0.35, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
-    Axis AXeta("1/GammaBeta [1]", 100, mass/4000., mass/0.35, AxisScale::kLog);
+    Axis AXeta("1/GammaBeta [1]", 200, mass/4000., mass/0.35, AxisScale::kLog);
 
     // MC
     Axis AXcut("Cut", 8, 0., 8.);

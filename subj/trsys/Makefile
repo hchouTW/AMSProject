@@ -23,6 +23,7 @@ all :
 	@cp -fa $(PWD)/src/track_fill.C $(TagetDir)/src/track_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/track_fit.C $(TagetDir)/src/track_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/hit_fill.C $(TagetDir)/src/hit_fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/hit_fit.C $(TagetDir)/src/hit_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fill.C $(TagetDir)/src/prop_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fit.C $(TagetDir)/src/prop_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit_fill.C $(TagetDir)/src/fit_fill.C 2> /dev/null
@@ -32,6 +33,7 @@ all :
 	make $(TagetDir)/track_fill
 	make $(TagetDir)/track_fit
 	#make $(TagetDir)/hit_fill
+	#make $(TagetDir)/hit_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	#make $(TagetDir)/fit_fill
@@ -65,6 +67,13 @@ $(TagetDir)/obj/hit_fill.o : $(TagetDir)/src/hit_fill.C
 
 $(TagetDir)/hit_fill : $(TagetDir)/obj/hit_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+$(TagetDir)/obj/hit_fit.o : $(TagetDir)/src/hit_fit.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
+-include $(TagetDir)/obj/hit_fit.d
+
+$(TagetDir)/hit_fit : $(TagetDir)/obj/hit_fit.o
+	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/obj/prop_fill.o : $(TagetDir)/src/prop_fill.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $< -MMD
@@ -118,6 +127,7 @@ clean :
 	@rm -fv $(TagetDir)/track_fill
 	@rm -fv $(TagetDir)/track_fit
 	@rm -fv $(TagetDir)/hit_fill
+	@rm -fv $(TagetDir)/hit_fit
 	@rm -fv $(TagetDir)/prop_fill
 	@rm -fv $(TagetDir)/prop_fit
 	@rm -fv $(TagetDir)/fit_fill

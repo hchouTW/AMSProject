@@ -31,7 +31,7 @@ $(TagetDir)/obj/testing.o : $(TagetDir)/src/testing.C
 $(TagetDir)/testing : $(TagetDir)/obj/testing.o
 	$(LD) -o $@ $+ $(LIBP)
 
-$(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/ClassDef.C $(TagetDir)/src/LinkDef.h
+$(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/LinkDef.h
 	rootcint -f $@ -c -p $(FLGS) $+
 	#rootcling -f $@ -c -p $(FLGS) $+ # only for ROOT6
 

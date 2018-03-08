@@ -98,6 +98,7 @@ class HitTRKMCInfo : public TObject {
 			mom  = -1;
 			std::fill_n(coo, 3, 0);
             std::fill_n(smr, 2, 0);
+			std::fill_n(loc, 2, -1);
 		}
 
 	public :
@@ -107,6 +108,7 @@ class HitTRKMCInfo : public TObject {
 		Float_t mom;     // momentum
 		Float_t coo[3];
         Float_t smr[2];
+        Float_t loc[2];
 
 	ClassDef(HitTRKMCInfo, 6)
 };
@@ -253,21 +255,11 @@ class HitTRKInfo : public TObject {
 			tkid =  0;
 			sens = -1;
 			mult = -1;
-			side =  0;
+			std::fill_n(side, 2, false);
 			std::fill_n(coo, 3, 0);
-			std::fill_n(nsr, 2, 0);
-			std::fill_n(sig, 2, -1);
+			std::fill_n(adc, 2, -1);
 			std::fill_n(loc, 2, -1);
-
-            //stripAdrX = -1;
-            //stripIdxX = -1;
-			//stripSigX.clear();
-			//stripSgmX.clear();
-
-            //stripAdrY = -1;
-            //stripIdxY = -1;
-			//stripSigY.clear();
-			//stripSgmY.clear();
+			std::fill_n(nsr, 2, 0);
 		}
 
 	public :
@@ -276,23 +268,13 @@ class HitTRKInfo : public TObject {
 		Short_t tkid;     // tkID
 		Short_t sens;     // sensor
 		Short_t mult;     // multiplicity
-		Short_t side;     // side, 1 x, 2 y, 3 xy
+		Bool_t  side[2];  // side, x, y
 		Float_t coo[3];   // coordinate
-        Short_t nsr[2];   // (elc) n-stripe
-		Float_t sig[2];   // (elc) signal
+		Float_t adc[2];   // (elc) signal
 		Float_t loc[2];   // (elc) cofg loc
-		
-        //Short_t              stripAdrX; // (elc) strip seed address
-        //Short_t              stripIdxX; // (elc) strip seed index
-		//std::vector<Float_t> stripSigX; // (elc) strip signal (value)
-		//std::vector<Float_t> stripSgmX; // (elc) strip signal (sigma)
-		
-        //Short_t              stripAdrY; // (elc) strip seed address
-        //Short_t              stripIdxY; // (elc) strip seed index
-		//std::vector<Float_t> stripSigY; // (elc) strip signal (value)
-		//std::vector<Float_t> stripSgmY; // (elc) strip signal (sigma)
+        Short_t nsr[2];   // (elc) n-stripe
 
-	ClassDef(HitTRKInfo, 7)
+	ClassDef(HitTRKInfo, 8)
 };
 
 struct HitTRKInfo_sort {
@@ -302,10 +284,6 @@ struct HitTRKInfo_sort {
 		else {
 			if      (hit1.tkid < hit2.tkid) return true;
 			else if (hit1.tkid > hit2.tkid) return false;
-			else {
-				if      (hit1.side < hit2.side) return true;
-				else if (hit1.side > hit2.side) return false;
-			}
 		}
 		return false;
 	}
@@ -473,17 +451,15 @@ class TrackInfo : public TObject {
 			QL1 = -1;
 			QL9 = -1;
 		
-            constexpr int naglo = 4;
+            constexpr int naglo = 3;
 			std::fill_n(status[0], naglo * 4, false);
 			std::fill_n(rig[0], naglo * 4, 0);
 			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
-			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 6, 0);
+			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 7, 0);
 			
             std::fill_n(cpuTime[0], naglo * 4, -1);
 			
 			hits.clear();
-
-
 		}
 
 	public :
@@ -505,15 +481,14 @@ class TrackInfo : public TObject {
 		Float_t QL2;
 		Float_t QL9;
 
-		// Algorithm     (CHOUTKO, CHIKANIANF, KALMAN)
+		// Algorithm     (CHOUTKO, KALMAN, HCHOU)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
-		Bool_t  status[4][4];
-		Float_t rig[4][4];
-		Float_t chisq[4][4][3]; // normalized chisq (X, Y, XY)
-		Float_t stateLJ[4][4][9][6]; // track state at ecah layer (x y z dirx diry dirz)
+		Bool_t  status[3][4];
+		Float_t rig[3][4];
+		Float_t chisq[3][4][3]; // normalized chisq (X, Y, XY)
+		Float_t stateLJ[3][4][9][7]; // track state at ecah layer (x y z dirx diry dirz rig)
         
-        // Cpu Time
-        Float_t cpuTime[4][4]; // [ms]
+        Float_t cpuTime[3][4]; // [ms]
 	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
@@ -796,8 +771,6 @@ class TRK : public TObject {
 		void init() {
             numOfTrack = 0;
 
-			beamID = -1;
-			beamDist = -1;
 			track.init();
 
             ftL56Dist = -1;
@@ -806,15 +779,13 @@ class TRK : public TObject {
             std::fill_n(ratN10S, 7, -1);
             
             noiseInTrSH = -1;
-            betaSH = -1;
+            std::fill_n(betaSH, 3, -1);
             massEstSH = -99;
 		}
 
 	public :
-        Short_t   numOfTrack;
+        Short_t numOfTrack;
 
-		Short_t   beamID;
-		Float_t   beamDist;
 		TrackInfo track;
 
         // Haino's tools
@@ -824,7 +795,10 @@ class TRK : public TObject {
         Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)
         
         Short_t noiseInTrSH;   // keep (noiseInTrSH == 0) events
-        Float_t betaSH;        // from dE/dx by Tracker, TOF and/or TRD
+        Float_t betaSH[3];     // from dE/dx by 
+                               // [0] Tracker
+                               // [1] Tracker, TOF
+                               // [2] Tracker, TOF and/or TRD
         Float_t massEstSH;     // mass estimator log-likelihood
 
 	ClassDef(TRK, 6)
@@ -852,6 +826,12 @@ class TRD : public TObject {
 
 			trackStatus = false;
 			std::fill_n(trackState, 6, 0);
+
+            std::fill_n(vtxNum, 3, 0);
+            vtxNTrk = 0;
+            vtxNHit = 0;
+            vtxChi2 = 0;
+            std::fill_n(vtxCoo, 3, 0);
 		}
 
 	public :
@@ -872,7 +852,14 @@ class TRD : public TObject {
 		Bool_t  trackStatus;
 		Float_t trackState[6]; // coo, dir
 
-	ClassDef(TRD, 6)
+        // TRDVertex
+        Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
+        Short_t vtxNTrk;
+        Short_t vtxNHit;
+        Float_t vtxChi2;
+        Float_t vtxCoo[3];
+
+	ClassDef(TRD, 7)
 };
 
 
@@ -884,51 +871,62 @@ class RICH : public TObject {
 
 		void init() {
             numOfHit = 0;
-
-			kindOfRad  = -1;
-			tileOfRad  = -1;
-			isGoodTile = false;
-			rfrIndex   = -1;
-			distToBorder = -1;
-			isInFiducialVolume = false;
-			std::fill_n(emission, 6, 0);
-			std::fill_n(receiving, 6, 0);
-            std::fill_n(numOfExpPE, 3, -1);
-			
+            
             status = false;
-			isGoodRecon = false;
+			isGood = false;
+            kind = -1;
+            tile = -1;
 			beta = -1;
 			Q = -1;
+            numOfExpPE = -1;
+            eftOfColPE = -1;
+			
+            vetoKind = -1;
+			vetoTile = -1;
+			vetoRfrIndex = -1;
+			vetoDistToBorder = -1;
+			vetoIsInFiducialVolume = false;
 
+            std::fill_n(vetoNumOfExpPE, 3, 0);
+            
+            vetoNumOfCrsHit = 0;
+            std::fill_n(vetoNumOfCkvHit[0], 3*3, 0);
+            
             hits.clear();
 		}
 
 	public :
         Short_t numOfHit;
-
-		// Rich Veto
-		Short_t kindOfRad;     // -1, None, 0, Aerogel 1, NaF
-		Short_t tileOfRad;     // tile id
-		Bool_t  isGoodTile;
-		Float_t rfrIndex;      // refractive index
-		Float_t distToBorder;  // dist To Border Edge
-		Bool_t  isInFiducialVolume;
-		Float_t emission[6];   // emission (x, y, z, dx, dy, dz) at RAD
-        Float_t receiving[6];  // receiving (x, y, z, dx, dy, dz) at PMT
         
-        // [0] electron [1] proton [2] deuterium
-		Float_t numOfExpPE[3]; // number of photoelectrons expected for a given track, beta and charge.
-		
         // Official RichRingR
 		Bool_t  status;
-		Bool_t  isGoodRecon;
+		Bool_t  isGood;
+        Short_t kind;
+        Short_t tile;
 		Float_t beta;
 		Float_t Q;
+        Float_t numOfExpPE;
+        Float_t eftOfColPE;
 
-		// Rich Hits
+		// Rich Veto
+		Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
+		Short_t vetoTile;          // tile id
+		Float_t vetoRfrIndex;      // refractive index
+		Float_t vetoDistToBorder;  // dist To Border Edge
+		Bool_t  vetoIsInFiducialVolume;
+        
+        // [0] electron [1] proton [2] deuterium
+		Float_t vetoNumOfExpPE[3];     // number of photoelectrons expected for a given track, beta and charge.
+        Short_t vetoNumOfCrsHit;       // Particle Cross PMT
+        Short_t vetoNumOfCkvHit[3][3]; // Photo
+                                       // [0] In  Ring
+                                       // [1] Out Ring
+                                       // [2] Non Physics
+
+        // Rich Hits
         std::vector<HitRICHInfo> hits;
-
-	ClassDef(RICH, 7)
+	
+    ClassDef(RICH, 8)
 };
 
 
