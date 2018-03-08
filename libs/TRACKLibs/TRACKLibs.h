@@ -1,5 +1,3 @@
-using namespace MGROOT;
-
 //#define __HAS_TESTPROP__
 //#define __HAS_TESTFIT__
 //#define __HAS_AMS_OFFICE_LIBS__

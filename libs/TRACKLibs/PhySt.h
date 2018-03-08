@@ -77,7 +77,7 @@ class PhyArg {
         void rndm_mscatl() { taul_ = 0.; rhol_ = 0.; if (sw_mscat_) { taul_ = pdf_mscatl_.rndm(); rhol_ = pdf_mscatl_.rndm(); } }
         void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
 
-        //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGROOT::Rndm::Landau(); } }
+        //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::Landau(); } }
         void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGRndm::NormalGaussian(); } } // testcode
         void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / MGMath::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
         void rndm_eloss() { rndm_elion(); rndm_elbrm(); }

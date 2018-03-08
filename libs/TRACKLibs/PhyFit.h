@@ -23,7 +23,7 @@ class TrFitPar {
         inline void delHit(Int_t it) { if (it >= 0 && it < static_cast<Int_t>(hits_.size())) { hits_.erase(hits_.begin()+it); is_check_ = false; } }
         
         inline Short_t numOfHit() const { return hits_.size(); }
-        inline Short_t numOfSeq() const { return (nhtx_ + nhty_); }
+        inline Short_t numOfSeq() const { return 2 * (nhtx_ + nhty_); }
 
     protected :
         Bool_t checkHit();

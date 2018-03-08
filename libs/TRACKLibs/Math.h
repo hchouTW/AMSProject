@@ -8,6 +8,43 @@
 namespace TrackSys {
 
 
+namespace Rndm {
+	TRandom3 rndmEngTR3(0);
+	inline Double_t Landau   (Double_t mpv = 0.0, Double_t sigma = 1.0)  { return rndmEngTR3.Landau(mpv, sigma); }
+}
+
+// SVector SMatrix Package
+template <unsigned int D>
+using SVecO = ROOT::Math::SVector<Bool_t, D>;
+
+template <unsigned int D>
+using SVecI = ROOT::Math::SVector<Int_t, D>;
+
+template <unsigned int D>
+using SVecD = ROOT::Math::SVector<Double_t, D>;
+
+template <unsigned int D1, unsigned int D2 = D1>
+using SMtxD = ROOT::Math::SMatrix<Double_t, D1, D2, ROOT::Math::MatRepStd<Double_t, D1, D2>>;
+
+template <unsigned int D>
+using SMtxSymD = ROOT::Math::SMatrix<Double_t, D, D, ROOT::Math::MatRepSym<Double_t, D>>;
+
+using SMtxId = ROOT::Math::SMatrixIdentity;
+
+namespace LA { // Linear Algebra
+	//// SVector Template Function 
+	using ROOT::Math::Cross;
+	using ROOT::Math::Dot;
+	using ROOT::Math::Mag;
+	using ROOT::Math::Unit;
+	//
+	//// SMatrix Template Function 
+	using ROOT::Math::Transpose;
+	using ROOT::Math::Similarity;   // U   M U^T
+	using ROOT::Math::SimilarityT;  // U^T M U
+}
+	
+
 // MultiGauss
 // Gaussian Core f ~ ([0]/[1])*exp(-0.5*x*x/[1]/[1])
 // Robust Method : efft_sigma = sigma * robust_factor if value/sigma > robust
@@ -49,6 +86,60 @@ class MultiGauss {
 };
 
 TRandom* MultiGauss::rndm_gen_ = nullptr;
+
+
+
+
+
+class IonEloss {
+    public :
+        IonEloss(const std::array<Double_t, 5>& mpv, const std::array<Double_t, 5>& sgm) : mpv_par_(mpv), sgm_par_(sgm) {}
+        ~IonEloss() {}
+
+        SVecD<2> operator() (Double_t adc, Double_t eta, Double_t dzds = 1.0) {
+            Double_t invbtasqr = (1.0 + eta * eta);
+            Double_t abseta    = std::fabs(eta);
+            if (MGNumc::Compare(abseta, 1.0) < 0) return SVecD<2>();
+
+            Double_t mpv = mpv_par_.at(0) * std::pow(invbtasqr, mpv_par_.at(2)) * 
+                (mpv_par_.at(1) - 
+                 std::pow(invbtasqr, -mpv_par_.at(1)) - 
+                 std::log(mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))));
+
+            Double_t sgm = sgm_par_.at(0) * std::pow(invbtasqr, sgm_par_.at(2)) * 
+                (sgm_par_.at(1) - 
+                 std::pow(invbtasqr, -sgm_par_.at(1)) - 
+                 std::log(sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))));
+
+            Double_t difmpv = (mpv_par_.at(0) * mpv_par_.at(2) * abseta * std::pow(invbtasqr, mpv_par_.at(2)-1.0)) *
+                (2.0 * mpv_par_.at(1) -
+                 2.0 * std::log(mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))) -
+                 (mpv_par_.at(4)/mpv_par_.at(2)) * invbtasqr * std::pow(abseta, mpv_par_.at(4)-2.0) / (mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))));
+            
+            Double_t difsgm = (sgm_par_.at(0) * sgm_par_.at(2) * abseta * std::pow(invbtasqr, sgm_par_.at(2)-1.0)) *
+                (2.0 * sgm_par_.at(1) -
+                 2.0 * std::log(sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))) -
+                 (sgm_par_.at(4)/sgm_par_.at(2)) * invbtasqr * std::pow(abseta, sgm_par_.at(4)-2.0) / (sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))));
+
+            if (!MGNumc::Valid(mpv) || MGNumc::Compare(mpv) <= 0) mpv = 0.0;
+            if (!MGNumc::Valid(sgm) || MGNumc::Compare(sgm) <= 0) sgm = 0.0;
+            if (!MGNumc::Valid(difmpv) || MGNumc::Compare(difmpv) <= 0) difmpv = 0.0;
+            if (!MGNumc::Valid(difsgm) || MGNumc::Compare(difsgm) <= 0) difsgm = 0.0;
+
+            Double_t scl = std::fabs(dzds);
+            Double_t res = (scl * adc - mpv) / sgm;
+            Double_t dif = -difmpv / sgm;
+
+            if (!MGNumc::Valid(res)) res = 0.0;
+            if (!MGNumc::Valid(dif)) dif = 0.0;
+
+            return SVecD<2>(res, dif);
+        }
+
+    private :
+        std::array<Double_t, 5> mpv_par_;
+        std::array<Double_t, 5> sgm_par_;
+};
 
 
 } // namesapce TrackSys

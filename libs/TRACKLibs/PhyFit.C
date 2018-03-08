@@ -46,7 +46,7 @@ Bool_t TrFitPar::checkHit() {
     for (auto&& hit : hits_) {
         hit.set_err(type_);
         hit.set_seqID(seq);
-        seq += (hit.sx() + hit.sy());
+        seq += 2 * (hit.sx() + hit.sy());
     }
 
     nhtx_ = nx;
@@ -445,6 +445,9 @@ Bool_t PhyTrFit::evolve() {
 
         if (hit.sx()) chix += (rs2(0) * rs2(0));
         if (hit.sy()) chiy += (rs2(1) * rs2(1));
+        
+        SVecD<2>&& ionx = hit.ionx(ppst.eta(), ppst.uz());
+        SVecD<2>&& iony = hit.iony(ppst.eta(), ppst.uz());
 
         if (cnt_nhit != 0) {
             SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
@@ -456,6 +459,7 @@ Bool_t PhyTrFit::evolve() {
         }
 
         cnt_nhit++;
+        if (!hit.sx()) hit.set_dummy_x(ppst.cx());
     }
     if (cnt_nhit != hits_.size()) return false;
 
@@ -517,14 +521,22 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         SVecD<2> rsm((hit.sx() ? (hit.cx() - ppst.cx()) : MGMath::ZERO), (hit.sy() ? (hit.cy() - ppst.cy()) : MGMath::ZERO));
         SVecD<2> rse((hit.sx() ?         hit.ex(rsm(0)) : MGMath::ZERO), (hit.sy() ?         hit.ey(rsm(1)) : MGMath::ZERO));
        
-        if (hit.sx()) rs(hit.seqIDx()) += rsm(0) / rse(0);
-        if (hit.sy()) rs(hit.seqIDy()) += rsm(1) / rse(1);
+        if (hit.sx()) rs(hit.seqIDcx()) += rsm(0) / rse(0);
+        if (hit.sy()) rs(hit.seqIDcy()) += rsm(1) / rse(1);
+
+        SVecD<2>&& ionx = hit.ionx(ppst.eta(), ppst.uz());
+        SVecD<2>&& iony = hit.iony(ppst.eta(), ppst.uz());
+        
+        if (hit.sx()) rs(hit.seqIDex()) += ionx(0);
+        if (hit.sy()) rs(hit.seqIDey()) += iony(0);
         
         if (hasJacb) {
             jbGG = curjb.gg() * jbGG;
             for (Int_t it = 0; it < PhyJb::DIM_G; ++it) {
-                if (hit.sx()) jb(hit.seqIDx(), it) += -jbGG(0, it) / rse(0);
-                if (hit.sy()) jb(hit.seqIDy(), it) += -jbGG(1, it) / rse(1);
+                if (hit.sx()) jb(hit.seqIDcx(), it) += -jbGG(0, it) / rse(0);
+                if (hit.sy()) jb(hit.seqIDcy(), it) += -jbGG(1, it) / rse(1);
+                if (hit.sx()) jb(hit.seqIDex(), it) +=  jbGG(4, it) * ionx(1);
+                if (hit.sy()) jb(hit.seqIDey(), it) +=  jbGG(4, it) * iony(1);
             }
         }    
 
@@ -543,8 +555,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
             for (Int_t it = 0; it < cnt_nhit; ++it) {
                 for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-                    if (hit.sx()) jb(hit.seqIDx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(0, jl) / rse(0);
-                    if (hit.sy()) jb(hit.seqIDy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(1, jl) / rse(1);
+                    if (hit.sx()) jb(hit.seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(0, jl) / rse(0);
+                    if (hit.sy()) jb(hit.seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(1, jl) / rse(1);
                 }
             }
             
