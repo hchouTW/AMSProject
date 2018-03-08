@@ -53,6 +53,7 @@ source ${AMSProjLibs}/external/eigen3/bin/eigen3.sh
 source ${AMSProjLibs}/external/google/bin/google.sh
 
 # AMS Software
+source ${AMSProjLibs}/AMSLibs/bin/amslibs.sh
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 alias amsenv=amsenv_root5gcc

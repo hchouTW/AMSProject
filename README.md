@@ -13,9 +13,6 @@ fi
 
 # User specific aliases and functions
 export AMSProj=~/AMSProject
-export AMSCore=~/AMSCore
-export AMSJobs=~/AMSJobs
-
 source ${AMSProj}/sys/shell/bashrc.sh
 ```
 VIM
@@ -25,11 +22,7 @@ ln -s ${AMSProj}/sw/vim/.vimrc ~/.vimrc
 ```
 ROOT
 ```bash
-ln -s ${AMSProj}/sw/ROOT/.rootlogon.C .rootlogon.C
-```
-Git
-```bash
-ln -s ${AMSProj}/sw/git/.gitconfig .gitconfig
+ln -s ${AMSProj}/sw/ROOT/.rootlogon.C ~/.rootlogon.C
 ```
 
 ## ENV Setting
