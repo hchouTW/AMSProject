@@ -75,7 +75,7 @@ public:
     double connect_upper_mindist;
     double connect_lower_mindist;
 
-    virtual void Print();
+    void Print();
 
     void Init();
     void AddConnectedHitUpper(TRD2DHit *hit);

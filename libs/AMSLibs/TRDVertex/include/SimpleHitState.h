@@ -4,7 +4,7 @@
 #include "TObject.h"
 #include "vector"
 
-class SimpleHitState: public TObject{
+class SimpleHitState{
 
 public:
 
@@ -50,7 +50,6 @@ public:
 //    double zmul[10];
 
 
-    ClassDef(SimpleHitState, 4)
 };
 
 #endif // SIMPLEHITSTATE_H
