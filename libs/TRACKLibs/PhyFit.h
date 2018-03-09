@@ -1,10 +1,9 @@
 #ifndef __TRACKLibs_PhyFit_H__
 #define __TRACKLibs_PhyFit_H__
 
-// Ceres Solver
-#ifdef __CeresSolver__
-#include "ceres/ceres.h"
-#endif
+
+#include "ceres/ceres.h" // Ceres-Solver
+
 
 namespace TrackSys {
 
@@ -97,7 +96,6 @@ class SimpleTrFit : protected TrFitPar {
 };
 
 
-#ifdef __CeresSolver__
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part), numOfRes_(0), numOfPar_(0) { if (checkHit()) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
@@ -180,7 +178,6 @@ class PhyTrFit : protected TrFitPar {
         std::map<Int_t, HitSt*> map_hits_;
         std::map<Int_t, PhySt*> map_stts_;
 };
-#endif
 
 
 } // namespace TrackSys

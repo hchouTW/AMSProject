@@ -1,3 +1,4 @@
+#if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
 #ifndef __TRACKLibs_MagEnvAms_C__
 #define __TRACKLibs_MagEnvAms_C__
 
@@ -14,13 +15,14 @@ Bool_t MagGeoBoxAms::Load() {
     
     if (mag_field_->GetMap()) is_load_ = true;
     else {
-        std::string filePath = STR_FMT("%s/v5.00/MagneticFieldMapPermanent_NEW_FULL.bin", MGSys::GetEnv("AMSDataDir").c_str());
-        if ((mag_field_->Read(filePath.c_str())) < 0) {
-            CERR("Magnetic Field map not found : %s\n", filePath.c_str());
+        std::string fdir = Sys::GetEnv("AMSDataDir");
+        std::string fpath = STR("%s/v5.00/MagneticFieldMapPermanent_NEW_FULL.bin", fdir.c_str());
+        if (fdir == "" || (mag_field_->Read(fpath.c_str())) < 0) {
+            CERR("Magnetic Field map not found : %s\n", fpath.c_str());
             mag_field_ = nullptr;
         }
         else {
-            COUT("MagGeoBoxAms::Load() Open file : %s\n", filePath.c_str());
+            COUT("MagGeoBoxAms::Load() Had file : %s\n", fpath.c_str());
             mag_field_->SetMagstat(1);
             mag_field_->SetScale(1);
             is_load_ = true;
@@ -41,42 +43,36 @@ MagFld MagGeoBoxAms::Get(const SVecD<3>& coo) {
 }
         
 
-void MagGeoBoxAms::Output(const std::string& file_path) {
+void MagGeoBoxAms::Output(const std::string& fpath) {
     if (!Load()) return;
-    const Long64_t n = 201;
-    const Float_t  min = -200.0;
-    const Float_t  max =  200.0;
-    const Float_t  dlt =    2.0;
-    MagGeoBoxCreator creator(
-            n, min, max,
-            n, min, max,
-            n, min, max,
-            file_path
-        );
+    const Long64_t n[3]   = {    201,    201,    201 };
+    const Double_t min[3] = { -200.0, -200.0, -200.0 };
+    const Double_t max[3] = {  200.0,  200.0,  200.0 };
+    const Double_t dlt    = 2.0;
+    MagGeoBoxCreator creator(n, min, max, fpath);
     if (!creator.is_open()) return;
-    
 
     COUT("\n");
-    COUT("MagGeoBoxAms::Output() : start.\n");
-    COUT("MagGeoBoxAms::Output() : X (%lld %8.2f %8.2f)\n", n, min, max);
-    COUT("MagGeoBoxAms::Output() : Y (%lld %8.2f %8.2f)\n", n, min, max);
-    COUT("MagGeoBoxAms::Output() : Z (%lld %8.2f %8.2f)\n", n, min, max);
+    COUT("MagGeoBoxAms::Output() : Start.\n");
+    COUT("MagGeoBoxAms::Output() : X (%lld %8.2f %8.2f)\n", n[0], min[0], max[0]);
+    COUT("MagGeoBoxAms::Output() : Y (%lld %8.2f %8.2f)\n", n[1], min[1], max[1]);
+    COUT("MagGeoBoxAms::Output() : Z (%lld %8.2f %8.2f)\n", n[2], min[2], max[2]);
 
-    Long64_t fact[2] { (n * n), (n) };
-    for (Long64_t xi = 0; xi < n; ++xi) {
-        for (Long64_t yi = 0; yi < n; ++yi) {
-            for (Long64_t zi = 0; zi < n; ++zi) {
+    Long64_t fact[2] { (n[2] * n[1]), (n[2]) };
+    for (Long64_t xi = 0; xi < n[0]; ++xi) {
+        for (Long64_t yi = 0; yi < n[1]; ++yi) {
+            for (Long64_t zi = 0; zi < n[2]; ++zi) {
                 Long64_t idx = xi * fact[0] + yi * fact[1] + zi;
-                SVecD<3> coo((min + static_cast<Double_t>(xi) * dlt), (min + static_cast<Double_t>(yi) * dlt), (min + static_cast<Double_t>(zi) * dlt));
+                SVecD<3> coo((min[0] + static_cast<Double_t>(xi) * dlt), (min[1] + static_cast<Double_t>(yi) * dlt), (min[2] + static_cast<Double_t>(zi) * dlt));
                 MagFld&& mag = MagGeoBoxAms::Get(coo);
                 creator.fill(idx, static_cast<Float_t>(mag.x()), static_cast<Float_t>(mag.y()), static_cast<Float_t>(mag.z()));
             }
         }
     }
-    COUT("MagGeoBoxAms::Output() : save.\n");
+    COUT("MagGeoBoxAms::Output() : Save.\n");
     creator.save_and_close();
     
-    COUT("MagGeoBoxAms::Output() : finish.\n");
+    COUT("MagGeoBoxAms::Output() : Finish.\n");
     COUT("\n");
 }
 
@@ -84,3 +80,4 @@ void MagGeoBoxAms::Output(const std::string& file_path) {
 
 
 #endif // __TRACKLibs_MagEnvAms_C__
+#endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 

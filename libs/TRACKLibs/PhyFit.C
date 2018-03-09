@@ -336,7 +336,6 @@ Bool_t SimpleTrFit::simpleFit() {
 }
 
 
-#ifdef __CeresSolver__
 PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (!checkHit()) { clear(); return; }
     clear();
@@ -578,7 +577,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     return true;
 }
-#endif
 
 
 } // namespace TrackSys

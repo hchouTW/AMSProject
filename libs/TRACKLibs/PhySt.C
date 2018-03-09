@@ -207,19 +207,19 @@ void PhySt::set_rig(Double_t rig) {
 
 void PhySt::print() const {
     std::string printStr;
-    printStr += STR_FMT("============ %-15s ============\n", info_.name().c_str());
-    printStr += STR_FMT("Bta %14.8f\n", bta_);
-    printStr += STR_FMT("Mom %14.8f\n", mom_);
-    printStr += STR_FMT("Eng %14.8f\n", eng_);
-    printStr += STR_FMT("KE  %14.8f\n", ke_);
-    printStr += STR_FMT("Eta %14.8f\n", eta_);
-    printStr += STR_FMT("Rig %14.8f\n", rig());
-    printStr += STR_FMT("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
-    printStr += STR_FMT("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
+    printStr += STR("============ %-15s ============\n", info_.name().c_str());
+    printStr += STR("Bta %14.8f\n", bta_);
+    printStr += STR("Mom %14.8f\n", mom_);
+    printStr += STR("Eng %14.8f\n", eng_);
+    printStr += STR("KE  %14.8f\n", ke_);
+    printStr += STR("Eta %14.8f\n", eta_);
+    printStr += STR("Rig %14.8f\n", rig());
+    printStr += STR("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
+    printStr += STR("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
     if (arg_()) {
-        printStr += STR_FMT("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(),  arg_.rhou());
-        printStr += STR_FMT("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(),  arg_.rhol());
-        printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.elion(), arg_.elbrm());
+        printStr += STR("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(),  arg_.rhou());
+        printStr += STR("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(),  arg_.rhol());
+        printStr += STR("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.elion(), arg_.elbrm());
     }
     printStr += STR("=========================================\n");
     COUT(printStr.c_str());
@@ -232,7 +232,7 @@ void PhySt::symbk(Bool_t is_rndm) {
     
     if (arg_.mscat()) {
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
-        mscatl(2) = 0.;
+        mscatl(2) = 0.; // testcode map to z
         coo_ = std::move(coo_ + mscatl);
         //coo_ = std::move(coo_ + arg_.symbk_mscatl());
         dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));

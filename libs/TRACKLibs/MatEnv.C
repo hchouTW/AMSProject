@@ -7,19 +7,19 @@ namespace TrackSys {
 
 void MatFld::print() const {
     std::string printStr;
-    printStr += STR_FMT("========================= MatFld =========================\n");
-    printStr += STR_FMT("Mat       %-d\n", mat_);
-    printStr += STR_FMT("InvRadLen %-8.5f\n", irl_);
-    printStr += STR_FMT("ECloudDen %-8.5f\n", eld_);
-    printStr += STR_FMT("LogMenExc %-8.5f\n", lme_);
-    printStr += STR_FMT("DenEftCor %-8.5f\n", dec_);
-    printStr += STR_FMT("NumRadLen %-8.5f\n", nrl());
-    printStr += STR_FMT("ECloudAbs %-8.5f\n", ela());
-    printStr += STR_FMT("RealLen   %-7.2f\n", rlen_);
-    printStr += STR_FMT("EfftLen   %-7.2f\n", elen_);
-    printStr += STR_FMT("Loc       %-6.4f\n", loc1_);
-    printStr += STR_FMT("LocSqr    %-6.4f\n", loc2_);
-    printStr += STR_FMT("==========================================================\n");
+    printStr += STR("========================= MatFld =========================\n");
+    printStr += STR("Mat       %-d\n", mat_);
+    printStr += STR("InvRadLen %-8.5f\n", irl_);
+    printStr += STR("ECloudDen %-8.5f\n", eld_);
+    printStr += STR("LogMenExc %-8.5f\n", lme_);
+    printStr += STR("DenEftCor %-8.5f\n", dec_);
+    printStr += STR("NumRadLen %-8.5f\n", nrl());
+    printStr += STR("ECloudAbs %-8.5f\n", ela());
+    printStr += STR("RealLen   %-7.2f\n", rlen_);
+    printStr += STR("EfftLen   %-7.2f\n", elen_);
+    printStr += STR("Loc       %-6.4f\n", loc1_);
+    printStr += STR("LocSqr    %-6.4f\n", loc2_);
+    printStr += STR("==========================================================\n");
     COUT(printStr.c_str());
 }
         
@@ -80,7 +80,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
   
     // Inf
     Long64_t flen_inf = (MATGEOBOX_NDIM*(sizeof(Long64_t)+sizeof(Double_t)+sizeof(Double_t)) + sizeof(Double_t) + (n[0]*n[1]*n[2])*sizeof(Bool_t));
-    Long64_t fdes_inf = open(CSTR_FMT("%s/%s.inf", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    Long64_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_inf < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
     write(fdes_inf, "\0", 1);
 
@@ -89,7 +89,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
 
     // Var
     Long64_t flen_var = (MATGEOBOX_NPAR * (n[0]*n[1]*n[2]) * sizeof(Double_t));
-    Long64_t fdes_var = open(CSTR_FMT("%s/%s.var", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    Long64_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_var < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
     write(fdes_var, "\0", 1);
 
@@ -228,11 +228,11 @@ void MatGeoBoxCreator::save_and_close() {
 void MatGeoBoxReader::print() const {
     if (!is_load_) return;
     std::string printStr;
-    printStr += STR_FMT("===================== MatGeoBoxReader ====================\n");
-    printStr += STR_FMT("BOX X     (%3d %7.2f %7.2f)\n", n_.at(0), min_.at(0), max_.at(0));
-    printStr += STR_FMT("BOX Y     (%3d %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
-    printStr += STR_FMT("BOX Z     (%3d %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
-    printStr += STR_FMT("==========================================================\n");
+    printStr += STR("===================== MatGeoBoxReader ====================\n");
+    printStr += STR("BOX X     (%3d %7.2f %7.2f)\n", n_.at(0), min_.at(0), max_.at(0));
+    printStr += STR("BOX Y     (%3d %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
+    printStr += STR("BOX Z     (%3d %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
+    printStr += STR("==========================================================\n");
     COUT(printStr.c_str());
 }
 
@@ -242,10 +242,10 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     //MGSys::ShowWarning("MatGeoBoxReader::Load() : re-load different file.");
 
     // Inf
-    Int_t fdes_inf = open(CSTR_FMT("%s/%s.inf", dpath.c_str(), fname.c_str()), O_RDONLY);
+    Int_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_RDONLY);
     Int_t flen_inf = lseek(fdes_inf, 0, SEEK_END); 
     if (fdes_inf < 0) {
-        MGSys::ShowError(STR_FMT("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        MGSys::ShowError(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
         is_load_ = false;
         return is_load_;
     }
@@ -259,10 +259,10 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     }
 
     // Var
-    Int_t fdes_var = open(CSTR_FMT("%s/%s.var", dpath.c_str(), fname.c_str()), O_RDONLY);
+    Int_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_RDONLY);
     Int_t flen_var = lseek(fdes_var, 0, SEEK_END); 
     if (fdes_var < 0) {
-        MGSys::ShowError(STR_FMT("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        MGSys::ShowError(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
         is_load_ = false;
         return is_load_;
     }

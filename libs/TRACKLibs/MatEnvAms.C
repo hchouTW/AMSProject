@@ -22,11 +22,13 @@ Bool_t MatMgnt::Load() {
 
 
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
-    std::string dpath = "/data1/hchou/material15"; // at NCU
-   
-    std::string flepath = "/data1/hchou/newstr_material/scan14/g4mscan.root";
-    //TFile* ifle = TFile::Open(CSTR_FMT("%s/g4mscan.root", dpath.c_str()));
-    TFile* ifle = TFile::Open(flepath.c_str());
+    //std::string dpath = "/data1/hchou/material15"; // at NCU
+    std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
+    if (dpath == "") return false;
+
+    //std::string fpath = "/data1/hchou/newstr_material/scan14/g4mscan.root";
+    std::string fpath = STR("%s/g4mscat.root", dpath.c_str());
+    TFile* ifle = TFile::Open(fpath.c_str());
     if (ifle == nullptr || ifle->IsZombie()) return false;
     TTree* tree = (TTree*)ifle->Get("tree"); 
     G4MatStep g4mat(tree);
@@ -161,8 +163,9 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
-    //std::string dpath = "/data1/hchou/material15"; // at NCU
-    std::string dpath = "/ams_home/hchou/AMSData/material"; // at NCU
+    //std::string dpath = "/ams_home/hchou/AMSData/material"; // at NCU
+    std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
+    if (dpath == "") return is_load_;
 
     reader_TRL1_.load("AMS02TRL1" , dpath);
     reader_TRL2_.load("AMS02TRL2" , dpath);
@@ -188,8 +191,8 @@ Bool_t MatGeoBoxAms::Load() {
     reader_TRS8_.load("AMS02TRS8" , dpath);
     reader_TRS9_.load("AMS02TRS9" , dpath);
     
-    reader_RAD_.load("AMS02RAD" , dpath);
-    reader_TRD_.load("AMS02TRD" , dpath);
+    reader_RAD_.load("AMS02RAD"   , dpath);
+    reader_TRD_.load("AMS02TRD"   , dpath);
     reader_SUPU_.load("AMS02SUPU" , dpath);
     reader_SPIU_.load("AMS02SPIU" , dpath);
     reader_TOFU_.load("AMS02TOFU" , dpath);
@@ -197,7 +200,7 @@ Bool_t MatGeoBoxAms::Load() {
     reader_SPIL_.load("AMS02SPIL" , dpath);
     reader_SUPL_.load("AMS02SUPL" , dpath);
     reader_RICH_.load("AMS02RICH" , dpath);
-    reader_PMT_.load("AMS02PMT" , dpath);
+    reader_PMT_.load("AMS02PMT"   , dpath);
     reader_ECAL_.load("AMS02ECAL" , dpath);
    
     reader_.clear();

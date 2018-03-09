@@ -2,9 +2,9 @@
 #define __TRACKLibs_Prop_C__
 
 
-#ifdef __HAS_AMS_OFFICE_LIBS__
+#if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
 #include <TrFit.h>
-#endif // __HAS_AMS_OFFICE_LIBS__
+#endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 
 
 
 namespace TrackSys {
@@ -273,7 +273,7 @@ void PropPhyCal::set_PhyArg(PhySt& part) const {
 }
 
 
-#ifdef __HAS_AMS_OFFICE_LIBS__
+#if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
 Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
     MatPhy::SetCorrFactor();
     Short_t sign = Numc::Compare(part.uz());
@@ -298,7 +298,7 @@ Bool_t PropMgnt::PropToZ_AMSLibs(const Double_t zcoo, PhySt& part) {
     );
     return true;
 }
-#endif // __HAS_AMS_OFFICE_LIBS__
+#endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 
 
 
 // Step Length

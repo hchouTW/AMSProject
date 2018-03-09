@@ -2,8 +2,6 @@
 
 # Test Ceres Solver
 LIBP += -lgflags -lglog -lceres
-CXX += -D__CeresSolver__
-LD  += -D__CeresSolver__    
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 

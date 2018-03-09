@@ -1,8 +1,8 @@
 #ifndef __TRACKLibs_Sys_H__
 #define __TRACKLibs_Sys_H__
 #include <iostream>
+#include <cstdlib>
 #include <string>
-#include <tuple>
 
 #ifndef __HAS_LOGSYS__
 #define __HAS_LOGSYS__

@@ -9,12 +9,9 @@ class MagFld {
     public :
         MagFld() {}
         MagFld(const SVecD<3>& mag) : mag_(mag) {}
-        MagFld(Float_t mag[3]) : mag_(mag[0], mag[1], mag[2]) {}
-        MagFld(Double_t mag[3]) : mag_(mag[0], mag[1], mag[2]) {}
         MagFld(Double_t x, Double_t y, Double_t z) : mag_(x, y, z) {}
+        MagFld(Float_t mag[3]) : mag_(mag[0], mag[1], mag[2]) {}
         ~MagFld() {}
-
-        void print() const;
 
         inline const SVecD<3>& operator() () const { return mag_; }
         inline const Double_t& x() const { return mag_(0); }
@@ -55,8 +52,7 @@ struct MagGeoBox {
 
 class MagGeoBoxCreator {
     public :
-        //MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp = Numc::HALF<>, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
-        MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path = "MagGeoBox.bin");
+        MagGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], const std::string& fpath = "MagGeoBox.bin");
         ~MagGeoBoxCreator() { if (is_open_) save_and_close(); }
 
         void fill(Long64_t idx, Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
@@ -67,15 +63,14 @@ class MagGeoBoxCreator {
         void save_and_close(Float_t bx, Float_t by, Float_t bz);
 
     protected :
-        inline void clear() { is_open_ = false; file_path_ = ""; file_des_ = -1; file_len_ = 0; file_ptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }
+        inline void clear() { is_open_ = false; fdes_ = -1; flen_ = 0; fptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }
 
     private :
         static constexpr Long64_t DIM_ = 3;
         Bool_t                    is_open_;
-        std::string               file_path_;
-        Int_t                     file_des_;
-        Int_t                     file_len_;
-        void*                     file_ptr_;
+        Int_t                     fdes_;
+        Int_t                     flen_;
+        void*                     fptr_;
         Long64_t                  max_len_;
         MagGeoBox*                geo_box_;
 };
@@ -84,22 +79,22 @@ class MagGeoBoxCreator {
 class MagGeoBoxReader {
     public :
         MagGeoBoxReader() { clear(); }
-        MagGeoBoxReader(const std::string& file_path) { clear(); load(file_path); }
+        MagGeoBoxReader(const std::string& fpath) { clear(); load(fpath); }
         ~MagGeoBoxReader() { clear(); }
 
         inline Bool_t exist() { return is_load_; }
         inline MagFld get(const SVecD<3>& coo);
         
-        Bool_t load(const std::string& file_path);
+        Bool_t load(const std::string& fpath);
 
     protected :
-        inline void clear() { is_load_ = false; file_path_ = ""; file_ptr_ = reinterpret_cast<void*>(-1); mag_ptr_ = nullptr;  n_.fill(0); min_.fill(0.); max_.fill(0.); dlt_.fill(0.); fact_.fill(0); }
+        inline void clear() { is_load_ = false; fpath_ = ""; fptr_ = reinterpret_cast<void*>(-1); mag_ptr_ = nullptr;  n_.fill(0); min_.fill(0.); max_.fill(0.); dlt_.fill(0.); fact_.fill(0); }
 
     private :
         static constexpr Long64_t   DIM_ = 3;
         Bool_t                      is_load_;
-        std::string                 file_path_;
-        void*                       file_ptr_;
+        std::string                 fpath_;
+        void*                       fptr_;
         Float_t*                    mag_ptr_;
         std::array<Long64_t, DIM_>  n_;
         std::array<Float_t,  DIM_>  min_;
@@ -112,8 +107,7 @@ class MagGeoBoxReader {
 class MagMgnt {
     public :
         static Bool_t Load();
-
-        inline static MagFld Get(const SVecD<3>& coo);
+        inline static MagFld Get(const SVecD<3>& coo) { if (!Load()) return MagFld(); return geo_box_reader_.get(coo); }
 
     protected :
         static Bool_t is_load_;

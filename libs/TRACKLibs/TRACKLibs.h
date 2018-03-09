@@ -11,8 +11,8 @@
 #include "MagEnv.h"
 #include "MagEnv.C"
 
-//#include "MagEnvAms.h"
-//#include "MagEnvAms.C"
+#include "MagEnvAms.h"
+#include "MagEnvAms.C"
 
 #include "MatEnv.h"
 #include "MatEnv.C"

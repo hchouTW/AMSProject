@@ -1,6 +1,3 @@
-//#define __HAS_TESTPROP__
-//#define __HAS_TESTFIT__
-#define __HAS_AMS_OFFICE_LIBS__
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKLibs/TRACKLibs.h>
@@ -17,6 +14,8 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
+    MagGeoBoxAms::Output();
+/*
     MGConfig::JobOpt opt(argc, argv);
 
 
@@ -323,5 +322,6 @@ int main(int argc, char * argv[]) {
     if (fEcal) { delete fEcal; fEcal = nullptr; }
 
     google::ShutdownGoogleLogging();
+    */
     return 0;
 }

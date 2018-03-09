@@ -170,7 +170,7 @@ long double MultiGauss::rndm() {
         for (unsigned int it = 1; it < multi_gauss_.size(); ++it) {
             int wgtID = 2 * it;
             int sgmID = 2 * it + 1;
-            fmt += STR_FMT(" + ([%d]/[%d])*TMath::Exp(-0.5*(x/[%d])*(x/[%d]))", wgtID, sgmID, sgmID, sgmID);
+            fmt += STR(" + ([%d]/[%d])*TMath::Exp(-0.5*(x/[%d])*(x/[%d]))", wgtID, sgmID, sgmID, sgmID);
         }
         rand_func_ = new TF1("rand_func", fmt.c_str(), -(Numc::TWO<long double>*ROBUST_SGM_) * bound_.second, (Numc::TWO<long double>*ROBUST_SGM_) * bound_.second);
         rand_func_->SetNpx(NPX_);

@@ -1,6 +1,7 @@
 #ifndef __TRACKLibs_Prop_H__
 #define __TRACKLibs_Prop_H__
 
+
 namespace TrackSys {
 
 
@@ -253,10 +254,10 @@ class PropMgnt {
         static Method method_;
 
     public :
-#ifdef __HAS_AMS_OFFICE_LIBS__
+#if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
         static Bool_t PropToZ_AMSLibs(const Double_t zcoo, PhySt& part);
-#endif // __HAS_AMS_OFFICE_LIBS__
-        
+#endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 
+
         static Bool_t Prop(const Double_t step, PhySt& part, MatFld* mfld = nullptr, PhyJb* phyJb = nullptr);
         static Bool_t PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld = nullptr, PhyJb* phyJb = nullptr);
         

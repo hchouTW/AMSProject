@@ -1,9 +1,9 @@
+#if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
 #ifndef __TRACKLibs_MagEnvAms_H__
 #define __TRACKLibs_MagEnvAms_H__
 
-
-#ifdef __HAS_AMS_OFFICE_LIBS__
 #include <MagField.h>
+
 
 namespace TrackSys {
 
@@ -31,4 +31,4 @@ MagField* MagGeoBoxAms::mag_field_ = nullptr;
 
 
 #endif // __TRACKLibs_MagEnvAms_H__
-
+#endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 
