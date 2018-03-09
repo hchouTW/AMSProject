@@ -194,7 +194,7 @@ class TransferPhyJb {
 
 class PropPhyCal {
     public :
-        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_abs_sat_ = part.eta_abs(); eta_abs_end_ = part.eta_abs(); sign_ = ((MGNumc::Compare(sign)>=0)?1:-1); }
+        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_abs_sat_ = part.eta_abs(); eta_abs_end_ = part.eta_abs(); sign_ = ((Numc::Compare(sign)>=0)?1:-1); }
         ~PropPhyCal() {}
 
         void init(); 

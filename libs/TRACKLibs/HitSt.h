@@ -71,8 +71,8 @@ class HitSt {
         inline const Double_t& ex() const { return err_(0); }
         inline const Double_t& ey() const { return err_(1); }
 
-        inline Double_t ex(Double_t r) const { return (side_(0) ? (err_(0) * pdf_cx_->efft_sgm( (r/err_(0)) )) : MGMath::ZERO); }
-        inline Double_t ey(Double_t r) const { return (side_(1) ? (err_(1) * pdf_cy_->efft_sgm( (r/err_(1)) )) : MGMath::ZERO); }
+        inline Double_t ex(Double_t r) const { return (side_(0) ? (err_(0) * pdf_cx_->efft_sgm( (r/err_(0)) )) : Numc::ZERO<>); }
+        inline Double_t ey(Double_t r) const { return (side_(1) ? (err_(1) * pdf_cy_->efft_sgm( (r/err_(1)) )) : Numc::ZERO<>); }
 
         inline SVecD<2> ionx(Double_t eta, Double_t dzds = 1.0) const { return (side_(0) ? (*pdf_ex_)(adc_(0), eta, dzds) : SVecD<2>()); }
         inline SVecD<2> iony(Double_t eta, Double_t dzds = 1.0) const { return (side_(1) ? (*pdf_ey_)(adc_(1), eta, dzds) : SVecD<2>()); }

@@ -78,8 +78,8 @@ class PhyArg {
         void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
 
         //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::Landau(); } }
-        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = MGRndm::NormalGaussian(); } } // testcode
-        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / MGMath::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:MGRndm::Gamma(bremslen,1.0/bremslen)()); } }
+        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::NormalGaussian(); } } // testcode
+        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / Numc::LOG_TWO<>; elbrm_ = ((nrl_<=0.0)?0.0:Rndm::Gamma(bremslen,1.0/bremslen)()); } }
         void rndm_eloss() { rndm_elion(); rndm_elbrm(); }
 
         void rndm() { if (field_) { rndm_mscatu(); rndm_mscatl(); rndm_elion(); rndm_elbrm(); } }
@@ -94,7 +94,7 @@ class PhyArg {
         // Symbk
         SVecD<3> symbk_mscatu() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_uu_) * orth_tau_ + (rhou_*mscat_uu_) * orth_rho_) : SVecD<3>()); }
         SVecD<3> symbk_mscatl() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_ul_ + taul_*mscat_ll_) * orth_tau_ + (rhou_*mscat_ul_ + rhol_*mscat_ll_) * orth_rho_) : SVecD<3>()); }
-        Double_t symbk_eloss() const  { return ((sw_eloss_ && mat_) ? (sign_ * (elion_*elion_sgm_ + elbrm_*elbrm_men_)) : MGMath::ZERO); }
+        Double_t symbk_eloss() const  { return ((sw_eloss_ && mat_) ? (sign_ * (elion_*elion_sgm_ + elbrm_*elbrm_men_)) : Numc::ZERO<>); }
 
     private :
         Bool_t   sw_mscat_;
@@ -195,13 +195,13 @@ class PhySt {
         inline const Double_t& gmbta() const { return gmbta_; }
         inline const Double_t& eta()   const { return eta_; }
       
-        inline Double_t gm() const { return ((MGNumc::EqualToZero(bta_)) ? MGMath::ONE : (gmbta_/bta_)); }
+        inline Double_t gm() const { return ((Numc::EqualToZero(bta_)) ? Numc::ONE<> : (gmbta_/bta_)); }
 
-        inline Short_t  eta_sign() const { return (MGNumc::Compare(eta_)); }
+        inline Short_t  eta_sign() const { return (Numc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }
 
         inline const Double_t& irig()  const { return irig_; }
-        inline Double_t rig() const { return (MGNumc::EqualToZero(irig_) ? MGMath::ZERO : MGMath::ONE / irig_); }
+        inline Double_t rig() const { return (Numc::EqualToZero(irig_) ? Numc::ZERO<> : Numc::ONE<> / irig_); }
 
         inline const SVecD<3>& c()  const { return coo_; } 
         inline const Double_t& cx() const { return coo_(0); } 
@@ -212,8 +212,8 @@ class PhySt {
         inline const Double_t& ux() const { return dir_(0); } 
         inline const Double_t& uy() const { return dir_(1); } 
         inline const Double_t& uz() const { return dir_(2); } 
-        inline Double_t        tx() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
-        inline Double_t        ty() const { return ((MGNumc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
+        inline Double_t        tx() const { return ((Numc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
+        inline Double_t        ty() const { return ((Numc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
 
         void symbk(Bool_t is_rndm = false);
 

@@ -58,7 +58,7 @@ void PhySt::reset(const PartType& type) {
 
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Double_t uz) {
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
-    if (MGNumc::EqualToZero(norm)) return;
+    if (Numc::EqualToZero(norm)) return;
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
@@ -69,9 +69,9 @@ void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t u
 
 
 void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx, Double_t ty, Double_t uz) {
-    Short_t tz = MGNumc::Compare(uz);
+    Short_t tz = Numc::Compare(uz);
     if (tz == 0) return;
-    Double_t norm_uz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + MGMath::ONE);
+    Double_t norm_uz = static_cast<Double_t>(tz) / std::sqrt(tx * tx + ty * ty + Numc::ONE<>);
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
@@ -82,13 +82,13 @@ void PhySt::set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t t
 
 
 void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Short_t signz) {
-    Short_t sign = MGNumc::Compare(signz);
+    Short_t sign = Numc::Compare(signz);
     if (sign == 0) return;
-    Double_t uz = (MGMath::ONE - ux * ux - uy * uy);
-    if (MGNumc::Compare(uz) <= 0) uz = MGMath::ZERO;
+    Double_t uz = (Numc::ONE<> - ux * ux - uy * uy);
+    if (Numc::Compare(uz) <= 0) uz = Numc::ZERO<>;
     else                          uz = sign * std::sqrt(uz);
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
-    if (MGNumc::EqualToZero(norm)) return;
+    if (Numc::EqualToZero(norm)) return;
     coo_(0) = cx;
     coo_(1) = cy;
     coo_(2) = cz;
@@ -100,14 +100,14 @@ void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t u
 
 void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz) {
     Double_t norm = std::sqrt(mx * mx + my * my + mz * mz);
-    if (MGNumc::EqualToZero(norm)) {
-        mom_   = MGMath::ZERO;
+    if (Numc::EqualToZero(norm)) {
+        mom_   = Numc::ZERO<>;
         eng_   = info_.mass();
-        ke_    = MGMath::ZERO;
-        bta_   = MGMath::ZERO;
-        gmbta_ = MGMath::ZERO;
-        eta_   = MGMath::ZERO;
-        irig_  = MGMath::ZERO;
+        ke_    = Numc::ZERO<>;
+        bta_   = Numc::ZERO<>;
+        gmbta_ = Numc::ZERO<>;
+        eta_   = Numc::ZERO<>;
+        irig_  = Numc::ZERO<>;
     }
     else {
         coo_(0) = cx;
@@ -122,19 +122,19 @@ void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double
  
 
 void PhySt::set_mom(Double_t mom, Double_t sign) {
-    Short_t mom_sign = MGNumc::Compare(mom);
-    Short_t eta_sign = MGNumc::Compare(sign);
+    Short_t mom_sign = Numc::Compare(mom);
+    Short_t eta_sign = Numc::Compare(sign);
     if (mom_sign  < 0) return;
-    if (eta_sign == 0) eta_sign = ((MGNumc::Compare(info_.chrg()) >= 0) ? 1 : -1);
+    if (eta_sign == 0) eta_sign = ((Numc::Compare(info_.chrg()) >= 0) ? 1 : -1);
 
     if (mom_sign == 0) {
-        mom_   = MGMath::ZERO;
+        mom_   = Numc::ZERO<>;
         eng_   = info_.mass();
-        ke_    = MGMath::ZERO;
-        bta_   = MGMath::ZERO;
-        gmbta_ = MGMath::ZERO;
-        eta_   = MGMath::ZERO;
-        irig_  = MGMath::ZERO;
+        ke_    = Numc::ZERO<>;
+        bta_   = Numc::ZERO<>;
+        gmbta_ = Numc::ZERO<>;
+        eta_   = Numc::ZERO<>;
+        irig_  = Numc::ZERO<>;
     }
     else {
         mom_   = mom;
@@ -142,7 +142,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
         //eng_   = std::sqrt(static_cast<long double>(mom_) * static_cast<long double>(mom_) + static_cast<long double>(info_.mass()) * static_cast<long double>(info_.mass()));
         //eng_   = std::hypot(mom_, info_.mass());
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + Numc::ONE<>)));
         gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
         eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
         irig_  = info_.chrg_to_mass() * eta_;
@@ -151,56 +151,56 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
 
 
 void PhySt::set_eta(Double_t eta) {
-    Short_t eta_sign = MGNumc::Compare(eta);
+    Short_t eta_sign = Numc::Compare(eta);
     if (eta_sign == 0) {
-        mom_   = MGMath::ZERO;
+        mom_   = Numc::ZERO<>;
         eng_   = info_.mass();
-        ke_    = MGMath::ZERO;
-        bta_   = MGMath::ZERO;
-        gmbta_ = MGMath::ZERO;
-        eta_   = MGMath::ZERO;
-        irig_  = MGMath::ZERO;
+        ke_    = Numc::ZERO<>;
+        bta_   = Numc::ZERO<>;
+        gmbta_ = Numc::ZERO<>;
+        eta_   = Numc::ZERO<>;
+        irig_  = Numc::ZERO<>;
     }
     else {
         eta_   = eta;
-        gmbta_ = (MGMath::ONE / std::fabs(eta_));
+        gmbta_ = (Numc::ONE<> / std::fabs(eta_));
         irig_  = info_.chrg_to_mass() * eta_;
         mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + MGMath::ONE));
+        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>));
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + MGMath::ONE)));
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + Numc::ONE<>)));
     }
 }
 
 
 void PhySt::set_irig(Double_t irig) {
-    Short_t rig_sign = MGNumc::Compare(irig);
+    Short_t rig_sign = Numc::Compare(irig);
     if (info_.is_chrgless()) return;
     if (info_.is_massless()) return;
     if (rig_sign == 0) {
-        mom_ = MGMath::ZERO;
+        mom_   = Numc::ZERO<>;
         eng_   = info_.mass();
-        ke_    = MGMath::ZERO;
-        bta_   = MGMath::ZERO;
-        gmbta_ = MGMath::ZERO;
-        eta_   = MGMath::ZERO;
-        irig_  = MGMath::ZERO;
+        ke_    = Numc::ZERO<>;
+        bta_   = Numc::ZERO<>;
+        gmbta_ = Numc::ZERO<>;
+        eta_   = Numc::ZERO<>;
+        irig_  = Numc::ZERO<>;
     }
     else {
         irig_  = irig;
         eta_   = info_.mass_to_chrg() * irig;
-        gmbta_ = (MGMath::ONE / std::fabs(eta_));
+        gmbta_ = (Numc::ONE<> / std::fabs(eta_));
         mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + MGMath::ONE));
+        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>));
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? MGMath::ONE : (MGMath::ONE / std::sqrt(eta_ * eta_ + MGMath::ONE)));
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(eta_ * eta_ + Numc::ONE<>)));
     }
 }
 
 
 void PhySt::set_rig(Double_t rig) {
-    Short_t rig_sign = MGNumc::Compare(rig);
-    Double_t irig = ((rig_sign==0) ? MGMath::ZERO : (MGMath::ONE / rig));
+    Short_t rig_sign = Numc::Compare(rig);
+    Double_t irig = ((rig_sign==0) ? Numc::ZERO<> : (Numc::ONE<> / rig));
     set_irig(irig);
 }
 
@@ -221,8 +221,8 @@ void PhySt::print() const {
         printStr += STR_FMT("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(),  arg_.rhol());
         printStr += STR_FMT("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.elion(), arg_.elbrm());
     }
-    printStr += STR_FMT("=========================================\n");
-    COUT(printStr);
+    printStr += STR("=========================================\n");
+    COUT(printStr.c_str());
 }
         
 
@@ -239,9 +239,9 @@ void PhySt::symbk(Bool_t is_rndm) {
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ * (MGMath::ONE + arg_.symbk_eloss()));
+        set_eta(eta_ * (Numc::ONE<> + arg_.symbk_eloss()));
         Short_t sym_sign = eta_sign();
-        if (org_sign != sym_sign) set_eta(MGMath::ZERO);
+        if (org_sign != sym_sign) set_eta(Numc::ZERO<>);
     }
 
     arg_.clear();

@@ -19,6 +19,7 @@ int main(int argc, char * argv[]) {
 
     MGConfig::JobOpt opt(argc, argv);
 
+
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
 

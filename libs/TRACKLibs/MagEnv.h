@@ -2,11 +2,6 @@
 #define __TRACKLibs_MagEnv_H__
 
 
-#ifdef __HAS_AMS_OFFICE_LIBS__
-#include <MagField.h>
-#endif // __HAS_AMS_OFFICE_LIBS__
-
-
 namespace TrackSys {
 
 
@@ -60,6 +55,7 @@ struct MagGeoBox {
 
 class MagGeoBoxCreator {
     public :
+        //MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp = Numc::HALF<>, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
         MagGeoBoxCreator(Long64_t xn, Float_t xmin, Float_t xmax, Long64_t yn, Float_t ymin, Float_t ymax, Long64_t zn, Float_t zmin, Float_t zmax, const std::string& file_path = "MagGeoBox.bin");
         ~MagGeoBoxCreator() { if (is_open_) save_and_close(); }
 
@@ -113,59 +109,11 @@ class MagGeoBoxReader {
 };
 
 
-#ifdef __HAS_AMS_OFFICE_LIBS__
-class MagGeoBoxAms {
-    public :
-        MagGeoBoxAms() {}
-        ~MagGeoBoxAms() {}
-
-        static Bool_t Load();
-
-        inline static MagFld Get(const SVecD<3>& coo);
-
-        static void Output(const std::string& file_path = "MagGeoBox.bin");
-
-    private :
-        static Bool_t    is_load_;
-        static MagField* mag_field_;
-};
-
-Bool_t MagGeoBoxAms::is_load_ = false;
-MagField* MagGeoBoxAms::mag_field_ = nullptr;
-
-
-class MagFuncAms {
-    public :
-        MagFuncAms() {}
-        ~MagFuncAms() {}
-
-        inline static MagFld Get(const SVecD<3>& coo) { return MagFld(GetMagx(coo[2]), MGMath::ZERO, MGMath::ZERO); }
-
-        inline static Double_t GetMagx(Double_t cooz);
-        inline static Double_t GetMagxInt1st(Double_t cooz);
-        inline static Double_t GetMagxInt2nd(Double_t cooz);
-
-    private :
-        static const std::array<Double_t, 2> PAR_MAG;
-        static const std::array<Double_t, 2> PAR_SGM;
-};
-
-const std::array<Double_t, 2> MagFuncAms::PAR_MAG = { 123.21342990, 20.80309443 };
-const std::array<Double_t, 2> MagFuncAms::PAR_SGM = {  37.01735081, 79.25552614 };
-#endif // __HAS_AMS_OFFICE_LIBS__
-
-
 class MagMgnt {
     public :
         static Bool_t Load();
 
         inline static MagFld Get(const SVecD<3>& coo);
-
-#ifdef __HAS_AMS_OFFICE_LIBS__
-        inline static Double_t GetMagx(Double_t cooz) { return MagFuncAms::GetMagx(cooz); }
-        inline static Double_t GetMagxInt1st(Double_t cooz) { return MagFuncAms::GetMagxInt1st(cooz); }
-        inline static Double_t GetMagxInt2nd(Double_t cooz) { return MagFuncAms::GetMagxInt2nd(cooz); }
-#endif // __HAS_AMS_OFFICE_LIBS__
 
     protected :
         static Bool_t is_load_;

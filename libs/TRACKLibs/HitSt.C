@@ -13,7 +13,7 @@ void HitSt::print() const {
     printStr += STR_FMT("Coo  (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
     printStr += STR_FMT("Err  (%11.6f %11.6f)\n", err_(0), err_(1));
     printStr += STR_FMT("==========================================\n");
-    COUT(printStr);
+    COUT(printStr.c_str());
 }
 
 

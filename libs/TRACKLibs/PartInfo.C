@@ -48,8 +48,8 @@ PartInfo::PartInfo(const PartType& type) {
         default : CERR("(ERROR) PartInfo : It is not in list of PartType.\n");
     }
     
-    is_chrgless_ = MGNumc::EqualToZero(chrg_);
-    is_massless_ = MGNumc::EqualToZero(mass_);
+    is_chrgless_ = Numc::EqualToZero(chrg_);
+    is_massless_ = Numc::EqualToZero(mass_);
     mass_to_chrg_ = ((is_chrgless_ || is_massless_) ? 0.0 : std::fabs(mass_ / chrg_));
     chrg_to_mass_ = ((is_chrgless_ || is_massless_) ? 0.0 : std::fabs(chrg_ / mass_));
 }
@@ -57,12 +57,12 @@ PartInfo::PartInfo(const PartType& type) {
 
 void PartInfo::print() const {
     std::string printStr;
-    printStr += STR_FMT("==== %-15s ====\n", name_.c_str());
-    printStr += STR_FMT("Chrg %3d\n"   , chrg_);
-    printStr += STR_FMT("Mass %10.6f\n", mass_);
-    printStr += STR_FMT("M/Q  %10.6f\n", mass_to_chrg_);
-    printStr += STR_FMT("=========================\n");
-    COUT(printStr);
+    printStr += STR("==== %-15s ====\n", name_.c_str());
+    printStr += STR("Chrg %3d\n"   , chrg_);
+    printStr += STR("Mass %10.6f\n", mass_);
+    printStr += STR("M/Q  %10.6f\n", mass_to_chrg_);
+    printStr += STR("=========================\n");
+    COUT(printStr.c_str());
 }
 
 
