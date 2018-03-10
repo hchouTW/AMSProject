@@ -1,7 +1,7 @@
 -include $(AMSMKfile)
 
 # Test Ceres Solver
-LIBP += -lgflags -lglog -lceres
+LIBP += -lgflags -lglog -lceres -lTRACKSys
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 
