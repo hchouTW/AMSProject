@@ -58,6 +58,10 @@ alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 alias amsenv=amsenv_root5gcc
 
+# TRACKSys Software
+source ${AMSProjLibs}/TRACKSys/bin/TRACKSys.sh
+
+# Makefile
 export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 
 # ROOT
