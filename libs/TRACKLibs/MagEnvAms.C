@@ -5,7 +5,6 @@
 
 namespace TrackSys {
 
-
 Bool_t MagGeoBoxAms::Load() {
     if (is_load_) return is_load_;
     is_load_ = false;
@@ -22,7 +21,7 @@ Bool_t MagGeoBoxAms::Load() {
             mag_field_ = nullptr;
         }
         else {
-            COUT("MagGeoBoxAms::Load() Had file : %s\n", fpath.c_str());
+            COUT("MagGeoBoxAms::Load() Open file : %s\n", fpath.c_str());
             mag_field_->SetMagstat(1);
             mag_field_->SetScale(1);
             is_load_ = true;
@@ -48,7 +47,7 @@ void MagGeoBoxAms::Output(const std::string& fpath) {
     const Long64_t n[3]   = {    201,    201,    201 };
     const Float_t  min[3] = { -200.0, -200.0, -200.0 };
     const Float_t  max[3] = {  200.0,  200.0,  200.0 };
-    const Float_t  dlt    = 2.0;
+    const Double_t dlt    = 2.0;
     MagGeoBoxCreator creator(n, min, max, fpath);
     if (!creator.is_open()) return;
 
@@ -63,7 +62,7 @@ void MagGeoBoxAms::Output(const std::string& fpath) {
         for (Long64_t yi = 0; yi < n[1]; ++yi) {
             for (Long64_t zi = 0; zi < n[2]; ++zi) {
                 Long64_t idx = xi * fact[0] + yi * fact[1] + zi;
-                SVecD<3> coo((min[0] + static_cast<Double_t>(xi) * dlt), (min[1] + static_cast<Float_t>(yi) * dlt), (min[2] + static_cast<Float_t>(zi) * dlt));
+                SVecD<3> coo((min[0] + static_cast<Double_t>(xi) * dlt), (min[1] + static_cast<Double_t>(yi) * dlt), (min[2] + static_cast<Double_t>(zi) * dlt));
                 MagFld&& mag = MagGeoBoxAms::Get(coo);
                 creator.fill(idx, static_cast<Float_t>(mag.x()), static_cast<Float_t>(mag.y()), static_cast<Float_t>(mag.z()));
             }

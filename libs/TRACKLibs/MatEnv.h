@@ -236,11 +236,7 @@ class MatMgnt {
         MatMgnt() {}
         ~MatMgnt() {}
 
-#if defined(__HAS_TESTPROP__) || defined(__HAS_TESTFIT__) || defined(__HAS_AMS_OFFICE_LIBS__)
         static Bool_t Load();
-#else
-        static Bool_t Load() { return false; }
-#endif
 
         static MatFld Get(const SVecD<3>& coo, Double_t log10gb = -10);
         static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);

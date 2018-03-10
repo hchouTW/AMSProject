@@ -1,12 +1,8 @@
-#ifdef __HAS_AMS_OFFICE_LIBS__
-
-
 #ifndef __TRACKLibs_MatEnvAms_H__
 #define __TRACKLibs_MatEnvAms_H__
 
 
 namespace TrackSys {
-
 
 namespace MatAms {
     // TRK
@@ -279,6 +275,3 @@ MatGeoBoxReader MatGeoBoxAms::reader_ECAL_;
 
 
 #endif // __TRACKLibs_MatEnvAms_H__
-
-
-#endif // __HAS_AMS_OFFICE_LIBS__

@@ -1,12 +1,8 @@
-#ifdef __HAS_AMS_OFFICE_LIBS__
-
-
 #ifndef __TRACKLibs_MatEnvAms_C__
 #define __TRACKLibs_MatEnvAms_C__
 
 
 namespace TrackSys {
-
 
 // Set to MatMgnt::Load()
 Bool_t MatMgnt::Load() {
@@ -22,12 +18,9 @@ Bool_t MatMgnt::Load() {
 
 
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
-    //std::string dpath = "/data1/hchou/material15"; // at NCU
-    if (!Sys::IsEnv("TRACKSys_MatBox")) return false;
-    std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
+    std::string dpath = "/ams_home/hchou/AMSData/new_material"; // at NCU
 
-    //std::string fpath = "/data1/hchou/newstr_material/scan14/g4mscan.root";
-    std::string fpath = STR("%s/g4mscat.root", dpath.c_str());
+    std::string fpath = "/ams_home/hchou/AMSData/material/g4mscan.root";
     TFile* ifle = TFile::Open(fpath.c_str());
     if (ifle == nullptr || ifle->IsZombie()) return false;
     TTree* tree = (TTree*)ifle->Get("tree"); 
@@ -163,7 +156,6 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
-    //std::string dpath = "/ams_home/hchou/AMSData/material"; // at NCU
     if (!Sys::IsEnv("TRACKSys_MatBox")) return is_load_;
     std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
 
@@ -257,6 +249,3 @@ Bool_t MatGeoBoxAms::Load() {
 
 
 #endif // __TRACKLibs_MatEnvAms_C__
-
-
-#endif // __HAS_AMS_OFFICE_LIBS__

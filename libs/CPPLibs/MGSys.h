@@ -16,14 +16,14 @@
 #ifndef __HAS_LOGSYS__
 #define __HAS_LOGSYS__
 
-//#define STR(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt)):(std::string(Form(fmt, ##__VA_ARGS__))))
-//#define CSTR(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt).c_str()):(std::string(Form(fmt, ##__VA_ARGS__)).c_str()))
 #define STR(fmt, ...)  (std::string(Form(fmt, ##__VA_ARGS__)))
 #define CSTR(fmt, ...) (std::string(Form(fmt, ##__VA_ARGS__)).c_str())
 
 #define COUT(fmt, ...) (std::cout << CSTR(fmt, ##__VA_ARGS__))
 #define CLOG(fmt, ...) (std::clog << CSTR(fmt, ##__VA_ARGS__))
 #define CERR(fmt, ...) (std::cerr << CSTR(fmt, ##__VA_ARGS__))
+
+#define LOCADR() (std::string(Form("(LINE %d) [FUNC  %s] {FILE  %s} :  ", __LINE__, __func__, __FILE__)))
 
 #endif // __HAS_LOGSYS__
 
@@ -35,6 +35,8 @@
 
 
 
+//#define STR(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt)):(std::string(Form(fmt, ##__VA_ARGS__))))
+//#define CSTR(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt).c_str()):(std::string(Form(fmt, ##__VA_ARGS__)).c_str()))
 
 #define STR_FMT(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt)        ) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__))        ))
 #define CSTR_FMT(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt).c_str()) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))

@@ -17,7 +17,7 @@ class MagGeoBoxAms {
 
         inline static MagFld Get(const SVecD<3>& coo);
 
-        static void Output(const std::string& file_path = "MagGeoBox.bin");
+        static void Output(const std::string& file_path = "AMS02Mag.bin");
 
     private :
         static Bool_t    is_load_;
