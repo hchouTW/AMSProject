@@ -14,7 +14,16 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    MagGeoBoxAms::Output();
+    TrackSys::Sys::PutEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSProject/subj/trsys/box");
+    TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSProject/subj/trsys/MagGeoBox.bin");
+    
+    //MagGeoBoxAms::Output();
+    //TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSProject/subj/trsys/MagGeoBox.bin");
+
+    //for (Int_t it = 0; it < 100; ++it) {
+    //    MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*4-200));
+    //    COUT("%14.8f %14.8f %14.8f\n", mag.x(), mag.y(), mag.z());
+    //}
 /*
     MGConfig::JobOpt opt(argc, argv);
 

@@ -5,19 +5,29 @@
 namespace TrackSys {
 
 
-MagGeoBoxCreator::MagGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], const std::string& fpath) {
+MagGeoBoxCreator::MagGeoBoxCreator(const Long64_t n[3], const Float_t min[3], const Float_t max[3], const std::string& fpath) {
     clear();
-    if (n[0] < 2 || n[1] < 2 || n[2] < 2) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Size failure."); return; }
-    if (Numc::Compare(min[0], max[0]) >= 0 || Numc::Compare(min[1], max[1]) >= 0 || Numc::Compare(min[2], max[2]) >= 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : Range failure."); return; }
-    if (fpath.size() == 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File path not found."); return; }
+    if (n[0] < 2 || n[1] < 2 || n[2] < 2) { 
+        Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : Size failure."); return; 
+    }
+    if (Numc::Compare(min[0], max[0]) >= 0 || Numc::Compare(min[1], max[1]) >= 0 || Numc::Compare(min[2], max[2]) >= 0) { 
+        Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : Range failure."); return; 
+    }
+    if (fpath.size() == 0) { 
+        Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : File path not found."); return; 
+    }
     
-    Int_t flen = ((sizeof(Long64_t) + sizeof(Float_t) + sizeof(Float_t)) + (n[0] * n[1] * n[2]) * sizeof(Float_t)) * DIM_;
-    Int_t fdes = open(fpath.c_str(), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    if (fdes < 0) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : File not opened."); return; }
-    write(fdes, "\0", 1);
+    Long64_t flen = ((sizeof(Long64_t) + sizeof(Float_t) + sizeof(Float_t)) + (n[0] * n[1] * n[2]) * sizeof(Float_t)) * DIM_;
+    Long64_t fdes = open(fpath.c_str(), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    if (fdes < 0) { 
+        Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : File not opened."); return; 
+    }
+    lseek(fdes, flen, SEEK_SET); 
     
     void* fptr = mmap(nullptr, flen, PROT_READ | PROT_WRITE, MAP_SHARED, fdes, 0);
-    if (fptr == reinterpret_cast<void*>(-1)) { MGSys::ShowError("MagGeoBoxCreator::MagGeoBoxCreator() : mmap() failure."); close(fdes); return; }
+    if (fptr == reinterpret_cast<void*>(-1)) { 
+        Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : mmap() failure."); close(fdes); return; 
+    }
     
     is_open_ = true;
     fdes_    = fdes;
@@ -36,10 +46,7 @@ MagGeoBoxCreator::MagGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
     geo_box_->max[1] = max[1];
     geo_box_->max[2] = max[2];
 
-    CERR("ERROR%d", __LINE__);
-    //std::fill_n(&(geo_box_->mag), max_len_ * DIM_, Numc::ZERO<Float_t>);
-    std::fill_n(&(geo_box_->mag), max_len_, Numc::ZERO<Float_t>);
-    CERR("ERROR%d", __LINE__);
+    std::fill_n(static_cast<Float_t*>(&(geo_box_->mag)), max_len_ * DIM_, Numc::ZERO<Float_t>);
 }
 
 
@@ -47,18 +54,16 @@ void MagGeoBoxCreator::fill(Long64_t idx, Float_t bx, Float_t by, Float_t bz) {
     if (!is_open_) return;
     if (idx < 0 || idx >= max_len_) return;
 
-    CERR("ERROR%d", __LINE__);
     Float_t* mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM_);
-    CERR("ERROR%d", __LINE__);
     mag[0] = bx;
     mag[1] = by;
     mag[2] = bz;
-    CERR("ERROR%d", __LINE__);
 }
 
 
 void MagGeoBoxCreator::save_and_close() {
     if (!is_open_) { clear(); return; }
+    msync(fptr_, flen_, MS_SYNC);
     munmap(fptr_, flen_);
     close(fdes_);
     clear();
@@ -85,7 +90,7 @@ Bool_t MagGeoBoxReader::load(const std::string& fpath) {
     if (is_load_) {
         if (fpath_ == fpath) return is_load_;
         else {
-            MGSys::ShowWarning("MagGeoBoxReader::Load() : re-load different file.");
+            Sys::ShowWarning("MagGeoBoxReader::Load() : re-load different file.");
             clear();
         }
     }
@@ -93,14 +98,14 @@ Bool_t MagGeoBoxReader::load(const std::string& fpath) {
     Int_t fdes = open(fpath.c_str(), O_RDONLY);
     Int_t flen = lseek(fdes, 0, SEEK_END); 
     if (fdes < 0) {
-        MGSys::ShowError(STR("MagGeoBoxReader::Load() : Magnetic field map not found (%s)", fpath.c_str()));
+        Sys::ShowWarning(STR("MagGeoBoxReader::Load() : Magnetic field map not found (%s)", fpath.c_str()));
         is_load_ = false;
         return is_load_;
     }
     
     void* fptr = mmap(nullptr, flen, PROT_READ, MAP_SHARED, fdes, 0);
     if (fptr == reinterpret_cast<void*>(-1)) {
-        MGSys::ShowError("MagGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarning("MagGeoBoxReader::Load() : mmap() failure.");
         close(fdes);
         is_load_ = false;
         return is_load_;
@@ -177,10 +182,10 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
 Bool_t MagMgnt::Load() {
     if (is_load_) return is_load_;
 
-    if (!geo_box_reader_.exist()) {
+    if (!geo_box_reader_.exist() && Sys::IsEnv("TRACKSys_MagBox")) {
         //std::string fpath = "/data3/hchou/AMSData/MagDB/MagTest.bin";
         std::string fpath = Sys::GetEnv("TRACKSys_MagBox");
-        if (fpath != "") geo_box_reader_.load(fpath);
+        geo_box_reader_.load(fpath);
     }
     is_load_ = (geo_box_reader_.exist());
 

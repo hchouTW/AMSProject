@@ -23,8 +23,8 @@ Bool_t MatMgnt::Load() {
 
 Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
     //std::string dpath = "/data1/hchou/material15"; // at NCU
+    if (!Sys::IsEnv("TRACKSys_MatBox")) return false;
     std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
-    if (dpath == "") return false;
 
     //std::string fpath = "/data1/hchou/newstr_material/scan14/g4mscan.root";
     std::string fpath = STR("%s/g4mscat.root", dpath.c_str());
@@ -164,8 +164,8 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
 Bool_t MatGeoBoxAms::Load() {
     if (is_load_) return is_load_;
     //std::string dpath = "/ams_home/hchou/AMSData/material"; // at NCU
+    if (!Sys::IsEnv("TRACKSys_MatBox")) return is_load_;
     std::string dpath = Sys::GetEnv("TRACKSys_MatBox");
-    if (dpath == "") return is_load_;
 
     reader_TRL1_.load("AMS02TRL1" , dpath);
     reader_TRL2_.load("AMS02TRL2" , dpath);

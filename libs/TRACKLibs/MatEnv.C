@@ -74,15 +74,21 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
 
 MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp, const std::string& fname, const std::string& dpath) {
     clear();
-    if (n[0] < 1 || n[1] < 1 || n[2] < 1) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Size failure."); return; }
-    if (Numc::Compare(min[0], max[0]) >= 0 || Numc::Compare(min[1], max[1]) >= 0 || Numc::Compare(min[2], max[2]) >= 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Range failure."); return; }
-    if (Numc::Compare(stp) <= 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Step is negative or zero."); return; }
+    if (n[0] < 1 || n[1] < 1 || n[2] < 1) { 
+        Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : Size failure."); return; 
+    }
+    if (Numc::Compare(min[0], max[0]) >= 0 || Numc::Compare(min[1], max[1]) >= 0 || Numc::Compare(min[2], max[2]) >= 0) { 
+        Sys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Range failure."); return; 
+    }
+    if (Numc::Compare(stp) <= 0) { 
+        Sys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Step is negative or zero."); return; 
+    }
   
     // Inf
     Long64_t flen_inf = (MATGEOBOX_NDIM*(sizeof(Long64_t)+sizeof(Double_t)+sizeof(Double_t)) + sizeof(Double_t) + (n[0]*n[1]*n[2])*sizeof(Bool_t));
     Long64_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_inf < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
-    write(fdes_inf, "\0", 1);
+    lseek(fdes_inf, flen_inf, SEEK_SET); 
 
     void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_inf, 0);
     if (fptr_inf == reinterpret_cast<void*>(-1)) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_inf); return; }
@@ -91,7 +97,7 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
     Long64_t flen_var = (MATGEOBOX_NPAR * (n[0]*n[1]*n[2]) * sizeof(Double_t));
     Long64_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes_var < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
-    write(fdes_var, "\0", 1);
+    lseek(fdes_var, flen_var, SEEK_SET); 
 
     void* fptr_var = mmap(nullptr, flen_var, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_var, 0);
     if (fptr_var == reinterpret_cast<void*>(-1)) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_var); return; }
@@ -215,9 +221,11 @@ void MatGeoBoxCreator::save_and_close() {
         var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_X1]  /= var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
     }}}
 
+    msync(fptr_inf_, flen_inf_, MS_SYNC);
     munmap(fptr_inf_, flen_inf_);
     close(fdes_inf_);
     
+    msync(fptr_var_, flen_var_, MS_SYNC);
     munmap(fptr_var_, flen_var_);
     close(fdes_var_);
 
