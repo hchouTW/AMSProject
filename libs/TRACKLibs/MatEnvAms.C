@@ -17,10 +17,7 @@ Bool_t MatMgnt::Load() {
 };
 
 
-Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree() {
-    std::string dpath = "/ams_home/hchou/AMSData/new_material"; // at NCU
-
-    std::string fpath = "/ams_home/hchou/AMSData/material/g4mscan.root";
+Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree(const std::string& dpath, const std::string& fpath) {
     TFile* ifle = TFile::Open(fpath.c_str());
     if (ifle == nullptr || ifle->IsZombie()) return false;
     TTree* tree = (TTree*)ifle->Get("tree"); 

@@ -1,10 +1,3 @@
-#ifndef __TRACKLibs_Sys_H__
-#define __TRACKLibs_Sys_H__
-#include <iostream>
-#include <cstdlib>
-#include <string>
-#include <algorithm>
-
 #ifndef __HAS_LOGSYS__
 #define __HAS_LOGSYS__
 
@@ -18,6 +11,14 @@
 #define LOCADR() (std::string(Form("(LINE %d) [FUNC  %s] {FILE  %s} :  ", __LINE__, __func__, __FILE__)))
 
 #endif // __HAS_LOGSYS__
+
+
+#ifndef __TRACKLibs_Sys_H__
+#define __TRACKLibs_Sys_H__
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <algorithm>
 
 
 namespace TrackSys {

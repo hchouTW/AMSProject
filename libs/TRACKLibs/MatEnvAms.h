@@ -185,7 +185,7 @@ class MatGeoBoxAms {
         MatGeoBoxAms() {}
         ~MatGeoBoxAms() {}
 
-        static Bool_t CreateMatGeoBoxFromG4MatTree();
+        static Bool_t CreateMatGeoBoxFromG4MatTree(const std::string& dpath = ".", const std::string& fpath = "g4mscan.root");
 
         static Bool_t Load();
         

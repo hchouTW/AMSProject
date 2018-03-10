@@ -1,4 +1,4 @@
 #!/bin/bash
-source ${AMSProjLibs}/external/google/gflags/bin/gflags.sh 
-source ${AMSProjLibs}/external/google/glog/bin/glog.sh 
-source ${AMSProjLibs}/external/google/ceres/bin/ceres.sh 
+export LIBRARY_PATH=${AMSProjLibs}/external/google/lib64:${LIBRARY_PATH}
+export LD_LIBRARY_PATH=${AMSProjLibs}/external/google/lib64:${LD_LIBRARY_PATH}
+export CPLUS_INCLUDE_PATH=${AMSProjLibs}/external/google/include:${CPLUS_INCLUDE_PATH}

@@ -15,13 +15,17 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
 
     TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::PutEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+
+
     //for (Int_t it = 0; it < 100; ++it) {
     //    MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*4-200));
     //    COUT("%14.8f %14.8f %14.8f\n", mag.x(), mag.y(), mag.z());
     //}
 
-    //TrackSys::Sys::PutEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
-    TrackSys::MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
+
+    TrackSys::MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree("/ams_home/hchou/AMSData/new_material", "/ams_home/hchou/AMSData/material/g4mscan.root");
+
 /*
     MGConfig::JobOpt opt(argc, argv);
 
