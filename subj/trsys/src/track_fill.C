@@ -5,6 +5,7 @@
 #include "/ams_home/hchou/AMSCore/prod/18Feb27/src/ClassDef.h"
 
 using namespace std;
+using namespace TrackSys;
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -24,8 +25,7 @@ int main(int argc, char * argv[]) {
     //}
 
 
-    TrackSys::MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree("/ams_home/hchou/AMSData/new_material", "/ams_home/hchou/AMSData/material/g4mscan.root");
-
+    //TrackSys::MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree("/ams_home/hchou/AMSData/new_material", "/ams_home/hchou/AMSData/material/g4mscan.root");
 /*
     MGConfig::JobOpt opt(argc, argv);
 
