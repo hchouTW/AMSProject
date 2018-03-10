@@ -149,14 +149,14 @@ Bool_t SimpleTrFit::analyticalFit() {
         std::vector<Double_t> stp(hits_.size(), Numc::ZERO<>);
         std::vector<Double_t> crs(hits_.size(), Numc::ZERO<>);
 
-        const Int_t nstp = 3;
-        for (Int_t ih = 1; ih < hits_.size(); ++ih) {
+        const UInt_t nstp = 3;
+        for (UInt_t ih = 1; ih < hits_.size(); ++ih) {
             SVecD<3>&& ref_l = (hits_.at(ih).c() - hits_.at(ih-1).c());
             SVecD<3>&& ref_u = LA::Unit(ref_l);
             Double_t   ref_s = LA::Mag(ref_l);
             
             SVecD<3> mfldv;
-            for (Int_t it = 0; it < nstp; ++it) {
+            for (UInt_t it = 0; it < nstp; ++it) {
                 Double_t stp = ((static_cast<Double_t>(it) + Numc::HALF<>) / static_cast<Double_t>(nstp));
                 SVecD<3>&& ref_m = ((Numc::ONE<> - stp) * hits_.at(ih-1).c() + stp * hits_.at(ih).c());
                 MagFld&&   mfld  = MagMgnt::Get(ref_m);
@@ -174,14 +174,14 @@ Bool_t SimpleTrFit::analyticalFit() {
         SVecD<3>    res;
         Double_t    cur_Au = Numc::ZERO<>;
         Double_t    cur_Ae = Numc::ZERO<>;
-        for (Int_t ih = 0; ih < hits_.size(); ++ih) {
+        for (UInt_t ih = 0; ih < hits_.size(); ++ih) {
             HitSt& hit = hits_.at(ih);
             Double_t ey  = hit.ey();
             Double_t err = (Numc::ONE<> / ey / ey);
             
             cur_Au += stp.at(ih);
             cur_Ae += Numc::HALF<> * crs.at(ih) * stp.at(ih) * stp.at(ih);
-            for (Int_t jh = 0; jh < ih; ++jh)
+            for (UInt_t jh = 0; jh < ih; ++jh)
                 cur_Ae += crs.at(jh) * stp.at(jh) * stp.at(ih);
 
             mtx(0, 0) += err * Numc::ONE<>;
@@ -228,15 +228,15 @@ Bool_t SimpleTrFit::simpleFit() {
     SVecD<5>    curGrdG;
     SMtxSymD<5> curCvGG;
 
-    Int_t  updIter = 0;
-    Int_t  curIter = 0;
+    UInt_t updIter = 0;
+    UInt_t curIter = 0;
     while (curIter <= LMTU_ITER && !succ) {
         Double_t chix = Numc::ZERO<>;
         Double_t chiy = Numc::ZERO<>;
         SVecD<5>    grdG;
         SMtxSymD<5> cvGG;
 
-        Int_t cnt_nhit = 0;
+        UInt_t cnt_nhit = 0;
         PhySt ppst(rltSt);
         PhyJb::SMtxDGG&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
@@ -305,7 +305,7 @@ Bool_t SimpleTrFit::simpleFit() {
         SVecD<5>&& rslG = (lmCvGG * grdG);
        
         curLmRhoDen = Numc::ZERO<>;
-        for (Int_t p = 0; p < 5; ++p)
+        for (UInt_t p = 0; p < 5; ++p)
             curLmRhoDen += (rslG(p) * (diagCvGG(p)*rslG(p) + grdG(p)));
         
         if (curIter == 0 || isUpdate) {
@@ -427,7 +427,7 @@ Bool_t PhyTrFit::evolve() {
     Double_t chir = 0;
 
     PhySt ppst(part_);
-    Int_t cnt_nhit = 0;
+    UInt_t cnt_nhit = 0;
     for (auto&& hit : hits_) {
         if (cnt_nhit != 0) ppst.arg() = args_.at(cnt_nhit-1);
         if (!PropMgnt::PropToZ(hit.cz(), ppst)) break;
@@ -445,8 +445,8 @@ Bool_t PhyTrFit::evolve() {
         if (hit.sx()) chix += (rs2(0) * rs2(0));
         if (hit.sy()) chiy += (rs2(1) * rs2(1));
         
-        SVecD<2>&& ionx = hit.ionx(ppst.eta(), ppst.uz());
-        SVecD<2>&& iony = hit.iony(ppst.eta(), ppst.uz());
+        //SVecD<2>&& ionx = hit.ionx(ppst.eta(), ppst.uz());
+        //SVecD<2>&& iony = hit.iony(ppst.eta(), ppst.uz());
 
         if (cnt_nhit != 0) {
             SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
@@ -463,12 +463,12 @@ Bool_t PhyTrFit::evolve() {
     if (cnt_nhit != hits_.size()) return false;
 
     stts_.back().arg().reset();
-    for (Int_t it = 0; it < stts_.size()-1; ++it) {
+    for (UInt_t it = 0; it < stts_.size()-1; ++it) {
         stts_.at(it).arg() = args_.at(it);
         stts_.at(it).arg().zero();
     }
     
-    for (Int_t it = 0; it < hits_.size(); ++it) {
+    for (UInt_t it = 0; it < hits_.size(); ++it) {
         map_hits_[hits_.at(it).lay()] = &hits_.at(it);
         map_stts_[hits_.at(it).lay()] = &stts_.at(it);
     }
@@ -497,7 +497,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ppst.set_eta(parameters[0][4]);
     ppst.arg().reset();
 
-    Int_t cnt_nhit = 0;
+    UInt_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(hits_.size()-1);
     Eigen::VectorXd rs = Eigen::VectorXd::Zero(numOfRes_);
@@ -531,7 +531,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         
         if (hasJacb) {
             jbGG = curjb.gg() * jbGG;
-            for (Int_t it = 0; it < PhyJb::DIM_G; ++it) {
+            for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
                 if (hit.sx()) jb(hit.seqIDcx(), it) += -jbGG(0, it) / rse(0);
                 if (hit.sy()) jb(hit.seqIDcy(), it) += -jbGG(1, it) / rse(1);
                 if (hit.sx()) jb(hit.seqIDex(), it) +=  jbGG(4, it) * ionx(1);
@@ -543,23 +543,23 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
         
         if (cnt_nhit != 0) {
-            for (Int_t it = 0; it < PhyJb::DIM_L; ++it)
+            for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
                 rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it) += intm(it) / inte(it);
         }
         
         if (cnt_nhit != 0 && hasJacb) {
             jbGL.at(cnt_nhit-1) = curjb.gl();
-            for (Int_t it = 0; it < cnt_nhit-1; ++it)
+            for (UInt_t it = 0; it < cnt_nhit-1; ++it)
                 jbGL.at(it) = curjb.gg() * jbGL.at(it);
 
-            for (Int_t it = 0; it < cnt_nhit; ++it) {
-                for (Int_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+            for (UInt_t it = 0; it < cnt_nhit; ++it) {
+                for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
                     if (hit.sx()) jb(hit.seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(0, jl) / rse(0);
                     if (hit.sy()) jb(hit.seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += -jbGL.at(it)(1, jl) / rse(1);
                 }
             }
             
-            for (Int_t it = 0; it < PhyJb::DIM_L; ++it)
+            for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
                 jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+it) += -1.0 / inte(it);
         }
 

@@ -67,7 +67,7 @@ Bool_t MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree(const std::string& dpath, cons
     Long64_t printRat = (nentries / 100);
     for (Long64_t entry = 0; entry < nentries; ++entry) {
         if ((entry%printRat) == 0 || (entry == nentries-1)) {
-            COUT("Entry %lld/%lld  (%6.2f %)\n", entry+1, nentries, 100. * static_cast<Double_t>(entry+1)/static_cast<Double_t>(nentries));
+            COUT("Entry %lld/%lld  (%6.2f %c)\n", entry+1, nentries, 100. * static_cast<Double_t>(entry+1)/static_cast<Double_t>(nentries), '%');
         }
         tree->GetEntry(entry);
         

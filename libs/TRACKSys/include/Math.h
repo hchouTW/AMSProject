@@ -1,6 +1,8 @@
 #ifndef __TRACKLibs_Math_H__
 #define __TRACKLibs_Math_H__
 
+#include <TMath.h>
+
 
 #include <random>
 #include <type_traits>
@@ -61,7 +63,8 @@ inline bool EqualToZero(RealType a) { return (Compare(a) == 0); }
 } // namesapce TrackSys
 
 
-#include <TRandom.h>
+#include <chrono>
+#include <TRandom3.h>
 namespace TrackSys {
 namespace Rndm {
 

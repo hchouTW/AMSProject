@@ -20,6 +20,8 @@
 #include <string>
 #include <algorithm>
 
+#include <TROOT.h>
+
 
 namespace TrackSys {
 namespace Sys {

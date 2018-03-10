@@ -98,7 +98,7 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), part_(part), numOfRes_(0), numOfPar_(0) { if (checkHit()) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (checkHit()) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
     
     public :
@@ -133,7 +133,7 @@ class PhyTrFit : protected TrFitPar {
 
         inline const Int_t nargs() const { return args_.size(); }
         inline const std::vector<PhyArg>& args() const { return args_; }
-        inline const PhyArg* args(Int_t it) const { return ((succ_ && it>=0 && it<args_.size()) ? &args_.at(it) : nullptr); }
+        inline const PhyArg* args(UInt_t it) const { return ((succ_ && it<args_.size()) ? &args_.at(it) : nullptr); }
 
         inline const Int_t nstts() const { return stts_.size(); }
         inline const std::vector<PhySt>& stts() const { return stts_; }

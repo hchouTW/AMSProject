@@ -1,6 +1,14 @@
 #ifndef __TRACKLibs_MatEnv_H__
 #define __TRACKLibs_MatEnv_H__
 
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <TTree.h>
+
+
 namespace TrackSys {
 
 
@@ -74,13 +82,6 @@ class MatFld {
 // elm_6: [1]        density effect correction X0                       //
 // elm_7: [1]        density effect correction X1                       //
 //======================================================================//
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <TTree.h>
-
 class G4MatStep {
     public :
         G4MatStep(TTree* tree = nullptr) : x(0), y(0), area(0), nstp(0), min(nullptr), max(nullptr), irl(nullptr), eld(nullptr), lme(nullptr), dcC(nullptr), dcM(nullptr), dcA(nullptr), dcX0(nullptr), dcX1(nullptr) { SetBranchAddress(tree); }

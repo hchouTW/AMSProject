@@ -259,9 +259,9 @@ void MatGeoBoxReader::print() const {
     if (!is_load_) return;
     std::string printStr;
     printStr += STR("===================== MatGeoBoxReader ====================\n");
-    printStr += STR("BOX X     (%3d %7.2f %7.2f)\n", n_.at(0), min_.at(0), max_.at(0));
-    printStr += STR("BOX Y     (%3d %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
-    printStr += STR("BOX Z     (%3d %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
+    printStr += STR("BOX X     (%3lld %7.2f %7.2f)\n", n_.at(0), min_.at(0), max_.at(0));
+    printStr += STR("BOX Y     (%3lld %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
+    printStr += STR("BOX Z     (%3lld %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
     printStr += STR("==========================================================\n");
     COUT(printStr.c_str());
 }
