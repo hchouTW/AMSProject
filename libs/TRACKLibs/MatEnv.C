@@ -78,29 +78,29 @@ MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], c
         Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : Size failure."); return; 
     }
     if (Numc::Compare(min[0], max[0]) >= 0 || Numc::Compare(min[1], max[1]) >= 0 || Numc::Compare(min[2], max[2]) >= 0) { 
-        Sys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Range failure."); return; 
+        Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : Range failure."); return; 
     }
     if (Numc::Compare(stp) <= 0) { 
-        Sys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : Step is negative or zero."); return; 
+        Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : Step is negative or zero."); return; 
     }
   
     // Inf
     Long64_t flen_inf = (MATGEOBOX_NDIM*(sizeof(Long64_t)+sizeof(Double_t)+sizeof(Double_t)) + sizeof(Double_t) + (n[0]*n[1]*n[2])*sizeof(Bool_t));
     Long64_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    if (fdes_inf < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
+    if (fdes_inf < 0) { Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
     lseek(fdes_inf, flen_inf, SEEK_SET); 
 
     void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_inf, 0);
-    if (fptr_inf == reinterpret_cast<void*>(-1)) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_inf); return; }
+    if (fptr_inf == reinterpret_cast<void*>(-1)) { Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_inf); return; }
 
     // Var
     Long64_t flen_var = (MATGEOBOX_NPAR * (n[0]*n[1]*n[2]) * sizeof(Double_t));
     Long64_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_CREAT | O_RDWR, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    if (fdes_var < 0) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
+    if (fdes_var < 0) { Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : File not opened."); return; }
     lseek(fdes_var, flen_var, SEEK_SET); 
 
     void* fptr_var = mmap(nullptr, flen_var, PROT_READ | PROT_WRITE, MAP_SHARED, fdes_var, 0);
-    if (fptr_var == reinterpret_cast<void*>(-1)) { MGSys::ShowError("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_var); return; }
+    if (fptr_var == reinterpret_cast<void*>(-1)) { Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : mmap() failure."); close(fdes_var); return; }
     
     // Create
     is_open_  = true;
@@ -247,20 +247,20 @@ void MatGeoBoxReader::print() const {
 
 Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath) {
     if (is_load_) return is_load_;
-    //MGSys::ShowWarning("MatGeoBoxReader::Load() : re-load different file.");
+    //Sys::ShowWarning("MatGeoBoxReader::Load() : re-load different file.");
 
     // Inf
     Int_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_RDONLY);
     Int_t flen_inf = lseek(fdes_inf, 0, SEEK_END); 
     if (fdes_inf < 0) {
-        MGSys::ShowError(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
         is_load_ = false;
         return is_load_;
     }
     
     void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ, MAP_SHARED, fdes_inf, 0);
     if (fptr_inf == reinterpret_cast<void*>(-1)) {
-        MGSys::ShowError("MatGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarning("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_inf);
         is_load_ = false;
         return is_load_;
@@ -270,14 +270,14 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     Int_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_RDONLY);
     Int_t flen_var = lseek(fdes_var, 0, SEEK_END); 
     if (fdes_var < 0) {
-        MGSys::ShowError(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
         is_load_ = false;
         return is_load_;
     }
     
     void* fptr_var = mmap(nullptr, flen_var, PROT_READ, MAP_SHARED, fdes_var, 0);
     if (fptr_var == reinterpret_cast<void*>(-1)) {
-        MGSys::ShowError("MatGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarning("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_var);
         is_load_ = false;
         return is_load_;
