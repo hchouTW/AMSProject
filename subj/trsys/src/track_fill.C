@@ -14,12 +14,12 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    //TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSProject/subj/trsys/AMS02Mag.bin");
-    TrackSys::Sys::PutEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
     TrackSys::MagGeoBoxAms::Output();
 
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSProject/subj/trsys/AMS02Mag.bin");
     TrackSys::MagMgnt::Load();
     for (Int_t it = 0; it < 50; ++it) {
         MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*8-200));
