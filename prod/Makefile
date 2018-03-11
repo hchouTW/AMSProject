@@ -1,5 +1,9 @@
 -include $(AMSMKfile)
 
+CXX += -DGLOG_NO_ABBREVIATED_SEVERITIES
+LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
+LIBP += -lgflags -lglog -lceres
+
 Version = vdev
 TagetDir = $(AMSCoreProd)/$(Version)
 

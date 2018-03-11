@@ -23,7 +23,7 @@ int main(int argc, const char ** argv) {
 	COUT("\n\n");
 
 	if (argc != 5 && argc != 6)
-		MGSys::ShowErrorAndExit(LOC_ADDR(), "Number of argument is not conform! Exiting ...");
+		MGSys::ShowErrorAndExit(LOCADR(), "Number of argument is not conform! Exiting ...");
 
 	std::string eventMode = argv[1];
 	std::string fileList = argv[2];
@@ -36,7 +36,7 @@ int main(int argc, const char ** argv) {
 	AMSChain fChain("AMSRoot");
     int fileStatus = fChain.AddFromFile(fileList.c_str(), begId, endId, stagedonly, timeout);
     if (fileStatus == -1) 
-        MGSys::ShowErrorAndExit(LOC_ADDR(), "ROOT file list cannot be opend! Exiting ..."); 
+        MGSys::ShowErrorAndExit(LOCADR(), "ROOT file list cannot be opend! Exiting ..."); 
 	COUT("FileStatus : %d\n", fileStatus);
     COUT("Totally : %ld data events.\n", fChain.GetEntries());
 	

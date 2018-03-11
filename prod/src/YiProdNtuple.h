@@ -64,7 +64,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 
 #define __HAS_AMS_OFFICE_LIBS__
-#include <TRACKLibs/TRACKLibs.h>
+#include <TRACKSys.h>
 
 #include <EcalHadron.h>
 #include <EcalHadron.C>

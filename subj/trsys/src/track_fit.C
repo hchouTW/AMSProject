@@ -31,21 +31,21 @@ int main(int argc, char * argv[]) {
     std::vector<Hist*> hHCcosy(9, nullptr);
 
     for (Int_t it = 0; it < 9; ++it) {
-        hCKresx.at(it) = Hist::Head(STR_FMT("hCKresxL%d", it+1));
-        hKFresx.at(it) = Hist::Head(STR_FMT("hKFresxL%d", it+1));
-        hHCresx.at(it) = Hist::Head(STR_FMT("hHCresxL%d", it+1));
+        hCKresx.at(it) = Hist::Head(STR("hCKresxL%d", it+1));
+        hKFresx.at(it) = Hist::Head(STR("hKFresxL%d", it+1));
+        hHCresx.at(it) = Hist::Head(STR("hHCresxL%d", it+1));
         
-        hCKresy.at(it) = Hist::Head(STR_FMT("hCKresyL%d", it+1));
-        hKFresy.at(it) = Hist::Head(STR_FMT("hKFresyL%d", it+1));
-        hHCresy.at(it) = Hist::Head(STR_FMT("hHCresyL%d", it+1));
+        hCKresy.at(it) = Hist::Head(STR("hCKresyL%d", it+1));
+        hKFresy.at(it) = Hist::Head(STR("hKFresyL%d", it+1));
+        hHCresy.at(it) = Hist::Head(STR("hHCresyL%d", it+1));
         
-        hCKcosx.at(it) = Hist::Head(STR_FMT("hCKcosxL%d", it+1));
-        hKFcosx.at(it) = Hist::Head(STR_FMT("hKFcosxL%d", it+1));
-        hHCcosx.at(it) = Hist::Head(STR_FMT("hHCcosxL%d", it+1));
+        hCKcosx.at(it) = Hist::Head(STR("hCKcosxL%d", it+1));
+        hKFcosx.at(it) = Hist::Head(STR("hKFcosxL%d", it+1));
+        hHCcosx.at(it) = Hist::Head(STR("hHCcosxL%d", it+1));
         
-        hCKcosy.at(it) = Hist::Head(STR_FMT("hCKcosyL%d", it+1));
-        hKFcosy.at(it) = Hist::Head(STR_FMT("hKFcosyL%d", it+1));
-        hHCcosy.at(it) = Hist::Head(STR_FMT("hHCcosyL%d", it+1));
+        hCKcosy.at(it) = Hist::Head(STR("hCKcosyL%d", it+1));
+        hKFcosy.at(it) = Hist::Head(STR("hKFcosyL%d", it+1));
+        hHCcosy.at(it) = Hist::Head(STR("hHCcosyL%d", it+1));
     }
     
     const Axis& AXmom = hCKRrso->xaxis();
@@ -138,12 +138,12 @@ int main(int argc, char * argv[]) {
     chRrsoS->Write();
 
     for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKresxS = Hist::New(CSTR_FMT("hCKresxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFresxS = Hist::New(CSTR_FMT("hKFresxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCresxS = Hist::New(CSTR_FMT("hHCresxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hCKresxS = Hist::New(CSTR("hCKresxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hKFresxS = Hist::New(CSTR("hKFresxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hHCresxS = Hist::New(CSTR("hHCresxL%dS", lay+1), HistAxis(AXmom));
         
-        Hist* hKFCKresxS = Hist::New(CSTR_FMT("hKFCKresxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKresxS = Hist::New(CSTR_FMT("hHCCKresxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
+        Hist* hKFCKresxS = Hist::New(CSTR("hKFCKresxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
+        Hist* hHCCKresxS = Hist::New(CSTR("hHCCKresxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
         
         std::vector<Hist*> vhCKresx = Hist::ProjectAll(HistProj::kY, hCKresx.at(lay));
         std::vector<Hist*> vhKFresx = Hist::ProjectAll(HistProj::kY, hKFresx.at(lay));
@@ -200,18 +200,18 @@ int main(int argc, char * argv[]) {
    
         hKFCKresxS->style(Fill(), Line(kBlue), Marker(kBlue));
         hHCCKresxS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chresxS = Hist::Collect(CSTR_FMT("chresxL%dS", lay+1), HistList({ hKFCKresxS, hHCCKresxS }));
+        THStack* chresxS = Hist::Collect(CSTR("chresxL%dS", lay+1), HistList({ hKFCKresxS, hHCCKresxS }));
         chresxS->Write();
     }
 
 
     for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKresyS = Hist::New(CSTR_FMT("hCKresyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFresyS = Hist::New(CSTR_FMT("hKFresyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCresyS = Hist::New(CSTR_FMT("hHCresyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hCKresyS = Hist::New(CSTR("hCKresyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hKFresyS = Hist::New(CSTR("hKFresyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hHCresyS = Hist::New(CSTR("hHCresyL%dS", lay+1), HistAxis(AXmom));
         
-        Hist* hKFCKresyS = Hist::New(CSTR_FMT("hKFCKresyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKresyS = Hist::New(CSTR_FMT("hHCCKresyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
+        Hist* hKFCKresyS = Hist::New(CSTR("hKFCKresyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
+        Hist* hHCCKresyS = Hist::New(CSTR("hHCCKresyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
         
         std::vector<Hist*> vhCKresy = Hist::ProjectAll(HistProj::kY, hCKresy.at(lay));
         std::vector<Hist*> vhKFresy = Hist::ProjectAll(HistProj::kY, hKFresy.at(lay));
@@ -268,18 +268,18 @@ int main(int argc, char * argv[]) {
    
         hKFCKresyS->style(Fill(), Line(kBlue), Marker(kBlue));
         hHCCKresyS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chresyS = Hist::Collect(CSTR_FMT("chresyL%dS", lay+1), HistList({ hKFCKresyS, hHCCKresyS }));
+        THStack* chresyS = Hist::Collect(CSTR("chresyL%dS", lay+1), HistList({ hKFCKresyS, hHCCKresyS }));
         chresyS->Write();
     }
 
 
     for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKcosxS = Hist::New(CSTR_FMT("hCKcosxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFcosxS = Hist::New(CSTR_FMT("hKFcosxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCcosxS = Hist::New(CSTR_FMT("hHCcosxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hCKcosxS = Hist::New(CSTR("hCKcosxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hKFcosxS = Hist::New(CSTR("hKFcosxL%dS", lay+1), HistAxis(AXmom));
+        Hist* hHCcosxS = Hist::New(CSTR("hHCcosxL%dS", lay+1), HistAxis(AXmom));
         
-        Hist* hKFCKcosxS = Hist::New(CSTR_FMT("hKFCKcosxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKcosxS = Hist::New(CSTR_FMT("hHCCKcosxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
+        Hist* hKFCKcosxS = Hist::New(CSTR("hKFCKcosxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
+        Hist* hHCCKcosxS = Hist::New(CSTR("hHCCKcosxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
         
         std::vector<Hist*> vhCKcosx = Hist::ProjectAll(HistProj::kY, hCKcosx.at(lay));
         std::vector<Hist*> vhKFcosx = Hist::ProjectAll(HistProj::kY, hKFcosx.at(lay));
@@ -336,18 +336,18 @@ int main(int argc, char * argv[]) {
    
         hKFCKcosxS->style(Fill(), Line(kBlue), Marker(kBlue));
         hHCCKcosxS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chcosxS = Hist::Collect(CSTR_FMT("chcosxL%dS", lay+1), HistList({ hKFCKcosxS, hHCCKcosxS }));
+        THStack* chcosxS = Hist::Collect(CSTR("chcosxL%dS", lay+1), HistList({ hKFCKcosxS, hHCCKcosxS }));
         chcosxS->Write();
     }
 
 
     for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKcosyS = Hist::New(CSTR_FMT("hCKcosyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFcosyS = Hist::New(CSTR_FMT("hKFcosyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCcosyS = Hist::New(CSTR_FMT("hHCcosyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hCKcosyS = Hist::New(CSTR("hCKcosyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hKFcosyS = Hist::New(CSTR("hKFcosyL%dS", lay+1), HistAxis(AXmom));
+        Hist* hHCcosyS = Hist::New(CSTR("hHCcosyL%dS", lay+1), HistAxis(AXmom));
         
-        Hist* hKFCKcosyS = Hist::New(CSTR_FMT("hKFCKcosyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKcosyS = Hist::New(CSTR_FMT("hHCCKcosyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
+        Hist* hKFCKcosyS = Hist::New(CSTR("hKFCKcosyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
+        Hist* hHCCKcosyS = Hist::New(CSTR("hHCCKcosyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
         
         std::vector<Hist*> vhCKcosy = Hist::ProjectAll(HistProj::kY, hCKcosy.at(lay));
         std::vector<Hist*> vhKFcosy = Hist::ProjectAll(HistProj::kY, hKFcosy.at(lay));
@@ -404,7 +404,7 @@ int main(int argc, char * argv[]) {
    
         hKFCKcosyS->style(Fill(), Line(kBlue), Marker(kBlue));
         hHCCKcosyS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chcosyS = Hist::Collect(CSTR_FMT("chcosyL%dS", lay+1), HistList({ hKFCKcosyS, hHCCKcosyS }));
+        THStack* chcosyS = Hist::Collect(CSTR("chcosyL%dS", lay+1), HistList({ hKFCKcosyS, hHCCKcosyS }));
         chcosyS->Write();
     }
 
