@@ -20,5 +20,5 @@ export CPLUS_INCLUDE_PATH=${ExternalLibs}/LIBS/TRACKSys/include:${CPLUS_INCLUDE_
 export GOOGLE_PARA='-DGLOG_NO_ABBREVIATED_SEVERITIES'
 export GOOGLE_FLAGS='-lgflags -lglog -lceres'
 
-export TRACKSYS_MagBox=${ExternalLibs}/DB/magnetic/AMS02Mag.bin
-export TRACKSYS_MatBox=${ExternalLibs}/DB/material
+export TRACKSys_MagBox=${ExternalLibs}/DB/magnetic/AMS02Mag.bin
+export TRACKSys_MatBox=${ExternalLibs}/DB/material
