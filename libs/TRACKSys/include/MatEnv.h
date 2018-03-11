@@ -192,7 +192,7 @@ class MatGeoBoxReader {
         MatGeoBoxReader(const std::string& fname, const std::string& dpath) { clear(); load(fname, dpath); }
         ~MatGeoBoxReader() { clear(); }
 
-        inline Bool_t exist() { return is_load_; }
+        inline const Bool_t& exist() const { return is_load_; }
 
         void print() const;
 

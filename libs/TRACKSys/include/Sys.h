@@ -27,7 +27,7 @@ namespace TrackSys {
 namespace Sys {
 
 inline Bool_t       IsEnv(const std::string& var) { return (getenv(var.c_str()) != nullptr); }
-inline std::string GetEnv(const std::string& var) { return std::string(getenv(var.c_str())); }
+inline std::string GetEnv(const std::string& var) { return (IsEnv(var) ? std::string(getenv(var.c_str())) : ""); }
 inline void        PutEnv(const std::string& var, const std::string& val = "") { putenv(const_cast<char*>( STR("%s=%s", var.c_str(), val.c_str()).c_str() )); }
 
 using Msg  = std::string;

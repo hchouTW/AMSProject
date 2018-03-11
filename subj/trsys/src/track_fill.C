@@ -1,11 +1,10 @@
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
-#include <TRACKSysLibs.h>
+#include <TRACKSys.h>
 
 #include "/ams_home/hchou/AMSCore/prod/18Feb27/src/ClassDef.h"
 
 using namespace std;
-using namespace TrackSys;
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -15,15 +14,20 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::PutEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSProject/subj/trsys/AMS02Mag.bin");
     TrackSys::Sys::PutEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
+    TrackSys::MagGeoBoxAms::Output();
 
-    //for (Int_t it = 0; it < 100; ++it) {
-    //    MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*4-200));
-    //    COUT("%14.8f %14.8f %14.8f\n", mag.x(), mag.y(), mag.z());
-    //}
+    TrackSys::MagMgnt::Load();
+    for (Int_t it = 0; it < 50; ++it) {
+        MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*8-200));
+        COUT("%14.8f %14.8f %14.8f\n", mag.x(), mag.y(), mag.z());
+    }
 
+    TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
+    TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
 
     //TrackSys::MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree("/ams_home/hchou/AMSData/new_material", "/ams_home/hchou/AMSData/material/g4mscan.root");
 /*
