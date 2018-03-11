@@ -18,18 +18,18 @@ std::string StringFormat(const std::string& fmt, Args... args) {
 
 void ShowInfo(const Message& mainInfo, const MGSys::Message& message, const Message& title, std::ostream& out) {
 	std::string space(title.size()+6, ' ');
-	out << CSTR_FMT("==%s==  %s\n", title.c_str(), mainInfo.c_str());
+	out << CSTR("==%s==  %s\n", title.c_str(), mainInfo.c_str());
 	if (message != "")
-		out << CSTR_FMT("%s%s\n", space.c_str(), message.c_str());
+		out << CSTR("%s%s\n", space.c_str(), message.c_str());
 }
 
 
 void ShowInfo(const Message& mainInfo, const MGSys::Messages& messages, const Message& title, std::ostream& out) {
 	std::string space(title.size()+6, ' ');
-	out << CSTR_FMT("==%s==  %s\n", title.c_str(), mainInfo.c_str());
+	out << CSTR("==%s==  %s\n", title.c_str(), mainInfo.c_str());
 	for (auto&& str : messages)
 		if (str != "")
-			out << CSTR_FMT("%s%s\n", space.c_str(), str.c_str()); 
+			out << CSTR("%s%s\n", space.c_str(), str.c_str()); 
 }
 
 } // namespace MGSys	

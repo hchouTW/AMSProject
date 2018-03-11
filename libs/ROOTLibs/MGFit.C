@@ -33,7 +33,7 @@ void RooVar::set(const std::string& name, Hist * samp, Hist * sumt, const HistLi
                 return;
             }
             else if (elem->dim() != samp->dim()) {
-                MGSys::ShowError(STR_FMT("<< RooVar::RooVar >> Template dimension(%d) vs. Sample dimension(%d).", elem->dim(), samp->dim()));
+                MGSys::ShowError(STR("<< RooVar::RooVar >> Template dimension(%d) vs. Sample dimension(%d).", elem->dim(), samp->dim()));
                 return;
             }
         }
@@ -55,11 +55,11 @@ void RooVar::set(const std::string& name, Hist * samp, Hist * sumt, const HistLi
         fTemp = temp;
     }
     else {
-        fSamp = Hist::New(STR_FMT("RVAR__%s", samp->name().c_str()), samp->title(), (*samp)());
+        fSamp = Hist::New(STR("RVAR__%s", samp->name().c_str()), samp->title(), (*samp)());
         if (sumt != nullptr)
-            fSumt = Hist::New(STR_FMT("RVAR__%s", sumt->name().c_str()), sumt->title(), (*sumt)());
+            fSumt = Hist::New(STR("RVAR__%s", sumt->name().c_str()), sumt->title(), (*sumt)());
         for (auto&& elem : temp) {
-            Hist * hist = Hist::New(STR_FMT("RVAR__%s", elem->name().c_str()), elem->title(), (*elem)());
+            Hist * hist = Hist::New(STR("RVAR__%s", elem->name().c_str()), elem->title(), (*elem)());
             fTemp.push_back(hist);
         }
     }
@@ -98,11 +98,11 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : exist_(f
     Double_t    min  = var.min();
     Double_t    max  = var.max();
     std::string name = var.name();
-    Hist *      sumt = Hist::New(STR_FMT("SUMT%06d_%s", RooResult::fCounter, var.samp()->name().c_str()), "", (*var.samp())(), true);
-    Hist *      samp = Hist::New(STR_FMT("SAMP%06d_%s", RooResult::fCounter, var.samp()->name().c_str()), "", (*var.samp())());
+    Hist *      sumt = Hist::New(STR("SUMT%06d_%s", RooResult::fCounter, var.samp()->name().c_str()), "", (*var.samp())(), true);
+    Hist *      samp = Hist::New(STR("SAMP%06d_%s", RooResult::fCounter, var.samp()->name().c_str()), "", (*var.samp())());
     HistList    temp;
     for (auto&& elem : var.temp()) {
-        Hist * hist = Hist::New(STR_FMT("TEMP%06d_%s", RooResult::fCounter, elem->name().c_str()), "", (*elem)());
+        Hist * hist = Hist::New(STR("TEMP%06d_%s", RooResult::fCounter, elem->name().c_str()), "", (*elem)());
 
         if (fluc) {
             Double_t sum = (*hist)()->Integral();
@@ -155,7 +155,7 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : exist_(f
     std::vector<RooRealVar*>  tempVar(var_.num(), nullptr);
     RooArgList tempVarList;
     for (Int_t it = 0; it < var_.num(); ++it) {
-        tempVar.at(it) = new RooRealVar(CSTR_FMT("ROOVAR__TEMP%03d", it), "", meanVal, lwLmt, upLmt);
+        tempVar.at(it) = new RooRealVar(CSTR("ROOVAR__TEMP%03d", it), "", meanVal, lwLmt, upLmt);
         tempVarList.add(*tempVar.at(it));
     }
     
@@ -164,8 +164,8 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : exist_(f
     std::vector<RooHistPdf *>  tempPdf(var_.num(), nullptr);
     RooArgList tempPdfList;
     for (Int_t it = 0; it < var_.num(); ++it) {
-        tempHist.at(it) = new RooDataHist(CSTR_FMT("ROOHIST__TEMP%03d", it), "", xvar, (*var_.temp(it))());
-        tempPdf.at(it) = new RooHistPdf(CSTR_FMT("ROOPDF__TEMP%03d", it), "", xvar, *tempHist.at(it));
+        tempHist.at(it) = new RooDataHist(CSTR("ROOHIST__TEMP%03d", it), "", xvar, (*var_.temp(it))());
+        tempPdf.at(it) = new RooHistPdf(CSTR("ROOPDF__TEMP%03d", it), "", xvar, *tempHist.at(it));
         tempPdfList.add(*tempPdf.at(it));
     }
     RooAddPdf model("model", "model", tempPdfList, tempVarList);

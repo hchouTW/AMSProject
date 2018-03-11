@@ -28,11 +28,11 @@ bool Exist(const std::string& filename) {
 void File::open(const std::string& filename, OpenMode mode) {
 	close();
 	//bool isopt = ((mode&File::ReadWrite) != OpenMode(0));
-	//if (!isopt) { MGSys::ShowError(LocAddr(), STR_FMT("File::OpenMode is wrong. (%d)", mode)); return; }
+	//if (!isopt) { MGSys::ShowError(LocAddr(), STR("File::OpenMode is wrong. (%d)", mode)); return; }
 	//bool isfine = (isopt && (Exist(filename) || (mode&(File::Trunc|File::App)) != OpenMode(0)));
 	//if (isfine) fFstr.open(filename, mode);
 	fstr_.open(filename, mode);
-	if (!fstr_.is_open()) { MGSys::ShowError(LOC_ADDR(), STR_FMT("Can't open file. (%s)", filename.c_str())); return; }
+	if (!fstr_.is_open()) { MGSys::ShowError(LOCADR(), STR("Can't open file. (%s)", filename.c_str())); return; }
 	mode_ = mode;
 }
 

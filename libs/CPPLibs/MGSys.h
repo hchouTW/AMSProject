@@ -28,27 +28,6 @@
 #endif // __HAS_LOGSYS__
 
 
-
-
-
-
-
-
-
-//#define STR(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt)):(std::string(Form(fmt, ##__VA_ARGS__))))
-//#define CSTR(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(std::string(fmt).c_str()):(std::string(Form(fmt, ##__VA_ARGS__)).c_str()))
-
-#define STR_FMT(fmt, ...)  (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt)        ) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__))        ))
-#define CSTR_FMT(fmt, ...) (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0) ? (MGSys::StringFormat(fmt).c_str()) : ((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str()))
-
-//#define COUT(fmt, ...) (std::cout << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
-//#define CLOG(fmt, ...) (std::clog << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
-//#define CERR(fmt, ...) (std::cerr << (((std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value)==0)?(MGSys::StringFormat(fmt).c_str()):((MGSys::StringFormat(fmt, ##__VA_ARGS__)).c_str())))
-
-#define LOC_ADDR() (MGSys::StringFormat("(LINE %d)  [FUNC  %s]  {FILE  %s} :  ", __LINE__, __func__, __FILE__))
-
-#define DEBUG() (std::cerr << CSTR_FMT("==DEBUG==  %s\n", LOC_ADDR().c_str()))
-
 namespace MGSys {
 
 inline int                    System(const std::string& command) { return std::system(command.c_str()); }
@@ -100,7 +79,7 @@ inline void ShowErrorAndExit(const Message& mainInfo, const MGSys::Messages& mes
 // TODO (hchou): Debug
 
 // TODO (hchou): update by C++17 (filesystem)
-inline bool TestFile(const std::string& file, char opt = 'e') { return (MGSys::System(STR_FMT("test -%c \"%s\"", opt, file.c_str())) == 0); }
+inline bool TestFile(const std::string& file, char opt = 'e') { return (MGSys::System(STR("test -%c \"%s\"", opt, file.c_str())) == 0); }
 
 // TODO (hchou): update by C++17 (filesystem)
 std::vector<std::string> ReadDirectory(const std::string& path = std::string("."), const std::string& patt = std::string("")) {
@@ -132,7 +111,7 @@ void Console() {
 console :
     cmdin = "";
     while ("" == cmdin) { 
-        std::cout << CSTR_FMT("C++ Bash Console [%ld] >  ", count);
+        std::cout << CSTR("C++ Bash Console [%ld] >  ", count);
         std::getline(std::cin, cmdin); 
     }
     if (cmdin == "exit" || cmdin == "EXIT") return;

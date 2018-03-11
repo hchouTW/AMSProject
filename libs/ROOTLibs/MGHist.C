@@ -12,11 +12,11 @@ Hist::Hist(const std::string& name, const std::string& title, const TH1 * hist, 
 		return;
 	}
 	else if (name != "" && Head(name, false) != nullptr) {
-		MGSys::ShowError(STR_FMT("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
+		MGSys::ShowError(STR("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
 		return;	
 	}
 	else if (name == "" && Head(hist->GetName(), false) != nullptr) {
-		MGSys::ShowError(STR_FMT("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
+		MGSys::ShowError(STR("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
 		return;
 	}
 	
@@ -61,7 +61,7 @@ Hist::Hist(const std::string& name, const std::string& title, const HistAxis& ax
 		return;
 	}
 	if (Head(name, false) != nullptr) {
-		MGSys::ShowError(STR_FMT("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
+		MGSys::ShowError(STR("<< Hist::Hist >> Histogram (%s) is existence.", name.c_str()));
 		return;	
 	}
 
@@ -121,7 +121,7 @@ Hist::Hist(const std::string& name, const std::string& title, const HistAxis& ax
 void Hist::set_bin(const HistBin& bin, Double_t content, Double_t error) {
 	if (!exist()) return;
 	if (bin.dim() != info_.second) {
-		MGSys::ShowError(STR_FMT("<< Hist::set_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
+		MGSys::ShowError(STR("<< Hist::set_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
 		return;
 	}
 
@@ -156,7 +156,7 @@ void Hist::set_bin(const HistBin& bin, Double_t content, Double_t error) {
 std::pair<Double_t, Double_t> Hist::get_bin(const HistBin& bin) const {
 	if (!exist()) return std::make_pair(0., 0.);
 	if (bin.dim() != info_.second) {
-		MGSys::ShowError(STR_FMT("<< Hist::get_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
+		MGSys::ShowError(STR("<< Hist::get_bin >> Histogram dimension(%d) vs. HistBin dimension(%d).", static_cast<Int_t>(info_.second), static_cast<Int_t>(bin.dim())));
 		return std::make_pair(0., 0.);
 	}
 	
@@ -312,7 +312,7 @@ Hist * Hist::Head(const std::string& name, Bool_t show) {
 	if (name == "") return nullptr;
 	std::map<std::string, Hist*>::iterator search = hist_map_.find(name);
 	if (search == hist_map_.end()) {
-		if (show) MGSys::ShowError(STR_FMT("<< Hist::Head >> %s is not found.", name.c_str()));
+		if (show) MGSys::ShowError(STR("<< Hist::Head >> %s is not found.", name.c_str()));
 		return nullptr;
 	}
 	return search->second;
@@ -337,9 +337,9 @@ void Hist::Write() {
 
 
 Bool_t Hist::Load(const std::string& filename, const std::string& filepath) {
-	std::string fullPath = STR_FMT("%s/%s", filepath.c_str(), filename.c_str());
+	std::string fullPath = STR("%s/%s", filepath.c_str(), filename.c_str());
 	if (!MGSys::TestFile(fullPath, 'f')) {
-		MGSys::ShowError(STR_FMT("<< Hist::Load >>  %s is not open.", fullPath.c_str()));
+		MGSys::ShowError(STR("<< Hist::Load >>  %s is not open.", fullPath.c_str()));
 		return false;
 	}
 
@@ -361,7 +361,7 @@ Bool_t Hist::Load(const std::string& filename, const std::string& filepath) {
 
 
 Bool_t Hist::Save(const std::string& filename, const std::string& filepath) {
-	std::string fullPath = STR_FMT("%s/%s", filepath.c_str(), filename.c_str());
+	std::string fullPath = STR("%s/%s", filepath.c_str(), filename.c_str());
 	if (!MGSys::TestFile(filepath, 'd')) return false;
 	
 	TFile * file = new TFile(fullPath.c_str(), "RECREATE");
@@ -456,7 +456,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& axis = hMom->axis().y();
 					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
 					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
-					std::string name = STR_FMT("%s__PROJX%05dTO%05d", hMom->name().c_str(), sb, eb);
+					std::string name = STR("%s__PROJX%05dTO%05d", hMom->name().c_str(), sb, eb);
 					TH1D * projHist = ((TH2D*)(*hMom)())->ProjectionX(name.c_str(), sb, eb);
 					hist = Hist::New(name, "", projHist);
 					projHist->Delete();
@@ -467,7 +467,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& axis = hMom->axis().x();
 					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
 					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
-					std::string name = STR_FMT("%s__PROJY%05dTO%05d", hMom->name().c_str(), sb, eb);
+					std::string name = STR("%s__PROJY%05dTO%05d", hMom->name().c_str(), sb, eb);
 					TH1D * projHist = ((TH2D*)(*hMom)())->ProjectionY(name.c_str(), sb, eb);
 					hist = Hist::New(name, "", projHist);
 					projHist->Delete();
@@ -486,7 +486,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& jaxis = hMom->axis().z();
 					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
 					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
-					std::string name = STR_FMT("%s__PROJY%05dTO%05d__PROJZ%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
+					std::string name = STR("%s__PROJY%05dTO%05d__PROJZ%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetYaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetZaxis()->SetRange(_jsb, _jeb);
 					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("X"));
@@ -504,7 +504,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& jaxis = hMom->axis().x();
 					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
 					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
-					std::string name = STR_FMT("%s__PROJZ%05dTO%05d__PROJX%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
+					std::string name = STR("%s__PROJZ%05dTO%05d__PROJX%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetZaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetXaxis()->SetRange(_jsb, _jeb);
 					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("Y"));
@@ -522,7 +522,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& jaxis = hMom->axis().y();
 					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
 					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
-					std::string name = STR_FMT("%s__PROJX%05dTO%05d__PROJY%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
+					std::string name = STR("%s__PROJX%05dTO%05d__PROJY%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetXaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetYaxis()->SetRange(_jsb, _jeb);
 					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("Z"));
@@ -539,7 +539,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& axis = hMom->axis().x();
 					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
 					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
-					std::string name = STR_FMT("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
+					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetXaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));
 					hist = Hist::New(name, "", projHist);
@@ -554,7 +554,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& axis = hMom->axis().y();
 					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
 					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
-					std::string name = STR_FMT("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
+					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetYaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));
 					hist = Hist::New(name, "", projHist);
@@ -569,7 +569,7 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 					const Axis& axis = hMom->axis().z();
 					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
 					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
-					std::string name = STR_FMT("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
+					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetZaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));
 					hist = Hist::New(name, "", projHist);

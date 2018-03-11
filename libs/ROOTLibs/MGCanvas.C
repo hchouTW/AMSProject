@@ -114,10 +114,10 @@ PdfEditor::PdfEditor(const Window& window, const std::string& filename, const st
 	canvas_.create(window);
 	canvas_.setNameTitle("START", "START");
 
-	std::string fullPathPDF = STR_FMT("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());	
+	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());	
 	COUT("\n\n**************** PdfEditor::OPEN    %-45s  ****************\n", fullPathPDF.c_str());
-	TextDraw(STR_FMT("<< START >>  %s  ", file_name_.c_str()));
-	canvas_.save(STR_FMT("%s(", fullPathPDF.c_str()));
+	TextDraw(STR("<< START >>  %s  ", file_name_.c_str()));
+	canvas_.save(STR("%s(", fullPathPDF.c_str()));
 	canvas_.clear();
 	exist_ = true;
 }
@@ -127,9 +127,9 @@ void PdfEditor::create(const std::string& title, const PadMargin& margin, const 
 	if (!exist_) return;
 	++file_page_;
 	canvas_.create(canvas_.window(), margin, border);
-	canvas_.setNameTitle(STR_FMT("%s__PAGE%06d", file_name_.c_str(), file_page_), title);
+	canvas_.setNameTitle(STR("%s__PAGE%06d", file_name_.c_str(), file_page_), title);
 	
-	std::string statement = STR_FMT("%s  >~@~>  %s", file_name_.c_str(), title.c_str());
+	std::string statement = STR("%s  >~@~>  %s", file_name_.c_str(), title.c_str());
 	COUT("PdfEditor::NEW_PAGE  ~~@ %05d @~~  << %-57s >>\n", file_page_, statement.c_str());
 }
 
@@ -138,9 +138,9 @@ void PdfEditor::create(const std::string& title, UInt_t ndivx, UInt_t ndivy, con
 	if (!exist_) return;
 	++file_page_;
 	canvas_.create(ndivx, ndivy, canvas_.window(), margin, border); 
-	canvas_.setNameTitle(STR_FMT("%s__PAGE%06d", file_name_.c_str(), file_page_), title);
+	canvas_.setNameTitle(STR("%s__PAGE%06d", file_name_.c_str(), file_page_), title);
 	
-	std::string statement = STR_FMT("%s  >~@~>  %s", file_name_.c_str(), title.c_str());
+	std::string statement = STR("%s  >~@~>  %s", file_name_.c_str(), title.c_str());
 	COUT("PdfEditor::NEW_PAGE  ~~@ %05d @~~  << %-57s >>\n", file_page_, statement.c_str());
 }
 
@@ -151,10 +151,10 @@ void PdfEditor::close() {
 	canvas_.create(canvas_.window());
 	canvas_.setNameTitle("END", "END");
 	
-	std::string fullPathPDF = STR_FMT("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
+	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
 	COUT("**************** PdfEditor::CLOSE   %-45s  ****************\n\n", fullPathPDF.c_str());
-	TextDraw(STR_FMT("<< END >>  %s  ", file_name_.c_str()));
-	canvas_.save(STR_FMT("%s)", fullPathPDF.c_str()));
+	TextDraw(STR("<< END >>  %s  ", file_name_.c_str()));
+	canvas_.save(STR("%s)", fullPathPDF.c_str()));
 	canvas_.clear();
 	exist_ = false;
 	file_name_ = "PdfEditor";
@@ -165,7 +165,7 @@ void PdfEditor::close() {
 
 void PdfEditor::save() {
 	if (!exist_) return;
-	std::string fullPathPDF = STR_FMT("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
+	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
 	canvas_.save(fullPathPDF);
 	canvas_.clear();
 }

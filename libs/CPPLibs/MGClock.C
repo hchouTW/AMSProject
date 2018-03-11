@@ -44,7 +44,7 @@ std::string PrintStr(const Time& timpnt, ClockType type, const std::string& fmt)
 	}
 	UTime utime = ConvertToUTime(timpnt);
 	CTime ctime = ConvertFromUTimeToCTime(utime, type, fmt);
-	return STR_FMT("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
+	return STR("UNIX (%ld)    %5s (%s)", utime, timetype.c_str(), ctime.c_str());
 }
 
 
@@ -66,13 +66,12 @@ std::ostream& Stopwatch<Clock, Time, Duration>::print(ClockType type, std::ostre
 	int      hr = hours.count();
 	int      mn = minutes.count();
 	double   sc = seconds.count();
-	CTime ctime = STR_FMT("", hr, mn, sc);
 
     std::string outstr;
 	outstr += "===============================  Stopwatch  ================================\n";
-	outstr += STR_FMT("==  START TIME : %s    ==\n", PrintStr(times_.first , type).c_str());
-	outstr += STR_FMT("==  STOP  TIME : %s    ==\n", PrintStr(times_.second, type).c_str());
-	outstr += STR_FMT("==  Duration   : %-3d HR %-2d MIN %6.3f   SEC (%24.9f)    ==\n", hr, mn, sc, time);
+	outstr += STR("==  START TIME : %s    ==\n", PrintStr(times_.first , type).c_str());
+	outstr += STR("==  STOP  TIME : %s    ==\n", PrintStr(times_.second, type).c_str());
+	outstr += STR("==  Duration   : %-3d HR %-2d MIN %6.3f   SEC (%24.9f)    ==\n", hr, mn, sc, time);
 	outstr += "============================================================================\n";
     out << outstr.c_str();
 	return out;

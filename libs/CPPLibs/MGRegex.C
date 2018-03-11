@@ -36,10 +36,10 @@ void ReplaceSelf(std::string& str, const std::string& expr, const std::string& f
 		str = std::regex_replace(str, std::regex(expr), fmt);
 	}
 	catch (const std::regex_error& err) { 
-		MGSys::ShowError(STR_FMT("<< ReplaceSelf >>  %s", err.what()),
+		MGSys::ShowError(STR("<< ReplaceSelf >>  %s", err.what()),
 		MGSys::Messages({
-			STR_FMT("SOURCE : \"%s\"", str.c_str()), 
-			STR_FMT("REGEX  : \"%s\"", expr.c_str())
+			STR("SOURCE : \"%s\"", str.c_str()), 
+			STR("REGEX  : \"%s\"", expr.c_str())
 		}));
 	}
 }
@@ -64,10 +64,10 @@ std::vector<std::string> Split(const std::string& str, const std::string& expr) 
 		return strvec;
 	}
 	catch (const std::regex_error& err) { 
-		MGSys::ShowError(STR_FMT("<< Split >>  %s", err.what()),
+		MGSys::ShowError(STR("<< Split >>  %s", err.what()),
 		MGSys::Messages({
-			STR_FMT("SOURCE : \"%s\"", str.c_str()), 
-			STR_FMT("REGEX  : \"%s\"", expr.c_str())
+			STR("SOURCE : \"%s\"", str.c_str()), 
+			STR("REGEX  : \"%s\"", expr.c_str())
 		}));
 		return std::vector<std::string>(); 
 	}
@@ -87,10 +87,10 @@ std::vector<std::string> Match(const std::string& str, const std::string& expr) 
 		return strvec;
 	}
 	catch (const std::regex_error& err) { 
-		MGSys::ShowError(STR_FMT("<< Match >>  %s", err.what()),
+		MGSys::ShowError(STR("<< Match >>  %s", err.what()),
 		MGSys::Messages({
-			STR_FMT("SOURCE : \"%s\"", str.c_str()), 
-			STR_FMT("REGEX  : \"%s\"", expr.c_str())
+			STR("SOURCE : \"%s\"", str.c_str()), 
+			STR("REGEX  : \"%s\"", expr.c_str())
 		}));
 		return std::vector<std::string>(); 
 	}
@@ -112,11 +112,11 @@ std::pair<bool, IntType> ConvertFromStringToIntegral(const std::string& str) {
 		try {
 			long long tmpval = std::stoll(strvec.at(0));
 			IntType value = static_cast<IntType>(tmpval);
-			if (value != tmpval) throw std::out_of_range(CSTR_FMT("static_cast<%s>(%s) failure", typeid(IntType).name(), typeid(long long).name()));
+			if (value != tmpval) throw std::out_of_range(CSTR("static_cast<%s>(%s) failure", typeid(IntType).name(), typeid(long long).name()));
 			return std::make_pair(true, value);
 		}
 		catch (const std::logic_error & err) {
-			MGSys::ShowError(STR_FMT("<< ConvertFromStringToIntegral >>  %s", err.what()));
+			MGSys::ShowError(STR("<< ConvertFromStringToIntegral >>  %s", err.what()));
 			return std::make_pair(false, IntType(0));
 		}
 	}
@@ -141,7 +141,7 @@ std::pair<bool, RealType> ConvertFromStringToFloat(const std::string& str) {
 			return std::make_pair(true, value);
 		}
 		catch (const std::logic_error & err) {
-			MGSys::ShowError(STR_FMT("<< ConvertFromStringToFloat >>  %s", err.what()));
+			MGSys::ShowError(STR("<< ConvertFromStringToFloat >>  %s", err.what()));
 			return std::make_pair(false, RealType(0.0));
 		}
 	}
