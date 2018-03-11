@@ -1,9 +1,11 @@
 #!/bin/bash
 ################################################################################
 ##  1st Step: source CERN_TRACKSys.sh                                         ##
-##  2nd Step: add GOOGLE_FLAGS to makefile                                    ##
-##  3rd Step: add GOOGLE_PARA to makefile (if needed)                         ##
-##  4th Step: In C++ codes.                                                   ##
+##  2nd Step: add OpenMP flag to makefile                                     ##
+##  3rd Step: add GOOGLE_FLAGS to makefile                                    ##
+##  4th Step: add GOOGLE_PARA to makefile (if needed)                         ##
+##  5th Step: Complier with -std=c++11 or -std=c++14                          ##
+##  6th Step: In C++ codes.                                                   ##
 ##            #include <TRACKSys.h>                                           ##
 ##            using namespace TrackSys;                                       ##
 ################################################################################
