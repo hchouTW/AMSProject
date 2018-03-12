@@ -3,7 +3,7 @@
 
 #include <TMath.h>
 
-
+#include <array>
 #include <random>
 #include <type_traits>
 #include <functional>
@@ -214,8 +214,8 @@ class IonEloss {
 
             if (!Numc::Valid(mpv) || Numc::Compare(mpv) <= 0) mpv = 0.0;
             if (!Numc::Valid(sgm) || Numc::Compare(sgm) <= 0) sgm = 0.0;
-            if (!Numc::Valid(difmpv) || Numc::Compare(difmpv) <= 0) difmpv = 0.0;
-            if (!Numc::Valid(difsgm) || Numc::Compare(difsgm) <= 0) difsgm = 0.0;
+            if (!Numc::Valid(difmpv)) difmpv = 0.0;
+            if (!Numc::Valid(difsgm)) difsgm = 0.0;
 
             Double_t scl = std::fabs(dzds);
             Double_t res = (scl * adc - mpv) / sgm;

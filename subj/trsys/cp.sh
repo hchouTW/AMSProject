@@ -25,8 +25,9 @@
 #    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb13/CERN_TESTp3 /ams02/user/hchou/ISS_PASS6_CERN_TEST YiNtuple_ISS.00${id} &
 #done
 
-for id in `seq 0 14`
+for id in `seq 0 8`
 do
-    ii=`printf "%02d" $id`
-    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Feb27/PR054000.B1119 /ams02/user/hchou/PR054000.B1119_18Feb27p2 YiNtuple_MC.000${ii} &
+    #ii=`printf "%03d" $id`
+    ii=`printf "%06d" $id`
+    sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Mar12/PR054000.B1119 /ams02/user/hchou/PR054000.B1119_18Mar12 YiNtuple_MC.${ii} &
 done

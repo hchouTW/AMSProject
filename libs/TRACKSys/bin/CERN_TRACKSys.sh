@@ -17,6 +17,7 @@ export CPLUS_INCLUDE_PATH=${ExternalLibs}/LIBS/external/eigen3/include:${CPLUS_I
 export CPLUS_INCLUDE_PATH=${ExternalLibs}/LIBS/external/google/include:${CPLUS_INCLUDE_PATH}
 export CPLUS_INCLUDE_PATH=${ExternalLibs}/LIBS/TRACKSys/include:${CPLUS_INCLUDE_PATH}
 
+# -D_GLIBCXX_USE_CXX11_ABI=0
 export GOOGLE_PARA='-DGLOG_NO_ABBREVIATED_SEVERITIES'
 export GOOGLE_FLAGS='-lgflags -lglog -lceres'
 

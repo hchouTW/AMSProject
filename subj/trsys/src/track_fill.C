@@ -1,12 +1,11 @@
-#include <CPPLibs/CPPLibs.h>
-#include <ROOTLibs/ROOTLibs.h>
+//#include <CPPLibs/CPPLibs.h>
+//#include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
 #include "/ams_home/hchou/AMSCore/prod/18Feb27/src/ClassDef.h"
 
-using namespace std;
-
 int main(int argc, char * argv[]) {
+    /*
     using namespace MGROOT;
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
@@ -331,5 +330,6 @@ int main(int argc, char * argv[]) {
     if (fEcal) { delete fEcal; fEcal = nullptr; }
 
     google::ShutdownGoogleLogging();
+    */
     return 0;
 }
