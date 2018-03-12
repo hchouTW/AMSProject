@@ -281,6 +281,8 @@ fi
 source \${PWD}/env.sh
 LD_LIBRARY_PATH=\${PWD}:\${LD_LIBRARY_PATH}
 
+source /eos/ams/user/h/hchou/ExternalLibs/BIN/CERN_TRACKSys.sh
+
 tmpData=\${PWD}/data
 mkdir -p \${tmpData}
 if [ ! -d \${tmpDate} ]; then
