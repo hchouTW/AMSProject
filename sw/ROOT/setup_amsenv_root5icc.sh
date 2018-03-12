@@ -43,6 +43,7 @@ export ROOTSYS=${Offline}/root/Linux/${AMSSW}
 export PATH=${ROOTSYS}/bin:${PATH}
 export LIBRARY_PATH=${ROOTSYS}/lib:${LIBRARY_PATH}
 export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+export CPLUS_INCLUDE_PATH=${ROOTSYS}/include:${CPLUS_INCLUDE_PATH}
 
 #### AMS %% Xrd Environment
 AMSXRD=${Offline}/AMSsoft/xrootd/xrootd-icc64-12
@@ -56,6 +57,7 @@ export AMSSRC=${Offline}/${AMSVersion}
 export AMSLIB=${AMSSRC}/lib/${ROOTARCH}
 export LIBRARY_PATH=${AMSLIB}:${LIBRARY_PATH}
 export LD_LIBRARY_PATH=${AMSLIB}:${LD_LIBRARY_PATH}
+export CPLUS_INCLUDE_PATH=${AMSSRC}/include:${CPLUS_INCLUDE_PATH}
 
 export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
