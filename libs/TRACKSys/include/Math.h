@@ -21,23 +21,23 @@ template<typename T = Double_t> constexpr T SIX    = static_cast<T>(6);
 template<typename T = Double_t> constexpr T EIGHT  = static_cast<T>(8);
 template<typename T = Double_t> constexpr T TEN    = static_cast<T>(10);
 
-template<typename T = Double_t> constexpr T HALF = static_cast<T>(5.00000000000000000e-01);
+constexpr Double_t HALF = 5.00000000000000000e-01;
 
-template<typename T = Double_t> constexpr T ONE_TO_TWO   = static_cast<T>(5.00000000000000000e-01);
-template<typename T = Double_t> constexpr T ONE_TO_SIX   = static_cast<T>(1.66666666666666657e-01);
-template<typename T = Double_t> constexpr T ONE_TO_EIGHT = static_cast<T>(1.25000000000000000e-01);
+constexpr Double_t ONE_TO_TWO   = 5.00000000000000000e-01;
+constexpr Double_t ONE_TO_SIX   = 1.66666666666666657e-01;
+constexpr Double_t ONE_TO_EIGHT = 1.25000000000000000e-01;
 
-template<typename T = Double_t> constexpr T PI     = static_cast<T>(3.14159265358979312e+00);
-template<typename T = Double_t> constexpr T INV_PI = static_cast<T>(3.18309886183790691e-01);
+constexpr Double_t PI     = 3.14159265358979312e+00;
+constexpr Double_t INV_PI = 3.18309886183790691e-01;
 
-template<typename T = Double_t> constexpr T SQRT_TWO    = static_cast<T>(1.41421356237309515e+00);
-template<typename T = Double_t> constexpr T SQRT_THREE  = static_cast<T>(1.73205080756887719e+00);
+constexpr Double_t SQRT_TWO    = 1.41421356237309515e+00;
+constexpr Double_t SQRT_THREE  = 1.73205080756887719e+00;
 
-template<typename T = Double_t> constexpr T INV_SQRT_TWO    = static_cast<T>(7.07106781186547462e-01);
-template<typename T = Double_t> constexpr T INV_SQRT_THREE  = static_cast<T>(5.77350269189625842e-01);
+constexpr Double_t INV_SQRT_TWO    = 7.07106781186547462e-01;
+constexpr Double_t INV_SQRT_THREE  = 5.77350269189625842e-01;
 
-template<typename T = Double_t> constexpr T LOG_TWO = static_cast<T>(6.93147180559945286e-01);
-template<typename T = Double_t> constexpr T LOG_TEN = static_cast<T>(2.30258509299404590e+00);
+constexpr Double_t LOG_TWO = 6.93147180559945286e-01;
+constexpr Double_t LOG_TEN = 2.30258509299404590e+00;
 
 // Valid
 template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>

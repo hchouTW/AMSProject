@@ -318,7 +318,7 @@ Double_t PropMgnt::GetPropStep(PhySt& part, Short_t ward) {
     // Predict
     SVecD<3>&& pred_coo = part.c() + (sign * pred_step) * part.u();
     Double_t pred_mag = LA::Mag(MagMgnt::Get(pred_coo)());
-    curve = std::fabs(PROP_FACT * part.irig() * Numc::HALF<> * (cur_mag + pred_mag));
+    curve = std::fabs(PROP_FACT * part.irig() * Numc::HALF * (cur_mag + pred_mag));
     if (Numc::Compare(curve, LMTL_CURVE) < 0) curve = LMTL_CURVE;
     pred_step = TUNE_STEP / curve;
     if (Numc::Compare(pred_step, LMTU_STEP) > 0) pred_step = LMTU_STEP;
@@ -358,7 +358,7 @@ Double_t PropMgnt::GetStepToZ(PhySt& part, Double_t resStepZ) {
     Double_t lens  = GetPropStep(part, signs);
 
     MotionFunc mnfunc(part);
-    Double_t lenz  = std::fabs((static_cast<Double_t>(signs) * lens) * mnfunc.cz() + Numc::HALF<> * (lens * lens) * mnfunc.uz());
+    Double_t lenz  = std::fabs((static_cast<Double_t>(signs) * lens) * mnfunc.cz() + Numc::HALF * (lens * lens) * mnfunc.uz());
     Double_t resz  = std::fabs(resStepZ);
     
     Double_t lengthz = Numc::ZERO<>;
@@ -605,7 +605,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
     Bool_t        withJb = (phyJb != nullptr);
     
     Double_t sstep = step * step;
-    Double_t ss1o2 = sstep * Numc::HALF<>;
+    Double_t ss1o2 = sstep * Numc::HALF;
     
     Double_t step_ps = prop_sign;
 
@@ -671,13 +671,13 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
     Bool_t     withEloss = (part.arg().eloss() && mfld());
     Bool_t        withJb = (phyJb != nullptr);
    
-    Double_t s1o2  = step * Numc::HALF<>;
+    Double_t s1o2  = step * Numc::HALF;
     Double_t sstep = step * step;
-    Double_t ss1o2 = sstep * Numc::HALF<>;
-    Double_t ss1o6 = sstep * Numc::ONE_TO_SIX<>;
+    Double_t ss1o2 = sstep * Numc::HALF;
+    Double_t ss1o6 = sstep * Numc::ONE_TO_SIX;
     
     Double_t step_ps = prop_sign;
-    Double_t s1o2_ps = prop_sign * Numc::HALF<>;
+    Double_t s1o2_ps = prop_sign * Numc::HALF;
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
@@ -720,7 +720,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
                           std::sqrt(
                                   (mp0.mscat_sgm()*mp0.mscat_sgm() + 
                                    mp1.mscat_sgm()*mp1.mscat_sgm()
-                                  ) * Numc::ONE_TO_TWO<>) :
+                                  ) * Numc::ONE_TO_TWO) :
                           Numc::ZERO<>;
     
     ppcal.push(part, mfld, mscat_sgm);
@@ -789,16 +789,16 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
     Bool_t     withEloss = (part.arg().eloss() && mfld());
     Bool_t        withJb = (phyJb != nullptr);
 
-    Double_t s1o2  = step * Numc::HALF<>;
-    Double_t s1o6  = step * Numc::ONE_TO_SIX<>;
+    Double_t s1o2  = step * Numc::HALF;
+    Double_t s1o6  = step * Numc::ONE_TO_SIX;
     Double_t sstep = step * step;
-    Double_t ss1o2 = sstep * Numc::HALF<>;
-    Double_t ss1o6 = sstep * Numc::ONE_TO_SIX<>;
-    Double_t ss1o8 = sstep * Numc::ONE_TO_EIGHT<>;
+    Double_t ss1o2 = sstep * Numc::HALF;
+    Double_t ss1o6 = sstep * Numc::ONE_TO_SIX;
+    Double_t ss1o8 = sstep * Numc::ONE_TO_EIGHT;
     
     Double_t step_ps = prop_sign;
-    Double_t s1o2_ps = prop_sign * Numc::HALF<>;
-    Double_t s1o6_ps = prop_sign * Numc::ONE_TO_SIX<>;
+    Double_t s1o2_ps = prop_sign * Numc::HALF;
+    Double_t s1o6_ps = prop_sign * Numc::ONE_TO_SIX;
 
     PhySt st0 = part;
     MatPhyFld&& mp0 = MatPhy::Get(mfld, st0);
@@ -879,7 +879,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
                                    Numc::TWO<> * mp1.mscat_sgm()*mp1.mscat_sgm() + 
                                    Numc::TWO<> * mp2.mscat_sgm()*mp2.mscat_sgm() + 
                                    mp3.mscat_sgm()*mp3.mscat_sgm()
-                                  ) * Numc::ONE_TO_SIX<>) :
+                                  ) * Numc::ONE_TO_SIX) :
                           Numc::ZERO<>;
     
     ppcal.push(part, mfld, mscat_sgm);

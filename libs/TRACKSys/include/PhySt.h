@@ -79,7 +79,7 @@ class PhyArg {
 
         //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::Landau(); } }
         void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::NormalGaussian(); } } // testcode
-        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / Numc::LOG_TWO<>; elbrm_ = ((nrl_<=0.0)?0.0:Rndm::Gamma(bremslen,1.0/bremslen)()); } }
+        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / Numc::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:Rndm::Gamma(bremslen,1.0/bremslen)()); } }
         void rndm_eloss() { rndm_elion(); rndm_elbrm(); }
 
         void rndm() { if (field_) { rndm_mscatu(); rndm_mscatl(); rndm_elion(); rndm_elbrm(); } }

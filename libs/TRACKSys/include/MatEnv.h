@@ -151,7 +151,7 @@ struct MatGeoBoxVar {
 
 class MatGeoBoxCreator {
     public :
-        MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp = Numc::HALF<>, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
+        MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp = Numc::HALF, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
         ~MatGeoBoxCreator() { save_and_close(); }
 
         void fill(const G4MatStep& g4mat);
@@ -212,7 +212,7 @@ class MatGeoBoxReader {
 
     private :
         static constexpr Double_t STD_STEP_LEN_ = Numc::ONE<>;
-        static constexpr Double_t FST_STEP_LEN_ = Numc::ONE<> + Numc::HALF<>;
+        static constexpr Double_t FST_STEP_LEN_ = Numc::ONE<> + Numc::HALF;
 
         Bool_t                               is_load_;
         Bool_t*                              mat_ptr_;

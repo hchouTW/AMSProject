@@ -336,7 +336,7 @@ Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t l
     Double_t& X0 = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_X0];
     if (log10gb >= X0) {
         Double_t& C = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_C];
-        dec += Numc::TWO<> * Numc::LOG_TEN<> * log10gb - C;
+        dec += Numc::TWO<> * Numc::LOG_TEN * log10gb - C;
         
         Double_t& X1 = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_X1];
         if (log10gb < X1) { 
@@ -439,7 +439,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
     SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
 
-    SVecD<3> itloc((vxloc + Numc::HALF<> * unit(0)), (vyloc + Numc::HALF<> * unit(1)), (vzloc + Numc::HALF<> * unit(2)));
+    SVecD<3> itloc((vxloc + Numc::HALF * unit(0)), (vyloc + Numc::HALF * unit(1)), (vzloc + Numc::HALF * unit(2)));
     Long64_t itsat = 0;
     Long64_t itend = nstp;
 
@@ -476,7 +476,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         Bool_t   mat = mat_ptr_[idx];
         if (mat) {
-            Double_t itrat = ((Numc::HALF<> + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
+            Double_t itrat = ((Numc::HALF + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
             Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
             Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
             Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
@@ -670,7 +670,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t log_mean_exc_eng  = mfld.lme(); // log[MeV]
     Double_t elcloud_abundance = mfld.ela(); // [mol cm^-2]
     Double_t density_corr      = mfld.dec(); // [1]
-    Double_t Bethe_Bloch       = (Numc::HALF<> * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
+    Double_t Bethe_Bloch       = (Numc::HALF * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
 
     // Calculate Sigma
     Double_t eta_trans = (std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta); // ke to eta
@@ -707,7 +707,7 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     Double_t ke_part     = (eng - Numc::ONE<>);
     Double_t eta_trans   = (eng / sqr_gmbta);
 
-    Double_t elbrm_men = chrgmass_sqr * (ke_part * eta_trans) * (mfld.nrl() / Numc::LOG_TWO<>);
+    Double_t elbrm_men = chrgmass_sqr * (ke_part * eta_trans) * (mfld.nrl() / Numc::LOG_TWO);
     
     if (!Numc::Valid(elbrm_men) || Numc::Compare(elbrm_men) <= 0) elbrm_men = Numc::ZERO<>;
     return elbrm_men;

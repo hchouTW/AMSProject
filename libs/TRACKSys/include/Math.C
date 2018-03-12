@@ -138,7 +138,7 @@ long double MultiGauss::efft_sgm(long double r) const {
         for (auto&& gauss : multi_gauss_) {
             long double res = (absr / gauss.second);
             long double nrm = (gauss.second / bound_.second);
-            long double prb = (gauss.first / nrm) * std::exp(-Numc::HALF<long double> * res * res);
+            long double prb = (gauss.first / nrm) * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
             ttl_wgt += prb;
             inv_nrm += prb / (nrm * nrm);
         }

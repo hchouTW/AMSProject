@@ -156,7 +156,7 @@ Bool_t SimpleTrFit::analyticalFit() {
             
             SVecD<3> mfldv;
             for (UInt_t it = 0; it < nstp; ++it) {
-                Double_t stp = ((static_cast<Double_t>(it) + Numc::HALF<>) / static_cast<Double_t>(nstp));
+                Double_t stp = ((static_cast<Double_t>(it) + Numc::HALF) / static_cast<Double_t>(nstp));
                 SVecD<3>&& ref_m = ((Numc::ONE<> - stp) * hits_.at(ih-1).c() + stp * hits_.at(ih).c());
                 MagFld&&   mfld  = MagMgnt::Get(ref_m);
                 mfldv += mfld();
@@ -179,7 +179,7 @@ Bool_t SimpleTrFit::analyticalFit() {
             Double_t err = (Numc::ONE<> / ey / ey);
             
             cur_Au += stp.at(ih);
-            cur_Ae += Numc::HALF<> * crs.at(ih) * stp.at(ih) * stp.at(ih);
+            cur_Ae += Numc::HALF * crs.at(ih) * stp.at(ih) * stp.at(ih);
             for (UInt_t jh = 0; jh < ih; ++jh)
                 cur_Ae += crs.at(jh) * stp.at(jh) * stp.at(ih);
 
