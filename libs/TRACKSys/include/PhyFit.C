@@ -45,8 +45,7 @@ Bool_t TrFitPar::checkHit() {
     Short_t seq = 0;
     for (auto&& hit : hits_) {
         hit.set_err(type_);
-        hit.set_seqID(seq);
-        seq += 2 * (hit.sx() + hit.sy());
+        seq += hit.set_seqID(seq);
     }
 
     nhtx_ = nx;
@@ -523,19 +522,19 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hit.sx()) rs(hit.seqIDcx()) += rsm(0) / rse(0);
         if (hit.sy()) rs(hit.seqIDcy()) += rsm(1) / rse(1);
 
-        SVecD<2>&& ionx = hit.ionx(ppst.eta(), ppst.uz());
-        SVecD<2>&& iony = hit.iony(ppst.eta(), ppst.uz());
+        SVecD<2>&& ionx = hit.ionx(ppst.eta());
+        SVecD<2>&& iony = hit.iony(ppst.eta());
         
-        if (hit.sx()) rs(hit.seqIDex()) += ionx(0);
-        if (hit.sy()) rs(hit.seqIDey()) += iony(0);
+        if (hit.seqIDex() >= 0) rs(hit.seqIDex()) += ionx(0);
+        if (hit.seqIDey() >= 0) rs(hit.seqIDey()) += iony(0);
         
         if (hasJacb) {
             jbGG = curjb.gg() * jbGG;
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
                 if (hit.sx()) jb(hit.seqIDcx(), it) += -jbGG(0, it) / rse(0);
                 if (hit.sy()) jb(hit.seqIDcy(), it) += -jbGG(1, it) / rse(1);
-                if (hit.sx()) jb(hit.seqIDex(), it) +=  jbGG(4, it) * ionx(1);
-                if (hit.sy()) jb(hit.seqIDey(), it) +=  jbGG(4, it) * iony(1);
+                if (hit.seqIDex() >= 0) jb(hit.seqIDex(), it) +=  jbGG(4, it) * ionx(1);
+                if (hit.seqIDey() >= 0) jb(hit.seqIDey(), it) +=  jbGG(4, it) * iony(1);
             }
         }    
 

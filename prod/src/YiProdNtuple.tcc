@@ -993,8 +993,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             if (_patt[patt] == 6 || _patt[patt] == 7) { if (!mhitL9()) continue; _fitPar.addHit(mhitL9); }
            
             MGClock::HrsStopwatch sw; sw.start();
-            TrackSys::SimpleTrFit hctr(_fitPar);
-            //PhyTrFit tr(fitPar);
+            //TrackSys::SimpleTrFit hctr(_fitPar);
+            TrackSys::PhyTrFit    hctr(_fitPar);
             sw.stop();
             
             if (!hctr.status()) continue;
@@ -1005,16 +1005,29 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.chisq[algo][patt][1] = hctr.nchiy();
 			track.chisq[algo][patt][2] = hctr.nchi();
 
-            TrackSys::PhySt ppst(hctr.part());
-            for (int il = 0; il < 9; ++il) {
-                TrackSys::PropMgnt::PropToZ(recEv.trackerZJ[il], ppst);
-				track.stateLJ[algo][patt][il][0] = ppst.cx();
-				track.stateLJ[algo][patt][il][1] = ppst.cy();
-				track.stateLJ[algo][patt][il][2] = ppst.cz();
-				track.stateLJ[algo][patt][il][3] = ppst.ux();
-				track.stateLJ[algo][patt][il][4] = ppst.uy();
-				track.stateLJ[algo][patt][il][5] = ppst.uz();
+            for (Int_t il = 0; il < 9; ++il) {
+                const TrackSys::PhySt* stt = hctr.stts(il+1);
+                if (stt == nullptr) continue;
+				track.stateLJ[algo][patt][il][0] = stt->cx();
+				track.stateLJ[algo][patt][il][1] = stt->cy();
+				track.stateLJ[algo][patt][il][2] = stt->cz();
+				track.stateLJ[algo][patt][il][3] = stt->ux();
+				track.stateLJ[algo][patt][il][4] = stt->uy();
+				track.stateLJ[algo][patt][il][5] = stt->uz();
             }
+
+
+
+            //TrackSys::PhySt ppst(hctr.part());
+            //for (int il = 0; il < 9; ++il) {
+            //    TrackSys::PropMgnt::PropToZ(recEv.trackerZJ[il], ppst);
+			//	track.stateLJ[algo][patt][il][0] = ppst.cx();
+			//	track.stateLJ[algo][patt][il][1] = ppst.cy();
+			//	track.stateLJ[algo][patt][il][2] = ppst.cz();
+			//	track.stateLJ[algo][patt][il][3] = ppst.ux();
+			//	track.stateLJ[algo][patt][il][4] = ppst.uy();
+			//	track.stateLJ[algo][patt][il][5] = ppst.uz();
+            //}
             
             track.cpuTime[algo][patt] = sw.time() * 1.0e3;
         }

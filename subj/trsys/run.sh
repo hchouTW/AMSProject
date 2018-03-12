@@ -3,15 +3,11 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
 RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/fit_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/prop_smc_fill
 
 CurDir=${PWD}
 
 DataType=MC
 Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Feb27
-#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Feb05cv
-#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Jan29
 #Stream=${CurDir}/lst/flist.ncu.mc.PR1800_B1042_18Jan29
 #Stream=${CurDir}/lst/flist.ncu.mc.PR10004000_B1103_18Jan29
 

@@ -17,41 +17,18 @@ class HitSt {
             pdf_cx_(&PDF_PR_CX_NN_), pdf_cy_(&PDF_PR_CY_NN_), 
             pdf_ex_(&PDF_PR_EX_), pdf_ey_(&PDF_PR_EY_) {}
         
+        void print() const;
+        
         inline Bool_t operator()() const { return (side_(0) || side_(1)); }
         
-        inline void set_seqID(Short_t id) { 
-            seqID_ = id; 
-            if (side_(0)) { seqIDcx_ = id;          seqIDex_ = id+2; }
-            if (side_(1)) { seqIDcy_ = id+side_(0); seqIDey_ = id+2+side_(0); }
-        }
+        inline Short_t set_seqID(Short_t id); 
 
-        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_(0) = cx; coo_(1) = cy; coo_(2) = cz; }
-        inline void set_nsr(Int_t nx, Int_t ny) { nsr_(0) = (side_(0) && nx > 0) ? nx : 0; nsr_(1) = (side_(1) && ny > 0) ? ny : 0; }
-        inline void set_adc(Double_t x, Double_t y) { adc_(0) = (side_(0) && x > 0) ? x : 0; adc_(1) = (side_(1) && y > 0) ? y : 0; }
-        
-        inline void set_err(const PartType& type = PartType::Proton) {
-            if (type == PartType::Proton) {
-                type_ = type;
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz);
+        inline void set_adc(Double_t ax, Double_t ay);
+        inline void set_nsr(Int_t nx, Int_t ny);
+        inline void set_err(const PartType& type = PartType::Proton);
 
-                pdf_cx_ = &PDF_PR_CX_NN_;
-                if      (nsr_(0) == 1) pdf_cx_ = &PDF_PR_CX_N1_;
-                else if (nsr_(0) == 2) pdf_cx_ = &PDF_PR_CX_N2_;
-                else if (nsr_(0) >= 3) pdf_cx_ = &PDF_PR_CX_N3_;
-                
-                pdf_cy_ = &PDF_PR_CY_NN_;
-                if      (nsr_(1) == 1) pdf_cy_ = &PDF_PR_CY_N1_;
-                else if (nsr_(1) == 2) pdf_cy_ = &PDF_PR_CY_N2_;
-                else if (nsr_(1) == 3) pdf_cy_ = &PDF_PR_CY_N3_;
-                else if (nsr_(1) >= 4) pdf_cy_ = &PDF_PR_CY_N4_;
-                
-                pdf_ex_ = &PDF_PR_EX_;
-                pdf_ey_ = &PDF_PR_EY_;
-            }
-        }
-        
         inline void set_dummy_x(Double_t cx) { if (!side_(0)) coo_(0) = cx; }
-
-        void print() const;
 
         inline const Short_t&  seqID() const { return seqID_; }
         inline const Short_t&  seqIDcx() const { return seqIDcx_; }
@@ -74,8 +51,8 @@ class HitSt {
         inline Double_t ex(Double_t r) const { return (side_(0) ? (err_(0) * pdf_cx_->efft_sgm( (r/err_(0)) )) : Numc::ZERO<>); }
         inline Double_t ey(Double_t r) const { return (side_(1) ? (err_(1) * pdf_cy_->efft_sgm( (r/err_(1)) )) : Numc::ZERO<>); }
 
-        inline SVecD<2> ionx(Double_t eta, Double_t dzds = 1.0) const { return (side_(0) ? (*pdf_ex_)(adc_(0), eta, dzds) : SVecD<2>()); }
-        inline SVecD<2> iony(Double_t eta, Double_t dzds = 1.0) const { return (side_(1) ? (*pdf_ey_)(adc_(1), eta, dzds) : SVecD<2>()); }
+        inline SVecD<2> ionx(Double_t eta, Double_t dzds = 1.0) const { return ((side_(0) && adc_(0) > 0) ? (*pdf_ex_)(adc_(0), eta, dzds) : SVecD<2>()); }
+        inline SVecD<2> iony(Double_t eta, Double_t dzds = 1.0) const { return ((side_(1) && adc_(1) > 0) ? (*pdf_ey_)(adc_(1), eta, dzds) : SVecD<2>()); }
 
     private :
         Short_t    seqID_;

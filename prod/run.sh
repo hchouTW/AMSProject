@@ -17,8 +17,8 @@ Stream=lst/flist.ncu.mc.pr.pl1.l1.054000.B1119
 #Stream=lst/flist.cern.mc.el.pl1.0_25200.B1119
 #Stream=lst/flist.cern.mc.el.pl1.2004000.B1119
 
-GroupId=11
-GroupSize=1
+GroupId=2
+GroupSize=10
 OutputDir=.
 
 if [[ -f ${RunFile} && -f ${Stream} ]]; then
