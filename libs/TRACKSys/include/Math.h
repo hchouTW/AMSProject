@@ -21,10 +21,10 @@ template<typename T = Double_t> constexpr T SIX    = static_cast<T>(6);
 template<typename T = Double_t> constexpr T EIGHT  = static_cast<T>(8);
 template<typename T = Double_t> constexpr T TEN    = static_cast<T>(10);
 
-template<typename T = Double_t> constexpr T HALF         = static_cast<T>(1.0/2.0);
-template<typename T = Double_t> constexpr T ONE_TO_TWO   = static_cast<T>(1.0/2.0);
-template<typename T = Double_t> constexpr T ONE_TO_SIX   = static_cast<T>(1.0/6.0);
-template<typename T = Double_t> constexpr T ONE_TO_EIGHT = static_cast<T>(1.0/8.0);
+template<typename T = Double_t> constexpr T HALF         = const_cast<T>(1.0/2.0);
+template<typename T = Double_t> constexpr T ONE_TO_TWO   = const_cast<T>(1.0/2.0);
+template<typename T = Double_t> constexpr T ONE_TO_SIX   = const_cast<T>(1.0/6.0);
+template<typename T = Double_t> constexpr T ONE_TO_EIGHT = const_cast<T>(1.0/8.0);
 
 template<typename T = Double_t> constexpr T PI     = static_cast<T>(3.14159265358979312);
 template<typename T = Double_t> constexpr T INV_PI = static_cast<T>(ONE<T> / PI<T>);
