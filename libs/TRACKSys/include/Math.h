@@ -26,17 +26,17 @@ template<typename T = Double_t> constexpr T ONE_TO_TWO   = ONE<T> / TWO<T>;
 template<typename T = Double_t> constexpr T ONE_TO_SIX   = ONE<T> / SIX<T>;
 template<typename T = Double_t> constexpr T ONE_TO_EIGHT = ONE<T> / EIGHT<T>;
 
-template<typename T = Double_t> constexpr T PI     = static_cast<T>(std::atan(ONE<T>) * FOUR<T>);
+template<typename T = Double_t> constexpr T PI     = static_cast<T>(3.14159265358979312);
 template<typename T = Double_t> constexpr T INV_PI = static_cast<T>(ONE<T> / PI<T>);
 
-template<typename T = Double_t> constexpr T SQRT_TWO    = static_cast<T>(std::sqrt(TWO<T>));
-template<typename T = Double_t> constexpr T SQRT_THREE  = static_cast<T>(std::sqrt(THREE<T>));
+template<typename T = Double_t> constexpr T SQRT_TWO    = static_cast<T>(1.41421356237309515e+00);
+template<typename T = Double_t> constexpr T SQRT_THREE  = static_cast<T>(1.73205080756887719e+00);
 
 template<typename T = Double_t> constexpr T INV_SQRT_TWO    = static_cast<T>(ONE<T> / SQRT_TWO<T>);
 template<typename T = Double_t> constexpr T INV_SQRT_THREE  = static_cast<T>(ONE<T> / SQRT_THREE<T>);
 
-template<typename T = Double_t> constexpr T LOG_TWO = static_cast<T>(std::log(TWO<T>));
-template<typename T = Double_t> constexpr T LOG_TEN = static_cast<T>(std::log(TEN<T>));
+template<typename T = Double_t> constexpr T LOG_TWO = static_cast<T>(6.93147180559945286e-01);
+template<typename T = Double_t> constexpr T LOG_TEN = static_cast<T>(2.30258509299404590e+00);
 
 // Valid
 template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
