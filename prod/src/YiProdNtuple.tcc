@@ -1014,6 +1014,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				track.stateLJ[algo][patt][il][3] = stt->ux();
 				track.stateLJ[algo][patt][il][4] = stt->uy();
 				track.stateLJ[algo][patt][il][5] = stt->uz();
+				track.stateLJ[algo][patt][il][6] = stt->rig();
             }
 
 
