@@ -44,9 +44,9 @@ MagFld MagGeoBoxAms::Get(const SVecD<3>& coo) {
 
 void MagGeoBoxAms::Output(const std::string& fpath) {
     if (!Load()) return;
-    const Long64_t n[3]   = {    201,    201,    201 };
-    const Float_t  min[3] = { -200.0, -200.0, -200.0 };
-    const Float_t  max[3] = {  200.0,  200.0,  200.0 };
+    const std::array<Long64_t, 3> n  ({    201,    201,    201 });
+    const std::array<Float_t, 3>  min({ -200.0, -200.0, -200.0 });
+    const std::array<Float_t, 3>  max({  200.0,  200.0,  200.0 });
     const Double_t dlt    = 2.0;
     MagGeoBoxCreator creator(n, min, max, fpath);
     if (!creator.is_open()) return;

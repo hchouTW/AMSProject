@@ -52,7 +52,7 @@ struct MagGeoBox {
 
 class MagGeoBoxCreator {
     public :
-        MagGeoBoxCreator(const Long64_t n[3], const Float_t min[3], const Float_t max[3], const std::string& fpath = "MagGeoBox.bin");
+        MagGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::array<Float_t, 3>& min, const std::array<Float_t, 3>& max, const std::string& fpath = "MagGeoBox.bin");
         ~MagGeoBoxCreator() { if (is_open_) save_and_close(); }
 
         void fill(Long64_t idx, Float_t bx = 0., Float_t by = 0., Float_t bz = 0.);
