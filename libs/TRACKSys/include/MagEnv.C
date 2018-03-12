@@ -5,7 +5,7 @@
 namespace TrackSys {
 
 
-MagGeoBoxCreator::MagGeoBoxCreator(const Long64_t n[3], const Float_t min[3], const Float_t max[3], const std::string& fpath) {
+MagGeoBoxCreator::MagGeoBoxCreator(Long64_t n[3], Float_t min[3], Float_t max[3], const std::string& fpath) {
     clear();
     if (n[0] < 2 || n[1] < 2 || n[2] < 2) { 
         Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : Size failure."); return; 

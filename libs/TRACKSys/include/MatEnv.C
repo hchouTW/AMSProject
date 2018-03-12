@@ -72,7 +72,7 @@ MatFld MatFld::Merge(const std::list<MatFld>& mflds) {
 }
 
 
-MatGeoBoxCreator::MatGeoBoxCreator(const Long64_t n[3], const Double_t min[3], const Double_t max[3], Double_t stp, const std::string& fname, const std::string& dpath) {
+MatGeoBoxCreator::MatGeoBoxCreator(Long64_t n[3], Double_t min[3], Double_t max[3], Double_t stp, const std::string& fname, const std::string& dpath) {
     clear();
     if (n[0] < 1 || n[1] < 1 || n[2] < 1) { 
         Sys::ShowWarning("MatGeoBoxCreator::MatGeoBoxCreator() : Size failure."); return; 
