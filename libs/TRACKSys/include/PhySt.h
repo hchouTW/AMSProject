@@ -126,28 +126,28 @@ class PhyArg {
         Double_t elbrm_men_;
 
     protected :
-        static MultiGauss pdf_mscatu_;
-        static MultiGauss pdf_mscatl_;
-        static MultiGauss pdf_elion_;
+        static MultiGaus pdf_mscatu_;
+        static MultiGaus pdf_mscatl_;
+        static MultiGaus pdf_elion_;
 };
 
 Bool_t PhyArg::opt_mscat_ = false;
 Bool_t PhyArg::opt_eloss_ = false;
 
-MultiGauss PhyArg::pdf_mscatu_(
-    MultiGauss::Opt::NOROBUST,
+MultiGaus PhyArg::pdf_mscatu_(
+    MultiGaus::Opt::NOROBUST,
     7.99549384311964539e-01, 1.000000e+00,
     1.78119391133381794e-01, 1.579653e+00,
     1.94920516860290043e-02, 3.418158e+00,
     2.83917286862460675e-03, 9.314250e+00
 );
 
-MultiGauss PhyArg::pdf_mscatl_(
-    MultiGauss::Opt::NOROBUST, 1.0
+MultiGaus PhyArg::pdf_mscatl_(
+    MultiGaus::Opt::NOROBUST, 1.0
 );
 
-MultiGauss PhyArg::pdf_elion_(
-    MultiGauss::Opt::NOROBUST, 1.0
+MultiGaus PhyArg::pdf_elion_(
+    MultiGaus::Opt::NOROBUST, 1.0
 );
 
 

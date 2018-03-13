@@ -137,25 +137,25 @@ namespace LA { // Linear Algebra
 
 #include <TF1.h>
 namespace TrackSys {
-// MultiGauss
+// MultiGaus
 // Gaussian Core f ~ ([0]/[1])*exp(-0.5*x*x/[1]/[1])
 // Robust Method : efft_sigma = sigma * robust_factor if value/sigma > robust
-class MultiGauss {
+class MultiGaus {
     public :
         enum class Opt { NOROBUST = 0, ROBUST = 1 };
 
     public :
-        MultiGauss() : robust_(Opt::NOROBUST), rand_func_(nullptr) {}
-        MultiGauss(Opt opt, long double sgm);
-        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
-        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
-        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
-        MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
-        ~MultiGauss() { robust_ = Opt::NOROBUST; if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
+        MultiGaus() : robust_(Opt::NOROBUST), rand_func_(nullptr) {}
+        MultiGaus(Opt opt, long double sgm);
+        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
+        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
+        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
+        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
+        ~MultiGaus() { robust_ = Opt::NOROBUST; if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
-        inline Int_t num() const { return multi_gauss_.size(); }
-        inline const long double& wgt(Int_t i) const { return multi_gauss_.at(i).first; }
-        inline const long double& sgm(Int_t i) const { return multi_gauss_.at(i).second; }
+        inline Int_t num() const { return multi_gaus_.size(); }
+        inline const long double& wgt(Int_t i) const { return multi_gaus_.at(i).first; }
+        inline const long double& sgm(Int_t i) const { return multi_gaus_.at(i).second; }
 
         inline long double efft_sgm(long double r = 0.) const; 
 
@@ -163,7 +163,7 @@ class MultiGauss {
 
     private :
         std::pair<long double, long double> bound_;
-        std::vector<std::pair<long double, long double>> multi_gauss_;
+        std::vector<std::pair<long double, long double>> multi_gaus_;
 
     private :
         Opt   robust_;
@@ -177,8 +177,44 @@ class MultiGauss {
         static constexpr long double ROBUST_SGM_ = 2.0;
 };
 
-TRandom* MultiGauss::rndm_gen_ = nullptr;
+TRandom* MultiGaus::rndm_gen_ = nullptr;
 } // namesapce TrackSys
+
+
+
+
+
+
+
+
+
+namespace TrackSys {
+//TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
+//flg->SetParameters(1.0, 0.1, 0.0, 1.0);
+//flg->SetParLimits(1, 0.0, 1.0);
+class LandauGaus {
+    public :
+        LandauGaus() {}
+        ~LandauGaus() {}
+
+    protected :
+        long double kpa;
+        long double mpv;
+        long double sgm;
+
+    private :
+        static constexpr long double LANDAU0 = 1.78854160900000003e-01;
+};
+
+} // namesapce TrackSys
+
+
+
+
+
+
+
+
 
 
 namespace TrackSys {

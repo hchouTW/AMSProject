@@ -70,72 +70,72 @@ std::function<RealType()> Normal(RealType mean, RealType stddev) {
 
 namespace TrackSys {
 
-MultiGauss::MultiGauss(Opt opt, long double sgm) : MultiGauss()  {
-    multi_gauss_.push_back(std::make_pair(Numc::ONE<long double>, sgm));
+MultiGaus::MultiGaus(Opt opt, long double sgm) : MultiGaus()  {
+    multi_gaus_.push_back(std::make_pair(Numc::ONE<long double>, sgm));
     bound_.first  = sgm;
     bound_.second = sgm;
     robust_ = opt;
 }
 
-MultiGauss::MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2) : MultiGauss()  {
+MultiGaus::MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2) : MultiGaus()  {
     long double norm = wgt1 + wgt2;
-    multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
-    multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
     bound_.first  = std::min(sgm1, sgm2);
     bound_.second = std::max(sgm1, sgm2);
     robust_ = opt;
 }
 
-MultiGauss::MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3) : MultiGauss()  {
+MultiGaus::MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3) : MultiGaus()  {
     long double norm = wgt1 + wgt2 + wgt3;
-    multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
-    multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
-    multi_gauss_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
     bound_.first  = std::min(std::min(sgm1, sgm2), sgm3);
     bound_.second = std::max(std::max(sgm1, sgm2), sgm3);
     robust_ = opt;
 }
 
-MultiGauss::MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4) : MultiGauss()  {
+MultiGaus::MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4) : MultiGaus()  {
     long double norm = wgt1 + wgt2 + wgt3 + wgt4;
-    multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
-    multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
-    multi_gauss_.push_back(std::make_pair(wgt3/norm, sgm3));
-    multi_gauss_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
     bound_.first  = std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4);
     bound_.second = std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4);
     robust_ = opt;
 }
 
-MultiGauss::MultiGauss(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5) : MultiGauss()  {
+MultiGaus::MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5) : MultiGaus()  {
     long double norm = wgt1 + wgt2 + wgt3 + wgt4 + wgt5;
-    multi_gauss_.push_back(std::make_pair(wgt1/norm, sgm1));
-    multi_gauss_.push_back(std::make_pair(wgt2/norm, sgm2));
-    multi_gauss_.push_back(std::make_pair(wgt3/norm, sgm3));
-    multi_gauss_.push_back(std::make_pair(wgt4/norm, sgm4));
-    multi_gauss_.push_back(std::make_pair(wgt5/norm, sgm5));
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt5/norm, sgm5));
     bound_.first  = std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5);
     bound_.second = std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5);
     robust_ = opt;
     
     // find max sigma
     //long double max_sgm = std::max_element(
-    //            multi_gauss_.begin(), multi_gauss_.end(), 
+    //            multi_gaus_.begin(), multi_gaus_.end(), 
     //            [](const std::pair<long double, long double>& gauss1, const std::pair<long double, long double>& gauss2) { return (gauss1.second < gauss2.second); }
     //        )->second;
 }
 
-long double MultiGauss::efft_sgm(long double r) const {
-    if (multi_gauss_.size() == 0) return Numc::ZERO<long double>;
+long double MultiGaus::efft_sgm(long double r) const {
+    if (multi_gaus_.size() == 0) return Numc::ZERO<long double>;
 
     long double sigma = Numc::ONE<long double>;
     long double absr = std::abs(r);
-    if (multi_gauss_.size() == 1) sigma = multi_gauss_.at(0).second;
+    if (multi_gaus_.size() == 1) sigma = multi_gaus_.at(0).second;
     else {
         // Note: inv_sgm_sqr = sum(prb * inv_sgm_sqr) / sum(prb)
         long double ttl_wgt = Numc::ZERO<long double>;
         long double inv_nrm = Numc::ZERO<long double>;
-        for (auto&& gauss : multi_gauss_) {
+        for (auto&& gauss : multi_gaus_) {
             long double res = (absr / gauss.second);
             long double nrm = (gauss.second / bound_.second);
             long double prb = (gauss.first / nrm) * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
@@ -160,14 +160,14 @@ long double MultiGauss::efft_sgm(long double r) const {
     return sigma;
 }
 
-long double MultiGauss::rndm() {
-    if (multi_gauss_.size() == 0) return Numc::ZERO<long double>;
-    if (multi_gauss_.size() == 1) return (multi_gauss_.at(0).second * Rndm::NormalGaussian());
+long double MultiGaus::rndm() {
+    if (multi_gaus_.size() == 0) return Numc::ZERO<long double>;
+    if (multi_gaus_.size() == 1) return (multi_gaus_.at(0).second * Rndm::NormalGaussian());
     
     if (rand_func_) return rand_func_->GetRandom();
     else {
         std::string fmt = "([0]/[1])*TMath::Exp(-0.5*(x/[1])*(x/[1]))";
-        for (unsigned int it = 1; it < multi_gauss_.size(); ++it) {
+        for (unsigned int it = 1; it < multi_gaus_.size(); ++it) {
             int wgtID = 2 * it;
             int sgmID = 2 * it + 1;
             fmt += STR(" + ([%d]/[%d])*TMath::Exp(-0.5*(x/[%d])*(x/[%d]))", wgtID, sgmID, sgmID, sgmID);
@@ -176,7 +176,7 @@ long double MultiGauss::rndm() {
         rand_func_->SetNpx(NPX_);
         
         int count = 0;
-        for (auto&& gauss : multi_gauss_) {
+        for (auto&& gauss : multi_gaus_) {
             rand_func_->SetParameter(2*count+0, gauss.first);
             rand_func_->SetParameter(2*count+1, gauss.second);
             count++;

@@ -70,8 +70,8 @@ class HitSt {
         SVecD<2>   adc_;
 
         PartType    type_;
-        MultiGauss* pdf_cx_;
-        MultiGauss* pdf_cy_;
+        MultiGaus* pdf_cx_;
+        MultiGaus* pdf_cy_;
         IonEloss*   pdf_ex_;
         IonEloss*   pdf_ey_;
 
@@ -81,18 +81,18 @@ class HitSt {
         static constexpr Double_t DEFERR_X_ =  NORMFT_X_ * 1.0e-4; // [cm]
         static constexpr Double_t DEFERR_Y_ =  NORMFT_Y_ * 1.0e-4; // [cm]
 
-        static constexpr MultiGauss::Opt PDF_OPT_ = MultiGauss::Opt::ROBUST;
+        static constexpr MultiGaus::Opt PDF_OPT_ = MultiGaus::Opt::ROBUST;
 
-        static MultiGauss PDF_PR_CX_NN_;
-        static MultiGauss PDF_PR_CX_N1_;
-        static MultiGauss PDF_PR_CX_N2_;
-        static MultiGauss PDF_PR_CX_N3_;
+        static MultiGaus PDF_PR_CX_NN_;
+        static MultiGaus PDF_PR_CX_N1_;
+        static MultiGaus PDF_PR_CX_N2_;
+        static MultiGaus PDF_PR_CX_N3_;
         
-        static MultiGauss PDF_PR_CY_NN_;
-        static MultiGauss PDF_PR_CY_N1_;
-        static MultiGauss PDF_PR_CY_N2_;
-        static MultiGauss PDF_PR_CY_N3_;
-        static MultiGauss PDF_PR_CY_N4_;
+        static MultiGaus PDF_PR_CY_NN_;
+        static MultiGaus PDF_PR_CY_N1_;
+        static MultiGaus PDF_PR_CY_N2_;
+        static MultiGaus PDF_PR_CY_N3_;
+        static MultiGaus PDF_PR_CY_N4_;
 
         static IonEloss PDF_PR_EX_;
         static IonEloss PDF_PR_EY_;
@@ -110,58 +110,58 @@ class HitSt {
 };
         
 
-MultiGauss HitSt::PDF_PR_CX_NN_(
+MultiGaus HitSt::PDF_PR_CX_NN_(
     PDF_OPT_,
     3.31376712664997630e-01, 1.77875e+01/HitSt::NORMFT_X_,
     5.10255425401639595e-01, 2.65271e+01/HitSt::NORMFT_X_,
     1.58367861933362775e-01, 5.15837e+01/HitSt::NORMFT_X_
 );
 
-MultiGauss HitSt::PDF_PR_CX_N1_(
+MultiGaus HitSt::PDF_PR_CX_N1_(
     PDF_OPT_,
     2.75608e+01/HitSt::NORMFT_X_
 );
 
-MultiGauss HitSt::PDF_PR_CX_N2_(
+MultiGaus HitSt::PDF_PR_CX_N2_(
     PDF_OPT_,
     6.02616961110044480e-01, 1.82559e+01/HitSt::NORMFT_X_,
     3.97383038889955520e-01, 4.18164e+01/HitSt::NORMFT_X_
 );
 
-MultiGauss HitSt::PDF_PR_CX_N3_(
+MultiGaus HitSt::PDF_PR_CX_N3_(
     PDF_OPT_,
     6.75185841999877190e-01, 1.84066e+01/HitSt::NORMFT_X_,
     3.24814158000122755e-01, 4.90605e+01/HitSt::NORMFT_X_
 );
 
-MultiGauss HitSt::PDF_PR_CY_NN_(
+MultiGaus HitSt::PDF_PR_CY_NN_(
     PDF_OPT_,
     5.50759994181610257e-01, 7.90750e+00/HitSt::NORMFT_Y_,
     3.74341189078839287e-01, 1.52916e+01/HitSt::NORMFT_Y_,
     7.48988167395504278e-02, 3.63939e+01/HitSt::NORMFT_Y_
 );
 
-MultiGauss HitSt::PDF_PR_CY_N1_(
+MultiGaus HitSt::PDF_PR_CY_N1_(
     PDF_OPT_,
     5.45247134760751928e-01, 9.87256e+00/HitSt::NORMFT_Y_,
     4.54752865239248016e-01, 1.65822e+01/HitSt::NORMFT_Y_
 );
 
-MultiGauss HitSt::PDF_PR_CY_N2_(
+MultiGaus HitSt::PDF_PR_CY_N2_(
     PDF_OPT_,
     4.53177772355239150e-01, 7.32341e+00/HitSt::NORMFT_Y_,
     4.29177717623073274e-01, 1.19994e+01/HitSt::NORMFT_Y_,
     1.17644510021687618e-01, 2.17922e+01/HitSt::NORMFT_Y_
 );
 
-MultiGauss HitSt::PDF_PR_CY_N3_(
+MultiGaus HitSt::PDF_PR_CY_N3_(
     PDF_OPT_,
     5.08190182558828307e-01, 7.74660e+00/HitSt::NORMFT_Y_,
     3.39669567581713017e-01, 1.56378e+01/HitSt::NORMFT_Y_,
     1.52140249859458648e-01, 3.18597e+01/HitSt::NORMFT_Y_
 );
 
-MultiGauss HitSt::PDF_PR_CY_N4_(
+MultiGaus HitSt::PDF_PR_CY_N4_(
     PDF_OPT_,
     5.19847432537280163e-01, 7.84945e+00/HitSt::NORMFT_Y_,
     3.39808551148078952e-01, 1.72969e+01/HitSt::NORMFT_Y_,
@@ -169,13 +169,17 @@ MultiGauss HitSt::PDF_PR_CY_N4_(
 );
 
 IonEloss HitSt::PDF_PR_EX_(
-    { 2.69731e+00, 8.60498e+00, 1.12322e+00, 2.86260e-02, 1.64740e+00 },
-    { 6.96247e-01, 9.55487e+00, 8.56826e-01, 7.95833e-02, 1.50747e+00 }
+    //{ 2.69731e+00, 8.60498e+00, 1.12322e+00, 2.86260e-02, 1.64740e+00 },
+    //{ 6.96247e-01, 9.55487e+00, 8.56826e-01, 7.95833e-02, 1.50747e+00 }
+    { 1.57477e+00, 1.44845e+01, 1.15735e+00, 1.16634e-03, 2.86648e+00 },
+    { 6.69489e-01, 9.40603e+00, 8.85988e-01, 4.91333e-02, 2.02425e+00 }
 );
 
 IonEloss HitSt::PDF_PR_EY_(
-    { 3.37886e+00, 7.97910e+00, 1.04927e+00, 6.45436e-02, 1.20948e+00 },
-    { 1.01843e+00, 7.12581e+00, 7.67523e-01, 1.15677e-01, 2.00335e+00 }
+    //{ 3.37886e+00, 7.97910e+00, 1.04927e+00, 6.45436e-02, 1.20948e+00 },
+    //{ 1.01843e+00, 7.12581e+00, 7.67523e-01, 1.15677e-01, 2.00335e+00 }
+    { 1.09446e+01, 2.68416e+00, 1.24592e+00, 2.81171e-01, 1.25205e+00 },
+    { 2.22378e+02, 5.02877e+00, 5.67401e-02, 5.41768e+01, 1.00641e+00 }
 );
 
 
