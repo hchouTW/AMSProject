@@ -194,16 +194,18 @@ namespace TrackSys {
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        LandauGaus() {}
+        LandauGaus(long double kpa, long double mpv, long double sgm) {}
         ~LandauGaus() {}
 
     protected :
-        long double kpa;
-        long double mpv;
-        long double sgm;
+
+    protected :
+        long double kpa_;
+        long double mpv_;
+        long double sgm_;
 
     private :
-        static constexpr long double LANDAU0 = 1.78854160900000003e-01;
+        static constexpr long double LANDAU0_ = 1.78854160900000003e-01;
 };
 
 } // namesapce TrackSys
