@@ -51,10 +51,12 @@
     //TF1 * feloss2 = new TF1("feloss2", Form("[0] * TMath::Power(%s, %s) / TMath::Gamma(%s) * TMath::Exp(-(%s) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )", tt, tt, tt, tt));
     //feloss2->SetParameters(1000., 1.0, 0.0015, 0.0002, 1.0); 
     
-    
-    
     TF1* fel = new TF1("fel", "[0] * (1+x*x)^[2] * ([1] - (1+x*x)^(-[2]) - TMath::Log([3] + abs(x)^[4]))");
     fel->SetParameters(10, 6.5, 1.0, 10.0, 1.0);
+    
+    TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
+    flg->SetParameters(1.0, 0.1, 0.0, 1.0);
+    flg->SetParLimits(1, 0.0, 1.0);
     
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 
