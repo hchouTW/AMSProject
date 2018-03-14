@@ -181,23 +181,24 @@ TRandom* MultiGaus::rndm_gen_ = nullptr;
 } // namesapce TrackSys
 
 
-
-
-
-
-
-
-
 namespace TrackSys {
 //TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
 //flg->SetParameters(1.0, 0.1, 0.0, 1.0);
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        LandauGaus(long double kpa, long double mpv, long double sgm) {}
+        LandauGaus(long double kpa, long double mpv, long double sgm);
         ~LandauGaus() {}
 
+        inline std::array<long double, 2> operator() (long double x) const { return std::array<long double, 2>({ eval(x), div(x) }); }
+
+        inline const long double& kpa() const { return kpa_; }
+        inline const long double& mpv() const { return mpv_; }
+        inline const long double& sgm() const { return sgm_; }
+
     protected :
+        long double eval(long double x) const;
+        long double div(long double x) const;
 
     protected :
         long double kpa_;
@@ -211,66 +212,33 @@ class LandauGaus {
 } // namesapce TrackSys
 
 
-
-
-
-
-
-
-
-
 namespace TrackSys {
-// Under Testing
+//TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[2] * ([1] - (1+x*x)^(-[2]) - TMath::Log([3] + abs(x)^[4]))");
+//fmpv->SetParameters(10, 6.5, 1.0, 10.0, 1.0);
+//TF1* fkpa = new TF1("fkpa", "[0] * (1+x*x)^[1] * (1 + [2]*abs(x)^[3] - TMath::Log([4] + abs(x)^[5]))");
+//fkpa->SetParameters(10, 1.0, 1.5, 3.0, 1.0, 7.0);
 class IonEloss {
     public :
-        IonEloss(const std::array<Double_t, 5>& mpv, const std::array<Double_t, 5>& sgm) : mpv_par_(mpv), sgm_par_(sgm) {}
+        IonEloss(const std::array<long double, 6>& kpa, const std::array<long double, 5>& mpv, const std::array<long double, 5>& sgm, long double fluc = Numc::ZERO<long double>) : kpa_(kpa), mpv_(mpv), sgm_(sgm), fluc_(fluc) { if (Numc::Compare(fluc_) <= 0) fluc_ = Numc::ZERO<long double>; }
         ~IonEloss() {}
+        
+        inline SVecD<2> operator() (long double x, long double eta) const { std::array<long double, 2>&& ion = eval(x, eta); return SVecD<2>(ion.at(0), ion.at(1)); }
+   
+    protected :
+        std::array<long double, 2> eval(long double x, long double eta) const;
 
-        SVecD<2> operator() (Double_t adc, Double_t eta, Double_t dzds = 1.0) {
-            Double_t invbtasqr = (1.0 + eta * eta);
-            Double_t abseta    = std::fabs(eta);
-            if (Numc::Compare(abseta, 1.0) < 0) return SVecD<2>();
-
-            Double_t mpv = mpv_par_.at(0) * std::pow(invbtasqr, mpv_par_.at(2)) * 
-                (mpv_par_.at(1) - 
-                 std::pow(invbtasqr, -mpv_par_.at(1)) - 
-                 std::log(mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))));
-
-            Double_t sgm = sgm_par_.at(0) * std::pow(invbtasqr, sgm_par_.at(2)) * 
-                (sgm_par_.at(1) - 
-                 std::pow(invbtasqr, -sgm_par_.at(1)) - 
-                 std::log(sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))));
-
-            Double_t difmpv = (mpv_par_.at(0) * mpv_par_.at(2) * abseta * std::pow(invbtasqr, mpv_par_.at(2)-1.0)) *
-                (2.0 * mpv_par_.at(1) -
-                 2.0 * std::log(mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))) -
-                 (mpv_par_.at(4)/mpv_par_.at(2)) * invbtasqr * std::pow(abseta, mpv_par_.at(4)-2.0) / (mpv_par_.at(3) + std::pow(abseta, mpv_par_.at(4))));
-            
-            Double_t difsgm = (sgm_par_.at(0) * sgm_par_.at(2) * abseta * std::pow(invbtasqr, sgm_par_.at(2)-1.0)) *
-                (2.0 * sgm_par_.at(1) -
-                 2.0 * std::log(sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))) -
-                 (sgm_par_.at(4)/sgm_par_.at(2)) * invbtasqr * std::pow(abseta, sgm_par_.at(4)-2.0) / (sgm_par_.at(3) + std::pow(abseta, sgm_par_.at(4))));
-
-            if (!Numc::Valid(mpv) || Numc::Compare(mpv) <= 0) mpv = 0.0;
-            if (!Numc::Valid(sgm) || Numc::Compare(sgm) <= 0) sgm = 0.0;
-            if (!Numc::Valid(difmpv)) difmpv = 0.0;
-            if (!Numc::Valid(difsgm)) difsgm = 0.0;
-
-            Double_t scl = std::fabs(dzds);
-            Double_t res = (scl * adc - mpv) / sgm;
-            Double_t dif = -difmpv / sgm;
-
-            if (!Numc::Valid(res)) res = 0.0;
-            if (!Numc::Valid(dif)) dif = 0.0;
-
-            return SVecD<2>(res, dif);
-        }
+        inline long double eval_kpa(long double eta, long double ibsqr) const;
+        inline long double eval_mpv(long double eta, long double ibsqr) const;
+        inline long double eval_sgm(long double eta, long double ibsqr) const;
+        
+        inline long double eval_divmpv(long double eta, long double ibsqr) const;
 
     private :
-        std::array<Double_t, 5> mpv_par_;
-        std::array<Double_t, 5> sgm_par_;
+        std::array<long double, 6> kpa_;
+        std::array<long double, 5> mpv_;
+        std::array<long double, 5> sgm_;
+        long double                fluc_;
 };
-
 
 } // namesapce TrackSys
 

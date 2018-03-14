@@ -51,8 +51,8 @@ class HitSt {
         inline Double_t ex(Double_t r) const { return (side_(0) ? (err_(0) * pdf_cx_->efft_sgm( (r/err_(0)) )) : Numc::ZERO<>); }
         inline Double_t ey(Double_t r) const { return (side_(1) ? (err_(1) * pdf_cy_->efft_sgm( (r/err_(1)) )) : Numc::ZERO<>); }
 
-        inline SVecD<2> ionx(Double_t eta, Double_t dzds = 1.0) const { return ((side_(0) && adc_(0) > 0) ? (*pdf_ex_)(adc_(0), eta, dzds) : SVecD<2>()); }
-        inline SVecD<2> iony(Double_t eta, Double_t dzds = 1.0) const { return ((side_(1) && adc_(1) > 0) ? (*pdf_ey_)(adc_(1), eta, dzds) : SVecD<2>()); }
+        inline SVecD<2> ionx(Double_t eta) const { return ((side_(0) && adc_(0) > 0) ? (*pdf_ex_)(adc_(0), eta) : SVecD<2>()); }
+        inline SVecD<2> iony(Double_t eta) const { return ((side_(1) && adc_(1) > 0) ? (*pdf_ey_)(adc_(1), eta) : SVecD<2>()); }
 
     private :
         Short_t    seqID_;
@@ -169,17 +169,17 @@ MultiGaus HitSt::PDF_PR_CY_N4_(
 );
 
 IonEloss HitSt::PDF_PR_EX_(
-    //{ 2.69731e+00, 8.60498e+00, 1.12322e+00, 2.86260e-02, 1.64740e+00 },
-    //{ 6.96247e-01, 9.55487e+00, 8.56826e-01, 7.95833e-02, 1.50747e+00 }
-    { 1.57477e+00, 1.44845e+01, 1.15735e+00, 1.16634e-03, 2.86648e+00 },
-    { 6.69489e-01, 9.40603e+00, 8.85988e-01, 4.91333e-02, 2.02425e+00 }
+    { 6.84708e-04, 1.22107e+00, 1.54109e+00, 2.83791e+00, 1.06167e+00, 7.87652e+00 }, // Kpa
+    { 1.01510e+00, 2.06220e+01, 1.24078e+00, 4.82421e-04, 5.80771e+00 }, // Mpv
+    { 6.21439e-02, 3.05480e+01, 1.37339e+00, 1.07762e-04, 8.70839e+00 }, // Sgm
+    5.00000e+00 // Fluc
 );
 
-IonEloss HitSt::PDF_PR_EY_(
-    //{ 3.37886e+00, 7.97910e+00, 1.04927e+00, 6.45436e-02, 1.20948e+00 },
-    //{ 1.01843e+00, 7.12581e+00, 7.67523e-01, 1.15677e-01, 2.00335e+00 }
-    { 1.09446e+01, 2.68416e+00, 1.24592e+00, 2.81171e-01, 1.25205e+00 },
-    { 2.22378e+02, 5.02877e+00, 5.67401e-02, 5.41768e+01, 1.00641e+00 }
+IonEloss HitSt::PDF_PR_EY_( // need to charge
+    { 6.84708e-04, 1.22107e+00, 1.54109e+00, 2.83791e+00, 1.06167e+00, 7.87652e+00 },
+    { 1.01510e+00, 2.06220e+01, 1.24078e+00, 4.82421e-04, 5.80771e+00 },
+    { 6.21439e-02, 3.05480e+01, 1.37339e+00, 1.07762e-04, 8.70839e+00 },
+    5.00000e+00
 );
 
 
