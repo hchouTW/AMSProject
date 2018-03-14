@@ -4,7 +4,8 @@ CXX += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
 
-Version = 18Mar12
+#Version = 18Mar12
+Version = vdev
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :
@@ -29,7 +30,7 @@ all :
 	make $(TagetDir)/YiProdNtuple
 
 $(TagetDir)/obj/testing.o : $(TagetDir)/src/testing.C
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD
+	$(CXX) -c -o $@ $(FLGS) -g $< -MMD
 -include $(TagetDir)/obj/testing.d
 
 $(TagetDir)/testing : $(TagetDir)/obj/testing.o
@@ -47,7 +48,7 @@ $(TagetDir)/lib/libClassDef.so : $(TagetDir)/src/dict.C
 	#@cp -fa $(TagetDir)/src/dict_rdict.pcm $(TagetDir)/lib/dict_rdict.pcm # only for ROOT6
 
 $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.h
-	$(CXX) -c -o $@ $(DEFS) $(FLGS) -g $< -MMD 
+	$(CXX) -c -o $@ $(FLGS) -g $< -MMD 
 -include $(TagetDir)/obj/YiProdNtuple.d
 
 $(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o

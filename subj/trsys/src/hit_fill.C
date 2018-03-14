@@ -1,21 +1,19 @@
-//#define __HAS_TESTPROP__
-//#define __HAS_TESTFIT__
-#define __HAS_AMS_OFFICE_LIBS__
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
-#include <TRACKLibs/TRACKLibs.h>
+#include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Feb27/src/ClassDef.h"
-
-using namespace std;
+#include "/ams_home/hchou/AMSCore/prod/18Mar12/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
-
+    
     MGConfig::JobOpt opt(argc, argv);
+    
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
@@ -49,39 +47,52 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 200, 0.35, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, 0.35, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
-    Axis AXeta("1/GammaBeta [1]", 200, mass/4000., mass/0.35, AxisScale::kLog);
+    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
-    // MC
-    Axis AXcut("Cut", 8, 0., 8.);
+    Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
+    Double_t ubta = 1.0/std::sqrt(1.0+AXeta.min()*AXeta.min());
+    Axis AXbta("Beta [1]", AXmom.nbin(), lbta, ubta, AxisScale::kLog);
+
+    // Cut
+    Axis AXcut("Cut", 9, 0., 9.);
     Hist* hCut = Hist::New("hCut", HistAxis(AXmom, AXcut));
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
-
+    
     // Coo
     Axis AXres("res [#mum]", 800, -200., 200.);
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
-    Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
-    
-    Axis AXadc("ADC", 1200, 0., 400.);
-    Hist* hMax = Hist::New("hMax", HistAxis(AXeta, AXadc));
-    Hist* hMay = Hist::New("hMay", HistAxis(AXeta, AXadc));
-    
-    Axis AXedep("Edep", 1600, 0., 1.0);
-    Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
-    
-    Axis AXloc("loc [1]", 40, -0.5, 0.5);
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
     Hist* hMrxN1 = Hist::New("hMrxN1", HistAxis(AXres, "Events/Bin"));
     Hist* hMrxN2 = Hist::New("hMrxN2", HistAxis(AXres, "Events/Bin"));
     Hist* hMrxN3 = Hist::New("hMrxN3", HistAxis(AXres, "Events/Bin"));
     
+    Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
     Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN1 = Hist::New("hMryN1", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
+    
+    Axis AXedep("Edep", 800, 0., 1.0);
+    Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
+    
+    Axis AXadc("ADC", 800, 0., 400.);
+    Hist* hMadcx = Hist::New("hMadcx", HistAxis(AXeta, AXadc));
+    Hist* hMadcy = Hist::New("hMadcy", HistAxis(AXeta, AXadc));
+    
+    Axis AXTFres("TFres [cm]", 800, -10., 10.);
+    Hist* hMTFrx[4] = { nullptr };
+    Hist* hMTFry[4] = { nullptr };
+    for (int it = 0; it < 4; ++it) {
+        hMTFrx[it] = Hist::New(Form("hMTF%drx", it), HistAxis(AXmom, AXTFres));
+        hMTFry[it] = Hist::New(Form("hMTF%dry", it), HistAxis(AXmom, AXTFres));
+    }
+    
+    Axis AXTFadc("TFadc", 800, 0., 3.);
+    Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
 
     Long64_t printRate = static_cast<Long64_t>(0.02*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -115,8 +126,8 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 4);
 
         // Charge
-        if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+        //if (track.QIn < 0.8 || track.QIn > 1.3) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // TOF
@@ -124,10 +135,12 @@ int main(int argc, char * argv[]) {
         if (fTof->normChisqC > 10.) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 6);
         
-        if (fTof->numOfInTimeCls > 4) continue;
-        if ((fTof->extClsN[0]+fTof->extClsN[1]) > 0 || 
-            (fTof->extClsN[2]+fTof->extClsN[3]) > 1) continue; 
+        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
         hCut->fillH2D(fG4mc->primPart.mom, 7);
+        
+        if (fTof->numOfInTimeCls > 4) continue;
+        hCut->fillH2D(fG4mc->primPart.mom, 8);
 
         // No Interaction
         if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100) continue;
@@ -141,26 +154,20 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
         
         SegPARTMCInfo * mcs[9]; std::fill_n(mcs, 9, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { mcs[seg.lay-1] = &seg; }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==0) mcs[seg.lay-1] = &seg; }
+        
+        SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay-1] = &seg; }
 
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it] || !mcs[it]) continue;
-            Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
-            Double_t loc[2] = { rec[it]->loc[0] - std::lrint(rec[it]->loc[0]), rec[it]->loc[1] - std::lrint(rec[it]->loc[1]) };
+            Double_t eta = mass/mch[it]->mom;
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
-            Double_t adc[2] = { rec[it]->sig[0], rec[it]->sig[1] };
+            Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
             
-            Double_t dsdz = std::fabs(mcs[it]->dir[2]);
-
             constexpr Double_t CM2UM = 1.0e4;
             if (ntp[0]!=0) hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
             if (ntp[1]!=0) hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
-            
-            if (ntp[0]!=0) hMax->fillH2D(mass/mch[it]->mom, adc[0]*dsdz);
-            if (ntp[1]!=0) hMay->fillH2D(mass/mch[it]->mom, adc[1]*dsdz);
-            
-            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(mass/mch[it]->mom, mch[it]->edep*1.0e3*dsdz);
-
             if (mch[it]->mom > 50.0) {
                 if (ntp[0]!=0) hMrxNN->fillH1D(CM2UM * res[0]);
                 if (ntp[0]==1) hMrxN1->fillH1D(CM2UM * res[0]);
@@ -173,6 +180,23 @@ int main(int argc, char * argv[]) {
                 if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
                 if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
             }
+            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(eta, mch[it]->edep*1.0e3*std::fabs(mcs[it]->dir[2]));
+            
+            if (ntp[0]!=0 && rec[it]->adc[0]>0) hMadcx->fillH2D(eta, rec[it]->adc[0]);
+            if (ntp[1]!=0 && rec[it]->adc[1]>0) hMadcy->fillH2D(eta, rec[it]->adc[1]);
+        }
+            
+        for (Int_t it = 0; it < 4; ++it) {
+            if (!mtf[it] || fTof->Q[it]<=0) continue;
+            Double_t eta = mass/mtf[it]->mom;
+            Double_t dz = fTof->coo[it][2] - mtf[it]->coo[2];
+            Double_t tx = mtf[it]->dir[0] / mtf[it]->dir[2];
+            Double_t ty = mtf[it]->dir[1] / mtf[it]->dir[2];
+            Double_t rx = fTof->coo[it][0] - (mtf[it]->coo[0] + tx * dz);
+            Double_t ry = fTof->coo[it][1] - (mtf[it]->coo[1] + ty * dz);
+            hMTFrx[it]->fillH2D(mtf[it]->mom, rx);
+            hMTFry[it]->fillH2D(mtf[it]->mom, ry);
+            hMTFadc->fillH2D(eta, fTof->Q[it]);
         }
     }
 

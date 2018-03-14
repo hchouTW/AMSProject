@@ -76,10 +76,11 @@ source ${AMSProjJobs}/LOCAL/local.sh
 ## Job Config
 source ${AMSProj}/sys/shell/ini_parser.sh
 if [[ "$HOSTNAME" == *"cern"* ]]; then
+    #alias amsenv=amsenv_root5icc
     source ${AMSProjJobs}/CERN/cern.sh
     alias scphep='scp -r -oProxyCommand="ssh -W %h:%p cms01.phy.ncu.edu.tw" hep068.phy.ncu.edu.tw:'
-#elif [[ "$HOSTNAME" == *"hep068"* || "$HOSTNAME" == *"cms01"* ]]; then
 else
+    #alias amsenv=amsenv_root5gcc
     source ${AMSProjJobs}/NCU/ncu.sh
 fi
 
