@@ -533,8 +533,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
                 if (hit.sx()) jb(hit.seqIDcx(), it) += -jbGG(0, it) / rse(0);
                 if (hit.sy()) jb(hit.seqIDcy(), it) += -jbGG(1, it) / rse(1);
-                if (hit.seqIDex() >= 0) jb(hit.seqIDex(), it) +=  jbGG(4, it) * ionx(1);
-                if (hit.seqIDey() >= 0) jb(hit.seqIDey(), it) +=  jbGG(4, it) * iony(1);
+                if (hit.seqIDex() >= 0) jb(hit.seqIDex(), it) += jbGG(4, it) * ionx(1);
+                if (hit.seqIDey() >= 0) jb(hit.seqIDey(), it) += jbGG(4, it) * iony(1);
             }
         }    
 
