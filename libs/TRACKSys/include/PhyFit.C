@@ -22,6 +22,7 @@ void TrFitPar::clear() {
     type_ = PartType::Proton;
     ortt_ = Orientation::kDownward;
     hits_.clear();
+    nseq_ = 0;
     nhtx_ = 0;
     nhty_ = 0;
 
@@ -42,12 +43,13 @@ Bool_t TrFitPar::checkHit() {
     }
     if (nx < LMTL_NHIT_X && ny < LMTL_NHIT_Y) return false;
    
-    Short_t seq = 0;
+    Short_t nseq = 0;
     for (auto&& hit : hits_) {
         hit.set_err(type_);
-        seq += hit.set_seqID(seq);
+        nseq += hit.set_seqID(nseq);
     }
 
+    nseq_ = nseq;
     nhtx_ = nx;
     nhty_ = ny;
 
@@ -451,6 +453,9 @@ Bool_t PhyTrFit::evolve() {
             SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
             SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
             SVecD<PhyJb::DIM_L> int2(intm(0)/inte(0), intm(1)/inte(1), intm(2)/inte(2), intm(3)/inte(3));
+            //SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol(), -curArg.elion());
+            //SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol(), curArg.eelion());
+            //SVecD<PhyJb::DIM_L> int2(intm(0)/inte(0), intm(1)/inte(1), intm(2)/inte(2), intm(3)/inte(3), intm(4)/inte(4));
             
             chit += (int2(0) * int2(0) + int2(2) * int2(2));
             chir += (int2(1) * int2(1) + int2(3) * int2(3));
@@ -527,7 +532,9 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         
         if (hit.seqIDex() >= 0) rs(hit.seqIDex()) += ionx(0);
         if (hit.seqIDey() >= 0) rs(hit.seqIDey()) += iony(0);
-        
+
+        //CERR("Eta %14.8f ION %14.8f %14.8f DIV %14.8f %14.8f\n", ppst.eta(), ionx(0), iony(0), ionx(1), iony(1));
+
         if (hasJacb) {
             jbGG = curjb.gg() * jbGG;
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
@@ -540,6 +547,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
         SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
         SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
+        //SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol(), -curArg.elion());
+        //SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol(), curArg.eelion());
         
         if (cnt_nhit != 0) {
             for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)

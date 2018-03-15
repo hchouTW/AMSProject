@@ -256,7 +256,7 @@ std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
-        MatPhyFld(Bool_t mat, Double_t mscat_sgm = 0, Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elion_men = 0, Double_t elbrm_men = 0) : mat_(mat), mscat_sgm_(mscat_sgm), elion_mpv_(elion_mpv), elion_sgm_(elion_sgm), elion_men_(elion_men), elbrm_men_(elbrm_men) {}
+        MatPhyFld(Bool_t mat, Double_t mscat_sgm = 0, Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elion_men = 0, Double_t elion_ncl = 0, Double_t elbrm_men = 0) : mat_(mat), mscat_sgm_(mscat_sgm), elion_mpv_(elion_mpv), elion_sgm_(elion_sgm), elion_men_(elion_men), elion_ncl_(elion_ncl), elbrm_men_(elbrm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
@@ -264,10 +264,11 @@ class MatPhyFld {
         inline const Double_t& elion_mpv() const { return elion_mpv_; }
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elion_men() const { return elion_men_; }
+        inline const Double_t& elion_ncl() const { return elion_ncl_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
     protected :
-        inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elbrm_men_ = 0; }
+        inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elion_ncl_ = 0; elbrm_men_ = 0; }
 
     private :
         Bool_t   mat_;       // has matter?
@@ -275,6 +276,7 @@ class MatPhyFld {
         Double_t elion_mpv_; // ionization-energy-loss MPV [1]
         Double_t elion_sgm_; // ionization-energy-loss SGM [1]
         Double_t elion_men_; // ionization-energy-loss MEN [1]
+        Double_t elion_ncl_; // ionization-energy-loss NCL [1]
         Double_t elbrm_men_; // bremsstrahlung-energy-loss MEN [1]
 };
 
@@ -289,20 +291,27 @@ class MatPhy {
 
     protected :
         static Double_t GetMultipleScattering(const MatFld& mfld, PhySt& part);
-        static std::tuple<Double_t, Double_t, Double_t>  GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t, Double_t> GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part);
     
-    // EX only testcode
+    // Expert only
     public :
-        static void SetCorrFactor(const MatFld* mfld = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true) {
+        static void SetCorrFactor(const MatFld* mfld = nullptr, PhySt* part = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true) {
             Bool_t sw = ((mfld != nullptr) && (*mfld)()) && (sw_mscat || sw_eloss); 
-            if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_mfld_ = *mfld; }
-            else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_mfld_ = std::move(MatFld()); }
+            if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_use_elion_mpv_ = false; corr_mfld_ = *mfld; }
+            else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_use_elion_mpv_ = false; corr_mfld_ = std::move(MatFld()); }
+            if (corr_sw_eloss_ && corr_mfld_() && part != nullptr) {
+                MatPhyFld&& mpfld = MatPhy::Get(corr_mfld_, *part);
+                corr_use_elion_mpv_ = (Numc::Compare(mpfld.elion_mpv(), mpfld.elion_men()) < 0);
+            }
         }
+
+        static const Bool_t& UseElionMpv() { return corr_use_elion_mpv_; }
 
     private :
         static Bool_t corr_sw_mscat_;
         static Bool_t corr_sw_eloss_;
+        static Bool_t corr_use_elion_mpv_;
         static MatFld corr_mfld_;
 
     private :
@@ -337,8 +346,9 @@ class MatPhy {
 };
         
 
-Bool_t   MatPhy::corr_sw_mscat_ = false;
-Bool_t   MatPhy::corr_sw_eloss_ = false;
+Bool_t   MatPhy::corr_sw_mscat_      = false;
+Bool_t   MatPhy::corr_sw_eloss_      = false;
+Bool_t   MatPhy::corr_use_elion_mpv_ = false;
 MatFld   MatPhy::corr_mfld_;
 
 

@@ -160,6 +160,7 @@ class PhyJb {
         static constexpr Short_t JRHOU = 1;
         static constexpr Short_t JTAUL = 2;
         static constexpr Short_t JRHOL = 3;
+        static constexpr Short_t JION  = 4;
 };
 
 

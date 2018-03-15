@@ -52,8 +52,7 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
     
     if (field) orth_.reset(part.u(), mag());
     
-    if (field && part.arg().eloss()) zeta_e_ = mphy->elion_mpv();
-    //if (field && part.arg().eloss()) zeta_e_ = mphy->elion_men();
+    if (field && part.arg().eloss()) zeta_e_ = (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
     else                             zeta_e_ = Numc::ZERO<>;
 }
 
@@ -79,8 +78,7 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
  
     kappa_ue_ = std::move(Lambda * crsub);
 
-    if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_mpv();
-    //if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_men();
+    if (field && part.arg().eloss()) kappa_ee_ = (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
     else                             kappa_ee_ = Numc::ZERO<>;
 }
  
@@ -95,10 +93,9 @@ void PhyJb::init(Double_t step) {
 void PhyJb::set(PhySt& part) {
     PhyArg& arg = part.arg();
     if (!arg()) return;
+    field_ = true;
     
     if (arg.mscat()) {
-        field_ = true;
-
         jb_gl_(JUX, JTAUU) = arg.mscat_uu() * arg.orth_tau(X);
         jb_gl_(JUY, JTAUU) = arg.mscat_uu() * arg.orth_tau(Y);
         jb_gl_(JPX, JTAUU) = arg.mscat_ul() * arg.orth_tau(X);
@@ -205,10 +202,6 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm) {
 
 
 void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
-    OrthCoord orth(part.u());
-    orth_tau_ = orth.tau();
-    orth_rho_ = orth.rho();
-    
     if (!mfld()) return;
     if (sw_mscat_) {
         mscat_uu_ = 0.;
@@ -409,7 +402,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
     if (part.field()) {
         MatFld fastscan;
         if (PropMgnt::FastProp(step, part, &fastscan) && fastscan())
-            MatPhy::SetCorrFactor(&fastscan);
+            MatPhy::SetCorrFactor(&fastscan, &part);
     }
 
     Long64_t iter     = 1;
@@ -469,7 +462,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
     if (part.field()) {
         MatFld fastscan;
         if (PropMgnt::FastPropToZ(zcoo, part, &fastscan) && fastscan())
-            MatPhy::SetCorrFactor(&fastscan);
+            MatPhy::SetCorrFactor(&fastscan, &part);
     }
     
     Long64_t iter     = 1;
@@ -551,7 +544,7 @@ Bool_t PropMgnt::FastProp(const Double_t step, const PhySt& part, MatFld* mfld) 
         Double_t cur_step = GetStep(ppst, res_step);
 
         MatFld&& curMfld = MatMgnt::Get(cur_step, ppst);
-        Bool_t valid = PropWithEulerHeun(cur_step, ppst, curMfld, ppcal);
+        Bool_t valid = PropWithRungeKuttaNystrom(cur_step, ppst, curMfld, ppcal);
         if (!valid) break;
 
         mflds.push_back(curMfld);

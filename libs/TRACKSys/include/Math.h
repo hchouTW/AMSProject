@@ -207,6 +207,7 @@ class LandauGaus {
 
     private :
         static constexpr long double LANDAU0_ = 1.78854160900000003e-01;
+        static constexpr long double DELTA_   = 0.01;
 };
 
 } // namesapce TrackSys

@@ -224,17 +224,13 @@ long double LandauGaus::eval(long double x) const {
 long double LandauGaus::div(long double x) const {
     long double norm = ((x - mpv_) / sgm_);
     if (!Numc::Valid(norm)) norm = Numc::ZERO<>;
+  
+    long double xlw = mpv_ + (norm - DELTA_) * sgm_;
+    long double xup = mpv_ + (norm + DELTA_) * sgm_;
+    long double div = Numc::NEG<long double> * (eval(xup) - eval(xlw)) / (xup - xlw);
 
-    constexpr long double dlt = 0.05;
-    long double dev_landau = Numc::HALF * ((TMath::Landau(norm+dlt)-TMath::Landau(norm-dlt)) / dlt);
-
-    long double landau = (LANDAU0_ / TMath::Landau(norm)) * dev_landau;
-    long double gaus   = Numc::NEG<long double> * norm;
-    long double ldgaus = (Numc::ONE<long double> - kpa_) * landau + kpa_ * gaus;
-    long double divchi = ldgaus;
-    
-    if (!Numc::Valid(divchi)) divchi = Numc::ZERO<>;
-    return divchi;
+    if (!Numc::Valid(div)) div = Numc::ZERO<>;
+    return div;
 }
 
 } // namesapce TrackSys
@@ -258,14 +254,15 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     LandauGaus ldgaus(kpa, mpv, sgm);
     std::array<long double, 2>&& lg_par = ldgaus(x);
 
-    long double factor = Numc::ONE<long double>;
+    long double factorRes = Numc::ONE<long double>;
+    long double factorDiv = Numc::ONE<long double>;
     if (Numc::EqualToZero(fluc_)) {
-        factor = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/ldgaus.sgm()) * (fluc_/ldgaus.sgm()));
-        if (!Numc::Valid(factor)) factor = Numc::ONE<long double>;
+        factorRes = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/ldgaus.sgm()) * (fluc_/ldgaus.sgm()));
+        factorDiv = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/ldgaus.sgm()) * (fluc_/ldgaus.sgm()));
     }
 
-    long double res = factor * lg_par.at(0);
-    long double div = factor * lg_par.at(1) * divmpv;
+    long double res = factorRes * lg_par.at(0);
+    long double div = factorDiv * lg_par.at(1) * divmpv;
 
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
@@ -309,9 +306,13 @@ long double IonEloss::eval_sgm(long double eta, long double ibsqr) const {
 }
 
 long double IonEloss::eval_divmpv(long double eta, long double ibsqr) const {
-    long double termA  = mpv_.at(0) * mpv_.at(2) * std::pow(ibsqr, mpv_.at(2)-Numc::ONE<long double>) * (Numc::TWO<long double> * eta);
-    long double termB  = (Numc::NEG<long double> * mpv_.at(0) / (mpv_.at(3) + std::pow(eta, mpv_.at(4)))) * std::pow(eta, mpv_.at(4)-Numc::ONE<long double>);
-    long double divmpv = termA + termB; 
+    long double divbta = mpv_.at(2) * std::pow(ibsqr, mpv_.at(2)-Numc::ONE<long double>) * (Numc::TWO<long double> * eta);
+    long double divlog = mpv_.at(4) * std::pow(eta, mpv_.at(4)-Numc::ONE<long double>) / (mpv_.at(3) + std::pow(eta, mpv_.at(4)));
+
+    long double termA  = mpv_.at(1) * divbta;
+    long double termB  = divbta * std::log(mpv_.at(3) + std::pow(eta, mpv_.at(4)));
+    long double termC  = std::pow(ibsqr, mpv_.at(2)) * divlog;
+    long double divmpv = mpv_.at(0) * (termA - termB - termC);
 
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
     return divmpv;
