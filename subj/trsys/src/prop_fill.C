@@ -1,11 +1,8 @@
-//#define __HAS_TESTPROP__
-//#define __HAS_TESTFIT__
-#define __HAS_AMS_OFFICE_LIBS__
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
-#include <TRACKLibs/TRACKLibs.h>
+#include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Feb27/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar12/src/ClassDef.h"
 
 using namespace std;
 
@@ -14,6 +11,9 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
+    
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
     MGConfig::JobOpt opt(argc, argv);
 
@@ -54,7 +54,14 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 200, 0.5, 800., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, 0.5, 4000., AxisScale::kLog);
+    
+    Double_t mass = 0.938272297;
+    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
+    
+    Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
+    Double_t ubta = 1.0/std::sqrt(1.0+AXeta.min()*AXeta.min());
+    Axis AXbta("Beta [1]", AXmom.nbin(), lbta, ubta, AxisScale::kLog);
     
     Axis AXcxy("Coo [cm]", 260, -65., 65.);
     Hist * hEvt = Hist::New("hEvt", "hEvt", HistAxis(AXcxy, AXcxy));
@@ -62,37 +69,25 @@ int main(int argc, char * argv[]) {
     // Prop
     Axis AXcoo("Residual [cm * p#beta/Q * L^-1]", 800, -0.25, 0.25);
     Axis AXagl("Residual [p#beta/Q]", 800, -0.25, 0.25);
-    Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 1200, 0.2, 18);
+    Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 800, 0.2, 12);
     
-    Hist* hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXmom, AXcoo)); // (TH2D) MC: residual x
-    Hist* hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXmom, AXcoo)); // (TH2D) MC: residual y
-    Hist* hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXmom, AXcoo)); // (TH2D) ToyMC: residual x
-    Hist* hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXmom, AXcoo)); // (TH2D) ToyMC: residual y
+    Hist* hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual x
+    Hist* hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual y
+    Hist* hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual x
+    Hist* hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual y
 
-    Hist* hMux = Hist::New("hMux", "hMux", HistAxis(AXmom, AXagl)); // (TH2D) MC: cosine angle x
-    Hist* hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXmom, AXagl)); // (TH2D) MC: cosine angle y
-    Hist* hTux = Hist::New("hTux", "hTux", HistAxis(AXmom, AXagl)); // (TH2D) ToyMC: cosine angle x
-    Hist* hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXmom, AXagl)); // (TH2D) ToyMC: cosine angle y
+    Hist* hMux = Hist::New("hMux", "hMux", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle x
+    Hist* hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle y
+    Hist* hTux = Hist::New("hTux", "hTux", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle x
+    Hist* hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle y
+
+    Hist* hMee = Hist::New("hMee", "hMee", HistAxis(AXeta, AXels)); // (TH2D) MC: kinetic energy difference
+    Hist* hTee = Hist::New("hTee", "hTee", HistAxis(AXeta, AXels)); // (TH2D) ToyMC: kinetic energy difference
     
     Hist* hMcux = Hist::New("hMcux", "hMcux", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual x vs. cosine angle x
     Hist* hMcuy = Hist::New("hMcuy", "hMcuy", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual y vs. cosine angle y
     Hist* hTcux = Hist::New("hTcux", "hTcux", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual x vs. cosine angle x
     Hist* hTcuy = Hist::New("hTcuy", "hTcuy", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual y vs. cosine angle y
-
-    Hist* hMee = Hist::New("hMee", "hMee", HistAxis(AXmom, AXels)); // (TH2D) MC: kinetic energy difference
-    Hist* hTee = Hist::New("hTee", "hTee", HistAxis(AXmom, AXels)); // (TH2D) ToyMC: kinetic energy difference
-    
-    Axis AXcoo2("Residual [cm * p#beta/Q * L^-1]", 2000, -0.5, 0.5);
-    Axis AXagl2("Residual [p#beta/Q]", 2000, -0.5, 0.5);
-    Hist* hMcx2 = Hist::New("hMcx2", "hMcx2", HistAxis(AXcoo2)); // (TH1D) MC: residual x
-    Hist* hMcy2 = Hist::New("hMcy2", "hMcy2", HistAxis(AXcoo2)); // (TH1D) MC: residual y
-    Hist* hTcx2 = Hist::New("hTcx2", "hTcx2", HistAxis(AXcoo2)); // (TH1D) ToyMC: residual x
-    Hist* hTcy2 = Hist::New("hTcy2", "hTcy2", HistAxis(AXcoo2)); // (TH1D) ToyMC: residual y
-    
-    Hist* hMux2 = Hist::New("hMux2", "hMux2", HistAxis(AXagl2)); // (TH1D) MC: cosine angle x
-    Hist* hMuy2 = Hist::New("hMuy2", "hMuy2", HistAxis(AXagl2)); // (TH1D) MC: cosine angle y
-    Hist* hTux2 = Hist::New("hTux2", "hTux2", HistAxis(AXagl2)); // (TH1D) ToyMC: cosine angle x
-    Hist* hTuy2 = Hist::New("hTuy2", "hTuy2", HistAxis(AXagl2)); // (TH1D) ToyMC: cosine angle y
 
     Long64_t printRate = static_cast<Long64_t>(0.04*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -127,8 +122,8 @@ int main(int argc, char * argv[]) {
         if (fTof->normChisqC > 10.) continue;
         
         if (fTof->numOfInTimeCls > 4) continue;
-        if ((fTof->extClsN[0]+fTof->extClsN[1]) > 0 || 
-            (fTof->extClsN[2]+fTof->extClsN[3]) > 1) continue; 
+        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
         
         // No Interaction
         if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100.) continue;
@@ -142,7 +137,7 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
         
         SegPARTMCInfo* mcs[9]; std::fill_n(mcs, 9, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { mcs[seg.lay-1] = &seg; }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay-1] = &seg; }
 
         Bool_t hasSat = (rec[laySat-1] && mch[laySat-1] && mcs[laySat-1]);
         Bool_t hasEnd = (rec[layEnd-1] && mch[layEnd-1] && mcs[layEnd-1]);
@@ -158,14 +153,15 @@ int main(int argc, char * argv[]) {
         );
         part.set_mom(mcsU->mom);
         Double_t mc_mom = part.mom();
+        Double_t mc_eta = mass/part.mom();
         
         PhySt ppst(part);  // Particle Status
         PropMgnt::PropToZ(mcsL->coo[2], ppst); // Propagate to Z with magnetic field
         Double_t len = ppst.arg().len(); // Delta Z
         Double_t nrl = ppst.arg().nrl(); // Number of Radiator Length [1]
         Double_t ela = ppst.arg().ela(); // Electron Abundance [mol/cm^2]
-        SVecD<3> refc = ppst.c(); // coord
-        SVecD<3> refu = ppst.u(); // cosine angle
+        TrackSys::SVecD<3> refc = ppst.c(); // coord
+        TrackSys::SVecD<3> refu = ppst.u(); // cosine angle
         
         const Double_t GeV2MeV = 1.0e3;
         Double_t scl_eloss = (part.bta() * part.bta()) / (part.chrg() * part.chrg()) / ela;       // normalized factor (energy loss)
@@ -181,33 +177,21 @@ int main(int argc, char * argv[]) {
         Double_t tm_resu[2] = { ppst.ux() - refu(0), ppst.uy() - refu(1) };       // ToyMC: cosine angle xy [1]
         Double_t tm_elsm    = GeV2MeV * (std::sqrt(part.mom()*part.mom()+msqr) - std::sqrt(ppst.mom()*ppst.mom()+msqr));  // ToyMC: kinetic energy difference [GeV]
 
-        //COUT("RES %14.8f %14.8f\n", mc_resc[0], tm_resc[0]);
-        //COUT("ELS %14.8f %14.8f\n", mc_elsm, tm_elsm);
-
-        hMcx->fillH2D(mc_mom, scl_mscat * mc_resc[0] / len);
-        hMcy->fillH2D(mc_mom, scl_mscat * mc_resc[1] / len);
-        hMux->fillH2D(mc_mom, scl_mscat * mc_resu[0]);
-        hMuy->fillH2D(mc_mom, scl_mscat * mc_resu[1]);
-        hMee->fillH2D(mc_mom, scl_eloss * mc_elsm);
-        hTcx->fillH2D(mc_mom, scl_mscat * tm_resc[0] / len);
-        hTcy->fillH2D(mc_mom, scl_mscat * tm_resc[1] / len);
-        hTux->fillH2D(mc_mom, scl_mscat * tm_resu[0]);
-        hTuy->fillH2D(mc_mom, scl_mscat * tm_resu[1]);
-        hTee->fillH2D(mc_mom, scl_eloss * tm_elsm);
+        hMcx->fillH2D(mc_eta, scl_mscat * mc_resc[0] / len);
+        hMcy->fillH2D(mc_eta, scl_mscat * mc_resc[1] / len);
+        hMux->fillH2D(mc_eta, scl_mscat * mc_resu[0]);
+        hMuy->fillH2D(mc_eta, scl_mscat * mc_resu[1]);
+        hMee->fillH2D(mc_eta, scl_eloss * mc_elsm);
+        hTcx->fillH2D(mc_eta, scl_mscat * tm_resc[0] / len);
+        hTcy->fillH2D(mc_eta, scl_mscat * tm_resc[1] / len);
+        hTux->fillH2D(mc_eta, scl_mscat * tm_resu[0]);
+        hTuy->fillH2D(mc_eta, scl_mscat * tm_resu[1]);
+        hTee->fillH2D(mc_eta, scl_eloss * tm_elsm);
         
         if (mc_mom > 5.0) hMcux->fillH2D(scl_mscat * mc_resc[0] / len, scl_mscat * mc_resu[0]);
         if (mc_mom > 5.0) hMcuy->fillH2D(scl_mscat * mc_resc[1] / len, scl_mscat * mc_resu[1]);
         if (mc_mom > 5.0) hTcux->fillH2D(scl_mscat * tm_resc[0] / len, scl_mscat * tm_resu[0]);
         if (mc_mom > 5.0) hTcuy->fillH2D(scl_mscat * tm_resc[1] / len, scl_mscat * tm_resu[1]);
-        
-        if (mc_mom > 5.0) hMcx2->fillH1D(scl_mscat * mc_resc[0] / len);
-        if (mc_mom > 5.0) hMcy2->fillH1D(scl_mscat * mc_resc[1] / len);
-        if (mc_mom > 5.0) hMux2->fillH1D(scl_mscat * mc_resu[0]);
-        if (mc_mom > 5.0) hMuy2->fillH1D(scl_mscat * mc_resu[1]);
-        if (mc_mom > 5.0) hTcx2->fillH1D(scl_mscat * tm_resc[0] / len);
-        if (mc_mom > 5.0) hTcy2->fillH1D(scl_mscat * tm_resc[1] / len);
-        if (mc_mom > 5.0) hTux2->fillH1D(scl_mscat * tm_resu[0]);
-        if (mc_mom > 5.0) hTuy2->fillH1D(scl_mscat * tm_resu[1]);
         
         Double_t cx = 0.5 * (mcsU->coo[0] + mcsL->coo[0]);
         Double_t cy = 0.5 * (mcsU->coo[1] + mcsL->coo[1]);

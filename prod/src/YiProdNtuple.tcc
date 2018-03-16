@@ -938,20 +938,18 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				if (fitid < 0) continue;
 				
                 track.status[algo][patt] = true;
-				track.rig[algo][patt] = trtk->GetRigidity(fitid, 0);
+				track.rig[algo][patt] = trtk->GetRigidity(fitid, 1);
 				track.chisq[algo][patt][0] = trtk->GetNormChisqX(fitid);
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
 				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
-			
 
-                const int ustate = 0; // KALMAN
 				for (int il = 0; il < 9; ++il) {
 				    AMSPoint pntLJ;
 				    AMSDir   dirLJ;
                     double   rig = track.rig[algo][patt];
                         
                     if (_algo[algo] == 6) // KALMAN
-                        trFit.InterpolateKalman(recEv.trackerZJ[il], pntLJ, dirLJ, rig, ustate);
+                        trFit.InterpolateKalman(recEv.trackerZJ[il], pntLJ, dirLJ, rig);
                     else
                         trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
 				   
@@ -1016,8 +1014,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				track.stateLJ[algo][patt][il][5] = stt->uz();
 				track.stateLJ[algo][patt][il][6] = stt->rig();
             }
-
-
 
             //TrackSys::PhySt ppst(hctr.part());
             //for (int il = 0; il < 9; ++il) {

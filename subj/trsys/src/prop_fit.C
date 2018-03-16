@@ -1,12 +1,8 @@
-//#define __HAS_TESTPROP__
-//#define __HAS_TESTFIT__
-#define __HAS_AMS_OFFICE_LIBS__
-
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
-#include <TRACKLibs/TRACKLibs.h>
+#include <TRACKSys.h>
 
-using namespace std;
+static TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/1.78854160900000003e-01) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -14,32 +10,115 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
     
-    //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree();
-    //return 0;
-   
     Hist::Load("prop_fill.root", "dat");
 
     // Prop
-    Hist * hMcx = Hist::Head("hMcx");
-    Hist * hMcy = Hist::Head("hMcy");
-    Hist * hTcx = Hist::Head("hTcx");
-    Hist * hTcy = Hist::Head("hTcy");
-    
-    Hist * hMux = Hist::Head("hMux");
-    Hist * hMuy = Hist::Head("hMuy");
-    Hist * hTux = Hist::Head("hTux");
-    Hist * hTuy = Hist::Head("hTuy");
+    //Hist * hMcx = Hist::Head("hMcx");
+    //Hist * hMcy = Hist::Head("hMcy");
+    //Hist * hTcx = Hist::Head("hTcx");
+    //Hist * hTcy = Hist::Head("hTcy");
+    //
+    //Hist * hMux = Hist::Head("hMux");
+    //Hist * hMuy = Hist::Head("hMuy");
+    //Hist * hTux = Hist::Head("hTux");
+    //Hist * hTuy = Hist::Head("hTuy");
     
     Hist * hMee = Hist::Head("hMee");
     Hist * hTee = Hist::Head("hTee");
     
-    const Axis& AXmom = hMee->xaxis();
+    const Axis& AXeta = hMee->xaxis();
+    const Axis& AXels = hMee->yaxis();
     
     TFile * ofle = new TFile("prop_fit.root", "RECREATE");
     ofle->cd();
     
     Hist::AddDirectory();
 
+    std::vector<Hist*> vhMee = Hist::ProjectAll(HistProj::kY, hMee);
+    Hist* hMeeK = Hist::New("hMeeK", HistAxis(AXeta, "Kappa"));
+    Hist* hMeeM = Hist::New("hMeeM", HistAxis(AXeta, "Mpv"));
+    Hist* hMeeS = Hist::New("hMeeS", HistAxis(AXeta, "Sigma"));
+    for (int it = 1; it <= AXeta.nbin(); ++it) {
+        COUT("Mee ITER %d\n", it);
+        Double_t mpv = (*vhMee.at(it))()->GetBinCenter((*vhMee.at(it))()->GetMaximumBin());
+        Double_t rms = (*vhMee.at(it))()->GetRMS();
+        flg->SetParameters(1000, 0.1, mpv, rms);
+        flg->SetParLimits(1, 0.0, 1.0);
+        flg->SetParLimits(2, 0.0, 10.0*mpv);
+        flg->SetParLimits(3, 0.0, 10.0*rms);
+        
+        (*vhMee.at(it))()->Fit(flg, "q0", "");
+        (*vhMee.at(it))()->Fit(flg, "q0", "");
+        (*vhMee.at(it))()->Fit(flg, "q0", "");
+
+        (*hMeeK)()->SetBinContent(it, flg->GetParameter(1));
+        (*hMeeK)()->SetBinError  (it, flg->GetParError(1));
+        (*hMeeM)()->SetBinContent(it, flg->GetParameter(2));
+        (*hMeeM)()->SetBinError  (it, flg->GetParError(2));
+        (*hMeeS)()->SetBinContent(it, flg->GetParameter(3));
+        (*hMeeS)()->SetBinError  (it, flg->GetParError(3));
+        
+        Hist* tmpl = Hist::New(Form("hMee_tmpl%03d", it), HistAxis(AXels));
+        for (int jt = 1; jt <= AXels.nbin(); ++jt) {
+            (*tmpl)()->SetBinContent(jt, flg->Eval(AXels.center(jt)));
+            (*tmpl)()->SetBinError(jt, 1.0e-6);
+        }
+    }
+    
+    std::vector<Hist*> vhTee = Hist::ProjectAll(HistProj::kY, hTee);
+    Hist* hTeeK = Hist::New("hTeeK", HistAxis(AXeta, "Kappa"));
+    Hist* hTeeM = Hist::New("hTeeM", HistAxis(AXeta, "Mpv"));
+    Hist* hTeeS = Hist::New("hTeeS", HistAxis(AXeta, "Sigma"));
+    for (int it = 1; it <= AXeta.nbin(); ++it) {
+        COUT("Tee ITER %d\n", it);
+        Double_t mpv = (*vhTee.at(it))()->GetBinCenter((*vhTee.at(it))()->GetMaximumBin());
+        Double_t rms = (*vhTee.at(it))()->GetRMS();
+        flg->SetParameters(1000, 0.1, mpv, rms);
+        flg->SetParLimits(1, 0.0, 1.0);
+        flg->SetParLimits(2, 0.0, 10.0*mpv);
+        flg->SetParLimits(3, 0.0, 10.0*rms);
+        
+        (*vhTee.at(it))()->Fit(flg, "q0", "");
+        (*vhTee.at(it))()->Fit(flg, "q0", "");
+        (*vhTee.at(it))()->Fit(flg, "q0", "");
+
+        (*hTeeK)()->SetBinContent(it, flg->GetParameter(1));
+        (*hTeeK)()->SetBinError  (it, flg->GetParError(1));
+        (*hTeeM)()->SetBinContent(it, flg->GetParameter(2));
+        (*hTeeM)()->SetBinError  (it, flg->GetParError(2));
+        (*hTeeS)()->SetBinContent(it, flg->GetParameter(3));
+        (*hTeeS)()->SetBinError  (it, flg->GetParError(3));
+        
+        Hist* tmpl = Hist::New(Form("hTee_tmpl%03d", it), HistAxis(AXels));
+        for (int jt = 1; jt <= AXels.nbin(); ++jt) {
+            (*tmpl)()->SetBinContent(jt, flg->Eval(AXels.center(jt)));
+            (*tmpl)()->SetBinError(jt, 1.0e-6);
+        }
+    }
+    
+    hMeeK->style(Fill(), Line(kBlue), Marker(kBlue));
+    hTeeK->style(Fill(), Line(kRed), Marker(kRed));
+    THStack* chMTeeK = Hist::Collect("chMTeeK", HistList({ hMeeK, hTeeK }));
+    chMTeeK->Write();
+    
+    hMeeM->style(Fill(), Line(kBlue), Marker(kBlue));
+    hTeeM->style(Fill(), Line(kRed), Marker(kRed));
+    THStack* chMTeeM = Hist::Collect("chMTeeM", HistList({ hMeeM, hTeeM }));
+    chMTeeM->Write();
+    
+    hMeeS->style(Fill(), Line(kBlue), Marker(kBlue));
+    hTeeS->style(Fill(), Line(kRed), Marker(kRed));
+    THStack* chMTeeS = Hist::Collect("chMTeeS", HistList({ hMeeS, hTeeS }));
+    chMTeeS->Write();
+    
+
+
+
+
+
+
+
+/*
     TGraphErrors* gMcx_men = new TGraphErrors(); gMcx_men->SetNameTitle("gMcx_men", "");
     TGraphErrors* gMcx_sgm = new TGraphErrors(); gMcx_sgm->SetNameTitle("gMcx_sgm", "");
     TGraphErrors* gMcy_men = new TGraphErrors(); gMcy_men->SetNameTitle("gMcy_men", "");
@@ -308,7 +387,7 @@ int main(int argc, char * argv[]) {
     gMTmpv->Write();
     gMTsgm->Write();
     gMTmos->Write();
-
+*/
     ofle->Write();
     ofle->Close();
 

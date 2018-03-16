@@ -16,12 +16,6 @@ int main(int argc, char * argv[]) {
     TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
     TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
-    //TrackSys::MagMgnt::Load();
-    //for (Int_t it = 0; it < 50; ++it) {
-    //    MagFld&& mag = MagMgnt::Get(TrackSys::SVecD<3>(0., 0., it*8-200));
-    //    COUT("%14.8f %14.8f %14.8f\n", mag.x(), mag.y(), mag.z());
-    //}
-
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
 
@@ -89,13 +83,13 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -10.0, 10.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -8.0, 8.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
     // Fit B Res
-    Axis AXBrso("(Bm - Bt) [1]", 1000, -0.5, 0.5);
+    Axis AXBrso("(Bm - Bt) [1]", 1000, -0.4, 0.4);
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
@@ -192,7 +186,7 @@ int main(int argc, char * argv[]) {
             HitSt mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_adc(hit.adc[0], hit.adc[1]);
+            //mhit.set_adc(hit.adc[0], hit.adc[1]);
           
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
@@ -210,7 +204,7 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mcs[9] = { nullptr };
         HitTRKMCInfo*  mch[9] = { nullptr };
         HitTRKInfo*    msh[9] = { nullptr };
-        for (auto&& seg : fG4mc->primPart.segs) mcs[seg.lay -1] = &seg;
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay -1] = &seg; }
         for (auto&& hit : fG4mc->primPart.hits) mch[hit.layJ-1] = &hit;
         for (auto&& hit :           track.hits) msh[hit.layJ-1] = &hit;
 
@@ -229,23 +223,23 @@ int main(int argc, char * argv[]) {
         
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        SimpleTrFit tr(fitPar);
-        //PhyTrFit tr(fitPar);
+        //SimpleTrFit tr(fitPar);
+        PhyTrFit tr(fitPar);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
         Double_t hc_tme  = sw.time()*1.0e3;
         Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
         Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
-        //for (Int_t it = 0; it < 9; ++it) {
-        //    const PhySt* stt = tr.stts(it+1);
-        //    if (stt == nullptr) continue;
-        //    hc_coo[it][0] = stt->cx();
-        //    hc_coo[it][1] = stt->cy();
-        //    hc_coo[it][2] = stt->cz();
-        //    hc_dir[it][0] = stt->ux();
-        //    hc_dir[it][1] = stt->uy();
-        //}
+        for (Int_t it = 0; it < 9; ++it) {
+            const PhySt* stt = tr.stts(it+1);
+            if (stt == nullptr) continue;
+            hc_coo[it][0] = stt->cx();
+            hc_coo[it][1] = stt->cy();
+            hc_coo[it][2] = stt->cz();
+            hc_dir[it][0] = stt->ux();
+            hc_dir[it][1] = stt->uy();
+        }
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -262,7 +256,8 @@ int main(int argc, char * argv[]) {
         //if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme*0.1);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rig[0][patt] : 0.);
-        Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
+        //Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
+        Double_t kf_irig = (kf_succ ? MGMath::ONE/track.stateLJ[1][patt][topmc->lay-1][6] : 0.);
         //Double_t hc_irig = (hc_succ ? MGMath::ONE/track.rig[2][patt] : 0.);
 
         Double_t ck_rig = (ck_succ ? 1.0/ck_irig : 0.);

@@ -1,14 +1,14 @@
 #include <CPPLibs/CPPLibs.h>
 #include <ROOTLibs/ROOTLibs.h>
     
-static TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
+static TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/1.78854160900000003e-01) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
 
 Double_t flgcov(Double_t* x, Double_t* par) {
     flg->SetParameters(1.0, par[1], par[2], par[3]);
 
     // control constants
-    Int_t    np = 100.0;
-    Double_t sc =   5.0;
+    Int_t    np = 60.0;
+    Double_t sc =  4.0;
 
     Double_t xlw = x[0] - sc * par[4];
     Double_t xup = x[0] + sc * par[4];
@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
     Hist::Load("hit_fill.root", iopath);
 
     // Fit
-    Hist* hMedep = Hist::Head("hMadcx");
+    Hist* hMedep = Hist::Head("hMadcy");
     std::vector<Hist*> vhMedep = Hist::ProjectAll(HistProj::kY, hMedep);
 
     const Axis& AXeta = hMedep->xaxis();
@@ -65,11 +65,12 @@ int main(int argc, char * argv[]) {
         Double_t kpa = 0.1;
         Double_t mpv = (*vhMedep.at(it))()->GetBinCenter((*vhMedep.at(it))()->GetMaximumBin());
         Double_t rms = (*vhMedep.at(it))()->GetRMS();
-        func->SetParameters(1000, kpa, mpv, rms, 0.1*rms);
+        func->SetParameters(1000, kpa, mpv, rms, 0.3*rms);
         func->SetParLimits(1, 0.0, 1.0);
         func->SetParLimits(2, 0.0, 10.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
-        func->SetParLimits(4, 0.0, 10.0*rms);
+        //func->SetParLimits(4, 0.0, 10.0*rms);
+        func->FixParameter(4, 4.4);
         (*vhMedep.at(it))()->Fit(func, "q0", "");
         (*vhMedep.at(it))()->Fit(func, "q0", "");
         (*vhMedep.at(it))()->Fit(func, "q0", "");

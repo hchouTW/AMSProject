@@ -10,10 +10,10 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
     
-    MGConfig::JobOpt opt(argc, argv);
-    
     TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
     TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    
+    MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());

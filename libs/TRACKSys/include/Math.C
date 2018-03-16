@@ -244,6 +244,11 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
 
     long double abseta = std::fabs(eta);
     long double ibsqr  = (Numc::ONE<long double> + abseta * abseta);
+    
+    // Under Test
+    if (Numc::Compare(abseta, Numc::ONE<long double>) <= 0)
+        return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
+    ////////////
 
     long double kpa = eval_kpa(abseta, ibsqr); 
     long double mpv = eval_mpv(abseta, ibsqr); 
