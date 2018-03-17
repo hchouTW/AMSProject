@@ -10,7 +10,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
    
-    Hist::Load("track_fill.root", "dat");
+    //Hist::Load("track_fill.root", "dat");
+    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test2");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");

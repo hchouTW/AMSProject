@@ -151,7 +151,7 @@ class MultiGaus {
         MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
         MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
         MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
-        ~MultiGaus() { robust_ = Opt::NOROBUST; if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
+        ~MultiGaus() { if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
         inline Int_t num() const { return multi_gaus_.size(); }
         inline const long double& wgt(Int_t i) const { return multi_gaus_.at(i).first; }
@@ -187,27 +187,38 @@ namespace TrackSys {
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        LandauGaus(long double kpa, long double mpv, long double sgm);
+        enum class Opt { NOROBUST = 0, ROBUST = 1 };
+    
+    public :
+        LandauGaus(Opt opt, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        inline std::array<long double, 2> operator() (long double x) const { return std::array<long double, 2>({ eval(x), div(x) }); }
+        inline std::array<long double, 2> operator() (long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }
         inline const long double& sgm() const { return sgm_; }
+        inline const long double& fluc() const { return fluc_; }
 
     protected :
-        long double eval(long double x) const;
-        long double div(long double x) const;
+        long double eval(long double norm) const;
+        long double div(long double norm) const;
 
     protected :
         long double kpa_;
         long double mpv_;
         long double sgm_;
+        long double fluc_;
+    
+    private :
+        Opt robust_;
 
     private :
         static constexpr long double LANDAU0_ = 1.78854160900000003e-01;
         static constexpr long double DELTA_   = 0.01;
+    
+    private :
+        static constexpr long double ROBUST_SGM_ = 2.0;
 };
 
 } // namesapce TrackSys

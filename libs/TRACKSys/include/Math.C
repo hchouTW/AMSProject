@@ -196,40 +196,70 @@ long double MultiGaus::rndm() {
 
 
 namespace TrackSys {
-        
 
-LandauGaus::LandauGaus(long double kpa, long double mpv, long double sgm) : kpa_(Numc::ZERO<long double>), mpv_(Numc::ZERO<long double>), sgm_(Numc::ONE<long double>) {
+LandauGaus::LandauGaus(Opt opt, long double kpa, long double mpv, long double sgm, long double fluc) : robust_(Opt::NOROBUST), kpa_(Numc::ZERO<long double>), mpv_(Numc::ZERO<long double>), sgm_(Numc::ONE<long double>), fluc_(Numc::ZERO<long double>) {
     if (Numc::Compare(sgm) <= 0) return;
+    robust_ = opt;
     if      (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa_ = Numc::ZERO<long double>;
     else if (Numc::Compare(kpa, Numc::ONE<long double>)  >= 0) kpa_ = Numc::ONE<long double>;
     else kpa_ = kpa;
     mpv_ = mpv;
     sgm_ = sgm;
+    fluc_ = ((Numc::Compare(fluc) <= 0) ? Numc::ZERO<long double> : fluc);
 }
 
-long double LandauGaus::eval(long double x) const {
+std::array<long double, 2> LandauGaus::operator() (long double x) const {
     long double norm = ((x - mpv_) / sgm_);
-    if (!Numc::Valid(norm)) norm = Numc::ZERO<>;
-    short sign = Numc::Compare(norm);
-
-    long double landau  = (Numc::NEG<long double> * Numc::TWO<long double>) * std::log(TMath::Landau(norm) / LANDAU0_);
-    long double gaus    = norm * norm;
-    long double ldgaus  = (Numc::ONE<long double> - kpa_) * landau + kpa_ * gaus;
-    long double normchi = sign * std::sqrt(ldgaus);
+    if (!Numc::Valid(norm))
+        return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
+   
+    // Norm and Div
+    long double nrmx = eval(norm);
+    long double divx = div(norm);
     
-    if (!Numc::Valid(normchi)) normchi = Numc::ZERO<>;
-    return normchi;
+    // Noise fluctuation
+    if (!Numc::EqualToZero(fluc_)) {
+        long double nsfluc = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/sgm_) * (fluc_/sgm_));
+        nrmx *= nsfluc; 
+        divx *= nsfluc; 
+    }
+    
+    // Robust Method (Modify-Cauchy)
+    if (robust_ == Opt::ROBUST) {
+        long double absnrmx = std::fabs(nrmx);
+        long double sftnrmr = absnrmx - ROBUST_SGM_;
+        if (Numc::Compare(sftnrmr) > 0) {
+            long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
+            long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
+            if (Numc::Valid(modify_cauchy)) {
+                nrmx /= modify_cauchy;
+                divx /= modify_cauchy;
+            }
+        }
+    }
+    
+    if (!Numc::Valid(nrmx) || !Numc::Valid(divx)) {
+        nrmx = Numc::ZERO<long double>;
+        divx = Numc::ZERO<long double>;
+    }
+    return std::array<long double, 2>({ nrmx, divx }); 
 }
 
-long double LandauGaus::div(long double x) const {
-    long double norm = ((x - mpv_) / sgm_);
-    if (!Numc::Valid(norm)) norm = Numc::ZERO<>;
-  
+long double LandauGaus::eval(long double norm) const {
+    short       sign   = Numc::Compare(norm);
+    long double landau = (Numc::NEG<long double> * Numc::TWO<long double>) * std::log(TMath::Landau(norm) / LANDAU0_);
+    long double gaus   = norm * norm;
+    long double ldgaus = (Numc::ONE<long double> - kpa_) * landau + kpa_ * gaus;
+    long double nrmx   = sign * std::sqrt(ldgaus);
+    if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
+    return nrmx;
+}
+
+long double LandauGaus::div(long double norm) const {
     long double xlw = mpv_ + (norm - DELTA_) * sgm_;
     long double xup = mpv_ + (norm + DELTA_) * sgm_;
     long double div = Numc::NEG<long double> * (eval(xup) - eval(xlw)) / (xup - xlw);
-
-    if (!Numc::Valid(div)) div = Numc::ZERO<>;
+    if (!Numc::Valid(div)) div = Numc::ZERO<long double>;
     return div;
 }
 
@@ -245,30 +275,27 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double abseta = std::fabs(eta);
     long double ibsqr  = (Numc::ONE<long double> + abseta * abseta);
     
-    // Under Test
-    if (Numc::Compare(abseta, Numc::ONE<long double>) <= 0)
-        return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
-    ////////////
-
-    long double kpa = eval_kpa(abseta, ibsqr); 
-    long double mpv = eval_mpv(abseta, ibsqr); 
-    long double sgm = eval_sgm(abseta, ibsqr); 
+    // Robust Method (Reduce important index in high energy)
+    long double gamma = (std::sqrt(ibsqr) / abseta);
+    if (Numc::Compare(gamma, Numc::ONE<long double>) < 0) gamma = Numc::ONE<long double>;
+    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + std::log(gamma));
     
+    //long double lngm = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
+    //if (!Numc::Valid(lngm) || Numc::Compare(lngm) <= 0) lngm = Numc::ZERO<long double>;
+    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm * lngm);
+  
+    // PDF parameters
+    long double kpa    = eval_kpa(abseta, ibsqr); 
+    long double mpv    = eval_mpv(abseta, ibsqr); 
+    long double sgm    = eval_sgm(abseta, ibsqr); 
     long double divmpv = eval_divmpv(abseta, ibsqr); 
-
-    LandauGaus ldgaus(kpa, mpv, sgm);
+  
+    // Landau-Gaus with noise fluctuation 
+    LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
-
-    long double factorRes = Numc::ONE<long double>;
-    long double factorDiv = Numc::ONE<long double>;
-    if (Numc::EqualToZero(fluc_)) {
-        factorRes = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/ldgaus.sgm()) * (fluc_/ldgaus.sgm()));
-        factorDiv = Numc::ONE<long double> / std::sqrt(Numc::ONE<long double> + (fluc_/ldgaus.sgm()) * (fluc_/ldgaus.sgm()));
-    }
-
-    long double res = factorRes * lg_par.at(0);
-    long double div = factorDiv * lg_par.at(1) * divmpv;
-
+    
+    long double res = robust * lg_par.at(0);
+    long double div = robust * lg_par.at(1) * divmpv;
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
         div = Numc::ZERO<long double>;
