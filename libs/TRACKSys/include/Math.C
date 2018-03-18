@@ -214,8 +214,8 @@ std::array<long double, 2> LandauGaus::operator() (long double x) const {
         return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
    
     // Norm and Div
-    long double nrmx = eval(norm);
-    long double divx = div(norm);
+    long double nrmx = eval(norm); // norm x
+    long double divx = div(norm) / sgm_;  // div x with sgm scale
     
     // Noise fluctuation
     if (!Numc::EqualToZero(fluc_)) {
@@ -256,9 +256,9 @@ long double LandauGaus::eval(long double norm) const {
 }
 
 long double LandauGaus::div(long double norm) const {
-    long double xlw = mpv_ + (norm - DELTA_) * sgm_;
-    long double xup = mpv_ + (norm + DELTA_) * sgm_;
-    long double div = Numc::NEG<long double> * (eval(xup) - eval(xlw)) / (xup - xlw);
+    long double normxlw = norm - DELTA_;
+    long double normxup = norm + DELTA_;
+    long double div = Numc::NEG<long double> * Numc::HALF * ((eval(normxup) - eval(normxlw)) / DELTA_);
     if (!Numc::Valid(div)) div = Numc::ZERO<long double>;
     return div;
 }
@@ -276,13 +276,10 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double ibsqr  = (Numc::ONE<long double> + abseta * abseta);
     
     // Robust Method (Reduce important index in high energy)
-    long double gamma = (std::sqrt(ibsqr) / abseta);
-    if (Numc::Compare(gamma, Numc::ONE<long double>) < 0) gamma = Numc::ONE<long double>;
-    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + std::log(gamma));
-    
-    //long double lngm = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
-    //if (!Numc::Valid(lngm) || Numc::Compare(lngm) <= 0) lngm = Numc::ZERO<long double>;
-    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm * lngm);
+    long double lngm = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
+    if (!Numc::Valid(lngm) || Numc::Compare(lngm) <= 0) lngm = Numc::ZERO<long double>;
+    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm);
+    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm * lngm);
   
     // PDF parameters
     long double kpa    = eval_kpa(abseta, ibsqr); 
@@ -291,11 +288,11 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double divmpv = eval_divmpv(abseta, ibsqr); 
   
     // Landau-Gaus with noise fluctuation 
-    LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
+    LandauGaus ldgaus(LandauGaus::Opt::NOROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
     
-    long double res = robust * lg_par.at(0);
-    long double div = robust * lg_par.at(1) * divmpv;
+    long double res = robust * lg_par.at(0);          // res normx
+    long double div = robust * lg_par.at(1) * divmpv; // div f/x * div x/eta
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
         div = Numc::ZERO<long double>;

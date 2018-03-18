@@ -943,13 +943,14 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				track.chisq[algo][patt][1] = trtk->GetNormChisqY(fitid);
 				track.chisq[algo][patt][2] = (trtk->GetChisqX(fitid) + trtk->GetChisqY(fitid)) / (trtk->GetNdofX(fitid) + trtk->GetNdofY(fitid));
 
+                const int ustate = 0; // KALMAN
 				for (int il = 0; il < 9; ++il) {
 				    AMSPoint pntLJ;
 				    AMSDir   dirLJ;
                     double   rig = track.rig[algo][patt];
                         
                     if (_algo[algo] == 6) // KALMAN
-                        trFit.InterpolateKalman(recEv.trackerZJ[il], pntLJ, dirLJ, rig);
+                        trFit.InterpolateKalman(recEv.trackerZJ[il], pntLJ, dirLJ, rig, ustate);
                     else
                         trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
 				   
