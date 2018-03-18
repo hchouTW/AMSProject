@@ -278,7 +278,6 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     // Robust Method (Reduce important index in high energy)
     long double lngm = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
     if (!Numc::Valid(lngm) || Numc::Compare(lngm) <= 0) lngm = Numc::ZERO<long double>;
-    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm);
     long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm * lngm);
   
     // PDF parameters
@@ -288,7 +287,7 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double divmpv = eval_divmpv(abseta, ibsqr); 
   
     // Landau-Gaus with noise fluctuation 
-    LandauGaus ldgaus(LandauGaus::Opt::NOROBUST, kpa, mpv, sgm, fluc_);
+    LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
     
     long double res = robust * lg_par.at(0);          // res normx

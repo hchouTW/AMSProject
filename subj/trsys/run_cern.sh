@@ -9,7 +9,7 @@ CurDir=${PWD}
 DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar12
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test7
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test10
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
