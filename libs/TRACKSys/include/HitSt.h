@@ -11,16 +11,20 @@ class VirtualHitSt {
         };
 
     public :
-        VirtualHitSt(Detector dec = Detector::TRK, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true) : type_(PartType::None), dec_(dec), lay_(lay), coo_side_(csx, csy, csz), coo_(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>), cer_(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>) {}
-        ~VirtualHitSt() {}
-       
-        inline virtual void cal(const PhySt& part) = 0;
-        inline virtual void set_type(PartType type) = 0;
+        VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true);
+        ~VirtualHitSt() { clear(); }
+        
+        virtual Short_t set_seqID(Short_t seqID) = 0; 
+
+        virtual void cal(const PhySt& part) = 0;
+        virtual void set_type(PartType type) = 0;
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); }
         inline void set_dummy_x(Double_t cx) { if (!coo_side_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!coo_side_(1)) coo_(1) = cy; }
         inline void set_dummy_z(Double_t cz) { if (!coo_side_(2)) coo_(2) = cz; }
+        
+        inline const Short_t&  seqID() const { return seqID_; }
         
         inline const PartType& type() const { return type_; }
         inline const Detector& dec()  const { return dec_; }
@@ -40,11 +44,23 @@ class VirtualHitSt {
         inline const Double_t& cex() const { return cer_(0); }
         inline const Double_t& cey() const { return cer_(1); }
         inline const Double_t& cez() const { return cer_(2); }
+        
+        inline const SVecD<3>& cnrm()  const { return cnrm_; }
+        inline const Double_t& cnrmx() const { return cnrm_(0); }
+        inline const Double_t& cnrmy() const { return cnrm_(1); }
+        inline const Double_t& cnrmz() const { return cnrm_(2); }
+
+        inline const SVecD<3>& cdiv()  const { return cdiv_; }
+        inline const Double_t& cdivx() const { return cdiv_(0); }
+        inline const Double_t& cdivy() const { return cdiv_(1); }
+        inline const Double_t& cdivz() const { return cdiv_(2); }
 
     protected :
         inline void clear();
 
     protected :
+        Short_t  seqID_;
+
         PartType type_; // particle type
         
         Detector dec_; // TRK TOF TRD RICH ECAL
@@ -53,20 +69,25 @@ class VirtualHitSt {
         SVecO<3> coo_side_; // (x, y, z)
         SVecD<3> coo_;      // [cm] coord
         SVecD<3> cer_;      // [cm] error
+        
+        SVecD<3> cnrm_; // coord norm
+        SVecD<3> cdiv_; // coord div
 };
 
 
 class HitStTRK : public VirtualHitSt {
     public :
         HitStTRK(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_ax_(nullptr), pdf_ay_(nullptr) { clear(); }
-        ~HitStTRK() {}
+        ~HitStTRK() { clear(); }
         
-        inline void cal(const PhySt& part);
-        inline void set_type(PartType type);
+        Short_t set_seqID(Short_t seqID); 
+        
+        void cal(const PhySt& part);
+        void set_type(PartType type);
         
         inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_(0) = (Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>;
-            nsr_(1) = (Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>;
+            nsr_(0) = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
+            nsr_(1) = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
         inline void set_adc(Double_t ax, Double_t ay) {
             adc_side_(0) = (Numc::Compare(ax) > 0);
@@ -75,13 +96,10 @@ class HitStTRK : public VirtualHitSt {
             adc_(1) = (adc_side_(1) ? ay : Numc::ZERO<>);
         }
         
-        inline const SVecD<2>& cnrm()  const { return cnrm_; }
-        inline const Double_t& cnrmx() const { return cnrm_(0); }
-        inline const Double_t& cnrmy() const { return cnrm_(1); }
-
-        inline const SVecD<2>& cdiv()  const { return cdiv_; }
-        inline const Double_t& cdivx() const { return cdiv_(0); }
-        inline const Double_t& cdivy() const { return cdiv_(1); }
+        inline const Short_t&  seqIDcx() const { return seqIDcx_; }
+        inline const Short_t&  seqIDcy() const { return seqIDcy_; }
+        inline const Short_t&  seqIDax() const { return seqIDax_; }
+        inline const Short_t&  seqIDay() const { return seqIDay_; }
 
         inline const SVecD<2>& anrm()  const { return anrm_; }
         inline const Double_t& anrmx() const { return anrm_(0); }
@@ -95,13 +113,16 @@ class HitStTRK : public VirtualHitSt {
         void clear();
 
     protected :
+        Short_t seqIDcx_;
+        Short_t seqIDcy_;
+        Short_t seqIDax_;
+        Short_t seqIDay_;
+        
         SVecS<2> nsr_; // Number of strip
         
         SVecO<2> adc_side_;
         SVecD<2> adc_; // ADC
 
-        SVecD<2> cnrm_; // coord norm
-        SVecD<2> cdiv_; // coord div
         SVecD<2> anrm_; // adc nrom
         SVecD<2> adiv_; // adc div
 
@@ -134,36 +155,36 @@ class HitStTRK : public VirtualHitSt {
 class HitStTOF : public VirtualHitSt {
     public :
         HitStTOF(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, csx, csy), pdf_c_(nullptr), pdf_q_(nullptr) { clear(); }
-        ~HitStTOF() {}
+        ~HitStTOF() { clear(); }
         
-        inline void cal(const PhySt& part);
-        inline void set_type(PartType type);
+        Short_t set_seqID(Short_t seqID); 
+        
+        void cal(const PhySt& part);
+        void set_type(PartType type);
         
         inline void set_q(Double_t q) {
             q_side_ = (Numc::Compare(q) > 0);
             q_      = (q_side_ ? q : Numc::ZERO<>);
         }
-        
-        inline const SVecD<2>& cnrm()  const { return cnrm_; }
-        inline const Double_t& cnrmx() const { return cnrm_(0); }
-        inline const Double_t& cnrmy() const { return cnrm_(1); }
+       
+        inline const Short_t&  seqIDcx() const { return seqIDcx_; }
+        inline const Short_t&  seqIDcy() const { return seqIDcy_; }
+        inline const Short_t&  seqIDq()  const { return seqIDq_; }
 
-        inline const SVecD<2>& cdiv()  const { return cdiv_; }
-        inline const Double_t& cdivx() const { return cdiv_(0); }
-        inline const Double_t& cdivy() const { return cdiv_(1); }
-
-        inline const Double_t& qnrm()  const { return qnrm_; }
-        inline const Double_t& qdiv()  const { return qdiv_; }
+        inline const Double_t& qnrm() const { return qnrm_; }
+        inline const Double_t& qdiv() const { return qdiv_; }
 
     protected :
         void clear();
 
     protected :
+        Short_t seqIDcx_;
+        Short_t seqIDcy_;
+        Short_t seqIDq_;
+        
         Bool_t   q_side_;
         Double_t q_; // Q
 
-        SVecD<2> cnrm_; // coord norm
-        SVecD<2> cdiv_; // coord div
         Double_t qnrm_; // Q nrom
         Double_t qdiv_; // Q div
 
@@ -180,19 +201,22 @@ class HitStTOF : public VirtualHitSt {
 };
 
 
+template<class HitType>
+class HitStTest : public HitType {
+    public :
+        enum class Orientation {
+            kDownward = 0, kUpward = 1
+        };
+    
+        static void Sort(std::vector<HitStTest>& hits, const Orientation& ortt = Orientation::kDownward) {
+            if (hits.size() < 2) return;
+            if (ortt == Orientation::kDownward) std::sort(hits.begin(), hits.end(), [](const HitStTest& hit1, const HitStTest& hit2) { return (hit1.cz() > hit2.cz()); } );
+            else                                std::sort(hits.begin(), hits.end(), [](const HitStTest& hit1, const HitStTest& hit2) { return (hit1.cz() < hit2.cz()); } );
+        }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
+template class HitStTest<HitStTRK>;
+template class HitStTest<HitStTOF>;
 
 
 

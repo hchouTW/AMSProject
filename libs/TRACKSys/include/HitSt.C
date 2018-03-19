@@ -3,38 +3,66 @@
 
 
 namespace TrackSys {
-        
+
+// VirtualHitSt
+VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t csx, Bool_t csy, Bool_t csz) {
+    clear();
+    dec_ = dec;
+    lay_ = lay;
+    coo_side_ = std::move(SVecO<3>(csx, csy, csz));
+}
     
 void VirtualHitSt::clear() {
-    type_ = PartType::Proton;
+    seqID_ = -1;
+
+    type_ = PartType::None;
     dec_  = Detector::NONE;
     lay_  = 0;
     
-    coo_side_ = std::move(SVecO<3>(false, false, true));
-    coo_      = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
+    coo_side_ = std::move(SVecO<3>());
+    coo_      = std::move(SVecD<3>());
     cer_      = std::move(SVecD<3>(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>));
+    
+    cnrm_ = std::move(SVecD<3>());
+    cdiv_ = std::move(SVecD<3>());
 }
+        
 
+// HitStTRK
 void HitStTRK::clear() {
+    seqIDcx_ = -1;
+    seqIDcy_ = -1;
+    seqIDax_ = -1;
+    seqIDay_ = -1;
+
     nsr_      = std::move(SVecS<2>());
     adc_side_ = std::move(SVecO<2>());
     adc_      = std::move(SVecD<2>());
-
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
     
     anrm_ = std::move(SVecD<2>());
     adiv_ = std::move(SVecD<2>());
 
-    set_type(PartType::Proton);
+    set_type(type_);
     cer_ = std::move(SVecD<3>(DEF_CER_X_, DEF_CER_Y_, DEF_CER_Z_));
+}
+
+Short_t HitStTRK::set_seqID(Short_t seqID) {
+    if (seqID < 0) { seqID_ = -1; return 0; }
+
+    Short_t iter = 0;
+    if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
+    if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
+    if (adc_side_(0)) { seqIDax_ = seqID + iter; iter++; } else seqIDax_ = -1;
+    if (adc_side_(1)) { seqIDay_ = seqID + iter; iter++; } else seqIDay_ = -1;
+    if (iter != 0) seqID_ = seqID; else seqID_ = -1;
+    return iter;
 }
 
 void HitStTRK::cal(const PhySt& part) {
     set_type(part.info().type());
 
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
+    cnrm_ = std::move(SVecD<3>());
+    cdiv_ = std::move(SVecD<3>());
     SVecD<3>&& crs = (coo_ - part.c());
     if (coo_side_(0)) {
         cer_(0)  = pdf_cx_->efft_sgm(crs(0));
@@ -65,7 +93,9 @@ void HitStTRK::cal(const PhySt& part) {
 }
 
 void HitStTRK::set_type(PartType type) {
-    if (type_ == type) return;
+    if (type_ != PartType::None && type_ == type) return;
+    if (type_ == PartType::None) type_ = PartType::Proton;
+
     switch (type) {
         case PartType::Proton :
         {
@@ -162,25 +192,38 @@ IonEloss HitStTRK::PDF_PR_AY_(
 );
 
 
+// HitStTOF
 void HitStTOF::clear() {
+    seqIDcx_ = -1;
+    seqIDcx_ = -1;
+    seqIDq_  = -1;
+
     q_side_ = false;
     q_      = Numc::ZERO<>;
 
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
-    
     qnrm_ = Numc::ZERO<>;
     qdiv_ = Numc::ZERO<>;
 
-    set_type(PartType::Proton);
+    set_type(type_);
     cer_ = std::move(SVecD<3>(DEF_CER_X_, DEF_CER_Y_, DEF_CER_Z_));
+}
+
+Short_t HitStTOF::set_seqID(Short_t seqID) {
+    if (seqID < 0) { seqID_ = -1; return 0; }
+
+    Short_t iter = 0;
+    if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
+    if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
+    if (q_side_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
+    if (iter != 0) seqID_ = seqID; else seqID_ = -1;
+    return iter;
 }
 
 void HitStTOF::cal(const PhySt& part) {
     set_type(part.info().type());
 
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
+    cnrm_ = std::move(SVecD<3>());
+    cdiv_ = std::move(SVecD<3>());
     SVecD<3>&& crs = (coo_ - part.c());
     if (coo_side_(0)) {
         cer_(0)  = pdf_c_->efft_sgm(crs(0));
@@ -206,7 +249,9 @@ void HitStTOF::cal(const PhySt& part) {
 }
 
 void HitStTOF::set_type(PartType type) {
-    if (type_ == type) return;
+    if (type_ != PartType::None && type_ == type) return;
+    if (type_ == PartType::None) type_ = PartType::Proton;
+    
     switch (type) {
         case PartType::Proton :
         {
