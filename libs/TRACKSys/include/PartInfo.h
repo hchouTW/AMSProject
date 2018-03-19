@@ -6,6 +6,7 @@ namespace TrackSys {
 
 
 enum class PartType {
+    None,
     Photon, 
     Electron, Positron, 
     Muon, 
