@@ -3,22 +3,21 @@
 
 
 namespace TrackSys {
-/*
+
 class VirtualHitSt {
     public :
         enum class Detector {
-            TRK, TOF, TRD, RICH, ECAL
+            NONE, TRK, TOF, TRD, RICH, ECAL
         };
 
     public :
-        VirtualHitSt(Detector dec = Detector::TRK, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true) : type_(PartType::Proton), dec_(dec), lay_(lay), coo_side_(csx, csy, csz), coo_(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>), cer_(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>) {}
+        VirtualHitSt(Detector dec = Detector::TRK, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true) : type_(PartType::None), dec_(dec), lay_(lay), coo_side_(csx, csy, csz), coo_(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>), cer_(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>) {}
         ~VirtualHitSt() {}
        
         inline virtual void cal(const PhySt& part) = 0;
         inline virtual void set_type(PartType type) = 0;
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); }
-        inline void set_cer(Double_t ex, Double_t ey, Double_t ez) { cer_ = std::move(SVecD<3>(ex, ey, ez)); }
         inline void set_dummy_x(Double_t cx) { if (!coo_side_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!coo_side_(1)) coo_(1) = cy; }
         inline void set_dummy_z(Double_t cz) { if (!coo_side_(2)) coo_(2) = cz; }
@@ -43,20 +42,23 @@ class VirtualHitSt {
         inline const Double_t& cez() const { return cer_(2); }
 
     protected :
+        inline void clear();
+
+    protected :
         PartType type_; // particle type
         
         Detector dec_; // TRK TOF TRD RICH ECAL
         Short_t  lay_; // start from 0
 
-        SVecO<3> side_; // (x, y, z)
-        SVecD<3> coo_;  // [cm] coord
-        SVecD<3> cer_;  // [cm] error
+        SVecO<3> coo_side_; // (x, y, z)
+        SVecD<3> coo_;      // [cm] coord
+        SVecD<3> cer_;      // [cm] error
 };
 
 
 class HitStTRK : public VirtualHitSt {
     public :
-        HitStTRK(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy) { clear(); }
+        HitStTRK(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_ax_(nullptr), pdf_ay_(nullptr) { clear(); }
         ~HitStTRK() {}
         
         inline void cal(const PhySt& part);
@@ -105,13 +107,13 @@ class HitStTRK : public VirtualHitSt {
 
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
-        IonEloss*  pdf_ex_;
-        IonEloss*  pdf_ey_;
+        IonEloss*  pdf_ax_;
+        IonEloss*  pdf_ay_;
     
     protected :
-        static constexpr Double_t DEFERR_X_ = 1.80000e+1 * 1.0e-4; // [cm]
-        static constexpr Double_t DEFERR_Y_ = 8.00000e+0 * 1.0e-4; // [cm]
-        static constexpr Double_t DEFERR_Z_ = 1.50000e+2 * 1.0e-4; // [cm]
+        static constexpr Double_t DEF_CER_X_ = 1.80000e-03;
+        static constexpr Double_t DEF_CER_Y_ = 8.00000e-04;
+        static constexpr Double_t DEF_CER_Z_ = 1.50000e-02;
         
         static MultiGaus PDF_PR_CX_NN_;
         static MultiGaus PDF_PR_CX_N1_;
@@ -124,11 +126,93 @@ class HitStTRK : public VirtualHitSt {
         static MultiGaus PDF_PR_CY_N3_;
         static MultiGaus PDF_PR_CY_N4_;
 
-        static IonEloss PDF_PR_EX_;
-        static IonEloss PDF_PR_EY_;
+        static IonEloss  PDF_PR_AX_;
+        static IonEloss  PDF_PR_AY_;
 };
 
-*/
+
+class HitStTOF : public VirtualHitSt {
+    public :
+        HitStTOF(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, csx, csy), pdf_c_(nullptr), pdf_q_(nullptr) { clear(); }
+        ~HitStTOF() {}
+        
+        inline void cal(const PhySt& part);
+        inline void set_type(PartType type);
+        
+        inline void set_q(Double_t q) {
+            q_side_ = (Numc::Compare(q) > 0);
+            q_      = (q_side_ ? q : Numc::ZERO<>);
+        }
+        
+        inline const SVecD<2>& cnrm()  const { return cnrm_; }
+        inline const Double_t& cnrmx() const { return cnrm_(0); }
+        inline const Double_t& cnrmy() const { return cnrm_(1); }
+
+        inline const SVecD<2>& cdiv()  const { return cdiv_; }
+        inline const Double_t& cdivx() const { return cdiv_(0); }
+        inline const Double_t& cdivy() const { return cdiv_(1); }
+
+        inline const Double_t& qnrm()  const { return qnrm_; }
+        inline const Double_t& qdiv()  const { return qdiv_; }
+
+    protected :
+        void clear();
+
+    protected :
+        Bool_t   q_side_;
+        Double_t q_; // Q
+
+        SVecD<2> cnrm_; // coord norm
+        SVecD<2> cdiv_; // coord div
+        Double_t qnrm_; // Q nrom
+        Double_t qdiv_; // Q div
+
+        MultiGaus* pdf_c_;
+        IonEloss*  pdf_q_;
+    
+    protected :
+        static constexpr Double_t DEF_CER_X_ = 3.00000e+00;
+        static constexpr Double_t DEF_CER_Y_ = 3.00000e+00;
+        static constexpr Double_t DEF_CER_Z_ = 3.00000e+00;
+        
+        static MultiGaus PDF_PR_C_;
+        static IonEloss  PDF_PR_Q_;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
