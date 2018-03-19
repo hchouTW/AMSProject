@@ -3,7 +3,169 @@
 
 
 namespace TrackSys {
+/*
+class VirtualHitSt {
+    public :
+        enum class Detector {
+            TRK, TOF, TRD, RICH, ECAL
+        };
 
+    public :
+        VirtualHitSt(Detector dec = Detector::TRK, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true) : type_(PartType::Proton), dec_(dec), lay_(lay), coo_side_(csx, csy, csz), coo_(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>), cer_(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>) {}
+        ~VirtualHitSt() {}
+       
+        inline virtual void cal(const PhySt& part) = 0;
+        inline virtual void set_type(PartType type) = 0;
+        
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); }
+        inline void set_cer(Double_t ex, Double_t ey, Double_t ez) { cer_ = std::move(SVecD<3>(ex, ey, ez)); }
+        inline void set_dummy_x(Double_t cx) { if (!coo_side_(0)) coo_(0) = cx; }
+        inline void set_dummy_y(Double_t cy) { if (!coo_side_(1)) coo_(1) = cy; }
+        inline void set_dummy_z(Double_t cz) { if (!coo_side_(2)) coo_(2) = cz; }
+        
+        inline const PartType& type() const { return type_; }
+        inline const Detector& dec()  const { return dec_; }
+        inline const Short_t&  lay()  const { return lay_; }
+
+        inline const SVecO<3>& cs()  const { return coo_side_; }
+        inline const Bool_t&   csx() const { return coo_side_(0); }
+        inline const Bool_t&   csy() const { return coo_side_(1); }
+        inline const Bool_t&   csz() const { return coo_side_(2); }
+        
+        inline const SVecD<3>& c()  const { return coo_; }
+        inline const Double_t& cx() const { return coo_(0); }
+        inline const Double_t& cy() const { return coo_(1); }
+        inline const Double_t& cz() const { return coo_(2); }
+        
+        inline const SVecD<3>& ce()  const { return cer_; }
+        inline const Double_t& cex() const { return cer_(0); }
+        inline const Double_t& cey() const { return cer_(1); }
+        inline const Double_t& cez() const { return cer_(2); }
+
+    protected :
+        PartType type_; // particle type
+        
+        Detector dec_; // TRK TOF TRD RICH ECAL
+        Short_t  lay_; // start from 0
+
+        SVecO<3> side_; // (x, y, z)
+        SVecD<3> coo_;  // [cm] coord
+        SVecD<3> cer_;  // [cm] error
+};
+
+
+class HitStTRK : public VirtualHitSt {
+    public :
+        HitStTRK(Short_t lay = 0, Bool_t csx = false, Bool_t csy = false) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy) { clear(); }
+        ~HitStTRK() {}
+        
+        inline void cal(const PhySt& part);
+        inline void set_type(PartType type);
+        
+        inline void set_nsr(Short_t nx, Short_t ny) {
+            nsr_(0) = (Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>;
+            nsr_(1) = (Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>;
+        }
+        inline void set_adc(Double_t ax, Double_t ay) {
+            adc_side_(0) = (Numc::Compare(ax) > 0);
+            adc_side_(1) = (Numc::Compare(ay) > 0);
+            adc_(0) = (adc_side_(0) ? ax : Numc::ZERO<>);
+            adc_(1) = (adc_side_(1) ? ay : Numc::ZERO<>);
+        }
+        
+        inline const SVecD<2>& cnrm()  const { return cnrm_; }
+        inline const Double_t& cnrmx() const { return cnrm_(0); }
+        inline const Double_t& cnrmy() const { return cnrm_(1); }
+
+        inline const SVecD<2>& cdiv()  const { return cdiv_; }
+        inline const Double_t& cdivx() const { return cdiv_(0); }
+        inline const Double_t& cdivy() const { return cdiv_(1); }
+
+        inline const SVecD<2>& anrm()  const { return anrm_; }
+        inline const Double_t& anrmx() const { return anrm_(0); }
+        inline const Double_t& anrmy() const { return anrm_(1); }
+
+        inline const SVecD<2>& adiv()  const { return adiv_; }
+        inline const Double_t& adivx() const { return adiv_(0); }
+        inline const Double_t& adivy() const { return adiv_(1); }
+
+    protected :
+        void clear();
+
+    protected :
+        SVecS<2> nsr_; // Number of strip
+        
+        SVecO<2> adc_side_;
+        SVecD<2> adc_; // ADC
+
+        SVecD<2> cnrm_; // coord norm
+        SVecD<2> cdiv_; // coord div
+        SVecD<2> anrm_; // adc nrom
+        SVecD<2> adiv_; // adc div
+
+        MultiGaus* pdf_cx_;
+        MultiGaus* pdf_cy_;
+        IonEloss*  pdf_ex_;
+        IonEloss*  pdf_ey_;
+    
+    protected :
+        static constexpr Double_t DEFERR_X_ = 1.80000e+1 * 1.0e-4; // [cm]
+        static constexpr Double_t DEFERR_Y_ = 8.00000e+0 * 1.0e-4; // [cm]
+        static constexpr Double_t DEFERR_Z_ = 1.50000e+2 * 1.0e-4; // [cm]
+        
+        static MultiGaus PDF_PR_CX_NN_;
+        static MultiGaus PDF_PR_CX_N1_;
+        static MultiGaus PDF_PR_CX_N2_;
+        static MultiGaus PDF_PR_CX_N3_;
+        
+        static MultiGaus PDF_PR_CY_NN_;
+        static MultiGaus PDF_PR_CY_N1_;
+        static MultiGaus PDF_PR_CY_N2_;
+        static MultiGaus PDF_PR_CY_N3_;
+        static MultiGaus PDF_PR_CY_N4_;
+
+        static IonEloss PDF_PR_EX_;
+        static IonEloss PDF_PR_EY_;
+};
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////
 class HitSt {
     public :
         HitSt(Bool_t sx = false, Bool_t sy = false, Int_t lay = 0) :

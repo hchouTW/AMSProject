@@ -108,6 +108,8 @@ namespace TrackSys {
 template <unsigned int D>
 using SVecO = ROOT::Math::SVector<Bool_t, D>;
 template <unsigned int D>
+using SVecS = ROOT::Math::SVector<Short_t, D>;
+template <unsigned int D>
 using SVecI = ROOT::Math::SVector<Int_t, D>;
 template <unsigned int D>
 using SVecD = ROOT::Math::SVector<Double_t, D>;
