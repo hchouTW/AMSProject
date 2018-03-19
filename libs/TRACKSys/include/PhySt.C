@@ -232,8 +232,9 @@ void PhySt::symbk(Bool_t is_rndm) {
     
     if (arg_.mscat()) {
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
-        mscatl(2) = 0.; // testcode map to z
+        mscatl(2) = Numc::ZERO<>; // set dz to zero
         coo_ = std::move(coo_ + mscatl);
+        
         //coo_ = std::move(coo_ + arg_.symbk_mscatl());
         dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));
     }

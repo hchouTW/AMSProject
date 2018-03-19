@@ -214,14 +214,9 @@ class LandauGaus {
         Opt robust_;
 
     private :
-        static constexpr long double LANDAU0_ = 1.78854160900000003e-01;
-        static constexpr long double DELTA_   = 0.01;
-    
-    private :
-        //static constexpr long double ROBUST_SGM_ = 2.0; // from 2~3
-        //static constexpr long double ROBUST_SGM_ = 2.0; // test7
-        //static constexpr long double ROBUST_SGM_ = 3.0; // test8
-        static constexpr long double ROBUST_SGM_ = 2.5; // test9
+        static constexpr long double LANDAU0_    = 1.78854160900000003e-01;
+        static constexpr long double DELTA_      = 0.01;
+        static constexpr long double ROBUST_SGM_ = 2.5;
 };
 
 } // namesapce TrackSys
