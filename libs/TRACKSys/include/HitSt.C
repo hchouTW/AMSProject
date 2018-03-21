@@ -13,18 +13,20 @@ VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t csx, Bool_t csy, Bo
 }
     
 void VirtualHitSt::clear() {
-    seqID_ = -1;
+    seqID_   = -1;
+    seqIDcx_ = -1;
+    seqIDcy_ = -1;
 
-    type_ = PartType::None;
+    type_ = PartType::Proton;
     dec_  = Detector::NONE;
     lay_  = 0;
     
     coo_side_ = std::move(SVecO<3>());
     coo_      = std::move(SVecD<3>());
-    cer_      = std::move(SVecD<3>(Numc::ONE<>, Numc::ONE<>, Numc::ONE<>));
+    cer_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
     
-    cnrm_ = std::move(SVecD<3>());
-    cdiv_ = std::move(SVecD<3>());
+    cnrm_ = std::move(SVecD<2>());
+    cdiv_ = std::move(SVecD<2>());
 }
         
 
@@ -42,8 +44,9 @@ void HitStTRK::clear() {
     anrm_ = std::move(SVecD<2>());
     adiv_ = std::move(SVecD<2>());
 
-    set_type(type_);
-    cer_ = std::move(SVecD<3>(DEF_CER_X_, DEF_CER_Y_, DEF_CER_Z_));
+    set_type();
+    if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
+        cer_ = std::move(SVecD<2>(pdf_cx_->efft_sgm(), pdf_cy_->efft_sgm()));
 }
 
 Short_t HitStTRK::set_seqID(Short_t seqID) {
@@ -59,10 +62,10 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
 }
 
 void HitStTRK::cal(const PhySt& part) {
-    set_type(part.info().type());
+    set_type(part.info());
 
-    cnrm_ = std::move(SVecD<3>());
-    cdiv_ = std::move(SVecD<3>());
+    cnrm_ = std::move(SVecD<2>());
+    cdiv_ = std::move(SVecD<2>());
     SVecD<3>&& crs = (coo_ - part.c());
     if (coo_side_(0)) {
         cer_(0)  = pdf_cx_->efft_sgm(crs(0));
@@ -92,25 +95,24 @@ void HitStTRK::cal(const PhySt& part) {
     set_dummy_y(part.cy());
 }
 
-void HitStTRK::set_type(PartType type) {
-    if (type_ != PartType::None && type_ == type) return;
-    if (type_ == PartType::None) type_ = PartType::Proton;
+void HitStTRK::set_type(const PartInfo& info) {
+    if (type_ == info.type() && (pdf_cx_ && pdf_cy_ && pdf_ax_ && pdf_ay_)) return;
 
-    switch (type) {
-        case PartType::Proton :
+    switch (info.chrg()) {
+        case 1 : case -1 :
         {
-            pdf_cx_ = &PDF_PR_CX_NN_;
-            if      (nsr_(0) == 1) pdf_cx_ = &PDF_PR_CX_N1_;
-            else if (nsr_(0) == 2) pdf_cx_ = &PDF_PR_CX_N2_;
-            else if (nsr_(0) >= 3) pdf_cx_ = &PDF_PR_CX_N3_;
-            pdf_cy_ = &PDF_PR_CY_NN_;
-            if      (nsr_(1) == 1) pdf_cy_ = &PDF_PR_CY_N1_;
-            else if (nsr_(1) == 2) pdf_cy_ = &PDF_PR_CY_N2_;
-            else if (nsr_(1) == 3) pdf_cy_ = &PDF_PR_CY_N3_;
-            else if (nsr_(1) >= 4) pdf_cy_ = &PDF_PR_CY_N4_;
-            pdf_ax_ = &PDF_PR_AX_;
-            pdf_ay_ = &PDF_PR_AY_;
-            type_ = type;
+            pdf_cx_ = &PDF_Q01_CX_NN_;
+            if      (nsr_(0) == 1) pdf_cx_ = &PDF_Q01_CX_N1_;
+            else if (nsr_(0) == 2) pdf_cx_ = &PDF_Q01_CX_N2_;
+            else if (nsr_(0) >= 3) pdf_cx_ = &PDF_Q01_CX_N3_;
+            pdf_cy_ = &PDF_Q01_CY_NN_;
+            if      (nsr_(1) == 1) pdf_cy_ = &PDF_Q01_CY_N1_;
+            else if (nsr_(1) == 2) pdf_cy_ = &PDF_Q01_CY_N2_;
+            else if (nsr_(1) == 3) pdf_cy_ = &PDF_Q01_CY_N3_;
+            else if (nsr_(1) >= 4) pdf_cy_ = &PDF_Q01_CY_N4_;
+            pdf_ax_ = &PDF_Q01_AX_;
+            pdf_ay_ = &PDF_Q01_AY_;
+            type_ = info.type();
             break;
         }
         default :
@@ -119,72 +121,72 @@ void HitStTRK::set_type(PartType type) {
     }
 }
 
-MultiGaus HitStTRK::PDF_PR_CX_NN_(
+MultiGaus HitStTRK::PDF_Q01_CX_NN_(
     MultiGaus::Opt::ROBUST,
     3.31376712664997630e-01, 1.77875e-03,
     5.10255425401639595e-01, 2.65271e-03,
     1.58367861933362775e-01, 5.15837e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CX_N1_(
+MultiGaus HitStTRK::PDF_Q01_CX_N1_(
     MultiGaus::Opt::ROBUST,
     2.75608e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CX_N2_(
+MultiGaus HitStTRK::PDF_Q01_CX_N2_(
     MultiGaus::Opt::ROBUST,
     6.02616961110044480e-01, 1.82559e-03,
     3.97383038889955520e-01, 4.18164e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CX_N3_(
+MultiGaus HitStTRK::PDF_Q01_CX_N3_(
     MultiGaus::Opt::ROBUST,
     6.75185841999877190e-01, 1.84066e-03,
     3.24814158000122755e-01, 4.90605e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CY_NN_(
+MultiGaus HitStTRK::PDF_Q01_CY_NN_(
     MultiGaus::Opt::ROBUST,
     5.50759994181610257e-01, 7.90750e-04,
     3.74341189078839287e-01, 1.52916e-03,
     7.48988167395504278e-02, 3.63939e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CY_N1_(
+MultiGaus HitStTRK::PDF_Q01_CY_N1_(
     MultiGaus::Opt::ROBUST,
     5.45247134760751928e-01, 9.87256e-04,
     4.54752865239248016e-01, 1.65822e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CY_N2_(
+MultiGaus HitStTRK::PDF_Q01_CY_N2_(
     MultiGaus::Opt::ROBUST,
     4.53177772355239150e-01, 7.32341e-04,
     4.29177717623073274e-01, 1.19994e-03,
     1.17644510021687618e-01, 2.17922e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CY_N3_(
+MultiGaus HitStTRK::PDF_Q01_CY_N3_(
     MultiGaus::Opt::ROBUST,
     5.08190182558828307e-01, 7.74660e-04,
     3.39669567581713017e-01, 1.56378e-03,
     1.52140249859458648e-01, 3.18597e-03
 );
 
-MultiGaus HitStTRK::PDF_PR_CY_N4_(
+MultiGaus HitStTRK::PDF_Q01_CY_N4_(
     MultiGaus::Opt::ROBUST,
     5.19847432537280163e-01, 7.84945e-04,
     3.39808551148078952e-01, 1.72969e-03,
     1.40344016314640940e-01, 3.85202e-03
 );
 
-IonEloss HitStTRK::PDF_PR_AX_(
+IonEloss HitStTRK::PDF_Q01_AX_(
     { 6.84708e-04, 1.22107e+00, 1.54109e+00, 2.83791e+00, 1.06167e+00, 7.87652e+00 }, // Kpa
     { 1.01510e+00, 2.06220e+01, 1.24078e+00, 4.82421e-04, 5.80771e+00 }, // Mpv
     { 6.21439e-02, 3.05480e+01, 1.37339e+00, 1.07762e-04, 8.70839e+00 }, // Sgm
     5.00000e+00 // Fluc
 );
 
-IonEloss HitStTRK::PDF_PR_AY_(
+IonEloss HitStTRK::PDF_Q01_AY_(
     { 1.04571e-03, 1.56996e+00, 3.42208e+00, 1.60653e+00, 1.36027e+00, 1.00964e+01 }, // Kpa
     { 4.41904e+00, 6.24969e+00, 1.05197e+00, 1.39822e-01, 1.03750e+00 }, // Mpv
     { 7.13109e+00, 2.98634e+00, 5.79009e-01, 4.32315e+00, 7.58125e-01 }, // Sgm
@@ -197,15 +199,23 @@ void HitStTOF::clear() {
     seqIDcx_ = -1;
     seqIDcx_ = -1;
     seqIDq_  = -1;
+    seqIDt_  = -1;
 
     q_side_ = false;
     q_      = Numc::ZERO<>;
+    
+    t_side_ = false;
+    t_      = Numc::ZERO<>;
 
     qnrm_ = Numc::ZERO<>;
     qdiv_ = Numc::ZERO<>;
+    
+    tnrm_ = Numc::ZERO<>;
+    tdiv_ = Numc::ZERO<>;
 
-    set_type(type_);
-    cer_ = std::move(SVecD<3>(DEF_CER_X_, DEF_CER_Y_, DEF_CER_Z_));
+    set_type();
+    if (pdf_c_ != nullptr)
+        cer_ = std::move(SVecD<2>(pdf_c_->efft_sgm(), pdf_c_->efft_sgm()));
 }
 
 Short_t HitStTOF::set_seqID(Short_t seqID) {
@@ -215,15 +225,16 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
     if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
     if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
     if (q_side_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
+    if (t_side_     ) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
 
 void HitStTOF::cal(const PhySt& part) {
-    set_type(part.info().type());
+    set_type(part.info());
 
-    cnrm_ = std::move(SVecD<3>());
-    cdiv_ = std::move(SVecD<3>());
+    cnrm_ = std::move(SVecD<2>());
+    cdiv_ = std::move(SVecD<2>());
     SVecD<3>&& crs = (coo_ - part.c());
     if (coo_side_(0)) {
         cer_(0)  = pdf_c_->efft_sgm(crs(0));
@@ -243,21 +254,26 @@ void HitStTOF::cal(const PhySt& part) {
         qnrm_ = ion(0);
         qdiv_ = ion(1);
     }
+    
+    tnrm_ = Numc::ZERO<>;
+    tdiv_ = Numc::ZERO<>;
+    if (t_side_) {
+    }
 
     set_dummy_x(part.cx());
     set_dummy_y(part.cy());
 }
 
-void HitStTOF::set_type(PartType type) {
-    if (type_ != PartType::None && type_ == type) return;
-    if (type_ == PartType::None) type_ = PartType::Proton;
+void HitStTOF::set_type(const PartInfo& info) {
+    if (type_ == info.type() && (pdf_c_ && pdf_q_ && pdf_t_)) return;
     
-    switch (type) {
-        case PartType::Proton :
+    switch (info.chrg()) {
+        case 1 : case -1 :
         {
-            pdf_c_ = &PDF_PR_C_;
-            pdf_q_ = &PDF_PR_Q_;
-            type_ = type;
+            pdf_c_ = &PDF_Q01_C_;
+            pdf_q_ = &PDF_Q01_Q_;
+            pdf_t_ = &PDF_Q01_T_;
+            type_ = info.type();
             break;
         }
         default :
@@ -266,18 +282,22 @@ void HitStTOF::set_type(PartType type) {
     }
 }
 
-MultiGaus HitStTOF::PDF_PR_C_(
+MultiGaus HitStTOF::PDF_Q01_C_(
     MultiGaus::Opt::ROBUST,
-    2.75608e-03
+    2.78301e+00
 );
 
-IonEloss HitStTOF::PDF_PR_Q_(
-    { 6.84708e-04, 1.22107e+00, 1.54109e+00, 2.83791e+00, 1.06167e+00, 7.87652e+00 }, // Kpa
-    { 1.01510e+00, 2.06220e+01, 1.24078e+00, 4.82421e-04, 5.80771e+00 }, // Mpv
-    { 6.21439e-02, 3.05480e+01, 1.37339e+00, 1.07762e-04, 8.70839e+00 }, // Sgm
-    5.00000e+00 // Fluc
+IonEloss HitStTOF::PDF_Q01_Q_(
+    { 3.08657e-02, 6.90186e-01, 1.81945e+00, 3.04335e+00, 1.45315e+00, 0.00000e+00 }, // Kpa
+    { 3.39070e-01, 4.05151e+00, 5.83036e-01, 1.05523e+00, 1.39493e+00 }, // Mpv
+    { 1.36404e-02, 1.69478e+00, 1.50198e+00, 1.44517e-01, 1.96318e+00 }, // Sgm
+    3.9000000e-02 // Fluc
 );
 
+MultiGaus HitStTOF::PDF_Q01_T_(
+    MultiGaus::Opt::ROBUST,
+    1.0000e+00
+);
 
 
 
@@ -322,7 +342,7 @@ IonEloss HitStTOF::PDF_PR_Q_(
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-
+/*
 void HitSt::print() const {
     std::string printStr;
     printStr += STR("================= HitSt ==================\n");
@@ -384,7 +404,7 @@ void HitSt::set_err(const PartType& type) {
         pdf_ey_ = &PDF_PR_EY_;
     }
 }
-
+*/
 
 } // namesapce TrackSys
 

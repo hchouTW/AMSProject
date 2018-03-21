@@ -83,7 +83,7 @@ int main(int argc, char * argv[]) {
     Hist* hMadcx = Hist::New("hMadcx", HistAxis(AXeta, AXadc));
     Hist* hMadcy = Hist::New("hMadcy", HistAxis(AXeta, AXadc));
     
-    Axis AXTFres("TFres [cm]", 800, -10., 10.);
+    Axis AXTFres("TFres [cm]", 800, -8., 8.);
     Hist* hMTFrx[4] = { nullptr };
     Hist* hMTFry[4] = { nullptr };
     for (int it = 0; it < 4; ++it) {
@@ -94,7 +94,7 @@ int main(int argc, char * argv[]) {
     Axis AXTFadc("TFadc", 800, 0., 3.);
     Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
 
-    Long64_t printRate = static_cast<Long64_t>(0.02*dst->GetEntries());
+    Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());

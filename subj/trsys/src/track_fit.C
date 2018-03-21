@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
     Hist* hKFCKRrsoS = Hist::New("hKFCKRrsoS", HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
     Hist* hHCCKRrsoS = Hist::New("hHCCKRrsoS", HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
    
-    const Double_t stable = 1.5;
+    const Double_t stable = 2.0;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
     std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
     std::vector<Hist*> vhKFRrso = Hist::ProjectAll(HistProj::kY, hKFRrso);
@@ -85,6 +85,7 @@ int main(int argc, char * argv[]) {
         gaus->SetParameters(1000, CKRmax, CKRrms);
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "");
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
+        (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
@@ -103,6 +104,7 @@ int main(int argc, char * argv[]) {
         (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
         (*hKFRrsoM)()->SetBinContent(it, gaus->GetParameter(1));
         (*hKFRrsoM)()->SetBinError  (it, gaus->GetParError(1));
@@ -115,6 +117,7 @@ int main(int argc, char * argv[]) {
         gaus->SetParameters(1000, HCRmax, HCRrms);
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "");
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
+        (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
@@ -176,6 +179,7 @@ int main(int argc, char * argv[]) {
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
         (*hCKBrsoM)()->SetBinContent(it, gaus->GetParameter(1)/bta);
         (*hCKBrsoM)()->SetBinError  (it, gaus->GetParError(1)/bta);
@@ -191,6 +195,7 @@ int main(int argc, char * argv[]) {
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
         (*hKFBrsoM)()->SetBinContent(it, gaus->GetParameter(1)/bta);
         (*hKFBrsoM)()->SetBinError  (it, gaus->GetParError(1)/bta);
@@ -203,6 +208,7 @@ int main(int argc, char * argv[]) {
         gaus->SetParameters(1000, HCRmax, HCRrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "");
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
+        (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
@@ -236,7 +242,7 @@ int main(int argc, char * argv[]) {
     THStack* chBrsoS = Hist::Collect("chBrsoS", HistList({ hKFCKBrsoS, hHCCKBrsoS }));
     chBrsoS->Write();
 
-
+/*
     COUT("resx\n");
     for (Int_t lay = 0; lay < 9; ++lay) {
         Hist* hCKresxS = Hist::New(CSTR("hCKresxL%dS", lay+1), HistAxis(AXmom));
@@ -491,7 +497,7 @@ int main(int argc, char * argv[]) {
         THStack* chcosyS = Hist::Collect(CSTR("chcosyL%dS", lay+1), HistList({ hKFCKcosyS, hHCCKcosyS }));
         chcosyS->Write();
     }
-
+*/
     ofle->Write();
     ofle->Close();
 

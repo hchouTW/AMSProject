@@ -6,7 +6,7 @@ namespace TrackSys {
 
 
 enum class PartType {
-    None,
+    Self,
     Photon, 
     Electron, Positron, 
     Muon, 
@@ -42,7 +42,6 @@ class PartInfo {
         inline const Double_t& mass_to_chrg() const { return mass_to_chrg_; }
         inline const Double_t& chrg_to_mass() const { return chrg_to_mass_; }
 
-
     private :
         PartType    type_;
         std::string name_;
@@ -54,7 +53,19 @@ class PartInfo {
         
         Double_t    mass_to_chrg_;
         Double_t    chrg_to_mass_;
+
+    public :
+        static inline void SetSelf(Double_t mass, Short_t chrg = 1, const std::string& name = "Self") { MASS_ = mass; CHRG_ = chrg; NAME_ = name; }
+
+    private :
+        static std::string NAME_;
+        static Short_t     CHRG_;
+        static Double_t    MASS_;
 };
+
+std::string PartInfo::NAME_ = "Self";
+Short_t     PartInfo::CHRG_ = 1;
+Double_t    PartInfo::MASS_ = 0.938272297;
 
 
 } // namespace TrackSys

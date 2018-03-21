@@ -151,6 +151,7 @@ void PropPhyCal::init() {
     eta_abs_end_ = 0.;
     
     mat_ = false;
+    tme_ = 0.; 
     len_ = 0.; 
     nrl_ = 0.; 
     ela_ = 0.; 
@@ -173,8 +174,9 @@ void PropPhyCal::init() {
 }
 
 
-void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm) {
+void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm, Double_t tme) {
     eta_abs_end_ = part.eta_abs();
+    tme_ += tme;
     len_ += mfld.rlen();
     if (mfld()) {
         mat_ = true;
@@ -258,6 +260,7 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
 
 void PropPhyCal::set_PhyArg(PhySt& part) const {
     part.arg().zero();
+    part.arg().setvar_tme(tme_);
     part.arg().setvar_len(len_);
     part.arg().setvar_mat(mat_, nrl_, ela_);
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
@@ -623,8 +626,9 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
     
     Double_t mscat_sgm = (mfld() && part.arg().mscat()) ? 
                           mp0.mscat_sgm() : Numc::ZERO<>;
-    
-    ppcal.push(part, mfld, mscat_sgm);
+   
+    Double_t tme = (step / st0.bta());
+    ppcal.push(part, mfld, mscat_sgm, tme);
 
 
     if (withJb) {
@@ -716,7 +720,8 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
                                   ) * Numc::ONE_TO_TWO) :
                           Numc::ZERO<>;
     
-    ppcal.push(part, mfld, mscat_sgm);
+    Double_t tme = (Numc::TWO<> * step / (st0.bta() + st1.bta()));
+    ppcal.push(part, mfld, mscat_sgm, tme);
    
 
     if (withJb) {
@@ -875,7 +880,8 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
                                   ) * Numc::ONE_TO_SIX) :
                           Numc::ZERO<>;
     
-    ppcal.push(part, mfld, mscat_sgm);
+    Double_t tme = (Numc::SIX<> * step / (st0.bta() + Numc::TWO<>*st1.bta() + Numc::TWO<>*st2.bta() + st3.bta()));
+    ppcal.push(part, mfld, mscat_sgm, tme);
    
 
     if (withJb) {

@@ -7,6 +7,7 @@ namespace TrackSys {
 
 void PhyArg::zero() {
     mat_ = false;
+    tme_ = 0.;
     len_ = 0.;
     nrl_ = 0.;
     ela_ = 0.;

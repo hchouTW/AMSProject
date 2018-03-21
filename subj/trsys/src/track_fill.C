@@ -86,13 +86,13 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -8.0, 8.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -6.0, 6.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
     // Fit B Res
-    Axis AXBrso("(Bm - Bt) [1]", 1000, -0.4, 0.4);
+    Axis AXBrso("(Bm/Bt - 1) [1]", 2000, -0.20, 0.20);
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
@@ -186,11 +186,11 @@ int main(int argc, char * argv[]) {
         Bool_t hasL9 = false;
         TrFitPar fitPar(type);
         for (auto&& hit : track.hits) {
-            HitSt mhit(hit.side[0], hit.side[1], hit.layJ);
+            HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             mhit.set_adc(hit.adc[0], hit.adc[1]);
-          
+         
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
                 if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); }
@@ -199,6 +199,15 @@ int main(int argc, char * argv[]) {
         }
         Short_t cutNHit = 4 + optL1 + optL9;
         if (fitPar.numOfHit() <= cutNHit) continue;
+
+        for (Int_t il = 0; il < 4; ++il) {
+            Bool_t tofx = (il == 0 || il == 3);
+            Bool_t tofy = (il == 1 || il == 2);
+            HitStTOF mhit(tofx, tofy, il);
+            mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
+            mhit.set_q(fTof->Q[il]);
+            fitPar.addHit(mhit);
+        }
 
         if (optL1 && !(hasL1 && hasMCL1)) continue;
         if (optL9 && !(hasL9 && hasMCL9)) continue;
@@ -255,8 +264,8 @@ int main(int argc, char * argv[]) {
         
         if (ck_succ) hCKtme->fillH2D(mc_mom, track.cpuTime[0][patt]);
         if (kf_succ) hKFtme->fillH2D(mc_mom, track.cpuTime[1][patt]*0.01);
-        if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.1);
-        //if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme*0.1);
+        //if (hc_succ) hHCtme->fillH2D(mc_mom, track.cpuTime[2][patt]*0.1);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme*0.1);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rig[0][patt] : 0.);
         //Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
@@ -342,7 +351,7 @@ int main(int argc, char * argv[]) {
             if (hc_succ) hHCcosy.at(it)->fillH2D(mc_mom, hc_cosy);
         }
     }
-
+    
     ofle->Write();
     ofle->Close();
 

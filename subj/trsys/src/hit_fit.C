@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
     Hist::Load("hit_fill.root", iopath);
 
     // Fit
-    Hist* hMedep = Hist::Head("hMadcy");
+    Hist* hMedep = Hist::Head("hMTFadc");
     std::vector<Hist*> vhMedep = Hist::ProjectAll(HistProj::kY, hMedep);
 
     const Axis& AXeta = hMedep->xaxis();
@@ -70,10 +70,13 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(2, 0.0, 10.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
         //func->SetParLimits(4, 0.0, 10.0*rms);
-        func->FixParameter(4, 4.4);
+        //func->FixParameter(4, 4.4);
+        func->FixParameter(4, 0.039);
+        
         (*vhMedep.at(it))()->Fit(func, "q0", "");
         (*vhMedep.at(it))()->Fit(func, "q0", "");
-        (*vhMedep.at(it))()->Fit(func, "q0", "");
+        (*vhMedep.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
+        (*vhMedep.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
     
         (*hMedepK)()->SetBinContent(it, func->GetParameter(1));
         (*hMedepK)()->SetBinError  (it, func->GetParError(1));

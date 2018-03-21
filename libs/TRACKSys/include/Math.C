@@ -291,7 +291,7 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     std::array<long double, 2>&& lg_par = ldgaus(x);
     
     long double res = robust * lg_par.at(0);          // res normx
-    long double div = robust * lg_par.at(1) * divmpv; // div f/x * div x/eta
+    long double div = robust * lg_par.at(1) * divmpv; // div r/x * div x/eta
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
         div = Numc::ZERO<long double>;

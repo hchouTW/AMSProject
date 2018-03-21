@@ -16,16 +16,18 @@ class TrFitPar {
 
     public :
         TrFitPar(const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
-        ~TrFitPar() { clear(); }
+        ~TrFitPar() { TrFitPar::clear(); }
    
-        inline void addHit(HitSt& hit) { hits_.push_back(hit); is_check_ = false; }
-        inline void delHit(Int_t it) { if (it >= 0 && it < static_cast<Int_t>(hits_.size())) { hits_.erase(hits_.begin()+it); is_check_ = false; } }
+        inline void addHit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
+        inline void addHit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
         
-        inline Short_t numOfHit() const { return hits_.size(); }
-        inline Short_t numOfSeq() const { return nseq_; }
+        inline Short_t numOfHit() { return ((checkHit() >= 0) ? hits_.size() : 0); }
+        inline const Short_t numOfSeq() const { return nseq_; }
 
     protected :
-        Bool_t checkHit();
+        Bool_t  rebuildHit();
+        Short_t checkHit();
+        inline Short_t recheckHit() { is_check_ = false; return checkHit(); }
         void clear();
 
     protected :
@@ -34,13 +36,17 @@ class TrFitPar {
         PartType    type_;
         Orientation ortt_;
 
-        std::vector<HitSt> hits_;
+        std::vector<VirtualHitSt*> hits_;
+        std::vector<HitStTRK>      hits_TRK_;
+        std::vector<HitStTOF>      hits_TOF_;
+
         Short_t            nseq_;
         Short_t            nhtx_;
         Short_t            nhty_;
 
     private :
-        Bool_t is_check_;
+        Bool_t  is_check_;
+        Short_t rlt_check_;
 
     protected :
         // Number of Hit Requirement
@@ -52,7 +58,7 @@ class TrFitPar {
 class SimpleTrFit : protected TrFitPar {
     public :
         SimpleTrFit(TrFitPar& fitPar); 
-        ~SimpleTrFit() { SimpleTrFit::clear(); TrFitPar::clear(); }
+        ~SimpleTrFit() { SimpleTrFit::clear(); }
         
     public :
         inline const Bool_t& status() const { return succ_; }
@@ -99,8 +105,8 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (checkHit()) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
-        ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); TrFitPar::clear(); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (recheckHit()>0) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
+        ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
@@ -126,7 +132,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
 class PhyTrFit : protected TrFitPar {
     public :
         PhyTrFit(TrFitPar& fitPar);
-        ~PhyTrFit() { PhyTrFit::clear(); TrFitPar::clear(); }
+        ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
         inline const Bool_t& status() const { return succ_; }
@@ -141,8 +147,8 @@ class PhyTrFit : protected TrFitPar {
         inline const PhySt* stts(Int_t lay) const { auto&& stt = map_stts_.find(lay); return ((succ_ && stt!=map_stts_.end()) ? stt->second : nullptr); }
         
         inline const Int_t nhits() const { return hits_.size(); }
-        inline const std::vector<HitSt>& hits() const { return hits_; }
-        inline const HitSt* hits(Int_t lay) const { auto&& hit = map_hits_.find(lay); return ((succ_ && hit!=map_hits_.end()) ? hit->second : nullptr); }
+        inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
+        inline const VirtualHitSt* hits(Int_t lay) const { auto&& hit = map_hits_.find(lay); return ((succ_ && hit!=map_hits_.end()) ? hit->second : nullptr); }
 
         inline const Int_t& ndof() const { return ndof_; }
         inline const Double_t& nchi() const { return nchi_; }
@@ -176,8 +182,8 @@ class PhyTrFit : protected TrFitPar {
         Double_t nchi_;
 
     protected :
-        std::map<Int_t, HitSt*> map_hits_;
-        std::map<Int_t, PhySt*> map_stts_;
+        std::map<Int_t, VirtualHitSt*> map_hits_;
+        std::map<Int_t, PhySt*>        map_stts_;
 };
 
 

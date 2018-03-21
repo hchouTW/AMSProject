@@ -34,6 +34,7 @@ class PhyArg {
         inline const Bool_t& field() const { return field_; }
         inline const Bool_t& mat() const { return mat_; }
 
+        inline const Double_t& tme() const { return tme_; }
         inline const Double_t& len() const { return len_; }
         inline const Double_t& nrl() const { return nrl_; }
         inline const Double_t& ela() const { return ela_; }
@@ -85,6 +86,7 @@ class PhyArg {
         void rndm() { if (field_) { rndm_mscatu(); rndm_mscatl(); rndm_elion(); rndm_elbrm(); } }
 
         // Set Variables
+        void setvar_tme(Double_t tme = 0) { tme_ = tme; }
         void setvar_len(Double_t len = 0) { len_ = ((len>=0.)?len:0.); }
         void setvar_mat(Bool_t mat = false, Double_t nrl = 0, Double_t ela = 0) { if (mat) { mat_ = mat; nrl_ = nrl; ela_ = ela; } }
         void setvar_orth(Short_t sign = 1, const SVecD<3>& tau = SVecD<3>(1, 0, 0), const SVecD<3>& rho = SVecD<3>(0, 1, 0)) { sign_=((sign>=0)?1:-1); orth_tau_ = tau; orth_rho_ = rho; }
@@ -102,7 +104,8 @@ class PhyArg {
         
         Bool_t   field_;
         Bool_t   mat_;
-        Double_t len_;
+        Double_t tme_; // [cm]
+        Double_t len_; // [cm]
         Double_t nrl_;
         Double_t ela_;
 

@@ -201,7 +201,7 @@ class PropPhyCal {
 
         void init(); 
         
-        void push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm = 0);
+        void push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm = 0, Double_t tme = 0);
         void normalized(const MatFld& mfld, PhySt& part);
         
         void set_PhyArg(PhySt& part) const;
@@ -214,6 +214,7 @@ class PropPhyCal {
         Double_t eta_abs_end_;
        
         Bool_t   mat_;
+        Double_t tme_;
         Double_t len_;
         Double_t nrl_;
         Double_t ela_;
