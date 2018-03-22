@@ -10,8 +10,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
    
-    Hist::Load("track_fill.root", "dat");
-    //Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test9");
+    //Hist::Load("track_fill.root", "dat");
+    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test10");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
     Hist* hKFCKRrsoS = Hist::New("hKFCKRrsoS", HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
     Hist* hHCCKRrsoS = Hist::New("hHCCKRrsoS", HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
    
-    const Double_t stable = 2.0;
+    const Double_t stable = 1.7;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
     std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
     std::vector<Hist*> vhKFRrso = Hist::ProjectAll(HistProj::kY, hKFRrso);
@@ -172,6 +172,7 @@ int main(int argc, char * argv[]) {
        
         // Choutko
         Double_t CKRmax = (*vhCKBrso.at(it))()->GetBinCenter((*vhCKBrso.at(it))()->GetMaximumBin());
+        //Double_t CKRmax = 0;
         Double_t CKRrms = (*vhCKBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, CKRmax, CKRrms);
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "");
@@ -188,6 +189,7 @@ int main(int argc, char * argv[]) {
         
         // Kalman Filter
         Double_t KFRmax = (*vhKFBrso.at(it))()->GetBinCenter((*vhKFBrso.at(it))()->GetMaximumBin());
+        //Double_t KFRmax = 0;
         Double_t KFRrms = (*vhKFBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, KFRmax, KFRrms);
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "");
@@ -204,6 +206,7 @@ int main(int argc, char * argv[]) {
         
         // Hsin-Yi Chou
         Double_t HCRmax = (*vhHCBrso.at(it))()->GetBinCenter((*vhHCBrso.at(it))()->GetMaximumBin());
+        //Double_t HCRmax = 0;
         Double_t HCRrms = (*vhHCBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, HCRmax, HCRrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "");
