@@ -258,6 +258,17 @@ void HitStTOF::cal(const PhySt& part) {
     tnrm_ = Numc::ZERO<>;
     tdiv_ = Numc::ZERO<>;
     if (t_side_) {
+        Double_t ds  = std::fabs(part.path() - OFFSET_S_);
+        if (!Numc::EqualToZero(ds)) {
+            Double_t dt  = (t_ + OFFSET_T_) - part.time();
+            Double_t ter = pdf_t_->efft_sgm(dt);
+            tnrm_ = (dt / ter);
+            tdiv_ = (Numc::NEG<> / ds / ter) * (part.eta() / part.bta());
+            if (!Numc::Valid(tnrm_) || !Numc::Valid(tdiv_)) {
+                tnrm_ = Numc::ZERO<>;
+                tdiv_ = Numc::ZERO<>;
+            }
+        }
     }
 
     set_dummy_x(part.cx());

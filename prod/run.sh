@@ -1,6 +1,6 @@
 #!/bin/bash
-#Version=18Mar12
-Version=vdev
+Version=18Mar22
+#Version=vdev
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
@@ -18,8 +18,8 @@ Stream=lst/flist.ncu.mc.pr.pl1.l1.054000.B1119
 #Stream=lst/flist.cern.mc.el.pl1.0_25200.B1119
 #Stream=lst/flist.cern.mc.el.pl1.2004000.B1119
 
-GroupId=2
-GroupSize=10
+GroupId=20
+GroupSize=1
 OutputDir=.
 
 if [[ -f ${RunFile} && -f ${Stream} ]]; then

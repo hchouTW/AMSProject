@@ -266,6 +266,9 @@ void PropPhyCal::set_PhyArg(PhySt& part) const {
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
     part.arg().setvar_mscat(mscat_uu_, mscat_ul_, mscat_ll_);
     part.arg().setvar_eloss(elion_mpv_, elion_sgm_, elbrm_men_);
+
+    part.set_path(part.path() + len_);
+    part.set_time(part.time() + tme_);
 }
 
 

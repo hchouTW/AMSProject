@@ -182,7 +182,9 @@ class HitStTOF : public VirtualHitSt {
             t_side_ = true;
             t_      = (t_side_ ? t : Numc::ZERO<>);
         }
-       
+
+        inline const Double_t& t() const { return t_; }
+
         inline const Short_t&  seqIDq() const { return seqIDq_; }
         inline const Short_t&  seqIDt() const { return seqIDt_; }
 
@@ -203,7 +205,7 @@ class HitStTOF : public VirtualHitSt {
         Double_t q_; // Q
         
         Bool_t   t_side_;
-        Double_t t_; // T
+        Double_t t_; // T [cm]
 
         Double_t qnrm_; // Q nrom
         Double_t qdiv_; // Q div
@@ -219,7 +221,19 @@ class HitStTOF : public VirtualHitSt {
         static MultiGaus PDF_Q01_C_;
         static IonEloss  PDF_Q01_Q_;
         static MultiGaus PDF_Q01_T_;
+
+    public :
+        static constexpr Double_t TRANS_NS_TO_CM = 2.99792458e+01; // [ns] -> [cm]
+        static void SetOffsetTime(Double_t offset_t = Numc::ZERO<>) { OFFSET_T_ = offset_t; }
+        static void SetOffsetPath(Double_t offset_s = Numc::ZERO<>) { OFFSET_S_ = offset_s; }
+
+    protected :
+        static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF PART-TOF)
+        static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
 };
+
+Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
+Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
 
 
 template<class HitStType>

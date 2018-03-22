@@ -235,6 +235,18 @@ class PhySt {
         
         SVecD<3> coo_;
         SVecD<3> dir_;
+
+    // Global Information of Track
+    public :
+        inline void set_path(Double_t path) { path_ = path; }
+        inline void set_time(Double_t time) { time_ = time; }
+
+        inline const Double_t& path() const { return path_; }
+        inline const Double_t& time() const { return time_; }
+
+    private :
+        Double_t path_;
+        Double_t time_;
 };
         
 

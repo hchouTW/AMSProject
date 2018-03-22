@@ -221,10 +221,10 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
             if (id == 1) {
                 Short_t dec = -1, lay = -1;
                 if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
-                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il+1; break; } // Silicon
-                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il+1; break; } // TOF
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il+1; break; } // TRD
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il+1; break; } // ECAL
+                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il; break; } // Silicon
+                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il; break; } // TOF
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il; break; } // TRD
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il; break; } // ECAL
                 if (dec < 0 || lay < 0) continue;
                 Float_t eta = (fG4mc.primPart.mass / mcev->Momentum);
                 Float_t bta = (MGNumc::EqualToZero(fG4mc.primPart.mass) ? 1.0 : 1.0/(1.0+eta*eta));
@@ -287,7 +287,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.coo[2] = coo[2];
 
             for (auto&& seg : fG4mc.primPart.segs) {
-                if (seg.dec != 0 || seg.lay != hit.layJ) continue;
+                if (seg.dec != 0 || (seg.lay+1) != hit.layJ) continue;
                 float dz = (hit.coo[2] - seg.coo[2]);
                 float tx = (seg.dir[0] / seg.dir[2]);
                 float ty = (seg.dir[1] / seg.dir[2]);
@@ -612,6 +612,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTof.normChisqC  = betaH->GetNormChi2C();
 
 		fTof.betaHPatt = 0;
+        Float_t minT = 0.;
 		for (int il = 0; il < 4; il++) {
 			if (!betaH->TestExistHL(il)) continue;
 			TofClusterHR* cls = betaH->GetClusterHL(il);
@@ -623,9 +624,16 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
             fTof.err[il][0] = cls->ECoo[0];
             fTof.err[il][1] = cls->ECoo[1];
             fTof.err[il][2] = cls->ECoo[2];
-			fTof.Q[il] = betaH->GetQL(il, 2, qopt);
+            fTof.T[il]      = cls->Time;
+            fTof.TErr[il]   = cls->ETime;
+			fTof.Q[il]      = betaH->GetQL(il, 2, qopt);
 			fTof.betaHPatt += pattIdx[il];
+            minT = std::min(minT, cls->Time);
 		}
+		for (int il = 0; il < 4; il++) {
+            if (fTof.Q[il] <= 0) continue;
+            fTof.T[il] -= minT;
+        }
 
 		int nlay = 0;
 		float Qall_RMS = 0;
@@ -660,6 +668,23 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	for (int il = 0; il < 4; ++il) {
 		fTof.numOfExtCls[il] = nearHitNm[il];
 	}
+
+	if (checkEventMode(EventBase::MC)) {
+        int    mcnum[4] = {0};
+        double mcbta[4] = {0};
+        for (int it = 0; it < event->NTofMCCluster(); ++it) {
+            TofMCClusterR* cls = event->pTofMCCluster(it);
+            if (cls == nullptr) continue;
+            if (cls->GtrkID != 1) continue;
+            int lay = cls->GetLayer();
+            mcbta[lay] += cls->Beta;
+            mcnum[lay]++;
+        }
+        for (int il = 0; il < 4; ++il) {
+            if (mcnum[il] == 0) continue;
+            fTof.mcBeta[il] = (mcbta[il] / mcnum[il]);
+        }
+    }
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -851,13 +876,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 			TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 			
-			TkSens tksens(coo, EventBase::checkEventMode(EventBase::MC));
+			TkSens tksens(coo, checkEventMode(EventBase::MC));
 			int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
 
             double xloc = (xcls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointX()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointX();
             double yloc = (ycls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointY()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointY();
 
-	        const int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+	        int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+	        if (checkEventMode(EventBase::MC) && event->Version() >= 1107)
+                qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
+
 			float xadc = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
 			float yadc = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
 
@@ -971,10 +999,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
         // HChou Fitting
         TrackSys::TrFitPar fitPar(TrackSys::PartType::Proton);
-        TrackSys::HitSt mhitL1;
-        TrackSys::HitSt mhitL9;
+        TrackSys::HitStTRK mhitL1;
+        TrackSys::HitStTRK mhitL9;
         for (auto&& hit : track.hits) {
-            TrackSys::HitSt mhit(hit.side[0], hit.side[1], hit.layJ);
+            TrackSys::HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             mhit.set_adc(hit.adc[0], hit.adc[1]);
@@ -988,9 +1016,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (int patt = 0; patt < _npatt; patt++) {
             const int algo = 2;
             TrackSys::TrFitPar _fitPar = fitPar;
-            if (_patt[patt] == 5 || _patt[patt] == 7) { if (!mhitL1()) continue; _fitPar.addHit(mhitL1); }
-            if (_patt[patt] == 6 || _patt[patt] == 7) { if (!mhitL9()) continue; _fitPar.addHit(mhitL9); }
-           
+            if (_patt[patt] == 5 || _patt[patt] == 7) { if (!(mhitL1.csx() || mhitL1.csy())) continue; _fitPar.addHit(mhitL1); }
+            if (_patt[patt] == 6 || _patt[patt] == 7) { if (!(mhitL9.csx() || mhitL9.csy())) continue; _fitPar.addHit(mhitL9); }
+          
             MGClock::HrsStopwatch sw; sw.start();
             //TrackSys::SimpleTrFit hctr(_fitPar);
             TrackSys::PhyTrFit    hctr(_fitPar);
@@ -1016,17 +1044,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				track.stateLJ[algo][patt][il][6] = stt->rig();
             }
 
-            //TrackSys::PhySt ppst(hctr.part());
-            //for (int il = 0; il < 9; ++il) {
-            //    TrackSys::PropMgnt::PropToZ(recEv.trackerZJ[il], ppst);
-			//	track.stateLJ[algo][patt][il][0] = ppst.cx();
-			//	track.stateLJ[algo][patt][il][1] = ppst.cy();
-			//	track.stateLJ[algo][patt][il][2] = ppst.cz();
-			//	track.stateLJ[algo][patt][il][3] = ppst.ux();
-			//	track.stateLJ[algo][patt][il][4] = ppst.uy();
-			//	track.stateLJ[algo][patt][il][5] = ppst.uz();
-            //}
-            
             track.cpuTime[algo][patt] = sw.time() * 1.0e3;
         }
 

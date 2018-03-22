@@ -54,6 +54,9 @@ void PhySt::reset(const PartType& type) {
     coo_ = std::move(SVecD<3>(0, 0, 0));
     dir_ = std::move(SVecD<3>(0, 0, -1));
     arg_.clear();
+    
+    path_ = Numc::ZERO<>;
+    time_ = Numc::ZERO<>;
 }
         
 

@@ -17,7 +17,9 @@ class TrFitPar {
     public :
         TrFitPar(const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
-   
+
+        void print() const;
+
         inline void addHit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
         inline void addHit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
         
