@@ -998,6 +998,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		}
 
         // HChou Fitting
+        /*
         TrackSys::TrFitPar fitPar(TrackSys::PartType::Proton);
         TrackSys::HitStTRK mhitL1;
         TrackSys::HitStTRK mhitL9;
@@ -1005,7 +1006,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_adc(hit.adc[0], hit.adc[1]);
+            //mhit.set_adc(hit.adc[0], hit.adc[1]);
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
                 if (hit.layJ == 1) mhitL1 = mhit;
@@ -1046,6 +1047,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
             track.cpuTime[algo][patt] = sw.time() * 1.0e3;
         }
+        */
 
 		fTrk.track = track;
 	}
@@ -1155,7 +1157,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				{
 				  if (recEv.iTrTrack < 0) break;
 				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-				  int fitid_max = trtk->iTrTrackPar(1, 0, 22);
+				  int fitid_max = trtk->iTrTrackPar(1, 0, 21);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
 				  isOK = true;

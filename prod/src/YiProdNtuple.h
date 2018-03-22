@@ -103,7 +103,7 @@ class RecEvent {
 	// Algorithm     (CHOUTKO, KALMAN, HCHOU)
 	// Track Pattern (Inn, InnL1, InnL9, FS)
     public :
-        inline void initTrRft() { std::fill_n(_trRft[0], 3*4, 22); }
+        inline void initTrRft() { std::fill_n(_trRft[0], 3*4, 21); } // testcode 22->21
         inline int trRft(int i, int j) { 
             if (_trRft[i][j]==22) { _trRft[i][j] = 21; return 22; }
             else return _trRft[i][j];
