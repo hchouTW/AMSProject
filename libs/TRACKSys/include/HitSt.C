@@ -307,7 +307,7 @@ IonEloss HitStTOF::PDF_Q01_Q_(
 
 MultiGaus HitStTOF::PDF_Q01_T_(
     MultiGaus::Opt::ROBUST,
-    1.0000e+00
+    6.54953960794784162e+00 // TWO Time Fluc 0.154481
 );
 
 

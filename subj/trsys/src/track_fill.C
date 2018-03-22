@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar12/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar12/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar22/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar22/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -48,8 +48,8 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
-    dst->SetBranchAddress("rich", &fRich);
-    dst->SetBranchAddress("ecal", &fEcal);
+    //dst->SetBranchAddress("rich", &fRich);
+    //dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -189,7 +189,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_adc(hit.adc[0], hit.adc[1]);
+            //mhit.set_adc(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {
@@ -206,7 +206,7 @@ int main(int argc, char * argv[]) {
             HitStTOF mhit(tofx, tofy, il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
-            //mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
+            mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.addHit(mhit);
         }
 

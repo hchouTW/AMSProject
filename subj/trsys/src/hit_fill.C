@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Mar12/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar22/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -39,15 +39,16 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
-    dst->SetBranchAddress("rich", &fRich);
-    dst->SetBranchAddress("ecal", &fEcal);
+    //dst->SetBranchAddress("rich", &fRich);
+    //dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 150, 0.35, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 50, 0.2, 10., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
@@ -79,19 +80,11 @@ int main(int argc, char * argv[]) {
     Axis AXedep("Edep", 800, 0., 1.0);
     Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
     
-    Axis AXadc("ADC", 800, 0., 400.);
+    Axis AXadc("TKadc", 800, 0., 8.);
     Hist* hMadcx = Hist::New("hMadcx", HistAxis(AXeta, AXadc));
     Hist* hMadcy = Hist::New("hMadcy", HistAxis(AXeta, AXadc));
     
-    Axis AXTFres("TFres [cm]", 800, -8., 8.);
-    Hist* hMTFrx[4] = { nullptr };
-    Hist* hMTFry[4] = { nullptr };
-    for (int it = 0; it < 4; ++it) {
-        hMTFrx[it] = Hist::New(Form("hMTF%drx", it), HistAxis(AXmom, AXTFres));
-        hMTFry[it] = Hist::New(Form("hMTF%dry", it), HistAxis(AXmom, AXTFres));
-    }
-    
-    Axis AXTFadc("TFadc", 800, 0., 3.);
+    Axis AXTFadc("TFadc", 800, 0., 4.);
     Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
@@ -188,14 +181,7 @@ int main(int argc, char * argv[]) {
             
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
-            Double_t eta = mass/mtf[it]->mom;
-            Double_t dz = fTof->coo[it][2] - mtf[it]->coo[2];
-            Double_t tx = mtf[it]->dir[0] / mtf[it]->dir[2];
-            Double_t ty = mtf[it]->dir[1] / mtf[it]->dir[2];
-            Double_t rx = fTof->coo[it][0] - (mtf[it]->coo[0] + tx * dz);
-            Double_t ry = fTof->coo[it][1] - (mtf[it]->coo[1] + ty * dz);
-            hMTFrx[it]->fillH2D(mtf[it]->mom, rx);
-            hMTFry[it]->fillH2D(mtf[it]->mom, ry);
+            Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
             hMTFadc->fillH2D(eta, fTof->Q[it]);
         }
     }

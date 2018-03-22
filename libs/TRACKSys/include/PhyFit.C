@@ -621,6 +621,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
             if (hitTOF->seqIDq()>=0) rs(hitTOF->seqIDq()) += hitTOF->qnrm();
+            if (hitTOF->seqIDt()>=0) rs(hitTOF->seqIDt()) += hitTOF->tnrm();
             if (hasJacb) {
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
                 if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), it) += hitTOF->qdiv() * jbGG(4, it);
