@@ -300,7 +300,8 @@ class HitTRDInfo : public TObject {
 			lay  = 0;
 			sub  = 0;
 			side = 0;
-			amp  = -1;
+			amp  = 0;
+			len  = 0;
 			std::fill_n(coo, 3, 0);
 		}
 
@@ -309,9 +310,10 @@ class HitTRDInfo : public TObject {
 		Short_t sub;    // ladder * 100 + tube
 		Short_t side;   // side, 1 x, 2 y, 3 xy
 		Float_t amp;    // (elc) amp
+		Float_t len;    // (elc) len
 		Float_t coo[3];
 
-	ClassDef(HitTRDInfo, 2)
+	ClassDef(HitTRDInfo, 3)
 };
 
 struct HitTRDInfo_sort {
@@ -825,6 +827,9 @@ class TRD : public TObject {
             numOfSegment = 0;
 			numOfTrack = 0;
 			numOfHTrack = 0;
+			
+            trackStatus = false;
+			std::fill_n(trackState, 6, 0);
 
 			std::fill_n(statusKCls, 2, false);
 			std::fill_n(LLRep, 2, -1);
@@ -833,8 +838,8 @@ class TRD : public TObject {
 			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
 
-			trackStatus = false;
-			std::fill_n(trackState, 6, 0);
+            hits[0].clear();
+            hits[1].clear();
 
             std::fill_n(vtxNum, 3, 0);
             vtxNTrk = 0;
@@ -848,6 +853,10 @@ class TRD : public TObject {
         Short_t numOfSegment;
 		Short_t numOfTrack;
 		Short_t numOfHTrack;
+		
+        // TrdTrack or TrdHTrack (first TrdH, second Trd)
+		Bool_t  trackStatus;
+		Float_t trackState[6]; // coo, dir
 
 		// (TrdHTrack or TrdTrack) and TrTrack
 		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
@@ -857,9 +866,7 @@ class TRD : public TObject {
 		Short_t LLRnhit[2];
 		Float_t Q[2];
 
-		// TrdTrack or TrdHTrack (first TrdH, second Trd)
-		Bool_t  trackStatus;
-		Float_t trackState[6]; // coo, dir
+        std::vector<HitTRDInfo> hits[2];
 
         // TRDVertex
         Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
@@ -868,7 +875,7 @@ class TRD : public TObject {
         Float_t vtxChi2;
         Float_t vtxCoo[3];
 
-	ClassDef(TRD, 7)
+	ClassDef(TRD, 8)
 };
 
 

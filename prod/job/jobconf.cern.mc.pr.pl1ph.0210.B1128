@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  18Mar22
+PROJVERSION  =  18Mar23
 PROJTITLE    =  PR0210.B1128
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.mc.pr.pl1ph.0210.B1128

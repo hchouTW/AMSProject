@@ -958,6 +958,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         Int_t zin  = (track.QIn < 1.) ? 1 : std::lrint(track.QIn);
         float mass = (zin < 2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
 		for (int algo = 0; algo < _nalgo; ++algo) {
+            if (algo == 1) continue; // testcode
 			for (int patt = 0; patt < _npatt; ++patt) {
                 MGClock::HrsStopwatch sw; sw.start();
                 TrFit trFit;
@@ -1127,7 +1128,48 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	fTrd.numOfSegment = event->NTrdSegment();
 	fTrd.numOfTrack = event->NTrdTrack();
 	fTrd.numOfHTrack = event->NTrdHTrack();
-		
+	
+    // Track
+    short trdIdx = -1;
+	if      (recEv.iTrdHTrack >= 0) trdIdx = 1;
+	else if (recEv.iTrdTrack  >= 0) trdIdx = 0;
+
+	while (trdIdx >= 0) {
+		bool isOK = false;
+		AMSPoint trd_coo;
+		AMSDir trd_dir;
+		// Base on TrdTrack
+		if (trdIdx == 0) {
+			TrdTrackR * trd = event->pTrdTrack(recEv.iTrdTrack);
+			trd_coo.setp(trd->Coo[0], trd->Coo[1], trd->Coo[2]);
+			trd_dir.SetTheta(trd->Theta);
+			trd_dir.SetPhi(trd->Phi);
+			trd_dir[0] *= -1; trd_dir[1] *= -1; trd_dir[2] *= -1;
+			isOK = true;
+		}
+		// Base on TrdHTrack
+		if (trdIdx == 1) {
+			TrdHTrackR * trdh = event->pTrdHTrack(recEv.iTrdHTrack);
+			trd_coo.setp(trdh->Coo[0], trdh->Coo[1], trdh->Coo[2]);
+			trd_dir.setd(trdh->Dir[0], trdh->Dir[1], trdh->Dir[2]);
+			trd_dir[0] *= -1; trd_dir[1] *= -1; trd_dir[2] *= -1;
+			isOK = true;
+		}
+		if (!isOK) break;
+		else isOK = true;
+
+		fTrd.trackStatus = true;
+		fTrd.trackState[0] = trd_coo[0];
+		fTrd.trackState[1] = trd_coo[1];
+		fTrd.trackState[2] = trd_coo[2];
+		fTrd.trackState[3] = trd_dir[0];
+		fTrd.trackState[4] = trd_dir[1];
+		fTrd.trackState[5] = trd_dir[2];
+
+		break;
+	} // while loop --- trd track
+
+
 	// TrdKCluster
 	float TOF_Beta = 1;
 	if      (recEv.iBetaH >= 0) TOF_Beta = std::fabs(event->pBetaH(recEv.iBetaH)->GetBeta());
@@ -1187,67 +1229,48 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		else if (kindOfFit == 1) trdkcls->GetLikelihoodRatio_TrTrack(threshold, llr, nhits);
 		if (llr[0] < 0 || llr[1] < 0 || llr[2] < 0) continue;
 
-		int numberOfHit = 0;
+        AMSPoint trdKP0;
+        AMSDir   trdKDir;
+        if (kindOfFit == 1) {
+            trdkcls->GetTrTrackExtrapolation(trdKP0, trdKDir);
+        }
+        else {
+            trdKP0  = AMSPoint(fTrd.trackState[0], fTrd.trackState[1], fTrd.trackState[2]);
+            trdKDir = AMSDir(fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5]);
+        }
+
 		for (int ih = 0; ih < nhits; ih++) {
-			TrdKHit * hit = trdkcls->GetHit(ih);
+			TrdKHit* hit = trdkcls->GetHit(ih);
 			if (hit == nullptr) continue;
 			if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
 				if (!hit->IsCalibrated) continue;
 			if (checkEventMode(EventBase::ISS))
 				if (!hit->IsAligned) continue;
-			//int lay = hit->TRDHit_Layer;
-			//float amp = hit->TRDHit_Amp;
-			numberOfHit++;
+            
+            HitTRDInfo hitInfo;
+            hitInfo.lay = hit->TRDHit_Layer;
+            hitInfo.sub = hit->TRDHit_Ladder * 100 + hit->TRDHit_Tube;
+            hitInfo.side = hit->TRDHit_Direction;
+            hitInfo.amp = hit->TRDHit_Amp;
+            hitInfo.len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
+            hitInfo.coo[0] = hit->TRDHit_TRDTrack_x;
+            hitInfo.coo[1] = hit->TRDHit_TRDTrack_y;
+            hitInfo.coo[2] = hit->TRDHit_TRDTrack_z;
+            fTrd.hits[kindOfFit].push_back(hitInfo);
 		}
-		if (numberOfHit <= 0) continue;
+		if (fTrd.hits[kindOfFit].size() == 0) continue;
+        std::sort(fTrd.hits[kindOfFit].begin(), fTrd.hits[kindOfFit].end(), HitTRDInfo_sort());
 
 		fTrd.statusKCls[kindOfFit] = true;
 		fTrd.LLRep[kindOfFit]      = llr[0];
 		fTrd.LLReh[kindOfFit]      = llr[1];
 		fTrd.LLRph[kindOfFit]      = llr[2];
-		fTrd.LLRnhit[kindOfFit]    = numberOfHit;
+		fTrd.LLRnhit[kindOfFit]    = fTrd.hits[kindOfFit].size();
 		fTrd.Q[kindOfFit]          = Q;
 	}
 
-	short trdIdx = -1;
-	if      (recEv.iTrdHTrack >= 0) trdIdx = 1;
-	else if (recEv.iTrdTrack  >= 0) trdIdx = 0;
 
-	while (trdIdx >= 0) {
-		bool isOK = false;
-		AMSPoint trd_coo;
-		AMSDir trd_dir;
-		// Base on TrdTrack
-		if (trdIdx == 0) {
-			TrdTrackR * trd = event->pTrdTrack(recEv.iTrdTrack);
-			trd_coo.setp(trd->Coo[0], trd->Coo[1], trd->Coo[2]);
-			trd_dir.SetTheta(trd->Theta);
-			trd_dir.SetPhi(trd->Phi);
-			trd_dir[0] *= -1; trd_dir[1] *= -1; trd_dir[2] *= -1;
-			isOK = true;
-		}
-		// Base on TrdHTrack
-		if (trdIdx == 1) {
-			TrdHTrackR * trdh = event->pTrdHTrack(recEv.iTrdHTrack);
-			trd_coo.setp(trdh->Coo[0], trdh->Coo[1], trdh->Coo[2]);
-			trd_dir.setd(trdh->Dir[0], trdh->Dir[1], trdh->Dir[2]);
-			trd_dir[0] *= -1; trd_dir[1] *= -1; trd_dir[2] *= -1;
-			isOK = true;
-		}
-		if (!isOK) break;
-		else isOK = true;
-
-		fTrd.trackStatus = true;
-		fTrd.trackState[0] = trd_coo[0];
-		fTrd.trackState[1] = trd_coo[1];
-		fTrd.trackState[2] = trd_coo[2];
-		fTrd.trackState[3] = trd_dir[0];
-		fTrd.trackState[4] = trd_dir[1];
-		fTrd.trackState[5] = trd_dir[2];
-
-		break;
-	} // while loop --- trd track
-
+    // Vertex
     TRDVertex trdVtx;
     trdVtx.Reconstruction(event);
 
