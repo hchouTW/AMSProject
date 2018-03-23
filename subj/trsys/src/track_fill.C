@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar22/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar22/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -13,11 +13,11 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
 
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
@@ -217,7 +217,7 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mcs[9] = { nullptr };
         HitTRKMCInfo*  mch[9] = { nullptr };
         HitTRKInfo*    msh[9] = { nullptr };
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay -1] = &seg; }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay] = &seg; }
         for (auto&& hit : fG4mc->primPart.hits) mch[hit.layJ-1] = &hit;
         for (auto&& hit :           track.hits) msh[hit.layJ-1] = &hit;
 
@@ -225,7 +225,7 @@ int main(int argc, char * argv[]) {
         for (Int_t it = 0; it < 9; ++it) hasLay[it] = (mcs[it] && mch[it] && msh[it]);
 
         SegPARTMCInfo* topmc = nullptr;
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay >= 2-optL1) { topmc = &seg; break; } }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay >= 1-optL1) { topmc = &seg; break; } }
         if (topmc == nullptr) continue;
 
         Double_t mc_mom  = topmc->mom;
@@ -270,7 +270,7 @@ int main(int argc, char * argv[]) {
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rig[0][patt] : 0.);
         //Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
-        Double_t kf_irig = (kf_succ ? MGMath::ONE/track.stateLJ[1][patt][topmc->lay-1][6] : 0.);
+        Double_t kf_irig = (kf_succ ? MGMath::ONE/track.stateLJ[1][patt][topmc->lay][6] : 0.);
         //Double_t hc_irig = (hc_succ ? MGMath::ONE/track.rig[2][patt] : 0.);
 
         Double_t ck_rig = (ck_succ ? 1.0/ck_irig : 0.);

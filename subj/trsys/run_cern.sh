@@ -7,9 +7,9 @@ RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 CurDir=${PWD}
 
 DataType=MC
-Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar12
+Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test10
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test11
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
