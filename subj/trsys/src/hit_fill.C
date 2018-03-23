@@ -52,7 +52,7 @@ int main(int argc, char * argv[]) {
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 50, 0.2, 10., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 20, 0.2, 10., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);

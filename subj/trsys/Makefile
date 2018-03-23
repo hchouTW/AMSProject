@@ -25,10 +25,10 @@ all :
 	@cp -fa $(PWD)/src/track_fit.C $(TagetDir)/src/track_fit.C 2> /dev/null
 	make $(TagetDir)/hit_fill
 	make $(TagetDir)/hit_fit
-	make $(TagetDir)/prop_fill
-	make $(TagetDir)/prop_fit
-	make $(TagetDir)/track_fill
-	make $(TagetDir)/track_fit
+	#make $(TagetDir)/prop_fill
+	#make $(TagetDir)/prop_fit
+	#make $(TagetDir)/track_fill
+	#make $(TagetDir)/track_fit
 
 
 $(TagetDir)/obj/hit_fill.o : $(TagetDir)/src/hit_fill.C
