@@ -258,7 +258,7 @@ void HitStTOF::cal(const PhySt& part) {
     tnrm_ = Numc::ZERO<>;
     tdiv_ = Numc::ZERO<>;
     if (t_side_) {
-        Double_t ds  = std::fabs(part.path() - OFFSET_S_);
+        Double_t ds = std::fabs(part.path() - OFFSET_S_);
         if (!Numc::EqualToZero(ds)) {
             Double_t dt  = (t_ + OFFSET_T_) - part.time();
             Double_t ter = pdf_t_->efft_sgm(dt);

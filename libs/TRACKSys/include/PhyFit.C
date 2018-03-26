@@ -293,6 +293,10 @@ Bool_t SimpleTrFit::simpleFit() {
     UInt_t updIter = 0;
     UInt_t curIter = 0;
     while (curIter <= LMTU_ITER && !succ) {
+        Bool_t resetTOF = true;
+        HitStTOF::SetOffsetTime(Numc::ZERO<>);
+        HitStTOF::SetOffsetPath(Numc::ZERO<>);
+        
         Double_t chix = Numc::ZERO<>;
         Double_t chiy = Numc::ZERO<>;
         SVecD<5>    grdG;
@@ -305,8 +309,14 @@ Bool_t SimpleTrFit::simpleFit() {
             PhyJb curjb;
             if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr, &curjb)) break;
             ppjb = curjb.gg() * ppjb;
+        
+            if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
+                HitStTOF::SetOffsetPath(ppst.path());
+                HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
+                resetTOF = false;
+            }
             hit->cal(ppst);
-            
+
             SVecD<2> rsM;
             rsM(0) = (hit->seqIDcx()>=0 ? hit->cnrmx() * hit->cdivx() : Numc::ZERO<>);
             rsM(1) = (hit->seqIDcy()>=0 ? hit->cnrmy() * hit->cdivy() : Numc::ZERO<>);
@@ -491,6 +501,10 @@ Bool_t PhyTrFit::physicalFit() {
 
 
 Bool_t PhyTrFit::evolve() {
+    Bool_t resetTOF = true;
+    HitStTOF::SetOffsetTime(Numc::ZERO<>);
+    HitStTOF::SetOffsetPath(Numc::ZERO<>);
+    
     Double_t chix = 0;
     Double_t chiy = 0;
     Double_t chit = 0;
@@ -507,10 +521,22 @@ Bool_t PhyTrFit::evolve() {
         ppst.symbk();
 
         stts_.at(cnt_nhit) = ppst;
+        if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
+            HitStTOF::SetOffsetPath(ppst.path());
+            HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
+            resetTOF = false;
+            //CERR("\n\nTOF RESET TO %14.8f\n", ppst.time());
+        }
         hit->cal(ppst);
 
         if (hit->seqIDcx()>=0) chix += hit->cnrmx() * hit->cnrmx(); 
         if (hit->seqIDcy()>=0) chiy += hit->cnrmy() * hit->cnrmy();
+        
+        HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
+        if (hitTOF != nullptr) {
+            ///if (hitTOF) CERR("TOF L %d T %14.8f DT %14.8f COO %14.8f %14.8f %14.8f\n", hitTOF->lay(), hitTOF->t(), hitTOF->t()-ppst.time(), hitTOF->cx(), hitTOF->cy(), hitTOF->cz());
+            ///CERR("L %d LEN %14.8f TIME %14.8f Beta %14.8f\n", hit->lay(), ppst.path(), ppst.time(), ppst.path()/ppst.time());
+        }
         
         if (cnt_nhit != 0) {
             SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());

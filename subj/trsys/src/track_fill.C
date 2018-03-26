@@ -62,9 +62,9 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.40, 4000., AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 100, 0.35, 4000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.40, 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Double_t mass = 0.938272297;
@@ -86,13 +86,13 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -6.0, 6.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 3000, -5.0, 5.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
     // Fit B Res
-    Axis AXBrso("(Bm/Bt - 1) [1]", 2000, -0.20, 0.20);
+    Axis AXBrso("(Bm/Bt - 1) [1]", 1000, -0.12, 0.12);
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
@@ -228,7 +228,16 @@ int main(int argc, char * argv[]) {
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay >= 1-optL1) { topmc = &seg; break; } }
         if (topmc == nullptr) continue;
 
-        Double_t mc_mom  = topmc->mom;
+        Double_t tmom = 0;
+        Double_t tbta = fTof->mcBeta[0];
+        if (tbta > 0) {
+            tmom = mass / std::sqrt(1.0 / tbta / tbta - 1.0);
+            if (!Numc::Valid(tmom)) tmom = topmc->mom;
+        }
+        else tmom = tmom = topmc->mom;
+
+        //Double_t mc_mom  = topmc->mom;
+        Double_t mc_mom  = tmom;
         Double_t mc_eta  = mass/mc_mom;
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
@@ -297,12 +306,12 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));
         if (hc_succ) hHCRrso->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
-        if (ck_succ) hCKBrso->fillH2D(mc_bta, (ck_bta - mc_bta));
-        if (kf_succ) hKFBrso->fillH2D(mc_bta, (kf_bta - mc_bta));
-        if (hc_succ) hHCBrso->fillH2D(mc_bta, (hc_bta - mc_bta));
-        hSH0Brso->fillH2D(mc_bta, (fTrk->betaSH[0] - mc_bta) / mc_bta);
-        hSH1Brso->fillH2D(mc_bta, (fTrk->betaSH[1] - mc_bta) / mc_bta);
-        hSH2Brso->fillH2D(mc_bta, (fTrk->betaSH[2] - mc_bta) / mc_bta);
+        if (ck_succ) hCKBrso->fillH2D(mc_bta, (ck_bta/mc_bta - 1.0));
+        if (kf_succ) hKFBrso->fillH2D(mc_bta, (kf_bta/mc_bta - 1.0));
+        if (hc_succ) hHCBrso->fillH2D(mc_bta, (hc_bta/mc_bta - 1.0));
+        hSH0Brso->fillH2D(mc_bta, (fTrk->betaSH[0]/mc_bta - 1.0));
+        hSH1Brso->fillH2D(mc_bta, (fTrk->betaSH[1]/mc_bta - 1.0));
+        hSH2Brso->fillH2D(mc_bta, (fTrk->betaSH[2]/mc_bta - 1.0));
         
         if (ck_succ) hCKRchix->fillH2D(mc_mom, ck_chix);
         if (kf_succ) hKFRchix->fillH2D(mc_mom, kf_chix);

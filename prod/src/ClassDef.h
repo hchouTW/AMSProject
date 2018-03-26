@@ -708,7 +708,7 @@ class TOF : public TObject {
 			std::fill_n(coo[0], 4*3, 0);
 			std::fill_n(err[0], 4*3, 0);
 			std::fill_n(T, 4, -1);
-			std::fill_n(TErr, 4, -1);
+			std::fill_n(TErr, 4, 0);
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
             Zall = -1;

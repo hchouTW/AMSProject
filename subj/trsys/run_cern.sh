@@ -8,17 +8,18 @@ CurDir=${PWD}
 
 DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
+#Stream=${CurDir}/lst/flist.cern.mc.EL025200_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test11
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test17
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
 #Hit
 #GroupSize=30
-#Nseq=65
+#Nseq=50
 #Fit
-GroupSize=10
-Nseq=200
+GroupSize=7
+Nseq=210
 
 for id in `seq 0 ${Nseq}`
 do

@@ -81,15 +81,15 @@ int main(int argc, char * argv[]) {
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
     
-    Axis AXedep("Edep", 800, 0., 1.0);
-    Hist* hMedep = Hist::New("hMedep", HistAxis(AXeta, AXedep));
-    
     Axis AXadc("TKadc", 800, 0., 8.);
     Hist* hMadcx = Hist::New("hMadcx", HistAxis(AXeta, AXadc));
     Hist* hMadcy = Hist::New("hMadcy", HistAxis(AXeta, AXadc));
     
     Axis AXTFadc("TFadc", 800, 0., 4.);
     Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
+    
+    Axis AXTDadc("TDadc", 1200, 0., 4000.);
+    Hist* hMTDadc = Hist::New("hMTDadc", HistAxis(AXeta, AXTDadc));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -177,8 +177,6 @@ int main(int argc, char * argv[]) {
                 if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
                 if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
             }
-            if (ntp[0]!=0 && ntp[1]!=0) hMedep->fillH2D(eta, mch[it]->edep*1.0e3*std::fabs(mcs[it]->dir[2]));
-            
             if (ntp[0]!=0 && rec[it]->adc[0]>0) hMadcx->fillH2D(eta, rec[it]->adc[0]);
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hMadcy->fillH2D(eta, rec[it]->adc[1]);
         }
@@ -187,6 +185,12 @@ int main(int argc, char * argv[]) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
             hMTFadc->fillH2D(eta, fTof->Q[it]);
+        }
+
+        for (auto&& hit : fTrd->hits[0]) {
+            if (hit.len <= 0 || hit.amp <= 0) continue;
+            Double_t dedx = hit.amp/hit.len;
+            hMTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
         }
     }
 

@@ -179,11 +179,11 @@ class HitStTOF : public VirtualHitSt {
         }
         
         inline void set_t(Double_t t) {
-            t_side_ = true;
+            t_side_ = (Numc::Compare(t) >= 0);
             t_      = (t_side_ ? t : Numc::ZERO<>);
         }
 
-        inline const Double_t& t() const { return t_; }
+        inline Double_t t() const { return (t_ + OFFSET_T_); }
 
         inline const Short_t&  seqIDq() const { return seqIDq_; }
         inline const Short_t&  seqIDt() const { return seqIDt_; }
@@ -226,7 +226,9 @@ class HitStTOF : public VirtualHitSt {
         static constexpr Double_t TRANS_NS_TO_CM = 2.99792458e+01; // [ns] -> [cm]
         static void SetOffsetTime(Double_t offset_t = Numc::ZERO<>) { OFFSET_T_ = offset_t; }
         static void SetOffsetPath(Double_t offset_s = Numc::ZERO<>) { OFFSET_S_ = offset_s; }
-
+        static const Double_t& OffsetTime() { return OFFSET_T_; }
+        static const Double_t& OffsetPath() { return OFFSET_S_; }
+    
     protected :
         static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF PART-TOF)
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)

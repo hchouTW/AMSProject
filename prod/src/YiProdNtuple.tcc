@@ -624,14 +624,14 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
             fTof.err[il][0] = cls->ECoo[0];
             fTof.err[il][1] = cls->ECoo[1];
             fTof.err[il][2] = cls->ECoo[2];
-            fTof.T[il]      = cls->Time;
-            fTof.TErr[il]   = cls->ETime;
+            fTof.T[il]      = betaH->GetTime(il);
+            fTof.TErr[il]   = betaH->GetETime(il);
 			fTof.Q[il]      = betaH->GetQL(il, 2, qopt);
 			fTof.betaHPatt += pattIdx[il];
-            minT = std::min(minT, cls->Time);
+            minT = std::min(minT, fTof.T[il]);
 		}
 		for (int il = 0; il < 4; il++) {
-            if (fTof.Q[il] <= 0) continue;
+            if (fTof.T[il] >= 0) { fTof.T[il] = -1; continue; }
             fTof.T[il] -= minT;
         }
 

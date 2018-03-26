@@ -10,8 +10,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
    
-    Hist::Load("track_fill.root", "dat");
-    //Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test10");
+    //Hist::Load("track_fill.root", "dat");
+    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test15");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
@@ -168,58 +168,56 @@ int main(int argc, char * argv[]) {
     std::vector<Hist*> vhHCBrso = Hist::ProjectAll(HistProj::kY, hHCBrso);
 
     for (int it = 1; it <= AXbta.nbin(); ++it) {
-        double bta = AXbta.center(it, AxisScale::kLog);
-       
         // Choutko
-        Double_t CKRmax = (*vhCKBrso.at(it))()->GetBinCenter((*vhCKBrso.at(it))()->GetMaximumBin());
+        Double_t CKBmax = (*vhCKBrso.at(it))()->GetBinCenter((*vhCKBrso.at(it))()->GetMaximumBin());
         //Double_t CKRmax = 0;
-        Double_t CKRrms = (*vhCKBrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, CKRmax, CKRrms);
+        Double_t CKBrms = (*vhCKBrso.at(it))()->GetRMS();
+        gaus->SetParameters(1000, CKBmax, CKBrms);
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "");
-        (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
+        (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", CKBmax-stable*CKBrms, CKBmax+stable*CKBrms);
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hCKBrsoM)()->SetBinContent(it, gaus->GetParameter(1)/bta);
-        (*hCKBrsoM)()->SetBinError  (it, gaus->GetParError(1)/bta);
-        (*hCKBrsoS)()->SetBinContent(it, gaus->GetParameter(2)/bta);
-        (*hCKBrsoS)()->SetBinError  (it, gaus->GetParError(2)/bta);
+        (*hCKBrsoM)()->SetBinContent(it, gaus->GetParameter(1));
+        (*hCKBrsoM)()->SetBinError  (it, gaus->GetParError(1));
+        (*hCKBrsoS)()->SetBinContent(it, gaus->GetParameter(2));
+        (*hCKBrsoS)()->SetBinError  (it, gaus->GetParError(2));
         
         // Kalman Filter
-        Double_t KFRmax = (*vhKFBrso.at(it))()->GetBinCenter((*vhKFBrso.at(it))()->GetMaximumBin());
+        Double_t KFBmax = (*vhKFBrso.at(it))()->GetBinCenter((*vhKFBrso.at(it))()->GetMaximumBin());
         //Double_t KFRmax = 0;
-        Double_t KFRrms = (*vhKFBrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, KFRmax, KFRrms);
+        Double_t KFBrms = (*vhKFBrso.at(it))()->GetRMS();
+        gaus->SetParameters(1000, KFBmax, KFBrms);
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "");
-        (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", KFRmax-stable*KFRrms, KFRmax+stable*KFRrms);
+        (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", KFBmax-stable*KFBrms, KFBmax+stable*KFBrms);
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hKFBrsoM)()->SetBinContent(it, gaus->GetParameter(1)/bta);
-        (*hKFBrsoM)()->SetBinError  (it, gaus->GetParError(1)/bta);
-        (*hKFBrsoS)()->SetBinContent(it, gaus->GetParameter(2)/bta);
-        (*hKFBrsoS)()->SetBinError  (it, gaus->GetParError(2)/bta);
+        (*hKFBrsoM)()->SetBinContent(it, gaus->GetParameter(1));
+        (*hKFBrsoM)()->SetBinError  (it, gaus->GetParError(1));
+        (*hKFBrsoS)()->SetBinContent(it, gaus->GetParameter(2));
+        (*hKFBrsoS)()->SetBinError  (it, gaus->GetParError(2));
         
         // Hsin-Yi Chou
-        Double_t HCRmax = (*vhHCBrso.at(it))()->GetBinCenter((*vhHCBrso.at(it))()->GetMaximumBin());
+        Double_t HCBmax = (*vhHCBrso.at(it))()->GetBinCenter((*vhHCBrso.at(it))()->GetMaximumBin());
         //Double_t HCRmax = 0;
-        Double_t HCRrms = (*vhHCBrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, HCRmax, HCRrms);
+        Double_t HCBrms = (*vhHCBrso.at(it))()->GetRMS();
+        gaus->SetParameters(1000, HCBmax, HCBrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "");
-        (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
+        (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", HCBmax-stable*HCBrms, HCBmax+stable*HCBrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hHCBrsoM)()->SetBinContent(it, gaus->GetParameter(1)/bta);
-        (*hHCBrsoM)()->SetBinError  (it, gaus->GetParError(1)/bta);
-        (*hHCBrsoS)()->SetBinContent(it, gaus->GetParameter(2)/bta);
-        (*hHCBrsoS)()->SetBinError  (it, gaus->GetParError(2)/bta);
+        (*hHCBrsoM)()->SetBinContent(it, gaus->GetParameter(1));
+        (*hHCBrsoM)()->SetBinError  (it, gaus->GetParError(1));
+        (*hHCBrsoS)()->SetBinContent(it, gaus->GetParameter(2));
+        (*hHCBrsoS)()->SetBinError  (it, gaus->GetParError(2));
         
         (*hKFCKBrsoS)()->SetBinContent(it, (*hKFBrsoS)()->GetBinContent(it)/(*hCKBrsoS)()->GetBinContent(it));
         (*hHCCKBrsoS)()->SetBinContent(it, (*hHCBrsoS)()->GetBinContent(it)/(*hCKBrsoS)()->GetBinContent(it));
