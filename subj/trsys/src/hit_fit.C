@@ -33,15 +33,15 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
   
-    //std::string iopath = "/ams_home/hchou/AMSProject/subj/trsys/dat";
-    std::string iopath = "/afs/cern.ch/work/h/hchou/AMSData/test18";
+    std::string iopath = "/ams_home/hchou/AMSProject/subj/trsys/dat";
+    //std::string iopath = "/afs/cern.ch/work/h/hchou/AMSData/test18";
     Int_t idx = std::atoi(argv[1]);
 
     //Hist::Load("hit_fill.root", "dat");
     Hist::Load("hit_fill.root", iopath);
 
     // Fit
-    Hist* hAdc = Hist::Head("hTKadcx");
+    Hist* hAdc = Hist::Head("hMTFadc");
     std::vector<Hist*> vhAdc = Hist::ProjectAll(HistProj::kY, hAdc);
 
     const Axis& AXeta = hAdc->xaxis();
@@ -70,9 +70,9 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(1, 0.0, 1.0);
         func->SetParLimits(2, 0.0, 10.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
-        //func->SetParLimits(4, 0.0, 10.0*rms);
-        func->FixParameter(4, 0.178087);
-        //func->FixParameter(4, 0.039);
+        func->SetParLimits(4, 0.0, 10.0*rms);
+        //func->FixParameter(4, 0.178087); // TKadcx
+        //func->FixParameter(4, 0.166633); // TKadcy
         
         (*vhAdc.at(it))()->Fit(func, "q0", "");
         (*vhAdc.at(it))()->Fit(func, "q0", "");

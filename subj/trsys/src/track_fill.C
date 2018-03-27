@@ -189,7 +189,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_adc(hit.adc[0], hit.adc[1]);
+            mhit.set_adc(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
             else {

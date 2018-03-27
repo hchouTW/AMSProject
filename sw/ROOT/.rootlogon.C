@@ -61,9 +61,9 @@
     flg->SetParameters(1.0, 0.1, 0.0, 1.0);
     flg->SetParLimits(1, 0.0, 1.0);
     
-    TF1* flggm = new TF1("flggm", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) ) + [4]*TMath::Exp(-[5]/x)*TMath::Power([5]/x, [6])");
-    flggm->SetParameters(1.0, 0.1, 0.0, 1.0, 1.0, 1.0, 2.0);
-    flggm->SetParLimits(1, 0.0, 1.0);
+    //TF1* flggm = new TF1("flggm", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) ) + [4]*TMath::Exp(-[5]/x)*TMath::Power([5]/x, [6])");
+    //flggm->SetParameters(1.0, 0.1, 0.0, 1.0, 1.0, 1.0, 2.0);
+    //flggm->SetParLimits(1, 0.0, 1.0);
     
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 

@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -11,11 +11,11 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
 
     MGConfig::JobOpt opt(argc, argv);
 
@@ -85,10 +85,10 @@ int main(int argc, char * argv[]) {
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
     Axis AXTFadc("TFadc", 800, 0., 4.);
-    Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
+    Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
     Axis AXTDadc("TDadc", 1200, 0., 4000.);
-    Hist* hMTDadc = Hist::New("hMTDadc", HistAxis(AXeta, AXTDadc));
+    Hist* hTDadc = Hist::New("hTDadc", HistAxis(AXeta, AXTDadc));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -183,13 +183,13 @@ int main(int argc, char * argv[]) {
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
-            hMTFadc->fillH2D(eta, fTof->Q[it]);
+            hTFadc->fillH2D(eta, fTof->Q[it]);
         }
 
         for (auto&& hit : fTrd->hits[0]) {
             if (hit.len <= 0 || hit.amp <= 0) continue;
             Double_t dedx = hit.amp/hit.len;
-            hMTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
+            hTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
         }
     }
 
