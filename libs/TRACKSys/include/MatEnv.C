@@ -642,12 +642,14 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t nrl     = mfld.nrl();
     Double_t sqr_nrl = std::sqrt(nrl);
     Double_t log_nrl = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
-    
+
     // Highland-Lynch-Dahl formula
-    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
+    //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
+    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
     
     // Modified Highland-Lynch-Dahl formula
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
+    Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
+    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;

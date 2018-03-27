@@ -45,20 +45,21 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
-    dst->SetBranchAddress("rich", &fRich);
-    dst->SetBranchAddress("ecal", &fEcal);
+    //dst->SetBranchAddress("rich", &fRich);
+    //dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
-    Int_t laySat = 1;
-    Int_t layEnd = 2;
+    Int_t decSel = 2;
+    Int_t laySat = 0;
+    Int_t layEnd = 1;
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 150, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
@@ -132,23 +133,16 @@ int main(int argc, char * argv[]) {
         // No Interaction
         if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100.) continue;
 
-        // REC hit
-        HitTRKInfo* rec[9]; std::fill_n(rec, 9, nullptr);
-        for (auto&& hit : track.hits) { rec[hit.layJ-1] = &hit; }
-
         // MC hit
-        HitTRKMCInfo* mch[9]; std::fill_n(mch, 9, nullptr);
-        for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
-        
         SegPARTMCInfo* mcs[9]; std::fill_n(mcs, 9, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay] = &seg; }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == decSel) mcs[seg.lay] = &seg; }
 
-        Bool_t hasSat = (rec[laySat-1] && mch[laySat-1] && mcs[laySat-1]);
-        Bool_t hasEnd = (rec[layEnd-1] && mch[layEnd-1] && mcs[layEnd-1]);
+        Bool_t hasSat = mcs[laySat];
+        Bool_t hasEnd = mcs[layEnd];
 
         if (!hasSat || !hasEnd) continue;
-        SegPARTMCInfo* mcsU = mcs[laySat-1];
-        SegPARTMCInfo* mcsL = mcs[layEnd-1];
+        SegPARTMCInfo* mcsU = mcs[laySat];
+        SegPARTMCInfo* mcsL = mcs[layEnd];
 
         PhySt part(PartType::Proton);
         part.set_state_with_cos(

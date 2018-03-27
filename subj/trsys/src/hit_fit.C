@@ -33,66 +33,66 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
   
-    std::string iopath = "/ams_home/hchou/AMSProject/subj/trsys/dat";
+    //std::string iopath = "/ams_home/hchou/AMSProject/subj/trsys/dat";
+    std::string iopath = "/afs/cern.ch/work/h/hchou/AMSData/test18";
     Int_t idx = std::atoi(argv[1]);
 
     //Hist::Load("hit_fill.root", "dat");
     Hist::Load("hit_fill.root", iopath);
 
     // Fit
-    Hist* hMedep = Hist::Head("hMTFadc");
-    std::vector<Hist*> vhMedep = Hist::ProjectAll(HistProj::kY, hMedep);
+    Hist* hAdc = Hist::Head("hTKadcx");
+    std::vector<Hist*> vhAdc = Hist::ProjectAll(HistProj::kY, hAdc);
 
-    const Axis& AXeta = hMedep->xaxis();
-    const Axis& AXadc = hMedep->yaxis();
+    const Axis& AXeta = hAdc->xaxis();
+    const Axis& AXadc = hAdc->yaxis();
     
     TFile * ofle = new TFile(Form("%s/hit_fit%04d.root", iopath.c_str(), idx), "RECREATE");
     ofle->cd();
 
     Hist::AddDirectory();
     
-    Hist* hMedepK = Hist::New("hMedepK", HistAxis(AXeta, "Kappa"));
-    Hist* hMedepM = Hist::New("hMedepM", HistAxis(AXeta, "Mpv"));
-    Hist* hMedepS = Hist::New("hMedepS", HistAxis(AXeta, "Sigma"));
-    Hist* hMedepF = Hist::New("hMedepF", HistAxis(AXeta, "Fluc"));
+    Hist* hAdcK = Hist::New("hAdcK", HistAxis(AXeta, "Kappa"));
+    Hist* hAdcM = Hist::New("hAdcM", HistAxis(AXeta, "Mpv"));
+    Hist* hAdcS = Hist::New("hAdcS", HistAxis(AXeta, "Sigma"));
+    Hist* hAdcF = Hist::New("hAdcF", HistAxis(AXeta, "Fluc"));
 
     TF1* fcov = new TF1("fcov", flgcov, 0, 100, 5);
     TF1* func = fcov;
     func->SetParameters(1.0, 0.1, 0.0, 1.0, 1.0);
     //for (int it = 1; it <= AXeta.nbin(); ++it) {
-    for (int it = idx; it <= idx; ++it) {
+    for (int it = idx; it <= idx && it <= AXeta.nbin(); ++it) {
         COUT("Process ITER %d\n", it);
         Double_t kpa = 0.1;
-        Double_t mpv = (*vhMedep.at(it))()->GetBinCenter((*vhMedep.at(it))()->GetMaximumBin());
-        Double_t rms = (*vhMedep.at(it))()->GetRMS();
+        Double_t mpv = (*vhAdc.at(it))()->GetBinCenter((*vhAdc.at(it))()->GetMaximumBin());
+        Double_t rms = (*vhAdc.at(it))()->GetRMS();
         func->SetParameters(1000, kpa, mpv, rms, 0.3*rms);
         func->SetParLimits(1, 0.0, 1.0);
         func->SetParLimits(2, 0.0, 10.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
         //func->SetParLimits(4, 0.0, 10.0*rms);
-        //func->FixParameter(4, 4.4);
-        func->FixParameter(4, 0.039);
+        func->FixParameter(4, 0.178087);
+        //func->FixParameter(4, 0.039);
         
-        (*vhMedep.at(it))()->Fit(func, "q0", "");
-        (*vhMedep.at(it))()->Fit(func, "q0", "");
-        (*vhMedep.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
-        (*vhMedep.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
+        (*vhAdc.at(it))()->Fit(func, "q0", "");
+        (*vhAdc.at(it))()->Fit(func, "q0", "");
+        (*vhAdc.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
+        (*vhAdc.at(it))()->Fit(func, "q0", "", func->GetParameter(1)-4*func->GetParameter(2), func->GetParameter(1)+6.*func->GetParameter(2));
     
-        (*hMedepK)()->SetBinContent(it, func->GetParameter(1));
-        (*hMedepK)()->SetBinError  (it, func->GetParError(1));
-        (*hMedepM)()->SetBinContent(it, func->GetParameter(2));
-        (*hMedepM)()->SetBinError  (it, func->GetParError(2));
-        (*hMedepS)()->SetBinContent(it, func->GetParameter(3));
-        (*hMedepS)()->SetBinError  (it, func->GetParError(3));
-        (*hMedepF)()->SetBinContent(it, func->GetParameter(4));
-        (*hMedepF)()->SetBinError  (it, func->GetParError(4));
+        (*hAdcK)()->SetBinContent(it, func->GetParameter(1));
+        (*hAdcK)()->SetBinError  (it, func->GetParError(1));
+        (*hAdcM)()->SetBinContent(it, func->GetParameter(2));
+        (*hAdcM)()->SetBinError  (it, func->GetParError(2));
+        (*hAdcS)()->SetBinContent(it, func->GetParameter(3));
+        (*hAdcS)()->SetBinError  (it, func->GetParError(3));
+        (*hAdcF)()->SetBinContent(it, func->GetParameter(4));
+        (*hAdcF)()->SetBinError  (it, func->GetParError(4));
 
         Hist* tmpl = Hist::New(Form("tmpl%03d", it), HistAxis(AXadc));
         for (int jt = 1; jt <= AXadc.nbin(); ++jt) {
             (*tmpl)()->SetBinContent(jt, func->Eval(AXadc.center(jt)));
-            (*tmpl)()->SetBinError(jt, 1.0e-6);
         }
-        (*vhMedep.at(it))()->Write();
+        (*vhAdc.at(it))()->Write();
     }
   
     ofle->Write();

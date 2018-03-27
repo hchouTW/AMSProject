@@ -51,8 +51,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.35, 4000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 20, 0.2, 10., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
     
     Double_t mass = 0.938272297;
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
@@ -81,9 +80,9 @@ int main(int argc, char * argv[]) {
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
     
-    Axis AXadc("TKadc", 800, 0., 8.);
-    Hist* hMadcx = Hist::New("hMadcx", HistAxis(AXeta, AXadc));
-    Hist* hMadcy = Hist::New("hMadcy", HistAxis(AXeta, AXadc));
+    Axis AXTKadc("TKadc", 800, 0., 8.);
+    Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
+    Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
     Axis AXTFadc("TFadc", 800, 0., 4.);
     Hist* hMTFadc = Hist::New("hMTFadc", HistAxis(AXeta, AXTFadc));
@@ -123,8 +122,8 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 4);
 
         // Charge
-        //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        //if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // TOF
@@ -177,8 +176,8 @@ int main(int argc, char * argv[]) {
                 if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
                 if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
             }
-            if (ntp[0]!=0 && rec[it]->adc[0]>0) hMadcx->fillH2D(eta, rec[it]->adc[0]);
-            if (ntp[1]!=0 && rec[it]->adc[1]>0) hMadcy->fillH2D(eta, rec[it]->adc[1]);
+            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]);
+            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]);
         }
             
         for (Int_t it = 0; it < 4; ++it) {

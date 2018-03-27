@@ -62,9 +62,9 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.40, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 100, 0.40, 4000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Double_t mass = 0.938272297;
