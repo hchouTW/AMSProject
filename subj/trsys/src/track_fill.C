@@ -234,7 +234,7 @@ int main(int argc, char * argv[]) {
             tmom = mass / std::sqrt(1.0 / tbta / tbta - 1.0);
             if (!Numc::Valid(tmom)) tmom = topmc->mom;
         }
-        else tmom = tmom = topmc->mom;
+        else tmom = topmc->mom;
 
         //Double_t mc_mom  = topmc->mom;
         Double_t mc_mom  = tmom;

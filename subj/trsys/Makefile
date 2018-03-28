@@ -17,18 +17,37 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(PWD)/src/time_fill.C $(TagetDir)/src/time_fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/time_fit.C $(TagetDir)/src/time_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/hit_fill.C $(TagetDir)/src/hit_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/hit_fit.C $(TagetDir)/src/hit_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fill.C $(TagetDir)/src/prop_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fit.C $(TagetDir)/src/prop_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/track_fill.C $(TagetDir)/src/track_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/track_fit.C $(TagetDir)/src/track_fit.C 2> /dev/null
+	#make $(TagetDir)/time_fill
+	#make $(TagetDir)/time_fit
 	#make $(TagetDir)/hit_fill
-	make $(TagetDir)/hit_fit
+	#make $(TagetDir)/hit_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	#make $(TagetDir)/track_fill
-	#make $(TagetDir)/track_fit
+	make $(TagetDir)/track_fit
+
+$(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/time_fill.d
+
+$(TagetDir)/time_fill : $(TagetDir)/obj/time_fill.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+$(TagetDir)/obj/time_fit.o : $(TagetDir)/src/time_fit.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/time_fit.d
+
+$(TagetDir)/time_fit : $(TagetDir)/obj/time_fit.o
+	$(LD) -o $@ $+ $(LIBP)
+
 
 
 $(TagetDir)/obj/hit_fill.o : $(TagetDir)/src/hit_fill.C
@@ -79,6 +98,8 @@ clean :
 	@rm -fv $(TagetDir)/obj/*
 	@rm -fv $(TagetDir)/src/*
 	@rm -fv $(TagetDir)/lst/*
+	@rm -fv $(TagetDir)/time_fill
+	@rm -fv $(TagetDir)/time_fit
 	@rm -fv $(TagetDir)/hit_fill
 	@rm -fv $(TagetDir)/hit_fit
 	@rm -fv $(TagetDir)/prop_fill

@@ -76,23 +76,23 @@ int main(int argc, char * argv[]) {
     Axis AXagl("Residual [p#beta/Q]", 800, -0.25, 0.25);
     Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 800, 0.2, 12);
     
-    Hist* hMcx = Hist::New("hMcx", "hMcx", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual x
-    Hist* hMcy = Hist::New("hMcy", "hMcy", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual y
-    Hist* hTcx = Hist::New("hTcx", "hTcx", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual x
-    Hist* hTcy = Hist::New("hTcy", "hTcy", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual y
+    Hist* hMcx = Hist::New("hMcx", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual x
+    Hist* hMcy = Hist::New("hMcy", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual y
+    Hist* hTcx = Hist::New("hTcx", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual x
+    Hist* hTcy = Hist::New("hTcy", HistAxis(AXeta, AXcoo)); // (TH2D) ToyMC: residual y
 
-    Hist* hMux = Hist::New("hMux", "hMux", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle x
-    Hist* hMuy = Hist::New("hMuy", "hMuy", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle y
-    Hist* hTux = Hist::New("hTux", "hTux", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle x
-    Hist* hTuy = Hist::New("hTuy", "hTuy", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle y
+    Hist* hMux = Hist::New("hMux", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle x
+    Hist* hMuy = Hist::New("hMuy", HistAxis(AXeta, AXagl)); // (TH2D) MC: cosine angle y
+    Hist* hTux = Hist::New("hTux", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle x
+    Hist* hTuy = Hist::New("hTuy", HistAxis(AXeta, AXagl)); // (TH2D) ToyMC: cosine angle y
 
-    Hist* hMee = Hist::New("hMee", "hMee", HistAxis(AXeta, AXels)); // (TH2D) MC: kinetic energy difference
-    Hist* hTee = Hist::New("hTee", "hTee", HistAxis(AXeta, AXels)); // (TH2D) ToyMC: kinetic energy difference
+    Hist* hMee = Hist::New("hMee", HistAxis(AXeta, AXels)); // (TH2D) MC: kinetic energy difference
+    Hist* hTee = Hist::New("hTee", HistAxis(AXeta, AXels)); // (TH2D) ToyMC: kinetic energy difference
     
-    Hist* hMcux = Hist::New("hMcux", "hMcux", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual x vs. cosine angle x
-    Hist* hMcuy = Hist::New("hMcuy", "hMcuy", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual y vs. cosine angle y
-    Hist* hTcux = Hist::New("hTcux", "hTcux", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual x vs. cosine angle x
-    Hist* hTcuy = Hist::New("hTcuy", "hTcuy", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual y vs. cosine angle y
+    Hist* hMcux = Hist::New("hMcux", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual x vs. cosine angle x
+    Hist* hMcuy = Hist::New("hMcuy", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual y vs. cosine angle y
+    Hist* hTcux = Hist::New("hTcux", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual x vs. cosine angle x
+    Hist* hTcuy = Hist::New("hTcuy", HistAxis(AXcoo, AXagl)); // (TH2D) ToyMC: residual y vs. cosine angle y
 
     Long64_t printRate = static_cast<Long64_t>(0.04*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());

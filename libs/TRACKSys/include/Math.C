@@ -276,9 +276,11 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double ibsqr  = (Numc::ONE<long double> + abseta * abseta);
     
     // Robust Method (Reduce important index in high energy)
-    long double lngm = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
-    if (!Numc::Valid(lngm) || Numc::Compare(lngm) <= 0) lngm = Numc::ZERO<long double>;
-    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm * lngm);
+    long double lngm    = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
+    long double lngm8th = std::pow(lngm, Numc::EIGHT<long double>);
+    if (!Numc::Valid(lngm8th) || Numc::Compare(lngm8th) <= 0) lngm8th = Numc::ZERO<long double>;
+    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngmsqr);
+    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm8th);
   
     // PDF parameters
     long double kpa    = eval_kpa(abseta, ibsqr); 

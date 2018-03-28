@@ -1,4 +1,5 @@
 #!/bin/bash
+#RunFile=${AMSCore}/subj/trsys/vdev/time_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fit
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
@@ -10,7 +11,7 @@ DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
 #Stream=${CurDir}/lst/flist.cern.mc.EL025200_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test19
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test24
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 

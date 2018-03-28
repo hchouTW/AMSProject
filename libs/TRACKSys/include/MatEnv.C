@@ -354,15 +354,19 @@ Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t l
 
 Bool_t MatGeoBoxReader::is_in_box(const SVecD<3>& coo) {
     if (!is_load_) return false;
-    if (Numc::Compare(coo(2), min_.at(2)) <= 0 || Numc::Compare(coo(2), max_.at(2)) >= 0) return false;
-    if (Numc::Compare(coo(1), min_.at(1)) <= 0 || Numc::Compare(coo(1), max_.at(1)) >= 0) return false;
-    if (Numc::Compare(coo(0), min_.at(0)) <= 0 || Numc::Compare(coo(0), max_.at(0)) >= 0) return false;
+    if (!Numc::Valid(coo(2)) || Numc::Compare(coo(2), min_.at(2)) <= 0 || Numc::Compare(coo(2), max_.at(2)) >= 0) return false;
+    if (!Numc::Valid(coo(1)) || Numc::Compare(coo(1), min_.at(1)) <= 0 || Numc::Compare(coo(1), max_.at(1)) >= 0) return false;
+    if (!Numc::Valid(coo(0)) || Numc::Compare(coo(0), min_.at(0)) <= 0 || Numc::Compare(coo(0), max_.at(0)) >= 0) return false;
     return true;
 }
 
 
 Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
     if (!is_load_) return false;
+    Bool_t valid = (Numc::Valid(vcoo(2)) && Numc::Valid(wcoo(2)) && 
+                    Numc::Valid(vcoo(1)) && Numc::Valid(wcoo(1)) &&
+                    Numc::Valid(vcoo(0)) && Numc::Valid(wcoo(0)));
+    if (!valid) return false;
     if (Numc::Compare(vcoo(2), min_.at(2)) <= 0 && Numc::Compare(wcoo(2), min_.at(2)) <= 0) return false;
     if (Numc::Compare(vcoo(2), max_.at(2)) >= 0 && Numc::Compare(wcoo(2), max_.at(2)) >= 0) return false;
     if (Numc::Compare(vcoo(1), min_.at(1)) <= 0 && Numc::Compare(wcoo(1), min_.at(1)) <= 0) return false;
@@ -377,13 +381,13 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
     if (!is_load_) return MatFld();
 
     Long64_t zi = static_cast<Long64_t>(std::floor((coo(2) - min_.at(2)) / dlt_.at(2)));
-    if (zi < 0 || zi >= n_.at(2)) return MatFld();
+    if (!Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) return MatFld();
     
     Long64_t yi = static_cast<Long64_t>(std::floor((coo(1) - min_.at(1)) / dlt_.at(1)));
-    if (yi < 0 || yi >= n_.at(1)) return MatFld();
+    if (!Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) return MatFld();
 
     Long64_t xi = static_cast<Long64_t>(std::floor((coo(0) - min_.at(0)) / dlt_.at(0)));
-    if (xi < 0 || xi >= n_.at(0)) return MatFld();
+    if (!Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) return MatFld();
 
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
     Bool_t   mat = mat_ptr_[idx];
@@ -405,18 +409,21 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t wzloc = std::move((wcoo(2) - min_.at(2)) / dlt_.at(2));
     Long64_t vzi = static_cast<Long64_t>(std::floor(vzloc));
     Long64_t wzi = static_cast<Long64_t>(std::floor(wzloc));
+    if (!Numc::Valid(vzi) || !Numc::Valid(wzi)) return MatFld();
     if ((vzi < 0 && wzi < 0) || (vzi >= n_.at(2) && wzi >= n_.at(2))) return MatFld();
     
     Double_t vyloc = std::move((vcoo(1) - min_.at(1)) / dlt_.at(1));
     Double_t wyloc = std::move((wcoo(1) - min_.at(1)) / dlt_.at(1));
     Long64_t vyi = static_cast<Long64_t>(std::floor(vyloc));
     Long64_t wyi = static_cast<Long64_t>(std::floor(wyloc));
+    if (!Numc::Valid(vyi) || !Numc::Valid(wyi)) return MatFld();
     if ((vyi < 0 && wyi < 0) || (vyi >= n_.at(1) && wyi >= n_.at(1))) return MatFld();
     
     Double_t vxloc = std::move((vcoo(0) - min_.at(0)) / dlt_.at(0));
     Double_t wxloc = std::move((wcoo(0) - min_.at(0)) / dlt_.at(0));
     Long64_t vxi = static_cast<Long64_t>(std::floor(vxloc));
     Long64_t wxi = static_cast<Long64_t>(std::floor(wxloc));
+    if (!Numc::Valid(vxi) || !Numc::Valid(wxi)) return MatFld();
     if ((vxi < 0 && wxi < 0) || (vxi >= n_.at(0) && wxi >= n_.at(0))) return MatFld();
 
     Double_t rlen = LA::Mag((wcoo - vcoo));
@@ -467,11 +474,11 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t sum_loc2 = 0;
     for (Long64_t it = itsat; it < itend; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(std::floor(itloc(2)));
-        if (zi < 0 || zi >= n_.at(2)) continue;
+        if (!Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) continue;
         Long64_t yi = static_cast<Long64_t>(std::floor(itloc(1)));
-        if (yi < 0 || yi >= n_.at(1)) continue;
+        if (!Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) continue;
         Long64_t xi = static_cast<Long64_t>(std::floor(itloc(0)));
-        if (xi < 0 || xi >= n_.at(0)) continue;
+        if (!Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) continue;
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         Bool_t   mat = mat_ptr_[idx];
@@ -691,7 +698,8 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t elion_men    = elion_sgm * (transke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
     
     // Calculate Ncl (Number of men eloss to maximum trans eng)
-    Double_t elion_ncl = ((Bethe_Bloch * corr_fact) / trans_eng);
+    Double_t maxke = (((trans_eng / mass_rel) / mass_in_MeV) * eta_trans); // [1]
+    Double_t elion_ncl = (elion_sgm / maxke); // [1]
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
@@ -717,6 +725,76 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     if (!Numc::Valid(elbrm_men) || Numc::Compare(elbrm_men) <= 0) elbrm_men = Numc::ZERO<>;
     return elbrm_men;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+/*
+void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
+{
+  // Code ported from GEANT 3 (erland.F)
+
+  // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
+  double sigma2E ( 0. );
+  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
+  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
+  double kappa ( zeta / Emax );
+
+  if (kappa > 0.01) { // Vavilov-Gaussian regime
+    sigma2E += zeta * Emax * (1. - betaSquare / 2.); // eV^2
+  } else { // Urban/Landau approximation
+    // calculate number of collisions Nc
+    double I = 16. * pow(matZ_, 0.9); // eV
+    double f2 = 0.;
+    if (matZ_ > 2.) f2 = 2. / matZ_;
+    double f1 = 1. - f2;
+    double e2 = 10.*matZ_ * matZ_; // eV
+    double e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
+
+    double mbbgg2 = 2.E9 * mass_ * betaSquare * gammaSquare; // eV
+    double Sigma1 = dEdx_ * 1.0E9 * f1 / e1 * (log(mbbgg2 / e1) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
+    double Sigma2 = dEdx_ * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
+    double Sigma3 = dEdx_ * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
+
+    double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(stepSize_);
+
+    if (Nc > 50.) { // truncated Landau distribution
+      double sigmaalpha = 15.76;
+      // calculate sigmaalpha  (see GEANT3 manual W5013)
+      double RLAMED = -0.422784 - betaSquare - log(zeta / Emax);
+      double RLAMAX =  0.60715 + 1.1934 * RLAMED + (0.67794 + 0.052382 * RLAMED) * exp(0.94753 + 0.74442 * RLAMED);
+      // from lambda max to sigmaalpha=sigma (empirical polynomial)
+      if (RLAMAX <= 1010.) {
+        sigmaalpha =  1.975560
+                      + 9.898841e-02 * RLAMAX
+                      - 2.828670e-04 * RLAMAX * RLAMAX
+                      + 5.345406e-07 * pow(RLAMAX, 3.)
+                      - 4.942035e-10 * pow(RLAMAX, 4.)
+                      + 1.729807e-13 * pow(RLAMAX, 5.);
+      } else { sigmaalpha = 1.871887E+01 + 1.296254E-02 * RLAMAX; }
+      // alpha=54.6  corresponds to a 0.9996 maximum cut
+      if (sigmaalpha > 54.6) sigmaalpha = 54.6;
+      sigma2E += sigmaalpha * sigmaalpha * zeta * zeta; // eV^2
+    } else { // Urban model
+      static const double alpha = 0.996;
+      double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
+      double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
+      sigma2E += fabs(stepSize_) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
+    }
+  }
+
+  sigma2E *= 1.E-18; // eV -> GeV
+
+  // update noise matrix, using linear error propagation from E to q/p
+  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(mom, 4) * sigma2E;
+}
+*/
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 } // namespace TrackSys

@@ -11,7 +11,7 @@ int main(int argc, char * argv[]) {
     //Hist::AddDirectory();
    
     //Hist::Load("track_fill.root", "dat");
-    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test16");
+    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test23");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
