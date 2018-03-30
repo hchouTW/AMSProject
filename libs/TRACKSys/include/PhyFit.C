@@ -399,7 +399,7 @@ Bool_t SimpleTrFit::simpleFit() {
             rltSt.cz(),
             rltSt.ux() - rslG(2),
             rltSt.uy() - rslG(3),
-            ((ortt_ == Orientation::kDownward) ? -1 : 1)
+            ((ortt_ == Orientation::kDownward) ? Numc::NEG<> : Numc::ONE<>)
         );
         rltSt.set_eta(rltSt.eta() - rslG(4));
         
@@ -491,8 +491,8 @@ Bool_t PhyTrFit::physicalFit() {
                 interaction_parameters.at(it*PhyJb::DIM_L+1), 
                 interaction_parameters.at(it*PhyJb::DIM_L+2), 
                 interaction_parameters.at(it*PhyJb::DIM_L+3));
-        //args_.at(it).set_eloss(
-        //        interaction_parameters.at(it*PhyJb::DIM_L+4));
+        args_.at(it).set_eloss(
+                interaction_parameters.at(it*PhyJb::DIM_L+4));
     }
     
     if (!evolve()) return false;
@@ -539,15 +539,11 @@ Bool_t PhyTrFit::evolve() {
         }
         
         if (cnt_nhit != 0) {
-            SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
-            SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
-            SVecD<PhyJb::DIM_L> int2(intm(0)/inte(0), intm(1)/inte(1), intm(2)/inte(2), intm(3)/inte(3));
-            //SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol(), -curArg.elion());
-            //SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol(), curArg.eelion());
-            //SVecD<PhyJb::DIM_L> int2(intm(0)/inte(0), intm(1)/inte(1), intm(2)/inte(2), intm(3)/inte(3), intm(4)/inte(4));
+            SVecD<PhyJb::DIM_L> inrm;
+            curArg.cal_nrm(inrm);
             
-            chit += (int2(0) * int2(0) + int2(2) * int2(2));
-            chir += (int2(1) * int2(1) + int2(3) * int2(3));
+            chit += (inrm(0) * inrm(0) + inrm(2) * inrm(2));
+            chir += (inrm(1) * inrm(1) + inrm(3) * inrm(3));
         }
 
         cnt_nhit++;
@@ -608,39 +604,84 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+1], 
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+2], 
                 parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+3]);
-            //ppst.arg().set_eloss(
-            //    parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+4]);
+            ppst.arg().set_eloss(
+                parameters[0][PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+4]);
         }
         PhyArg curArg = ppst.arg();
         ppst.symbk();
 
+        // Setting TOF reference time and path
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             HitStTOF::SetOffsetPath(ppst.path());
             HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
             resetTOF = false;
         }
         hit->cal(ppst);
-       
+      
+        // Interaction Local Parameters
+        Bool_t hasLoc = (cnt_nhit != 0);
+
+        // Update Jacb
+        if (hasJacb) {
+            jbGG = curjb.gg() * jbGG;
+            if (hasLoc) { // Local
+                jbGL.at(cnt_nhit-1) = curjb.gl();
+                for (UInt_t it = 0; it < cnt_nhit-1; ++it)
+                    jbGL.at(it) = curjb.gg() * jbGL.at(it);
+            } // Local
+        }
+
+        // Interaction
+        if (hasLoc) { // Local
+            SVecD<PhyJb::DIM_L> inrm, idiv;
+            curArg.cal_nrm_and_div(inrm, idiv);
+
+            for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
+                rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it) += inrm(it);
+
+            if (hasJacb) {
+                for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
+                    jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+it) += idiv(it);
+            } // hasJacb
+        } // Local
+      
+        // Coord
         if (hit->seqIDcx()>=0) rs(hit->seqIDcx()) += hit->cnrmx();
         if (hit->seqIDcy()>=0) rs(hit->seqIDcy()) += hit->cnrmy();
         if (hasJacb) {
-            jbGG = curjb.gg() * jbGG;
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
                 if (hit->seqIDcx()>=0) jb(hit->seqIDcx(), it) += hit->cdivx() * jbGG(0, it);
                 if (hit->seqIDcy()>=0) jb(hit->seqIDcy(), it) += hit->cdivy() * jbGG(1, it);
             }
-        }    
+            if (hasLoc) {
+                for (UInt_t it = 0; it < cnt_nhit; ++it) {
+                    for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+                        if (hit->seqIDcx()>=0) jb(hit->seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivx() * jbGL.at(it)(0, jl);
+                        if (hit->seqIDcy()>=0) jb(hit->seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivy() * jbGL.at(it)(1, jl);
+                    }
+                }
+            } // Local
+        } // hasJacb 
 
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->seqIDax()>=0) rs(hitTRK->seqIDax()) += hitTRK->anrmx();
-            if (hitTRK->seqIDay()>=0) rs(hitTRK->seqIDay()) += hitTRK->anrmy();
+            if (hitTRK->seqIDqx()>=0) rs(hitTRK->seqIDqx()) += hitTRK->qnrmx();
+            if (hitTRK->seqIDqy()>=0) rs(hitTRK->seqIDqy()) += hitTRK->qnrmy();
             if (hasJacb) {
-            for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
-                if (hitTRK->seqIDax()>=0) jb(hitTRK->seqIDax(), it) += hitTRK->adivx() * jbGG(4, it);
-                if (hitTRK->seqIDay()>=0) jb(hitTRK->seqIDay(), it) += hitTRK->adivy() * jbGG(4, it);
-            }}
+                for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
+                    if (hitTRK->seqIDqx()>=0) jb(hitTRK->seqIDqx(), it) += hitTRK->qdivx() * jbGG(4, it);
+                    if (hitTRK->seqIDqy()>=0) jb(hitTRK->seqIDqy(), it) += hitTRK->qdivy() * jbGG(4, it);
+                }
+                if (hasLoc) {
+                    for (UInt_t it = 0; it < cnt_nhit; ++it) {
+                        for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+                            if (hitTRK->seqIDqx()>=0) jb(hitTRK->seqIDqx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->qdivx() * jbGL.at(it)(4, jl);
+                            if (hitTRK->seqIDqy()>=0) jb(hitTRK->seqIDqy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->qdivy() * jbGL.at(it)(4, jl);
+                        }
+                    }
+                } // Local
+            } // hasJacb
         }
         
         // TOF
@@ -649,50 +690,37 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->seqIDq()>=0) rs(hitTOF->seqIDq()) += hitTOF->qnrm();
             if (hitTOF->seqIDt()>=0) rs(hitTOF->seqIDt()) += hitTOF->tnrm();
             if (hasJacb) {
-            for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
-                if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), it) += hitTOF->qdiv() * jbGG(4, it);
-                if (hitTOF->seqIDt()>=0) jb(hitTOF->seqIDt(), it) += hitTOF->tdiv() * jbGG(4, it);
-            }}
-        }
-
-        // Interaction
-        SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol());
-        SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol());
-        //SVecD<PhyJb::DIM_L> intm(-curArg.tauu(), -curArg.rhou(), -curArg.taul(), -curArg.rhol(), -curArg.elion());
-        //SVecD<PhyJb::DIM_L> inte(curArg.etauu(), curArg.erhou(), curArg.etaul(), curArg.erhol(), curArg.eelion());
-        
-        if (cnt_nhit != 0) {
-            for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
-                rs(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it) += intm(it) / inte(it);
-        }
-        
-        if (cnt_nhit != 0 && hasJacb) {
-            jbGL.at(cnt_nhit-1) = curjb.gl();
-            for (UInt_t it = 0; it < cnt_nhit-1; ++it)
-                jbGL.at(it) = curjb.gg() * jbGL.at(it);
-
-            for (UInt_t it = 0; it < cnt_nhit; ++it) {
-                for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-                    if (hit->seqIDcx()>=0) jb(hit->seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivx() * jbGL.at(it)(0, jl);
-                    if (hit->seqIDcy()>=0) jb(hit->seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivy() * jbGL.at(it)(1, jl);
+                for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
+                    if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), it) += hitTOF->qdiv() * jbGG(4, it);
+                    if (hitTOF->seqIDt()>=0) jb(hitTOF->seqIDt(), it) += hitTOF->tdiv() * jbGG(4, it);
                 }
-            }
-            
-            for (UInt_t it = 0; it < PhyJb::DIM_L; ++it)
-                jb(numOfSeq()+(cnt_nhit-1)*PhyJb::DIM_L+it, PhyJb::DIM_G+(cnt_nhit-1)*PhyJb::DIM_L+it) += -1.0 / inte(it);
+                if (hasLoc) {
+                    for (UInt_t it = 0; it < cnt_nhit; ++it) {
+                        for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
+                            if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->qdiv() * jbGL.at(it)(4, jl);
+                            if (hitTOF->seqIDt()>=0) jb(hitTOF->seqIDt(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->tdiv() * jbGL.at(it)(4, jl);
+                        }
+                    }
+                } // Local
+            } // hasJacb
         }
 
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
     
-    for (Int_t it = 0; it < numOfRes_; ++it)
+    for (Int_t it = 0; it < numOfRes_; ++it) {
+        if ( !Numc::Valid(rs(it)) ) rs(it) = Numc::ZERO<>;
         residuals[it] = rs(it);
+    }
     
-    if (hasJacb)
-        for (Int_t it = 0; it < numOfRes_; ++it)
-            for (Int_t jt = 0; jt < numOfPar_; ++jt)
-                jacobians[0][it * numOfPar_ + jt] = jb(it, jt); 
+    if (hasJacb) {
+        for (Int_t it = 0; it < numOfRes_; ++it) {
+        for (Int_t jt = 0; jt < numOfPar_; ++jt) {
+            if ( !Numc::Valid(jb(it, jt)) ) jb(it, jt) = Numc::ZERO<>;
+            jacobians[0][it * numOfPar_ + jt] = jb(it, jt); 
+        }}
+    }
 
     return true;
 }

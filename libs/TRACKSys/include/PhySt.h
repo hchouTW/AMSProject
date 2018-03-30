@@ -68,10 +68,13 @@ class PhyArg {
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
+        void cal_nrm(SVecD<5>& nrm) const;
+        void cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const;
+
     public :
         // Set Parameters
         void set_mscat(Double_t tauu = 0, Double_t rhou = 0, Double_t taul = 0, Double_t rhol = 0) { if (sw_mscat_) { tauu_ = tauu; rhou_ = rhou; taul_ = taul; rhol_ = rhol; } }
-        void set_eloss(Double_t ion = 0, Double_t brm = 0) { if (sw_eloss_) { elion_ = ion; elbrm_ = ((brm<0.0)?0.0:brm); } }
+        void set_eloss(Double_t elion = 0, Double_t elbrm = 0) { if (sw_eloss_) { elion_ = elion; elbrm_ = ((elbrm<0.0)?0.0:elbrm); } }
 
         // Rndm Parameters
         void rndm_mscatu() { tauu_ = 0.; rhou_ = 0.; if (sw_mscat_) { tauu_ = pdf_mscatu_.rndm(); rhou_ = pdf_mscatu_.rndm(); } }
@@ -87,7 +90,7 @@ class PhyArg {
 
         // Set Variables
         void setvar_tme(Double_t tme = 0) { tme_ = tme; }
-        void setvar_len(Double_t len = 0) { len_ = ((len>=0.)?len:0.); }
+        void setvar_len(Double_t len = 0) { len_ = len; }
         void setvar_mat(Bool_t mat = false, Double_t nrl = 0, Double_t ela = 0) { if (mat) { mat_ = mat; nrl_ = nrl; ela_ = ela; } }
         void setvar_orth(Short_t sign = 1, const SVecD<3>& tau = SVecD<3>(1, 0, 0), const SVecD<3>& rho = SVecD<3>(0, 1, 0)) { sign_=((sign>=0)?1:-1); orth_tau_ = tau; orth_rho_ = rho; }
         void setvar_mscat(Double_t mscat_uu = 0, Double_t mscat_ul = 0, Double_t mscat_ll = 0) { if (sw_mscat_) { mscat_uu_ = mscat_uu; mscat_ul_ = mscat_ul; mscat_ll_ = mscat_ll; } }

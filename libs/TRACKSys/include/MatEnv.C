@@ -274,7 +274,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     // Inf
     Long64_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_RDONLY);
     if (fdes_inf < 0) {
-        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.inf)", dpath.c_str(), fname.c_str()));
         return is_load_;
     }
     Long64_t flen_inf = lseek(fdes_inf, 0, SEEK_END); 
@@ -289,7 +289,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     // Var
     Long64_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_RDONLY);
     if (fdes_var < 0) {
-        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s)", fname.c_str()));
+        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.var)", dpath.c_str(), fname.c_str()));
         return is_load_;
     }
     Long64_t flen_var = lseek(fdes_var, 0, SEEK_END); 
@@ -322,7 +322,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     var_ptr_ = &(gbox_var->var);
 
     is_load_ = true;
-    COUT("MatGeoBoxReader::Load() : Open file (%s)\n", fname.c_str());
+    COUT("MatGeoBoxReader::Load() : Open file (%s/%s)\n", dpath.c_str(), fname.c_str());
     return is_load_;
 }
 
@@ -619,10 +619,10 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
     if (!mfld()) return MatPhyFld();
 
     Double_t mscat_sgm = GetMultipleScattering(mfld, part);
-    std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
+    std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
 
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
 }
 
 
@@ -633,10 +633,10 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     if (Numc::EqualToZero(part.mom())) return MatPhyFld();
     
     Double_t mscat_sgm = GetMultipleScattering(mfld, part);
-    std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
+    std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
     
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
 }
         
 
@@ -663,8 +663,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
 }
 
 
-std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part) {
-    if (!part.arg().eloss()) return std::make_tuple(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>);
+std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part) {
+    if (!part.arg().eloss()) return std::make_tuple(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>);
 
     Bool_t is_over_lmt   = (Numc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t sqr_gmbta   = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
@@ -673,40 +673,73 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t sqr_chrg    = part.chrg() * part.chrg();
     Double_t mass_in_GeV = part.mass();
     Double_t mass_in_MeV = part.mass() * GEV_TO_MEV;
-
-    // Calculate Matterial Quality and Eta Trans
+    
+    // Trans KE[MeV] to Eta[1]
+    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / mass_in_MeV);
+    
+    // Calculate Matterial Quality
     Double_t log_mean_exc_eng  = mfld.lme(); // log[MeV]
     Double_t elcloud_abundance = mfld.ela(); // [mol cm^-2]
     Double_t density_corr      = mfld.dec(); // [1]
     Double_t Bethe_Bloch       = (Numc::HALF * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
+    
+    // Calculate Maximum Trans KE
+    Double_t mass_rat       = (MASS_EL_IN_GEV / mass_in_GeV); // [1]
+    Double_t mass_rel       = (Numc::ONE<> + mass_rat * (Numc::TWO<> * gm + mass_rat)); // [1]
+    Double_t elpair_keng    = (Numc::TWO<> * MASS_EL_IN_MEV * sqr_gmbta); // [MeV]
+    Double_t max_trans_keng = (elpair_keng / mass_rel); // [MeV]
+    
+    // Trans
+    Double_t elion_xi  = (Bethe_Bloch * eta_trans); // [1]
+    Double_t elion_mk  = (max_trans_keng * eta_trans); // [1]
+    
+    // Calculate Global Material Quality
+    // Calculate Ncl (Number of men eloss to maximum trans eng)
+    Double_t global_ela = (corr_sw_eloss_ ? corr_mfld_.ela() : mfld.ela()); // Elcloud Abundance [mol cm^-2]
+    Double_t global_BB  = (Numc::HALF * BETHE_BLOCH_K * global_ela * sqr_chrg / sqr_bta); // Bethe Bloch [MeV]
+    Double_t elion_ncl  = ((global_BB * eta_trans) / elion_mk); // [1]
 
-    // Calculate Sigma
-    Double_t eta_trans = (std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta); // ke to eta
-    Double_t elion_sgm = ((Bethe_Bloch / mass_in_MeV) * eta_trans); // [1]
+    // Calculate Mean
+    Double_t elke_part = (std::log(elpair_keng) - log_mean_exc_eng); // [1]
+    Double_t mtke_part = (std::log(max_trans_keng) - log_mean_exc_eng); // [1]
+    Double_t elion_men = elion_xi * (elke_part + mtke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
     
     // Calculate Mpv
-    Double_t corr_fact  = ((corr_sw_eloss_) ? (corr_mfld_.ela() / elcloud_abundance) : Numc::ONE<>);
-    Double_t trans_eng  = Numc::TWO<> * MASS_EL_IN_MEV * sqr_gmbta; // [MeV]
-    Double_t maxke_part = std::log(trans_eng) - log_mean_exc_eng;   // [1]
-    Double_t ionke_part = std::log(Bethe_Bloch * corr_fact) - log_mean_exc_eng; // [1]
-    Double_t elion_mpv  = elion_sgm * (maxke_part + ionke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
-    
-    // Calculate Mean
-    Double_t mass_rat     = (MASS_EL_IN_GEV / mass_in_GeV);
-    Double_t mass_rel     = (Numc::ONE<> + mass_rat * (Numc::TWO<> * gm + mass_rat));
-    Double_t transke_part = Numc::TWO<> * maxke_part - std::log(mass_rel);
-    Double_t elion_men    = elion_sgm * (transke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
-    
-    // Calculate Ncl (Number of men eloss to maximum trans eng)
-    Double_t maxke = (((trans_eng / mass_rel) / mass_in_MeV) * eta_trans); // [1]
-    Double_t elion_ncl = (elion_sgm / maxke); // [1]
+    Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
+    Double_t elion_mpv = elion_xi * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
+
+    // Calculate Sigma (GEANT3 manual W5013) (From GenFit package)
+    Double_t elion_sgm = elion_xi;
+    //if (elion_ncl > 0.01) { // Vavilov-Gaussian regime
+    //    Double_t elion_sgm_vg = std::sqrt(elion_xi * elion_mk * (Numc::ONE<> - Numc::HALF * sqr_bta));
+    //    elion_sgm = elion_sgm_vg;
+    //}
+    //else { // truncated Landau distribution (if Nc > 50.)
+    //    Double_t sgm_alpha = 15.76;
+    //    Double_t LAD_MEN = (-0.422784 - sqr_bta - std::log(elion_ncl));
+    //    Double_t LAD_MAX = 0.60715 + 1.1934 * LAD_MEN + (0.67794 + 0.052382 * LAD_MEN) * std::exp(0.94753 + 0.74442 * LAD_MEN);
+    //    if (LAD_MAX <= 1010.0) {
+    //        sgm_alpha = 1.975560 
+    //                    + 9.898841e-02 * LAD_MAX 
+    //                    - 2.828670e-04 * LAD_MAX * LAD_MAX
+    //                    + 5.345406e-07 * std::pow(LAD_MAX, Numc::THREE<>)
+    //                    - 4.942035e-10 * std::pow(LAD_MAX, Numc::FOUR<>)
+    //                    + 1.729807e-13 * std::pow(LAD_MAX, Numc::FIVE<>);
+    //    }
+    //    else {
+    //        sgm_alpha = 1.871887e+01 + 1.296254e-02 * LAD_MAX;
+    //    }
+    //    if (sgm_alpha > 54.6) sgm_alpha = 54.6;
+    //    Double_t elion_sgm_lg = sgm_alpha * elion_xi;
+    //    elion_sgm = elion_sgm_lg;
+    //}
+    //if (Numc::EqualToZero(elion_sgm)) elion_sgm = elion_xi;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
     if (!Numc::Valid(elion_men) || Numc::Compare(elion_men) <= 0) elion_men = Numc::ZERO<>;
-    if (!Numc::Valid(elion_ncl) || Numc::Compare(elion_ncl) <= 0) elion_ncl = Numc::ZERO<>;
    
-    return std::make_tuple(elion_mpv, elion_sgm, elion_men, elion_ncl);
+    return std::make_tuple(elion_mpv, elion_sgm, elion_men);
 }
 
 

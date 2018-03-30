@@ -17,6 +17,7 @@ template<typename T = Double_t> constexpr T ONE    = static_cast<T>(1);
 template<typename T = Double_t> constexpr T TWO    = static_cast<T>(2);
 template<typename T = Double_t> constexpr T THREE  = static_cast<T>(3);
 template<typename T = Double_t> constexpr T FOUR   = static_cast<T>(4);
+template<typename T = Double_t> constexpr T FIVE   = static_cast<T>(5);
 template<typename T = Double_t> constexpr T SIX    = static_cast<T>(6);
 template<typename T = Double_t> constexpr T EIGHT  = static_cast<T>(8);
 template<typename T = Double_t> constexpr T TEN    = static_cast<T>(10);
@@ -155,6 +156,8 @@ class MultiGaus {
         MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
         ~MultiGaus() { if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
+        inline const Opt& opt() const { return robust_; }
+
         inline Int_t num() const { return multi_gaus_.size(); }
         inline const long double& wgt(Int_t i) const { return multi_gaus_.at(i).first; }
         inline const long double& sgm(Int_t i) const { return multi_gaus_.at(i).second; }
@@ -170,6 +173,9 @@ class MultiGaus {
     private :
         Opt   robust_;
         TF1*  rand_func_;
+
+    public :
+        static long double RobustSgm(long double res = Numc::ZERO<long double>, long double sgm = Numc::ONE<long double>, Opt opt = Opt::ROBUST);
 
     private :
         static TRandom* rndm_gen_;

@@ -110,7 +110,7 @@ class TransferFunc {
 class PhyJb {
     public :
         static constexpr Int_t DIM_G = 5;
-        static constexpr Int_t DIM_L = 4;
+        static constexpr Int_t DIM_L = 5;
 
         using SMtxDGG = SMtxD<DIM_G, DIM_G>;
         using SMtxDGL = SMtxD<DIM_G, DIM_L>;

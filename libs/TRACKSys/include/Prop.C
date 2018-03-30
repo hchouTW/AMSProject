@@ -113,12 +113,7 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
     }
     if (arg.eloss()) {
-        //Double_t elion = part.eta() * (arg.sign() * arg.elion_sgm());
-        //jb_gl_(JPX, JION) = jb_gg_(JPX, JEA) * elion;
-        //jb_gl_(JPY, JION) = jb_gg_(JPY, JEA) * elion;
-        //jb_gl_(JUX, JION) = jb_gg_(JUX, JEA) * elion;
-        //jb_gl_(JUY, JION) = jb_gg_(JUY, JEA) * elion;
-        //jb_gl_(JEA, JION) = jb_gg_(JEA, JEA) * elion;
+        jb_gl_(JEA, JION) = part.eta() * (arg.sign() * arg.elion_sgm());
     }
 }
 
@@ -259,16 +254,18 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
 
 
 void PropPhyCal::set_PhyArg(PhySt& part) const {
+    Short_t seqt = Numc::Compare(tme_);
+
     part.arg().zero();
     part.arg().setvar_tme(tme_);
-    part.arg().setvar_len(len_);
+    part.arg().setvar_len(seqt * len_);
     part.arg().setvar_mat(mat_, nrl_, ela_);
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
     part.arg().setvar_mscat(mscat_uu_, mscat_ul_, mscat_ll_);
     part.arg().setvar_eloss(elion_mpv_, elion_sgm_, elbrm_men_);
 
-    part.set_path(part.path() + len_);
-    part.set_time(part.time() + tme_);
+    part.set_time(part.time() + part.arg().tme());
+    part.set_path(part.path() + part.arg().len());
 }
 
 

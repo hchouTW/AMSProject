@@ -34,15 +34,15 @@ void VirtualHitSt::clear() {
 void HitStTRK::clear() {
     seqIDcx_ = -1;
     seqIDcy_ = -1;
-    seqIDax_ = -1;
-    seqIDay_ = -1;
+    seqIDqx_ = -1;
+    seqIDqy_ = -1;
 
-    nsr_      = std::move(SVecS<2>());
-    adc_side_ = std::move(SVecO<2>());
-    adc_      = std::move(SVecD<2>());
+    nsr_    = std::move(SVecS<2>());
+    q_side_ = std::move(SVecO<2>());
+    q_      = std::move(SVecD<2>());
     
-    anrm_ = std::move(SVecD<2>());
-    adiv_ = std::move(SVecD<2>());
+    qnrm_ = std::move(SVecD<2>());
+    qdiv_ = std::move(SVecD<2>());
 
     set_type();
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
@@ -55,8 +55,8 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
     Short_t iter = 0;
     if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
     if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (adc_side_(0)) { seqIDax_ = seqID + iter; iter++; } else seqIDax_ = -1;
-    if (adc_side_(1)) { seqIDay_ = seqID + iter; iter++; } else seqIDay_ = -1;
+    if (q_side_(0))   { seqIDqx_ = seqID + iter; iter++; } else seqIDqx_ = -1;
+    if (q_side_(1))   { seqIDqy_ = seqID + iter; iter++; } else seqIDqy_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -78,17 +78,17 @@ void HitStTRK::cal(const PhySt& part) {
         cdiv_(1) = Numc::NEG<> / cer_(1);
     }
 
-    anrm_ = std::move(SVecD<2>());
-    adiv_ = std::move(SVecD<2>());
-    if (adc_side_(0)) {
-        SVecD<2>&& ionx = (*pdf_ax_)(adc_(0), part.eta());
-        anrm_(0) = ionx(0);
-        adiv_(0) = ionx(1);
+    qnrm_ = std::move(SVecD<2>());
+    qdiv_ = std::move(SVecD<2>());
+    if (q_side_(0)) {
+        SVecD<2>&& ionx = (*pdf_qx_)(q_(0), part.eta());
+        qnrm_(0) = ionx(0);
+        qdiv_(0) = ionx(1);
     }
-    if (adc_side_(1)) {
-        SVecD<2>&& iony = (*pdf_ay_)(adc_(1), part.eta());
-        anrm_(1) = iony(0);
-        adiv_(1) = iony(1);
+    if (q_side_(1)) {
+        SVecD<2>&& iony = (*pdf_qy_)(q_(1), part.eta());
+        qnrm_(1) = iony(0);
+        qdiv_(1) = iony(1);
     }
 
     set_dummy_x(part.cx());
@@ -96,7 +96,7 @@ void HitStTRK::cal(const PhySt& part) {
 }
 
 void HitStTRK::set_type(const PartInfo& info) {
-    if (type_ == info.type() && (pdf_cx_ && pdf_cy_ && pdf_ax_ && pdf_ay_)) return;
+    if (type_ == info.type() && (pdf_cx_ && pdf_cy_ && pdf_qx_ && pdf_qy_)) return;
 
     switch (info.chrg()) {
         case 1 : case -1 :
@@ -110,8 +110,8 @@ void HitStTRK::set_type(const PartInfo& info) {
             else if (nsr_(1) == 2) pdf_cy_ = &PDF_Q01_CY_N2_;
             else if (nsr_(1) == 3) pdf_cy_ = &PDF_Q01_CY_N3_;
             else if (nsr_(1) >= 4) pdf_cy_ = &PDF_Q01_CY_N4_;
-            pdf_ax_ = &PDF_Q01_AX_;
-            pdf_ay_ = &PDF_Q01_AY_;
+            pdf_qx_ = &PDF_Q01_QX_;
+            pdf_qy_ = &PDF_Q01_QY_;
             type_ = info.type();
             break;
         }
@@ -180,13 +180,13 @@ MultiGaus HitStTRK::PDF_Q01_CY_N4_(
 );
 
 // OLD
-//IonEloss HitStTRK::PDF_Q01_AX_(
+//IonEloss HitStTRK::PDF_Q01_QX_(
 //    { 6.84708e-04, 1.22107e+00, 1.54109e+00, 2.83791e+00, 1.06167e+00, 7.87652e+00 }, // Kpa
 //    { 1.01510e+00, 2.06220e+01, 1.24078e+00, 4.82421e-04, 5.80771e+00 }, // Mpv
 //    { 6.21439e-02, 3.05480e+01, 1.37339e+00, 1.07762e-04, 8.70839e+00 }, // Sgm
 //    5.00000e+00 // Fluc
 //);
-//IonEloss HitStTRK::PDF_Q01_AY_(
+//IonEloss HitStTRK::PDF_Q01_QY_(
 //    { 1.04571e-03, 1.56996e+00, 3.42208e+00, 1.60653e+00, 1.36027e+00, 1.00964e+01 }, // Kpa
 //    { 4.41904e+00, 6.24969e+00, 1.05197e+00, 1.39822e-01, 1.03750e+00 }, // Mpv
 //    { 7.13109e+00, 2.98634e+00, 5.79009e-01, 4.32315e+00, 7.58125e-01 }, // Sgm
@@ -194,14 +194,14 @@ MultiGaus HitStTRK::PDF_Q01_CY_N4_(
 //);
 
 // NEW
-IonEloss HitStTRK::PDF_Q01_AX_(
+IonEloss HitStTRK::PDF_Q01_QX_(
     { 6.05261e-03, 2.12431e-01, 5.25164e-01, 2.81963e+00, 2.40051e+00, 4.40867e+00 }, // Kpa
     { 1.06985e-01, 9.37601e+00, 8.91247e-01, 6.73657e-02, 1.83183e+00 }, // Mpv
     { 1.34009e-05, 4.93244e+03, 7.61516e-01, 0.00000e+00, 3.29793e+01 }, // Sgm
     0.178087 // Fluc
 );
 
-IonEloss HitStTRK::PDF_Q01_AY_(
+IonEloss HitStTRK::PDF_Q01_QY_(
     { 8.52848e-03, 3.24435e+00, 2.06864e-01, 1.60633e+00, 2.09756e+00, 1.53539e+00 }, // Kpa
     { 1.40446e-01, 7.48716e+00, 9.13645e-01, 1.31821e-01, 1.07348e+00 }, // Mpv
     { 2.46606e-01, 2.89505e+00, 2.79787e-01, 3.49813e+00, 5.30240e-02 }, // Sgm
@@ -273,13 +273,15 @@ void HitStTOF::cal(const PhySt& part) {
     tnrm_ = Numc::ZERO<>;
     tdiv_ = Numc::ZERO<>;
     if (t_side_) {
+        // t := (delta_S / beta)
+        // res_t = (meas_t - part_t);
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
+        Double_t dt = (t_ + OFFSET_T_) - part.time();
         if (!Numc::EqualToZero(ds)) {
-            Double_t dt  = (t_ + OFFSET_T_) - part.time();
-            //Double_t ter = pdf_t_->efft_sgm(dt);
-            Double_t ter = ( 4.82206e+00 + 1.87673e+00 * std::erf( -(std::log(std::fabs(part.eta()))-5.78158e-02) ) );
+            Double_t sgm = ( 4.82206e+00 + 1.87673e+00 * std::erf( -(std::log(std::fabs(part.eta()))-5.78158e-02) ) ); // [cm]
+            Double_t ter = MultiGaus::RobustSgm(dt, sgm, pdf_t_->opt());
             tnrm_ = (dt / ter);
-            tdiv_ = (Numc::NEG<> / ds / ter) * (part.eta() / part.bta());
+            tdiv_ = (Numc::NEG<> * ds / ter) * (part.bta() * part.eta());
             if (!Numc::Valid(tnrm_) || !Numc::Valid(tdiv_)) {
                 tnrm_ = Numc::ZERO<>;
                 tdiv_ = Numc::ZERO<>;

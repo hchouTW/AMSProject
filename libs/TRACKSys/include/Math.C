@@ -128,35 +128,26 @@ MultiGaus::MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wg
 long double MultiGaus::efft_sgm(long double r) const {
     if (multi_gaus_.size() == 0) return Numc::ZERO<long double>;
 
-    long double sigma = Numc::ONE<long double>;
-    long double absr = std::abs(r);
-    if (multi_gaus_.size() == 1) sigma = multi_gaus_.at(0).second;
+    long double sgm = Numc::ONE<long double>;
+    if (multi_gaus_.size() == 1) sgm = multi_gaus_.at(0).second;
     else {
         // Note: inv_sgm_sqr = sum(prb * inv_sgm_sqr) / sum(prb)
         long double ttl_wgt = Numc::ZERO<long double>;
         long double inv_nrm = Numc::ZERO<long double>;
         for (auto&& gauss : multi_gaus_) {
-            long double res = (absr / gauss.second);
+            long double res = (r / gauss.second);
             long double nrm = (gauss.second / bound_.second);
             long double prb = (gauss.first / nrm) * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
             ttl_wgt += prb;
             inv_nrm += prb / (nrm * nrm);
         }
         
-        sigma = bound_.second * ((Numc::Compare(ttl_wgt, LMTL_PROB_) <= 0 || Numc::EqualToZero(inv_nrm)) ? Numc::ONE<long double> : std::sqrt(ttl_wgt / inv_nrm));
-        if (!Numc::Valid(sigma) || Numc::Compare(sigma, bound_.second) > 0 || Numc::Compare(sigma) <= 0) sigma = bound_.second;
+        sgm = bound_.second * ((Numc::Compare(ttl_wgt, LMTL_PROB_) <= 0 || Numc::EqualToZero(inv_nrm)) ? Numc::ONE<long double> : std::sqrt(ttl_wgt / inv_nrm));
+        if (!Numc::Valid(sgm) || Numc::Compare(sgm, bound_.second) > 0 || Numc::Compare(sgm) <= 0) sgm = bound_.second;
     }
    
     // Robust Method (Modify-Cauchy)
-    if (robust_ == Opt::ROBUST) {
-        long double sftnrmr = (absr / sigma) - ROBUST_SGM_;
-        if (Numc::Compare(sftnrmr) > 0) {
-            long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
-            long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
-            if (Numc::Valid(modify_cauchy)) sigma *= modify_cauchy;
-        }
-    }
-
+    long double sigma = RobustSgm(r, sgm, robust_); 
     return sigma;
 }
 
@@ -190,6 +181,23 @@ long double MultiGaus::rndm() {
         return static_cast<long double>(rand_func_->GetRandom());
     }
     return Numc::ZERO<long double>;
+}
+
+long double MultiGaus::RobustSgm(long double res, long double sgm, Opt opt) {
+    long double absr  = std::fabs(res);
+    long double sigma = ((Numc::Compare(sgm) > 0) ? sgm : Numc::ONE<long double>);
+    if (opt == Opt::NOROBUST) return sigma;
+
+    // Robust Method (Modify-Cauchy)
+    long double sftnrmr = (absr / sigma) - ROBUST_SGM_;
+    if (Numc::Compare(sftnrmr) > 0) {
+        long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
+        long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
+        if (Numc::Valid(modify_cauchy)) sigma *= modify_cauchy;
+    }
+
+    if (!Numc::Valid(sigma)) sigma = Numc::ONE<long double>;
+    return sigma;
 }
 
 } // namesapce TrackSys
@@ -277,10 +285,9 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     
     // Robust Method (Reduce important index in high energy)
     long double lngm    = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
-    long double lngm8th = std::pow(lngm, Numc::EIGHT<long double>);
+    long double lngm8th = std::pow(Numc::SQRT_TWO * lngm, Numc::EIGHT<long double>);
     if (!Numc::Valid(lngm8th) || Numc::Compare(lngm8th) <= 0) lngm8th = Numc::ZERO<long double>;
-    //long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngmsqr);
-    long double robust = Numc::ONE<long double> / (Numc::ONE<long double> + lngm8th);
+    long double robust = Numc::ONE<long double> / std::cbrt(Numc::ONE<long double> + lngm8th);
   
     // PDF parameters
     long double kpa    = eval_kpa(abseta, ibsqr); 

@@ -93,7 +93,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t csx = false, Bool_t csy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_ax_(nullptr), pdf_ay_(nullptr) { clear(); }
+        HitStTRK(Bool_t csx = false, Bool_t csy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -105,43 +105,43 @@ class HitStTRK : public VirtualHitSt {
             nsr_(0) = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
             nsr_(1) = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
-        inline void set_adc(Double_t ax, Double_t ay) {
-            adc_side_(0) = (Numc::Compare(ax) > 0);
-            adc_side_(1) = (Numc::Compare(ay) > 0);
-            adc_(0) = (adc_side_(0) ? ax : Numc::ZERO<>);
-            adc_(1) = (adc_side_(1) ? ay : Numc::ZERO<>);
+        inline void set_q(Double_t qx, Double_t qy) {
+            q_side_(0) = (Numc::Compare(qx) > 0);
+            q_side_(1) = (Numc::Compare(qy) > 0);
+            q_(0) = (q_side_(0) ? qx : Numc::ZERO<>);
+            q_(1) = (q_side_(1) ? qy : Numc::ZERO<>);
         }
         
-        inline const Short_t&  seqIDax() const { return seqIDax_; }
-        inline const Short_t&  seqIDay() const { return seqIDay_; }
+        inline const Short_t&  seqIDqx() const { return seqIDqx_; }
+        inline const Short_t&  seqIDqy() const { return seqIDqy_; }
 
-        inline const SVecD<2>& anrm()  const { return anrm_; }
-        inline const Double_t& anrmx() const { return anrm_(0); }
-        inline const Double_t& anrmy() const { return anrm_(1); }
+        inline const SVecD<2>& qnrm()  const { return qnrm_; }
+        inline const Double_t& qnrmx() const { return qnrm_(0); }
+        inline const Double_t& qnrmy() const { return qnrm_(1); }
 
-        inline const SVecD<2>& adiv()  const { return adiv_; }
-        inline const Double_t& adivx() const { return adiv_(0); }
-        inline const Double_t& adivy() const { return adiv_(1); }
+        inline const SVecD<2>& qdiv()  const { return qdiv_; }
+        inline const Double_t& qdivx() const { return qdiv_(0); }
+        inline const Double_t& qdivy() const { return qdiv_(1); }
 
     protected :
         void clear();
 
     protected :
-        Short_t seqIDax_;
-        Short_t seqIDay_;
+        Short_t seqIDqx_;
+        Short_t seqIDqy_;
         
         SVecS<2> nsr_; // Number of strip
         
-        SVecO<2> adc_side_;
-        SVecD<2> adc_; // ADC
+        SVecO<2> q_side_;
+        SVecD<2> q_; // ADC
 
-        SVecD<2> anrm_; // adc nrom
-        SVecD<2> adiv_; // adc div
+        SVecD<2> qnrm_; // q nrom
+        SVecD<2> qdiv_; // q div
 
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
-        IonEloss*  pdf_ax_;
-        IonEloss*  pdf_ay_;
+        IonEloss*  pdf_qx_;
+        IonEloss*  pdf_qy_;
     
     protected :
         static MultiGaus PDF_Q01_CX_NN_;
@@ -155,8 +155,8 @@ class HitStTRK : public VirtualHitSt {
         static MultiGaus PDF_Q01_CY_N3_;
         static MultiGaus PDF_Q01_CY_N4_;
 
-        static IonEloss  PDF_Q01_AX_;
-        static IonEloss  PDF_Q01_AY_;
+        static IonEloss PDF_Q01_QX_;
+        static IonEloss PDF_Q01_QY_;
 };
 
 

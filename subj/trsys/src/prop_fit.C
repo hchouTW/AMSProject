@@ -13,8 +13,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
     
-    //Hist::Load("prop_fill.root", "dat");
-    Hist::Load("prop_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test18");
+    Hist::Load("prop_fill.root", "dat");
+    //Hist::Load("prop_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test18");
 
     // Prop
     Hist* hMcx = Hist::Head("hMcx");
@@ -342,6 +342,7 @@ int main(int argc, char * argv[]) {
     Hist* hMeeK = Hist::New("hMeeK", HistAxis(AXeta, "Kappa"));
     Hist* hMeeM = Hist::New("hMeeM", HistAxis(AXeta, "Mpv"));
     Hist* hMeeS = Hist::New("hMeeS", HistAxis(AXeta, "Sigma"));
+    
     for (int it = 1; it <= AXeta.nbin(); ++it) {
         COUT("Mee ITER %d\n", it);
         Double_t mpv = (*vhMee.at(it))()->GetBinCenter((*vhMee.at(it))()->GetMaximumBin());
@@ -351,9 +352,9 @@ int main(int argc, char * argv[]) {
         flg->SetParLimits(2, 0.0, 10.0*mpv);
         flg->SetParLimits(3, 0.0, 10.0*rms);
         
-        (*vhMee.at(it))()->Fit(flg, "q0", "");
-        (*vhMee.at(it))()->Fit(flg, "q0", "");
-        (*vhMee.at(it))()->Fit(flg, "q0", "");
+        (*vhMee.at(it))()->Fit(flg, "q0", "", mpv-stable*rms, mpv+stable*rms);
+        (*vhMee.at(it))()->Fit(flg, "q0", "", flg->GetParameter(2)-stable*flg->GetParameter(3), flg->GetParameter(2)+stable*flg->GetParameter(3));
+        (*vhMee.at(it))()->Fit(flg, "q0", "", flg->GetParameter(2)-stable*flg->GetParameter(3), flg->GetParameter(2)+stable*flg->GetParameter(3));
 
         (*hMeeK)()->SetBinContent(it, flg->GetParameter(1));
         (*hMeeK)()->SetBinError  (it, flg->GetParError(1));
@@ -368,7 +369,7 @@ int main(int argc, char * argv[]) {
             //(*tmpl)()->SetBinError(jt, 1.0e-6);
         }
     }
-    
+
     std::vector<Hist*> vhTee = Hist::ProjectAll(HistProj::kY, hTee);
     Hist* hTeeK = Hist::New("hTeeK", HistAxis(AXeta, "Kappa"));
     Hist* hTeeM = Hist::New("hTeeM", HistAxis(AXeta, "Mpv"));
@@ -381,10 +382,11 @@ int main(int argc, char * argv[]) {
         flg->SetParLimits(1, 0.0, 1.0);
         flg->SetParLimits(2, 0.0, 10.0*mpv);
         flg->SetParLimits(3, 0.0, 10.0*rms);
+        flg->FixParameter(1, 1.0);
         
-        (*vhTee.at(it))()->Fit(flg, "q0", "");
-        (*vhTee.at(it))()->Fit(flg, "q0", "");
-        (*vhTee.at(it))()->Fit(flg, "q0", "");
+        (*vhTee.at(it))()->Fit(flg, "q0", "", mpv-stable*rms, mpv+stable*rms);
+        (*vhTee.at(it))()->Fit(flg, "q0", "", flg->GetParameter(2)-stable*flg->GetParameter(3), flg->GetParameter(2)+stable*flg->GetParameter(3));
+        (*vhTee.at(it))()->Fit(flg, "q0", "", flg->GetParameter(2)-stable*flg->GetParameter(3), flg->GetParameter(2)+stable*flg->GetParameter(3));
 
         (*hTeeK)()->SetBinContent(it, flg->GetParameter(1));
         (*hTeeK)()->SetBinError  (it, flg->GetParError(1));
