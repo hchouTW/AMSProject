@@ -288,6 +288,7 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double lngm8th = std::pow(Numc::SQRT_TWO * lngm, Numc::EIGHT<long double>);
     if (!Numc::Valid(lngm8th) || Numc::Compare(lngm8th) <= 0) lngm8th = Numc::ZERO<long double>;
     long double robust = Numc::ONE<long double> / std::cbrt(Numc::ONE<long double> + lngm8th);
+    //long double robust = Numc::ONE<long double>; // testcode
   
     // PDF parameters
     long double kpa    = eval_kpa(abseta, ibsqr); 

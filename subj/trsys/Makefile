@@ -3,7 +3,7 @@
 # Test Ceres Solver
 LIBP += -lgflags -lglog -lceres
 
-TagetDir = $(AMSCoreSubj)/trsys/vdev
+TagetDir = $(AMSCoreSubj)/trsys/test
 
 Version=18Mar23
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
@@ -32,7 +32,7 @@ all :
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	make $(TagetDir)/track_fill
-	make $(TagetDir)/track_fit
+	#make $(TagetDir)/track_fit
 
 $(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD

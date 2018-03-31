@@ -8,8 +8,8 @@ namespace TrackSys {
 void TrFitPar::print() const {
     std::string outstr;
     outstr += "TrFitPar::Print()\n";
-    for (auto&& hit : hits_TRK_) outstr += STR("TRK L%d COO %14.8f %14.8f %14.8f CERR %14.8f %14.8f\n", hit.lay(), hit.cx(), hit.cy(), hit.cz(), hit.cex(), hit.cey());
-    for (auto&& hit : hits_TOF_) outstr += STR("TOF L%d COO %14.8f %14.8f %14.8f CERR %14.8f %14.8f\n", hit.lay(), hit.cx(), hit.cy(), hit.cz(), hit.cex(), hit.cey());
+    for (auto&& hit : hits_TRK_) outstr += STR("TRK L%d COO %14.8f %14.8f %14.8f CERR %14.8f %14.8f\n", hit.lay(), hit.cx(), hit.cy(), hit.cz(), hit.ecx(), hit.ecy());
+    for (auto&& hit : hits_TOF_) outstr += STR("TOF L%d COO %14.8f %14.8f %14.8f CERR %14.8f %14.8f\n", hit.lay(), hit.cx(), hit.cy(), hit.cz(), hit.ecx(), hit.ecy());
     outstr += "\n";
     COUT("%s", outstr.c_str());
 }
@@ -23,76 +23,94 @@ TrFitPar::TrFitPar(const PartType& type, const Orientation& ortt, Bool_t sw_msca
     ortt_ = ortt;
 }
 
+void TrFitPar::zero() {
+    hits_.clear();
+
+    nseq_ = 0;
+    ndof_ = 0;
+    nmes_ = 0;
+
+    nmes_cx_    = 0;
+    nmes_cy_    = 0;
+    nmes_TRKqx_ = 0;
+    nmes_TRKqy_ = 0;
+    nmes_TOFq_  = 0;
+    nmes_TOFt_  = 0;
+    
+    is_check_ = false;
+}
+
 void TrFitPar::clear() {
     sw_mscat_ = false;
     sw_eloss_ = false;
     
     type_ = PartType::Proton;
     ortt_ = Orientation::kDownward;
-    hits_.clear();
-    nseq_ = 0;
-    nhtx_ = 0;
-    nhty_ = 0;
+   
+    hits_TRK_.clear();
+    hits_TOF_.clear();
 
-    is_check_ = false;
-    rlt_check_ = -1;
+    zero();
 }
 
-Bool_t TrFitPar::rebuildHit() {
-    hits_.clear();
+Bool_t TrFitPar::sortHits() {
+    zero();
+
     if (ortt_ == Orientation::kDownward) Hit<HitStTRK>::Sort(hits_TRK_, VirtualHitSt::Orientation::kDownward);
     else                                 Hit<HitStTRK>::Sort(hits_TRK_, VirtualHitSt::Orientation::kUpward);
     if (ortt_ == Orientation::kDownward) Hit<HitStTOF>::Sort(hits_TOF_, VirtualHitSt::Orientation::kDownward);
     else                                 Hit<HitStTOF>::Sort(hits_TOF_, VirtualHitSt::Orientation::kUpward);
-    
-    if (hits_TRK_.size() == 0 && hits_TOF_.size() == 0) return false;
-
+ 
     for (auto&& hit : hits_TRK_) hits_.push_back(&hit); 
     for (auto&& hit : hits_TOF_) hits_.push_back(&hit); 
+    
     if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
     else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
-    if (hits_.size() == 0) return false;
-
-    return true;
-}
-
-Short_t TrFitPar::checkHit() {
-    if (is_check_) return rlt_check_;
-    nseq_ = 0; nhtx_ = 0; nhty_ = 0;
     
-    rlt_check_ = -1;
-    if (!rebuildHit()) return rlt_check_;
-    
-    Short_t nx = 0, ny = 0;
-    for (auto&& hit : hits_) {
-        if (hit->csx()) nx++;
-        if (hit->csy()) ny++;
-    }
-    rlt_check_ = 0;
-    if (nx < LMTL_NHIT_X && ny < LMTL_NHIT_Y) return rlt_check_;
-   
     Short_t nseq = 0;
     for (auto&& hit : hits_) {
         hit->set_type(type_);
         nseq += hit->set_seqID(nseq);
+        
+        if (hit->scx()) nmes_cx_++;
+        if (hit->scy()) nmes_cy_++;
+        
+        HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
+        if (hitTRK != nullptr) {
+            if (hitTRK->sqx()) nmes_TRKqx_++;
+            if (hitTRK->sqy()) nmes_TRKqy_++;
+        }
+        
+        HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
+        if (hitTOF != nullptr) {
+            if (hitTOF->sq()) nmes_TOFq_++;
+            if (hitTOF->st()) nmes_TOFt_++;
+        }
     }
 
     nseq_ = nseq;
-    nhtx_ = nx;
-    nhty_ = ny;
+    ndof_ = nseq - 5;
+    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFq_ + nmes_TOFt_);
 
-    is_check_ = true;
-    rlt_check_ = 1;
-    return rlt_check_;
+    return true;
+}
+
+Bool_t TrFitPar::checkHits() {
+    if (is_check_) return is_check_;
+    
+    sortHits();
+    if (nmes_cx_ >= LMTL_NHIT_X && nmes_cy_ >= LMTL_NHIT_Y) is_check_ = true;
+   
+    return is_check_;
 }
         
 
 SimpleTrFit::SimpleTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
-    if (recheckHit() <= 0) return;
+    if (!recheckHits()) return;
    
-    ndfx_ = nhtx_ - 2;
-    ndfy_ = nhty_ - 3;
+    ndfx_ = nmes_cx_ - 2;
+    ndfy_ = nmes_cy_ - 3;
     ndof_ = ndfx_ + ndfy_;
     
     succ_ = (analyticalFit() ? simpleFit() : false);
@@ -135,8 +153,8 @@ Bool_t SimpleTrFit::analyticalFit() {
         SMtxSymD<2> mtx;
         SVecD<2>    res;
         for (auto&& hit : hits_) {
-            if (!hit->csx()) continue;
-            Double_t ex  = hit->cex();
+            if (!hit->scx()) continue;
+            Double_t ex  = hit->ecx();
             Double_t err = (Numc::ONE<> / ex / ex);
             Double_t dz1 = hit->cz() - prefit_pz;
             Double_t dz2 = dz1 * dz1;
@@ -175,7 +193,7 @@ Bool_t SimpleTrFit::analyticalFit() {
         
         std::vector<UInt_t> mapID;
         for (UInt_t ih = 0; ih < hits_.size(); ++ih)
-            if (hits_.at(ih)->csy()) mapID.push_back(ih);
+            if (hits_.at(ih)->scy()) mapID.push_back(ih);
 
         std::vector<Double_t> stp(mapID.size(), Numc::ZERO<>);
         std::vector<Double_t> crs(mapID.size(), Numc::ZERO<>);
@@ -208,7 +226,7 @@ Bool_t SimpleTrFit::analyticalFit() {
         Double_t    cur_Ae = Numc::ZERO<>;
         for (UInt_t id = 0; id < mapID.size(); ++id) {
             VirtualHitSt* hit = hits_.at(mapID.at(id));
-            Double_t ey  = hit->cey();
+            Double_t ey  = hit->ecy();
             Double_t err = (Numc::ONE<> / ey / ey);
             
             cur_Au += stp.at(id);
@@ -317,20 +335,74 @@ Bool_t SimpleTrFit::simpleFit() {
             }
             hit->cal(ppst);
 
-            SVecD<2> rsM;
-            rsM(0) = (hit->seqIDcx()>=0 ? hit->cnrmx() * hit->cdivx() : Numc::ZERO<>);
-            rsM(1) = (hit->seqIDcy()>=0 ? hit->cnrmy() * hit->cdivy() : Numc::ZERO<>);
+//////////////////////////////
+//////////////////////////////
+//////////////////////////////
+
+            SVecD<2>    rsC;
+            SMtxD<2, 5> jbC;
+            if (hit->scx()) rsC(0) += hit->nrmcx();
+            if (hit->scy()) rsC(1) += hit->nrmcy();
+            for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
+                if (hit->scx()) jbC(0, it) += hit->divcx() * ppjb(0, it);
+                if (hit->scy()) jbC(1, it) += hit->divcy() * ppjb(1, it);
+            }
+           
+            grdG += LA::Transpose(jbC) * rsC;
+            cvGG += LA::SimilarityT(jbC, SMtxSymD<2>(SMtxId()));
+            if (hit->scx()) chix += rsC(0) * rsC(0); 
+            if (hit->scy()) chiy += rsC(1) * rsC(1);
             
-            SMtxSymD<2> cvM;
-            cvM(0, 0) = (hit->seqIDcx()>=0 ? (hit->cdivx() * hit->cdivx()) : Numc::ZERO<>);
-            cvM(1, 1) = (hit->seqIDcy()>=0 ? (hit->cdivy() * hit->cdivy()) : Numc::ZERO<>);
+            HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
+            if (hitTRK != nullptr) {
+                SVecD<2>    rsTRK;
+                SMtxD<2, 5> jbTRK;
+                if (hitTRK->sqx()) rsTRK(0) += hitTRK->nrmqx();
+                if (hitTRK->sqy()) rsTRK(1) += hitTRK->nrmqy();
+                for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
+                    if (hitTRK->sqx()) jbTRK(0, it) += hitTRK->divqx() * ppjb(4, it);
+                    if (hitTRK->sqy()) jbTRK(1, it) += hitTRK->divqy() * ppjb(4, it);
+                }
+                grdG += LA::Transpose(jbTRK) * rsTRK;
+                cvGG += LA::SimilarityT(jbTRK, SMtxSymD<2>(SMtxId()));
+                if (hitTRK->sqx()) chiy += rsTRK(0) * rsTRK(0);
+                if (hitTRK->sqy()) chiy += rsTRK(1) * rsTRK(1);
+            }
+
+            HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
+            if (hitTOF != nullptr) {
+                SVecD<2>    rsTOF;
+                SMtxD<2, 5> jbTOF;
+                if (hitTOF->sq()) rsTOF(0) += hitTOF->nrmq();
+                if (hitTOF->st()) rsTOF(1) += hitTOF->nrmt();
+                for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
+                    if (hitTOF->sq()) jbTOF(0, it) += hitTOF->divq() * ppjb(4, it);
+                    if (hitTOF->st()) jbTOF(1, it) += hitTOF->divt() * ppjb(4, it);
+                }
+                grdG += LA::Transpose(jbTOF) * rsTOF;
+                cvGG += LA::SimilarityT(jbTOF, SMtxSymD<2>(SMtxId()));
+                if (hitTOF->sq()) chix += rsTOF(0) * rsTOF(0);
+                if (hitTOF->st()) chiy += rsTOF(1) * rsTOF(1);
+            }
+
+//////////////////////////////
+//////////////////////////////
+//////////////////////////////
             
-            PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
-            grdG += LA::Transpose(subJbF) * rsM;
-            cvGG += LA::SimilarityT(subJbF, cvM);
+            //SVecD<2> rsM;
+            //rsM(0) = (hit->scx() ? hit->nrmcx() * hit->divcx() : Numc::ZERO<>);
+            //rsM(1) = (hit->scy() ? hit->nrmcy() * hit->divcy() : Numc::ZERO<>);
+            //
+            //SMtxSymD<2> cvM;
+            //cvM(0, 0) = (hit->scx() ? (hit->divcx() * hit->divcx()) : Numc::ZERO<>);
+            //cvM(1, 1) = (hit->scy() ? (hit->divcy() * hit->divcy()) : Numc::ZERO<>);
+            //
+            //PhyJb::SMtxDXYG&& subJbF = PhyJb::SubXYG(ppjb);
+            //grdG += LA::Transpose(subJbF) * rsM;
+            //cvGG += LA::SimilarityT(subJbF, cvM);
             
-            if (hit->seqIDcx()>=0) chix += hit->cnrmx() * hit->cnrmx(); 
-            if (hit->seqIDcy()>=0) chiy += hit->cnrmy() * hit->cnrmy();
+            //if (hit->scx()) chix += hit->nrmcx() * hit->nrmcx(); 
+            //if (hit->scy()) chiy += hit->nrmcy() * hit->nrmcy();
             
             cnt_nhit++;
         }
@@ -409,7 +481,7 @@ Bool_t SimpleTrFit::simpleFit() {
         
         if (!succ) curIter++;
     }
-    //if (!succ) COUT("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
+    if (!succ) COUT("FAIL. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     //else       COUT("SUCC. IT %2d %2d (RIG %14.8f CHI %14.8f) LAMBDA %14.8f\n", curIter, updIter, part_.rig(), nchi_, lambda);
     
     return succ;
@@ -417,11 +489,11 @@ Bool_t SimpleTrFit::simpleFit() {
 
 
 PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
-    if (recheckHit() <= 0) { clear(); return; }
+    if (!recheckHits()) { clear(); return; }
     clear();
     
-    ndfx_ = nhtx_ - 2;
-    ndfy_ = nhty_ - 3;
+    ndfx_ = nmes_cx_ - 2;
+    ndfy_ = nmes_cy_ - 3;
     ndof_ = ndfx_ + ndfy_;
     succ_ = physicalFit();
     if (!succ_) { PhyTrFit::clear(); COUT("PhyTrFit::FAIL.\n"); }
@@ -529,8 +601,8 @@ Bool_t PhyTrFit::evolve() {
         }
         hit->cal(ppst);
 
-        if (hit->seqIDcx()>=0) chix += hit->cnrmx() * hit->cnrmx(); 
-        if (hit->seqIDcy()>=0) chiy += hit->cnrmy() * hit->cnrmy();
+        if (hit->scx()) chix += hit->nrmcx() * hit->nrmcx(); 
+        if (hit->scy()) chiy += hit->nrmcy() * hit->nrmcy();
         
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
@@ -646,18 +718,18 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         } // Local
       
         // Coord
-        if (hit->seqIDcx()>=0) rs(hit->seqIDcx()) += hit->cnrmx();
-        if (hit->seqIDcy()>=0) rs(hit->seqIDcy()) += hit->cnrmy();
+        if (hit->scx()) rs(hit->seqIDcx()) += hit->nrmcx();
+        if (hit->scy()) rs(hit->seqIDcy()) += hit->nrmcy();
         if (hasJacb) {
             for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
-                if (hit->seqIDcx()>=0) jb(hit->seqIDcx(), it) += hit->cdivx() * jbGG(0, it);
-                if (hit->seqIDcy()>=0) jb(hit->seqIDcy(), it) += hit->cdivy() * jbGG(1, it);
+                if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
+                if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
             }
             if (hasLoc) {
                 for (UInt_t it = 0; it < cnt_nhit; ++it) {
                     for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-                        if (hit->seqIDcx()>=0) jb(hit->seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivx() * jbGL.at(it)(0, jl);
-                        if (hit->seqIDcy()>=0) jb(hit->seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->cdivy() * jbGL.at(it)(1, jl);
+                        if (hit->scx()) jb(hit->seqIDcx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->divcx() * jbGL.at(it)(0, jl);
+                        if (hit->scy()) jb(hit->seqIDcy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hit->divcy() * jbGL.at(it)(1, jl);
                     }
                 }
             } // Local
@@ -666,18 +738,18 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->seqIDqx()>=0) rs(hitTRK->seqIDqx()) += hitTRK->qnrmx();
-            if (hitTRK->seqIDqy()>=0) rs(hitTRK->seqIDqy()) += hitTRK->qnrmy();
+            if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
+            if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacb) {
                 for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
-                    if (hitTRK->seqIDqx()>=0) jb(hitTRK->seqIDqx(), it) += hitTRK->qdivx() * jbGG(4, it);
-                    if (hitTRK->seqIDqy()>=0) jb(hitTRK->seqIDqy(), it) += hitTRK->qdivy() * jbGG(4, it);
+                    if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
+                    if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
                 }
                 if (hasLoc) {
                     for (UInt_t it = 0; it < cnt_nhit; ++it) {
                         for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-                            if (hitTRK->seqIDqx()>=0) jb(hitTRK->seqIDqx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->qdivx() * jbGL.at(it)(4, jl);
-                            if (hitTRK->seqIDqy()>=0) jb(hitTRK->seqIDqy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->qdivy() * jbGL.at(it)(4, jl);
+                            if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->divqx() * jbGL.at(it)(4, jl);
+                            if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTRK->divqy() * jbGL.at(it)(4, jl);
                         }
                     }
                 } // Local
@@ -687,18 +759,18 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         // TOF
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
-            if (hitTOF->seqIDq()>=0) rs(hitTOF->seqIDq()) += hitTOF->qnrm();
-            if (hitTOF->seqIDt()>=0) rs(hitTOF->seqIDt()) += hitTOF->tnrm();
+            if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
+            if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb) {
                 for (UInt_t it = 0; it < PhyJb::DIM_G; ++it) {
-                    if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), it) += hitTOF->qdiv() * jbGG(4, it);
-                    if (hitTOF->seqIDt()>=0) jb(hitTOF->seqIDt(), it) += hitTOF->tdiv() * jbGG(4, it);
+                    if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
+                    if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
                 }
                 if (hasLoc) {
                     for (UInt_t it = 0; it < cnt_nhit; ++it) {
                         for (UInt_t jl = 0; jl < PhyJb::DIM_L; ++jl) {
-                            if (hitTOF->seqIDq()>=0) jb(hitTOF->seqIDq(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->qdiv() * jbGL.at(it)(4, jl);
-                            if (hitTOF->seqIDt()>=0) jb(hitTOF->seqIDt(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->tdiv() * jbGL.at(it)(4, jl);
+                            if (hitTOF->sq()) jb(hitTOF->seqIDq(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->divq() * jbGL.at(it)(4, jl);
+                            if (hitTOF->st()) jb(hitTOF->seqIDt(), PhyJb::DIM_G+it*PhyJb::DIM_L+jl) += hitTOF->divt() * jbGL.at(it)(4, jl);
                         }
                     }
                 } // Local

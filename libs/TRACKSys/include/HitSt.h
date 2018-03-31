@@ -13,7 +13,7 @@ class VirtualHitSt {
         };
 
     public :
-        VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t csx = false, Bool_t csy = false, Bool_t csz = true);
+        VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t scx = false, Bool_t scy = false, Bool_t scz = true);
         ~VirtualHitSt() { clear(); }
 
         virtual Short_t set_seqID(Short_t seqID) = 0; 
@@ -22,8 +22,8 @@ class VirtualHitSt {
         virtual void set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); }
-        inline void set_dummy_x(Double_t cx) { if (!coo_side_(0)) coo_(0) = cx; }
-        inline void set_dummy_y(Double_t cy) { if (!coo_side_(1)) coo_(1) = cy; }
+        inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
+        inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
         
         inline const Short_t&  seqID() const { return seqID_; }
         inline const Short_t&  seqIDcx() const { return seqIDcx_; }
@@ -33,27 +33,27 @@ class VirtualHitSt {
         inline const Detector& dec()  const { return dec_; }
         inline const Short_t&  lay()  const { return lay_; }
 
-        inline const SVecO<3>& cs()  const { return coo_side_; }
-        inline const Bool_t&   csx() const { return coo_side_(0); }
-        inline const Bool_t&   csy() const { return coo_side_(1); }
-        inline const Bool_t&   csz() const { return coo_side_(2); }
+        inline const SVecO<3>& sc()  const { return side_coo_; }
+        inline const Bool_t&   scx() const { return side_coo_(0); }
+        inline const Bool_t&   scy() const { return side_coo_(1); }
+        inline const Bool_t&   scz() const { return side_coo_(2); }
         
         inline const SVecD<3>& c()  const { return coo_; }
         inline const Double_t& cx() const { return coo_(0); }
         inline const Double_t& cy() const { return coo_(1); }
         inline const Double_t& cz() const { return coo_(2); }
         
-        inline const SVecD<2>& ce()  const { return cer_; }
-        inline const Double_t& cex() const { return cer_(0); }
-        inline const Double_t& cey() const { return cer_(1); }
+        inline const SVecD<2>& ec()  const { return erc_; }
+        inline const Double_t& ecx() const { return erc_(0); }
+        inline const Double_t& ecy() const { return erc_(1); }
         
-        inline const SVecD<2>& cnrm()  const { return cnrm_; }
-        inline const Double_t& cnrmx() const { return cnrm_(0); }
-        inline const Double_t& cnrmy() const { return cnrm_(1); }
+        inline const SVecD<2>& nrmc()  const { return nrmc_; }
+        inline const Double_t& nrmcx() const { return nrmc_(0); }
+        inline const Double_t& nrmcy() const { return nrmc_(1); }
 
-        inline const SVecD<2>& cdiv()  const { return cdiv_; }
-        inline const Double_t& cdivx() const { return cdiv_(0); }
-        inline const Double_t& cdivy() const { return cdiv_(1); }
+        inline const SVecD<2>& divc()  const { return divc_; }
+        inline const Double_t& divcx() const { return divc_(0); }
+        inline const Double_t& divcy() const { return divc_(1); }
 
     protected :
         void clear();
@@ -68,12 +68,12 @@ class VirtualHitSt {
         Detector dec_; // TRK TOF TRD RICH ECAL
         Short_t  lay_; // start from 0
 
-        SVecO<3> coo_side_; // (x, y, z)
+        SVecO<3> side_coo_; // (x, y, z)
         SVecD<3> coo_;      // [cm] coord
-        SVecD<2> cer_;      // [cm] error
+        SVecD<2> erc_;      // [cm] error
         
-        SVecD<2> cnrm_; // coord norm
-        SVecD<2> cdiv_; // coord div
+        SVecD<2> nrmc_; // coord norm
+        SVecD<2> divc_; // coord div
     
     public :
         enum class Orientation {
@@ -93,7 +93,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t csx = false, Bool_t csy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, csx, csy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
+        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, scx, scy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -106,22 +106,25 @@ class HitStTRK : public VirtualHitSt {
             nsr_(1) = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
         inline void set_q(Double_t qx, Double_t qy) {
-            q_side_(0) = (Numc::Compare(qx) > 0);
-            q_side_(1) = (Numc::Compare(qy) > 0);
-            q_(0) = (q_side_(0) ? qx : Numc::ZERO<>);
-            q_(1) = (q_side_(1) ? qy : Numc::ZERO<>);
+            side_q_(0) = (Numc::Compare(qx) > 0);
+            side_q_(1) = (Numc::Compare(qy) > 0);
+            q_(0) = (side_q_(0) ? qx : Numc::ZERO<>);
+            q_(1) = (side_q_(1) ? qy : Numc::ZERO<>);
         }
         
         inline const Short_t&  seqIDqx() const { return seqIDqx_; }
         inline const Short_t&  seqIDqy() const { return seqIDqy_; }
 
-        inline const SVecD<2>& qnrm()  const { return qnrm_; }
-        inline const Double_t& qnrmx() const { return qnrm_(0); }
-        inline const Double_t& qnrmy() const { return qnrm_(1); }
+        inline const Bool_t& sqx() const { return side_q_(0); }
+        inline const Bool_t& sqy() const { return side_q_(1); }
 
-        inline const SVecD<2>& qdiv()  const { return qdiv_; }
-        inline const Double_t& qdivx() const { return qdiv_(0); }
-        inline const Double_t& qdivy() const { return qdiv_(1); }
+        inline const SVecD<2>& nrmq()  const { return nrmq_; }
+        inline const Double_t& nrmqx() const { return nrmq_(0); }
+        inline const Double_t& nrmqy() const { return nrmq_(1); }
+
+        inline const SVecD<2>& divq()  const { return divq_; }
+        inline const Double_t& divqx() const { return divq_(0); }
+        inline const Double_t& divqy() const { return divq_(1); }
 
     protected :
         void clear();
@@ -132,11 +135,11 @@ class HitStTRK : public VirtualHitSt {
         
         SVecS<2> nsr_; // Number of strip
         
-        SVecO<2> q_side_;
+        SVecO<2> side_q_;
         SVecD<2> q_; // ADC
 
-        SVecD<2> qnrm_; // q nrom
-        SVecD<2> qdiv_; // q div
+        SVecD<2> nrmq_; // q nrom
+        SVecD<2> divq_; // q div
 
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
@@ -165,7 +168,7 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     public :
-        HitStTOF(Bool_t csx = false, Bool_t csy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, csx, csy), pdf_c_(nullptr), pdf_q_(nullptr), pdf_t_(nullptr) { clear(); }
+        HitStTOF(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, scx, scy), pdf_c_(nullptr), pdf_q_(nullptr), pdf_t_(nullptr) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -174,25 +177,28 @@ class HitStTOF : public VirtualHitSt {
         void set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_q(Double_t q) {
-            q_side_ = (Numc::Compare(q) > 0);
-            q_      = (q_side_ ? q : Numc::ZERO<>);
+            side_q_ = (Numc::Compare(q) > 0);
+            q_      = (side_q_ ? q : Numc::ZERO<>);
         }
         
         inline void set_t(Double_t t) {
-            t_side_ = (Numc::Compare(t) >= 0);
-            t_      = (t_side_ ? t : Numc::ZERO<>);
+            side_t_ = (Numc::Compare(t) >= 0);
+            t_      = (side_t_ ? t : Numc::ZERO<>);
         }
 
         inline Double_t t() const { return (t_ + OFFSET_T_); }
 
         inline const Short_t&  seqIDq() const { return seqIDq_; }
         inline const Short_t&  seqIDt() const { return seqIDt_; }
+        
+        inline const Bool_t& sq() const { return side_q_; }
+        inline const Bool_t& st() const { return side_t_; }
 
-        inline const Double_t& qnrm() const { return qnrm_; }
-        inline const Double_t& qdiv() const { return qdiv_; }
+        inline const Double_t& nrmq() const { return nrmq_; }
+        inline const Double_t& divq() const { return divq_; }
 
-        inline const Double_t& tnrm() const { return tnrm_; }
-        inline const Double_t& tdiv() const { return tdiv_; }
+        inline const Double_t& nrmt() const { return nrmt_; }
+        inline const Double_t& divt() const { return divt_; }
 
     protected :
         void clear();
@@ -201,17 +207,17 @@ class HitStTOF : public VirtualHitSt {
         Short_t seqIDq_;
         Short_t seqIDt_;
         
-        Bool_t   q_side_;
+        Bool_t   side_q_;
         Double_t q_; // Q
         
-        Bool_t   t_side_;
+        Bool_t   side_t_;
         Double_t t_; // T [cm]
 
-        Double_t qnrm_; // Q nrom
-        Double_t qdiv_; // Q div
+        Double_t nrmq_; // Q nrom
+        Double_t divq_; // Q div
         
-        Double_t tnrm_; // T nrom
-        Double_t tdiv_; // T div
+        Double_t nrmt_; // T nrom
+        Double_t divt_; // T div
 
         MultiGaus* pdf_c_;
         IonEloss*  pdf_q_;

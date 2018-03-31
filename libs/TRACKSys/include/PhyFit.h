@@ -20,17 +20,22 @@ class TrFitPar {
 
         void print() const;
 
-        inline void addHit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
-        inline void addHit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; rlt_check_ = -1; }
+        inline void addHit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; }
+        inline void addHit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; }
         
-        inline Short_t numOfHit() { return ((checkHit() >= 0) ? hits_.size() : 0); }
+        inline Short_t numOfHit() { checkHits(); return hits_.size(); }
         inline const Short_t numOfSeq() const { return nseq_; }
 
+        inline Bool_t check() { return checkHits(); }
+
     protected :
-        Bool_t  rebuildHit();
-        Short_t checkHit();
-        inline Short_t recheckHit() { is_check_ = false; return checkHit(); }
+        void zero();
         void clear();
+        
+        Bool_t sortHits();
+        Bool_t checkHits();
+
+        inline Bool_t recheckHits() { is_check_ = false; return checkHits(); }
 
     protected :
         Bool_t      sw_mscat_;
@@ -42,13 +47,19 @@ class TrFitPar {
         std::vector<HitStTRK>      hits_TRK_;
         std::vector<HitStTOF>      hits_TOF_;
 
-        Short_t            nseq_;
-        Short_t            nhtx_;
-        Short_t            nhty_;
+        Short_t nseq_;
+        Short_t ndof_;
+        Short_t nmes_;
+
+        Short_t nmes_cx_;
+        Short_t nmes_cy_;
+        Short_t nmes_TRKqx_;
+        Short_t nmes_TRKqy_;
+        Short_t nmes_TOFq_;
+        Short_t nmes_TOFt_;
 
     private :
         Bool_t  is_check_;
-        Short_t rlt_check_;
 
     protected :
         // Number of Hit Requirement
@@ -107,7 +118,7 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (recheckHit()>0) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
+        VirtualPhyTrFit(TrFitPar& fitPar, PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (recheckHits()) setvar(numOfSeq()+(numOfHit()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(numOfHit()-1)*PhyJb::DIM_L); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :

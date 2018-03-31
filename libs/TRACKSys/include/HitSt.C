@@ -5,11 +5,11 @@
 namespace TrackSys {
 
 // VirtualHitSt
-VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t csx, Bool_t csy, Bool_t csz) {
+VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t scx, Bool_t scy, Bool_t scz) {
     clear();
     dec_ = dec;
     lay_ = lay;
-    coo_side_ = std::move(SVecO<3>(csx, csy, csz));
+    side_coo_ = std::move(SVecO<3>(scx, scy, scz));
 }
     
 void VirtualHitSt::clear() {
@@ -21,12 +21,12 @@ void VirtualHitSt::clear() {
     dec_  = Detector::NONE;
     lay_  = 0;
     
-    coo_side_ = std::move(SVecO<3>());
+    side_coo_ = std::move(SVecO<3>());
     coo_      = std::move(SVecD<3>());
-    cer_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
+    erc_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
     
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
+    nrmc_ = std::move(SVecD<2>());
+    divc_ = std::move(SVecD<2>());
 }
         
 
@@ -38,25 +38,25 @@ void HitStTRK::clear() {
     seqIDqy_ = -1;
 
     nsr_    = std::move(SVecS<2>());
-    q_side_ = std::move(SVecO<2>());
+    side_q_ = std::move(SVecO<2>());
     q_      = std::move(SVecD<2>());
     
-    qnrm_ = std::move(SVecD<2>());
-    qdiv_ = std::move(SVecD<2>());
+    nrmq_ = std::move(SVecD<2>());
+    divq_ = std::move(SVecD<2>());
 
     set_type();
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
-        cer_ = std::move(SVecD<2>(pdf_cx_->efft_sgm(), pdf_cy_->efft_sgm()));
+        erc_ = std::move(SVecD<2>(pdf_cx_->efft_sgm(), pdf_cy_->efft_sgm()));
 }
 
 Short_t HitStTRK::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
-    if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (q_side_(0))   { seqIDqx_ = seqID + iter; iter++; } else seqIDqx_ = -1;
-    if (q_side_(1))   { seqIDqy_ = seqID + iter; iter++; } else seqIDqy_ = -1;
+    if (side_coo_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
+    if (side_coo_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
+    if (side_q_(0))   { seqIDqx_ = seqID + iter; iter++; } else seqIDqx_ = -1;
+    if (side_q_(1))   { seqIDqy_ = seqID + iter; iter++; } else seqIDqy_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -64,31 +64,31 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
 void HitStTRK::cal(const PhySt& part) {
     set_type(part.info());
 
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
+    nrmc_ = std::move(SVecD<2>());
+    divc_ = std::move(SVecD<2>());
     SVecD<3>&& crs = (coo_ - part.c());
-    if (coo_side_(0)) {
-        cer_(0)  = pdf_cx_->efft_sgm(crs(0));
-        cnrm_(0) = crs(0) / cer_(0);
-        cdiv_(0) = Numc::NEG<> / cer_(0);
+    if (side_coo_(0)) {
+        erc_(0)  = pdf_cx_->efft_sgm(crs(0));
+        nrmc_(0) = crs(0) / erc_(0);
+        divc_(0) = Numc::NEG<> / erc_(0);
     }
-    if (coo_side_(1)) {
-        cer_(1) = pdf_cy_->efft_sgm(crs(1));
-        cnrm_(1) = crs(1) / cer_(1);
-        cdiv_(1) = Numc::NEG<> / cer_(1);
+    if (side_coo_(1)) {
+        erc_(1) = pdf_cy_->efft_sgm(crs(1));
+        nrmc_(1) = crs(1) / erc_(1);
+        divc_(1) = Numc::NEG<> / erc_(1);
     }
 
-    qnrm_ = std::move(SVecD<2>());
-    qdiv_ = std::move(SVecD<2>());
-    if (q_side_(0)) {
+    nrmq_ = std::move(SVecD<2>());
+    divq_ = std::move(SVecD<2>());
+    if (side_q_(0)) {
         SVecD<2>&& ionx = (*pdf_qx_)(q_(0), part.eta());
-        qnrm_(0) = ionx(0);
-        qdiv_(0) = ionx(1);
+        nrmq_(0) = ionx(0);
+        divq_(0) = ionx(1);
     }
-    if (q_side_(1)) {
+    if (side_q_(1)) {
         SVecD<2>&& iony = (*pdf_qy_)(q_(1), part.eta());
-        qnrm_(1) = iony(0);
-        qdiv_(1) = iony(1);
+        nrmq_(1) = iony(0);
+        divq_(1) = iony(1);
     }
 
     set_dummy_x(part.cx());
@@ -216,31 +216,31 @@ void HitStTOF::clear() {
     seqIDq_  = -1;
     seqIDt_  = -1;
 
-    q_side_ = false;
+    side_q_ = false;
     q_      = Numc::ZERO<>;
     
-    t_side_ = false;
+    side_t_ = false;
     t_      = Numc::ZERO<>;
 
-    qnrm_ = Numc::ZERO<>;
-    qdiv_ = Numc::ZERO<>;
+    nrmq_ = Numc::ZERO<>;
+    divq_ = Numc::ZERO<>;
     
-    tnrm_ = Numc::ZERO<>;
-    tdiv_ = Numc::ZERO<>;
+    nrmt_ = Numc::ZERO<>;
+    divt_ = Numc::ZERO<>;
 
     set_type();
     if (pdf_c_ != nullptr)
-        cer_ = std::move(SVecD<2>(pdf_c_->efft_sgm(), pdf_c_->efft_sgm()));
+        erc_ = std::move(SVecD<2>(pdf_c_->efft_sgm(), pdf_c_->efft_sgm()));
 }
 
 Short_t HitStTOF::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (coo_side_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
-    if (coo_side_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (q_side_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
-    if (t_side_     ) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
+    if (side_coo_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
+    if (side_coo_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
+    if (side_q_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
+    if (side_t_     ) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -248,31 +248,31 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
 void HitStTOF::cal(const PhySt& part) {
     set_type(part.info());
 
-    cnrm_ = std::move(SVecD<2>());
-    cdiv_ = std::move(SVecD<2>());
+    nrmc_ = std::move(SVecD<2>());
+    divc_ = std::move(SVecD<2>());
     SVecD<3>&& crs = (coo_ - part.c());
-    if (coo_side_(0)) {
-        cer_(0)  = pdf_c_->efft_sgm(crs(0));
-        cnrm_(0) = crs(0) / cer_(0);
-        cdiv_(0) = Numc::NEG<> / cer_(0);
+    if (side_coo_(0)) {
+        erc_(0)  = pdf_c_->efft_sgm(crs(0));
+        nrmc_(0) = crs(0) / erc_(0);
+        divc_(0) = Numc::NEG<> / erc_(0);
     }
-    if (coo_side_(1)) {
-        cer_(1) = pdf_c_->efft_sgm(crs(1));
-        cnrm_(1) = crs(1) / cer_(1);
-        cdiv_(1) = Numc::NEG<> / cer_(1);
+    if (side_coo_(1)) {
+        erc_(1) = pdf_c_->efft_sgm(crs(1));
+        nrmc_(1) = crs(1) / erc_(1);
+        divc_(1) = Numc::NEG<> / erc_(1);
     }
 
-    qnrm_ = Numc::ZERO<>;
-    qdiv_ = Numc::ZERO<>;
-    if (q_side_) {
+    nrmq_ = Numc::ZERO<>;
+    divq_ = Numc::ZERO<>;
+    if (side_q_) {
         SVecD<2>&& ion = (*pdf_q_)(q_, part.eta());
-        qnrm_ = ion(0);
-        qdiv_ = ion(1);
+        nrmq_ = ion(0);
+        divq_ = ion(1);
     }
     
-    tnrm_ = Numc::ZERO<>;
-    tdiv_ = Numc::ZERO<>;
-    if (t_side_) {
+    nrmt_ = Numc::ZERO<>;
+    divt_ = Numc::ZERO<>;
+    if (side_t_) {
         // t := (delta_S / beta)
         // res_t = (meas_t - part_t);
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
@@ -280,11 +280,11 @@ void HitStTOF::cal(const PhySt& part) {
         if (!Numc::EqualToZero(ds)) {
             Double_t sgm = ( 4.82206e+00 + 1.87673e+00 * std::erf( -(std::log(std::fabs(part.eta()))-5.78158e-02) ) ); // [cm]
             Double_t ter = MultiGaus::RobustSgm(dt, sgm, pdf_t_->opt());
-            tnrm_ = (dt / ter);
-            tdiv_ = (Numc::NEG<> * ds / ter) * (part.bta() * part.eta());
-            if (!Numc::Valid(tnrm_) || !Numc::Valid(tdiv_)) {
-                tnrm_ = Numc::ZERO<>;
-                tdiv_ = Numc::ZERO<>;
+            nrmt_ = (dt / ter);
+            divt_ = (Numc::NEG<> * ds / ter) * (part.bta() * part.eta());
+            if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_)) {
+                nrmt_ = Numc::ZERO<>;
+                divt_ = Numc::ZERO<>;
             }
         }
     }
