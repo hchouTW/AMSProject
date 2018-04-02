@@ -28,7 +28,7 @@ class TrFitPar {
         inline const Short_t& nseq() const { return nseq_; }
         
         inline const Short_t nhits() const { return hits_.size(); }
-        inline const std::vector<VirtualHitSt*> hits() const { return hits_; }
+        inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
         inline const VirtualHitSt* hits(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
 
     protected :
