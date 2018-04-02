@@ -254,13 +254,12 @@ int main(int argc, char * argv[]) {
         Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
         Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
         for (Int_t it = 0; it < 9; ++it) {
-            const PhySt* stt = tr.stts(it+1);
-            if (stt == nullptr) continue;
-            hc_coo[it][0] = stt->cx();
-            hc_coo[it][1] = stt->cy();
-            hc_coo[it][2] = stt->cz();
-            hc_dir[it][0] = stt->ux();
-            hc_dir[it][1] = stt->uy();
+            PhySt&& stt = tr.interpolate_to_z(track.stateLJ[0][0][it][2]);
+            hc_coo[it][0] = stt.cx();
+            hc_coo[it][1] = stt.cy();
+            hc_coo[it][2] = stt.cz();
+            hc_dir[it][0] = stt.ux();
+            hc_dir[it][1] = stt.uy();
         }
         //-------------------------------------//
         

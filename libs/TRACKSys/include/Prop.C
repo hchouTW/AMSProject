@@ -444,7 +444,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
         int_step += cur_step;
         is_succ = (Numc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
     }
-    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    MatFld&& mgfld = MatFld::Merge(mflds);
     if (withMf) *mfld = mgfld;
         
     ppcal.normalized(mgfld, part);
@@ -504,7 +504,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
         int_step += cur_step;
         is_succ = (Numc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
     }
-    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    MatFld&& mgfld = MatFld::Merge(mflds);
     if (withMf) *mfld = mgfld;
     
     ppcal.normalized(mgfld, part);
@@ -556,7 +556,7 @@ Bool_t PropMgnt::FastProp(const Double_t step, const PhySt& part, MatFld* mfld) 
         int_step += cur_step;
         is_succ = (Numc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
     }
-    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    MatFld&& mgfld = MatFld::Merge(mflds);
     if (mfld != nullptr) *mfld = mgfld;
    
     return is_succ;
@@ -587,7 +587,7 @@ Bool_t PropMgnt::FastPropToZ(const Double_t zcoo, const PhySt& part, MatFld* mfl
         int_step += cur_step;
         is_succ = (Numc::Compare(std::fabs(zcoo - ppst.cz()), CONV_STEP) < 0);
     }
-    MatFld&& mgfld = std::move(MatFld::Merge(mflds));
+    MatFld&& mgfld = MatFld::Merge(mflds);
     if (mfld != nullptr) *mfld = mgfld;
     
     return is_succ;

@@ -28,6 +28,8 @@ class TrFitPar {
         inline const Short_t& nseq() const { return nseq_; }
         
         inline const Short_t nhits() const { return hits_.size(); }
+        inline const std::vector<VirtualHitSt*> hits() const { return hits_; }
+        inline const VirtualHitSt* hits(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
 
     protected :
         void zero();
@@ -165,17 +167,9 @@ class PhyTrFit : protected TrFitPar {
         inline const Bool_t& status() const { return succ_; }
         inline const PhySt& part() const { return part_; }
 
-        inline const Int_t nargs() const { return args_.size(); }
-        inline const std::vector<PhyArg>& args() const { return args_; }
-        inline const PhyArg* args(UInt_t it) const { return ((succ_ && it<args_.size()) ? &args_.at(it) : nullptr); }
-
         inline const Int_t nstts() const { return stts_.size(); }
-        inline const std::vector<PhySt>& stts() const { return stts_; }
-        inline const PhySt* stts(Int_t lay) const { auto&& stt = map_stts_.find(lay); return ((succ_ && stt!=map_stts_.end()) ? stt->second : nullptr); }
-        
-        inline const Int_t nhits() const { return hits_.size(); }
-        inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
-        inline const VirtualHitSt* hits(Int_t lay) const { auto&& hit = map_hits_.find(lay); return ((succ_ && hit!=map_hits_.end()) ? hit->second : nullptr); }
+        inline const std::vector<std::pair<VirtualHitSt*, PhySt>>& stts() const { return stts_; }
+        inline const std::pair<VirtualHitSt*, PhySt>* stts(Int_t idx) const { return ((idx<0 || idx>=stts_.size()) ? nullptr : &stts_.at(idx)); }
 
         inline const Short_t& ndof()      const { return ndof_; }
         inline const Short_t& ndof_cx()   const { return ndof_cx_; }
@@ -195,6 +189,10 @@ class PhyTrFit : protected TrFitPar {
         inline const Double_t& nrm_mscat() const { return nrm_mscat_; }
         inline const Double_t& nrm_eloss() const { return nrm_eloss_; }
 
+    public :
+        PhySt interpolate_to_z(Double_t zcoo = 0);
+        MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0);
+
     protected :
         void clear();
 
@@ -207,7 +205,6 @@ class PhyTrFit : protected TrFitPar {
         Bool_t              succ_;
         PhySt               part_;
         std::vector<PhyArg> args_; 
-        std::vector<PhySt>  stts_; 
         
         Short_t ndof_;
         Short_t ndof_cx_;
@@ -228,14 +225,7 @@ class PhyTrFit : protected TrFitPar {
         Double_t nrm_eloss_;
 
     protected :
-        std::map<Int_t, VirtualHitSt*> map_hits_;
-        std::map<Int_t, PhySt*>        map_stts_;
-
-    protected :
-        // (z, hit, part, args)
-        //std::vector<std::tuple<Double_t, VirtualHitSt*, PhySt, SVecD<5>>> stts;
-        // Interpolate form -inf to inf; return part;
-        // Material return nrl, ela
+        std::vector<std::pair<VirtualHitSt*, PhySt>> stts_;
 };
 
 

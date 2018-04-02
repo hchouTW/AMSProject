@@ -492,7 +492,7 @@ PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
    
     nsegs_ = (nhits() >= Numc::TWO<Short_t>) ? (nhits() - Numc::ONE<Short_t>) : 0;
 
-    succ_ = physicalFit();
+    succ_ = (simpleFit() ? physicalFit() : false);
     if (!succ_) { PhyTrFit::clear(); COUT("PhyTrFit::FAIL.\n"); }
 }
 
@@ -503,9 +503,6 @@ void PhyTrFit::clear() {
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();
     stts_.clear();
-
-    map_hits_.clear();
-    map_stts_.clear();
 
     ndof_      = 0;
     ndof_cx_   = 0;
@@ -536,7 +533,6 @@ Bool_t PhyTrFit::simpleFit() {
 
 
 Bool_t PhyTrFit::physicalFit() {
-    if (!simpleFit()) return false;
     part_.arg().reset(sw_mscat_, sw_eloss_);
     std::vector<double> interaction_parameters((nhits()-1)*PhyJb::DIM_L, 0.);
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
@@ -560,7 +556,6 @@ Bool_t PhyTrFit::physicalFit() {
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), part_.cz(), parameters.at(2), parameters.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(parameters.at(4));
 
-    stts_ = std::vector<PhySt>(nhits());
     args_ = std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_));
     for (Int_t it = 0; it < nhits()-1; ++it) {
         args_.at(it).set_mscat(
@@ -572,12 +567,13 @@ Bool_t PhyTrFit::physicalFit() {
         //        interaction_parameters.at(it*PhyJb::DIM_L+4));
     }
     
-    if (!evolve()) return false;
-    return true;
+    return evolve();
 }
 
 
 Bool_t PhyTrFit::evolve() {
+    std::vector<std::pair<VirtualHitSt*, PhySt>> stts;
+    
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
     HitStTOF::SetOffsetPath(Numc::ZERO<>);
@@ -600,18 +596,22 @@ Bool_t PhyTrFit::evolve() {
         // Propagate
         if (hasLoc) ppst.arg() = args_.at(cnt_nhit-1);
         if (!PropMgnt::PropToZ(hit->cz(), ppst)) break;
-        
+       
+        // Particle State
         if (hasLoc) args_.at(cnt_nhit-1).setvar_mat(ppst.arg().mat(), ppst.arg().nrl(), ppst.arg().ela());
         PhyArg curArg = ppst.arg();
         ppst.symbk();
 
-        stts_.at(cnt_nhit) = ppst;
+        // Hit Status: Setting TOF reference time and path
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             HitStTOF::SetOffsetPath(ppst.path());
             HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
             resetTOF = false;
         }
         hit->cal(ppst);
+
+        // State Pair
+        stts.push_back(std::make_pair(hit, ppst));
 
         // Coord
         if (hit->scx()) chi_cx += hit->nrmcx() * hit->nrmcx(); 
@@ -645,34 +645,29 @@ Bool_t PhyTrFit::evolve() {
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
-
-    stts_.back().arg().reset();
-    for (UInt_t it = 0; it < stts_.size()-1; ++it) {
-        stts_.at(it).arg() = args_.at(it);
-        stts_.at(it).arg().zero();
-    }
-    
-    for (UInt_t it = 0; it < hits_.size(); ++it) {
-        if (!Hit<HitStTRK>::IsSame(hits_.at(it))) continue;
-        map_hits_[hits_.at(it)->lay()] =  hits_.at(it);
-        map_stts_[hits_.at(it)->lay()] = &stts_.at(it);
-    }
-
     Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mscat + chi_eloss);
     Double_t nchi = (chi / static_cast<Double_t>(ndof_));
+
+    if (stts.size() != 0) (stts.at(stts.size()-1).second).arg().clear();
+    for (UInt_t it = 0; it < stts.size()-1; ++it) {
+        PhySt&  stt = (stts.at(it).second);
+        PhyArg& arg = args_.at(it);
+        stt.arg().set_mscat(arg.tauu(), arg.rhou(), arg.taul(), arg.rhol());
+        stt.arg().set_eloss(arg.elion(), arg.elbrm());
+    }
 
     nchi_cx_   = ((ndof_cx_   > 0) ? (chi_cx   / static_cast<Double_t>(ndof_cx_  )) : 0);
     nchi_cy_   = ((ndof_cy_   > 0) ? (chi_cy   / static_cast<Double_t>(ndof_cy_  )) : 0);
     nchi_TRKq_ = ((ndof_TRKq_ > 0) ? (chi_TRKq / static_cast<Double_t>(ndof_TRKq_)) : 0);
     nchi_TOFq_ = ((ndof_TOFq_ > 0) ? (chi_TOFq / static_cast<Double_t>(ndof_TOFq_)) : 0);
     nchi_TOFt_ = ((ndof_TOFt_ > 0) ? (chi_TOFt / static_cast<Double_t>(ndof_TOFt_)) : 0);
+    nchi_      = nchi;
 
     nrm_mscat_ = ((nsegs_ > 0) ? (chi_mscat / static_cast<Double_t>(nsegs_)) : 0);
     nrm_eloss_ = ((nsegs_ > 0) ? (chi_eloss / static_cast<Double_t>(nsegs_)) : 0);
-    
-    nchi_ = nchi;
 
-    succ_ = true;
+    stts_ = std::move(stts);
+
     return true;
 }
 
@@ -715,7 +710,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         PhyArg curArg = ppst.arg();
         ppst.symbk();
 
-        // Setting TOF reference time and path
+        // Hit Status: Setting TOF reference time and path
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             HitStTOF::SetOffsetPath(ppst.path());
             HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
@@ -825,6 +820,81 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     }
 
     return true;
+}
+    
+
+PhySt PhyTrFit::interpolate_to_z(Double_t zcoo) {
+    PhySt nullst = part_; nullst.reset(part_.info().type());
+    if (!succ_ || stts_.size() == 0) return nullst;
+
+    // Find Index
+    Int_t idx = -1;
+    if (ortt_ == Orientation::kDownward)
+        for (UInt_t it = 0; it < stts_.size(); ++it)
+            if (idx == -1 && Numc::Compare(zcoo, (stts_.at(it).first)->cz()) <= 0) idx = it;
+    else // kUpward
+        for (UInt_t it = 0; it < stts_.size(); ++it)
+            if (idx == -1 && Numc::Compare(zcoo, (stts_.at(it).first)->cz()) >= 0) idx = it;
+
+    // Set Particle
+    PhySt ppst = ((idx == -1) ? (stts_.at(0).second) : (stts_.at(idx).second));
+    if (idx == -1) ppst.arg().clear();
+    PhyArg arg = ppst.arg();
+        
+    if (!PropMgnt::PropToZ(zcoo, ppst)) return nullst;
+    ppst.symbk();
+
+    ppst.arg().clear();
+    ppst.arg().set_mscat(arg.tauu(), arg.rhou(), arg.taul(), arg.rhol());
+    ppst.arg().set_eloss(arg.elion(), arg.elbrm());
+
+    return ppst;
+}
+
+
+MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) {
+    if (!succ_ || stts_.size() == 0) return MatFld();
+    
+    // Set Boundary
+    Short_t zbd_sign = Numc::Compare(zbd1, zbd2);
+    if (zbd_sign == 0) {
+        Double_t zcoo = zbd1;
+        PhySt&& st = interpolate_to_z(zcoo);
+        if (Numc::EqualToZero(st.eta())) return MatFld();
+        else return MatMgnt::Get(Numc::ZERO<>, st);
+    }
+    Double_t zsat = ((ortt_ == Orientation::kDownward && zbd_sign > 0) || (ortt_ == Orientation::kUpward && zbd_sign < 0)) ? zbd1 : zbd2;
+    Double_t zend = ((ortt_ == Orientation::kDownward && zbd_sign > 0) || (ortt_ == Orientation::kUpward && zbd_sign < 0)) ? zbd2 : zbd1;
+
+    // Find Index
+    Int_t isat = -1, iend = -1;
+    if (ortt_ == Orientation::kDownward) {
+        for (UInt_t it = 0; it < stts_.size(); ++it) {
+            if (isat == -1 && Numc::Compare(zsat, (stts_.at(it).first)->cz()) <= 0) isat = it;
+            if (iend == -1 && Numc::Compare(zend, (stts_.at(it).first)->cz()) <= 0) iend = it;
+        }
+    }
+    else { // kUpward
+        for (UInt_t it = 0; it < stts_.size(); ++it) {
+            if (isat == -1 && Numc::Compare(zsat, (stts_.at(it).first)->cz()) >= 0) isat = it;
+            if (iend == -1 && Numc::Compare(zend, (stts_.at(it).first)->cz()) >= 0) iend = it;
+        }
+    }
+
+    // Material
+    std::list<MatFld> mflds;
+    for (Int_t it = isat; it <= iend; ++it) {
+        PhySt ppst = (it == isat) ? interpolate_to_z(zsat) : (stts_.at(it).second);
+        if (Numc::EqualToZero(ppst.eta())) return MatFld();
+
+        MatFld fld;
+        Double_t zcoo = (it == iend) ? zend : (stts_.at(it+1).first)->cz();
+        if (!PropMgnt::PropToZ(zcoo, ppst, &fld)) return MatFld();
+        mflds.push_back(fld);
+    }
+    
+    MatFld&& mfld = MatFld::Merge(mflds);
+    return mfld;
 }
 
 
