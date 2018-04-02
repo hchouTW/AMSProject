@@ -191,10 +191,10 @@ int main(int argc, char * argv[]) {
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             mhit.set_q(hit.adc[0], hit.adc[1]);
          
-            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
+            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.add_hit(mhit);
             else {
-                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.addHit(mhit); }
-                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.addHit(mhit); }
+                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.add_hit(mhit); }
+                if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.add_hit(mhit); }
             }
         }
         Short_t cutNHit = 4 + optL1 + optL9;
@@ -206,7 +206,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            fitPar.addHit(mhit);
+            fitPar.add_hit(mhit);
         }
         
         if (!fitPar.check()) continue;
@@ -254,7 +254,7 @@ int main(int argc, char * argv[]) {
         Double_t hc_tme  = sw.time()*1.0e3;
         Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
         Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
-        for (Int_t it = 0; it < 9; ++it) {
+        for (Int_t it = 0; hc_succ && it < 9; ++it) {
             PhySt&& stt = tr.interpolate_to_z(track.stateLJ[0][0][it][2]);
             hc_coo[it][0] = stt.cx();
             hc_coo[it][1] = stt.cy();
@@ -262,11 +262,6 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        CERR("\n===============================================\n");
-        tr.get_mat(track.stateLJ[0][0][2][2], track.stateLJ[0][0][3][2]).print();
-        tr.get_mat(track.stateLJ[0][0][4][2], track.stateLJ[0][0][5][2]).print();
-        tr.get_mat(track.stateLJ[0][0][6][2], track.stateLJ[0][0][7][2]).print();
-        CERR("\n===============================================\n");
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

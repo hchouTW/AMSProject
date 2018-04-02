@@ -20,8 +20,8 @@ class TrFitPar {
 
         void print() const;
 
-        inline void addHit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; }
-        inline void addHit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; }
+        inline void add_hit(HitStTRK& hit) { hits_TRK_.push_back(hit); hits_.clear(); is_check_ = false; }
+        inline void add_hit(HitStTOF& hit) { hits_TOF_.push_back(hit); hits_.clear(); is_check_ = false; }
         
         inline Bool_t check() { return check_hits(); }
 
