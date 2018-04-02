@@ -49,8 +49,8 @@ void PhyArg::cal_nrm(SVecD<5>& nrm) const {
     if (sw_mscat_) {
         nrm(0) = (Numc::NEG<> * tauu_ / pdf_mscatu_.efft_sgm(tauu_)); 
         nrm(1) = (Numc::NEG<> * rhou_ / pdf_mscatu_.efft_sgm(rhou_)); 
-        nrm(2) = (Numc::NEG<> * taul_ / pdf_mscatu_.efft_sgm(taul_)); 
-        nrm(3) = (Numc::NEG<> * rhol_ / pdf_mscatu_.efft_sgm(rhol_)); 
+        nrm(2) = (Numc::NEG<> * taul_ / pdf_mscatl_.efft_sgm(taul_)); 
+        nrm(3) = (Numc::NEG<> * rhol_ / pdf_mscatl_.efft_sgm(rhol_)); 
     }
     if (sw_eloss_) {
         nrm(4) = (Numc::NEG<> * elion_ / pdf_elion_.efft_sgm(elion_));
@@ -65,8 +65,8 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
     if (sw_mscat_) {
         div(0) = (Numc::NEG<> / pdf_mscatu_.efft_sgm(tauu_));
         div(1) = (Numc::NEG<> / pdf_mscatu_.efft_sgm(rhou_));
-        div(2) = (Numc::NEG<> / pdf_mscatu_.efft_sgm(taul_));
-        div(3) = (Numc::NEG<> / pdf_mscatu_.efft_sgm(rhol_));
+        div(2) = (Numc::NEG<> / pdf_mscatl_.efft_sgm(taul_));
+        div(3) = (Numc::NEG<> / pdf_mscatl_.efft_sgm(rhol_));
         nrm(0) = (tauu_ * div(0)); 
         nrm(1) = (rhou_ * div(1)); 
         nrm(2) = (taul_ * div(2)); 

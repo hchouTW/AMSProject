@@ -113,7 +113,7 @@ void PhyJb::set(PhySt& part) {
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
     }
     if (arg.eloss()) {
-        jb_gl_(JEA, JION) = part.eta() * (arg.sign() * arg.elion_sgm());
+        //jb_gl_(JEA, JION) = part.eta() * (arg.sign() * arg.elion_sgm());
     }
 }
 

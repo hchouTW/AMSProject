@@ -243,7 +243,7 @@ int main(int argc, char * argv[]) {
     THStack* chBrsoS = Hist::Collect("chBrsoS", HistList({ hKFCKBrsoS, hHCCKBrsoS }));
     chBrsoS->Write();
 
-
+/*
     COUT("resx\n");
     for (Int_t lay = 0; lay < 9; ++lay) {
         Hist* hCKresxS = Hist::New(CSTR("hCKresxL%dS", lay+1), HistAxis(AXmom));
@@ -498,7 +498,7 @@ int main(int argc, char * argv[]) {
         THStack* chcosyS = Hist::Collect(CSTR("chcosyL%dS", lay+1), HistList({ hKFCKcosyS, hHCCKcosyS }));
         chcosyS->Write();
     }
-
+*/
     ofle->Write();
     ofle->Close();
 
