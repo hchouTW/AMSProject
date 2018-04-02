@@ -684,7 +684,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     PhySt ppst(part_);
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
     ppst.set_eta(parameters[0][4]);
-    ppst.arg().reset();
+    ppst.arg().clear();
 
     UInt_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& jbGG = SMtxId();
