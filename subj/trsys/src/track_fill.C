@@ -262,6 +262,11 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
+        CERR("\n===============================================\n");
+        tr.get_mat(track.stateLJ[0][0][2][2], track.stateLJ[0][0][3][2]).print();
+        tr.get_mat(track.stateLJ[0][0][4][2], track.stateLJ[0][0][5][2]).print();
+        tr.get_mat(track.stateLJ[0][0][6][2], track.stateLJ[0][0][7][2]).print();
+        CERR("\n===============================================\n");
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

@@ -7,7 +7,7 @@ namespace TrackSys {
 
 void MatFld::print() const {
     std::string printStr;
-    printStr += STR("========================= MatFld =========================\n");
+    printStr += STR("================= MatFld =================\n");
     printStr += STR("Mat       %-d\n", mat_);
     printStr += STR("InvRadLen %-8.5f\n", irl_);
     printStr += STR("ECloudDen %-8.5f\n", eld_);
@@ -19,7 +19,7 @@ void MatFld::print() const {
     printStr += STR("EfftLen   %-7.2f\n", elen_);
     printStr += STR("Loc       %-6.4f\n", loc1_);
     printStr += STR("LocSqr    %-6.4f\n", loc2_);
-    printStr += STR("==========================================================\n");
+    printStr += STR("==========================================\n");
     COUT(printStr.c_str());
 }
         
