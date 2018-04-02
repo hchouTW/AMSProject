@@ -198,7 +198,6 @@ int main(int argc, char * argv[]) {
             }
         }
         Short_t cutNHit = 4 + optL1 + optL9;
-        if (fitPar.nhits() <= cutNHit) continue;
 
         for (Int_t il = 0; il < 4; ++il) {
             Bool_t tofx = (il == 0 || il == 3);
@@ -209,6 +208,8 @@ int main(int argc, char * argv[]) {
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.addHit(mhit);
         }
+        
+        if (!fitPar.check()) continue;
 
         if (optL1 && !(hasL1 && hasMCL1)) continue;
         if (optL9 && !(hasL9 && hasMCL9)) continue;

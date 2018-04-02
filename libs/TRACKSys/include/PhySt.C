@@ -256,11 +256,9 @@ void PhySt::print() const {
     printStr += STR("Rig %14.8f\n", rig());
     printStr += STR("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
     printStr += STR("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
-    if (arg_()) {
-        printStr += STR("Mscat    Tauu %6.2f  Rhou %6.2f\n", arg_.tauu(),  arg_.rhou());
-        printStr += STR("Mscat    Taul %6.2f  Rhol %6.2f\n", arg_.taul(),  arg_.rhol());
-        printStr += STR("Eloss    Ion  %6.2f  Brm  %6.2f\n", arg_.elion(), arg_.elbrm());
-    }
+    printStr += STR("-----------------------------------------\n");
+    printStr += STR("Path %14.8f\n", path_);
+    printStr += STR("Time %14.8f\n", time_);
     printStr += STR("=========================================\n");
     COUT(printStr.c_str());
 }
