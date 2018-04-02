@@ -860,7 +860,7 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) {
     if (zbd_sign == 0) {
         Double_t zcoo = zbd1;
         PhySt&& st = interpolate_to_z(zcoo);
-        if (Numc::EqualToZero(st.eta())) return MatFld();
+        if (Numc::EqualToZero(st.mom())) return MatFld();
         else return MatMgnt::Get(Numc::ZERO<>, st);
     }
     Double_t zsat = ((ortt_ == Orientation::kDownward && zbd_sign > 0) || (ortt_ == Orientation::kUpward && zbd_sign < 0)) ? zbd1 : zbd2;
@@ -885,7 +885,7 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) {
     std::list<MatFld> mflds;
     for (Int_t it = isat; it <= iend; ++it) {
         PhySt ppst = (it == isat) ? interpolate_to_z(zsat) : (stts_.at(it).second);
-        if (Numc::EqualToZero(ppst.eta())) return MatFld();
+        if (Numc::EqualToZero(ppst.mom())) return MatFld();
 
         MatFld fld;
         Double_t zcoo = (it == iend) ? zend : (stts_.at(it+1).first)->cz();
