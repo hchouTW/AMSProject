@@ -14,13 +14,11 @@
 
 #include "MagEnv.h"
 #include "MagEnv.C"
-
 #include "MagEnvAms.h"
 #include "MagEnvAms.C"
 
 #include "MatEnv.h"
 #include "MatEnv.C"
-
 #include "MatEnvAms.h"
 #include "MatEnvAms.C"
 
@@ -32,6 +30,9 @@
 
 #include "PhyFit.h"
 #include "PhyFit.C"
+
+#include "InterfaceAms.h"
+#include "InterfaceAms.C"
 
 
 #endif // __TRACKSys_H__
