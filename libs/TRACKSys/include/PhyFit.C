@@ -13,6 +13,38 @@ void TrFitPar::print() const {
     outstr += "\n";
     COUT("%s", outstr.c_str());
 }
+        
+TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
+    if (this != &rhs) {
+        sw_mscat_   = rhs.sw_mscat_;
+        sw_eloss_   = rhs.sw_eloss_;
+        type_       = rhs.type_;
+        ortt_       = rhs.ortt_;
+        hits_TRK_   = rhs.hits_TRK_;
+        hits_TOF_   = rhs.hits_TOF_;
+        nseq_       = rhs.nseq_;
+        nmes_       = rhs.nmes_;
+        nmes_cx_    = rhs.nmes_cx_;
+        nmes_cy_    = rhs.nmes_cy_;
+        nmes_TRKqx_ = rhs.nmes_TRKqx_;
+        nmes_TRKqy_ = rhs.nmes_TRKqy_;
+        nmes_TOFq_  = rhs.nmes_TOFq_;
+        nmes_TOFt_  = rhs.nmes_TOFt_;
+        is_check_   = rhs.is_check_;
+        
+        hits_.clear();
+        if (is_check_) {
+            for (auto&& hit : hits_TRK_) hits_.push_back(&hit); 
+            for (auto&& hit : hits_TOF_) hits_.push_back(&hit); 
+            
+            if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
+            else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
+        }
+        else zero();
+    }
+   
+    return *this;
+}
     
 TrFitPar::TrFitPar(const PartType& type, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
     clear();
@@ -103,7 +135,7 @@ Bool_t TrFitPar::check_hits() {
 
 SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
-    if (!recheck_hits()) return;
+    if (!check_hits()) return;
    
     ndof_cx_   = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
     ndof_cy_   = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
@@ -477,10 +509,41 @@ Bool_t SimpleTrFit::simpleFit() {
     return succ;
 }
 
+PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
+    if (this != &rhs) {
+        dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
+        succ_      = rhs.succ_;
+        part_      = rhs.part_;
+        args_      = rhs.args_;
+        ndof_      = rhs.ndof_;
+        ndof_cx_   = rhs.ndof_cx_;
+        ndof_cy_   = rhs.ndof_cy_;
+        ndof_TRKq_ = rhs.ndof_TRKq_;
+        ndof_TOFq_ = rhs.ndof_TOFq_;
+        ndof_TOFt_ = rhs.ndof_TOFt_;
+        nchi_      = rhs.nchi_;
+        nchi_cx_   = rhs.nchi_cx_;
+        nchi_cy_   = rhs.nchi_cy_;
+        nchi_TRKq_ = rhs.nchi_TRKq_;
+        nchi_TOFq_ = rhs.nchi_TOFq_;
+        nchi_TOFt_ = rhs.nchi_TOFt_;
+        nsegs_     = rhs.nsegs_;
+        nrm_mstau_ = rhs.nrm_mstau_;
+        nrm_msrho_ = rhs.nrm_msrho_;
+        nrm_elion_ = rhs.nrm_elion_;
+        if (succ_ && hits_.size() == stts_.size()) {
+            for (UInt_t it = 0; it < stts_.size(); ++it) {
+                stts_.at(it).first = hits_.at(it);
+            }
+        }
+        else clear();
+    }
+    return *this;
+}
 
 PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     PhyTrFit::clear();
-    if (!recheck_hits()) return;
+    if (!check_hits()) return;
     
     ndof_cx_   = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
     ndof_cy_   = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;

@@ -15,13 +15,16 @@ class TrFitPar {
         };
 
     public :
+        TrFitPar& operator=(const TrFitPar& rhs);
+        TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
+        
         TrFitPar(const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
+    public :
         void print() const;
         
         inline Bool_t check() { return check_hits(); }
-        inline Bool_t recheck() { return recheck_hits(); }
 
         inline void add_hit(HitStTRK& hit) { hits_TRK_.push_back(hit); zero(); }
         inline void add_hit(HitStTOF& hit) { hits_TOF_.push_back(hit); zero(); }
@@ -44,7 +47,6 @@ class TrFitPar {
         
         Bool_t sort_hits();
         Bool_t check_hits();
-        Bool_t recheck_hits() { zero(); return check_hits(); }
 
     protected :
         Bool_t      sw_mscat_;
@@ -141,7 +143,7 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (recheck_hits()) setvar(nseq_+(nhits()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(nhits()-1)*PhyJb::DIM_L); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*PhyJb::DIM_L, PhyJb::DIM_G+(nhits()-1)*PhyJb::DIM_L); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :
@@ -167,6 +169,9 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
 
 class PhyTrFit : protected TrFitPar {
     public :
+        PhyTrFit& operator=(const PhyTrFit& rhs);
+        PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
+        
         PhyTrFit(const TrFitPar& fitPar);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
@@ -240,7 +245,7 @@ class PhyTrFit : protected TrFitPar {
 
 class VirtualPhyMassFit {
     public :
-        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>, const std::string& name = "Self") : check_(false), fitPar_(fitPar), chrg_(chrg), name_(name) { check_ = fitPar_.recheck(); }
+        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>, const std::string& name = "Self") : check_(false), fitPar_(fitPar), chrg_(chrg), name_(name) { check_ = fitPar_.check(); }
         ~VirtualPhyMassFit() {}
 
         inline bool is_vary_mass() const { return (check_ && fitPar_.type() == PartType::Self); }
