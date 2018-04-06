@@ -22,6 +22,13 @@ int main(int argc, char * argv[]) {
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
 
+    //PhyArg::SetOpt(true, true);
+    //PhySt st;
+    //st.set_state_with_uxy(0, 0, 55, 0, 0, -1);
+    //st.set_mom(3);
+    //PropMgnt::PropToZ(-55, st);
+    //st.print();
+
     MGConfig::JobOpt opt(argc, argv);
 
     TChain * dst = new TChain("data");
@@ -54,7 +61,8 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    PartType type = PartType::Proton;
+    PartType type = PartType::Self;
+    //PartType type = PartType::Proton;
     //PartType type = PartType::Electron;
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
@@ -67,7 +75,7 @@ int main(int argc, char * argv[]) {
     Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
-    Double_t mass = 0.938272297;
+    Double_t mass = PIProton.mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -189,7 +197,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_q(hit.adc[0], hit.adc[1]);
+            //mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.add_hit(mhit);
             else {
@@ -243,7 +251,7 @@ int main(int argc, char * argv[]) {
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
-        
+       
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         //SimpleTrFit tr(fitPar);
@@ -263,6 +271,28 @@ int main(int argc, char * argv[]) {
             hc_dir[it][1] = stt.uy();
         }
         //-------------------------------------//
+        
+        //-------------------------------------//
+        if (mc_mom < 1.0) {
+            MGClock::HrsStopwatch sw3; sw3.start();
+            PhyMassFit mfit(fitPar);
+            sw3.stop();
+            MGClock::HrsStopwatch sw4; sw4.start();
+            PartInfo::SetSelf(PartType::Proton);
+            PhyTrFit trfitP(fitPar);
+            sw4.stop();
+            MGClock::HrsStopwatch sw5; sw5.start();
+            PartInfo::SetSelf(PartType::Deuterium);
+            PhyTrFit trfitD(fitPar);
+            sw5.stop();
+            if (mfit.status()) CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
+            else               CERR("MASS Fit  TIME %14.8f\n", sw3.time());
+            if (mfit.status()) CERR("TR-P Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw4.time(), trfitP.part().mass(), trfitP.part().rig(), trfitP.nchi());
+            else               CERR("TR-P Fit  TIME %14.8f\n", sw4.time());
+            if (mfit.status()) CERR("TR-D Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw5.time(), trfitD.part().mass(), trfitD.part().rig(), trfitD.nchi());
+            else               CERR("TR-D Fit  TIME %14.8f\n", sw5.time());
+            CERR("\n");
+        }
         
         Bool_t ck_succ = track.status[0][patt];
         Bool_t kf_succ = track.status[1][patt];
@@ -295,12 +325,12 @@ int main(int argc, char * argv[]) {
         Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
         //Double_t hc_chix = (hc_succ ? std::log(track.chisq[2][patt][0]) : 0.); 
-        Double_t hc_chix = (hc_succ ? std::log(tr.nchi_cx())            : 0.); 
+        Double_t hc_chix = (hc_succ ? std::log(tr.nchi())            : 0.); 
         
         Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
-        Double_t hc_chiy = (hc_succ ? std::log(tr.nchi_cy())            : 0.); 
+        Double_t hc_chiy = (hc_succ ? std::log( (tr.ndof_cy()*tr.nchi_cy()+tr.nsegs()*tr.nrm_msrho())/tr.ndof_cy() ) : 0.); 
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));

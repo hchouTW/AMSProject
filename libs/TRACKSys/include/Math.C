@@ -284,11 +284,13 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
     long double ibsqr  = (Numc::ONE<long double> + abseta * abseta);
     
     // Robust Method (Reduce important index in high energy)
-    long double lngm    = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
-    long double lngm8th = std::pow(Numc::SQRT_TWO * lngm, Numc::EIGHT<long double>);
-    if (!Numc::Valid(lngm8th) || Numc::Compare(lngm8th) <= 0) lngm8th = Numc::ZERO<long double>;
-    long double robust = Numc::ONE<long double> / std::cbrt(Numc::ONE<long double> + lngm8th);
-    //long double robust = Numc::ONE<long double>; // testcode
+    //==== First Method ====//
+    //long double lngm    = std::log(std::sqrt(ibsqr) / abseta); // log(gamma)
+    //long double lngm8th = std::pow(Numc::SQRT_TWO * lngm, Numc::EIGHT<long double>);
+    //if (!Numc::Valid(lngm8th) || Numc::Compare(lngm8th) <= 0) lngm8th = Numc::ZERO<long double>;
+    //long double robust = Numc::ONE<long double> / std::cbrt(Numc::ONE<long double> + lngm8th);
+    //==== Second Method ====//
+    long double robust = Numc::ONE<long double>;
   
     // PDF parameters
     long double kpa    = eval_kpa(abseta, ibsqr); 
@@ -310,11 +312,8 @@ std::array<long double, 2> IonEloss::eval(long double x, long double eta) const 
 }
         
 long double IonEloss::eval_kpa(long double eta, long double ibsqr) const {
-    long double kpa = kpa_.at(0) * std::pow(ibsqr,  kpa_.at(1)) * 
-        (Numc::ONE<long double> +
-         kpa_.at(2) * std::pow(eta, kpa_.at(3)) -
-         std::log(kpa_.at(4) + std::pow(eta, kpa_.at(5)))
-        );
+    long double kpa = Numc::ONE<long double> - Numc::HALF *
+        std::erfc(kpa_.at(0) * std::log(Numc::ONE<long double>+kpa_.at(1)*eta) + kpa_.at(2));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     else {
         if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;

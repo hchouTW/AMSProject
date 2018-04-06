@@ -54,12 +54,19 @@
     TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[2] * ([1] - (1+x*x)^(-[2]) - TMath::Log([3] + abs(x)^[4]))");
     fmpv->SetParameters(10, 6.5, 1.0, 10.0, 1.0);
     
-    TF1* fkpa = new TF1("fkpa", "[0] * (1+x*x)^[1] * (1 + [2]*abs(x)^[3] - TMath::Log([4] + abs(x)^[5]))");
-    fkpa->SetParameters(10, 1.0, 1.5, 3.0, 1.0, 7.0);
+    //TF1* fkpa = new TF1("fkpa", "[0] * (1+x*x)^[1] * (1 + [2]*abs(x)^[3] - TMath::Log([4] + abs(x)^[5]))");
+    //fkpa->SetParameters(10, 1.0, 1.5, 3.0, 1.0, 7.0);
+    
+    TF1* fkpa = new TF1("fkpa", "1.0 - 0.5*TMath::Erfc([0]*TMath::Log(1.0+[1]*x)+[2])");
+    fkpa->SetParameters(1.0, 0.3, 0.0);
     
     TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
     flg->SetParameters(1.0, 0.1, 0.0, 1.0);
     flg->SetParLimits(1, 0.0, 1.0);
+    
+    TF1* flg2 = new TF1("flg2", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x*x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x*x-[2])*(x*x-[2])/[3]/[3]) )");
+    flg2->SetParameters(1.0, 0.1, 0.0, 1.0);
+    flg2->SetParLimits(1, 0.0, 1.0);
     
     //TF1* flggm = new TF1("flggm", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) ) + [4]*TMath::Exp(-[5]/x)*TMath::Power([5]/x, [6])");
     //flggm->SetParameters(1.0, 0.1, 0.0, 1.0, 1.0, 1.0, 2.0);

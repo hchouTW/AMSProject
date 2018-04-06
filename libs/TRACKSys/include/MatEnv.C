@@ -675,7 +675,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t mass_in_MeV = part.mass() * GEV_TO_MEV;
     
     // Trans KE[MeV] to Eta[1]
-    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / mass_in_MeV);
+    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / mass_in_MeV); // [1/MeV]
     
     // Calculate Matterial Quality
     Double_t log_mean_exc_eng  = mfld.lme(); // log[MeV]
@@ -708,32 +708,9 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
     Double_t elion_mpv = elion_xi * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
 
-    // Calculate Sigma (GEANT3 manual W5013) (From GenFit package)
+    // Calculate Sigma
+    // TODO: (GEANT3 manual W5013) (From GenFit package)
     Double_t elion_sgm = elion_xi;
-    //if (elion_ncl > 0.01) { // Vavilov-Gaussian regime
-    //    Double_t elion_sgm_vg = std::sqrt(elion_xi * elion_mk * (Numc::ONE<> - Numc::HALF * sqr_bta));
-    //    elion_sgm = elion_sgm_vg;
-    //}
-    //else { // truncated Landau distribution (if Nc > 50.)
-    //    Double_t sgm_alpha = 15.76;
-    //    Double_t LAD_MEN = (-0.422784 - sqr_bta - std::log(elion_ncl));
-    //    Double_t LAD_MAX = 0.60715 + 1.1934 * LAD_MEN + (0.67794 + 0.052382 * LAD_MEN) * std::exp(0.94753 + 0.74442 * LAD_MEN);
-    //    if (LAD_MAX <= 1010.0) {
-    //        sgm_alpha = 1.975560 
-    //                    + 9.898841e-02 * LAD_MAX 
-    //                    - 2.828670e-04 * LAD_MAX * LAD_MAX
-    //                    + 5.345406e-07 * std::pow(LAD_MAX, Numc::THREE<>)
-    //                    - 4.942035e-10 * std::pow(LAD_MAX, Numc::FOUR<>)
-    //                    + 1.729807e-13 * std::pow(LAD_MAX, Numc::FIVE<>);
-    //    }
-    //    else {
-    //        sgm_alpha = 1.871887e+01 + 1.296254e-02 * LAD_MAX;
-    //    }
-    //    if (sgm_alpha > 54.6) sgm_alpha = 54.6;
-    //    Double_t elion_sgm_lg = sgm_alpha * elion_xi;
-    //    elion_sgm = elion_sgm_lg;
-    //}
-    //if (Numc::EqualToZero(elion_sgm)) elion_sgm = elion_xi;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
@@ -758,76 +735,6 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     if (!Numc::Valid(elbrm_men) || Numc::Compare(elbrm_men) <= 0) elbrm_men = Numc::ZERO<>;
     return elbrm_men;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-/*
-void MaterialEffects::noiseBetheBloch(M7x7& noise, double mom, double betaSquare, double gamma, double gammaSquare) const
-{
-  // Code ported from GEANT 3 (erland.F)
-
-  // ENERGY LOSS FLUCTUATIONS; calculate sigma^2(E);
-  double sigma2E ( 0. );
-  double zeta  ( 153.4E3 * charge_ * charge_ / betaSquare * matZ_ / matA_ * matDensity_ * fabs(stepSize_) ); // eV
-  double Emax  ( 2.E9 * me_ * betaSquare * gammaSquare / (1. + 2.*gamma * me_ / mass_ + (me_ / mass_) * (me_ / mass_)) ); // eV
-  double kappa ( zeta / Emax );
-
-  if (kappa > 0.01) { // Vavilov-Gaussian regime
-    sigma2E += zeta * Emax * (1. - betaSquare / 2.); // eV^2
-  } else { // Urban/Landau approximation
-    // calculate number of collisions Nc
-    double I = 16. * pow(matZ_, 0.9); // eV
-    double f2 = 0.;
-    if (matZ_ > 2.) f2 = 2. / matZ_;
-    double f1 = 1. - f2;
-    double e2 = 10.*matZ_ * matZ_; // eV
-    double e1 = pow((I / pow(e2, f2)), 1. / f1); // eV
-
-    double mbbgg2 = 2.E9 * mass_ * betaSquare * gammaSquare; // eV
-    double Sigma1 = dEdx_ * 1.0E9 * f1 / e1 * (log(mbbgg2 / e1) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
-    double Sigma2 = dEdx_ * 1.0E9 * f2 / e2 * (log(mbbgg2 / e2) - betaSquare) / (log(mbbgg2 / I) - betaSquare) * 0.6; // 1/cm
-    double Sigma3 = dEdx_ * 1.0E9 * Emax / (I * (Emax + I) * log((Emax + I) / I)) * 0.4; // 1/cm
-
-    double Nc = (Sigma1 + Sigma2 + Sigma3) * fabs(stepSize_);
-
-    if (Nc > 50.) { // truncated Landau distribution
-      double sigmaalpha = 15.76;
-      // calculate sigmaalpha  (see GEANT3 manual W5013)
-      double RLAMED = -0.422784 - betaSquare - log(zeta / Emax);
-      double RLAMAX =  0.60715 + 1.1934 * RLAMED + (0.67794 + 0.052382 * RLAMED) * exp(0.94753 + 0.74442 * RLAMED);
-      // from lambda max to sigmaalpha=sigma (empirical polynomial)
-      if (RLAMAX <= 1010.) {
-        sigmaalpha =  1.975560
-                      + 9.898841e-02 * RLAMAX
-                      - 2.828670e-04 * RLAMAX * RLAMAX
-                      + 5.345406e-07 * pow(RLAMAX, 3.)
-                      - 4.942035e-10 * pow(RLAMAX, 4.)
-                      + 1.729807e-13 * pow(RLAMAX, 5.);
-      } else { sigmaalpha = 1.871887E+01 + 1.296254E-02 * RLAMAX; }
-      // alpha=54.6  corresponds to a 0.9996 maximum cut
-      if (sigmaalpha > 54.6) sigmaalpha = 54.6;
-      sigma2E += sigmaalpha * sigmaalpha * zeta * zeta; // eV^2
-    } else { // Urban model
-      static const double alpha = 0.996;
-      double Ealpha  = I / (1. - (alpha * Emax / (Emax + I))); // eV
-      double meanE32 = I * (Emax + I) / Emax * (Ealpha - I); // eV^2
-      sigma2E += fabs(stepSize_) * (Sigma1 * e1 * e1 + Sigma2 * e2 * e2 + Sigma3 * meanE32); // eV^2
-    }
-  }
-
-  sigma2E *= 1.E-18; // eV -> GeV
-
-  // update noise matrix, using linear error propagation from E to q/p
-  noise[6 * 7 + 6] += charge_*charge_/betaSquare / pow(mom, 4) * sigma2E;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 } // namespace TrackSys

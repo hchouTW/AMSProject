@@ -101,7 +101,7 @@ Bool_t TrFitPar::check_hits() {
 }
         
 
-SimpleTrFit::SimpleTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
+SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
     if (!recheck_hits()) return;
    
@@ -478,7 +478,7 @@ Bool_t SimpleTrFit::simpleFit() {
 }
 
 
-PhyTrFit::PhyTrFit(TrFitPar& fitPar) : TrFitPar(fitPar) {
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     PhyTrFit::clear();
     if (!recheck_hits()) return;
     
@@ -519,8 +519,9 @@ void PhyTrFit::clear() {
     nchi_TOFt_ = 0;
     
     nsegs_     = 0;
-    nrm_mscat_ = 0;
-    nrm_eloss_ = 0;
+    nrm_mstau_ = 0;
+    nrm_msrho_ = 0;
+    nrm_elion_ = 0;
 }
 
 
@@ -548,6 +549,8 @@ Bool_t PhyTrFit::physicalFit() {
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
     
     ceres::Solver::Options options;
+    //options.line_search_direction_type = ceres::LBFGS;
+    
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     if (!summary.IsSolutionUsable()) return false;
@@ -556,7 +559,7 @@ Bool_t PhyTrFit::physicalFit() {
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), part_.cz(), parameters.at(2), parameters.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(parameters.at(4));
 
-    args_ = std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_));
+    args_ = std::move(std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_)));
     for (Int_t it = 0; it < nhits()-1; ++it) {
         args_.at(it).set_mscat(
                 interaction_parameters.at(it*PhyJb::DIM_L+0), 
@@ -584,8 +587,9 @@ Bool_t PhyTrFit::evolve() {
     Double_t chi_TOFq = 0;
     Double_t chi_TOFt = 0;
             
-    Double_t chi_mscat = 0;
-    Double_t chi_eloss = 0;
+    Double_t chi_mstau = 0;
+    Double_t chi_msrho = 0;
+    Double_t chi_elion = 0;
 
     PhySt ppst(part_);
     UInt_t cnt_nhit = 0;
@@ -635,17 +639,17 @@ Bool_t PhyTrFit::evolve() {
         if (hasLoc) {
             SVecD<5> inrm;
             curArg.cal_nrm(inrm);
-            chi_mscat += inrm(0) * inrm(0);
-            chi_mscat += inrm(1) * inrm(1);
-            chi_mscat += inrm(2) * inrm(2);
-            chi_mscat += inrm(3) * inrm(3);
-            chi_eloss += inrm(4) * inrm(4);
+            chi_mstau += inrm(0) * inrm(0);
+            chi_msrho += inrm(1) * inrm(1);
+            chi_mstau += inrm(2) * inrm(2);
+            chi_msrho += inrm(3) * inrm(3);
+            chi_elion += inrm(4) * inrm(4);
         }
 
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
-    Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mscat + chi_eloss);
+    Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mstau + chi_msrho + chi_elion);
     Double_t nchi = (chi / static_cast<Double_t>(ndof_));
 
     if (stts.size() != 0) (stts.at(stts.size()-1).second).arg().clear();
@@ -663,8 +667,9 @@ Bool_t PhyTrFit::evolve() {
     nchi_TOFt_ = ((ndof_TOFt_ > 0) ? (chi_TOFt / static_cast<Double_t>(ndof_TOFt_)) : 0);
     nchi_      = nchi;
 
-    nrm_mscat_ = ((nsegs_ > 0) ? (chi_mscat / static_cast<Double_t>(nsegs_)) : 0);
-    nrm_eloss_ = ((nsegs_ > 0) ? (chi_eloss / static_cast<Double_t>(nsegs_)) : 0);
+    nrm_mstau_ = ((nsegs_ > 0) ? (chi_mstau / static_cast<Double_t>(nsegs_)) : 0);
+    nrm_msrho_ = ((nsegs_ > 0) ? (chi_msrho / static_cast<Double_t>(nsegs_)) : 0);
+    nrm_elion_ = ((nsegs_ > 0) ? (chi_elion / static_cast<Double_t>(nsegs_)) : 0);
 
     stts_ = std::move(stts);
 
@@ -689,8 +694,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     UInt_t cnt_nhit = 0;
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(hits_.size()-1);
-    Eigen::VectorXd rs = Eigen::VectorXd::Zero(numOfRes_);
-    Eigen::MatrixXd jb = Eigen::MatrixXd::Zero(numOfRes_, numOfPar_);
+    ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
+    ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
     for (auto&& hit : hits_) {
         // Interaction Local Parameters
         Bool_t hasLoc = (cnt_nhit != 0);
@@ -895,6 +900,51 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) {
     
     MatFld&& mfld = MatFld::Merge(mflds);
     return mfld;
+}
+
+
+bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) const {
+    residuals[0] = Numc::ZERO<>;
+    if (!is_vary_mass()) return false;
+    if (Numc::Compare(x[0]) <= 0) return false;
+    
+    Double_t mass = Numc::ONE<>/std::expm1(x[0]);
+    PartInfo::SetSelf(mass, chrg_, name_);
+
+    PhyTrFit trFit(fitPar_);
+    if (!trFit.status()) return false;
+
+    double nrm = std::sqrt(trFit.nchi());
+    if (!Numc::Valid(nrm) || Numc::Compare(nrm) < 0) return false;
+
+    residuals[0] = nrm;
+    return true;
+}
+
+
+PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg, const std::string& name) : phyTr_(nullptr) {
+    if (fitPar.type() != PartType::Self) return;
+
+    std::vector<double> parameters{ std::log1p(Numc::ONE<>/PIProton.mass()) };
+
+    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg, name));
+
+    ceres::Problem problem;
+    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
+    problem.SetParameterLowerBound(parameters.data(), 0, Numc::ZERO<>);
+    
+    ceres::Solver::Options options;
+    //options.minimizer_type = ceres::LINE_SEARCH;
+    //options.line_search_direction_type = ceres::BFGS;
+
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    if (!summary.IsSolutionUsable()) return;
+
+    Double_t estm = Numc::ONE<>/std::expm1(parameters.at(0));
+    PartInfo::SetSelf(estm, chrg, name);
+    phyTr_ = new PhyTrFit(fitPar);
+    if (!phyTr_->status()) clear();
 }
 
 

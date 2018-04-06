@@ -153,12 +153,12 @@ int main(int argc, char * argv[]) {
 
 
     COUT("Brso\n");
-    Hist* hCKBrsoM = Hist::New("hCKBrsoM", HistAxis(AXbta));
-    Hist* hCKBrsoS = Hist::New("hCKBrsoS", HistAxis(AXbta));
-    Hist* hKFBrsoM = Hist::New("hKFBrsoM", HistAxis(AXbta));
-    Hist* hKFBrsoS = Hist::New("hKFBrsoS", HistAxis(AXbta));
-    Hist* hHCBrsoM = Hist::New("hHCBrsoM", HistAxis(AXbta));
-    Hist* hHCBrsoS = Hist::New("hHCBrsoS", HistAxis(AXbta));
+    Hist* hCKBrsoM = Hist::New("hCKBrsoM", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Mean [1]"));
+    Hist* hCKBrsoS = Hist::New("hCKBrsoS", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Sigma [1]"));
+    Hist* hKFBrsoM = Hist::New("hKFBrsoM", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Mean [1]"));
+    Hist* hKFBrsoS = Hist::New("hKFBrsoS", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Sigma [1]"));
+    Hist* hHCBrsoM = Hist::New("hHCBrsoM", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Mean [1]"));
+    Hist* hHCBrsoS = Hist::New("hHCBrsoS", HistAxis(AXbta, "(Beta_{rec}/Beta_{gen}-1) Sigma [1]"));
     
     Hist* hKFCKBrsoS = Hist::New("hKFCKBrsoS", HistAxis(AXbta, "KF/Choutko Sigma Ratio [1]"));
     Hist* hHCCKBrsoS = Hist::New("hHCCKBrsoS", HistAxis(AXbta, "HYChou/Choutko Sigma Ratio [1]"));

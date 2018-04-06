@@ -13,7 +13,7 @@ PartInfo::PartInfo(const PartType& type) {
     mass_ = 0.;
 
     switch (type) {
-        case PartType::Self          : name_ = NAME_; chrg_ = CHRG_; mass_ = MASS_; break;
+        case PartType::Self          : name_ = SelfName_; chrg_ = SelfChrg_; mass_ = SelfMass_; break;
         case PartType::Photon        : name_ = "Photon"       ; chrg_ =  0; mass_ =  0.000000000; break;
         case PartType::Electron      : name_ = "Electron"     ; chrg_ = -1; mass_ =  0.000510999; break;
         case PartType::Positron      : name_ = "Positron"     ; chrg_ =  1; mass_ =  0.000510999; break;

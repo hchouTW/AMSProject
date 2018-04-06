@@ -51,9 +51,9 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 2000., AxisScale::kLog);
     
-    Double_t mass = 0.938272297;
+    Double_t mass = PIProton.mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -122,8 +122,8 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 4);
 
         // Charge
-        if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+        //if (track.QIn < 0.8 || track.QIn > 1.3) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // TOF
@@ -154,10 +154,13 @@ int main(int argc, char * argv[]) {
         
         SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
-
+    
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it] || !mcs[it]) continue;
-            Double_t eta = mass/mch[it]->mom;
+            Double_t eta = (mass/mch[it]->mom);
+            if (eta < AXeta.min() || eta > AXeta.max()) continue;
+            eta = AXeta.center(AXeta.find(eta), AxisScale::kLog);
+            Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
             Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
             
@@ -176,14 +179,17 @@ int main(int argc, char * argv[]) {
                 if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
                 if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
             }
-            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]);
-            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]);
+            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]*bta*bta);
+            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]*bta*bta);
         }
             
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
-            hTFadc->fillH2D(eta, fTof->Q[it]);
+            if (eta < AXeta.min() || eta > AXeta.max()) continue;
+            eta = AXeta.center(AXeta.find(eta), AxisScale::kLog);
+            Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
+            hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]*bta*bta);
         }
 
         for (auto&& hit : fTrd->hits[0]) {
