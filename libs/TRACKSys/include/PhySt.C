@@ -80,21 +80,30 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
 
 
 void PhySt::reset(const PartType& type) {
-    info_ = std::move(PartInfo(type));
-    mom_ = 0;
-    eng_ = 0;
-    ke_  = 0;
-    bta_ = 0;
-    eta_ = info_.mass();
-    irig_ = 0;
-    coo_ = std::move(SVecD<3>(0, 0, 0));
-    dir_ = std::move(SVecD<3>(0, 0, -1));
+    info_.reset(type);
     arg_.clear();
+    zero();
+    
+    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
+    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
     
     path_ = Numc::ZERO<>;
     time_ = Numc::ZERO<>;
 }
-        
+
+
+void PhySt::reset(Short_t chrg, Double_t mass) {
+    info_.reset(chrg, mass);
+    arg_.clear();
+    zero();
+    
+    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
+    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
+    
+    path_ = Numc::ZERO<>;
+    time_ = Numc::ZERO<>;
+}
+
 
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Double_t uz) {
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
@@ -140,15 +149,7 @@ void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t u
 
 void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz) {
     Double_t norm = std::sqrt(mx * mx + my * my + mz * mz);
-    if (Numc::EqualToZero(norm)) {
-        mom_   = Numc::ZERO<>;
-        eng_   = info_.mass();
-        ke_    = Numc::ZERO<>;
-        bta_   = Numc::ZERO<>;
-        gmbta_ = Numc::ZERO<>;
-        eta_   = Numc::ZERO<>;
-        irig_  = Numc::ZERO<>;
-    }
+    if (Numc::EqualToZero(norm)) zero();
     else {
         coo_(0) = cx;
         coo_(1) = cy;
@@ -167,20 +168,10 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     if (mom_sign  < 0) return;
     if (eta_sign == 0) eta_sign = ((Numc::Compare(info_.chrg()) >= 0) ? 1 : -1);
 
-    if (mom_sign == 0) {
-        mom_   = Numc::ZERO<>;
-        eng_   = info_.mass();
-        ke_    = Numc::ZERO<>;
-        bta_   = Numc::ZERO<>;
-        gmbta_ = Numc::ZERO<>;
-        eta_   = Numc::ZERO<>;
-        irig_  = Numc::ZERO<>;
-    }
+    if (mom_sign == 0) zero();
     else {
         mom_   = mom;
         eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
-        //eng_   = std::sqrt(static_cast<long double>(mom_) * static_cast<long double>(mom_) + static_cast<long double>(info_.mass()) * static_cast<long double>(info_.mass()));
-        //eng_   = std::hypot(mom_, info_.mass());
         ke_    = (eng_ - info_.mass());
         bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + Numc::ONE<>)));
         gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
@@ -192,15 +183,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
 
 void PhySt::set_eta(Double_t eta) {
     Short_t eta_sign = Numc::Compare(eta);
-    if (eta_sign == 0) {
-        mom_   = Numc::ZERO<>;
-        eng_   = info_.mass();
-        ke_    = Numc::ZERO<>;
-        bta_   = Numc::ZERO<>;
-        gmbta_ = Numc::ZERO<>;
-        eta_   = Numc::ZERO<>;
-        irig_  = Numc::ZERO<>;
-    }
+    if (eta_sign == 0) zero();
     else {
         eta_   = eta;
         gmbta_ = (Numc::ONE<> / std::fabs(eta_));
@@ -217,15 +200,7 @@ void PhySt::set_irig(Double_t irig) {
     Short_t rig_sign = Numc::Compare(irig);
     if (info_.is_chrgless()) return;
     if (info_.is_massless()) return;
-    if (rig_sign == 0) {
-        mom_   = Numc::ZERO<>;
-        eng_   = info_.mass();
-        ke_    = Numc::ZERO<>;
-        bta_   = Numc::ZERO<>;
-        gmbta_ = Numc::ZERO<>;
-        eta_   = Numc::ZERO<>;
-        irig_  = Numc::ZERO<>;
-    }
+    if (rig_sign == 0) zero();
     else {
         irig_  = irig;
         eta_   = info_.mass_to_chrg() * irig;

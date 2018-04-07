@@ -105,12 +105,13 @@ class HitStTRK : public VirtualHitSt {
             nsr_(0) = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
             nsr_(1) = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
-        inline void set_q(Double_t qx, Double_t qy) {
-            side_q_(0) = (Numc::Compare(qx) > 0);
-            side_q_(1) = (Numc::Compare(qy) > 0);
-            q_(0) = (side_q_(0) ? qx : Numc::ZERO<>);
-            q_(1) = (side_q_(1) ? qy : Numc::ZERO<>);
-        }
+        // TODO: // rebuild template
+        //inline void set_q(Double_t qx, Double_t qy) {
+        //    side_q_(0) = (Numc::Compare(qx) > 0);
+        //    side_q_(1) = (Numc::Compare(qy) > 0);
+        //    q_(0) = (side_q_(0) ? qx : Numc::ZERO<>);
+        //    q_(1) = (side_q_(1) ? qy : Numc::ZERO<>);
+        //}
         
         inline const Short_t&  seqIDqx() const { return seqIDqx_; }
         inline const Short_t&  seqIDqy() const { return seqIDqy_; }

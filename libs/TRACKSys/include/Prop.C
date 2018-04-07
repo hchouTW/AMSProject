@@ -111,6 +111,26 @@ void PhyJb::set(PhySt& part) {
         
         jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
+
+        //-----------------------------------------------
+        // testcode (try to improve multiple-scatttering)
+        jb_gg_(JPX, JEA) += (arg.tauu() * arg.mscat_ul() * arg.orth_tau(X) + 
+                             arg.rhou() * arg.mscat_ul() * arg.orth_rho(X) +
+                             arg.taul() * arg.mscat_ll() * arg.orth_tau(X) +
+                             arg.rhol() * arg.mscat_ll() * arg.orth_rho(X)
+                            ) / part.eta();
+        jb_gg_(JPY, JEA) += (arg.tauu() * arg.mscat_ul() * arg.orth_tau(Y) + 
+                             arg.rhou() * arg.mscat_ul() * arg.orth_rho(Y) +
+                             arg.taul() * arg.mscat_ll() * arg.orth_tau(Y) +
+                             arg.rhol() * arg.mscat_ll() * arg.orth_rho(Y)
+                            ) / part.eta();
+        jb_gg_(JUX, JEA) += (arg.tauu() * arg.mscat_uu() * arg.orth_tau(X) + 
+                             arg.rhou() * arg.mscat_uu() * arg.orth_rho(X)
+                            ) / part.eta();
+        jb_gg_(JUY, JEA) += (arg.tauu() * arg.mscat_uu() * arg.orth_tau(Y) + 
+                             arg.rhou() * arg.mscat_uu() * arg.orth_rho(Y)
+                            ) / part.eta();
+        //-----------------------------------------------
     }
     if (arg.eloss()) {
         //jb_gl_(JEA, JION) = part.eta() * (arg.sign() * arg.elion_sgm());

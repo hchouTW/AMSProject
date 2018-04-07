@@ -1,8 +1,8 @@
 #!/bin/bash
-RunFile=${AMSCore}/subj/trsys/vdev/hit_fit
+#RunFile=${AMSCore}/subj/trsys/vdev/hit_fit
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
-#RunFile=${AMSCore}/subj/trsys/18Apr05/track_fill
+RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
 CurDir=${PWD}
@@ -19,12 +19,11 @@ OutputDir=${CurDir}/dat
 GroupSize=7
 Nseq=210
 
-for id in `seq 1 100`
-#for id in `seq 0 ${Nseq}`
+#for id in `seq 1 100`
+for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${id} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
-#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
 #${RunFile} ${id} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
 done

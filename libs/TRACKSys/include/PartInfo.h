@@ -6,6 +6,7 @@ namespace TrackSys {
 
 
 enum class PartType {
+    Fixed,
     Self,
     Photon, 
     Electron, Positron, 
@@ -26,8 +27,11 @@ enum class PartType {
 
 class PartInfo {
     public :
-        PartInfo(const PartType& type = PartType::Proton);
+        PartInfo(const PartType& type = PartType::Proton) { reset(type); }
         ~PartInfo() {}
+        
+        void reset(const PartType& type);
+        inline void reset(Short_t chrg, Double_t mass) { reset(PartType::Fixed, "", chrg, mass); }
 
         void print() const;
 
@@ -47,6 +51,9 @@ class PartInfo {
         //inline Double_t umass_to_chrg() const { return (mass_to_chrg_ / ATOMIC_MASS); } // [1]
         //inline Double_t chrg_to_umass() const { return (chrg_to_mass_ * ATOMIC_MASS); } // [1]
 
+    protected :
+        inline void reset(const PartType& type, const std::string& name, Short_t chrg, Double_t mass);
+
     private :
         PartType    type_;
         std::string name_;
@@ -60,14 +67,12 @@ class PartInfo {
         Double_t    chrg_to_mass_;
 
     public :
-        static inline void SetSelf(const PartType& type = PartType::Proton) { PartInfo info(type); SelfMass_ = info.mass(); SelfChrg_ = info.chrg(); SelfName_ = info.name(); }
-        static inline void SetSelf(Double_t mass, Short_t chrg = 1, const std::string& name = "Self") { SelfMass_ = mass; SelfChrg_ = chrg; SelfName_ = name; }
-        static inline const std::string& SelfName() { return SelfName_; }
+        static inline void SetSelf(const PartType& type = PartType::Proton) { PartInfo info(type); SelfChrg_ = info.chrg(); SelfMass_ = info.mass(); }
+        static inline void SetSelf(Short_t chrg, Double_t mass) { SelfChrg_ = chrg; SelfMass_ = mass; }
         static inline const Short_t&     SelfChrg() { return SelfChrg_; }
         static inline const Double_t&    SelfMass() { return SelfMass_; }
 
     private :
-        static std::string SelfName_;
         static Short_t     SelfChrg_;
         static Double_t    SelfMass_;
     
@@ -84,7 +89,6 @@ static const PartInfo PIHelium3(PartType::Helium3);
 static const PartInfo PIHelium4(PartType::Helium4);
 
 // Self Particle
-std::string PartInfo::SelfName_ = "Self";
 Short_t     PartInfo::SelfChrg_ = PIProton.chrg();
 Double_t    PartInfo::SelfMass_ = PIProton.mass();
 

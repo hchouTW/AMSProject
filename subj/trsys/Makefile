@@ -4,7 +4,7 @@
 LIBP += -lgflags -lglog -lceres
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
-#TagetDir = $(AMSCoreSubj)/trsys/18Apr05
+#TagetDir = $(AMSCoreSubj)/trsys/18Apr06
 
 Version=18Mar23
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so

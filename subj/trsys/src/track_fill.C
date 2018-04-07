@@ -61,6 +61,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
+    PartInfo::SetSelf(PartType::Proton);
     PartType type = PartType::Self;
     //PartType type = PartType::Proton;
     //PartType type = PartType::Electron;
@@ -273,7 +274,7 @@ int main(int argc, char * argv[]) {
         //-------------------------------------//
         
         //-------------------------------------//
-        if (mc_mom < 1.0) {
+        if (mc_mom < 0.8) {
             MGClock::HrsStopwatch sw3; sw3.start();
             PhyMassFit mfit(fitPar);
             sw3.stop();
@@ -285,12 +286,26 @@ int main(int argc, char * argv[]) {
             PartInfo::SetSelf(PartType::Deuterium);
             PhyTrFit trfitD(fitPar);
             sw5.stop();
-            if (mfit.status()) CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
-            else               CERR("MASS Fit  TIME %14.8f\n", sw3.time());
-            if (mfit.status()) CERR("TR-P Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw4.time(), trfitP.part().mass(), trfitP.part().rig(), trfitP.nchi());
-            else               CERR("TR-P Fit  TIME %14.8f\n", sw4.time());
-            if (mfit.status()) CERR("TR-D Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw5.time(), trfitD.part().mass(), trfitD.part().rig(), trfitD.nchi());
-            else               CERR("TR-D Fit  TIME %14.8f\n", sw5.time());
+            MGClock::HrsStopwatch sw6; sw6.start();
+            PartInfo::SetSelf(PartType::Electron);
+            PhyTrFit trfitE(fitPar);
+            sw6.stop();
+            MGClock::HrsStopwatch sw7; sw7.start();
+            PartInfo::SetSelf(PartType::PionPlus);
+            PhyTrFit trfitI(fitPar);
+            sw7.stop();
+
+            CERR("MC MOM %14.8f\n", tmom);
+            if (mfit.status())   CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
+            else                 CERR("MASS Fit  TIME %14.8f\n", sw3.time());
+            if (trfitP.status()) CERR("TR-P Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw4.time(), trfitP.part().mass(), trfitP.part().rig(), trfitP.nchi());
+            else                 CERR("TR-P Fit  TIME %14.8f\n", sw4.time());
+            if (trfitD.status()) CERR("TR-D Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw5.time(), trfitD.part().mass(), trfitD.part().rig(), trfitD.nchi());
+            else                 CERR("TR-D Fit  TIME %14.8f\n", sw5.time());
+            if (trfitE.status()) CERR("TR-E Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw6.time(), trfitE.part().mass(), trfitE.part().rig(), trfitE.nchi());
+            else                 CERR("TR-E Fit  TIME %14.8f\n", sw6.time());
+            if (trfitI.status()) CERR("TR-I Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw7.time(), trfitI.part().mass(), trfitI.part().rig(), trfitI.nchi());
+            else                 CERR("TR-I Fit  TIME %14.8f\n", sw6.time());
             CERR("\n");
         }
         

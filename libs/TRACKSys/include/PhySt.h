@@ -160,10 +160,13 @@ MultiGaus PhyArg::pdf_elion_(
 class PhySt {
     public :
         PhySt(const PartType& type = PartType::Proton, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
-        PhySt(const PartInfo& info, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info.type()); }
-        ~PhySt() {}
+        PhySt(Short_t chrg, Double_t mass, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(chrg, mass); }
 
-        void reset(const PartType& type = PartType::Proton);
+        inline void reset(const PartType& type);
+        inline void reset(Short_t chrg, Double_t mass);
+        
+        inline void recal(const PartType& type) { info_.reset(type); set_eta(eta_); }
+        inline void recal(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); set_eta(eta_); }
         
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
@@ -218,10 +221,21 @@ class PhySt {
         inline const Double_t& ux() const { return dir_(0); } 
         inline const Double_t& uy() const { return dir_(1); } 
         inline const Double_t& uz() const { return dir_(2); } 
-        inline Double_t        tx() const { return ((Numc::EqualToZero(dir_(2))) ? 0. : dir_(0)/dir_(2)); } 
-        inline Double_t        ty() const { return ((Numc::EqualToZero(dir_(2))) ? 0. : dir_(1)/dir_(2)); } 
+        inline Double_t        tx() const { return ((Numc::EqualToZero(dir_(2))) ? Numc::ZERO<> : dir_(0)/dir_(2)); } 
+        inline Double_t        ty() const { return ((Numc::EqualToZero(dir_(2))) ? Numc::ZERO<> : dir_(1)/dir_(2)); } 
 
         void symbk(Bool_t is_rndm = false);
+
+    protected :
+        inline void zero() {
+            mom_   = Numc::ZERO<>;
+            eng_   = info_.mass();
+            ke_    = Numc::ZERO<>;
+            bta_   = Numc::ZERO<>;
+            gmbta_ = Numc::ZERO<>;
+            eta_   = Numc::ZERO<>;
+            irig_  = Numc::ZERO<>;
+        }
 
     private :
         PartInfo info_;

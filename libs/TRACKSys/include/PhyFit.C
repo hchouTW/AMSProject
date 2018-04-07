@@ -493,7 +493,7 @@ Bool_t SimpleTrFit::simpleFit() {
             rltSt.cz(),
             rltSt.ux() - rslG(2),
             rltSt.uy() - rslG(3),
-            ((ortt_ == Orientation::kDownward) ? Numc::NEG<> : Numc::ONE<>)
+            ((ortt_ == Orientation::kDownward) ? Numc::NEG<Short_t> : Numc::ONE<Short_t>)
         );
         rltSt.set_eta(rltSt.eta() - rslG(4));
         
@@ -605,7 +605,7 @@ Bool_t PhyTrFit::physicalFit() {
     ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     ceres::Problem problem;
-    problem.AddResidualBlock(cost_function, NULL, parameters.data());
+    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
     problem.SetParameterLowerBound(parameters.data(), 2, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 2,  1.0);
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
@@ -972,7 +972,7 @@ bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) co
     if (Numc::Compare(x[0]) <= 0) return false;
     
     Double_t mass = Numc::ONE<>/std::expm1(x[0]);
-    PartInfo::SetSelf(mass, chrg_, name_);
+    PartInfo::SetSelf(chrg_, mass);
 
     PhyTrFit trFit(fitPar_);
     if (!trFit.status()) return false;
@@ -985,12 +985,12 @@ bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) co
 }
 
 
-PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg, const std::string& name) : phyTr_(nullptr) {
+PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg) : phyTr_(nullptr) {
     if (fitPar.type() != PartType::Self) return;
 
     std::vector<double> parameters{ std::log1p(Numc::ONE<>/PIProton.mass()) };
 
-    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg, name));
+    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg));
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -1005,7 +1005,7 @@ PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg, cons
     if (!summary.IsSolutionUsable()) return;
 
     Double_t estm = Numc::ONE<>/std::expm1(parameters.at(0));
-    PartInfo::SetSelf(estm, chrg, name);
+    PartInfo::SetSelf(chrg, estm);
     phyTr_ = new PhyTrFit(fitPar);
     if (!phyTr_->status()) clear();
 }

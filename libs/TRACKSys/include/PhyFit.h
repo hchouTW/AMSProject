@@ -245,7 +245,7 @@ class PhyTrFit : protected TrFitPar {
 
 class VirtualPhyMassFit {
     public :
-        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>, const std::string& name = "Self") : check_(false), fitPar_(fitPar), chrg_(chrg), name_(name) { check_ = fitPar_.check(); }
+        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
         ~VirtualPhyMassFit() {}
 
         inline bool is_vary_mass() const { return (check_ && fitPar_.type() == PartType::Self); }
@@ -255,13 +255,12 @@ class VirtualPhyMassFit {
         Bool_t      check_;
         TrFitPar    fitPar_;
         Short_t     chrg_;
-        std::string name_;
 };
 
 
 class PhyMassFit {
     public :
-        PhyMassFit(const TrFitPar& fitPar, Double_t mass = PIProton.mass(), Short_t chrg = Numc::ONE<Short_t>, const std::string& name = "Self");
+        PhyMassFit(const TrFitPar& fitPar, Double_t mass = PIProton.mass(), Short_t chrg = Numc::ONE<Short_t>);
         ~PhyMassFit() { PhyMassFit::clear(); }
 
         inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
