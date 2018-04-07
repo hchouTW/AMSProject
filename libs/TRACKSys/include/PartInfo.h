@@ -31,7 +31,7 @@ class PartInfo {
         PartInfo(const PartInfo& info) { *this = info; }
     
     public :
-        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0) { reset(type); }
+        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), is_chrgless_(true), is_massless_(true), mass_to_chrg_(0), chrg_to_mass_(0) { reset(type); }
         PartInfo(Short_t chrg, Double_t mass) { reset(chrg, mass); }
         ~PartInfo() {}
         
@@ -44,7 +44,6 @@ class PartInfo {
         void print() const;
 
         inline Bool_t is_std() const { return (type_ != PartType::Fixed && type_ != PartType::Self); }
-        inline Bool_t is_fixed() const { return (type_ == PartType::Fixed); }
 
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }

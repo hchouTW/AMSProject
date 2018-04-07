@@ -275,9 +275,9 @@ int main(int argc, char * argv[]) {
         
         //-------------------------------------//
         if (mc_mom < 0.8) {
-            //MGClock::HrsStopwatch sw3; sw3.start();
-            //PhyMassFit mfit(fitPar);
-            //sw3.stop();
+            MGClock::HrsStopwatch sw3; sw3.start();
+            PhyMassFit mfit(fitPar);
+            sw3.stop();
             MGClock::HrsStopwatch sw4; sw4.start();
             PartInfo::SetSelf(PartType::Proton);
             PhyTrFit trfitP(fitPar);
@@ -296,8 +296,8 @@ int main(int argc, char * argv[]) {
             sw7.stop();
 
             CERR("MC MOM %14.8f\n", tmom);
-            //if (mfit.status())   CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
-            //else                 CERR("MASS Fit  TIME %14.8f\n", sw3.time());
+            if (mfit.status())   CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
+            else                 CERR("MASS Fit  TIME %14.8f\n", sw3.time());
             if (trfitP.status()) CERR("TR-P Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw4.time(), trfitP.part().mass(), trfitP.part().rig(), trfitP.nchi());
             else                 CERR("TR-P Fit  TIME %14.8f\n", sw4.time());
             if (trfitD.status()) CERR("TR-D Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw5.time(), trfitD.part().mass(), trfitD.part().rig(), trfitD.nchi());

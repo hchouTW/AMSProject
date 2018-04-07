@@ -243,35 +243,35 @@ class PhyTrFit : protected TrFitPar {
 };
 
 
-//class VirtualPhyMassFit {
-//    public :
-//        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
-//        ~VirtualPhyMassFit() {}
-//
-//        inline bool is_vary_mass() const { return (check_ && fitPar_.type() == PartType::Self); }
-//        bool operator() (const double* const x, double* residuals) const;
-//        
-//    protected :
-//        Bool_t      check_;
-//        TrFitPar    fitPar_;
-//        Short_t     chrg_;
-//};
-//
-//
-//class PhyMassFit {
-//    public :
-//        PhyMassFit(const TrFitPar& fitPar, Double_t mass = PIProton.mass(), Short_t chrg = Numc::ONE<Short_t>);
-//        ~PhyMassFit() { PhyMassFit::clear(); }
-//
-//        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
-//        inline const PhyTrFit* operator() () const { return phyTr_; }
-//
-//    protected :
-//        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
-//
-//    protected :
-//        PhyTrFit* phyTr_;
-//};
+class VirtualPhyMassFit {
+    public :
+        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
+        ~VirtualPhyMassFit() {}
+
+        inline bool is_vary_mass() const { return (check_ && fitPar_.info().type() == PartType::Self); }
+        bool operator() (const double* const x, double* residuals) const;
+        
+    protected :
+        Bool_t      check_;
+        TrFitPar    fitPar_;
+        Short_t     chrg_;
+};
+
+
+class PhyMassFit {
+    public :
+        PhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>, Double_t mass = Numc::ONE<>);
+        ~PhyMassFit() { PhyMassFit::clear(); }
+
+        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
+        inline const PhyTrFit* operator() () const { return phyTr_; }
+
+    protected :
+        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
+
+    protected :
+        PhyTrFit* phyTr_;
+};
 
 
 } // namespace TrackSys

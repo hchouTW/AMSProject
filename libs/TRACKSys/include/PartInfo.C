@@ -27,6 +27,7 @@ PartInfo& PartInfo::operator=(const PartInfo& rhs) {
 void PartInfo::reset(const PartType& type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
     switch (type) {
+        case PartType::Fixed         : type_ = PartType::Fixed; name_ = ""; break;
         case PartType::Self          : reset(PartType::Self, "", SelfChrg_, SelfMass_); break;
         case PartType::Photon        : reset(PartType::Photon       , "Photon"       ,  0,  0.000000000); break;
         case PartType::Electron      : reset(PartType::Electron     , "Electron"     , -1,  0.000510999); break;
