@@ -294,6 +294,10 @@ int main(int argc, char * argv[]) {
             PartInfo::SetSelf(PartType::PionPlus);
             PhyTrFit trfitI(fitPar);
             sw7.stop();
+            MGClock::HrsStopwatch sw8; sw8.start();
+            PartInfo::SetSelf(PartType::KaonPlus);
+            PhyTrFit trfitK(fitPar);
+            sw8.stop();
 
             CERR("MC MOM %14.8f\n", tmom);
             if (mfit.status())   CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
@@ -305,7 +309,9 @@ int main(int argc, char * argv[]) {
             if (trfitE.status()) CERR("TR-E Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw6.time(), trfitE.part().mass(), trfitE.part().rig(), trfitE.nchi());
             else                 CERR("TR-E Fit  TIME %14.8f\n", sw6.time());
             if (trfitI.status()) CERR("TR-I Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw7.time(), trfitI.part().mass(), trfitI.part().rig(), trfitI.nchi());
-            else                 CERR("TR-I Fit  TIME %14.8f\n", sw6.time());
+            else                 CERR("TR-I Fit  TIME %14.8f\n", sw7.time());
+            if (trfitK.status()) CERR("TR-K Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw8.time(), trfitK.part().mass(), trfitK.part().rig(), trfitK.nchi());
+            else                 CERR("TR-K Fit  TIME %14.8f\n", sw8.time());
             CERR("\n");
         }
         //-------------------------------------//
