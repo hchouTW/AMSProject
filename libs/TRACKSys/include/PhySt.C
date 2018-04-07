@@ -77,6 +77,19 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
         nrm(4) = (elion_ * div(4));
     }
 }
+        
+
+void PhySt::reset(const PartInfo& info) {
+    info_ = info;
+    arg_.clear();
+    zero();
+    
+    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
+    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
+    
+    path_ = Numc::ZERO<>;
+    time_ = Numc::ZERO<>;
+}
 
 
 void PhySt::reset(const PartType& type) {

@@ -159,12 +159,15 @@ MultiGaus PhyArg::pdf_elion_(
 
 class PhySt {
     public :
-        PhySt(const PartType& type = PartType::Proton, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
+        PhySt(const PartInfo& info = PartInfo(PartType::Proton), Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info); }
+        PhySt(const PartType& type, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
         PhySt(Short_t chrg, Double_t mass, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(chrg, mass); }
 
+        inline void reset(const PartInfo& info);
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass);
         
+        inline void recal(const PartInfo& info) { info_ = info; set_eta(eta_); }
         inline void recal(const PartType& type) { info_.reset(type); set_eta(eta_); }
         inline void recal(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); set_eta(eta_); }
         

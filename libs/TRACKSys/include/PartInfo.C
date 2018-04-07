@@ -5,6 +5,25 @@
 namespace TrackSys {
 
 
+PartInfo& PartInfo::operator=(const PartInfo& rhs) {
+    if (this != &rhs) {
+        if (rhs.type_ == PartType::Self) reset(PartType::Self);
+        else {
+            type_         = rhs.type_;
+            name_         = rhs.name_;
+            chrg_         = rhs.chrg_;
+            mass_         = rhs.mass_;
+            is_chrgless_  = rhs.is_chrgless_;
+            is_massless_  = rhs.is_massless_;
+            mass_to_chrg_ = rhs.mass_to_chrg_;
+            chrg_to_mass_ = rhs.chrg_to_mass_;
+        }
+    }
+    
+    return *this;
+}
+
+
 void PartInfo::reset(const PartType& type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
     switch (type) {

@@ -18,7 +18,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
         sw_mscat_   = rhs.sw_mscat_;
         sw_eloss_   = rhs.sw_eloss_;
-        type_       = rhs.type_;
+        info_       = rhs.info_;
         ortt_       = rhs.ortt_;
         hits_TRK_   = rhs.hits_TRK_;
         hits_TOF_   = rhs.hits_TOF_;
@@ -46,12 +46,12 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     return *this;
 }
     
-TrFitPar::TrFitPar(const PartType& type, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
+TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
     clear();
 
     sw_mscat_ = sw_mscat;
     sw_eloss_ = sw_eloss;
-    type_ = type;
+    info_ = info;
     ortt_ = ortt;
 }
 
@@ -74,7 +74,7 @@ void TrFitPar::clear() {
     sw_mscat_ = false;
     sw_eloss_ = false;
     
-    type_ = PartType::Proton;
+    info_ = PartInfo(PartType::Proton);
     ortt_ = Orientation::kDownward;
    
     hits_TRK_.clear();
@@ -99,7 +99,7 @@ Bool_t TrFitPar::sort_hits() {
     
     Short_t nseq = 0;
     for (auto&& hit : hits_) {
-        hit->set_type(type_);
+        hit->set_type(info_);
         nseq += hit->set_seqID(nseq);
         
         if (hit->scx()) nmes_cx_++;
@@ -152,7 +152,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 void SimpleTrFit::clear() {
     succ_ = false;
-    part_.reset(type_);
+    part_.reset(info_);
     part_.arg().reset(false, false);
 
     ndof_      = 0;
@@ -562,7 +562,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 void PhyTrFit::clear() {
     succ_ = false;
-    part_.reset(type_);
+    part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();
     stts_.clear();
@@ -966,49 +966,49 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) {
 }
 
 
-bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) const {
-    residuals[0] = Numc::ZERO<>;
-    if (!is_vary_mass()) return false;
-    if (Numc::Compare(x[0]) <= 0) return false;
-    
-    Double_t mass = Numc::ONE<>/std::expm1(x[0]);
-    PartInfo::SetSelf(chrg_, mass);
-
-    PhyTrFit trFit(fitPar_);
-    if (!trFit.status()) return false;
-
-    double nrm = std::sqrt(trFit.nchi());
-    if (!Numc::Valid(nrm) || Numc::Compare(nrm) < 0) return false;
-
-    residuals[0] = nrm;
-    return true;
-}
-
-
-PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg) : phyTr_(nullptr) {
-    if (fitPar.type() != PartType::Self) return;
-
-    std::vector<double> parameters{ std::log1p(Numc::ONE<>/PIProton.mass()) };
-
-    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg));
-
-    ceres::Problem problem;
-    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
-    problem.SetParameterLowerBound(parameters.data(), 0, Numc::ZERO<>);
-    
-    ceres::Solver::Options options;
-    //options.minimizer_type = ceres::LINE_SEARCH;
-    //options.line_search_direction_type = ceres::BFGS;
-
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
-    if (!summary.IsSolutionUsable()) return;
-
-    Double_t estm = Numc::ONE<>/std::expm1(parameters.at(0));
-    PartInfo::SetSelf(chrg, estm);
-    phyTr_ = new PhyTrFit(fitPar);
-    if (!phyTr_->status()) clear();
-}
+//bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) const {
+//    residuals[0] = Numc::ZERO<>;
+//    if (!is_vary_mass()) return false;
+//    if (Numc::Compare(x[0]) <= 0) return false;
+//    
+//    Double_t mass = Numc::ONE<>/std::expm1(x[0]);
+//    PartInfo::SetSelf(chrg_, mass);
+//
+//    PhyTrFit trFit(fitPar_);
+//    if (!trFit.status()) return false;
+//
+//    double nrm = std::sqrt(trFit.nchi());
+//    if (!Numc::Valid(nrm) || Numc::Compare(nrm) < 0) return false;
+//
+//    residuals[0] = nrm;
+//    return true;
+//}
+//
+//
+//PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Double_t mass, Short_t chrg) : phyTr_(nullptr) {
+//    if (fitPar.type() != PartType::Self) return;
+//
+//    std::vector<double> parameters{ std::log1p(Numc::ONE<>/PIProton.mass()) };
+//
+//    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg));
+//
+//    ceres::Problem problem;
+//    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
+//    problem.SetParameterLowerBound(parameters.data(), 0, Numc::ZERO<>);
+//    
+//    ceres::Solver::Options options;
+//    //options.minimizer_type = ceres::LINE_SEARCH;
+//    //options.line_search_direction_type = ceres::BFGS;
+//
+//    ceres::Solver::Summary summary;
+//    ceres::Solve(options, &problem, &summary);
+//    if (!summary.IsSolutionUsable()) return;
+//
+//    Double_t estm = Numc::ONE<>/std::expm1(parameters.at(0));
+//    PartInfo::SetSelf(chrg, estm);
+//    phyTr_ = new PhyTrFit(fitPar);
+//    if (!phyTr_->status()) clear();
+//}
 
 
 } // namespace TrackSys

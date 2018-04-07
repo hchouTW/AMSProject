@@ -27,13 +27,20 @@ enum class PartType {
 
 class PartInfo {
     public :
-        PartInfo(const PartType& type = PartType::Proton) { reset(type); }
+        PartInfo& operator=(const PartInfo& rhs);
+        PartInfo(const PartInfo& info) { *this = info; }
+    
+    public :
+        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0) { reset(type); }
+        PartInfo(Short_t chrg, Double_t mass) { reset(chrg, mass); }
         ~PartInfo() {}
         
-        void reset(const PartType& type);
+        inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass) { reset(PartType::Fixed, "", chrg, mass); }
 
         void print() const;
+
+        inline Bool_t is_std() const { return !(type_ == PartType::Fixed || type_ == PartType::Self); }
 
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }

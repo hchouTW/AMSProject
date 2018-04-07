@@ -96,7 +96,7 @@ void HitStTRK::cal(const PhySt& part) {
 }
 
 void HitStTRK::set_type(const PartInfo& info) {
-    if (type_ == info.type() && (pdf_cx_ && pdf_cy_ && pdf_qx_ && pdf_qy_)) return;
+    if ((info.is_std() && type_ == info.type()) && (pdf_cx_ && pdf_cy_ && pdf_qx_ && pdf_qy_)) return;
 
     switch (info.chrg()) {
         case 1 : case -1 :
@@ -293,7 +293,7 @@ void HitStTOF::cal(const PhySt& part) {
 }
 
 void HitStTOF::set_type(const PartInfo& info) {
-    if (type_ == info.type() && (pdf_c_ && pdf_q_ && pdf_t_)) return;
+    if ((info.is_std() && type_ == info.type()) && (pdf_c_ && pdf_q_ && pdf_t_)) return;
     
     switch (info.chrg()) {
         case 1 : case -1 :

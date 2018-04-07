@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartType& type = PartType::Proton, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -29,10 +29,10 @@ class TrFitPar {
         inline void add_hit(HitStTRK& hit) { hits_TRK_.push_back(hit); zero(); }
         inline void add_hit(HitStTOF& hit) { hits_TOF_.push_back(hit); zero(); }
         
-        inline void set_type(const PartType& type = PartType::Proton) { type_ = type; zero(); }
+        inline void set_info(const PartInfo& info = PartInfo(PartType::Proton)) { info_ = info; zero(); }
         inline void set_ortt(const Orientation& ortt = Orientation::kDownward) { ortt_ = ortt; zero(); }
 
-        inline const PartType& type() const { return type_; }
+        inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
 
         inline const Short_t& nseq() const { return nseq_; }
@@ -51,7 +51,7 @@ class TrFitPar {
     protected :
         Bool_t      sw_mscat_;
         Bool_t      sw_eloss_;
-        PartType    type_;
+        PartInfo    info_;
         Orientation ortt_;
 
         std::vector<VirtualHitSt*> hits_;
@@ -158,7 +158,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
         }
 
-        inline void clear() { part_.reset(type_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
+        inline void clear() { part_.reset(info_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
     
     protected :
         Int_t numOfRes_;
@@ -243,35 +243,35 @@ class PhyTrFit : protected TrFitPar {
 };
 
 
-class VirtualPhyMassFit {
-    public :
-        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
-        ~VirtualPhyMassFit() {}
-
-        inline bool is_vary_mass() const { return (check_ && fitPar_.type() == PartType::Self); }
-        bool operator() (const double* const x, double* residuals) const;
-        
-    protected :
-        Bool_t      check_;
-        TrFitPar    fitPar_;
-        Short_t     chrg_;
-};
-
-
-class PhyMassFit {
-    public :
-        PhyMassFit(const TrFitPar& fitPar, Double_t mass = PIProton.mass(), Short_t chrg = Numc::ONE<Short_t>);
-        ~PhyMassFit() { PhyMassFit::clear(); }
-
-        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
-        inline const PhyTrFit* operator() () const { return phyTr_; }
-
-    protected :
-        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
-
-    protected :
-        PhyTrFit* phyTr_;
-};
+//class VirtualPhyMassFit {
+//    public :
+//        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
+//        ~VirtualPhyMassFit() {}
+//
+//        inline bool is_vary_mass() const { return (check_ && fitPar_.type() == PartType::Self); }
+//        bool operator() (const double* const x, double* residuals) const;
+//        
+//    protected :
+//        Bool_t      check_;
+//        TrFitPar    fitPar_;
+//        Short_t     chrg_;
+//};
+//
+//
+//class PhyMassFit {
+//    public :
+//        PhyMassFit(const TrFitPar& fitPar, Double_t mass = PIProton.mass(), Short_t chrg = Numc::ONE<Short_t>);
+//        ~PhyMassFit() { PhyMassFit::clear(); }
+//
+//        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
+//        inline const PhyTrFit* operator() () const { return phyTr_; }
+//
+//    protected :
+//        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
+//
+//    protected :
+//        PhyTrFit* phyTr_;
+//};
 
 
 } // namespace TrackSys
