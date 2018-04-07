@@ -147,7 +147,14 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (ndof_ == Numc::ZERO<Short_t>) return;
 
     succ_ = (analyticalFit() ? simpleFit() : false);
-    if (!succ_) { SimpleTrFit::clear(); COUT("SimpleTrFit::FAIL.\n"); }
+    if (succ_) { // testcode
+        //info_.tune_fixed();
+        //part_.recal(info_);
+        //for (auto&& hit : hits_) {
+        //    hit->set_type(info_);
+        //}
+    }
+    else { SimpleTrFit::clear(); COUT("SimpleTrFit::FAIL.\n"); }
 }
 
 
@@ -558,7 +565,15 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     nsegs_ = (nhits() >= Numc::TWO<Short_t>) ? (nhits() - Numc::ONE<Short_t>) : 0;
 
     succ_ = (simpleFit() ? physicalFit() : false);
-    if (!succ_) { PhyTrFit::clear(); COUT("PhyTrFit::FAIL.\n"); }
+    if (succ_) { // testcode
+        //info_.tune_fixed();
+        //part_.recal(info_);
+        //for (auto&& set : stts_) {
+        //    set.first->set_type(info_);
+        //    set.second.recal(info_);
+        //}
+    }
+    else { PhyTrFit::clear(); COUT("PhyTrFit::FAIL.\n"); }
 }
 
 

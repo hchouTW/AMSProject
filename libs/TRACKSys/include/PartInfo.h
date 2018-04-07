@@ -38,9 +38,13 @@ class PartInfo {
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass) { reset(PartType::Fixed, "", chrg, mass); }
 
+        // Exporter only
+        inline void tune_fixed() { if (type_ == PartType::Self) { reset(type_); type_ = PartType::Fixed; } }
+    
         void print() const;
 
-        inline Bool_t is_std() const { return !(type_ == PartType::Fixed || type_ == PartType::Self); }
+        inline Bool_t is_std() const { return (type_ != PartType::Fixed && type_ != PartType::Self); }
+        inline Bool_t is_fixed() const { return (type_ == PartType::Fixed); }
 
         inline const PartType&     type() const { return type_; }
         inline const std::string&  name() const { return name_; }

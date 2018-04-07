@@ -274,7 +274,6 @@ int main(int argc, char * argv[]) {
         //-------------------------------------//
         
         //-------------------------------------//
-        /*
         if (mc_mom < 0.8) {
             //MGClock::HrsStopwatch sw3; sw3.start();
             //PhyMassFit mfit(fitPar);
@@ -309,7 +308,6 @@ int main(int argc, char * argv[]) {
             else                 CERR("TR-I Fit  TIME %14.8f\n", sw6.time());
             CERR("\n");
         }
-        */
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
