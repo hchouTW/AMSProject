@@ -84,6 +84,7 @@ void TrFitPar::clear() {
 }
 
 Bool_t TrFitPar::sort_hits() {
+    info_.reset(info_.type());
     zero();
 
     if (ortt_ == Orientation::kDownward) Hit<HitStTRK>::Sort(hits_TRK_, VirtualHitSt::Orientation::kDownward);
@@ -152,6 +153,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 void SimpleTrFit::clear() {
     succ_ = false;
+    info_.reset(info_.type());
     part_.reset(info_);
     part_.arg().reset(false, false);
 
@@ -562,6 +564,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 void PhyTrFit::clear() {
     succ_ = false;
+    info_.reset(info_.type());
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();

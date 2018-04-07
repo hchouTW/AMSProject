@@ -158,7 +158,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
         }
 
-        inline void clear() { part_.reset(info_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
+        inline void clear() { info_.reset(info_.type()); part_.reset(info_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
     
     protected :
         Int_t numOfRes_;
