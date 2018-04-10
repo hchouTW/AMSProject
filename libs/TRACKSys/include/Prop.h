@@ -93,6 +93,9 @@ class TransferFunc {
         inline const SVecD<3>&    ue() const { return kappa_ue_; }
         inline const Double_t&    ue(Int_t i) const { return kappa_ue_(i); }
         
+        inline const SVecD<3>&    um() const { return kappa_um_; }
+        inline const Double_t&    um(Int_t i) const { return kappa_um_(i); }
+        
         inline const Double_t&    ee() const { return kappa_ee_; }
     
     private :
@@ -102,6 +105,7 @@ class TransferFunc {
         
         SMtxD<3, 3> kappa_uu_; // d(du/ds) / du
         SVecD<3>    kappa_ue_; // d(du/ds) / de
+        SVecD<3>    kappa_um_; // d(du/ds) / dm
         
         Double_t    kappa_ee_; // d(de/ds) / de
 };
@@ -131,7 +135,7 @@ class PhyJb {
 
         inline void multiplied(PhyJb& phyJb);
 
-        inline const Bool_t&   field() const { return field_; }
+        inline const Bool_t& field() const { return field_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
@@ -156,6 +160,7 @@ class PhyJb {
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
+        static constexpr Short_t JIU = 5;
         static constexpr Short_t JTAUU = 0;
         static constexpr Short_t JRHOU = 1;
         static constexpr Short_t JTAUL = 2;
@@ -175,11 +180,15 @@ class TransferPhyJb {
         inline const SVecD<2>& ue() const { return ue_; }
         inline const Double_t& ue(Int_t i) const { return ue_(i); }
         
+        inline const SVecD<2>& um() const { return um_; }
+        inline const Double_t& um(Int_t i) const { return um_(i); }
+        
         inline const Double_t& ee() const { return ee_; }
 
     private :
         SMtxD<2, 2> uu_;
         SVecD<2>    ue_;
+        SVecD<2>    um_;
         Double_t    ee_;
     
     private :
@@ -191,6 +200,7 @@ class TransferPhyJb {
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
+        static constexpr Short_t JIU = 5;
 };
 
 
@@ -308,10 +318,7 @@ class PropMgnt {
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
-        static constexpr Short_t JTAU = 0;
-        static constexpr Short_t JRHO = 1;
-        static constexpr Short_t JION = 2;
-        static constexpr Short_t JBRM = 3;
+        static constexpr Short_t JIU = 5;
 };
 
 PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;

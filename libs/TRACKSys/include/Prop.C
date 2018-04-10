@@ -59,7 +59,7 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
 
 TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
     Bool_t field = (part.field() && mphy != nullptr && (*mphy)());
-    Double_t Lambda = PROP_FACT * part.info().chrg_to_mass();
+    Double_t Lambda = PROP_FACT * part.info().chrg_to_atomic_mass();
     
     MagFld&& mag = MagMgnt::Get(part.c());
     SVecD<3>&& crsub = LA::Cross(part.u(), mag());
@@ -74,9 +74,10 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
     kappa_uu_(1, 2) =  mag.x();
     kappa_uu_(2, 0) =  mag.y();
     kappa_uu_(2, 1) = -mag.x();
-    kappa_uu_ = std::move((Lambda * part.eta()) * kappa_uu_);
+    kappa_uu_ = std::move((Lambda * part.info().invu() * part.eta()) * kappa_uu_);
  
-    kappa_ue_ = std::move(Lambda * crsub);
+    kappa_ue_ = std::move(Lambda * part.info().invu() * crsub);
+    kappa_um_ = std::move(Lambda * part.eta() * crsub);
 
     if (field && part.arg().eloss()) kappa_ee_ = (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
     else                             kappa_ee_ = Numc::ZERO<>;
@@ -158,6 +159,9 @@ TransferPhyJb::TransferPhyJb(const TransferFunc& tf, PhyJb& jb) {
 
     ue_(X) = tf.uu(X, X) * jb.gg(JUX, JEA) + tf.uu(X, Y) * jb.gg(JUY, JEA) + tf.ue(X) * jb.gg(JEA, JEA);
     ue_(Y) = tf.uu(Y, X) * jb.gg(JUX, JEA) + tf.uu(Y, Y) * jb.gg(JUY, JEA) + tf.ue(Y) * jb.gg(JEA, JEA);
+    
+    //um_(X) = tf.uu(X, X) * jb.gg(JUX, JIU) + tf.uu(X, Y) * jb.gg(JUY, JIU) + tf.ue(X) * jb.gg(JEA, JIU);
+    //um_(Y) = tf.uu(Y, X) * jb.gg(JUX, JIU) + tf.uu(Y, Y) * jb.gg(JUY, JIU) + tf.ue(Y) * jb.gg(JEA, JIU);
 
     ee_ = tf.ee() * jb.gg(JEA, JEA);
 }
