@@ -13,6 +13,7 @@ PartInfo& PartInfo::operator=(const PartInfo& rhs) {
             name_         = rhs.name_;
             chrg_         = rhs.chrg_;
             mass_         = rhs.mass_;
+            invu_         = rhs.invu_;
             is_chrgless_  = rhs.is_chrgless_;
             is_massless_  = rhs.is_massless_;
             mass_to_chrg_ = rhs.mass_to_chrg_;
@@ -74,6 +75,9 @@ void PartInfo::reset(const PartType& type, const std::string& name, Short_t chrg
     is_massless_ = Numc::EqualToZero(mass_);
     mass_to_chrg_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(mass_ / chrg_));
     chrg_to_mass_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(chrg_ / mass_));
+
+    if (is_massless_) invu_ = Numc::ZERO<>;
+    else              invu_ = (ATOMIC_MASS / mass_);
 }
 
 void PartInfo::print() const {

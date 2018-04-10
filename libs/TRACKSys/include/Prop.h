@@ -127,7 +127,7 @@ class PhyJb {
 
         inline void init(Double_t step = 0.);
         
-        inline void set(PhySt& part);
+        inline void set(PhySt& part, Double_t eta_abs = 0);
 
         inline void multiplied(PhyJb& phyJb);
 
@@ -205,6 +205,8 @@ class PropPhyCal {
         void normalized(const MatFld& mfld, PhySt& part);
         
         void set_PhyArg(PhySt& part) const;
+
+        inline Double_t eft_eta() const { return (Numc::HALF * (eta_abs_sat_ + eta_abs_end_)); }
 
     private :
         Bool_t   sw_mscat_;

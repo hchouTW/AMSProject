@@ -31,7 +31,7 @@ class PartInfo {
         PartInfo(const PartInfo& info) { *this = info; }
     
     public :
-        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), is_chrgless_(true), is_massless_(true), mass_to_chrg_(0), chrg_to_mass_(0) { reset(type); }
+        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), invu_(0), is_chrgless_(true), is_massless_(true), mass_to_chrg_(0), chrg_to_mass_(0) { reset(type); }
         PartInfo(Short_t chrg, Double_t mass) { reset(chrg, mass); }
         ~PartInfo() {}
         
@@ -49,17 +49,15 @@ class PartInfo {
         inline const std::string&  name() const { return name_; }
         inline const Short_t&      chrg() const { return chrg_; } // [1]
         inline const Double_t&     mass() const { return mass_; } // [GeV]
+        inline const Double_t&     invu() const { return invu_; } // [1]
 
         inline const Bool_t& is_chrgless() const { return is_chrgless_; }
         inline const Bool_t& is_massless() const { return is_massless_; }
         
         inline const Double_t& mass_to_chrg() const { return mass_to_chrg_; } // [GeV]
         inline const Double_t& chrg_to_mass() const { return chrg_to_mass_; } // [1/GeV]
-       
-        // testcode
-        //inline Double_t umass() const { return (mass_ / ATOMIC_MASS); } // [1]
-        //inline Double_t umass_to_chrg() const { return (mass_to_chrg_ / ATOMIC_MASS); } // [1]
-        //inline Double_t chrg_to_umass() const { return (chrg_to_mass_ * ATOMIC_MASS); } // [1]
+
+        inline const Double_t chrg_to_atomic_mass() const { return std::fabs(static_cast<Double_t>(chrg_) / ATOMIC_MASS); }
 
     protected :
         inline void reset(const PartType& type, const std::string& name, Short_t chrg, Double_t mass);
@@ -69,7 +67,8 @@ class PartInfo {
         std::string name_;
         Short_t     chrg_;
         Double_t    mass_; // [GeV]
-        
+        Double_t    invu_;
+
         Bool_t      is_chrgless_;
         Bool_t      is_massless_;
         

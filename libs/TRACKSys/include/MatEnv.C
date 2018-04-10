@@ -618,7 +618,7 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
     
     if (!mfld()) return MatPhyFld();
 
-    Double_t mscat_sgm = GetMultipleScattering(mfld, part);
+    Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
 
@@ -632,7 +632,7 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     if (part.info().is_chrgless() || part.info().is_massless()) return MatPhyFld();
     if (Numc::EqualToZero(part.mom())) return MatPhyFld();
     
-    Double_t mscat_sgm = GetMultipleScattering(mfld, part);
+    Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
     
@@ -644,7 +644,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     if (!part.arg().mscat()) return Numc::ZERO<>;
     
     Bool_t is_over_lmt = (Numc::Compare(part.bta(), LMT_BTA) > 0);
-    Double_t eta_part = ((is_over_lmt) ? (part.eta_abs() / part.bta()) : (LMT_INV_GMBTA / LMT_BTA));
+    Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
+    Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
 
     Double_t nrl     = mfld.nrl();
     Double_t sqr_nrl = std::sqrt(nrl);
@@ -652,11 +653,13 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
 
     // Highland-Lynch-Dahl formula
     //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
-    //Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
+    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqr_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
     
     // Modified Highland-Lynch-Dahl formula
     Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
-    Double_t mscat_sgm = RYDBERG_CONST * part.info().chrg_to_mass() * eta_part * sqr_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
+    Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqr_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
+
+    Double_t mscat_sgm = mscat_fat * part.info().invu() * (eta / bta);
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;

@@ -265,7 +265,7 @@ class MatPhyFld {
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elion_men() const { return elion_men_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
-
+        
     protected :
         inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elbrm_men_ = 0; }
 

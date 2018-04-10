@@ -90,11 +90,13 @@ void PhyJb::init(Double_t step) {
 }
  
 
-void PhyJb::set(PhySt& part) {
+void PhyJb::set(PhySt& part, Double_t eta_abs) {
     PhyArg& arg = part.arg();
     if (!arg()) return;
     field_ = true;
-    
+
+    Double_t eta = (Numc::EqualToZero(eta_abs) ? part.eta_abs() : eta_abs);
+
     if (arg.mscat()) {
         jb_gl_(JUX, JTAUU) = arg.mscat_uu() * arg.orth_tau(X);
         jb_gl_(JUY, JTAUU) = arg.mscat_uu() * arg.orth_tau(Y);
@@ -114,22 +116,25 @@ void PhyJb::set(PhySt& part) {
 
         //-----------------------------------------------
         // testcode (try to improve multiple-scatttering)
-        jb_gg_(JPX, JEA) += (arg.tauu() * arg.mscat_ul() * arg.orth_tau(X) + 
-                             arg.rhou() * arg.mscat_ul() * arg.orth_rho(X) +
-                             arg.taul() * arg.mscat_ll() * arg.orth_tau(X) +
-                             arg.rhol() * arg.mscat_ll() * arg.orth_rho(X)
-                            ) / part.eta();
-        jb_gg_(JPY, JEA) += (arg.tauu() * arg.mscat_ul() * arg.orth_tau(Y) + 
-                             arg.rhou() * arg.mscat_ul() * arg.orth_rho(Y) +
-                             arg.taul() * arg.mscat_ll() * arg.orth_tau(Y) +
-                             arg.rhol() * arg.mscat_ll() * arg.orth_rho(Y)
-                            ) / part.eta();
-        jb_gg_(JUX, JEA) += (arg.tauu() * arg.mscat_uu() * arg.orth_tau(X) + 
-                             arg.rhou() * arg.mscat_uu() * arg.orth_rho(X)
-                            ) / part.eta();
-        jb_gg_(JUY, JEA) += (arg.tauu() * arg.mscat_uu() * arg.orth_tau(Y) + 
-                             arg.rhou() * arg.mscat_uu() * arg.orth_rho(Y)
-                            ) / part.eta();
+        Double_t mscrr_eta = ((part.info().is_massless() || part.info().is_chrgless()) ? Numc::ZERO<> : ((Numc::ONE<> + Numc::TWO<> * eta * eta) / (Numc::ONE<> + eta * eta) / eta) );
+        Double_t mscrr_mas = ((part.info().is_massless() || part.info().is_chrgless()) ? Numc::ZERO<> : (Numc::ONE<> / part.info().invu()) );
+
+        jb_gg_(JPX, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_ul() * arg.orth_tau(X) + 
+                             arg.rhou() * mscrr_eta * arg.mscat_ul() * arg.orth_rho(X) +
+                             arg.taul() * mscrr_eta * arg.mscat_ll() * arg.orth_tau(X) +
+                             arg.rhol() * mscrr_eta * arg.mscat_ll() * arg.orth_rho(X)
+                            );
+        jb_gg_(JPY, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_ul() * arg.orth_tau(Y) + 
+                             arg.rhou() * mscrr_eta * arg.mscat_ul() * arg.orth_rho(Y) +
+                             arg.taul() * mscrr_eta * arg.mscat_ll() * arg.orth_tau(Y) +
+                             arg.rhol() * mscrr_eta * arg.mscat_ll() * arg.orth_rho(Y)
+                            );
+        jb_gg_(JUX, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_uu() * arg.orth_tau(X) + 
+                             arg.rhou() * mscrr_eta * arg.mscat_uu() * arg.orth_rho(X)
+                            );
+        jb_gg_(JUY, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_uu() * arg.orth_tau(Y) + 
+                             arg.rhou() * mscrr_eta * arg.mscat_uu() * arg.orth_rho(Y)
+                            );
         //-----------------------------------------------
     }
     if (arg.eloss()) {
@@ -469,7 +474,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
         
     ppcal.normalized(mgfld, part);
     ppcal.set_PhyArg(part);
-    if (withJb) phyJb->set(part);
+    if (withJb) phyJb->set(part, ppcal.eft_eta());
 
     MatPhy::SetCorrFactor();
     return is_succ;
@@ -529,7 +534,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
     
     ppcal.normalized(mgfld, part);
     ppcal.set_PhyArg(part);
-    if (withJb) phyJb->set(part);
+    if (withJb) phyJb->set(part, ppcal.eft_eta());
    
     MatPhy::SetCorrFactor();
     return is_succ;
