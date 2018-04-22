@@ -118,6 +118,19 @@ void PhySt::reset(Short_t chrg, Double_t mass) {
 }
 
 
+void PhySt::reset(Double_t invu) {
+    info_.reset(invu);
+    arg_.clear();
+    zero();
+    
+    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
+    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
+    
+    path_ = Numc::ZERO<>;
+    time_ = Numc::ZERO<>;
+}
+
+
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Double_t uz) {
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
     if (Numc::EqualToZero(norm)) return;
@@ -186,7 +199,7 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
         mom_   = mom;
         eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + Numc::ONE<>)));
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt((info_.mass() / mom_) * (info_.mass() / mom_) + Numc::ONE<>)));
         gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
         eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
         irig_  = info_.chrg_to_mass() * eta_;
@@ -211,17 +224,16 @@ void PhySt::set_eta(Double_t eta) {
 
 void PhySt::set_irig(Double_t irig) {
     Short_t rig_sign = Numc::Compare(irig);
-    if (info_.is_chrgless()) return;
-    if (info_.is_massless()) return;
+    if (info_.is_chrgless() || info_.is_massless()) { zero(); return; }
     if (rig_sign == 0) zero();
     else {
         irig_  = irig;
-        eta_   = info_.mass_to_chrg() * irig;
+        eta_   = irig / info_.chrg_to_mass();
         gmbta_ = (Numc::ONE<> / std::fabs(eta_));
-        mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>));
+        mom_   = (info_.mass() * gmbta_);
+        eng_   = info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>);
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(eta_ * eta_ + Numc::ONE<>)));
+        bta_   = (Numc::ONE<> / std::sqrt(eta_ * eta_ + Numc::ONE<>));
     }
 }
 
@@ -257,16 +269,16 @@ void PhySt::symbk(Bool_t is_rndm) {
     if (is_rndm) arg_.rndm();
     
     if (arg_.mscat()) {
+        //coo_ = std::move(coo_ + arg_.symbk_mscatl());
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
         mscatl(2) = Numc::ZERO<>; // set dz to zero
         coo_ = std::move(coo_ + mscatl);
-        
-        //coo_ = std::move(coo_ + arg_.symbk_mscatl());
+
         dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ * (Numc::ONE<> + arg_.symbk_eloss()));
+        set_eta(eta_ * (Numc::ONE<> + info_.invu() * arg_.symbk_eloss()));
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(Numc::ZERO<>);
     }

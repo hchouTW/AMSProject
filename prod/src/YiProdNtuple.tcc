@@ -613,7 +613,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		fTof.betaHPatt = 0;
         Float_t minT = 0.;
-		for (int il = 0; il < 4; il++) {
+		for (int il = 0; il < 4; ++il) {
 			if (!betaH->TestExistHL(il)) continue;
 			TofClusterHR* cls = betaH->GetClusterHL(il);
 			if (cls == nullptr) continue;
@@ -865,7 +865,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
-			TrRecHitR * recHit = trtk->GetHitLJ(ilay+1);
+			TrRecHitR* recHit = trtk->GetHitLJ(ilay+1);
 			if (recHit == nullptr) continue;
 
 			int tkid = recHit->GetTkId();

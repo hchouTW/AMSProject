@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -87,8 +87,11 @@ int main(int argc, char * argv[]) {
     Axis AXTFadc("TFadc", 800, 0., 4.);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
-    Axis AXTDadc("TDadc", 1200, 0., 4000.);
+    Axis AXTDadc("TDadc", 800, 0., 4000.);
     Hist* hTDadc = Hist::New("hTDadc", HistAxis(AXeta, AXTDadc));
+    
+    Axis AXTDavg("TDavg", 400, 0., 1500.);
+    Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -192,10 +195,18 @@ int main(int argc, char * argv[]) {
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]*bta*bta);
         }
 
+        std::vector<Double_t> vdedx;
         for (auto&& hit : fTrd->hits[0]) {
             if (hit.len <= 0 || hit.amp <= 0) continue;
+            if (hit.len < 0.3) continue;
             Double_t dedx = hit.amp/hit.len;
             hTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
+            vdedx.push_back(dedx);
+        }
+        if (vdedx.size() >= 5) {
+            std::sort(vdedx.begin(), vdedx.end());
+            Double_t avg = std::accumulate(vdedx.begin()+1, vdedx.end()-1, 0) / (vdedx.size()-2);
+            hTDavg->fillH2D(mass/fG4mc->primPart.mom, avg);
         }
     }
 

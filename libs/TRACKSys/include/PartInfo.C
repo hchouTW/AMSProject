@@ -5,31 +5,10 @@
 namespace TrackSys {
 
 
-PartInfo& PartInfo::operator=(const PartInfo& rhs) {
-    if (this != &rhs) {
-        if (rhs.type_ == PartType::Self) reset(PartType::Self);
-        else {
-            type_         = rhs.type_;
-            name_         = rhs.name_;
-            chrg_         = rhs.chrg_;
-            mass_         = rhs.mass_;
-            invu_         = rhs.invu_;
-            is_chrgless_  = rhs.is_chrgless_;
-            is_massless_  = rhs.is_massless_;
-            mass_to_chrg_ = rhs.mass_to_chrg_;
-            chrg_to_mass_ = rhs.chrg_to_mass_;
-        }
-    }
-    
-    return *this;
-}
-
-
 void PartInfo::reset(const PartType& type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
     switch (type) {
-        case PartType::Fixed         : type_ = PartType::Fixed; name_ = ""; break;
-        case PartType::Self          : reset(PartType::Self, "", SelfChrg_, SelfMass_); break;
+        case PartType::Fixed         : reset(PartType::Fixed, "", DefaultChrg_, DefaultMass_); break;
         case PartType::Photon        : reset(PartType::Photon       , "Photon"       ,  0,  0.000000000); break;
         case PartType::Electron      : reset(PartType::Electron     , "Electron"     , -1,  0.000510999); break;
         case PartType::Positron      : reset(PartType::Positron     , "Positron"     ,  1,  0.000510999); break;
@@ -73,8 +52,8 @@ void PartInfo::reset(const PartType& type, const std::string& name, Short_t chrg
     mass_ = mass;
     is_chrgless_ = Numc::EqualToZero(chrg_);
     is_massless_ = Numc::EqualToZero(mass_);
-    mass_to_chrg_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(mass_ / chrg_));
     chrg_to_mass_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(chrg_ / mass_));
+    chrg_to_atomic_mass_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(chrg_ / ATOMIC_MASS));
 
     if (is_massless_) invu_ = Numc::ZERO<>;
     else              invu_ = (ATOMIC_MASS / mass_);
@@ -85,7 +64,6 @@ void PartInfo::print() const {
     printStr += STR("==== %-15s ====\n", name_.c_str());
     printStr += STR("Chrg %3d\n"   , chrg_);
     printStr += STR("Mass %10.6f\n", mass_);
-    printStr += STR("M/Q  %10.6f\n", mass_to_chrg_);
     printStr += STR("=========================\n");
     COUT(printStr.c_str());
 }

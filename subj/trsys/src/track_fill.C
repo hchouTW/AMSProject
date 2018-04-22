@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -13,11 +13,14 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
 
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
@@ -61,10 +64,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    PartInfo::SetSelf(PartType::Proton);
-    PartType type = PartType::Self;
-    //PartType type = PartType::Proton;
-    //PartType type = PartType::Electron;
+    PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
@@ -76,7 +76,7 @@ int main(int argc, char * argv[]) {
     Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
-    Double_t mass = PIProton.mass();
+    Double_t mass = PartInfo(PartType::Proton).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -105,9 +105,10 @@ int main(int argc, char * argv[]) {
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
-    Hist* hSH0Brso = Hist::New("hSH0Brso", HistAxis(AXbta, AXBrso));
-    Hist* hSH1Brso = Hist::New("hSH1Brso", HistAxis(AXbta, AXBrso));
-    Hist* hSH2Brso = Hist::New("hSH2Brso", HistAxis(AXbta, AXBrso));
+   
+    // Fit M 
+    Axis AXMrso("1/Mass [1/GeV]", 800, 0, 4);
+    Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
     Axis AXRchi("Log-Chi-square [1]", 800, -8.0, 8.0);
     Hist* hCKRchix = Hist::New("hCKRchix", HistAxis(AXmom, AXRchi));
@@ -118,35 +119,35 @@ int main(int argc, char * argv[]) {
     Hist* hKFRchiy = Hist::New("hKFRchiy", HistAxis(AXmom, AXRchi));
     Hist* hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
     
-    Axis AXRres("Residual [#mum]", 4000, -800.0, 800.0);
-    std::vector<Hist*> hCKresx(9, nullptr);
-    std::vector<Hist*> hKFresx(9, nullptr);
-    std::vector<Hist*> hHCresx(9, nullptr);
-    for (UInt_t it = 0; it < hCKresx.size(); ++it) hCKresx[it] = Hist::New(STR("hCKresxL%d", it+1), HistAxis(AXmom, AXRres));
-    for (UInt_t it = 0; it < hKFresx.size(); ++it) hKFresx[it] = Hist::New(STR("hKFresxL%d", it+1), HistAxis(AXmom, AXRres));
-    for (UInt_t it = 0; it < hHCresx.size(); ++it) hHCresx[it] = Hist::New(STR("hHCresxL%d", it+1), HistAxis(AXmom, AXRres));
-    
-    std::vector<Hist*> hCKresy(9, nullptr);
-    std::vector<Hist*> hKFresy(9, nullptr);
-    std::vector<Hist*> hHCresy(9, nullptr);
-    for (UInt_t it = 0; it < hCKresy.size(); ++it) hCKresy[it] = Hist::New(STR("hCKresyL%d", it+1), HistAxis(AXmom, AXRres));
-    for (UInt_t it = 0; it < hKFresy.size(); ++it) hKFresy[it] = Hist::New(STR("hKFresyL%d", it+1), HistAxis(AXmom, AXRres));
-    for (UInt_t it = 0; it < hHCresy.size(); ++it) hHCresy[it] = Hist::New(STR("hHCresyL%d", it+1), HistAxis(AXmom, AXRres));
-    
-    Axis AXRcos("Residual [10^{-4}]", 3000, -30, 30);
-    std::vector<Hist*> hCKcosx(9, nullptr);
-    std::vector<Hist*> hKFcosx(9, nullptr);
-    std::vector<Hist*> hHCcosx(9, nullptr);
-    for (UInt_t it = 0; it < hCKcosx.size(); ++it) hCKcosx[it] = Hist::New(STR("hCKcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (UInt_t it = 0; it < hKFcosx.size(); ++it) hKFcosx[it] = Hist::New(STR("hKFcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (UInt_t it = 0; it < hHCcosx.size(); ++it) hHCcosx[it] = Hist::New(STR("hHCcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    
-    std::vector<Hist*> hCKcosy(9, nullptr);
-    std::vector<Hist*> hKFcosy(9, nullptr);
-    std::vector<Hist*> hHCcosy(9, nullptr);
-    for (UInt_t it = 0; it < hCKcosy.size(); ++it) hCKcosy[it] = Hist::New(STR("hCKcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (UInt_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    for (UInt_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    //Axis AXRres("Residual [#mum]", 4000, -800.0, 800.0);
+    //std::vector<Hist*> hCKresx(9, nullptr);
+    //std::vector<Hist*> hKFresx(9, nullptr);
+    //std::vector<Hist*> hHCresx(9, nullptr);
+    //for (UInt_t it = 0; it < hCKresx.size(); ++it) hCKresx[it] = Hist::New(STR("hCKresxL%d", it+1), HistAxis(AXmom, AXRres));
+    //for (UInt_t it = 0; it < hKFresx.size(); ++it) hKFresx[it] = Hist::New(STR("hKFresxL%d", it+1), HistAxis(AXmom, AXRres));
+    //for (UInt_t it = 0; it < hHCresx.size(); ++it) hHCresx[it] = Hist::New(STR("hHCresxL%d", it+1), HistAxis(AXmom, AXRres));
+    //
+    //std::vector<Hist*> hCKresy(9, nullptr);
+    //std::vector<Hist*> hKFresy(9, nullptr);
+    //std::vector<Hist*> hHCresy(9, nullptr);
+    //for (UInt_t it = 0; it < hCKresy.size(); ++it) hCKresy[it] = Hist::New(STR("hCKresyL%d", it+1), HistAxis(AXmom, AXRres));
+    //for (UInt_t it = 0; it < hKFresy.size(); ++it) hKFresy[it] = Hist::New(STR("hKFresyL%d", it+1), HistAxis(AXmom, AXRres));
+    //for (UInt_t it = 0; it < hHCresy.size(); ++it) hHCresy[it] = Hist::New(STR("hHCresyL%d", it+1), HistAxis(AXmom, AXRres));
+    //
+    //Axis AXRcos("Residual [10^{-4}]", 3000, -30, 30);
+    //std::vector<Hist*> hCKcosx(9, nullptr);
+    //std::vector<Hist*> hKFcosx(9, nullptr);
+    //std::vector<Hist*> hHCcosx(9, nullptr);
+    //for (UInt_t it = 0; it < hCKcosx.size(); ++it) hCKcosx[it] = Hist::New(STR("hCKcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    //for (UInt_t it = 0; it < hKFcosx.size(); ++it) hKFcosx[it] = Hist::New(STR("hKFcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    //for (UInt_t it = 0; it < hHCcosx.size(); ++it) hHCcosx[it] = Hist::New(STR("hHCcosxL%d", it+1), HistAxis(AXmom, AXRcos));
+    //
+    //std::vector<Hist*> hCKcosy(9, nullptr);
+    //std::vector<Hist*> hKFcosy(9, nullptr);
+    //std::vector<Hist*> hHCcosy(9, nullptr);
+    //for (UInt_t it = 0; it < hCKcosy.size(); ++it) hCKcosy[it] = Hist::New(STR("hCKcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    //for (UInt_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
+    //for (UInt_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
 
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -193,7 +194,7 @@ int main(int argc, char * argv[]) {
         
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        TrFitPar fitPar(type);
+        TrFitPar fitPar(PartType::Fixed, true);
         for (auto&& hit : track.hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
@@ -213,7 +214,7 @@ int main(int argc, char * argv[]) {
             Bool_t tofy = (il == 1 || il == 2);
             HitStTOF mhit(tofx, tofy, il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            mhit.set_q(fTof->Q[il]);
+            //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.add_hit(mhit);
         }
@@ -246,18 +247,24 @@ int main(int argc, char * argv[]) {
         }
         else tmom = topmc->mom;
         Double_t mc_mom  = tmom;
-        
+
         //Double_t mc_mom  = topmc->mom;
         Double_t mc_eta  = mass/mc_mom;
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
-       
+        
+        //if (mc_mom < 1.0 || mc_mom > 20.0) continue; // testcode
+        //if (mc_mom > 1.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         //SimpleTrFit tr(fitPar);
+        PartInfo::SetDefault(PartType::Proton);
         PhyTrFit tr(fitPar);
+        //PhyMassFit mfit(fitPar, 1);
+        //const PhyTrFit& tr = *mfit();
         sw.stop();
+        //if (!mfit.status()) continue;
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
         Double_t hc_tme  = sw.time()*1.0e3;
@@ -271,49 +278,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        //-------------------------------------//
-        
-        //-------------------------------------//
-        if (mc_mom < 0.8) {
-            MGClock::HrsStopwatch sw3; sw3.start();
-            PhyMassFit mfit(fitPar);
-            sw3.stop();
-            MGClock::HrsStopwatch sw4; sw4.start();
-            PartInfo::SetSelf(PartType::Proton);
-            PhyTrFit trfitP(fitPar);
-            sw4.stop();
-            MGClock::HrsStopwatch sw5; sw5.start();
-            PartInfo::SetSelf(PartType::Deuterium);
-            PhyTrFit trfitD(fitPar);
-            sw5.stop();
-            MGClock::HrsStopwatch sw6; sw6.start();
-            PartInfo::SetSelf(PartType::Electron);
-            PhyTrFit trfitE(fitPar);
-            sw6.stop();
-            MGClock::HrsStopwatch sw7; sw7.start();
-            PartInfo::SetSelf(PartType::PionPlus);
-            PhyTrFit trfitI(fitPar);
-            sw7.stop();
-            MGClock::HrsStopwatch sw8; sw8.start();
-            PartInfo::SetSelf(PartType::KaonPlus);
-            PhyTrFit trfitK(fitPar);
-            sw8.stop();
-
-            CERR("MC MOM %14.8f\n", tmom);
-            if (mfit.status())   CERR("MASS Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw3.time(), mfit()->part().mass(), mfit()->part().rig(), mfit()->nchi());
-            else                 CERR("MASS Fit  TIME %14.8f\n", sw3.time());
-            if (trfitP.status()) CERR("TR-P Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw4.time(), trfitP.part().mass(), trfitP.part().rig(), trfitP.nchi());
-            else                 CERR("TR-P Fit  TIME %14.8f\n", sw4.time());
-            if (trfitD.status()) CERR("TR-D Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw5.time(), trfitD.part().mass(), trfitD.part().rig(), trfitD.nchi());
-            else                 CERR("TR-D Fit  TIME %14.8f\n", sw5.time());
-            if (trfitE.status()) CERR("TR-E Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw6.time(), trfitE.part().mass(), trfitE.part().rig(), trfitE.nchi());
-            else                 CERR("TR-E Fit  TIME %14.8f\n", sw6.time());
-            if (trfitI.status()) CERR("TR-I Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw7.time(), trfitI.part().mass(), trfitI.part().rig(), trfitI.nchi());
-            else                 CERR("TR-I Fit  TIME %14.8f\n", sw7.time());
-            if (trfitK.status()) CERR("TR-K Fit  TIME %14.8f  MASS %14.8f RIG %14.8f NCHI %14.8f\n", sw8.time(), trfitK.part().mass(), trfitK.part().rig(), trfitK.nchi());
-            else                 CERR("TR-K Fit  TIME %14.8f\n", sw8.time());
-            CERR("\n");
-        }
+        CERR("MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -333,15 +298,14 @@ int main(int argc, char * argv[]) {
         //Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
         Double_t kf_irig = (kf_succ ? MGMath::ONE/track.stateLJ[1][patt][topmc->lay][6] : 0.);
         //Double_t hc_irig = (hc_succ ? MGMath::ONE/track.rig[2][patt] : 0.);
-
-        Double_t ck_rig = (ck_succ ? 1.0/ck_irig : 0.);
-        Double_t kf_rig = (kf_succ ? 1.0/kf_irig : 0.);
-        Double_t hc_rig = (hc_succ ? 1.0/hc_irig : 0.);
         
         Double_t ck_bta = (ck_succ ? 1.0/std::sqrt(1.0+mass*ck_irig*mass*ck_irig) : 0.);
         Double_t kf_bta = (kf_succ ? 1.0/std::sqrt(1.0+mass*kf_irig*mass*kf_irig) : 0.);
         Double_t hc_bta = (hc_succ ? 1.0/std::sqrt(1.0+mass*hc_irig*mass*hc_irig) : 0.);
-       
+      
+        if (hc_succ) hHCMrso->fillH2D(mc_bta, 1.0/tr.part().mass());
+
+        //COUT("MC %14.8f BTA %14.8f MASS %14.8f\n", mc_bta, hc_bta, 1.0/hc_mas);
         //COUT("MC %14.8f MES %14.8f %14.8f %14.8f\n", mc_bta, ck_bta, kf_bta, hc_bta);
 
         Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
@@ -361,9 +325,6 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKBrso->fillH2D(mc_bta, (ck_bta/mc_bta - 1.0));
         if (kf_succ) hKFBrso->fillH2D(mc_bta, (kf_bta/mc_bta - 1.0));
         if (hc_succ) hHCBrso->fillH2D(mc_bta, (hc_bta/mc_bta - 1.0));
-        hSH0Brso->fillH2D(mc_bta, (fTrk->betaSH[0]/mc_bta - 1.0));
-        hSH1Brso->fillH2D(mc_bta, (fTrk->betaSH[1]/mc_bta - 1.0));
-        hSH2Brso->fillH2D(mc_bta, (fTrk->betaSH[2]/mc_bta - 1.0));
         
         if (ck_succ) hCKRchix->fillH2D(mc_mom, ck_chix);
         if (kf_succ) hKFRchix->fillH2D(mc_mom, kf_chix);
@@ -373,45 +334,45 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFRchiy->fillH2D(mc_mom, kf_chiy);
         if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
 
-        for (Int_t it = 0; it < 9; ++it) {
-            if (!hasLay[it]) continue;
-            if (!(msh[it]->side[0] && msh[it]->adc[0]>0)) continue;
-            if (!(msh[it]->side[1] && msh[it]->adc[1]>0)) continue;
-            constexpr Double_t CM2UM = 1.0e4;
-            constexpr Double_t COS   = 1.0e4;
-            
-            Double_t ck_resx = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][0]-mch[it]->coo[0]) : 0.);
-            Double_t kf_resx = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][0]-mch[it]->coo[0]) : 0.);
-            Double_t hc_resx = (hc_succ ? CM2UM * (                hc_coo[it][0]-mch[it]->coo[0]) : 0.);
+        //for (Int_t it = 0; it < 9; ++it) {
+        //    if (!hasLay[it]) continue;
+        //    if (!(msh[it]->side[0] && msh[it]->adc[0]>0)) continue;
+        //    if (!(msh[it]->side[1] && msh[it]->adc[1]>0)) continue;
+        //    constexpr Double_t CM2UM = 1.0e4;
+        //    constexpr Double_t COS   = 1.0e4;
+        //    
+        //    Double_t ck_resx = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][0]-mch[it]->coo[0]) : 0.);
+        //    Double_t kf_resx = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][0]-mch[it]->coo[0]) : 0.);
+        //    Double_t hc_resx = (hc_succ ? CM2UM * (                hc_coo[it][0]-mch[it]->coo[0]) : 0.);
 
-            if (ck_succ) hCKresx.at(it)->fillH2D(mc_mom, ck_resx);
-            if (kf_succ) hKFresx.at(it)->fillH2D(mc_mom, kf_resx);
-            if (hc_succ) hHCresx.at(it)->fillH2D(mc_mom, hc_resx);
-            
-            Double_t ck_resy = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][1]-mch[it]->coo[1]) : 0.);
-            Double_t kf_resy = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][1]-mch[it]->coo[1]) : 0.);
-            Double_t hc_resy = (hc_succ ? CM2UM * (                hc_coo[it][1]-mch[it]->coo[1]) : 0.);
-            
-            if (ck_succ) hCKresy.at(it)->fillH2D(mc_mom, ck_resy);
-            if (kf_succ) hKFresy.at(it)->fillH2D(mc_mom, kf_resy);
-            if (hc_succ) hHCresy.at(it)->fillH2D(mc_mom, hc_resy);
-            
-            Double_t ck_cosx = (ck_succ ? COS * (track.stateLJ[0][patt][it][3]-mcs[it]->dir[0]) : 0.);
-            Double_t kf_cosx = (kf_succ ? COS * (track.stateLJ[1][patt][it][3]-mcs[it]->dir[0]) : 0.);
-            Double_t hc_cosx = (hc_succ ? COS * (                hc_dir[it][0]-mcs[it]->dir[0]) : 0.);
-            
-            if (ck_succ) hCKcosx.at(it)->fillH2D(mc_mom, ck_cosx);
-            if (kf_succ) hKFcosx.at(it)->fillH2D(mc_mom, kf_cosx);
-            if (hc_succ) hHCcosx.at(it)->fillH2D(mc_mom, hc_cosx);
-            
-            Double_t ck_cosy = (ck_succ ? COS * (track.stateLJ[0][patt][it][4]-mcs[it]->dir[1]) : 0.);
-            Double_t kf_cosy = (kf_succ ? COS * (track.stateLJ[1][patt][it][4]-mcs[it]->dir[1]) : 0.);
-            Double_t hc_cosy = (hc_succ ? COS * (                hc_dir[it][1]-mcs[it]->dir[1]) : 0.);
-            
-            if (ck_succ) hCKcosy.at(it)->fillH2D(mc_mom, ck_cosy);
-            if (kf_succ) hKFcosy.at(it)->fillH2D(mc_mom, kf_cosy);
-            if (hc_succ) hHCcosy.at(it)->fillH2D(mc_mom, hc_cosy);
-        }
+        //    if (ck_succ) hCKresx.at(it)->fillH2D(mc_mom, ck_resx);
+        //    if (kf_succ) hKFresx.at(it)->fillH2D(mc_mom, kf_resx);
+        //    if (hc_succ) hHCresx.at(it)->fillH2D(mc_mom, hc_resx);
+        //    
+        //    Double_t ck_resy = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][1]-mch[it]->coo[1]) : 0.);
+        //    Double_t kf_resy = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][1]-mch[it]->coo[1]) : 0.);
+        //    Double_t hc_resy = (hc_succ ? CM2UM * (                hc_coo[it][1]-mch[it]->coo[1]) : 0.);
+        //    
+        //    if (ck_succ) hCKresy.at(it)->fillH2D(mc_mom, ck_resy);
+        //    if (kf_succ) hKFresy.at(it)->fillH2D(mc_mom, kf_resy);
+        //    if (hc_succ) hHCresy.at(it)->fillH2D(mc_mom, hc_resy);
+        //    
+        //    Double_t ck_cosx = (ck_succ ? COS * (track.stateLJ[0][patt][it][3]-mcs[it]->dir[0]) : 0.);
+        //    Double_t kf_cosx = (kf_succ ? COS * (track.stateLJ[1][patt][it][3]-mcs[it]->dir[0]) : 0.);
+        //    Double_t hc_cosx = (hc_succ ? COS * (                hc_dir[it][0]-mcs[it]->dir[0]) : 0.);
+        //    
+        //    if (ck_succ) hCKcosx.at(it)->fillH2D(mc_mom, ck_cosx);
+        //    if (kf_succ) hKFcosx.at(it)->fillH2D(mc_mom, kf_cosx);
+        //    if (hc_succ) hHCcosx.at(it)->fillH2D(mc_mom, hc_cosx);
+        //    
+        //    Double_t ck_cosy = (ck_succ ? COS * (track.stateLJ[0][patt][it][4]-mcs[it]->dir[1]) : 0.);
+        //    Double_t kf_cosy = (kf_succ ? COS * (track.stateLJ[1][patt][it][4]-mcs[it]->dir[1]) : 0.);
+        //    Double_t hc_cosy = (hc_succ ? COS * (                hc_dir[it][1]-mcs[it]->dir[1]) : 0.);
+        //    
+        //    if (ck_succ) hCKcosy.at(it)->fillH2D(mc_mom, ck_cosy);
+        //    if (kf_succ) hKFcosy.at(it)->fillH2D(mc_mom, kf_cosy);
+        //    if (hc_succ) hHCcosy.at(it)->fillH2D(mc_mom, hc_cosy);
+        //}
     }
     
     ofle->Write();

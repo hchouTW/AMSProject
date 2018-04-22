@@ -647,17 +647,17 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
     Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
 
-    Double_t nrl     = mfld.nrl();
-    Double_t sqr_nrl = std::sqrt(nrl);
-    Double_t log_nrl = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
+    Double_t nrl      = mfld.nrl();
+    Double_t sqrt_nrl = std::sqrt(nrl);
+    Double_t log_nrl  = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
 
     // Highland-Lynch-Dahl formula
     //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
-    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqr_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
+    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
     
     // Modified Highland-Lynch-Dahl formula
     Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
-    Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqr_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
+    Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
 
     Double_t mscat_sgm = mscat_fat * part.info().invu() * (eta / bta);
    
@@ -674,11 +674,10 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t sqr_bta     = ((is_over_lmt) ? (part.bta() * part.bta()) : LMT_SQR_BTA);
     Double_t gm          = ((is_over_lmt) ? part.gm() : LMT_GM);
     Double_t sqr_chrg    = part.chrg() * part.chrg();
-    Double_t mass_in_GeV = part.mass();
-    Double_t mass_in_MeV = part.mass() * GEV_TO_MEV;
     
     // Trans KE[MeV] to Eta[1]
-    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / mass_in_MeV); // [1/MeV]
+    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / (PartInfo::ATOMIC_MASS * GEV_TO_MEV)); // [1/MeV]
+    if (!Numc::Valid(eta_trans)) eta_trans = Numc::ZERO<>;
     
     // Calculate Matterial Quality
     Double_t log_mean_exc_eng  = mfld.lme(); // log[MeV]
@@ -687,33 +686,28 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t Bethe_Bloch       = (Numc::HALF * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
     
     // Calculate Maximum Trans KE
-    Double_t mass_rat       = (MASS_EL_IN_GEV / mass_in_GeV); // [1]
+    Double_t mass_rat       = (MASS_EL_IN_GEV / part.mass()); // [1]
     Double_t mass_rel       = (Numc::ONE<> + mass_rat * (Numc::TWO<> * gm + mass_rat)); // [1]
     Double_t elpair_keng    = (Numc::TWO<> * MASS_EL_IN_MEV * sqr_gmbta); // [MeV]
     Double_t max_trans_keng = (elpair_keng / mass_rel); // [MeV]
     
-    // Trans
-    Double_t elion_xi  = (Bethe_Bloch * eta_trans); // [1]
-    Double_t elion_mk  = (max_trans_keng * eta_trans); // [1]
+    // Calculate Sigma
+    // TODO: (GEANT3 manual W5013) (From GenFit package)
+    Double_t elion_sgm = (eta_trans * Bethe_Bloch); // [1]
     
     // Calculate Global Material Quality
     // Calculate Ncl (Number of men eloss to maximum trans eng)
     Double_t global_ela = (corr_sw_eloss_ ? corr_mfld_.ela() : mfld.ela()); // Elcloud Abundance [mol cm^-2]
     Double_t global_BB  = (Numc::HALF * BETHE_BLOCH_K * global_ela * sqr_chrg / sqr_bta); // Bethe Bloch [MeV]
-    Double_t elion_ncl  = ((global_BB * eta_trans) / elion_mk); // [1]
 
     // Calculate Mean
     Double_t elke_part = (std::log(elpair_keng) - log_mean_exc_eng); // [1]
     Double_t mtke_part = (std::log(max_trans_keng) - log_mean_exc_eng); // [1]
-    Double_t elion_men = elion_xi * (elke_part + mtke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
+    Double_t elion_men = elion_sgm * (elke_part + mtke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
     
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
-    Double_t elion_mpv = elion_xi * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
-
-    // Calculate Sigma
-    // TODO: (GEANT3 manual W5013) (From GenFit package)
-    Double_t elion_sgm = elion_xi;
+    Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
@@ -723,6 +717,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
 }
 
 
+// TODO : need to modify to new struction
 Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     if (!part.arg().eloss()) return Numc::ZERO<>;
     Double_t chrgmass_sqr = (MASS_EL_IN_GEV * part.info().chrg_to_mass()) * (MASS_EL_IN_GEV * part.info().chrg_to_mass());

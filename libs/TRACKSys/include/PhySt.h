@@ -166,10 +166,12 @@ class PhySt {
         inline void reset(const PartInfo& info);
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass);
+        inline void reset(Double_t invu);
         
-        inline void recal(const PartInfo& info) { if (!info_.is_std() || info_.type() != info.type()) { info_ = info; set_eta(eta_); } }
-        inline void recal(const PartType& type) { if (!info_.is_std() || info_.type() != type) { info_.reset(type); set_eta(eta_); } }
+        inline void recal(const PartInfo& info) { info_ = info; set_eta(eta_); }
+        inline void recal(const PartType& type) { info_.reset(type); set_eta(eta_); }
         inline void recal(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); set_eta(eta_); }
+        inline void recal(Double_t invu) { info_.reset(invu); set_eta(eta_); }
         
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);

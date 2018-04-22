@@ -112,24 +112,25 @@ class TransferFunc {
 
 
 class PhyJb {
-    public :
-        static constexpr Int_t DIM_G = 5;
-        static constexpr Int_t DIM_L = 4;
+    private :
+        static constexpr Int_t DIMG = 6;
+        static constexpr Int_t DIML = 4;
 
-        using SMtxDGG = SMtxD<DIM_G, DIM_G>;
-        using SMtxDGL = SMtxD<DIM_G, DIM_L>;
+    public :
+        using SMtxDGG = SMtxD<DIMG, DIMG>;
+        using SMtxDGL = SMtxD<DIMG, DIML>;
         
-        using SMtxDXYG = SMtxD<2, DIM_G>;
-        using SMtxDXYL = SMtxD<2, DIM_L>;
+        using SMtxDXYG = SMtxD<2, DIMG>;
+        using SMtxDXYL = SMtxD<2, DIML>;
         
         inline static SMtxDXYG SubXYG(const SMtxDGG& jb) { return jb.Sub<SMtxDXYG>(0, 0); }
         inline static SMtxDXYL SubXYL(const SMtxDGL& jb) { return jb.Sub<SMtxDXYL>(0, 0); }
 
     public :
-        PhyJb(Double_t step = 0.) { init(step); }
+        PhyJb() { init(); }
         ~PhyJb() {}
 
-        inline void init(Double_t step = 0.);
+        inline void init();
         
         inline void set(PhySt& part, Double_t eta_abs = 0);
 

@@ -10,8 +10,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
    
-    Hist::Load("track_fill.root", "dat");
-    //Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test23");
+    //Hist::Load("track_fill.root", "dat");
+    Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test33");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
@@ -21,37 +21,39 @@ int main(int argc, char * argv[]) {
     Hist* hCKBrso = Hist::Head("hCKBrso");
     Hist* hKFBrso = Hist::Head("hKFBrso");
     Hist* hHCBrso = Hist::Head("hHCBrso");
+    
+    Hist* hHCMrso = Hist::Head("hHCMrso");
  
-    std::vector<Hist*> hCKresx(9, nullptr);
-    std::vector<Hist*> hKFresx(9, nullptr);
-    std::vector<Hist*> hHCresx(9, nullptr);
-    std::vector<Hist*> hCKresy(9, nullptr);
-    std::vector<Hist*> hKFresy(9, nullptr);
-    std::vector<Hist*> hHCresy(9, nullptr);
-    std::vector<Hist*> hCKcosx(9, nullptr);
-    std::vector<Hist*> hKFcosx(9, nullptr);
-    std::vector<Hist*> hHCcosx(9, nullptr);
-    std::vector<Hist*> hCKcosy(9, nullptr);
-    std::vector<Hist*> hKFcosy(9, nullptr);
-    std::vector<Hist*> hHCcosy(9, nullptr);
+    //std::vector<Hist*> hCKresx(9, nullptr);
+    //std::vector<Hist*> hKFresx(9, nullptr);
+    //std::vector<Hist*> hHCresx(9, nullptr);
+    //std::vector<Hist*> hCKresy(9, nullptr);
+    //std::vector<Hist*> hKFresy(9, nullptr);
+    //std::vector<Hist*> hHCresy(9, nullptr);
+    //std::vector<Hist*> hCKcosx(9, nullptr);
+    //std::vector<Hist*> hKFcosx(9, nullptr);
+    //std::vector<Hist*> hHCcosx(9, nullptr);
+    //std::vector<Hist*> hCKcosy(9, nullptr);
+    //std::vector<Hist*> hKFcosy(9, nullptr);
+    //std::vector<Hist*> hHCcosy(9, nullptr);
 
-    for (Int_t it = 0; it < 9; ++it) {
-        hCKresx.at(it) = Hist::Head(STR("hCKresxL%d", it+1));
-        hKFresx.at(it) = Hist::Head(STR("hKFresxL%d", it+1));
-        hHCresx.at(it) = Hist::Head(STR("hHCresxL%d", it+1));
-        
-        hCKresy.at(it) = Hist::Head(STR("hCKresyL%d", it+1));
-        hKFresy.at(it) = Hist::Head(STR("hKFresyL%d", it+1));
-        hHCresy.at(it) = Hist::Head(STR("hHCresyL%d", it+1));
-        
-        hCKcosx.at(it) = Hist::Head(STR("hCKcosxL%d", it+1));
-        hKFcosx.at(it) = Hist::Head(STR("hKFcosxL%d", it+1));
-        hHCcosx.at(it) = Hist::Head(STR("hHCcosxL%d", it+1));
-        
-        hCKcosy.at(it) = Hist::Head(STR("hCKcosyL%d", it+1));
-        hKFcosy.at(it) = Hist::Head(STR("hKFcosyL%d", it+1));
-        hHCcosy.at(it) = Hist::Head(STR("hHCcosyL%d", it+1));
-    }
+    //for (Int_t it = 0; it < 9; ++it) {
+    //    hCKresx.at(it) = Hist::Head(STR("hCKresxL%d", it+1));
+    //    hKFresx.at(it) = Hist::Head(STR("hKFresxL%d", it+1));
+    //    hHCresx.at(it) = Hist::Head(STR("hHCresxL%d", it+1));
+    //    
+    //    hCKresy.at(it) = Hist::Head(STR("hCKresyL%d", it+1));
+    //    hKFresy.at(it) = Hist::Head(STR("hKFresyL%d", it+1));
+    //    hHCresy.at(it) = Hist::Head(STR("hHCresyL%d", it+1));
+    //    
+    //    hCKcosx.at(it) = Hist::Head(STR("hCKcosxL%d", it+1));
+    //    hKFcosx.at(it) = Hist::Head(STR("hKFcosxL%d", it+1));
+    //    hHCcosx.at(it) = Hist::Head(STR("hHCcosxL%d", it+1));
+    //    
+    //    hCKcosy.at(it) = Hist::Head(STR("hCKcosyL%d", it+1));
+    //    hKFcosy.at(it) = Hist::Head(STR("hKFcosyL%d", it+1));
+    //    hHCcosy.at(it) = Hist::Head(STR("hHCcosyL%d", it+1));
+    //}
    
     const Axis& AXmom = hCKRrso->xaxis();
     const Axis& AXbta = hCKBrso->xaxis();
@@ -170,7 +172,6 @@ int main(int argc, char * argv[]) {
     for (int it = 1; it <= AXbta.nbin(); ++it) {
         // Choutko
         Double_t CKBmax = (*vhCKBrso.at(it))()->GetBinCenter((*vhCKBrso.at(it))()->GetMaximumBin());
-        //Double_t CKRmax = 0;
         Double_t CKBrms = (*vhCKBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, CKBmax, CKBrms);
         (*vhCKBrso.at(it))()->Fit(gaus, "q0", "");
@@ -187,7 +188,6 @@ int main(int argc, char * argv[]) {
         
         // Kalman Filter
         Double_t KFBmax = (*vhKFBrso.at(it))()->GetBinCenter((*vhKFBrso.at(it))()->GetMaximumBin());
-        //Double_t KFRmax = 0;
         Double_t KFBrms = (*vhKFBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, KFBmax, KFBrms);
         (*vhKFBrso.at(it))()->Fit(gaus, "q0", "");
@@ -204,7 +204,6 @@ int main(int argc, char * argv[]) {
         
         // Hsin-Yi Chou
         Double_t HCBmax = (*vhHCBrso.at(it))()->GetBinCenter((*vhHCBrso.at(it))()->GetMaximumBin());
-        //Double_t HCRmax = 0;
         Double_t HCBrms = (*vhHCBrso.at(it))()->GetRMS();
         gaus->SetParameters(1000, HCBmax, HCBrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "");
@@ -242,6 +241,35 @@ int main(int argc, char * argv[]) {
     hHCCKBrsoS->style(Fill(), Line(kRed), Marker(kRed));
     THStack* chBrsoS = Hist::Collect("chBrsoS", HistList({ hKFCKBrsoS, hHCCKBrsoS }));
     chBrsoS->Write();
+
+
+    COUT("Mrso\n");
+    Hist* hHCMrsoM = Hist::New("hHCMrsoM", HistAxis(AXbta, "1/Mass Mean [1/GeV]"));
+    Hist* hHCMrsoS = Hist::New("hHCMrsoS", HistAxis(AXbta, "1/Mass Sigma [1/GeV]"));
+    
+    std::vector<Hist*> vhHCMrso = Hist::ProjectAll(HistProj::kY, hHCMrso);
+
+    for (int it = 1; it <= AXbta.nbin(); ++it) {
+        // Hsin-Yi Chou
+        Double_t HCMmax = (*vhHCMrso.at(it))()->GetBinCenter((*vhHCMrso.at(it))()->GetMaximumBin());
+        Double_t HCMrms = (*vhHCMrso.at(it))()->GetRMS();
+        gaus->SetParameters(1000, HCMmax, HCMrms);
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "");
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", HCMmax-stable*HCMrms, HCMmax+stable*HCMrms);
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
+    
+        (*hHCMrsoM)()->SetBinContent(it, gaus->GetParameter(1));
+        (*hHCMrsoM)()->SetBinError  (it, gaus->GetParError(1));
+        (*hHCMrsoS)()->SetBinContent(it, gaus->GetParameter(2));
+        (*hHCMrsoS)()->SetBinError  (it, gaus->GetParError(2));
+    } 
+    
+    hHCMrsoM->write();
+    hHCMrsoS->write();
+
 
 /*
     COUT("resx\n");
