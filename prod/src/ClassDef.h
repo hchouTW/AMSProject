@@ -453,7 +453,7 @@ class TrackInfo : public TObject {
 			QL1 = -1;
 			QL9 = -1;
 		
-            constexpr int naglo = 3;
+            constexpr int naglo = 2;
 			std::fill_n(status[0], naglo * 4, false);
 			std::fill_n(rig[0], naglo * 4, 0);
 			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
@@ -483,19 +483,57 @@ class TrackInfo : public TObject {
 		Float_t QL2;
 		Float_t QL9;
 
-		// Algorithm     (CHOUTKO, KALMAN, HCHOU)
+		// Algorithm     (CHOUTKO, KALMAN)
 		// Track Pattern (Inn, InnL1, InnL9, FS)
-		Bool_t  status[3][4];
-		Float_t rig[3][4];
-		Float_t chisq[3][4][3]; // normalized chisq (X, Y, XY)
-		Float_t stateLJ[3][4][9][7]; // track state at ecah layer (x y z dirx diry dirz rig)
+		Bool_t  status[2][4];
+		Float_t rig[2][4];
+		Float_t chisq[2][4][3]; // normalized chisq (X, Y, XY)
+		Float_t stateLJ[2][4][9][7]; // track state at each layer (x y z dirx diry dirz rig)
         
-        Float_t cpuTime[3][4]; // [ms]
+        Float_t cpuTime[2][4]; // [ms]
 	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
 
-	ClassDef(TrackInfo, 8)
+	ClassDef(TrackInfo, 9)
+};
+
+
+// HCTrackInfo
+class HCTrackInfo : public TObject {
+	public :
+		HCTrackInfo() { init(); }
+		~HCTrackInfo() {}
+
+		void init() {
+            status = false;
+            chrg = 0;
+            mass = 0;
+            std::fill_n(statusLJ, 9, false);
+            std::fill_n(stateLJ[0], 9*8, 0);
+            nchi = 0;
+            nchi_cx = 0;
+            nchi_cy = 0;
+            nrm_mstau = 0;
+            nrm_msrho = 0;
+            cpuTime = 0;
+        }
+	
+    public :
+        Bool_t  status;
+
+        Short_t chrg;
+        Float_t mass;
+        Bool_t  statusLJ[9];
+        Float_t stateLJ[9][8]; // track state at each layer (x y z dirx diry dirz irig bta)
+
+        Float_t nchi;
+        Float_t nchi_cx;
+        Float_t nchi_cy;
+        Float_t nrm_mstau;
+        Float_t nrm_msrho;
+
+        Float_t cpuTime;
 };
 
 
@@ -783,6 +821,7 @@ class TRK : public TObject {
             numOfTrack = 0;
 
 			track.init();
+            hcTrack.init();
 
             ftL56Dist = -1;
             survHeL56Prob = -1;
@@ -798,6 +837,9 @@ class TRK : public TObject {
         Short_t numOfTrack;
 
 		TrackInfo track;
+
+        // Hsin-Yi tools
+        HCTrackInfo hcTrack;
 
         // Haino's tools
         Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)

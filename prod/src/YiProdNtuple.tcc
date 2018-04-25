@@ -41,7 +41,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		iTrdHTrack  = (par->iTrdHTrack()  < 0) ? -1 : par->iTrdHTrack() ;
 		iRichRing   = (par->iRichRing()   < 0) ? -1 : par->iRichRing()  ;
 
-		for (int it = 0; it < event->NBetaH() && iTrTrack>=0; ++it)
+		for (UInt_t it = 0; it < event->NBetaH() && iTrTrack>=0; ++it)
 			if (event->pBetaH(it)->iTrTrack() == iTrTrack) iBetaH = it;
 
 		isParticle = true;
@@ -212,7 +212,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
         constexpr Int_t EcLay[2] = { -1019, -1020 };
 		    
         constexpr Float_t kEngTh = 5.0e-2; 
-        for (int it = 0; it < event->NMCEventg(); it++) {
+        for (UInt_t it = 0; it < event->NMCEventg(); it++) {
 		    MCEventgR * mcev = event->pMCEventg(it);
 		    if (mcev == nullptr) continue;
             Int_t id = (mcev->trkID == primary->trkID) + (mcev->parentID == primary->trkID) * 2;
@@ -262,7 +262,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		std::sort(fG4mc.primPart.segs.begin(), fG4mc.primPart.segs.end(), SegPARTMCInfo_sort());
         if (fG4mc.primVtx.numOfPart < 2) fG4mc.primVtx.init();
 
-		for (int icls = 0; icls < event->NTrMCCluster(); icls++) {
+		for (UInt_t icls = 0; icls < event->NTrMCCluster(); icls++) {
 			TrMCClusterR * cluster = event->pTrMCCluster(icls);
 			if (cluster == nullptr) continue;
 			if (cluster->GetGtrkID() != primary->trkID) continue;
@@ -657,7 +657,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	
     const double ChrgLimit = 0.875;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
-	for (int it = 0; it < event->NTofClusterH(); ++it) {
+	for (UInt_t it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
 		if (cls == nullptr) continue;
 		if (betaHClsId.at(cls->Layer) == it) continue;
@@ -672,7 +672,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (checkEventMode(EventBase::MC)) {
         int    mcnum[4] = {0};
         double mcbta[4] = {0};
-        for (int it = 0; it < event->NTofMCCluster(); ++it) {
+        for (UInt_t it = 0; it < event->NTofMCCluster(); ++it) {
             TofMCClusterR* cls = event->pTofMCCluster(it);
             if (cls == nullptr) continue;
             if (cls->GtrkID != 1) continue;
@@ -746,7 +746,7 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 		double timeRange[2] = { (time.front() - 5. * TimeOfOneM), (time.back()  + 10. * TimeOfOneM) };
 		double minTimeOfTOF = time.front();
 
-		for (int icls = 0; icls < event->NAntiCluster(); ++icls) {
+		for (UInt_t icls = 0; icls < event->NAntiCluster(); ++icls) {
 			AntiClusterR * cls = event->pAntiCluster(icls);
 			if (cls == nullptr) continue;
 			if (cls->time < timeRange[0] || cls->time > timeRange[1]) continue;
@@ -997,60 +997,45 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 track.cpuTime[algo][patt] = sw.time() * 1.0e3;
 			} // for loop - pattern
 		}
+		fTrk.track = track;
 
         // HChou Fitting
-        /*
         TrackSys::TrFitPar fitPar(TrackSys::PartType::Proton);
-        TrackSys::HitStTRK mhitL1;
-        TrackSys::HitStTRK mhitL9;
-        for (auto&& hit : track.hits) {
-            TrackSys::HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
-            mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_adc(hit.adc[0], hit.adc[1]);
-            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.addHit(mhit);
-            else {
-                if (hit.layJ == 1) mhitL1 = mhit;
-                if (hit.layJ == 9) mhitL9 = mhit;
-            }
-        }
-
-		for (int patt = 0; patt < _npatt; patt++) {
-            const int algo = 2;
-            TrackSys::TrFitPar _fitPar = fitPar;
-            if (_patt[patt] == 5 || _patt[patt] == 7) { if (!(mhitL1.csx() || mhitL1.csy())) continue; _fitPar.addHit(mhitL1); }
-            if (_patt[patt] == 6 || _patt[patt] == 7) { if (!(mhitL9.csx() || mhitL9.csy())) continue; _fitPar.addHit(mhitL9); }
-          
-            MGClock::HrsStopwatch sw; sw.start();
-            //TrackSys::SimpleTrFit hctr(_fitPar);
-            TrackSys::PhyTrFit    hctr(_fitPar);
-            sw.stop();
-            
-            if (!hctr.status()) continue;
-
-            track.status[algo][patt] = true;
-			track.rig[algo][patt] = hctr.part().rig();
-			track.chisq[algo][patt][0] = hctr.nchix();
-			track.chisq[algo][patt][1] = hctr.nchiy();
-			track.chisq[algo][patt][2] = hctr.nchi();
+        fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTRK(*trtk, 0));
+        fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH)));
+        
+        MGClock::HrsStopwatch swhc; swhc.start();
+        Bool_t is_fixed_mass = true;
+        TrackSys::PhyTrFit hctr(fitPar, is_fixed_mass);
+        swhc.stop();
+        if (hctr.status()) {
+            fTrk.hcTrack.status = hctr.status();
+            fTrk.hcTrack.chrg   = hctr.part().chrg();
+            fTrk.hcTrack.mass   = hctr.part().mass();
 
             for (Int_t il = 0; il < 9; ++il) {
-                const TrackSys::PhySt* stt = hctr.stts(il+1);
-                if (stt == nullptr) continue;
-				track.stateLJ[algo][patt][il][0] = stt->cx();
-				track.stateLJ[algo][patt][il][1] = stt->cy();
-				track.stateLJ[algo][patt][il][2] = stt->cz();
-				track.stateLJ[algo][patt][il][3] = stt->ux();
-				track.stateLJ[algo][patt][il][4] = stt->uy();
-				track.stateLJ[algo][patt][il][5] = stt->uz();
-				track.stateLJ[algo][patt][il][6] = stt->rig();
+                Double_t zcoo = recEv.trackerZJ[il];
+                TrackSys::PhySt&& phySt = hctr.interpolate_to_z(zcoo);
+                if (TrackSys::Numc::EqualToZero(phySt.mom())) continue;
+                fTrk.hcTrack.statusLJ[il] = true;
+                fTrk.hcTrack.stateLJ[il][0] = phySt.cx();
+                fTrk.hcTrack.stateLJ[il][1] = phySt.cy();
+                fTrk.hcTrack.stateLJ[il][2] = phySt.cz();
+                fTrk.hcTrack.stateLJ[il][3] = phySt.ux();
+                fTrk.hcTrack.stateLJ[il][4] = phySt.uy();
+                fTrk.hcTrack.stateLJ[il][5] = phySt.uz();
+                fTrk.hcTrack.stateLJ[il][6] = phySt.irig();
+                fTrk.hcTrack.stateLJ[il][7] = phySt.bta();
             }
+            
+            fTrk.hcTrack.nchi = hctr.nchi();
+            fTrk.hcTrack.nchi_cx = hctr.nchi_cx();
+            fTrk.hcTrack.nchi_cy = hctr.nchi_cy();
+            fTrk.hcTrack.nrm_mstau = hctr.nrm_mstau();
+            fTrk.hcTrack.nrm_msrho = hctr.nrm_msrho();
 
-            track.cpuTime[algo][patt] = sw.time() * 1.0e3;
+            fTrk.hcTrack.cpuTime = swhc.time() * 1.0e3;
         }
-        */
-
-		fTrk.track = track;
 	}
 
     // Haino's tools
@@ -2257,7 +2242,7 @@ void YiNtuple::saveInputFileList(TFile * file) {
 	TTree * tree = new TTree("fileList", "List Of Input File Info");
 	TString filePath;
 	tree->Branch("file", &filePath);
-	for (int i = 0; i < fFileList.size(); ++i) {
+	for (UInt_t i = 0; i < fFileList.size(); ++i) {
 		filePath = TString(fFileList.at(i).c_str());
 		tree->Fill();
 	}

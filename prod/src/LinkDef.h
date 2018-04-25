@@ -44,6 +44,9 @@
 #pragma link C++ class TrackInfo;
 #pragma link C++ class std::vector<TrackInfo>+;
 
+#pragma link C++ class HCTrackInfo;
+#pragma link C++ class std::vector<HCTrackInfo>+;
+
 #pragma link C++ class VertexInfo;
 #pragma link C++ class std::vector<VertexInfo>+;
 
