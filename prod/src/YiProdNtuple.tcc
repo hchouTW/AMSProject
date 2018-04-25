@@ -1005,8 +1005,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH)));
         
         MGClock::HrsStopwatch swhc; swhc.start();
-        Bool_t is_fixed_mass = true;
-        TrackSys::PhyTrFit hctr(fitPar, is_fixed_mass);
+        //TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFixed);
+        TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFree);
         swhc.stop();
         if (hctr.status()) {
             fTrk.hcTrack.status = hctr.status();

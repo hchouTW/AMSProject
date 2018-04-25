@@ -180,10 +180,15 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
 
 class PhyTrFit : protected TrFitPar {
     public :
+        enum class MassOpt {
+            kFixed = 0, kFree = 1
+        };
+
+    public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass = true);
+        PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt = MassOpt::kFixed);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
@@ -221,7 +226,7 @@ class PhyTrFit : protected TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(Bool_t is_fixed_mass = true, Double_t scl = 0);
+        Bool_t physicalFit(const MassOpt& massOpt = MassOpt::kFixed, Double_t scl = 0);
 
         Bool_t evolve();
 

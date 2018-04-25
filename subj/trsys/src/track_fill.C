@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -13,14 +13,14 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
 
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
@@ -194,7 +194,7 @@ int main(int argc, char * argv[]) {
         
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        TrFitPar fitPar(PartType::Fixed, true);
+        TrFitPar fitPar(PartType::Fixed);
         for (auto&& hit : track.hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
@@ -254,17 +254,15 @@ int main(int argc, char * argv[]) {
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
         
-        //if (mc_mom < 1.0 || mc_mom > 20.0) continue; // testcode
+        //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
         //if (mc_mom > 1.0) continue; // testcode
+        //if (mc_mom < 10.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //SimpleTrFit tr(fitPar);
         PartInfo::SetDefault(PartType::Proton);
-        PhyTrFit tr(fitPar);
-        //PhyMassFit mfit(fitPar, 1);
-        //const PhyTrFit& tr = *mfit();
+        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
         sw.stop();
-        //if (!mfit.status()) continue;
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
         Double_t hc_tme  = sw.time()*1.0e3;
@@ -278,7 +276,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        CERR("MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        //CERR("FINAL FIT == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

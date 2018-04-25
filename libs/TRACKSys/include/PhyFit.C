@@ -573,7 +573,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     return *this;
 }
 
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitPar) {
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt) : TrFitPar(fitPar) {
     PhyTrFit::clear();
     if (!check_hits()) return;
     nsegs_ = (nhits() >= Numc::TWO<Short_t>) ? (nhits() - Numc::ONE<Short_t>) : 0;
@@ -583,12 +583,12 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitP
     ndof_TRKq_ = nmes_TRKqx_ + nmes_TRKqy_;
     ndof_TOFq_ = nmes_TOFq_;
     ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
-    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - (is_fixed_mass?0:1));
+    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - ((MassOpt::kFixed == massOpt) ? 0 : 1));
     if (ndof_ == Numc::ZERO<Short_t>) return;
     Short_t absChrg = std::abs(info_.chrg());
 
     // Fixed Mass
-    if (is_fixed_mass) succ_ = (simpleFit() ? physicalFit() : false);
+    if (MassOpt::kFixed == massOpt) succ_ = (simpleFit() ? physicalFit() : false);
     // Free Mass
     else if (absChrg > Numc::ZERO<Short_t> && absChrg < PartListMassQ.size()) {
         auto&& compless = [] (const Double_t& a, const Double_t& b) { return ((a > Numc::ZERO<>) ? ((b > Numc::ZERO<>) ? a < b : a > Numc::ZERO<>) : false); }; // return true, if a < b or only a
@@ -619,11 +619,11 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitP
         std::vector<PhyArg> args = args_;
         
         Int_t seedIter = 0;
-        const std::vector<Double_t> seedVec({ 0.3, 0.7, 0.7 });
-        const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::FIVE<>/Numc::SIX<> });
-        const std::vector<Double_t> flucVec({ 0.02, 0.05, 0.05 });
+        const std::vector<Double_t> seedVec({ Numc::THREE<>/Numc::TEN<>, Numc::FIVE<>/Numc::TEN<>, Numc::SEVEN<>/Numc::TEN<> });
+        const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::SIX<>/Numc::SEVEN<> });
+        const std::vector<Double_t> flucVec({ Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
         while (Numc::Compare(minNchi) > 0 && seedIter < seedVec.size()) {
-            CERR("ITER %d MIN_NCHI %14.8f\n", seedIter, minNchi);
+            //CERR("ITER %d MIN_NCHI %14.8f\n", seedIter, minNchi); // testcode
             std::vector<Double_t> listVal;
             Short_t consistSelfCnt = Numc::ZERO<Int_t>;
             for (UInt_t it = 0; it < listMass.size(); ++it) {
@@ -633,7 +633,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitP
 
                 part_ = refSt.at(it);
                 args_ = refArgs.at(it);
-                Bool_t succ = physicalFit(is_fixed_mass, seedVec.at(seedIter));
+                Bool_t succ = physicalFit(massOpt, seedVec.at(seedIter));
                 if (!succ) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
                 Double_t fluc = std::fabs(refNchi.at(it) - nchi_) / (refNchi.at(it) + nchi_);
                 if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
@@ -670,7 +670,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitP
         }
 
         // Final
-        CERR("FINE\n");
+        //CERR("FINE\n"); // testcode
         if (Numc::Compare(nchi) > 0) {
             part_ = part;
             args_ = args;
@@ -718,7 +718,8 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(Bool_t is_fixed_mass, Double_t scl) {
+Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
+    Bool_t is_fixed_mass = (MassOpt::kFixed == massOpt);
     Bool_t resetArg = (args_.size() != nhits()-1);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     if (resetArg) args_ = std::move(std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_)));
@@ -881,7 +882,7 @@ Bool_t PhyTrFit::evolve() {
     stts_ = std::move(stts);
     info_ = part_.info();
     
-    CERR("PhyTrFit::SUCC (RIG %14.8f MASS %14.8f NCHI %14.8f)\n", part_.rig(), part_.mass(), nchi_);
+    //CERR("PhyTrFit::SUCC (RIG %14.8f MASS %14.8f NCHI %14.8f)\n", part_.rig(), part_.mass(), nchi_);
     return true;
 }
 

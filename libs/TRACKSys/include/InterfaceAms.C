@@ -14,7 +14,7 @@ static std::vector<HitStTRK> GetHitStTRK(TrTrackR& trtk, Int_t patt, Bool_t hasQ
     std::vector<HitStTRK> hits;
 	
     std::vector<Short_t>  lay;
-    std::vector<SVecI<2>> nsr;
+    std::vector<SVecS<2>> nsr;
     std::vector<SVecD<3>> coo;
     std::vector<SVecD<2>> chg;
     for (Int_t layJ = 1; layJ <= 9; ++layJ) {
@@ -69,11 +69,11 @@ static std::vector<HitStTRK> GetHitStTRK(TrTrackR& trtk, Int_t patt, Bool_t hasQ
 		for (int it = yseedIndx+1; (ycls!=nullptr) && it < ystripSS.size(); ++it)
             if (ystripSS.at(it) < ystripSS.at(it-1)+GateTh && ystripSS.at(it) > ylenTh) yreg[1] = it; else break;
             
-        Int_t nsrx = (xcls != nullptr) ? (xreg[1]-xreg[0]+1) : -1;
-        Int_t nsry = (ycls != nullptr) ? (yreg[1]-yreg[0]+1) : -1;
+        Short_t nsrx = (xcls != nullptr) ? (xreg[1]-xreg[0]+1) : -1;
+        Short_t nsry = (ycls != nullptr) ? (yreg[1]-yreg[0]+1) : -1;
           
         lay.push_back(layJ);
-        nsr.push_back(SVecI<2>(nsrx, nsry));
+        nsr.push_back(SVecS<2>(nsrx, nsry));
         coo.push_back(SVecD<3>(pnt.x(), pnt.y(), pnt.z()));
         chg.push_back(SVecD<2>(qx, qy));
     }

@@ -19,8 +19,13 @@ template<typename T = Double_t> constexpr T THREE  = static_cast<T>(3);
 template<typename T = Double_t> constexpr T FOUR   = static_cast<T>(4);
 template<typename T = Double_t> constexpr T FIVE   = static_cast<T>(5);
 template<typename T = Double_t> constexpr T SIX    = static_cast<T>(6);
+template<typename T = Double_t> constexpr T SEVEN  = static_cast<T>(7);
 template<typename T = Double_t> constexpr T EIGHT  = static_cast<T>(8);
+template<typename T = Double_t> constexpr T NINE   = static_cast<T>(9);
 template<typename T = Double_t> constexpr T TEN    = static_cast<T>(10);
+
+template<typename T = Double_t> constexpr T HUNDRED  = static_cast<T>(100);
+template<typename T = Double_t> constexpr T THOUSAND = static_cast<T>(1000);
 
 constexpr Double_t HALF = 5.00000000000000000e-01;
 
