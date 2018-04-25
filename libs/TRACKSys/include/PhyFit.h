@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), Bool_t is_fixed_mass = true, const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -32,7 +32,6 @@ class TrFitPar {
         inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
        
-        inline void set_fixed_mass(Bool_t is_fixed_mass = true) { is_fixed_mass_ = is_fixed_mass; zero(); }
         inline void set_info(const PartInfo& info = PartInfo(PartType::Proton)) { info_ = info; zero(); }
         inline void set_ortt(const Orientation& ortt = Orientation::kDownward) { ortt_ = ortt; zero(); }
 
@@ -53,7 +52,6 @@ class TrFitPar {
         Bool_t check_hits();
 
     protected :
-        Bool_t      is_fixed_mass_;
         Bool_t      sw_mscat_;
         Bool_t      sw_eloss_;
         PartInfo    info_;
@@ -155,7 +153,7 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : TrFitPar(fitPar), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*DIML, DIMG+(nhits()-1)*DIML); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_fixed_mass = true) : TrFitPar(fitPar), is_fixed_mass_(is_fixed_mass), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*DIML, DIMG+(nhits()-1)*DIML); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :
@@ -170,9 +168,10 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
         }
 
-        inline void clear() { info_.reset(info_.type()); part_.reset(info_); part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); }
+        inline void clear() { info_ = part_.info(); is_fixed_mass_ = true; part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); part_.reset(part_.info()); }
     
     protected :
+        Bool_t is_fixed_mass_;
         Int_t numOfRes_;
         Int_t numOfPar_;
         PhySt part_;
@@ -184,7 +183,7 @@ class PhyTrFit : protected TrFitPar {
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar);
+        PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass = true);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
@@ -222,7 +221,7 @@ class PhyTrFit : protected TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(Double_t scl = 0);
+        Bool_t physicalFit(Bool_t is_fixed_mass = true, Double_t scl = 0);
 
         Bool_t evolve();
 
@@ -255,20 +254,20 @@ class PhyTrFit : protected TrFitPar {
 };
 
 
-class PhyMassFit : private TrFitPar {
-    public :
-        PhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>);
-        ~PhyMassFit() { PhyMassFit::clear(); }
-
-        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
-        inline const PhyTrFit* operator() () const { return phyTr_; }
-
-    protected :
-        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
-
-    protected :
-        PhyTrFit* phyTr_;
-};
+//class PhyMassFit : private TrFitPar {
+//    public :
+//        PhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>);
+//        ~PhyMassFit() { PhyMassFit::clear(); }
+//
+//        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
+//        inline const PhyTrFit* operator() () const { return phyTr_; }
+//
+//    protected :
+//        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
+//
+//    protected :
+//        PhyTrFit* phyTr_;
+//};
 
 
 //class VirtualPhyMassFit {

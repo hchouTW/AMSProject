@@ -93,7 +93,7 @@ void PhyJb::init() {
 
 void PhyJb::set(PhySt& part, Double_t eta_abs) {
     if (part.info().is_massless() || part.info().is_chrgless()) return;
-    PhyArg& arg = part.arg();
+    const PhyArg& arg = part.arg();
     if (!arg()) return;
     field_ = true;
 
@@ -154,7 +154,6 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
                             );
     }
     if (arg.eloss()) {
-        //jb_gl_(JEA, JION) = part.eta() * (arg.sign() * arg.elion_sgm());
     }
 }
 

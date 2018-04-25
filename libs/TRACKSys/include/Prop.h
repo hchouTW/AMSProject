@@ -120,12 +120,6 @@ class PhyJb {
         using SMtxDGG = SMtxD<DIMG, DIMG>;
         using SMtxDGL = SMtxD<DIMG, DIML>;
         
-        using SMtxDXYG = SMtxD<2, DIMG>;
-        using SMtxDXYL = SMtxD<2, DIML>;
-        
-        inline static SMtxDXYG SubXYG(const SMtxDGG& jb) { return jb.Sub<SMtxDXYG>(0, 0); }
-        inline static SMtxDXYL SubXYL(const SMtxDGL& jb) { return jb.Sub<SMtxDXYL>(0, 0); }
-
     public :
         PhyJb() { init(); }
         ~PhyJb() {}
@@ -143,9 +137,6 @@ class PhyJb {
         
         inline Double_t& gg(Int_t i, Int_t j) { return jb_gg_(i, j); }
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
-
-        inline SMtxDXYG xyg() { return jb_gg_.Sub<SMtxDXYG>(0, 0); }
-        inline SMtxDXYL xyl() { return jb_gl_.Sub<SMtxDXYL>(0, 0); }
 
     private :
         Bool_t   field_;

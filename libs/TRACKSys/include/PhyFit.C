@@ -16,7 +16,6 @@ void TrFitPar::print() const {
         
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
-        is_fixed_mass_ = rhs.is_fixed_mass_;
         sw_mscat_      = rhs.sw_mscat_;
         sw_eloss_      = rhs.sw_eloss_;
         info_          = rhs.info_;
@@ -47,10 +46,9 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     return *this;
 }
     
-TrFitPar::TrFitPar(const PartInfo& info, Bool_t is_fixed_mass, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
+TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
     clear();
 
-    is_fixed_mass_ = is_fixed_mass;
     sw_mscat_ = sw_mscat;
     sw_eloss_ = sw_eloss;
     info_ = info;
@@ -168,21 +166,20 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_);
     if (ndof_ == Numc::ZERO<Short_t>) return;
 
-    Bool_t fixm    = is_fixed_mass_;
-    is_fixed_mass_ = true;
     succ_ = (analyticalFit() ? simpleFit() : false);
-    is_fixed_mass_ = fixm;
     
-    if (succ_ && !is_fixed_mass_) succ_ = simpleFit();
     if (succ_) info_ = part_.info();
     else { SimpleTrFit::clear(); COUT("SimpleTrFit::FAIL.\n"); }
 }
 
 
 void SimpleTrFit::clear() {
+    sw_mscat_ = false;
+    sw_eloss_ = false;
+    
     succ_ = false;
     part_.reset(info_);
-    part_.arg().reset(false, false);
+    part_.arg().reset(sw_mscat_, sw_eloss_);
 
     ndof_      = 0;
     ndof_cx_   = 0;
@@ -369,11 +366,11 @@ Bool_t SimpleTrFit::simpleFit() {
     Bool_t preSucc = false;
     Bool_t curSucc = false;
 
-    Double_t       curLmRhoDen = Numc::ONE<>;
-    Double_t       lambda = LAMBDA0;
-    PhySt          rltSt(part_);
-    SVecD<DIMG>    curGrdG;
-    SMtxSymD<DIMG> curCvGG;
+    Double_t    curLmRhoDen = Numc::ONE<>;
+    Double_t    lambda = LAMBDA0;
+    PhySt       rltSt(part_);
+    SVecD<5>    curGrdG;
+    SMtxSymD<5> curCvGG;
 
     UInt_t updIter = 0;
     UInt_t curIter = 0;
@@ -388,16 +385,16 @@ Bool_t SimpleTrFit::simpleFit() {
         Double_t chi_TOFq = 0;
         Double_t chi_TOFt = 0;
         
-        SVecD<DIMG>    grdG;
-        SMtxSymD<DIMG> cvGG;
+        SVecD<5>    grdG;
+        SMtxSymD<5> cvGG;
 
         UInt_t cnt_nhit = 0;
         PhySt ppst(rltSt);
-        PhyJb::SMtxDGG&& ppjb = SMtxId();
+        SMtxD<5>&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
             PhyJb curjb;
             if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr, &curjb)) break;
-            ppjb = curjb.gg() * ppjb;
+            ppjb = (curjb.gg()).Sub<SMtxD<5>>(0, 0) * ppjb;
         
             if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
                 HitStTOF::SetOffsetPath(ppst.path());
@@ -406,11 +403,11 @@ Bool_t SimpleTrFit::simpleFit() {
             }
             hit->cal(ppst);
 
-            SVecD<2>       rsC;
-            SMtxD<2, DIMG> jbC;
+            SVecD<2>    rsC;
+            SMtxD<2, 5> jbC;
             if (hit->scx()) rsC(0) += hit->nrmcx();
             if (hit->scy()) rsC(1) += hit->nrmcy();
-            for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+            for (UInt_t it = 0; it < 5; ++it) {
                 if (hit->scx()) jbC(0, it) += hit->divcx() * ppjb(0, it);
                 if (hit->scy()) jbC(1, it) += hit->divcy() * ppjb(1, it);
             }
@@ -422,11 +419,11 @@ Bool_t SimpleTrFit::simpleFit() {
             
             HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
             if (hitTRK != nullptr) {
-                SVecD<2>       rsTRK;
-                SMtxD<2, DIMG> jbTRK;
+                SVecD<2>    rsTRK;
+                SMtxD<2, 5> jbTRK;
                 if (hitTRK->sqx()) rsTRK(0) += hitTRK->nrmqx();
                 if (hitTRK->sqy()) rsTRK(1) += hitTRK->nrmqy();
-                for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+                for (UInt_t it = 0; it < 5; ++it) {
                     if (hitTRK->sqx()) jbTRK(0, it) += hitTRK->divqx() * ppjb(4, it);
                     if (hitTRK->sqy()) jbTRK(1, it) += hitTRK->divqy() * ppjb(4, it);
                 }
@@ -438,11 +435,11 @@ Bool_t SimpleTrFit::simpleFit() {
 
             HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
             if (hitTOF != nullptr) {
-                SVecD<2>       rsTOF;
-                SMtxD<2, DIMG> jbTOF;
+                SVecD<2>    rsTOF;
+                SMtxD<2, 5> jbTOF;
                 if (hitTOF->sq()) rsTOF(0) += hitTOF->nrmq();
                 if (hitTOF->st()) rsTOF(1) += hitTOF->nrmt();
-                for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+                for (UInt_t it = 0; it < 5; ++it) {
                     if (hitTOF->sq()) jbTOF(0, it) += hitTOF->divq() * ppjb(4, it);
                     if (hitTOF->st()) jbTOF(1, it) += hitTOF->divt() * ppjb(4, it);
                 }
@@ -489,9 +486,9 @@ Bool_t SimpleTrFit::simpleFit() {
         }
         else { nchi_ = nchi; }
 
-        SMtxSymD<DIMG> lmCvGG(cvGG);
-        SVecD<DIMG>&&  diagCvGG = (lambda * cvGG.Diagonal());
-        lmCvGG.SetDiagonal(SVecD<DIMG>(lmCvGG.Diagonal() + diagCvGG));
+        SMtxSymD<5> lmCvGG(cvGG);
+        SVecD<5>&&  diagCvGG = (lambda * cvGG.Diagonal());
+        lmCvGG.SetDiagonal(SVecD<5>(lmCvGG.Diagonal() + diagCvGG));
 
         Bool_t isNomag = (Numc::EqualToZero(lmCvGG(4, 4)) && Numc::EqualToZero(grdG(4))); // Fast Check
         if (isNomag) {
@@ -499,28 +496,19 @@ Bool_t SimpleTrFit::simpleFit() {
             grdG(5) = Numc::ZERO<>;
             SMtxSymD<4>&& lmCvGG_nomag = lmCvGG.Sub<SMtxSymD<4>>(0, 0);
             if (!lmCvGG_nomag.Invert()) break;
-            lmCvGG = std::move(SMtxSymD<DIMG>());
+            lmCvGG = std::move(SMtxSymD<5>());
             for (UInt_t ielem = 0; ielem < 4; ++ielem)
                 for (UInt_t jelem = ielem; jelem < 4; ++jelem)
                     lmCvGG(ielem, jelem) = lmCvGG_nomag(ielem, jelem);
-        }
-        else if (is_fixed_mass_) {
-            grdG(5) = Numc::ZERO<>;
-            SMtxSymD<5>&& lmCvGG_nom = lmCvGG.Sub<SMtxSymD<5>>(0, 0);
-            if (!lmCvGG_nom.Invert()) break;
-            lmCvGG = std::move(SMtxSymD<DIMG>());
-            for (UInt_t ielem = 0; ielem < 5; ++ielem)
-                for (UInt_t jelem = ielem; jelem < 5; ++jelem)
-                    lmCvGG(ielem, jelem) = lmCvGG_nom(ielem, jelem);
         }
         else {
             if (!lmCvGG.Invert()) break;
         }
 
-        SVecD<DIMG>&& rslG = (lmCvGG * grdG);
+        SVecD<5>&& rslG = (lmCvGG * grdG);
        
         curLmRhoDen = Numc::ZERO<>;
-        for (UInt_t p = 0; p < DIMG; ++p)
+        for (UInt_t p = 0; p < 5; ++p)
             curLmRhoDen += (rslG(p) * (diagCvGG(p)*rslG(p) + grdG(p)));
         
         if (curIter == 0 || isUpdate) {
@@ -537,11 +525,6 @@ Bool_t SimpleTrFit::simpleFit() {
             ((ortt_ == Orientation::kDownward) ? Numc::NEG<Short_t> : Numc::ONE<Short_t>)
         );
         rltSt.set_eta(rltSt.eta() - rslG(4));
-
-        if (!is_fixed_mass_) {
-            Double_t invu = (rltSt.info().invu() - rslG(5));
-            if (Numc::Compare(invu)>0) rltSt.recal(invu);
-        }
         
         preSucc = curSucc;
         curSucc = (isSucc && updIter >= LMTL_ITER);
@@ -590,7 +573,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     return *this;
 }
 
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar, Bool_t is_fixed_mass) : TrFitPar(fitPar) {
     PhyTrFit::clear();
     if (!check_hits()) return;
     nsegs_ = (nhits() >= Numc::TWO<Short_t>) ? (nhits() - Numc::ONE<Short_t>) : 0;
@@ -600,38 +583,99 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     ndof_TRKq_ = nmes_TRKqx_ + nmes_TRKqy_;
     ndof_TOFq_ = nmes_TOFq_;
     ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
-    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - (is_fixed_mass_?0:1));
+    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - (is_fixed_mass?0:1));
     if (ndof_ == Numc::ZERO<Short_t>) return;
+    Short_t absChrg = std::abs(info_.chrg());
 
-    Bool_t fixm    = is_fixed_mass_;
-    is_fixed_mass_ = true;
-    succ_ = (simpleFit() ? physicalFit() : false);
-    is_fixed_mass_ = fixm;
-
-    PhySt refSt = part_;
-    std::vector<Double_t> seedvec({ 0.333, 0.750, 1.500 });
-    if (succ_ && !is_fixed_mass_) {
-        Double_t            nchi = nchi_;
-        PhySt               part = part_;
-        std::vector<PhyArg> args = args_;
-
-        Bool_t fine = false;
-        for (auto&& seed : seedvec) {
-            part_ = refSt;
-            if (physicalFit(seed) && (nchi_ < nchi || !fine)) {
-                part = part_;
-                args = args_;
-                nchi = nchi_;
-                fine = true;
-            }
+    // Fixed Mass
+    if (is_fixed_mass) succ_ = (simpleFit() ? physicalFit() : false);
+    // Free Mass
+    else if (absChrg > Numc::ZERO<Short_t> && absChrg < PartListMassQ.size()) {
+        auto&& compless = [] (const Double_t& a, const Double_t& b) { return ((a > Numc::ZERO<>) ? ((b > Numc::ZERO<>) ? a < b : a > Numc::ZERO<>) : false); }; // return true, if a < b or only a
+        
+        // List of Mass
+        const std::vector<Double_t>&     listMass = PartListMassQ.at(absChrg);
+        std::vector<Bool_t>              refSucc(listMass.size(), false);
+        std::vector<Double_t>            refNchi(listMass.size(), Numc::NEG<>);
+        std::vector<PhySt>               refSt;
+        std::vector<std::vector<PhyArg>> refArgs;
+        for (UInt_t it = 0; it < listMass.size(); ++it) {
+            info_.reset(absChrg, listMass.at(it)); 
+            Bool_t succ = (simpleFit() ? physicalFit() : false);
+            refSt.push_back(part_);
+            refArgs.push_back(args_);
+            if (!succ) continue;
+            refSucc.at(it) = true;
+            refNchi.at(it) = nchi_;
         }
 
-        if (fine) {
+        // Min NormChisq
+        const Double_t LMT_NCHI = 0.05;
+        Double_t minNchi = *std::min_element(refNchi.begin(), refNchi.end(), compless);
+        
+        // Parameters
+        Double_t            nchi = Numc::NEG<>;
+        PhySt               part = part_;
+        std::vector<PhyArg> args = args_;
+        
+        Int_t seedIter = 0;
+        const std::vector<Double_t> seedVec({ 0.3, 0.7, 0.7 });
+        const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::FIVE<>/Numc::SIX<> });
+        const std::vector<Double_t> flucVec({ 0.02, 0.05, 0.05 });
+        while (Numc::Compare(minNchi) > 0 && seedIter < seedVec.size()) {
+            CERR("ITER %d MIN_NCHI %14.8f\n", seedIter, minNchi);
+            std::vector<Double_t> listVal;
+            Short_t consistSelfCnt = Numc::ZERO<Int_t>;
+            for (UInt_t it = 0; it < listMass.size(); ++it) {
+                if (!refSucc.at(it)) continue;
+                Double_t quality = (Numc::TWO<> * (minNchi + LMT_NCHI) / (minNchi + refNchi.at(it) + Numc::TWO<> * LMT_NCHI)); 
+                if (quality < qualityVec.at(seedIter)) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
+
+                part_ = refSt.at(it);
+                args_ = refArgs.at(it);
+                Bool_t succ = physicalFit(is_fixed_mass, seedVec.at(seedIter));
+                if (!succ) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
+                Double_t fluc = std::fabs(refNchi.at(it) - nchi_) / (refNchi.at(it) + nchi_);
+                if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
+                
+                refNchi.at(it) = nchi_;
+                listVal.push_back(nchi_);
+                Bool_t firstTime = (Numc::Compare(nchi) < 0);
+                if (firstTime || Numc::Compare(nchi_, nchi) < 0) {
+                    nchi = nchi_;
+                    part = part_;
+                    args = args_;
+                }
+            }
+            if (listVal.size() == 0) break;
+            auto minmax = std::minmax_element(listVal.begin(), listVal.end());
+            if (seedIter == 0) minNchi = *minmax.first;
+            else               minNchi = std::min(minNchi, *minmax.first);
+            
+            Bool_t consistSelf = (listVal.size() == consistSelfCnt);
+            if (consistSelf) break;
+            
+            if (listVal.size() >= 2) {
+                Bool_t consistGroup = true;
+                Double_t normFluc = Numc::TWO<> / (*minmax.first + *minmax.second);
+                for (UInt_t it = 0; it < listMass.size(); ++it) {
+                    if (!refSucc.at(it)) continue;
+                    Double_t fluc = std::fabs(normFluc * refNchi.at(it) - Numc::ONE<>);
+                    if (fluc > flucVec.at(seedIter)) { consistGroup = false; break; }
+                }
+                if (consistGroup) break;
+            }
+
+            seedIter++;
+        }
+
+        // Final
+        CERR("FINE\n");
+        if (Numc::Compare(nchi) > 0) {
             part_ = part;
             args_ = args;
             succ_ = evolve();
         }
-        else succ_ = false;
     }
 
     if (succ_) info_ = part_.info();
@@ -641,7 +685,6 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 void PhyTrFit::clear() {
     succ_ = false;
-    info_.reset(info_.type());
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();
@@ -675,21 +718,26 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(Double_t scl) {
+Bool_t PhyTrFit::physicalFit(Bool_t is_fixed_mass, Double_t scl) {
+    Bool_t resetArg = (args_.size() != nhits()-1);
     part_.arg().reset(sw_mscat_, sw_eloss_);
+    if (resetArg) args_ = std::move(std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_)));
+    
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta(), part_.info().invu() });
     std::vector<double> interaction_parameters((nhits()-1)*DIML, Numc::ZERO<>);
-    if (Numc::Compare(scl) > 0) {
+    if (!resetArg) {
+        Bool_t is_scl = (Numc::Compare(scl) > 0);
         for (Int_t it = 0; it < nhits()-1; ++it) {
-            interaction_parameters.at(it*DIML+0) = scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
-            interaction_parameters.at(it*DIML+1) = scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
-            interaction_parameters.at(it*DIML+2) = scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
-            interaction_parameters.at(it*DIML+3) = scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
+            const PhyArg& arg = args_.at(it);
+            interaction_parameters.at(it*DIML+0) = arg.tauu() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
+            interaction_parameters.at(it*DIML+1) = arg.rhou() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
+            interaction_parameters.at(it*DIML+2) = arg.taul() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
+            interaction_parameters.at(it*DIML+3) = arg.rhol() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
         }
     }
     parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
 
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_fixed_mass);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -697,9 +745,9 @@ Bool_t PhyTrFit::physicalFit(Double_t scl) {
     problem.SetParameterUpperBound(parameters.data(), 2,  1.0);
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
-    if (!is_fixed_mass_) {
-        Double_t lmtl_invu = (1.0/56.0) * 0.1; // Fe
-        Double_t lmtu_invu = 2000.0 * 10.0; // El
+    if (!is_fixed_mass && part_.chrg() < PartListMassQ.size()) {
+        Double_t lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::TEN<>;
+        Double_t lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::TEN<>;
         problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu);
         problem.SetParameterUpperBound(parameters.data(), 5, lmtu_invu);
     }
@@ -713,11 +761,10 @@ Bool_t PhyTrFit::physicalFit(Double_t scl) {
 
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), part_.cz(), parameters.at(2), parameters.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(parameters.at(4));
-    if (!is_fixed_mass_)
+    if (!is_fixed_mass)
         part_.recal(parameters.at(5));
 
     interaction_parameters = std::vector<double>(parameters.begin()+DIMG, parameters.end());
-    args_ = std::move(std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_)));
     for (Int_t it = 0; it < nhits()-1; ++it) {
         args_.at(it).set_mscat(
                 interaction_parameters.at(it*DIML+0), 
@@ -832,9 +879,9 @@ Bool_t PhyTrFit::evolve() {
     nrm_elion_ = ((nsegs_ > 0) ? (chi_elion / static_cast<Double_t>(nsegs_)) : 0);
 
     stts_ = std::move(stts);
-
-    //COUT("PhyTrFit::SUCC (RIG %14.8f MASS %14.8f ETA/MASS  %14.8f CHI %14.8f)\n", part_.rig(), part_.mass(), part_.eta()/part_.mass(), nchi_);
+    info_ = part_.info();
     
+    CERR("PhyTrFit::SUCC (RIG %14.8f MASS %14.8f NCHI %14.8f)\n", part_.rig(), part_.mass(), nchi_);
     return true;
 }
 
@@ -1068,24 +1115,25 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) const {
 }
 
 
-PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Short_t chrg) : TrFitPar(fitPar), phyTr_(nullptr) {
-    if (chrg <= Numc::ZERO<Short_t>) return;
-    if (chrg >= PartListMassQ.size()) return;
-    is_fixed_mass_ = false;
-
-    Double_t nchi = 0;
-    Bool_t   succ = false;
-    for (auto&& mass : PartListMassQ.at(chrg)) {
-        info_.reset(chrg, mass);
-        PhyTrFit* phyTr = new PhyTrFit(static_cast<const TrFitPar&>(*this));
-        if (!phyTr->status()) { delete phyTr; continue; }
-        if (succ && phyTr->nchi() > nchi) { delete phyTr; continue; }
-        phyTr_ = phyTr;
-        nchi = phyTr->nchi();
-        succ = true;
-    }
-    if (!succ) clear();
-}
+//PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Short_t chrg) : TrFitPar(fitPar), phyTr_(nullptr) {
+//    if (chrg <= Numc::ZERO<Short_t>) return;
+//    if (chrg >= PartListMassQ.size()) return;
+//    is_fixed_mass_ = false;
+//
+//    Double_t nchi = 0;
+//    Bool_t   succ = false;
+//    for (auto&& mass : PartListMassQ.at(chrg)) {
+//        CERR("MASS %14.8f\n", mass);
+//        info_.reset(chrg, mass);
+//        PhyTrFit* phyTr = new PhyTrFit(static_cast<const TrFitPar&>(*this));
+//        if (!phyTr->status()) { delete phyTr; continue; }
+//        if (succ && phyTr->nchi() > nchi) { delete phyTr; continue; }
+//        phyTr_ = phyTr;
+//        nchi = phyTr->nchi();
+//        succ = true;
+//    }
+//    if (!succ) clear();
+//}
 
 
 //bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) const {
