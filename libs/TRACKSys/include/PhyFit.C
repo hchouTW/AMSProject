@@ -747,8 +747,8 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
     if (!is_fixed_mass && part_.chrg() < PartListMassQ.size()) {
-        Double_t lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::TEN<>;
-        Double_t lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::TEN<>;
+        Double_t lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::HUNDRED<>;
+        Double_t lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::HUNDRED<>;
         problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu);
         problem.SetParameterUpperBound(parameters.data(), 5, lmtu_invu);
     }

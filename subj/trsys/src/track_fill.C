@@ -149,10 +149,12 @@ int main(int argc, char * argv[]) {
     //for (UInt_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
     //for (UInt_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
 
+    MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
-        if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
+        hrssw.stop();
+        if (entry%printRate==0) COUT("Entry %lld/%lld Time %14.8f\n", entry, dst->GetEntries(), hrssw.time());
         dst->GetEntry(entry);
 
         TrackInfo& track = fTrk->track;

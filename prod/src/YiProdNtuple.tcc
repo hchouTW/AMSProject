@@ -1009,6 +1009,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFree);
         swhc.stop();
         if (hctr.status()) {
+            CERR("FINAL FIT == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", hctr.part().mass(), hctr.part().rig(), hctr.nchi(), swhc.time());
+
             fTrk.hcTrack.status = hctr.status();
             fTrk.hcTrack.chrg   = hctr.part().chrg();
             fTrk.hcTrack.mass   = hctr.part().mass();
