@@ -719,7 +719,7 @@ Bool_t PhyTrFit::simpleFit() {
 
 
 Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
-    Bool_t is_fixed_mass = (MassOpt::kFixed == massOpt);
+    Bool_t is_mass_fixed = (MassOpt::kFixed == massOpt);
     Bool_t resetArg = (args_.size() != nhits()-1);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     if (resetArg) args_ = std::move(std::vector<PhyArg>(nhits()-1, PhyArg(sw_mscat_, sw_eloss_)));
@@ -738,7 +738,7 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
     }
     parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
 
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_fixed_mass);
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -746,7 +746,7 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
     problem.SetParameterUpperBound(parameters.data(), 2,  1.0);
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
-    if (!is_fixed_mass && part_.chrg() < PartListMassQ.size()) {
+    if (!is_mass_fixed && part_.chrg() < PartListMassQ.size()) {
         Double_t lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::HUNDRED<>;
         Double_t lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::HUNDRED<>;
         problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu);
@@ -762,7 +762,7 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
 
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), part_.cz(), parameters.at(2), parameters.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(parameters.at(4));
-    if (!is_fixed_mass)
+    if (!is_mass_fixed)
         part_.recal(parameters.at(5));
 
     interaction_parameters = std::vector<double>(parameters.begin()+DIMG, parameters.end());
@@ -901,7 +901,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ppst.set_eta(parameters[0][4]);
     ppst.arg().clear();
 
-    if (!is_fixed_mass_)
+    if (!is_mass_fixed_)
         ppst.recal(parameters[0][5]);
 
     UInt_t cnt_nhit = 0;
@@ -964,7 +964,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hit->scx()) rs(hit->seqIDcx()) += hit->nrmcx();
         if (hit->scy()) rs(hit->seqIDcy()) += hit->nrmcy();
         if (hasJacb) {
-            for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+            for (UInt_t it = 0; it < DIMG-is_mass_fixed_; ++it) {
                 if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
                 if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
             }
@@ -984,7 +984,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
             if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacb) {
-                for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+                for (UInt_t it = 0; it < DIMG-is_mass_fixed_; ++it) {
                     if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
                     if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
                 }
@@ -1005,7 +1005,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb) {
-                for (UInt_t it = 0; it < DIMG-is_fixed_mass_; ++it) {
+                for (UInt_t it = 0; it < DIMG-is_mass_fixed_; ++it) {
                     if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
                     if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
                 }
@@ -1114,74 +1114,6 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) const {
     MatFld&& mfld = MatFld::Merge(mflds);
     return mfld;
 }
-
-
-//PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Short_t chrg) : TrFitPar(fitPar), phyTr_(nullptr) {
-//    if (chrg <= Numc::ZERO<Short_t>) return;
-//    if (chrg >= PartListMassQ.size()) return;
-//    is_fixed_mass_ = false;
-//
-//    Double_t nchi = 0;
-//    Bool_t   succ = false;
-//    for (auto&& mass : PartListMassQ.at(chrg)) {
-//        CERR("MASS %14.8f\n", mass);
-//        info_.reset(chrg, mass);
-//        PhyTrFit* phyTr = new PhyTrFit(static_cast<const TrFitPar&>(*this));
-//        if (!phyTr->status()) { delete phyTr; continue; }
-//        if (succ && phyTr->nchi() > nchi) { delete phyTr; continue; }
-//        phyTr_ = phyTr;
-//        nchi = phyTr->nchi();
-//        succ = true;
-//    }
-//    if (!succ) clear();
-//}
-
-
-//bool VirtualPhyMassFit::operator() (const double* const x, double* residuals) const {
-//    residuals[0] = Numc::ZERO<>;
-//    if (!is_vary_mass()) return false;
-//    if (Numc::Compare(x[0]) <= 0) return false;
-//    
-//    PartInfo::SetDefaultInvu(x[0]);
-//
-//    PhyTrFit trFit(fitPar_);
-//    if (!trFit.status()) return false;
-//
-//    double nrm = std::sqrt(trFit.nchi());
-//    if (!Numc::Valid(nrm) || Numc::Compare(nrm) < 0) return false;
-//
-//    residuals[0] = nrm;
-//    return true;
-//}
-//
-//
-//PhyMassFit::PhyMassFit(const TrFitPar& fitPar, Short_t chrg, Double_t mass) : phyTr_(nullptr) {
-//    if (fitPar.info().type() != PartType::Fixed) return;
-//
-//    std::vector<double> parameters{ PartInfo::ATOMIC_MASS/mass };
-//
-//    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<VirtualPhyMassFit, ceres::CENTRAL, 1, 1>(new VirtualPhyMassFit(fitPar, chrg));
-//
-//    ceres::Problem problem;
-//    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
-//    
-//    Double_t lmtl_invu = (1.0/56.0) * 0.1; // Fe
-//    Double_t lmtu_invu = 2000.0 * 10.0; // El
-//    problem.SetParameterLowerBound(parameters.data(), 0, lmtl_invu);
-//    problem.SetParameterUpperBound(parameters.data(), 0, lmtu_invu);
-//    
-//    ceres::Solver::Options options;
-//    //options.minimizer_type = ceres::LINE_SEARCH;
-//    //options.line_search_direction_type = ceres::BFGS;
-//
-//    ceres::Solver::Summary summary;
-//    ceres::Solve(options, &problem, &summary);
-//    if (!summary.IsSolutionUsable()) return;
-//
-//    PartInfo::SetDefaultInvu(parameters.at(0));
-//    phyTr_ = new PhyTrFit(fitPar);
-//    if (!phyTr_->status()) clear();
-//}
 
 
 } // namespace TrackSys

@@ -115,7 +115,7 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
 
         //-----------------------------------------------
-        // testcode (try to improve multiple-scatttering)
+        // (improve multiple-scatttering by eta)
         Double_t mscrr_eta = Numc::ONE<> / part.eta_abs();
         jb_gg_(JPX, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_ul() * arg.orth_tau(X) + 
                              arg.rhou() * mscrr_eta * arg.mscat_ul() * arg.orth_rho(X) +
@@ -134,7 +134,7 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
                              arg.rhou() * mscrr_eta * arg.mscat_uu() * arg.orth_rho(Y)
                             );
         
-        // testcode (try to improve mass)
+        // (improve multiple-scatttering by mass)
         Double_t mscrr_mas = Numc::ONE<> / part.info().invu();
         jb_gg_(JPX, JIU) += (arg.tauu() * mscrr_mas * arg.mscat_ul() * arg.orth_tau(X) + 
                              arg.rhou() * mscrr_mas * arg.mscat_ul() * arg.orth_rho(X) +
@@ -201,7 +201,6 @@ void PropPhyCal::init() {
     mscat_uu_  = 0.;
     mscat_ul_  = 0.;
     mscat_ll_  = 0.;
-    elion_mpv_ = 0.;
     elion_sgm_ = 0.;
     elbrm_men_ = 0.;
 
@@ -284,12 +283,10 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
         if (!Numc::Valid(mscat_ll_) || Numc::Compare(mscat_ll_) <= 0) mscat_ll_ = Numc::ZERO<>;
     }
     if (sw_eloss_) {
-        //MatPhyFld&& mphy = MatPhy::Get(mfld, part);
-        //elion_mpv_ = std::fabs((eta_abs_end_ / eta_abs_sat_) - Numc::ONE<>); // TODO
-        //elion_sgm_ = mphy.elion_sgm(); // TODO
-        //elbrm_men_ = mphy.elbrm_men(); // TODO
+        MatPhyFld&& mphy = MatPhy::Get(mfld, part);
+        elion_sgm_ = part.info().invu() * mphy.elion_sgm(); // TODO
+        elbrm_men_ = mphy.elbrm_men(); // TODO
 
-        if (!Numc::Valid(elion_mpv_) || Numc::Compare(elion_mpv_) <= 0) elion_mpv_ = Numc::ZERO<>;
         if (!Numc::Valid(elion_sgm_) || Numc::Compare(elion_sgm_) <= 0) elion_sgm_ = Numc::ZERO<>;
         if (!Numc::Valid(elbrm_men_) || Numc::Compare(elbrm_men_) <= 0) elbrm_men_ = Numc::ZERO<>;
     }
@@ -297,15 +294,13 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
 
 
 void PropPhyCal::set_PhyArg(PhySt& part) const {
-    Short_t seqt = Numc::Compare(tme_);
-
     part.arg().zero();
     part.arg().setvar_tme(tme_);
-    part.arg().setvar_len(seqt * len_);
+    part.arg().setvar_len(Numc::Compare(tme_) * len_);
     part.arg().setvar_mat(mat_, nrl_, ela_);
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
     part.arg().setvar_mscat(mscat_uu_, mscat_ul_, mscat_ll_);
-    part.arg().setvar_eloss(elion_mpv_, elion_sgm_, elbrm_men_);
+    part.arg().setvar_eloss(elion_sgm_, elbrm_men_);
 
     part.set_time(part.time() + part.arg().tme());
     part.set_path(part.path() + part.arg().len());

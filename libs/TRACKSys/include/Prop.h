@@ -231,7 +231,6 @@ class PropPhyCal {
         Double_t mscat_ul_;
         Double_t mscat_ll_;
 
-        Double_t elion_mpv_;
         Double_t elion_sgm_;
         Double_t elbrm_men_;
 

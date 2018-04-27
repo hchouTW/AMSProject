@@ -153,7 +153,7 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_fixed_mass = true) : TrFitPar(fitPar), is_fixed_mass_(is_fixed_mass), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*DIML, DIMG+(nhits()-1)*DIML); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*DIML, DIMG+(nhits()-1)*DIML); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :
@@ -168,10 +168,10 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
         }
 
-        inline void clear() { info_ = part_.info(); is_fixed_mass_ = true; part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); part_.reset(part_.info()); }
+        inline void clear() { info_ = part_.info(); is_mass_fixed_ = true; part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); part_.reset(part_.info()); }
     
     protected :
-        Bool_t is_fixed_mass_;
+        Bool_t is_mass_fixed_;
         Int_t numOfRes_;
         Int_t numOfPar_;
         PhySt part_;
@@ -257,53 +257,6 @@ class PhyTrFit : protected TrFitPar {
     protected :
         std::vector<std::pair<VirtualHitSt*, PhySt>> stts_;
 };
-
-
-//class PhyMassFit : private TrFitPar {
-//    public :
-//        PhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>);
-//        ~PhyMassFit() { PhyMassFit::clear(); }
-//
-//        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
-//        inline const PhyTrFit* operator() () const { return phyTr_; }
-//
-//    protected :
-//        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
-//
-//    protected :
-//        PhyTrFit* phyTr_;
-//};
-
-
-//class VirtualPhyMassFit {
-//    public :
-//        VirtualPhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>) : check_(false), fitPar_(fitPar), chrg_(chrg) { check_ = fitPar_.check(); }
-//        ~VirtualPhyMassFit() {}
-//
-//        inline bool is_vary_mass() const { return (check_ && fitPar_.info().type() == PartType::Fixed); }
-//        bool operator() (const double* const x, double* residuals) const;
-//        
-//    protected :
-//        Bool_t      check_;
-//        TrFitPar    fitPar_;
-//        Short_t     chrg_;
-//};
-//
-//
-//class PhyMassFit {
-//    public :
-//        PhyMassFit(const TrFitPar& fitPar, Short_t chrg = Numc::ONE<Short_t>, Double_t mass = Numc::ONE<>);
-//        ~PhyMassFit() { PhyMassFit::clear(); }
-//
-//        inline Bool_t status() const { return (phyTr_ != nullptr && phyTr_->status()); }
-//        inline const PhyTrFit* operator() () const { return phyTr_; }
-//
-//    protected :
-//        inline void clear() { if (phyTr_ != nullptr) { delete phyTr_; phyTr_ = nullptr; }; }
-//
-//    protected :
-//        PhyTrFit* phyTr_;
-//};
 
 
 } // namespace TrackSys
