@@ -12,7 +12,7 @@ DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
 #Stream=${CurDir}/lst/flist.cern.mc.EL025200_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test41
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test42
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
