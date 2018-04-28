@@ -450,19 +450,43 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Long64_t itsat = 0;
     Long64_t itend = nstp;
 
-    //==== faster method (tuned by axis-Z)
-    Short_t uz_sign = Numc::Compare(unit(2));
-    if (uz_sign != 0) {
-        Double_t sat = ((uz_sign == 1) ? 0. : n_.at(2));
-        Double_t end = ((uz_sign == 1) ? n_.at(2) : 0.);
-        Long64_t satID = static_cast<Long64_t>(std::floor((sat - itloc(2)) / unit(2)));
-        Long64_t endID = static_cast<Long64_t>(std::floor((end - itloc(2)) / unit(2))) + 1;
-        if (Numc::Valid(satID) && Numc::Valid(endID)) {
-            if (satID > 0 && satID < nstp) itsat = satID;
-            if (endID > 0 && endID < nstp) itend = endID;
-            itloc += (itsat * unit);
+    //==== faster method (tuned by axis-ZYX)
+    Short_t iu    = -1;
+    Short_t signu =  0;
+    const Double_t LMTU = 5.0e-2;
+    if      (Numc::Compare(std::fabs(unit(2)), LMTU) > 0) { iu = 2; signu = Numc::Compare(unit(2)); }
+    else if (Numc::Compare(std::fabs(unit(1)), LMTU) > 0) { iu = 1; signu = Numc::Compare(unit(1)); }
+    else if (Numc::Compare(std::fabs(unit(0)), LMTU) > 0) { iu = 0; signu = Numc::Compare(unit(0)); }
+    if (iu >= 0 && signu != 0) {
+        Double_t sat = ((signu == 1) ? Numc::ZERO<> :    n_.at(iu));
+        Double_t end = ((signu == 1) ?    n_.at(iu) : Numc::ZERO<>);
+        sat = std::floor((sat - itloc(iu)) / unit(iu));
+        end = std::floor((end - itloc(iu)) / unit(iu));
+        if (Numc::Valid(sat) && Numc::Valid(end)) {
+            Long64_t satID = static_cast<Long64_t>(sat);
+            Long64_t endID = static_cast<Long64_t>(end) + Numc::ONE<Long64_t>;
+            if (Numc::Valid(satID) && Numc::Valid(endID)) {
+                if (satID > 0 && satID < nstp) itsat = satID;
+                if (endID > 0 && endID < nstp) itend = endID;
+                itloc += (itsat * unit);
+            }
         }
     }
+    //====
+
+    //==== faster method (tuned by axis-Z)
+    //Short_t signuz = Numc::Compare(unit(2));
+    //if (signuz != 0 && Numc::Compare(std::fabs(unit(2)), 1.0e-2) > 0) {
+    //    Double_t sat = ((signuz == 1) ? 0. : n_.at(2));
+    //    Double_t end = ((signuz == 1) ? n_.at(2) : 0.);
+    //    Long64_t satID = static_cast<Long64_t>(std::floor((sat - itloc(2)) / unit(2)));
+    //    Long64_t endID = static_cast<Long64_t>(std::floor((end - itloc(2)) / unit(2))) + 1;
+    //    if (Numc::Valid(satID) && Numc::Valid(endID)) {
+    //        if (satID > 0 && satID < nstp) itsat = satID;
+    //        if (endID > 0 && endID < nstp) itend = endID;
+    //        itloc += (itsat * unit);
+    //    }
+    //}
     //====
 
     Long64_t itcnt    = 0;
