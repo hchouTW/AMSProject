@@ -228,8 +228,6 @@ void HitStTOF::clear() {
     divt_ = Numc::ZERO<>;
 
     set_type();
-    if (pdf_c_ != nullptr)
-        erc_ = std::move(SVecD<2>(pdf_c_->efft_sgm(), pdf_c_->efft_sgm()));
 }
 
 Short_t HitStTOF::set_seqID(Short_t seqID) {
@@ -246,20 +244,6 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
 
 void HitStTOF::cal(const PhySt& part) {
     set_type(part.info());
-
-    nrmc_ = std::move(SVecD<2>());
-    divc_ = std::move(SVecD<2>());
-    SVecD<3>&& crs = (coo_ - part.c());
-    if (side_coo_(0)) {
-        erc_(0)  = pdf_c_->efft_sgm(crs(0));
-        nrmc_(0) = crs(0) / erc_(0);
-        divc_(0) = Numc::NEG<> / erc_(0);
-    }
-    if (side_coo_(1)) {
-        erc_(1) = pdf_c_->efft_sgm(crs(1));
-        nrmc_(1) = crs(1) / erc_(1);
-        divc_(1) = Numc::NEG<> / erc_(1);
-    }
 
     nrmq_ = Numc::ZERO<>;
     divq_ = Numc::ZERO<>;
@@ -293,12 +277,11 @@ void HitStTOF::cal(const PhySt& part) {
 }
 
 void HitStTOF::set_type(const PartInfo& info) {
-    if ((info.is_std() && type_ == info.type()) && (pdf_c_ && pdf_q_ && pdf_t_)) return;
+    if ((info.is_std() && type_ == info.type()) && (pdf_q_ && pdf_t_)) return;
     
     switch (info.chrg()) {
         case 1 : case -1 :
         {
-            pdf_c_ = &PDF_Q01_C_;
             pdf_q_ = &PDF_Q01_Q_;
             pdf_t_ = &PDF_Q01_T_;
             type_ = info.type();
@@ -309,11 +292,6 @@ void HitStTOF::set_type(const PartInfo& info) {
             break;
     }
 }
-
-MultiGaus HitStTOF::PDF_Q01_C_(
-    MultiGaus::Opt::ROBUST,
-    2.78301e+00
-);
 
 //IonEloss HitStTOF::PDF_Q01_Q_( // OLD
 //    { 3.08657e-02, 6.90186e-01, 1.81945e+00, 3.04335e+00, 1.45315e+00, 0.00000e+00 }, // Kpa

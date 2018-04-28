@@ -22,8 +22,6 @@ class TrFitPar {
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
-        void print() const;
-        
         inline Bool_t check() { return check_hits(); }
 
         inline void add_hit(const HitStTRK& hit) { hits_TRK_.push_back(hit); zero(); }
@@ -32,17 +30,15 @@ class TrFitPar {
         inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
        
-        inline void set_info(const PartInfo& info = PartInfo(PartType::Proton)) { info_ = info; zero(); }
-        inline void set_ortt(const Orientation& ortt = Orientation::kDownward) { ortt_ = ortt; zero(); }
-
         inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
 
         inline const Short_t& nseq() const { return nseq_; }
-        
-        inline const Short_t nhits() const { return hits_.size(); }
+        inline const Short_t& nseg() const { return nseg_; }
+
+        inline const Short_t nhit() const { return hits_.size(); }
         inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
-        inline const VirtualHitSt* hits(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
+        inline const VirtualHitSt* hit(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
 
     protected :
         void zero();
@@ -62,6 +58,8 @@ class TrFitPar {
         std::vector<HitStTOF>      hits_TOF_;
 
         Short_t nseq_;
+        Short_t nseg_;
+
         Short_t nmes_;
         Short_t nmes_cx_;
         Short_t nmes_cy_;
@@ -78,14 +76,10 @@ class TrFitPar {
         static constexpr Short_t LMTN_CX = 3;
         static constexpr Short_t LMTN_CY = 4;
         static constexpr Short_t LMTN_TOF_T = 2;
-
-    protected :
-        static constexpr Short_t DIMG = 6;
-        static constexpr Short_t DIML = 4;
 };
 
 
-class SimpleTrFit : protected TrFitPar {
+class SimpleTrFit : public TrFitPar {
     public :
         SimpleTrFit& operator=(const SimpleTrFit& rhs);
         SimpleTrFit(const SimpleTrFit& trFit) { *this = trFit; }
@@ -136,9 +130,11 @@ class SimpleTrFit : protected TrFitPar {
         Double_t nchi_TOFt_;
 
     protected :
+        static constexpr Short_t DIMG = 5;
+        
         // Minimization (Levenberg-Marquardt Method)
-        static constexpr Int_t LMTL_ITER = 3;
-        static constexpr Int_t LMTU_ITER = 25;
+        static constexpr Short_t LMTL_ITER = 3;
+        static constexpr Short_t LMTU_ITER = 25;
         
         static constexpr Double_t LAMBDA0 = 1.0e-2;
         static constexpr Double_t LAMBDA_DN_FAC = 5.0;
@@ -153,14 +149,14 @@ class SimpleTrFit : protected TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), numOfRes_(0), numOfPar_(0), part_(part) { if (check_hits()) setvar(nseq_+(nhits()-1)*DIML, DIMG+(nhits()-1)*DIML); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), numOfRes_(0), numOfPar_(0), part_(part), DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>) { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_); }
         ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
     
     protected :
-        inline void setvar(Int_t num_of_residual = 0, Int_t num_of_parameter = 0) {
+        inline void setvar(Short_t num_of_residual = 0, Short_t num_of_parameter = 0) {
             numOfRes_ = 0;
             numOfPar_ = 0;
             mutable_parameter_block_sizes()->clear(); 
@@ -172,13 +168,16 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     
     protected :
         Bool_t is_mass_fixed_;
-        Int_t numOfRes_;
-        Int_t numOfPar_;
+        Short_t numOfRes_;
+        Short_t numOfPar_;
         PhySt part_;
+
+        const Short_t DIMG_;
+        const Short_t DIML_;
 };
 
 
-class PhyTrFit : protected TrFitPar {
+class PhyTrFit : public TrFitPar {
     public :
         enum class MassOpt {
             kFixed = 0, kFree = 1
@@ -195,10 +194,6 @@ class PhyTrFit : protected TrFitPar {
         inline const Bool_t& status() const { return succ_; }
         inline const PhySt& part() const { return part_; }
 
-        inline const Int_t nstts() const { return stts_.size(); }
-        inline const std::vector<std::pair<VirtualHitSt*, PhySt>>& stts() const { return stts_; }
-        inline const std::pair<VirtualHitSt*, PhySt>* stts(Int_t idx) const { return ((idx<0 || idx>=stts_.size()) ? nullptr : &stts_.at(idx)); }
-
         inline const Short_t& ndof()      const { return ndof_; }
         inline const Short_t& ndof_cx()   const { return ndof_cx_; }
         inline const Short_t& ndof_cy()   const { return ndof_cy_; }
@@ -213,7 +208,6 @@ class PhyTrFit : protected TrFitPar {
         inline const Double_t& nchi_TOFq() const { return nchi_TOFq_; }
         inline const Double_t& nchi_TOFt() const { return nchi_TOFt_; }
         
-        inline const Short_t&  nsegs()     const { return nsegs_; }
         inline const Double_t& nrm_mstau() const { return nrm_mstau_; }
         inline const Double_t& nrm_msrho() const { return nrm_msrho_; }
         inline const Double_t& nrm_elion() const { return nrm_elion_; }
@@ -227,6 +221,7 @@ class PhyTrFit : protected TrFitPar {
 
         Bool_t simpleFit();
         Bool_t physicalFit(const MassOpt& massOpt = MassOpt::kFixed, Double_t scl = 0);
+        Bool_t physicalMassFit();
 
         Bool_t evolve();
 
@@ -249,13 +244,12 @@ class PhyTrFit : protected TrFitPar {
         Double_t nchi_TOFq_;
         Double_t nchi_TOFt_;
 
-        Short_t  nsegs_;
         Double_t nrm_mstau_;
         Double_t nrm_msrho_;
         Double_t nrm_elion_;
 
     protected :
-        std::vector<std::pair<VirtualHitSt*, PhySt>> stts_;
+        std::vector<PhySt> stts_;
 };
 
 

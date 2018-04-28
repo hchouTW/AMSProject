@@ -169,7 +169,7 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     public :
-        HitStTOF(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, scx, scy), pdf_c_(nullptr), pdf_q_(nullptr), pdf_t_(nullptr) { clear(); }
+        HitStTOF(Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, false, false), pdf_q_(nullptr), pdf_t_(nullptr) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -220,12 +220,10 @@ class HitStTOF : public VirtualHitSt {
         Double_t nrmt_; // T nrom
         Double_t divt_; // T div
 
-        MultiGaus* pdf_c_;
         IonEloss*  pdf_q_;
         MultiGaus* pdf_t_;
     
     protected :
-        static MultiGaus PDF_Q01_C_;
         static IonEloss  PDF_Q01_Q_;
         static MultiGaus PDF_Q01_T_;
 

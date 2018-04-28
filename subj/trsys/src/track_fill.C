@@ -153,8 +153,10 @@ int main(int argc, char * argv[]) {
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
-        hrssw.stop();
-        if (entry%printRate==0) COUT("Entry %lld/%lld Time %14.8f\n", entry, dst->GetEntries(), hrssw.time());
+        if (entry%printRate==0) {
+            hrssw.stop();
+            COUT("Entry %lld/%lld Time %14.8f\n", entry, dst->GetEntries(), hrssw.time());
+        }
         dst->GetEntry(entry);
 
         TrackInfo& track = fTrk->track;
@@ -196,6 +198,7 @@ int main(int argc, char * argv[]) {
         
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
+        PartInfo::SetDefault(PartType::Proton);
         TrFitPar fitPar(PartType::Fixed);
         for (auto&& hit : track.hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
@@ -212,9 +215,7 @@ int main(int argc, char * argv[]) {
         Short_t cutNHit = 4 + optL1 + optL9;
 
         for (Int_t il = 0; il < 4; ++il) {
-            Bool_t tofx = (il == 0 || il == 3);
-            Bool_t tofy = (il == 1 || il == 2);
-            HitStTOF mhit(tofx, tofy, il);
+            HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
@@ -255,15 +256,14 @@ int main(int argc, char * argv[]) {
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
-        
+       
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
         //if (mc_mom > 1.0) continue; // testcode
-        //if (mc_mom < 10.0) continue; // testcode
+        //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PartInfo::SetDefault(PartType::Proton);
-        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -278,7 +278,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        //CERR("FINAL FIT == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        //CERR("FINAL FIT(N%02d,%02d) (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.nhit(), tr.nseg(), mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -316,7 +316,7 @@ int main(int argc, char * argv[]) {
         Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
-        Double_t hc_chiy = (hc_succ ? std::log( (tr.ndof_cy()*tr.nchi_cy()+tr.nsegs()*tr.nrm_msrho())/tr.ndof_cy() ) : 0.); 
+        Double_t hc_chiy = (hc_succ ? std::log( (tr.ndof_cy()*tr.nchi_cy()+tr.nseg()*tr.nrm_msrho())/tr.ndof_cy() ) : 0.); 
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));

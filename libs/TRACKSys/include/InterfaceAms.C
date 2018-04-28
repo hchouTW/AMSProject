@@ -114,12 +114,8 @@ static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasT, Bool_t hasQ
     }
 
     for (UInt_t it = 0; it < lay.size(); ++it) {
-        //Bool_t scx = (lay.at(it) == 0 || lay.at(it) == 3);
-        //Bool_t scy = (lay.at(it) == 1 || lay.at(it) == 2);
-        Bool_t scx = false;
-        Bool_t scy = false;
         tme.at(it) -= minT;
-        HitStTOF hit(scx, scy, lay.at(it));
+        HitStTOF hit(lay.at(it));
         hit.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
         if (hasT) hit.set_t(tme.at(it));
         if (hasQ) hit.set_q(chg.at(it));
