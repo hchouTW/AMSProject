@@ -154,7 +154,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
-    
+
     protected :
         inline void setvar(Short_t num_of_residual = 0, Short_t num_of_parameter = 0) {
             numOfRes_ = 0;
@@ -212,6 +212,13 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& nrm_msrho() const { return nrm_msrho_; }
         inline const Double_t& nrm_elion() const { return nrm_elion_; }
 
+        inline const Double_t& err_cx()   const { return errG_(0); }
+        inline const Double_t& err_cy()   const { return errG_(1); }
+        inline const Double_t& err_ux()   const { return errG_(2); }
+        inline const Double_t& err_uy()   const { return errG_(3); }
+        inline const Double_t& err_eta()  const { return errG_(4); }
+        inline const Double_t& err_invu() const { return errG_(5); }
+
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;
         MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0) const;
@@ -247,6 +254,9 @@ class PhyTrFit : public TrFitPar {
         Double_t nrm_mstau_;
         Double_t nrm_msrho_;
         Double_t nrm_elion_;
+
+    protected :
+        SVecD<6> errG_; // (cx, cy, ux, uy, eta, invu)
 
     protected :
         std::vector<PhySt> stts_;

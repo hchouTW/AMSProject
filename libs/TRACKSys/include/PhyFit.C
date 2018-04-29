@@ -606,6 +606,8 @@ void PhyTrFit::clear() {
     nrm_mstau_ = 0;
     nrm_msrho_ = 0;
     nrm_elion_ = 0;
+
+    errG_ = SVecD<6>();
 }
 
 
@@ -780,6 +782,8 @@ Bool_t PhyTrFit::physicalMassFit() {
 
 
 Bool_t PhyTrFit::evolve() {
+    const Short_t DIMG = 6;
+    const Short_t DIML = 4;
     std::vector<PhySt> stts;
     
     // Reset TOF Time and Path
@@ -799,6 +803,11 @@ Bool_t PhyTrFit::evolve() {
 
     // Particle Status
     PhySt ppst(part_);
+    
+    // Matrix (Jb)
+    Bool_t hasCov = true;
+    PhyJb::SMtxDGG&& jbGG = SMtxId();
+    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML, DIMG);
         
     // Interaction Local Parameters
     for (auto&& arg : args_) {
@@ -813,7 +822,8 @@ Bool_t PhyTrFit::evolve() {
 
     Short_t cnt_nhit =  0;
     Short_t cnt_nseg = -1;
-    PhySt nearPpst = ppst;
+    PhySt nearPpst          = ppst;
+    PhyJb::SMtxDGG nearJbGG = jbGG;
     for (auto&& hit : hits_) {
         // Interaction Local Parameters
         Bool_t  hasLoc  = (cnt_nseg >= 0);
@@ -821,12 +831,16 @@ Bool_t PhyTrFit::evolve() {
         Short_t itnseg  = (cnt_nseg == nseg_) ? (nseg_ - Numc::ONE<Short_t>) : cnt_nseg;
         Bool_t  hasCxy  = (hit->scx() || hit->scy());
         
-        if (isInner && !hasCxy) ppst = nearPpst;
+        if (isInner && !hasCxy) {
+            ppst = nearPpst;
+            if (hasCov) jbGG = nearJbGG;
+        }
         
         // Propagate
+        PhyJb curjb;
         if (isInner) ppst.arg() = args_.at(cnt_nseg);
         else         ppst.arg().clear();
-        if (!PropMgnt::PropToZ(hit->cz(), ppst)) break;
+        if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr,  ((hasCov)?&curjb:nullptr))) break;
         ppst.symbk();
        
         // Hit Status: Setting TOF reference time and path
@@ -836,6 +850,9 @@ Bool_t PhyTrFit::evolve() {
             resetTOF = false;
         }
         hit->cal(ppst);
+        
+        // Update Jacb
+        if (hasCov) jbGG = curjb.gg() * jbGG;
 
         // State
         if (hasCxy) stts.push_back(ppst);
@@ -843,12 +860,24 @@ Bool_t PhyTrFit::evolve() {
         // Coord
         if (hit->scx()) chi_cx += hit->nrmcx() * hit->nrmcx(); 
         if (hit->scy()) chi_cy += hit->nrmcy() * hit->nrmcy();
+        if (hasCov) {
+            for (Short_t it = 0; it < DIMG; ++it) {
+                if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
+                if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
+            }
+        }
          
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
             if (hitTRK->sqx()) chi_TRKq += hitTRK->nrmqx() * hitTRK->nrmqx();
             if (hitTRK->sqy()) chi_TRKq += hitTRK->nrmqy() * hitTRK->nrmqy();
+            if (hasCov) {
+                for (Short_t it = 0; it < DIMG; ++it) {
+                    if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
+                    if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
+                }
+            }
         }
 
         // TOF
@@ -856,16 +885,29 @@ Bool_t PhyTrFit::evolve() {
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi_TOFt += hitTOF->nrmt() * hitTOF->nrmt();
             if (hitTOF->sq()) chi_TOFq += hitTOF->nrmq() * hitTOF->nrmq();
+            if (hasCov) {
+                for (Short_t it = 0; it < DIMG; ++it) {
+                    if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
+                    if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
+                }
+            }
         }
         
         if (hasCxy) {
             nearPpst = ppst;
+            if (hasCov) nearJbGG = jbGG;
             cnt_nseg++;
         }
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
     if (cnt_nseg != nseg_) return false;
+    
+    ceres::Matrix cov  = (jb.transpose() * jb);
+    ceres::Vector diag = cov.inverse().diagonal();
+    SVecD<DIMG>   errs(std::sqrt(diag(0)), std::sqrt(diag(1)), std::sqrt(diag(2)), std::sqrt(diag(3)), std::sqrt(diag(4)), std::sqrt(diag(5)));
+    for (Short_t it = 0; it < DIMG; ++it)
+        if (!Numc::Valid(errs(it))) errs(it) = Numc::ZERO<>;
     
     Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mstau + chi_msrho + chi_elion);
     Double_t nchi = (chi / static_cast<Double_t>(ndof_));
@@ -888,10 +930,11 @@ Bool_t PhyTrFit::evolve() {
     nrm_msrho_ = ((nseg_ > 0) ? (chi_msrho / static_cast<Double_t>(nseg_)) : 0);
     nrm_elion_ = ((nseg_ > 0) ? (chi_elion / static_cast<Double_t>(nseg_)) : 0);
 
+    errG_ = errs;
     stts_ = stts;
     info_ = part_.info();
    
-    CERR("MASS %14.8f RIG %14.8f NCHI %14.8f\n", part_.mass(), part_.rig(), nchi_);
+    CERR("MASS %14.8f INVU(%14.8f %14.8f) RIG %14.8f NCHI %14.8f\n", part_.mass(), part_.info().invu(), errG_(5), part_.rig(), nchi_);
     return true;
 }
 
@@ -931,19 +974,17 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
 
-    if (args.size() != 0) { // Interaction
-        for (Short_t is = 0; is < nseg_; ++is) {
-            SVecD<5> inrm, idiv;
-            args.at(is).cal_nrm_and_div(inrm, idiv);
+    for (Short_t is = 0; is < nseg_; ++is) { // Interaction
+        SVecD<5> inrm, idiv;
+        args.at(is).cal_nrm_and_div(inrm, idiv);
 
+        for (Short_t it = 0; it < DIML_; ++it)
+            rs(nseq_+is*DIML_+it) += inrm(it);
+
+        if (hasJacb) {
             for (Short_t it = 0; it < DIML_; ++it)
-                rs(nseq_+is*DIML_+it) += inrm(it);
-
-            if (hasJacb) {
-                for (Short_t it = 0; it < DIML_; ++it)
-                    jb(nseq_+is*DIML_+it, DIMG_+is*DIML_+it) += idiv(it);
-            } // hasJacb
-        }
+                jb(nseq_+is*DIML_+it, DIMG_+is*DIML_+it) += idiv(it);
+        } // hasJacb
     } // Interaction
     
     Short_t cnt_nhit =  0;
