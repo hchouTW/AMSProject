@@ -191,7 +191,7 @@ class PhyTrFit : public TrFitPar {
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt = MassOpt::kFixed);
+        PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt = MassOpt::kFixed);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
@@ -235,7 +235,7 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MassOpt& massOpt = MassOpt::kFixed, Double_t scl = 0);
+        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t invu_sgm = 0);
         Bool_t physicalMassFit();
 
         Bool_t evolve(Bool_t has_err_estimator = true);

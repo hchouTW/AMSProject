@@ -563,7 +563,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     return *this;
 }
 
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt) : TrFitPar(fitPar) {
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt) : TrFitPar(fitPar) {
     PhyTrFit::clear();
     if (!check_hits()) return;
     ndof_cx_   = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
@@ -571,17 +571,13 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt) : TrFitPar(fi
     ndof_TRKq_ = nmes_TRKqx_ + nmes_TRKqy_;
     ndof_TOFq_ = nmes_TOFq_;
     ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
-    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - ((MassOpt::kFixed == massOpt) ? 0 : 1));
+    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - ((MassOpt::kFixed == mass_opt) ? 0 : 1));
     if (ndof_ == Numc::ZERO<Short_t>) return;
 
-    if (MassOpt::kFixed == massOpt) succ_ = (simpleFit() ? physicalFit() : false);
-    else                            succ_ = physicalMassFit();
+    if (MassOpt::kFixed == mass_opt) succ_ = (simpleFit() ? physicalFit() : false);
+    else                             succ_ = physicalMassFit();
+    
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
-
-    // testcode
-    //for (auto&& arg : args_) {
-    //    CERR("ARG %14.8f %14.8f %14.8f %14.8f\n", arg.tauu(), arg.rhou(), arg.taul(), arg.rhol());
-    //}
 }
 
 
@@ -623,24 +619,47 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
-    const Bool_t is_mass_fixed = (MassOpt::kFixed == massOpt);
+Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
+    const Bool_t is_mass_fixed = (MassOpt::kFixed == mass_opt);
     const Short_t DIMG = DIMG_ - is_mass_fixed;
     const Short_t DIML = DIML_;
+   
+    // MassFixed: Init Invu
+    Double_t invu = part_.info().invu();
+    Double_t lmtl_invu = Numc::ZERO<>; 
+    Double_t lmtu_invu = Numc::ZERO<>; 
+    if (!is_mass_fixed) {
+        lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::HUNDRED<>;
+        lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::HUNDRED<>;
+        Bool_t   is_scl = (Numc::Compare(invu_sgm) > 0);
+        if (is_scl) {
+            Double_t invu_len   = (lmtu_invu - lmtl_invu);
+            Bool_t   is_uniform = (!Numc::Valid(invu_sgm) || (invu_sgm > Numc::FOUR<> * invu_len));
+            Double_t invu_fluc  = Numc::ZERO<>;
+            
+            Short_t iter = 0;
+            const Short_t niter = 20;
+            while ((iter < niter) && (invu_fluc < lmtl_invu || invu_fluc > lmtu_invu)) {
+                if (is_uniform) invu_fluc = lmtl_invu + invu_len * Rndm::DecimalUniform();
+                else            invu_fluc = invu + invu_sgm * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
+                iter++;
+            }
+            if (iter != niter) invu = invu_fluc;
+        }
+    }
     
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
-    if (!is_mass_fixed) parameters.push_back(part_.info().invu());
+    if (!is_mass_fixed) parameters.push_back(invu);
 
     std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
     if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
     else {
-        Bool_t is_scl = (Numc::Compare(scl) > 0);
         for (Short_t is = 0; is < nseg_; ++is) {
             const PhyArg& arg = args_.at(is);
-            interaction_parameters.at(is*DIML+0) = arg.tauu() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
-            interaction_parameters.at(is*DIML+1) = arg.rhou() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
-            interaction_parameters.at(is*DIML+2) = arg.taul() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
-            interaction_parameters.at(is*DIML+3) = arg.rhol() + (is_scl ? (scl * (Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian())) : Numc::ZERO<>);
+            interaction_parameters.at(is*DIML+0) = arg.tauu();
+            interaction_parameters.at(is*DIML+1) = arg.rhou();
+            interaction_parameters.at(is*DIML+2) = arg.taul();
+            interaction_parameters.at(is*DIML+3) = arg.rhol();
         }
     }
     parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
@@ -654,8 +673,6 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
     if (!is_mass_fixed) {
-        Double_t lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::HUNDRED<>;
-        Double_t lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::HUNDRED<>;
         problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu);
         problem.SetParameterUpperBound(parameters.data(), 5, lmtu_invu);
     }
@@ -699,6 +716,7 @@ Bool_t PhyTrFit::physicalMassFit() {
     const std::vector<Double_t>&     listMass = PartListMassQ.at(absChrg);
     std::vector<Bool_t>              refSucc(listMass.size(), false);
     std::vector<Double_t>            refNchi(listMass.size(), Numc::NEG<>);
+    std::vector<Double_t>            refErrInvu(listMass.size(), Numc::ZERO<>);
     std::vector<PhySt>               refSt;
     std::vector<std::vector<PhyArg>> refArgs;
     for (UInt_t it = 0; it < listMass.size(); ++it) {
@@ -709,6 +727,7 @@ Bool_t PhyTrFit::physicalMassFit() {
         if (!succ) continue;
         refSucc.at(it) = true;
         refNchi.at(it) = nchi_;
+        refErrInvu.at(it) = errG_(5);
     }
 
     // Min NormChisq
@@ -722,12 +741,9 @@ Bool_t PhyTrFit::physicalMassFit() {
     std::vector<PhyArg> args = args_;
     
     Short_t seedIter = 0;
-    const std::vector<Double_t> seedVec({ 0.05, 0.05, 0.05 });
-    
-    //const std::vector<Double_t> seedVec({ 0, Numc::THREE<>/Numc::TEN<>, Numc::FIVE<>/Numc::TEN<>, Numc::SEVEN<>/Numc::TEN<> });
-    const std::vector<Double_t> flucVec({ 1, Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
+    const std::vector<Double_t> flucVec({ Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
     const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::SIX<>/Numc::SEVEN<> });
-    while (Numc::Compare(minNchi) > 0 && seedIter < seedVec.size()) {
+    while (Numc::Compare(minNchi) > 0 && seedIter < qualityVec.size()) {
         CERR("SeedIter %d\n", seedIter);
         std::vector<Double_t> listVal;
         Short_t consistSelfCnt = Numc::ZERO<Int_t>;
@@ -738,7 +754,7 @@ Bool_t PhyTrFit::physicalMassFit() {
 
             part_ = refSt.at(it);
             args_ = refArgs.at(it);
-            Bool_t succ = physicalFit(MassOpt::kFree, seedVec.at(seedIter));
+            Bool_t succ = physicalFit(MassOpt::kFree, refErrInvu.at(it));
             if (!succ) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
             Double_t fluc = std::fabs(refNchi.at(it) - nchi_) / (refNchi.at(it) + nchi_);
             //if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
@@ -948,8 +964,9 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
         ceres::Matrix cov  = (jb.transpose() * jb);
         ceres::Vector diag = cov.inverse().diagonal();
         for (UInt_t it = 0; it < diag.rows(); ++it) {
-            if (!Numc::Valid(diag(it))) continue;
-            errs.at(it) = std::sqrt(diag(it));
+            Double_t err = std::sqrt(diag(it));
+            if (!Numc::Valid(diag(it)) || !Numc::Valid(err)) continue;
+            errs.at(it) = err;
         }
     }
     
