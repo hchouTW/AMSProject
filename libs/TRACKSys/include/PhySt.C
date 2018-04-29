@@ -76,6 +76,25 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
         nrm(4) = (elion_ * div(4));
     }
 }
+
+
+void PhySt::print() const {
+    std::string printStr;
+    printStr += STR("============ %-15s ============\n", info_.name().c_str());
+    printStr += STR("Bta %14.8f\n", bta_);
+    printStr += STR("Mom %14.8f\n", mom_);
+    printStr += STR("Eng %14.8f\n", eng_);
+    printStr += STR("KE  %14.8f\n", ke_);
+    printStr += STR("Eta %14.8f\n", eta_);
+    printStr += STR("Rig %14.8f\n", rig());
+    printStr += STR("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
+    printStr += STR("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
+    printStr += STR("-----------------------------------------\n");
+    printStr += STR("Path %14.8f\n", path_);
+    printStr += STR("Time %14.8f\n", time_);
+    printStr += STR("=========================================\n");
+    COUT(printStr.c_str());
+}
         
 
 void PhySt::reset(const PartInfo& info) {
@@ -243,25 +262,6 @@ void PhySt::set_rig(Double_t rig) {
     set_irig(irig);
 }
 
-
-void PhySt::print() const {
-    std::string printStr;
-    printStr += STR("============ %-15s ============\n", info_.name().c_str());
-    printStr += STR("Bta %14.8f\n", bta_);
-    printStr += STR("Mom %14.8f\n", mom_);
-    printStr += STR("Eng %14.8f\n", eng_);
-    printStr += STR("KE  %14.8f\n", ke_);
-    printStr += STR("Eta %14.8f\n", eta_);
-    printStr += STR("Rig %14.8f\n", rig());
-    printStr += STR("Coo (%11.6f %11.6f %11.6f)\n", coo_(0), coo_(1), coo_(2));
-    printStr += STR("Dir (%11.8f %11.8f %11.8f)\n", dir_(0), dir_(1), dir_(2));
-    printStr += STR("-----------------------------------------\n");
-    printStr += STR("Path %14.8f\n", path_);
-    printStr += STR("Time %14.8f\n", time_);
-    printStr += STR("=========================================\n");
-    COUT(printStr.c_str());
-}
-        
 
 void PhySt::symbk(Bool_t is_rndm) {
     if (!arg_()) { arg_.clear(); return; }

@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -13,11 +13,11 @@ int main(int argc, char * argv[]) {
 
     google::InitGoogleLogging(argv[0]);
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -258,7 +258,7 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        //if (mc_mom > 1.0) continue; // testcode
+        if (mc_mom > 1.0) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
@@ -278,7 +278,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        //CERR("FINAL FIT(N%02d,%02d) (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", tr.nhit(), tr.nseg(), mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        CERR("FINAL FIT(N%02d,%02d) (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n\n", tr.nhit(), tr.nseg(), mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

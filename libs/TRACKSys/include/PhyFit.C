@@ -163,7 +163,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (ndof_ == Numc::ZERO<Short_t>) return;
 
     succ_ = (analyticalFit() ? simpleFit() : false);
-    if (!succ_) { SimpleTrFit::clear(); COUT("SimpleTrFit::FAIL.\n"); }
+    if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); COUT("SimpleTrFit::FAIL.\n"); }
 }
 
 
@@ -573,7 +573,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& massOpt) : TrFitPar(fi
 
     if (MassOpt::kFixed == massOpt) succ_ = (simpleFit() ? physicalFit() : false);
     else                            succ_ = physicalMassFit();
-    if (!succ_) { PhyTrFit::clear(); COUT("PhyTrFit::FAIL.\n"); }
+    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
 
     // testcode
     //for (auto&& arg : args_) {
@@ -716,24 +716,26 @@ Bool_t PhyTrFit::physicalMassFit() {
     std::vector<PhyArg> args = args_;
     
     Short_t seedIter = 0;
-    const std::vector<Double_t> seedVec({ Numc::THREE<>/Numc::TEN<>, Numc::FIVE<>/Numc::TEN<>, Numc::SEVEN<>/Numc::TEN<> });
+    const std::vector<Double_t> seedVec({ 0.05, 0.05, 0.05 });
+    
+    //const std::vector<Double_t> seedVec({ 0, Numc::THREE<>/Numc::TEN<>, Numc::FIVE<>/Numc::TEN<>, Numc::SEVEN<>/Numc::TEN<> });
+    const std::vector<Double_t> flucVec({ 1, Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
     const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::SIX<>/Numc::SEVEN<> });
-    const std::vector<Double_t> flucVec({ Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
     while (Numc::Compare(minNchi) > 0 && seedIter < seedVec.size()) {
-        //CERR("SeedIter %d\n", seedIter);
+        CERR("SeedIter %d\n", seedIter);
         std::vector<Double_t> listVal;
         Short_t consistSelfCnt = Numc::ZERO<Int_t>;
         for (UInt_t it = 0; it < listMass.size(); ++it) {
             if (!refSucc.at(it)) continue;
             Double_t quality = (Numc::TWO<> * (minNchi + LMT_NCHI) / (minNchi + refNchi.at(it) + Numc::TWO<> * LMT_NCHI)); 
-            if (quality < qualityVec.at(seedIter)) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
+            //if (quality < qualityVec.at(seedIter)) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
 
             part_ = refSt.at(it);
             args_ = refArgs.at(it);
             Bool_t succ = physicalFit(MassOpt::kFree, seedVec.at(seedIter));
             if (!succ) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
             Double_t fluc = std::fabs(refNchi.at(it) - nchi_) / (refNchi.at(it) + nchi_);
-            if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
+            //if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
 
             refNchi.at(it) = nchi_;
             listVal.push_back(nchi_);
@@ -750,7 +752,7 @@ Bool_t PhyTrFit::physicalMassFit() {
         else               minNchi = std::min(minNchi, *minmax.first);
         
         Bool_t consistSelf = (listVal.size() == consistSelfCnt);
-        if (consistSelf) break;
+        //if (consistSelf) break;
         
         if (listVal.size() >= 2) {
             Bool_t consistGroup = true;
@@ -758,16 +760,16 @@ Bool_t PhyTrFit::physicalMassFit() {
             for (UInt_t it = 0; it < listMass.size(); ++it) {
                 if (!refSucc.at(it)) continue;
                 Double_t fluc = std::fabs(normFluc * refNchi.at(it) - Numc::ONE<>);
-                if (fluc > flucVec.at(seedIter)) { consistGroup = false; break; }
+                //if (fluc > flucVec.at(seedIter)) { consistGroup = false; break; }
             }
-            if (consistGroup) break;
+            //if (consistGroup) break;
         }
 
         seedIter++;
     }
 
     // Final
-    //CERR("Final\n");
+    CERR("Final\n");
     if (Numc::Compare(nchi) > 0) {
         part_ = part;
         args_ = args;
@@ -852,8 +854,8 @@ Bool_t PhyTrFit::evolve() {
         // TOF
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
-            if (hitTOF->sq()) chi_TOFq += hitTOF->nrmq() * hitTOF->nrmq();
             if (hitTOF->st()) chi_TOFt += hitTOF->nrmt() * hitTOF->nrmt();
+            if (hitTOF->sq()) chi_TOFq += hitTOF->nrmq() * hitTOF->nrmq();
         }
         
         if (hasCxy) {
@@ -889,7 +891,7 @@ Bool_t PhyTrFit::evolve() {
     stts_ = stts;
     info_ = part_.info();
    
-    //CERR("MASS %14.8f RIG %14.8f NCHI %14.8f\n", part_.mass(), part_.rig(), nchi_);
+    CERR("MASS %14.8f RIG %14.8f NCHI %14.8f\n", part_.mass(), part_.rig(), nchi_);
     return true;
 }
 
@@ -1039,14 +1041,14 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb) {
                 for (Short_t it = 0; it < DIMG_; ++it) {
-                    if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
                     if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
+                    if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
                 }
                 if (hasLoc) {
                     for (Short_t is = 0; is <= itnseg; ++is) {
                         for (Short_t it = 0; it < DIML_; ++it) {
-                            if (hitTOF->sq()) jb(hitTOF->seqIDq(), DIMG_+is*DIML_+it) += hitTOF->divq() * jbGL.at(is)(4, it);
                             if (hitTOF->st()) jb(hitTOF->seqIDt(), DIMG_+is*DIML_+it) += hitTOF->divt() * jbGL.at(is)(4, it);
+                            if (hitTOF->sq()) jb(hitTOF->seqIDq(), DIMG_+is*DIML_+it) += hitTOF->divq() * jbGL.at(is)(4, it);
                         }
                     }
                 } // Local
@@ -1082,7 +1084,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     
 
 PhySt PhyTrFit::interpolate_to_z(Double_t zcoo) const {
-    PhySt nullst = part_; nullst.reset(part_.info().type());
+    PhySt nullst = part_; nullst.reset(part_.info());
     if (!succ_ || stts_.size() == 0) return nullst;
 
     // Find Index

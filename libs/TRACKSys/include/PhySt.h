@@ -160,16 +160,18 @@ class PhySt {
         PhySt(const PartInfo& info = PartInfo(PartType::Proton), Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info); }
         PhySt(const PartType& type, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
         PhySt(Short_t chrg, Double_t mass, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(chrg, mass); }
+        
+        void print() const;
 
         inline void reset(const PartInfo& info);
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass);
         inline void reset(Double_t invu);
         
-        inline void recal(const PartInfo& info) { info_ = info; set_eta(eta_); }
-        inline void recal(const PartType& type) { info_.reset(type); set_eta(eta_); }
-        inline void recal(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); set_eta(eta_); }
-        inline void recal(Double_t invu) { info_.reset(invu); set_eta(eta_); }
+        inline void reset_info(const PartInfo& info) { info_ = info; }
+        inline void reset_info(const PartType& type) { info_.reset(type); }
+        inline void reset_info(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); }
+        inline void reset_info(Double_t invu) { info_.reset(invu); }
         
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
@@ -188,8 +190,6 @@ class PhySt {
         void set_irig(Double_t irig);
 
         void set_rig(Double_t rig);
-
-        void print() const;
 
     public :
         inline PhyArg&       arg() { return arg_; }

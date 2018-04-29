@@ -33,7 +33,7 @@ all :
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	make $(TagetDir)/track_fill
-	make $(TagetDir)/track_fit
+	#make $(TagetDir)/track_fit
 
 $(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
