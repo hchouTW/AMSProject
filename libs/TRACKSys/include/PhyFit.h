@@ -182,6 +182,10 @@ class PhyTrFit : public TrFitPar {
         enum class MassOpt {
             kFixed = 0, kFree = 1
         };
+        
+    protected :
+        static constexpr Short_t DIMG_ = 6;
+        static constexpr Short_t DIML_ = 4;
 
     public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
@@ -211,17 +215,21 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& nrm_mstau() const { return nrm_mstau_; }
         inline const Double_t& nrm_msrho() const { return nrm_msrho_; }
         inline const Double_t& nrm_elion() const { return nrm_elion_; }
+    
+        inline const SVecD<DIMG_>& errG()      const { return errG_; }
+        inline const Double_t&     errG_cx()   const { return errG_(0); }
+        inline const Double_t&     errG_cy()   const { return errG_(1); }
+        inline const Double_t&     errG_ux()   const { return errG_(2); }
+        inline const Double_t&     errG_uy()   const { return errG_(3); }
+        inline const Double_t&     errG_eta()  const { return errG_(4); }
+        inline const Double_t&     errG_invu() const { return errG_(5); }
 
-        inline const Double_t& err_cx()   const { return errG_(0); }
-        inline const Double_t& err_cy()   const { return errG_(1); }
-        inline const Double_t& err_ux()   const { return errG_(2); }
-        inline const Double_t& err_uy()   const { return errG_(3); }
-        inline const Double_t& err_eta()  const { return errG_(4); }
-        inline const Double_t& err_invu() const { return errG_(5); }
-
-    public :
-        PhySt interpolate_to_z(Double_t zcoo = 0) const;
-        MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0) const;
+        inline const std::vector<SVecD<DIML_>>& errL() const { errL_; }
+        inline const SVecD<DIML_>& errL(Int_t it)      const { return errL_.at(it); }
+        inline const Double_t&     errL_tauu(Int_t it) const { return errL_.at(it)(0); }
+        inline const Double_t&     errL_rhou(Int_t it) const { return errL_.at(it)(1); }
+        inline const Double_t&     errL_taul(Int_t it) const { return errL_.at(it)(2); }
+        inline const Double_t&     errL_rhol(Int_t it) const { return errL_.at(it)(3); }
 
     protected :
         void clear();
@@ -230,7 +238,7 @@ class PhyTrFit : public TrFitPar {
         Bool_t physicalFit(const MassOpt& massOpt = MassOpt::kFixed, Double_t scl = 0);
         Bool_t physicalMassFit();
 
-        Bool_t evolve();
+        Bool_t evolve(Bool_t has_err_estimator = true);
 
     protected :
         Bool_t              succ_;
@@ -255,8 +263,12 @@ class PhyTrFit : public TrFitPar {
         Double_t nrm_msrho_;
         Double_t nrm_elion_;
 
-    protected :
-        SVecD<6> errG_; // (cx, cy, ux, uy, eta, invu)
+        SVecD<DIMG_>              errG_; // (cx, cy, ux, uy, eta, invu)
+        std::vector<SVecD<DIML_>> errL_; // (tauu, rhou, taul, rhol)
+
+    public :
+        PhySt interpolate_to_z(Double_t zcoo = 0) const;
+        MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0) const;
 
     protected :
         std::vector<PhySt> stts_;

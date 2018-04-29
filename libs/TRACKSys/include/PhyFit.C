@@ -554,6 +554,9 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         nrm_mstau_ = rhs.nrm_mstau_;
         nrm_msrho_ = rhs.nrm_msrho_;
         nrm_elion_ = rhs.nrm_elion_;
+    
+        errG_      = rhs.errG_;
+        errL_      = rhs.errL_;
 
         stts_      = rhs.stts_;
     }
@@ -607,7 +610,8 @@ void PhyTrFit::clear() {
     nrm_msrho_ = 0;
     nrm_elion_ = 0;
 
-    errG_ = SVecD<6>();
+    errG_ = SVecD<DIMG_>();
+    errL_.clear();
 }
 
 
@@ -621,8 +625,8 @@ Bool_t PhyTrFit::simpleFit() {
 
 Bool_t PhyTrFit::physicalFit(const MassOpt& massOpt, Double_t scl) {
     const Bool_t is_mass_fixed = (MassOpt::kFixed == massOpt);
-    const Short_t DIMG = 6 - is_mass_fixed;
-    const Short_t DIML = 4;
+    const Short_t DIMG = DIMG_ - is_mass_fixed;
+    const Short_t DIML = DIML_;
     
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
     if (!is_mass_fixed) parameters.push_back(part_.info().invu());
@@ -781,9 +785,7 @@ Bool_t PhyTrFit::physicalMassFit() {
 }
 
 
-Bool_t PhyTrFit::evolve() {
-    const Short_t DIMG = 6;
-    const Short_t DIML = 4;
+Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
     std::vector<PhySt> stts;
     
     // Reset TOF Time and Path
@@ -805,25 +807,32 @@ Bool_t PhyTrFit::evolve() {
     PhySt ppst(part_);
     
     // Matrix (Jb)
-    Bool_t hasCov = true;
     PhyJb::SMtxDGG&& jbGG = SMtxId();
-    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML, DIMG);
+    std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
+    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_);
         
     // Interaction Local Parameters
-    for (auto&& arg : args_) {
-        SVecD<5> inrm;
-        arg.cal_nrm(inrm);
+    for (Short_t is = 0; is < nseg_; ++is) { // Interaction
+        SVecD<5> inrm, idiv;
+        args_.at(is).cal_nrm_and_div(inrm, idiv);
+        
         chi_mstau += inrm(0) * inrm(0);
         chi_msrho += inrm(1) * inrm(1);
         chi_mstau += inrm(2) * inrm(2);
         chi_msrho += inrm(3) * inrm(3);
         chi_elion += inrm(4) * inrm(4);
-    }
 
+        if (has_err_estimator) {
+            for (Short_t it = 0; it < DIML_; ++it)
+                jb(nseq_+is*DIML_+it, DIMG_+is*DIML_+it) += idiv(it);
+        }
+    } // Interaction
+    
     Short_t cnt_nhit =  0;
     Short_t cnt_nseg = -1;
-    PhySt nearPpst          = ppst;
-    PhyJb::SMtxDGG nearJbGG = jbGG;
+    PhySt nearPpst                       = ppst;
+    PhyJb::SMtxDGG nearJbGG              = jbGG;
+    std::vector<PhyJb::SMtxDGL> nearJbGL = jbGL;
     for (auto&& hit : hits_) {
         // Interaction Local Parameters
         Bool_t  hasLoc  = (cnt_nseg >= 0);
@@ -833,14 +842,15 @@ Bool_t PhyTrFit::evolve() {
         
         if (isInner && !hasCxy) {
             ppst = nearPpst;
-            if (hasCov) jbGG = nearJbGG;
+            if (has_err_estimator) jbGG = nearJbGG;
+            if (has_err_estimator) jbGL = nearJbGL;
         }
         
         // Propagate
         PhyJb curjb;
         if (isInner) ppst.arg() = args_.at(cnt_nseg);
         else         ppst.arg().clear();
-        if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr,  ((hasCov)?&curjb:nullptr))) break;
+        if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr,  ((has_err_estimator)?&curjb:nullptr))) break;
         ppst.symbk();
        
         // Hit Status: Setting TOF reference time and path
@@ -852,7 +862,12 @@ Bool_t PhyTrFit::evolve() {
         hit->cal(ppst);
         
         // Update Jacb
-        if (hasCov) jbGG = curjb.gg() * jbGG;
+        if (has_err_estimator) {
+            jbGG = curjb.gg() * jbGG;
+            if (hasLoc && hasCxy) jbGL.at(cnt_nseg) = curjb.gl();
+            for (Short_t is = 0; is < cnt_nseg; ++is)
+                jbGL.at(is) = curjb.gg() * jbGL.at(is);
+        }
 
         // State
         if (hasCxy) stts.push_back(ppst);
@@ -860,11 +875,19 @@ Bool_t PhyTrFit::evolve() {
         // Coord
         if (hit->scx()) chi_cx += hit->nrmcx() * hit->nrmcx(); 
         if (hit->scy()) chi_cy += hit->nrmcy() * hit->nrmcy();
-        if (hasCov) {
-            for (Short_t it = 0; it < DIMG; ++it) {
+        if (has_err_estimator) {
+            for (Short_t it = 0; it < DIMG_; ++it) {
                 if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
                 if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
             }
+            if (hasLoc) {
+                for (Short_t is = 0; is <= itnseg; ++is) {
+                    for (Short_t it = 0; it < DIML_; ++it) {
+                        if (hit->scx()) jb(hit->seqIDcx(), DIMG_+is*DIML_+it) += hit->divcx() * jbGL.at(is)(0, it);
+                        if (hit->scy()) jb(hit->seqIDcy(), DIMG_+is*DIML_+it) += hit->divcy() * jbGL.at(is)(1, it);
+                    }
+                }
+            } // Local
         }
          
         // TRK
@@ -872,11 +895,19 @@ Bool_t PhyTrFit::evolve() {
         if (hitTRK != nullptr) {
             if (hitTRK->sqx()) chi_TRKq += hitTRK->nrmqx() * hitTRK->nrmqx();
             if (hitTRK->sqy()) chi_TRKq += hitTRK->nrmqy() * hitTRK->nrmqy();
-            if (hasCov) {
-                for (Short_t it = 0; it < DIMG; ++it) {
+            if (has_err_estimator) {
+                for (Short_t it = 0; it < DIMG_; ++it) {
                     if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
                     if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
                 }
+                if (hasLoc) {
+                    for (Short_t is = 0; is <= itnseg; ++is) {
+                        for (Short_t it = 0; it < DIML_; ++it) {
+                            if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), DIMG_+is*DIML_+it) += hitTRK->divqx() * jbGL.at(is)(4, it);
+                            if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), DIMG_+is*DIML_+it) += hitTRK->divqy() * jbGL.at(is)(4, it);
+                        }
+                    }
+                } // Local
             }
         }
 
@@ -885,29 +916,42 @@ Bool_t PhyTrFit::evolve() {
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi_TOFt += hitTOF->nrmt() * hitTOF->nrmt();
             if (hitTOF->sq()) chi_TOFq += hitTOF->nrmq() * hitTOF->nrmq();
-            if (hasCov) {
-                for (Short_t it = 0; it < DIMG; ++it) {
+            if (has_err_estimator) {
+                for (Short_t it = 0; it < DIMG_; ++it) {
                     if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
                     if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
                 }
+                if (hasLoc) {
+                    for (Short_t is = 0; is <= itnseg; ++is) {
+                        for (Short_t it = 0; it < DIML_; ++it) {
+                            if (hitTOF->st()) jb(hitTOF->seqIDt(), DIMG_+is*DIML_+it) += hitTOF->divt() * jbGL.at(is)(4, it);
+                            if (hitTOF->sq()) jb(hitTOF->seqIDq(), DIMG_+is*DIML_+it) += hitTOF->divq() * jbGL.at(is)(4, it);
+                        }
+                    }
+                } // Local
             }
         }
         
         if (hasCxy) {
             nearPpst = ppst;
-            if (hasCov) nearJbGG = jbGG;
+            if (has_err_estimator) nearJbGG = jbGG;
+            if (has_err_estimator) nearJbGL = jbGL;
             cnt_nseg++;
         }
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
     if (cnt_nseg != nseg_) return false;
-    
-    ceres::Matrix cov  = (jb.transpose() * jb);
-    ceres::Vector diag = cov.inverse().diagonal();
-    SVecD<DIMG>   errs(std::sqrt(diag(0)), std::sqrt(diag(1)), std::sqrt(diag(2)), std::sqrt(diag(3)), std::sqrt(diag(4)), std::sqrt(diag(5)));
-    for (Short_t it = 0; it < DIMG; ++it)
-        if (!Numc::Valid(errs(it))) errs(it) = Numc::ZERO<>;
+
+    std::vector<Double_t> errs(DIMG_+nseg_*DIML_, Numc::ZERO<>);
+    if (has_err_estimator) {
+        ceres::Matrix cov  = (jb.transpose() * jb);
+        ceres::Vector diag = cov.inverse().diagonal();
+        for (UInt_t it = 0; it < diag.rows(); ++it) {
+            if (!Numc::Valid(diag(it))) continue;
+            errs.at(it) = std::sqrt(diag(it));
+        }
+    }
     
     Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mstau + chi_msrho + chi_elion);
     Double_t nchi = (chi / static_cast<Double_t>(ndof_));
@@ -930,7 +974,13 @@ Bool_t PhyTrFit::evolve() {
     nrm_msrho_ = ((nseg_ > 0) ? (chi_msrho / static_cast<Double_t>(nseg_)) : 0);
     nrm_elion_ = ((nseg_ > 0) ? (chi_elion / static_cast<Double_t>(nseg_)) : 0);
 
-    errG_ = errs;
+    errG_ = std::move(SVecD<DIMG_>(errs.at(0), errs.at(1), errs.at(2), errs.at(3), errs.at(4), errs.at(5)));
+    errL_ = std::move(std::vector<SVecD<DIML_>>(nseg_, SVecD<DIML_>()));
+    if (has_err_estimator)
+        for (Short_t is = 0; is < nseg_; ++is)
+            for (Short_t it = 0; it < DIML_; ++it)
+                errL_.at(is)(it) = errs.at(DIMG_+is*DIML_+it);
+
     stts_ = stts;
     info_ = part_.info();
    

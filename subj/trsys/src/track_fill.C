@@ -258,8 +258,8 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        //if (mc_mom > 1.0) continue; // testcode
-        if (mc_mom < 30.0) continue; // testcode
+        if (mc_mom > 1.0) continue; // testcode
+        //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
