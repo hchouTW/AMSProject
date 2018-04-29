@@ -149,31 +149,29 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), numOfRes_(0), numOfPar_(0), part_(part), DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>) { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_); }
-        ~VirtualPhyTrFit() { VirtualPhyTrFit::clear(); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t invu_sgm = Numc::ZERO<>) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), part_(part), invu_sgm_(invu_sgm), is_mass_constraint_(Numc::Compare(invu_sgm_)>0), DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>), numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_mass_constraint_, DIMG_+nseg_*DIML_); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
     protected :
-        inline void setvar(Short_t num_of_residual = 0, Short_t num_of_parameter = 0) {
-            numOfRes_ = 0;
-            numOfPar_ = 0;
+        inline void setvar(const Short_t num_of_residual = 0, const Short_t num_of_parameter = 0) {
             mutable_parameter_block_sizes()->clear(); 
             if (num_of_residual  > 0) { numOfRes_ = num_of_residual;  set_num_residuals(num_of_residual); }
             if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
         }
-
-        inline void clear() { info_ = part_.info(); is_mass_fixed_ = true; part_.arg().reset(sw_mscat_, sw_eloss_); setvar(); part_.reset(part_.info()); }
     
     protected :
-        Bool_t is_mass_fixed_;
-        Short_t numOfRes_;
-        Short_t numOfPar_;
-        PhySt part_;
-
         const Short_t DIMG_;
         const Short_t DIML_;
+       
+        const Bool_t   is_mass_fixed_;
+        const Bool_t   is_mass_constraint_;
+        const Double_t invu_sgm_;
+        const PhySt    part_;
+        
+        Short_t numOfRes_;
+        Short_t numOfPar_;
 };
 
 

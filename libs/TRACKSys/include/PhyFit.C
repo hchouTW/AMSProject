@@ -664,7 +664,8 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
     }
     parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
 
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed);
+    //ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed, invu_sgm);
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed); // testcode
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -708,59 +709,52 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
 
 
 Bool_t PhyTrFit::physicalMassFit() {
-    Short_t absChrg = std::abs(info_.chrg());
-    if (absChrg <= Numc::ZERO<Short_t> || absChrg >= PartListMassQ.size()) return false;
-    if (PartListMassQ.at(absChrg).size() == 0) return false;
-    
-    // List of Mass (Init)
-    const std::vector<Double_t>&     listMass = PartListMassQ.at(absChrg);
-    std::vector<Bool_t>              refSucc(listMass.size(), false);
-    std::vector<Double_t>            refNchi(listMass.size(), Numc::NEG<>);
-    std::vector<Double_t>            refErrInvu(listMass.size(), Numc::ZERO<>);
-    std::vector<PhySt>               refSt;
-    std::vector<std::vector<PhyArg>> refArgs;
-    for (UInt_t it = 0; it < listMass.size(); ++it) {
-        info_.reset(absChrg, listMass.at(it)); 
-        Bool_t succ = (simpleFit() ? physicalFit() : false);
-        refSt.push_back(part_);
-        refArgs.push_back(args_);
-        if (!succ) continue;
-        refSucc.at(it) = true;
-        refNchi.at(it) = nchi_;
-        refErrInvu.at(it) = errG_(5);
-    }
+    Short_t chrg = std::abs(info_.chrg());
+    if (chrg <= Numc::ZERO<Short_t> || chrg >= PartListMassQ.size()) return false;
+    if (PartListMassQ.at(chrg).size() == 0) return false;
 
-    // Min NormChisq
-    const Double_t LMT_NCHI = 0.05;
-    auto&& compless = [] (const Double_t& a, const Double_t& b) { return ((a > Numc::ZERO<>) ? ((b > Numc::ZERO<>) ? a < b : a > Numc::ZERO<>) : false); }; // return true, if a < b or only a
-    Double_t minNchi = *std::min_element(refNchi.begin(), refNchi.end(), compless);
+    class ListElem {
+        public :
+            ListElem(Double_t _mass, Double_t _errG, const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _nchi) : used(true), mass(_mass), errG(_errG), part(_part), args(_args), nchi(_nchi) {}
+            Bool_t              used;
+            Double_t            mass;
+            Double_t            errG;
+            PhySt               part;
+            std::vector<PhyArg> args;
+            Double_t            nchi;
+    };
+
+    // List of Particle Mass (Init)
+    std::vector<ListElem> listPart;
+    Double_t minNchi = Numc::NEG<>;
+    for (auto&& mass : PartListMassQ.at(chrg)) {
+        args_.clear();
+        info_.reset(chrg, mass); 
+        Bool_t succ = (simpleFit() ? physicalFit() : false);
+        if (!succ) continue;
+        listPart.push_back(ListElem(mass, errG_(5), part_, args_, nchi_));
+        minNchi = ((minNchi < Numc::ZERO<>) ? nchi_ : std::min(minNchi, nchi_));
+    }
     
     // Parameters
     Double_t            nchi = Numc::NEG<>;
     PhySt               part = part_;
     std::vector<PhyArg> args = args_;
-    
-    Short_t seedIter = 0;
-    const std::vector<Double_t> flucVec({ Numc::TWO<>/Numc::HUNDRED<>, Numc::FOUR<>/Numc::HUNDRED<>, Numc::FIVE<>/Numc::HUNDRED<> });
-    const std::vector<Double_t> qualityVec({ Numc::THREE<>/Numc::FIVE<>, Numc::FOUR<>/Numc::FIVE<>, Numc::SIX<>/Numc::SEVEN<> });
-    while (Numc::Compare(minNchi) > 0 && seedIter < qualityVec.size()) {
-        CERR("SeedIter %d\n", seedIter);
-        std::vector<Double_t> listVal;
-        Short_t consistSelfCnt = Numc::ZERO<Int_t>;
-        for (UInt_t it = 0; it < listMass.size(); ++it) {
-            if (!refSucc.at(it)) continue;
-            Double_t quality = (Numc::TWO<> * (minNchi + LMT_NCHI) / (minNchi + refNchi.at(it) + Numc::TWO<> * LMT_NCHI)); 
-            //if (quality < qualityVec.at(seedIter)) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
 
-            part_ = refSt.at(it);
-            args_ = refArgs.at(it);
-            Bool_t succ = physicalFit(MassOpt::kFree, refErrInvu.at(it));
-            if (!succ) { refSucc.at(it) = false; refNchi.at(it) = Numc::NEG<>; continue; }
-            Double_t fluc = std::fabs(refNchi.at(it) - nchi_) / (refNchi.at(it) + nchi_);
-            //if (fluc < flucVec.at(seedIter)) consistSelfCnt++;
+    const Short_t niter = 2;
+    for (Short_t iter = 0; iter < niter; ++iter) {
+        CERR("ITER %d\n", iter);
+        for (auto&& elem : listPart) {
+            if (!elem.used) continue;
+            Double_t quality = (Numc::TWO<> * (minNchi + Numc::HALF) / (minNchi + elem.nchi + Numc::ONE<>));
+            if (quality < Numc::TWO<>/Numc::THREE<>) { elem.used = false; continue; }
 
-            refNchi.at(it) = nchi_;
-            listVal.push_back(nchi_);
+            part_ = elem.part;
+            args_ = elem.args;
+            Bool_t succ = physicalFit(MassOpt::kFree, elem.errG);
+            if (!succ) continue;
+            elem.nchi = nchi_;
+
             Bool_t firstTime = (Numc::Compare(nchi) < 0);
             if (firstTime || Numc::Compare(nchi_, nchi) < 0) {
                 nchi = nchi_;
@@ -768,30 +762,11 @@ Bool_t PhyTrFit::physicalMassFit() {
                 args = args_;
             }
         }
-        if (listVal.size() == 0) break;
-        auto minmax = std::minmax_element(listVal.begin(), listVal.end());
-        if (seedIter == 0) minNchi = *minmax.first;
-        else               minNchi = std::min(minNchi, *minmax.first);
-        
-        Bool_t consistSelf = (listVal.size() == consistSelfCnt);
-        //if (consistSelf) break;
-        
-        if (listVal.size() >= 2) {
-            Bool_t consistGroup = true;
-            Double_t normFluc = Numc::TWO<> / (*minmax.first + *minmax.second);
-            for (UInt_t it = 0; it < listMass.size(); ++it) {
-                if (!refSucc.at(it)) continue;
-                Double_t fluc = std::fabs(normFluc * refNchi.at(it) - Numc::ONE<>);
-                //if (fluc > flucVec.at(seedIter)) { consistGroup = false; break; }
-            }
-            //if (consistGroup) break;
-        }
-
-        seedIter++;
+        if (Numc::Compare(nchi) < 0) break;
+        minNchi = ((iter == 0) ? nchi : std::min(minNchi, nchi));
     }
 
-    // Final
-    CERR("Final\n");
+    CERR("FINAL\n");
     if (Numc::Compare(nchi) > 0) {
         part_ = part;
         args_ = args;
@@ -1040,6 +1015,15 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
+
+    ////////////////// testcode
+    // Mass Constraint
+    if (!is_mass_fixed_ && is_mass_constraint_) {
+        Double_t div = (Numc::ONE<> / invu_sgm_);
+        rs(numOfRes_-1)    += div * (part_.info().invu() - ppst.info().invu());
+        jb(numOfRes_-1, 5) += div * Numc::NEG<>;
+    }
+    ////////////////////
 
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
         SVecD<5> inrm, idiv;

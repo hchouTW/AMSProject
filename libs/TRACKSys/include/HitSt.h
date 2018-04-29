@@ -169,63 +169,63 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     public :
-        HitStTOF(Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, false, false), pdf_q_(nullptr), pdf_t_(nullptr) { clear(); }
+        HitStTOF(Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, false, false), pdf_t_(nullptr), pdf_q_(nullptr) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
         void set_type(const PartInfo& info = PartInfo(PartType::Proton));
+
+        inline void set_t(Double_t t) {
+            side_t_ = (Numc::Compare(t) >= 0);
+            t_      = (side_t_ ? t : Numc::ZERO<>);
+        }
         
         inline void set_q(Double_t q) {
             side_q_ = (Numc::Compare(q) > 0);
             q_      = (side_q_ ? q : Numc::ZERO<>);
         }
-        
-        inline void set_t(Double_t t) {
-            side_t_ = (Numc::Compare(t) >= 0);
-            t_      = (side_t_ ? t : Numc::ZERO<>);
-        }
 
         inline Double_t t() const { return (t_ + OFFSET_T_); }
 
-        inline const Short_t&  seqIDq() const { return seqIDq_; }
         inline const Short_t&  seqIDt() const { return seqIDt_; }
+        inline const Short_t&  seqIDq() const { return seqIDq_; }
         
-        inline const Bool_t& sq() const { return side_q_; }
         inline const Bool_t& st() const { return side_t_; }
-
-        inline const Double_t& nrmq() const { return nrmq_; }
-        inline const Double_t& divq() const { return divq_; }
+        inline const Bool_t& sq() const { return side_q_; }
 
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divt() const { return divt_; }
+        
+        inline const Double_t& nrmq() const { return nrmq_; }
+        inline const Double_t& divq() const { return divq_; }
 
     protected :
         void clear();
 
     protected :
-        Short_t seqIDq_;
         Short_t seqIDt_;
-        
-        Bool_t   side_q_;
-        Double_t q_; // Q
+        Short_t seqIDq_;
         
         Bool_t   side_t_;
         Double_t t_; // T [cm]
 
-        Double_t nrmq_; // Q nrom
-        Double_t divq_; // Q div
+        Bool_t   side_q_;
+        Double_t q_; // Q
         
         Double_t nrmt_; // T nrom
         Double_t divt_; // T div
 
-        IonEloss*  pdf_q_;
+        Double_t nrmq_; // Q nrom
+        Double_t divq_; // Q div
+
         MultiGaus* pdf_t_;
+        IonEloss*  pdf_q_;
     
     protected :
-        static IonEloss  PDF_Q01_Q_;
         static MultiGaus PDF_Q01_T_;
+        static IonEloss  PDF_Q01_Q_;
 
     public :
         static constexpr Double_t TRANS_NS_TO_CM = 2.99792458e+01; // [ns] -> [cm]

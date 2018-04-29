@@ -212,20 +212,20 @@ IonEloss HitStTRK::PDF_Q01_QY_( // TEMP
 void HitStTOF::clear() {
     seqIDcx_ = -1;
     seqIDcx_ = -1;
-    seqIDq_  = -1;
     seqIDt_  = -1;
-
-    side_q_ = false;
-    q_      = Numc::ZERO<>;
+    seqIDq_  = -1;
     
     side_t_ = false;
     t_      = Numc::ZERO<>;
 
-    nrmq_ = Numc::ZERO<>;
-    divq_ = Numc::ZERO<>;
+    side_q_ = false;
+    q_      = Numc::ZERO<>;
     
     nrmt_ = Numc::ZERO<>;
     divt_ = Numc::ZERO<>;
+    
+    nrmq_ = Numc::ZERO<>;
+    divq_ = Numc::ZERO<>;
 
     set_type();
 }
@@ -236,8 +236,8 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
     Short_t iter = 0;
     if (side_coo_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
     if (side_coo_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (side_q_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
     if (side_t_     ) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
+    if (side_q_     ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -245,14 +245,6 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
 void HitStTOF::cal(const PhySt& part) {
     set_type(part.info());
 
-    nrmq_ = Numc::ZERO<>;
-    divq_ = Numc::ZERO<>;
-    if (side_q_) {
-        SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.eta());
-        nrmq_ = ion(0);
-        divq_ = ion(1);
-    }
-    
     nrmt_ = Numc::ZERO<>;
     divt_ = Numc::ZERO<>;
     if (side_t_) {
@@ -271,19 +263,27 @@ void HitStTOF::cal(const PhySt& part) {
             }
         }
     }
+    
+    nrmq_ = Numc::ZERO<>;
+    divq_ = Numc::ZERO<>;
+    if (side_q_) {
+        SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.eta());
+        nrmq_ = ion(0);
+        divq_ = ion(1);
+    }
 
     set_dummy_x(part.cx());
     set_dummy_y(part.cy());
 }
 
 void HitStTOF::set_type(const PartInfo& info) {
-    if ((info.is_std() && type_ == info.type()) && (pdf_q_ && pdf_t_)) return;
+    if ((info.is_std() && type_ == info.type()) && (pdf_t_ && pdf_q_)) return;
     
     switch (info.chrg()) {
         case 1 : case -1 :
         {
-            pdf_q_ = &PDF_Q01_Q_;
             pdf_t_ = &PDF_Q01_T_;
+            pdf_q_ = &PDF_Q01_Q_;
             type_ = info.type();
             break;
         }
@@ -292,6 +292,11 @@ void HitStTOF::set_type(const PartInfo& info) {
             break;
     }
 }
+
+MultiGaus HitStTOF::PDF_Q01_T_(
+    MultiGaus::Opt::ROBUST,
+    6.698790e+00 // TWO Time Fluc
+);
 
 //IonEloss HitStTOF::PDF_Q01_Q_( // OLD
 //    { 3.08657e-02, 6.90186e-01, 1.81945e+00, 3.04335e+00, 1.45315e+00, 0.00000e+00 }, // Kpa
@@ -305,11 +310,6 @@ IonEloss HitStTOF::PDF_Q01_Q_( // NEW
     { 1.10206e-02, 8.62096e+01, 9.49522e-01, 3.59949e-04, 2.70646e+00 }, // Mpv
     { 1.89554e-01, 2.80196e+00, 6.28283e-01, 4.37731e+00, 1.25767e+00 }, // Sgm
     0.0829427 // Fluc
-);
-
-MultiGaus HitStTOF::PDF_Q01_T_(
-    MultiGaus::Opt::ROBUST,
-    6.698790e+00 // TWO Time Fluc
 );
 
 
