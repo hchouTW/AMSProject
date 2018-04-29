@@ -149,7 +149,11 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t invu_sgm = Numc::ZERO<>) : TrFitPar(fitPar), is_mass_fixed_(is_mass_fixed), part_(part), invu_sgm_(invu_sgm), is_mass_constraint_(Numc::Compare(invu_sgm_)>0), DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>), numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_mass_constraint_, DIMG_+nseg_*DIML_); }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t invu_sgm = Numc::ZERO<>) : 
+            TrFitPar(fitPar), part_(part), is_mass_fixed_(is_mass_fixed), invu_sgm_(invu_sgm),
+            is_mass_constraint_(Numc::Compare(invu_sgm_)>0),
+            DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>), 
+            numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_mass_constraint_, DIMG_+nseg_*DIML_); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
