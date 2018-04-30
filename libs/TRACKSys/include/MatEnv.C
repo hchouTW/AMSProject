@@ -274,14 +274,14 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     // Inf
     Long64_t fdes_inf = open(CSTR("%s/%s.inf", dpath.c_str(), fname.c_str()), O_RDONLY);
     if (fdes_inf < 0) {
-        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.inf)", dpath.c_str(), fname.c_str()));
+        Sys::ShowWarningExit(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.inf)", dpath.c_str(), fname.c_str()));
         return is_load_;
     }
     Long64_t flen_inf = lseek(fdes_inf, 0, SEEK_END); 
     
     void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ, MAP_SHARED, fdes_inf, 0);
     if (fptr_inf == reinterpret_cast<void*>(-1)) {
-        Sys::ShowWarning("MatGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarningExit("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_inf);
         return is_load_;
     }
@@ -289,14 +289,14 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     // Var
     Long64_t fdes_var = open(CSTR("%s/%s.var", dpath.c_str(), fname.c_str()), O_RDONLY);
     if (fdes_var < 0) {
-        Sys::ShowWarning(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.var)", dpath.c_str(), fname.c_str()));
+        Sys::ShowWarningExit(STR("MatGeoBoxReader::Load() : Mat field map not found (%s/%s.var)", dpath.c_str(), fname.c_str()));
         return is_load_;
     }
     Long64_t flen_var = lseek(fdes_var, 0, SEEK_END); 
     
     void* fptr_var = mmap(nullptr, flen_var, PROT_READ, MAP_SHARED, fdes_var, 0);
     if (fptr_var == reinterpret_cast<void*>(-1)) {
-        Sys::ShowWarning("MatGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarningExit("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_var);
         return is_load_;
     }

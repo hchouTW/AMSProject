@@ -1002,7 +1002,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // HChou Fitting
         TrackSys::TrFitPar fitPar(TrackSys::PartType::Proton);
         fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTRK(*trtk, 0));
-        fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH)));
+        fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH), true));
         
         MGClock::HrsStopwatch swhc; swhc.start();
         //TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFixed);

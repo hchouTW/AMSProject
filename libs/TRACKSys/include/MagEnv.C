@@ -109,14 +109,14 @@ Bool_t MagGeoBoxReader::load(const std::string& fpath) {
 
     Long64_t fdes = open(fpath.c_str(), O_RDONLY);
     if (fdes < 0) {
-        Sys::ShowWarning(STR("MagGeoBoxReader::Load() : Magnetic field map not found (%s)", fpath.c_str()));
+        Sys::ShowWarningExit(STR("MagGeoBoxReader::Load() : Magnetic field map not found (%s)", fpath.c_str()));
         return is_load_;
     }
     Long64_t flen = lseek(fdes, 0, SEEK_END); 
 
     void* fptr = mmap(nullptr, flen, PROT_READ, MAP_SHARED, fdes, 0);
     if (fptr == reinterpret_cast<void*>(-1)) {
-        Sys::ShowWarning("MagGeoBoxReader::Load() : mmap() failure.");
+        Sys::ShowWarningExit("MagGeoBoxReader::Load() : mmap() failure.");
         close(fdes);
         return is_load_;
     }
