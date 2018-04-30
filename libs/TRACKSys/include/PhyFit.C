@@ -160,7 +160,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     ndof_TOFq_ = nmes_TOFq_;
     ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
     ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_);
-    if (ndof_ == Numc::ZERO<Short_t>) return;
+    if (ndof_ < Numc::THREE<Short_t>) return;
 
     succ_ = (analyticalFit() ? simpleFit() : false);
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); COUT("SimpleTrFit::FAIL.\n"); }
@@ -534,10 +534,17 @@ Bool_t SimpleTrFit::simpleFit() {
 PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     if (this != &rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
-        succ_      = rhs.succ_;
-        part_      = rhs.part_;
-        args_      = rhs.args_;
-        
+        succ_ = rhs.succ_;
+        part_ = rhs.part_;
+        args_ = rhs.args_;
+        stts_ = rhs.stts_;
+      
+        lmtl_invu_   = rhs.lmtl_invu_;
+        lmtu_invu_   = rhs.lmtu_invu_;
+        lmtdiv_invu_ = rhs.lmtdiv_invu_;
+
+        quality_   = rhs.quality_;
+
         ndof_      = rhs.ndof_;
         ndof_cx_   = rhs.ndof_cx_;
         ndof_cy_   = rhs.ndof_cy_;
@@ -555,29 +562,10 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         nrm_msrho_ = rhs.nrm_msrho_;
         nrm_elion_ = rhs.nrm_elion_;
     
-        errG_      = rhs.errG_;
-        errL_      = rhs.errL_;
-
-        stts_      = rhs.stts_;
+        errG_ = rhs.errG_;
+        errL_ = rhs.errL_;
     }
     return *this;
-}
-
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt) : TrFitPar(fitPar) {
-    PhyTrFit::clear();
-    if (!check_hits()) return;
-    ndof_cx_   = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
-    ndof_cy_   = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
-    ndof_TRKq_ = nmes_TRKqx_ + nmes_TRKqy_;
-    ndof_TOFq_ = nmes_TOFq_;
-    ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
-    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - ((MassOpt::kFixed == mass_opt) ? 0 : 1));
-    if (ndof_ == Numc::ZERO<Short_t>) return;
-
-    if (MassOpt::kFixed == mass_opt) succ_ = (simpleFit() ? physicalFit() : false);
-    else                             succ_ = physicalMassFit();
-    
-    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
 }
 
 
@@ -587,6 +575,12 @@ void PhyTrFit::clear() {
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();
     stts_.clear();
+
+    lmtl_invu_   = 0;
+    lmtu_invu_   = 0;
+    lmtdiv_invu_ = 0;
+
+    quality_   = 0;
 
     ndof_      = 0;
     ndof_cx_   = 0;
@@ -611,6 +605,33 @@ void PhyTrFit::clear() {
 }
 
 
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt) : TrFitPar(fitPar) {
+    PhyTrFit::clear();
+    if (!check_hits()) return;
+    ndof_cx_   = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
+    ndof_cy_   = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
+    ndof_TRKq_ = nmes_TRKqx_ + nmes_TRKqy_;
+    ndof_TOFq_ = nmes_TOFq_;
+    ndof_TOFt_ = (nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0;
+    ndof_      = (ndof_cx_ + ndof_cy_ + ndof_TRKq_ + ndof_TOFq_ + ndof_TOFt_ - ((MassOpt::kFixed == mass_opt) ? 0 : 1));
+    if (ndof_ < Numc::THREE<Short_t>) return;
+   
+    // Setting Invu Boundary
+    Double_t chrg = std::fabs(info_.chrg());
+    if (chrg > Numc::ZERO<Short_t> && chrg < PartListMassQ.size() && PartListMassQ.at(chrg).size() != 0) {
+        lmtl_invu_   = (Numc::ONE<> / PartListMassQ.at(chrg).back() ) / Numc::HUNDRED<>;
+        lmtu_invu_   = (Numc::ONE<> / PartListMassQ.at(chrg).front()) * Numc::TEN<>;
+        lmtdiv_invu_ = (Numc::SQRT_THREE / (lmtu_invu_ - lmtl_invu_)) * Numc::HALF;
+    }
+
+    // Fitting
+    if (MassOpt::kFixed == mass_opt) succ_ = (simpleFit() ? physicalFit() : false);
+    else                             succ_ = physicalMassFit();
+    
+    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
+}
+
+
 Bool_t PhyTrFit::simpleFit() {
     SimpleTrFit simple(dynamic_cast<TrFitPar&>(*this));
     if (simple.status()) part_ = simple.part();
@@ -619,33 +640,23 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
+Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu) {
     const Bool_t is_mass_fixed = (MassOpt::kFixed == mass_opt);
     const Short_t DIMG = DIMG_ - is_mass_fixed;
     const Short_t DIML = DIML_;
    
     // MassFixed: Init Invu
     Double_t invu = part_.info().invu();
-    Double_t lmtl_invu = Numc::ZERO<>; 
-    Double_t lmtu_invu = Numc::ZERO<>; 
-    if (!is_mass_fixed) {
-        lmtl_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).back() ) / Numc::HUNDRED<>;
-        lmtu_invu = (Numc::ONE<> / PartListMassQ.at(part_.chrg()).front()) * Numc::HUNDRED<>;
-        Bool_t   is_scl = (Numc::Compare(invu_sgm) > 0);
-        if (is_scl) {
-            Double_t invu_len   = (lmtu_invu - lmtl_invu);
-            Bool_t   is_uniform = (!Numc::Valid(invu_sgm) || (invu_sgm > Numc::FOUR<> * invu_len));
-            Double_t invu_fluc  = Numc::ZERO<>;
-            
-            Short_t iter = 0;
-            const Short_t niter = 20;
-            while ((iter < niter) && (invu_fluc < lmtl_invu || invu_fluc > lmtu_invu)) {
-                if (is_uniform) invu_fluc = lmtl_invu + invu_len * Rndm::DecimalUniform();
-                else            invu_fluc = invu + invu_sgm * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
-                iter++;
-            }
-            if (iter != niter) invu = invu_fluc;
+    Bool_t is_invu_fluc = (Numc::Compare(sgm_invu) > 0);
+    if (!is_mass_fixed && is_invu_fluc) {
+        Short_t iter = 0;
+        const Short_t niter = 20;
+        Double_t invu_fluc  = Numc::ZERO<>;
+        while ((iter < niter) && (invu_fluc < lmtl_invu_ || invu_fluc > lmtu_invu_)) {
+            invu_fluc = invu + sgm_invu * Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
+            iter++;
         }
+        if (iter != niter) invu = invu_fluc;
     }
     
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
@@ -664,8 +675,7 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
     }
     parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
 
-    //ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed, invu_sgm);
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed); // testcode
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed, (is_mass_fixed?Numc::ZERO<>:lmtdiv_invu_));
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -674,8 +684,8 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t invu_sgm) {
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
     if (!is_mass_fixed) {
-        problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu);
-        problem.SetParameterUpperBound(parameters.data(), 5, lmtu_invu);
+        problem.SetParameterLowerBound(parameters.data(), 5, lmtl_invu_);
+        problem.SetParameterUpperBound(parameters.data(), 5, lmtu_invu_);
     }
     
     ceres::Solver::Options options;
@@ -713,70 +723,77 @@ Bool_t PhyTrFit::physicalMassFit() {
     if (chrg <= Numc::ZERO<Short_t> || chrg >= PartListMassQ.size()) return false;
     if (PartListMassQ.at(chrg).size() == 0) return false;
 
-    class ListElem {
+    class PartElem {
         public :
-            ListElem(Double_t _mass, Double_t _errG, const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _nchi) : used(true), mass(_mass), errG(_errG), part(_part), args(_args), nchi(_nchi) {}
-            Bool_t              used;
-            Double_t            mass;
-            Double_t            errG;
+            PartElem() : succ(false), sgmInvu(0), qltSqr(0) {}
+            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _sgmInvu, Double_t _qltSqr) : succ(true), part(_part), args(_args), sgmInvu(_sgmInvu), qltSqr(_qltSqr) {}
+            Bool_t              succ;
             PhySt               part;
             std::vector<PhyArg> args;
-            Double_t            nchi;
+            Double_t            sgmInvu;
+            Double_t            qltSqr;
     };
-
+    
     // List of Particle Mass (Init)
-    std::vector<ListElem> listPart;
-    Double_t minNchi = Numc::NEG<>;
+    PartElem condElem;
     for (auto&& mass : PartListMassQ.at(chrg)) {
         args_.clear();
         info_.reset(chrg, mass); 
-        Bool_t succ = (simpleFit() ? physicalFit() : false);
-        if (!succ) continue;
-        listPart.push_back(ListElem(mass, errG_(5), part_, args_, nchi_));
-        minNchi = ((minNchi < Numc::ZERO<>) ? nchi_ : std::min(minNchi, nchi_));
+        if (!(simpleFit() ? physicalFit() : false)) continue;
+        Double_t qltSqr = quality_ * quality_;
+        
+        Bool_t firstTime = (!condElem.succ);
+        if (firstTime || Numc::Compare(qltSqr, condElem.qltSqr) < 0)
+            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr));
     }
-    
-    // Parameters
-    Double_t            nchi = Numc::NEG<>;
-    PhySt               part = part_;
-    std::vector<PhyArg> args = args_;
+    if (!condElem.succ) return false;
 
-    const Short_t niter = 2;
-    for (Short_t iter = 0; iter < niter; ++iter) {
-        CERR("ITER %d\n", iter);
-        for (auto&& elem : listPart) {
-            if (!elem.used) continue;
-            Double_t quality = (Numc::TWO<> * (minNchi + Numc::HALF) / (minNchi + elem.nchi + Numc::ONE<>));
-            if (quality < Numc::TWO<>/Numc::THREE<>) { elem.used = false; continue; }
+    const Double_t LMT_QLT1  = 4.0e-2;
+    const Double_t LMT_QLT2  = 8.0e-2;
+    const Short_t  LMT_CNT   = 2;
+    const Short_t  LMTU_ITER = 7;
+  
+    //CERR("ITER\n");
+    Short_t cntQlt1 = 0;
+    Short_t cntQlt2 = 0;
+    Bool_t  succ  = false;
+    Bool_t  first = true;
+    for (Short_t curIter = 1; curIter <= LMTU_ITER; ++curIter) {
+        part_ = condElem.part;
+        args_ = condElem.args;
+        Double_t reduce = 
+            std::exp(Numc::NEG<> * Numc::THREE<> * 
+                     static_cast<Double_t>(curIter-1) / static_cast<Double_t>(LMT_CNT+LMTU_ITER)
+                    );
+        if (!physicalFit(MassOpt::kFree, reduce * condElem.sgmInvu)) continue;
+        Double_t qltSqr = quality_ * quality_;
+        Double_t qltRes = std::fabs(qltSqr - condElem.qltSqr);
 
-            part_ = elem.part;
-            args_ = elem.args;
-            Bool_t succ = physicalFit(MassOpt::kFree, elem.errG);
-            if (!succ) continue;
-            elem.nchi = nchi_;
+        if (first || Numc::Compare(qltSqr, condElem.qltSqr) < 0)
+            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr));
 
-            Bool_t firstTime = (Numc::Compare(nchi) < 0);
-            if (firstTime || Numc::Compare(nchi_, nchi) < 0) {
-                nchi = nchi_;
-                part = part_;
-                args = args_;
-            }
-        }
-        if (Numc::Compare(nchi) < 0) break;
-        minNchi = ((iter == 0) ? nchi : std::min(minNchi, nchi));
+        if (first) { first = false; continue; }
+        if (qltRes < LMT_QLT1) cntQlt1++;
+        if (qltRes < LMT_QLT2) cntQlt2++;
+
+        if (curIter == LMTU_ITER) succ = true;
+        if (cntQlt1 < LMT_CNT || cntQlt2 < (LMT_CNT+LMT_CNT)) continue;
+        succ = true;
+        break;
     }
 
-    CERR("FINAL\n");
-    if (Numc::Compare(nchi) > 0) {
-        part_ = part;
-        args_ = args;
+    //CERR("FINAL\n");
+    if (succ) {
+        part_ = condElem.part;
+        args_ = condElem.args;
         return evolve();
     }
     return false;
 }
 
 
-Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
+Bool_t PhyTrFit::evolve() {
+    Bool_t is_invu_bound = (Numc::Compare(lmtdiv_invu_) > 0);
     std::vector<PhySt> stts;
     
     // Reset TOF Time and Path
@@ -800,8 +817,11 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
     // Matrix (Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
-    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_);
-        
+    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML_+is_invu_bound, DIMG_+nseg_*DIML_);
+    
+    // Invu Bound Constraint
+    if (is_invu_bound) jb(nseq_+nseg_*DIML_, 5) += lmtdiv_invu_ * Numc::NEG<>;
+
     // Interaction Local Parameters
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
         SVecD<5> inrm, idiv;
@@ -813,10 +833,8 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
         chi_msrho += inrm(3) * inrm(3);
         chi_elion += inrm(4) * inrm(4);
 
-        if (has_err_estimator) {
-            for (Short_t it = 0; it < DIML_; ++it)
-                jb(nseq_+is*DIML_+it, DIMG_+is*DIML_+it) += idiv(it);
-        }
+        for (Short_t it = 0; it < DIML_; ++it)
+            jb(nseq_+is*DIML_+it, DIMG_+is*DIML_+it) += idiv(it);
     } // Interaction
     
     Short_t cnt_nhit =  0;
@@ -833,15 +851,15 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
         
         if (isInner && !hasCxy) {
             ppst = nearPpst;
-            if (has_err_estimator) jbGG = nearJbGG;
-            if (has_err_estimator) jbGL = nearJbGL;
+            jbGG = nearJbGG;
+            jbGL = nearJbGL;
         }
         
         // Propagate
         PhyJb curjb;
         if (isInner) ppst.arg() = args_.at(cnt_nseg);
         else         ppst.arg().clear();
-        if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr,  ((has_err_estimator)?&curjb:nullptr))) break;
+        if (!PropMgnt::PropToZ(hit->cz(), ppst, nullptr, &curjb)) break;
         ppst.symbk();
        
         // Hit Status: Setting TOF reference time and path
@@ -853,53 +871,48 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
         hit->cal(ppst);
         
         // Update Jacb
-        if (has_err_estimator) {
-            jbGG = curjb.gg() * jbGG;
-            if (hasLoc && hasCxy) jbGL.at(cnt_nseg) = curjb.gl();
-            for (Short_t is = 0; is < cnt_nseg; ++is)
-                jbGL.at(is) = curjb.gg() * jbGL.at(is);
-        }
-
+        jbGG = curjb.gg() * jbGG;
+        if (hasLoc && hasCxy) jbGL.at(cnt_nseg) = curjb.gl();
+        for (Short_t is = 0; is < cnt_nseg; ++is)
+            jbGL.at(is) = curjb.gg() * jbGL.at(is);
+        
         // State
         if (hasCxy) stts.push_back(ppst);
 
         // Coord
         if (hit->scx()) chi_cx += hit->nrmcx() * hit->nrmcx(); 
         if (hit->scy()) chi_cy += hit->nrmcy() * hit->nrmcy();
-        if (has_err_estimator) {
-            for (Short_t it = 0; it < DIMG_; ++it) {
-                if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
-                if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
-            }
-            if (hasLoc) {
-                for (Short_t is = 0; is <= itnseg; ++is) {
-                    for (Short_t it = 0; it < DIML_; ++it) {
-                        if (hit->scx()) jb(hit->seqIDcx(), DIMG_+is*DIML_+it) += hit->divcx() * jbGL.at(is)(0, it);
-                        if (hit->scy()) jb(hit->seqIDcy(), DIMG_+is*DIML_+it) += hit->divcy() * jbGL.at(is)(1, it);
-                    }
-                }
-            } // Local
+        for (Short_t it = 0; it < DIMG_; ++it) {
+            if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
+            if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
         }
+        if (hasLoc) {
+            for (Short_t is = 0; is <= itnseg; ++is) {
+                for (Short_t it = 0; it < DIML_; ++it) {
+                    if (hit->scx()) jb(hit->seqIDcx(), DIMG_+is*DIML_+it) += hit->divcx() * jbGL.at(is)(0, it);
+                    if (hit->scy()) jb(hit->seqIDcy(), DIMG_+is*DIML_+it) += hit->divcy() * jbGL.at(is)(1, it);
+                }
+            }
+        } // Local
+        
          
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
             if (hitTRK->sqx()) chi_TRKq += hitTRK->nrmqx() * hitTRK->nrmqx();
             if (hitTRK->sqy()) chi_TRKq += hitTRK->nrmqy() * hitTRK->nrmqy();
-            if (has_err_estimator) {
-                for (Short_t it = 0; it < DIMG_; ++it) {
-                    if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
-                    if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
-                }
-                if (hasLoc) {
-                    for (Short_t is = 0; is <= itnseg; ++is) {
-                        for (Short_t it = 0; it < DIML_; ++it) {
-                            if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), DIMG_+is*DIML_+it) += hitTRK->divqx() * jbGL.at(is)(4, it);
-                            if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), DIMG_+is*DIML_+it) += hitTRK->divqy() * jbGL.at(is)(4, it);
-                        }
-                    }
-                } // Local
+            for (Short_t it = 0; it < DIMG_; ++it) {
+                if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), it) += hitTRK->divqx() * jbGG(4, it);
+                if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), it) += hitTRK->divqy() * jbGG(4, it);
             }
+            if (hasLoc) {
+                for (Short_t is = 0; is <= itnseg; ++is) {
+                    for (Short_t it = 0; it < DIML_; ++it) {
+                        if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), DIMG_+is*DIML_+it) += hitTRK->divqx() * jbGL.at(is)(4, it);
+                        if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), DIMG_+is*DIML_+it) += hitTRK->divqy() * jbGL.at(is)(4, it);
+                    }
+                }
+            } // Local
         }
 
         // TOF
@@ -907,26 +920,24 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi_TOFt += hitTOF->nrmt() * hitTOF->nrmt();
             if (hitTOF->sq()) chi_TOFq += hitTOF->nrmq() * hitTOF->nrmq();
-            if (has_err_estimator) {
-                for (Short_t it = 0; it < DIMG_; ++it) {
-                    if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
-                    if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
-                }
-                if (hasLoc) {
-                    for (Short_t is = 0; is <= itnseg; ++is) {
-                        for (Short_t it = 0; it < DIML_; ++it) {
-                            if (hitTOF->st()) jb(hitTOF->seqIDt(), DIMG_+is*DIML_+it) += hitTOF->divt() * jbGL.at(is)(4, it);
-                            if (hitTOF->sq()) jb(hitTOF->seqIDq(), DIMG_+is*DIML_+it) += hitTOF->divq() * jbGL.at(is)(4, it);
-                        }
-                    }
-                } // Local
+            for (Short_t it = 0; it < DIMG_; ++it) {
+                if (hitTOF->st()) jb(hitTOF->seqIDt(), it) += hitTOF->divt() * jbGG(4, it);
+                if (hitTOF->sq()) jb(hitTOF->seqIDq(), it) += hitTOF->divq() * jbGG(4, it);
             }
+            if (hasLoc) {
+                for (Short_t is = 0; is <= itnseg; ++is) {
+                    for (Short_t it = 0; it < DIML_; ++it) {
+                        if (hitTOF->st()) jb(hitTOF->seqIDt(), DIMG_+is*DIML_+it) += hitTOF->divt() * jbGL.at(is)(4, it);
+                        if (hitTOF->sq()) jb(hitTOF->seqIDq(), DIMG_+is*DIML_+it) += hitTOF->divq() * jbGL.at(is)(4, it);
+                    }
+                }
+            } // Local
         }
         
         if (hasCxy) {
             nearPpst = ppst;
-            if (has_err_estimator) nearJbGG = jbGG;
-            if (has_err_estimator) nearJbGL = jbGL;
+            nearJbGG = jbGG;
+            nearJbGL = jbGL;
             cnt_nseg++;
         }
         cnt_nhit++;
@@ -935,14 +946,12 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
     if (cnt_nseg != nseg_) return false;
 
     std::vector<Double_t> errs(DIMG_+nseg_*DIML_, Numc::ZERO<>);
-    if (has_err_estimator) {
-        ceres::Matrix cov  = (jb.transpose() * jb);
-        ceres::Vector diag = cov.inverse().diagonal();
-        for (UInt_t it = 0; it < diag.rows(); ++it) {
-            Double_t err = std::sqrt(diag(it));
-            if (!Numc::Valid(diag(it)) || !Numc::Valid(err)) continue;
-            errs.at(it) = err;
-        }
+    ceres::Matrix cov  = (jb.transpose() * jb);
+    ceres::Vector diag = cov.inverse().diagonal();
+    for (UInt_t it = 0; it < diag.rows(); ++it) {
+        Double_t err = std::sqrt(diag(it));
+        if (!Numc::Valid(diag(it)) || !Numc::Valid(err)) continue;
+        errs.at(it) = err;
     }
     
     Double_t chi  = (chi_cx + chi_cy + chi_TRKq + chi_TOFq + chi_TOFt + chi_mstau + chi_msrho + chi_elion);
@@ -962,21 +971,22 @@ Bool_t PhyTrFit::evolve(Bool_t has_err_estimator) {
     nchi_TOFt_ = ((ndof_TOFt_ > 0) ? (chi_TOFt / static_cast<Double_t>(ndof_TOFt_)) : 0);
     nchi_      = nchi;
 
+    quality_   = NormQuality(nchi_, ndof_);
+
     nrm_mstau_ = ((nseg_ > 0) ? (chi_mstau / static_cast<Double_t>(nseg_)) : 0);
     nrm_msrho_ = ((nseg_ > 0) ? (chi_msrho / static_cast<Double_t>(nseg_)) : 0);
     nrm_elion_ = ((nseg_ > 0) ? (chi_elion / static_cast<Double_t>(nseg_)) : 0);
 
     errG_ = std::move(SVecD<DIMG_>(errs.at(0), errs.at(1), errs.at(2), errs.at(3), errs.at(4), errs.at(5)));
     errL_ = std::move(std::vector<SVecD<DIML_>>(nseg_, SVecD<DIML_>()));
-    if (has_err_estimator)
-        for (Short_t is = 0; is < nseg_; ++is)
-            for (Short_t it = 0; it < DIML_; ++it)
-                errL_.at(is)(it) = errs.at(DIMG_+is*DIML_+it);
+    for (Short_t is = 0; is < nseg_; ++is)
+        for (Short_t it = 0; it < DIML_; ++it)
+            errL_.at(is)(it) = errs.at(DIMG_+is*DIML_+it);
 
     stts_ = stts;
     info_ = part_.info();
    
-    CERR("MASS %14.8f INVU(%14.8f %14.8f) RIG %14.8f NCHI %14.8f\n", part_.mass(), part_.info().invu(), errG_(5), part_.rig(), nchi_);
+    //CERR("MASS %14.8f INVU(%14.8f %14.8f) RIG %14.8f NCHI %14.8f QUALITY %14.8f\n", part_.mass(), part_.info().invu(), errG_(5), part_.rig(), nchi_, quality_);
     return true;
 }
 
@@ -1016,14 +1026,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
 
-    ////////////////// testcode
-    // Mass Constraint
-    if (!is_mass_fixed_ && is_mass_constraint_) {
-        Double_t div = (Numc::ONE<> / invu_sgm_);
-        rs(numOfRes_-1)    += div * (part_.info().invu() - ppst.info().invu());
-        jb(numOfRes_-1, 5) += div * Numc::NEG<>;
-    }
-    ////////////////////
+    // Invu Bound Constraint
+    if (!is_mass_fixed_ && is_invu_bound_) jb(numOfRes_-1, 5) += lmtdiv_invu_ * Numc::NEG<>;
 
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
         SVecD<5> inrm, idiv;

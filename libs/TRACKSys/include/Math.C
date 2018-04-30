@@ -62,6 +62,14 @@ std::function<RealType()> Normal(RealType mean, RealType stddev) {
 	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
 	return rngfunc;
 }
+
+// Chi-Square Distributions
+template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
+inline std::function<RealType()> ChiSquare(RealType k) {
+    std::chi_squared_distribution<RealType> distribution(k);
+	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 	
 } // namesapce Rndm
 } // namesapce TrackSys

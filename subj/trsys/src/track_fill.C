@@ -119,6 +119,9 @@ int main(int argc, char * argv[]) {
     Hist* hKFRchiy = Hist::New("hKFRchiy", HistAxis(AXmom, AXRchi));
     Hist* hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
     
+    Axis AXRqlt("Quality [1]", 800, -5.0, 5.0);
+    Hist* hHCRqlt = Hist::New("hHCRqlt", HistAxis(AXmom, AXRqlt));
+    
     //Axis AXRres("Residual [#mum]", 4000, -800.0, 800.0);
     //std::vector<Hist*> hCKresx(9, nullptr);
     //std::vector<Hist*> hKFresx(9, nullptr);
@@ -258,7 +261,7 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        if (mc_mom > 1.0) continue; // testcode
+        //if (mc_mom > 1.0) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
@@ -278,7 +281,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        CERR("FINAL FIT(N%02d,%02d) (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n\n", tr.nhit(), tr.nseg(), mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -333,6 +336,8 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKRchiy->fillH2D(mc_mom, ck_chiy);
         if (kf_succ) hKFRchiy->fillH2D(mc_mom, kf_chiy);
         if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
+        
+        if (hc_succ) hHCRqlt->fillH2D(mc_mom, tr.quality());
 
         //for (Int_t it = 0; it < 9; ++it) {
         //    if (!hasLay[it]) continue;

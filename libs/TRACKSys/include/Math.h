@@ -98,6 +98,10 @@ inline std::function<RealType()> Normal(RealType mean = 0.0, RealType stddev = 1
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
 inline std::function<RealType()> Gamma(RealType alpha = 1.0, RealType beta = 1.0);
 
+// Chi-Square Distributions
+template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
+inline std::function<RealType()> ChiSquare(RealType k = 1.0);
+
 // Special Distributions
 static std::function<double()> DecimalUniform = Uniform<double>(0.0, 1.0);
 static std::function<double()> NormalGaussian = Normal<double>(0.0, 1.0);

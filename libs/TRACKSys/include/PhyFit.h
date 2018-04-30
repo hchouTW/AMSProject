@@ -149,11 +149,11 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t invu_sgm = Numc::ZERO<>) : 
-            TrFitPar(fitPar), part_(part), is_mass_fixed_(is_mass_fixed), invu_sgm_(invu_sgm),
-            is_mass_constraint_(Numc::Compare(invu_sgm_)>0),
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t lmtdiv_invu = Numc::ZERO<>) : 
+            TrFitPar(fitPar), part_(part), is_mass_fixed_(is_mass_fixed),
+            is_invu_bound_(Numc::Compare(lmtdiv_invu)>0), lmtdiv_invu_(is_invu_bound_?lmtdiv_invu:Numc::ZERO<>),
             DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>), 
-            numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_mass_constraint_, DIMG_+nseg_*DIML_); }
+            numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_invu_bound_, DIMG_+nseg_*DIML_); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
@@ -170,8 +170,8 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         const Short_t DIML_;
        
         const Bool_t   is_mass_fixed_;
-        const Bool_t   is_mass_constraint_;
-        const Double_t invu_sgm_;
+        const Bool_t   is_invu_bound_;
+        const Double_t lmtdiv_invu_;
         const PhySt    part_;
         
         Short_t numOfRes_;
@@ -199,6 +199,8 @@ class PhyTrFit : public TrFitPar {
     public :
         inline const Bool_t& status() const { return succ_; }
         inline const PhySt& part() const { return part_; }
+        
+        inline const Double_t& quality() const { return quality_; }
 
         inline const Short_t& ndof()      const { return ndof_; }
         inline const Short_t& ndof_cx()   const { return ndof_cx_; }
@@ -237,16 +239,22 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t invu_sgm = 0);
+        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_invu = 0);
         Bool_t physicalMassFit();
 
-        Bool_t evolve(Bool_t has_err_estimator = true);
+        Bool_t evolve();
 
     protected :
         Bool_t              succ_;
         PhySt               part_;
         std::vector<PhyArg> args_; 
-        
+
+        Double_t lmtl_invu_;
+        Double_t lmtu_invu_;
+        Double_t lmtdiv_invu_;
+
+        Double_t quality_;
+
         Short_t ndof_;
         Short_t ndof_cx_;
         Short_t ndof_cy_;
@@ -274,6 +282,20 @@ class PhyTrFit : public TrFitPar {
 
     protected :
         std::vector<PhySt> stts_;
+
+    private :
+        static Double_t NormQuality(Double_t nchi, Short_t ndof = Numc::THREE<Short_t>) {
+            if (ndof < Numc::THREE<Short_t>) return Numc::ZERO<>;
+            Double_t chi   = nchi * static_cast<Double_t>(ndof);
+            if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+            Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
+            Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
+            Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
+            if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
+            Double_t xfunc = sign * std::sqrt(qfunc / static_cast<Double_t>(ndof));
+            if (Numc::Valid(xfunc)) return xfunc;
+            return Numc::ZERO<>;
+        }
 };
 
 
