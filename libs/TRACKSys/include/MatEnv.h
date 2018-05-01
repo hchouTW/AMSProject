@@ -211,8 +211,8 @@ class MatGeoBoxReader {
         inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
     private :
-        static constexpr Double_t STD_STEP_LEN_ = Numc::ONE<>;
-        static constexpr Double_t FST_STEP_LEN_ = Numc::ONE<> + Numc::HALF;
+        static constexpr Double_t STD_STEP_LEN = Numc::ONE<>;
+        static constexpr Double_t FST_STEP_LEN = Numc::ONE<> + Numc::HALF;
 
         Bool_t                               is_load_;
         Bool_t*                              mat_ptr_;

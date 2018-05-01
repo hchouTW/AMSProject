@@ -221,7 +221,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            fitPar.add_hit(mhit);
+            //fitPar.add_hit(mhit);
         }
         
         if (!fitPar.check()) continue;
@@ -264,8 +264,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();

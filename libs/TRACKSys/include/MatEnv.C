@@ -449,7 +449,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     SVecD<3> vwvec((wxloc - vxloc), (wyloc - vyloc), (wzloc - vzloc));
     
     Double_t   vwlen = LA::Mag(vwvec);
-    Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN_ : FST_STEP_LEN_))) + 2;
+    Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN : FST_STEP_LEN))) + 2;
     SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
 
     SVecD<3> itloc((vxloc + Numc::HALF * unit(0)), (vyloc + Numc::HALF * unit(1)), (vzloc + Numc::HALF * unit(2)));
@@ -489,11 +489,11 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t sum_loc2 = 0;
     for (Long64_t it = itsat; it < itend; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(std::floor(itloc(2)));
-        if (!Numc::Valid(itloc(2)) || !Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) continue;
+        if (zi < 0 || zi >= n_.at(2)) continue;
         Long64_t yi = static_cast<Long64_t>(std::floor(itloc(1)));
-        if (!Numc::Valid(itloc(1)) || !Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) continue;
+        if (yi < 0 || yi >= n_.at(1)) continue;
         Long64_t xi = static_cast<Long64_t>(std::floor(itloc(0)));
-        if (!Numc::Valid(itloc(0)) || !Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) continue;
+        if (xi < 0 || xi >= n_.at(0)) continue;
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         Bool_t   mat = mat_ptr_[idx];
