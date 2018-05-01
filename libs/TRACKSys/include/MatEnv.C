@@ -380,14 +380,17 @@ Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
 MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
     if (!is_load_) return MatFld();
 
-    Long64_t zi = static_cast<Long64_t>(std::floor((coo(2) - min_.at(2)) / dlt_.at(2)));
-    if (!Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) return MatFld();
+    Double_t zloc = (coo(2) - min_.at(2)) / dlt_.at(2);
+    Long64_t zi = static_cast<Long64_t>(std::floor(zloc));
+    if (!Numc::Valid(zloc) || !Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) return MatFld();
     
-    Long64_t yi = static_cast<Long64_t>(std::floor((coo(1) - min_.at(1)) / dlt_.at(1)));
-    if (!Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) return MatFld();
+    Double_t yloc = (coo(1) - min_.at(1)) / dlt_.at(1);
+    Long64_t yi = static_cast<Long64_t>(std::floor(yloc));
+    if (!Numc::Valid(yloc) || !Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) return MatFld();
 
-    Long64_t xi = static_cast<Long64_t>(std::floor((coo(0) - min_.at(0)) / dlt_.at(0)));
-    if (!Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) return MatFld();
+    Double_t xloc = (coo(0) - min_.at(0)) / dlt_.at(0);
+    Long64_t xi = static_cast<Long64_t>(std::floor(xloc));
+    if (!Numc::Valid(xloc) || !Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) return MatFld();
 
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
     Bool_t   mat = mat_ptr_[idx];
@@ -405,25 +408,28 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
 MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb, Bool_t is_std) {
     if (!is_load_) return MatFld();
     
-    Double_t vzloc = std::move((vcoo(2) - min_.at(2)) / dlt_.at(2));
-    Double_t wzloc = std::move((wcoo(2) - min_.at(2)) / dlt_.at(2));
+    Double_t vzloc = (vcoo(2) - min_.at(2)) / dlt_.at(2);
+    Double_t wzloc = (wcoo(2) - min_.at(2)) / dlt_.at(2);
     Long64_t vzi = static_cast<Long64_t>(std::floor(vzloc));
     Long64_t wzi = static_cast<Long64_t>(std::floor(wzloc));
-    if (!Numc::Valid(vzi) || !Numc::Valid(wzi)) return MatFld();
+    if (!Numc::Valid(vzloc) || !Numc::Valid(vzi)) return MatFld();
+    if (!Numc::Valid(wzloc) || !Numc::Valid(wzi)) return MatFld();
     if ((vzi < 0 && wzi < 0) || (vzi >= n_.at(2) && wzi >= n_.at(2))) return MatFld();
     
-    Double_t vyloc = std::move((vcoo(1) - min_.at(1)) / dlt_.at(1));
-    Double_t wyloc = std::move((wcoo(1) - min_.at(1)) / dlt_.at(1));
+    Double_t vyloc = (vcoo(1) - min_.at(1)) / dlt_.at(1);
+    Double_t wyloc = (wcoo(1) - min_.at(1)) / dlt_.at(1);
     Long64_t vyi = static_cast<Long64_t>(std::floor(vyloc));
     Long64_t wyi = static_cast<Long64_t>(std::floor(wyloc));
-    if (!Numc::Valid(vyi) || !Numc::Valid(wyi)) return MatFld();
+    if (!Numc::Valid(vyloc) || !Numc::Valid(vyi)) return MatFld();
+    if (!Numc::Valid(wyloc) || !Numc::Valid(wyi)) return MatFld();
     if ((vyi < 0 && wyi < 0) || (vyi >= n_.at(1) && wyi >= n_.at(1))) return MatFld();
     
-    Double_t vxloc = std::move((vcoo(0) - min_.at(0)) / dlt_.at(0));
-    Double_t wxloc = std::move((wcoo(0) - min_.at(0)) / dlt_.at(0));
+    Double_t vxloc = (vcoo(0) - min_.at(0)) / dlt_.at(0);
+    Double_t wxloc = (wcoo(0) - min_.at(0)) / dlt_.at(0);
     Long64_t vxi = static_cast<Long64_t>(std::floor(vxloc));
     Long64_t wxi = static_cast<Long64_t>(std::floor(wxloc));
-    if (!Numc::Valid(vxi) || !Numc::Valid(wxi)) return MatFld();
+    if (!Numc::Valid(vxloc) || !Numc::Valid(vxi)) return MatFld();
+    if (!Numc::Valid(wxloc) || !Numc::Valid(wxi)) return MatFld();
     if ((vxi < 0 && wxi < 0) || (vxi >= n_.at(0) && wxi >= n_.at(0))) return MatFld();
 
     Double_t rlen = LA::Mag((wcoo - vcoo));
@@ -474,21 +480,6 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     }
     //====
 
-    //==== faster method (tuned by axis-Z)
-    //Short_t signuz = Numc::Compare(unit(2));
-    //if (signuz != 0 && Numc::Compare(std::fabs(unit(2)), 1.0e-2) > 0) {
-    //    Double_t sat = ((signuz == 1) ? 0. : n_.at(2));
-    //    Double_t end = ((signuz == 1) ? n_.at(2) : 0.);
-    //    Long64_t satID = static_cast<Long64_t>(std::floor((sat - itloc(2)) / unit(2)));
-    //    Long64_t endID = static_cast<Long64_t>(std::floor((end - itloc(2)) / unit(2))) + 1;
-    //    if (Numc::Valid(satID) && Numc::Valid(endID)) {
-    //        if (satID > 0 && satID < nstp) itsat = satID;
-    //        if (endID > 0 && endID < nstp) itend = endID;
-    //        itloc += (itsat * unit);
-    //    }
-    //}
-    //====
-
     Long64_t itcnt    = 0;
     Double_t sum_irl  = 0;
     Double_t sum_eld  = 0;
@@ -498,11 +489,11 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t sum_loc2 = 0;
     for (Long64_t it = itsat; it < itend; ++it, itloc += unit) {
         Long64_t zi = static_cast<Long64_t>(std::floor(itloc(2)));
-        if (!Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) continue;
+        if (!Numc::Valid(itloc(2)) || !Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) continue;
         Long64_t yi = static_cast<Long64_t>(std::floor(itloc(1)));
-        if (!Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) continue;
+        if (!Numc::Valid(itloc(1)) || !Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) continue;
         Long64_t xi = static_cast<Long64_t>(std::floor(itloc(0)));
-        if (!Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) continue;
+        if (!Numc::Valid(itloc(0)) || !Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) continue;
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         Bool_t   mat = mat_ptr_[idx];

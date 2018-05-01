@@ -725,13 +725,14 @@ Bool_t PhyTrFit::physicalMassFit() {
 
     class PartElem {
         public :
-            PartElem() : succ(false), sgmInvu(0), qltSqr(0) {}
-            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _sgmInvu, Double_t _qltSqr) : succ(true), part(_part), args(_args), sgmInvu(_sgmInvu), qltSqr(_qltSqr) {}
+            PartElem() : succ(false), sgmInvu(0), qltSqr(0), nchi(0) {}
+            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _sgmInvu, Double_t _qltSqr, Double_t _nchi) : succ(true), part(_part), args(_args), sgmInvu(_sgmInvu), qltSqr(_qltSqr), nchi(_nchi) {}
             Bool_t              succ;
             PhySt               part;
             std::vector<PhyArg> args;
             Double_t            sgmInvu;
             Double_t            qltSqr;
+            Double_t            nchi;
     };
     
     // List of Particle Mass (Init)
@@ -743,8 +744,8 @@ Bool_t PhyTrFit::physicalMassFit() {
         Double_t qltSqr = quality_ * quality_;
         
         Bool_t firstTime = (!condElem.succ);
-        if (firstTime || Numc::Compare(qltSqr, condElem.qltSqr) < 0)
-            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr));
+        if (firstTime || Numc::Compare(nchi_, condElem.nchi) < 0)
+            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr, nchi_));
     }
     if (!condElem.succ) return false;
 
@@ -769,8 +770,8 @@ Bool_t PhyTrFit::physicalMassFit() {
         Double_t qltSqr = quality_ * quality_;
         Double_t qltRes = std::fabs(qltSqr - condElem.qltSqr);
 
-        if (first || Numc::Compare(qltSqr, condElem.qltSqr) < 0)
-            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr));
+        if (first || Numc::Compare(nchi_, condElem.nchi) < 0)
+            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr, nchi_));
 
         if (first) { first = false; continue; }
         if (qltRes < LMT_QLT1) cntQlt1++;
