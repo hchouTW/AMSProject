@@ -12,7 +12,12 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
-    
+
+    std::string dpath = "/ams_home/hchou/AMSData/new_material";
+    std::string fpath = "/ams_home/hchou/AMSData/material/g4mscan.root";
+    MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree(dpath, fpath);
+    return true;
+
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
