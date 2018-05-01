@@ -621,7 +621,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt) : TrFitPar(f
     if (chrg > Numc::ZERO<Short_t> && chrg < PartListMassQ.size() && PartListMassQ.at(chrg).size() != 0) {
         lmtl_invu_   = (Numc::ONE<> / PartListMassQ.at(chrg).back() ) / Numc::HUNDRED<>;
         lmtu_invu_   = (Numc::ONE<> / PartListMassQ.at(chrg).front()) * Numc::TEN<>;
-        lmtdiv_invu_ = (Numc::SQRT_THREE / (lmtu_invu_ - lmtl_invu_)) * Numc::HALF;
+        lmtdiv_invu_ = (Numc::SQRT_THREE / (lmtu_invu_ - lmtl_invu_));
     }
 
     // Fitting
@@ -640,27 +640,50 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu) {
+Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu, Double_t reduce) {
     const Bool_t is_mass_fixed = (MassOpt::kFixed == mass_opt);
     const Short_t DIMG = DIMG_ - is_mass_fixed;
     const Short_t DIML = DIML_;
    
     // MassFixed: Init Invu
+    Double_t eta  = part_.eta();
     Double_t invu = part_.info().invu();
-    Bool_t is_invu_fluc = (Numc::Compare(sgm_invu) > 0);
+    Bool_t is_invu_fluc = (Numc::Compare(sgm_invu) > 0 && Numc::Compare(reduce) > 0);
     if (!is_mass_fixed && is_invu_fluc) {
+        //Short_t iter = 0;
+        //const Short_t niter = 20;
+        //Double_t invu_fluc  = Numc::ZERO<>;
+        //while ((iter < niter) && (invu_fluc < lmtl_invu_ || invu_fluc > lmtu_invu_)) {
+        //    Double_t fluc = reduce * (sgm_invu / invu) * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
+        //    invu_fluc = invu * (Numc::ONE<> + fluc);
+        //    iter++;
+        //}
+        
+        // testcode 
         Short_t iter = 0;
         const Short_t niter = 20;
         Double_t invu_fluc  = Numc::ZERO<>;
         while ((iter < niter) && (invu_fluc < lmtl_invu_ || invu_fluc > lmtu_invu_)) {
-            invu_fluc = invu + sgm_invu * Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
+            Double_t fluc = reduce * (sgm_invu / invu) * ((Rndm::DecimalUniform() - Numc::HALF) + Numc::HALF * Rndm::NormalGaussian());
+            invu_fluc = invu / (Numc::ONE<> + fluc);
             iter++;
         }
-        if (iter != niter) invu = invu_fluc;
+        
+        //
+        //
+        if (iter != niter) {
+            Double_t eta_fluc = reduce * (Rndm::NormalGaussian() / Numc::TEN<>);
+            if (Numc::Compare(std::fabs(eta_fluc), Numc::HALF) > 0) eta_fluc = Numc::ZERO<>;
+            eta  = eta * (Numc::ONE<> + eta_fluc);
+            invu = invu_fluc;
+        }
     }
     
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
-    if (!is_mass_fixed) parameters.push_back(invu);
+    if (!is_mass_fixed) {
+        parameters.at(4) = eta;
+        parameters.push_back(invu);
+    }
 
     std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
     if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
@@ -725,13 +748,12 @@ Bool_t PhyTrFit::physicalMassFit() {
 
     class PartElem {
         public :
-            PartElem() : succ(false), sgmInvu(0), qltSqr(0), nchi(0) {}
-            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _sgmInvu, Double_t _qltSqr, Double_t _nchi) : succ(true), part(_part), args(_args), sgmInvu(_sgmInvu), qltSqr(_qltSqr), nchi(_nchi) {}
+            PartElem() : succ(false), sgmInvu(0), nchi(0) {}
+            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _sgmInvu, Double_t _nchi) : succ(true), part(_part), args(_args), sgmInvu(_sgmInvu), nchi(_nchi) {}
             Bool_t              succ;
             PhySt               part;
             std::vector<PhyArg> args;
             Double_t            sgmInvu;
-            Double_t            qltSqr;
             Double_t            nchi;
     };
     
@@ -741,44 +763,39 @@ Bool_t PhyTrFit::physicalMassFit() {
         args_.clear();
         info_.reset(chrg, mass); 
         if (!(simpleFit() ? physicalFit() : false)) continue;
-        Double_t qltSqr = quality_ * quality_;
         
         Bool_t firstTime = (!condElem.succ);
         if (firstTime || Numc::Compare(nchi_, condElem.nchi) < 0)
-            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr, nchi_));
+            condElem = std::move(PartElem(part_, args_, errG_(5), nchi_));
     }
     if (!condElem.succ) return false;
 
-    const Double_t LMT_QLT1  = 4.0e-2;
-    const Double_t LMT_QLT2  = 8.0e-2;
+    const Double_t CONVG_EPSILON   = 1.0e-2;
+    const Double_t CONVG_TOLERANCE = 3.0e-2;
     const Short_t  LMT_CNT   = 2;
-    const Short_t  LMTU_ITER = 7;
+    const Short_t  LMTU_ITER = 8;
   
     //CERR("ITER\n");
+    Bool_t succ = false;
     Short_t cntQlt1 = 0;
     Short_t cntQlt2 = 0;
-    Bool_t  succ  = false;
-    Bool_t  first = true;
     for (Short_t curIter = 1; curIter <= LMTU_ITER; ++curIter) {
         part_ = condElem.part;
         args_ = condElem.args;
         Double_t reduce = 
-            std::exp(Numc::NEG<> * Numc::THREE<> * 
+            std::exp(Numc::NEG<> * Numc::FOUR<> * 
                      static_cast<Double_t>(curIter-1) / static_cast<Double_t>(LMT_CNT+LMTU_ITER)
                     );
-        if (!physicalFit(MassOpt::kFree, reduce * condElem.sgmInvu)) continue;
-        Double_t qltSqr = quality_ * quality_;
-        Double_t qltRes = std::fabs(qltSqr - condElem.qltSqr);
-
-        if (first || Numc::Compare(nchi_, condElem.nchi) < 0)
-            condElem = std::move(PartElem(part_, args_, errG_(5), qltSqr, nchi_));
-
-        if (first) { first = false; continue; }
-        if (qltRes < LMT_QLT1) cntQlt1++;
-        if (qltRes < LMT_QLT2) cntQlt2++;
+        if (curIter == 1) args_.clear();
+        if (!physicalFit(MassOpt::kFree, condElem.sgmInvu, reduce)) continue;
+        Double_t qltRes = std::fabs(condElem.nchi - nchi_) / (condElem.nchi + nchi_ + CONVG_TOLERANCE);
+        
+        condElem = std::move(PartElem(part_, args_, errG_(5), nchi_));
+        if (qltRes < CONVG_EPSILON  ) cntQlt1++;
+        if (qltRes < CONVG_TOLERANCE) cntQlt2++;
 
         if (curIter == LMTU_ITER) succ = true;
-        if (cntQlt1 < LMT_CNT || cntQlt2 < (LMT_CNT+LMT_CNT)) continue;
+        if (cntQlt1 < LMT_CNT && cntQlt2 < (LMT_CNT+LMT_CNT)) continue;
         succ = true;
         break;
     }
@@ -796,7 +813,7 @@ Bool_t PhyTrFit::physicalMassFit() {
 Bool_t PhyTrFit::evolve() {
     Bool_t is_invu_bound = (Numc::Compare(lmtdiv_invu_) > 0);
     std::vector<PhySt> stts;
-    
+
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
@@ -964,6 +981,7 @@ Bool_t PhyTrFit::evolve() {
         stts.at(it).arg().set_mscat(arg.tauu(), arg.rhou(), arg.taul(), arg.rhol());
         stts.at(it).arg().set_eloss(arg.elion(), arg.elbrm());
     }
+    if (!hits_.at(0)->scx() && !hits_.at(0)->scy()) stts.insert(stts.begin(), part_);
 
     nchi_cx_   = ((ndof_cx_   > 0) ? (chi_cx   / static_cast<Double_t>(ndof_cx_  )) : 0);
     nchi_cy_   = ((ndof_cy_   > 0) ? (chi_cy   / static_cast<Double_t>(ndof_cy_  )) : 0);
@@ -987,7 +1005,7 @@ Bool_t PhyTrFit::evolve() {
     stts_ = stts;
     info_ = part_.info();
    
-    //CERR("MASS %14.8f INVU(%14.8f %14.8f) RIG %14.8f NCHI %14.8f QUALITY %14.8f\n", part_.mass(), part_.info().invu(), errG_(5), part_.rig(), nchi_, quality_);
+    //CERR("INT(%d,%d) MASS %14.8f INVU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f QUALITY %14.8f\n", part_.arg().mscat(), part_.arg().eloss(), part_.mass(), part_.info().invu(), errG_(5), part_.eta(), errG_(4), part_.rig(), nchi_, quality_);
     return true;
 }
 

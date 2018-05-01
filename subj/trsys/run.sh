@@ -27,6 +27,6 @@ for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB_${Version}_${id}.log" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
 #${RunFile} ${id} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
 done

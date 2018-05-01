@@ -7,6 +7,7 @@ namespace TrackSys {
 
 enum class PartType {
     Fixed,
+    Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8,
     Photon, 
     Electron, Positron, 
     Muon, 
@@ -93,7 +94,7 @@ Double_t PartInfo::DefaultMass_ = 0;
 // List of Particle
 const std::vector<std::vector<Double_t>> PartListMassQ({
     { PartInfo(PartType::Photon).mass() }, // Q0
-    { PartInfo(PartType::Positron).mass(), PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::Deuterium).mass() }, // Q1
+    { PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::Deuterium).mass() }, // Q1
     { PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::Helium3).mass(), PartInfo(PartType::Helium4).mass() }, // Q2
     { PartInfo(PartType::Lithium6).mass(), PartInfo(PartType::Lithium7).mass() }, // Q3
     { PartInfo(PartType::Beryllium7).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium10).mass() }, // Q4

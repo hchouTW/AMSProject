@@ -7,7 +7,22 @@ namespace TrackSys {
 
 void PartInfo::reset(const PartType& type) {
     // Atomic mass unit u = 0.931494095 GeV/c^2
+    PartType part_type = type;
+    
+    // TODO: Check primary particle in cosmic rays
     switch (type) {
+        case PartType::Q0 : part_type = PartType::Photon    ; break;
+        case PartType::Q1 : part_type = PartType::Proton    ; break;
+        case PartType::Q2 : part_type = PartType::Helium4   ; break;
+        case PartType::Q3 : part_type = PartType::Lithium7  ; break;
+        case PartType::Q4 : part_type = PartType::Beryllium9; break;
+        case PartType::Q5 : part_type = PartType::Boron10   ; break;
+        case PartType::Q6 : part_type = PartType::Carbon14  ; break;
+        case PartType::Q7 : part_type = PartType::Nitrogen14; break;
+        case PartType::Q8 : part_type = PartType::Oxygen18  ; break;
+    }
+
+    switch (part_type) {
         case PartType::Fixed         : reset(PartType::Fixed, "", DefaultChrg_, DefaultMass_); break;
         case PartType::Photon        : reset(PartType::Photon       , "Photon"       ,  0,  0.000000000); break;
         case PartType::Electron      : reset(PartType::Electron     , "Electron"     , -1,  0.000510999); break;

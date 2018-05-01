@@ -201,8 +201,7 @@ int main(int argc, char * argv[]) {
         
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        PartInfo::SetDefault(PartType::Proton);
-        TrFitPar fitPar(PartType::Fixed);
+        TrFitPar fitPar(PartType::Proton);
         for (auto&& hit : track.hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
@@ -261,12 +260,12 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        //if (mc_mom > 1.0) continue; // testcode
+        //if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MassOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -281,7 +280,7 @@ int main(int argc, char * argv[]) {
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
         }
-        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

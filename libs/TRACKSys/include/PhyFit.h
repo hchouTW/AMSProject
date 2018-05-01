@@ -239,7 +239,7 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_invu = 0);
+        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_invu = Numc::ZERO<>, Double_t reduce = Numc::ONE<>);
         Bool_t physicalMassFit();
 
         Bool_t evolve();
