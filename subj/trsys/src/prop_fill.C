@@ -59,8 +59,8 @@ int main(int argc, char * argv[]) {
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
     Int_t decSel = 0;
-    Int_t laySat = 0;
-    Int_t layEnd = 1;
+    Int_t laySat = 4;
+    Int_t layEnd = 5;
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     

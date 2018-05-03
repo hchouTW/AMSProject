@@ -16,11 +16,11 @@ Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Mar23
 OutputDir=${CurDir}/dat
 
 #Hit
-#GroupSize=30
-#Nseq=50
+#GroupSize=20
+#Nseq=70
 #Fit
-GroupSize=3
-Nseq=450
+GroupSize=2
+Nseq=700
 
 #for id in `seq 1 100`
 for id in `seq 0 ${Nseq}`

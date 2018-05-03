@@ -198,7 +198,8 @@ int main(int argc, char * argv[]) {
             if (mchit.layJ == 1) hasMCL1 = true;
             if (mchit.layJ == 9) hasMCL9 = true;
         }
-        
+       
+        Int_t topLay = 1000;
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
         TrFitPar fitPar(PartType::Proton);
@@ -208,9 +209,9 @@ int main(int argc, char * argv[]) {
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             //mhit.set_q(hit.adc[0], hit.adc[1]);
          
-            if (hit.layJ >= 2 && hit.layJ <= 8) fitPar.add_hit(mhit);
+            if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
-                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.add_hit(mhit); }
+                if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.add_hit(mhit); topLay = 0; }
                 if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.add_hit(mhit); }
             }
         }
@@ -221,7 +222,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            //fitPar.add_hit(mhit);
+            fitPar.add_hit(mhit);
         }
         
         if (!fitPar.check()) continue;
@@ -241,7 +242,7 @@ int main(int argc, char * argv[]) {
         for (Int_t it = 0; it < 9; ++it) hasLay[it] = (mcs[it] && mch[it] && msh[it]);
 
         SegPARTMCInfo* topmc = nullptr;
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay >= 1-optL1) { topmc = &seg; break; } }
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay == topLay) { topmc = &seg; break; } }
         if (topmc == nullptr) continue;
 
         Double_t tmom = 0;
@@ -253,7 +254,7 @@ int main(int argc, char * argv[]) {
         else tmom = topmc->mom;
         Double_t mc_mom  = tmom;
 
-        //Double_t mc_mom  = topmc->mom;
+        //Double_t mc_mom  = topmc->mom; // Layer 2
         Double_t mc_eta  = mass/mc_mom;
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
@@ -272,6 +273,7 @@ int main(int argc, char * argv[]) {
         Double_t hc_tme  = sw.time()*1.0e3;
         Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
         Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
+        Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
         for (Int_t it = 0; hc_succ && it < 9; ++it) {
             PhySt&& stt = tr.interpolate_to_z(track.stateLJ[0][0][it][2]);
             hc_coo[it][0] = stt.cx();
@@ -279,7 +281,10 @@ int main(int argc, char * argv[]) {
             hc_coo[it][2] = stt.cz();
             hc_dir[it][0] = stt.ux();
             hc_dir[it][1] = stt.uy();
+            hc_lay_irig[it] = stt.irig();
+            //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
+        //hc_irig = hc_lay_irig[topLay];
         //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(), sw.time());
         //-------------------------------------//
         

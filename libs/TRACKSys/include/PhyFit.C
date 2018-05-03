@@ -13,6 +13,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         ortt_          = rhs.ortt_;
         hits_TRK_      = rhs.hits_TRK_;
         hits_TOF_      = rhs.hits_TOF_;
+        hits_RICH_     = rhs.hits_RICH_;
         nseq_          = rhs.nseq_;
         nseg_          = rhs.nseg_;
         nmes_          = rhs.nmes_;
@@ -22,12 +23,14 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         nmes_TRKqy_    = rhs.nmes_TRKqy_;
         nmes_TOFq_     = rhs.nmes_TOFq_;
         nmes_TOFt_     = rhs.nmes_TOFt_;
+        nmes_RICHib_   = rhs.nmes_RICHib_;
         is_check_      = rhs.is_check_;
         
         hits_.clear();
         if (is_check_) {
-            for (auto&& hit : hits_TRK_) hits_.push_back(&hit); 
-            for (auto&& hit : hits_TOF_) hits_.push_back(&hit); 
+            for (auto&& hit : hits_TRK_ ) hits_.push_back(&hit); 
+            for (auto&& hit : hits_TOF_ ) hits_.push_back(&hit); 
+            for (auto&& hit : hits_RICH_) hits_.push_back(&hit); 
             
             if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
             else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
@@ -50,15 +53,16 @@ TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, Bool_t sw_msca
 void TrFitPar::zero() {
     hits_.clear();
 
-    nseq_       = 0;
-    nseg_       = 0;
-    nmes_       = 0;
-    nmes_cx_    = 0;
-    nmes_cy_    = 0;
-    nmes_TRKqx_ = 0;
-    nmes_TRKqy_ = 0;
-    nmes_TOFq_  = 0;
-    nmes_TOFt_  = 0;
+    nseq_        = 0;
+    nseg_        = 0;
+    nmes_        = 0;
+    nmes_cx_     = 0;
+    nmes_cy_     = 0;
+    nmes_TRKqx_  = 0;
+    nmes_TRKqy_  = 0;
+    nmes_TOFq_   = 0;
+    nmes_TOFt_   = 0;
+    nmes_RICHib_ = 0;
     
     is_check_ = false;
 }
@@ -72,6 +76,7 @@ void TrFitPar::clear() {
    
     hits_TRK_.clear();
     hits_TOF_.clear();
+    hits_RICH_.clear();
 
     zero();
 }
@@ -83,9 +88,12 @@ Bool_t TrFitPar::sort_hits() {
     else                                 Hit<HitStTRK>::Sort(hits_TRK_, VirtualHitSt::Orientation::kUpward);
     if (ortt_ == Orientation::kDownward) Hit<HitStTOF>::Sort(hits_TOF_, VirtualHitSt::Orientation::kDownward);
     else                                 Hit<HitStTOF>::Sort(hits_TOF_, VirtualHitSt::Orientation::kUpward);
+    if (ortt_ == Orientation::kDownward) Hit<HitStRICH>::Sort(hits_RICH_, VirtualHitSt::Orientation::kDownward);
+    else                                 Hit<HitStRICH>::Sort(hits_RICH_, VirtualHitSt::Orientation::kUpward);
  
-    for (auto&& hit : hits_TRK_) hits_.push_back(&hit); 
-    for (auto&& hit : hits_TOF_) hits_.push_back(&hit); 
+    for (auto&& hit : hits_TRK_ ) hits_.push_back(&hit); 
+    for (auto&& hit : hits_TOF_ ) hits_.push_back(&hit); 
+    for (auto&& hit : hits_RICH_) hits_.push_back(&hit); 
     
     if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
     else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
@@ -110,10 +118,14 @@ Bool_t TrFitPar::sort_hits() {
         if (hit.sq()) nmes_TOFq_++;
         if (hit.st()) nmes_TOFt_++;
     }
-
+    
+    for (auto&& hit : hits_RICH_) {
+        if (hit.sib()) nmes_RICHib_++;
+    }
+    
     nseq_ = nseq;
-    nseg_ = ((nseg > 0) ? nseg : 0);
-    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFq_ + nmes_TOFt_);
+    nseg_ = ((sw_mscat_ && nseg > 0) ? nseg : 0);
+    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFq_ + nmes_TOFt_) + nmes_RICHib_;
 
     return true;
 }
@@ -372,6 +384,7 @@ Bool_t SimpleTrFit::simpleFit() {
         Bool_t resetTOF = true;
         HitStTOF::SetOffsetTime(Numc::ZERO<>);
         HitStTOF::SetOffsetPath(Numc::ZERO<>);
+        HitStTOF::SetTimeShiftCorr(false);
         
         Double_t chi_cx   = 0;
         Double_t chi_cy   = 0;
@@ -392,7 +405,7 @@ Bool_t SimpleTrFit::simpleFit() {
         
             if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
                 HitStTOF::SetOffsetPath(ppst.path());
-                HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
+                HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->orgt());
                 resetTOF = false;
             }
             hit->cal(ppst);
@@ -431,16 +444,16 @@ Bool_t SimpleTrFit::simpleFit() {
             if (hitTOF != nullptr) {
                 SVecD<2>       rsTOF;
                 SMtxD<2, DIMG> jbTOF;
-                if (hitTOF->sq()) rsTOF(0) += hitTOF->nrmq();
-                if (hitTOF->st()) rsTOF(1) += hitTOF->nrmt();
+                if (hitTOF->st()) rsTOF(0) += hitTOF->nrmt();
+                if (hitTOF->sq()) rsTOF(1) += hitTOF->nrmq();
                 for (Short_t it = 0; it < DIMG; ++it) {
-                    if (hitTOF->sq()) jbTOF(0, it) += hitTOF->divq() * ppjb(4, it);
-                    if (hitTOF->st()) jbTOF(1, it) += hitTOF->divt() * ppjb(4, it);
+                    if (hitTOF->st()) jbTOF(0, it) += hitTOF->divt() * ppjb(4, it);
+                    if (hitTOF->sq()) jbTOF(1, it) += hitTOF->divq() * ppjb(4, it);
                 }
                 grdG += LA::Transpose(jbTOF) * rsTOF;
                 cvGG += LA::SimilarityT(jbTOF, SMtxSymD<2>(SMtxId()));
-                if (hitTOF->sq()) chi_TOFq += rsTOF(0) * rsTOF(0);
-                if (hitTOF->st()) chi_TOFt += rsTOF(1) * rsTOF(1);
+                if (hitTOF->st()) chi_TOFt += rsTOF(0) * rsTOF(0);
+                if (hitTOF->sq()) chi_TOFq += rsTOF(1) * rsTOF(1);
             }
 
             cnt_nhit++;
@@ -538,6 +551,8 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         part_ = rhs.part_;
         args_ = rhs.args_;
         stts_ = rhs.stts_;
+
+        TOFt_sft_ = rhs.TOFt_sft_;
       
         lmtl_invu_   = rhs.lmtl_invu_;
         lmtu_invu_   = rhs.lmtu_invu_;
@@ -564,6 +579,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     
         errG_ = rhs.errG_;
         errL_ = rhs.errL_;
+        errT_ = rhs.errT_;
     }
     return *this;
 }
@@ -575,6 +591,8 @@ void PhyTrFit::clear() {
     part_.arg().reset(sw_mscat_, sw_eloss_);
     args_.clear();
     stts_.clear();
+
+    TOFt_sft_ = 0;
 
     lmtl_invu_   = 0;
     lmtu_invu_   = 0;
@@ -602,6 +620,7 @@ void PhyTrFit::clear() {
 
     errG_ = SVecD<DIMG_>();
     errL_.clear();
+    errT_ = 0;
 }
 
 
@@ -669,12 +688,10 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu, Double_
             iter++;
         }
         
-        //
-        //
         if (iter != niter) {
             Double_t eta_fluc = reduce * (Rndm::NormalGaussian() / Numc::TEN<>);
             if (Numc::Compare(std::fabs(eta_fluc), Numc::HALF) > 0) eta_fluc = Numc::ZERO<>;
-            eta  = eta * (Numc::ONE<> + eta_fluc);
+            eta  = eta * (invu / invu_fluc) * (Numc::ONE<> + eta_fluc);
             invu = invu_fluc;
         }
     }
@@ -685,18 +702,21 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu, Double_
         parameters.push_back(invu);
     }
 
-    std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
-    if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
-    else {
-        for (Short_t is = 0; is < nseg_; ++is) {
-            const PhyArg& arg = args_.at(is);
-            interaction_parameters.at(is*DIML+0) = arg.tauu();
-            interaction_parameters.at(is*DIML+1) = arg.rhou();
-            interaction_parameters.at(is*DIML+2) = arg.taul();
-            interaction_parameters.at(is*DIML+3) = arg.rhol();
+    if (nseg_ != 0) {
+        std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
+        if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
+        else {
+            for (Short_t is = 0; is < nseg_; ++is) {
+                const PhyArg& arg = args_.at(is);
+                interaction_parameters.at(is*DIML+0) = arg.tauu();
+                interaction_parameters.at(is*DIML+1) = arg.rhou();
+                interaction_parameters.at(is*DIML+2) = arg.taul();
+                interaction_parameters.at(is*DIML+3) = arg.rhol();
+            }
         }
+        parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
     }
-    parameters.insert(parameters.end(), interaction_parameters.begin(), interaction_parameters.end());
+    if (nmes_TOFt_ >= LMTN_TOF_T) { TOFt_sft_ = Numc::ZERO<>; parameters.push_back(Numc::ZERO<>); } // TOF Shift Time
 
     ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mass_fixed, (is_mass_fixed?Numc::ZERO<>:lmtdiv_invu_));
 
@@ -734,6 +754,8 @@ Bool_t PhyTrFit::physicalFit(const MassOpt& mass_opt, Double_t sgm_invu, Double_
         //args_.at(is).set_eloss(
         //        parameters.at(DIMGis*DIML+4));
     }
+    
+    if (nmes_TOFt_ >= LMTN_TOF_T) { TOFt_sft_ = parameters.at(DIMG+nseg_*DIML); } // TOF Shift Time 
 
     //std::cerr << summary.FullReport() << std::endl;
     Bool_t succ = evolve();
@@ -786,7 +808,6 @@ Bool_t PhyTrFit::physicalMassFit() {
             std::exp(Numc::NEG<> * Numc::FOUR<> * 
                      static_cast<Double_t>(curIter-1) / static_cast<Double_t>(LMT_CNT+LMTU_ITER)
                     );
-        if (curIter == 1) args_.clear();
         if (!physicalFit(MassOpt::kFree, condElem.sgmInvu, reduce)) continue;
         Double_t qltRes = std::fabs(condElem.nchi - nchi_) / (condElem.nchi + nchi_ + CONVG_TOLERANCE);
         
@@ -813,12 +834,22 @@ Bool_t PhyTrFit::physicalMassFit() {
 Bool_t PhyTrFit::evolve() {
     Bool_t is_invu_bound = (Numc::Compare(lmtdiv_invu_) > 0);
     std::vector<PhySt> stts;
+  
+    // Seg
+    Bool_t hasSeg = (sw_mscat_ && nseg_ != 0);
+
+    // Number of Res and Par
+    Short_t numOfRes = (nseq_+nseg_*DIML_) + is_invu_bound;
+    Short_t numOfPar = (DIMG_+nseg_*DIML_) + (nmes_TOFt_ >= LMTN_TOF_T);
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
     HitStTOF::SetOffsetPath(Numc::ZERO<>);
-    
+    HitStTOF::SetTimeShiftCorr(true);
+        
+    Short_t parIDtsft = ((nmes_TOFt_ >= LMTN_TOF_T) ? (DIMG_+nseg_*DIML_) : -1);
+   
     Double_t chi_cx   = 0;
     Double_t chi_cy   = 0;
     Double_t chi_TRKq = 0;
@@ -835,7 +866,7 @@ Bool_t PhyTrFit::evolve() {
     // Matrix (Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
-    ceres::Matrix jb = ceres::Matrix::Zero(nseq_+nseg_*DIML_+is_invu_bound, DIMG_+nseg_*DIML_);
+    ceres::Matrix jb = ceres::Matrix::Zero(numOfRes, numOfPar);
     
     // Invu Bound Constraint
     if (is_invu_bound) jb(nseq_+nseg_*DIML_, 5) += lmtdiv_invu_ * Numc::NEG<>;
@@ -882,9 +913,12 @@ Bool_t PhyTrFit::evolve() {
        
         // Hit Status: Setting TOF reference time and path
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
-            HitStTOF::SetOffsetPath(ppst.path());
-            HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
-            resetTOF = false;
+            const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
+            if (firstHitTOF->st()) {
+                HitStTOF::SetOffsetPath(ppst.path());
+                HitStTOF::SetOffsetTime((ppst.time() - firstHitTOF->orgt()) + TOFt_sft_);
+                resetTOF = false;
+            }
         }
         hit->cal(ppst);
         
@@ -950,20 +984,21 @@ Bool_t PhyTrFit::evolve() {
                     }
                 }
             } // Local
+            if (hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divt_sft(); // TOF time shift
         }
         
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
             nearJbGL = jbGL;
-            cnt_nseg++;
+            if (hasSeg) cnt_nseg++;
         }
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
-    if (cnt_nseg != nseg_) return false;
+    if (hasSeg && cnt_nseg != nseg_) return false;
 
-    std::vector<Double_t> errs(DIMG_+nseg_*DIML_, Numc::ZERO<>);
+    std::vector<Double_t> errs(numOfPar, Numc::ZERO<>);
     ceres::Matrix cov  = (jb.transpose() * jb);
     ceres::Vector diag = cov.inverse().diagonal();
     for (UInt_t it = 0; it < diag.rows(); ++it) {
@@ -1001,24 +1036,33 @@ Bool_t PhyTrFit::evolve() {
     for (Short_t is = 0; is < nseg_; ++is)
         for (Short_t it = 0; it < DIML_; ++it)
             errL_.at(is)(it) = errs.at(DIMG_+is*DIML_+it);
+    errT_ = ((nmes_TOFt_ > LMTN_TOF_T) ? errs.at(parIDtsft) : Numc::ZERO<>);
 
     stts_ = stts;
     info_ = part_.info();
-   
-    //CERR("INT(%d,%d) MASS %14.8f INVU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f QUALITY %14.8f\n", part_.arg().mscat(), part_.arg().eloss(), part_.mass(), part_.info().invu(), errG_(5), part_.eta(), errG_(4), part_.rig(), nchi_, quality_);
+  
+    //CERR("MASS %14.8f INVU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f QUALITY %14.8f ERRT %14.8f\n", part_.mass(), part_.info().invu(), errG_(5), part_.eta(), errG_(4), part_.rig(), nchi_, quality_, errT_);
     return true;
 }
 
 
 bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+    if (numOfRes_ <= 0 || numOfPar_ <= 0) return false;
     std::fill_n(residuals, numOfRes_, Numc::ZERO<>);
     Bool_t hasJacb = (jacobians != nullptr && jacobians[0] != nullptr);
-    if (hasJacb) std::fill_n(jacobians[0], numOfRes_*numOfPar_, Numc::ZERO<>);
+    if (hasJacb) std::fill_n(jacobians[0], numOfRes_ * numOfPar_, Numc::ZERO<>);
+    
+    // Seg
+    Bool_t hasSeg = (sw_mscat_ && nseg_ != 0);
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
     HitStTOF::SetOffsetPath(Numc::ZERO<>);
+    HitStTOF::SetTimeShiftCorr(true);
+
+    // TOF time shift
+    Double_t TOFt_sft = ((nmes_TOFt_ >= LMTN_TOF_T) ? parameters[0][parIDtsft_] : Numc::ZERO<>);
 
     // Particle Status
     PhySt ppst(part_);
@@ -1046,7 +1090,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
 
     // Invu Bound Constraint
-    if (!is_mass_fixed_ && is_invu_bound_) jb(numOfRes_-1, 5) += lmtdiv_invu_ * Numc::NEG<>;
+    if (is_invu_bound_) jb(seqIDinvu_, 5) += lmtdiv_invu_ * Numc::NEG<>;
 
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
         SVecD<5> inrm, idiv;
@@ -1096,9 +1140,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
         // Hit Status: Setting TOF reference time and path
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
-            HitStTOF::SetOffsetPath(ppst.path());
-            HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->t());
-            resetTOF = false;
+            const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
+            if (firstHitTOF->st()) {
+                HitStTOF::SetOffsetPath(ppst.path());
+                HitStTOF::SetOffsetTime((ppst.time() - firstHitTOF->orgt()) + TOFt_sft);
+                resetTOF = false;
+            }
         }
         hit->cal(ppst);
 
@@ -1167,6 +1214,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                         }
                     }
                 } // Local
+                if (hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft_) += hitTOF->divt_sft(); // TOF time shift
             } // hasJacb
         }
 
@@ -1174,12 +1222,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             nearPpst = ppst;
             nearJbGG = jbGG;
             nearJbGL = jbGL;
-            cnt_nseg++;
+            if (hasSeg) cnt_nseg++;
         }
         cnt_nhit++;
     }
     if (cnt_nhit != hits_.size()) return false;
-    if (cnt_nseg != nseg_) return false;
+    if (hasSeg && cnt_nseg != nseg_) return false;
     
     for (Short_t it = 0; it < numOfRes_; ++it) {
         if (!Numc::Valid(rs(it))) rs(it) = Numc::ZERO<>;

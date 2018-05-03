@@ -660,7 +660,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     
     Bool_t is_over_lmt = (Numc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
-    Double_t eta = ((is_over_lmt) ? part.eta_abs() : LMT_INV_GMBTA);
+    Double_t eta = ((is_over_lmt) ? part.eta_abs() : (Numc::ONE<> / LMT_GMBTA));
 
     Double_t nrl      = mfld.nrl();
     Double_t sqrt_nrl = std::sqrt(nrl);
@@ -675,6 +675,9 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
 
     Double_t mscat_sgm = mscat_fat * part.info().invu() * (eta / bta);
+    
+    // Correction (Tune) testcode
+    mscat_sgm *= 1.05;
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;
@@ -687,7 +690,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Bool_t is_over_lmt   = (Numc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t sqr_gmbta   = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
     Double_t sqr_bta     = ((is_over_lmt) ? (part.bta() * part.bta()) : LMT_SQR_BTA);
-    Double_t gm          = ((is_over_lmt) ? part.gm() : LMT_GM);
+    Double_t gm          = ((is_over_lmt) ? part.gm() : (LMT_GMBTA / LMT_BTA));
     Double_t sqr_chrg    = part.chrg() * part.chrg();
     
     // Trans KE[MeV] to Eta[1]
@@ -723,6 +726,9 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
     Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
+
+    // Correction (Tune) testcode
+    //elion_mpv *= 1.03;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;

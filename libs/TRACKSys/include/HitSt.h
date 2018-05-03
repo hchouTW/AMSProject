@@ -19,9 +19,9 @@ class VirtualHitSt {
         virtual Short_t set_seqID(Short_t seqID) = 0; 
 
         virtual void cal(const PhySt& part) = 0;
-        virtual void set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
+        virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
-        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); }
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_ = SVecD<2>(); divc_ = SVecD<2>(); }
         inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
         
@@ -93,13 +93,13 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TRK, lay, scx, scy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
+        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
-        void set_type(const PartInfo& info = PartInfo(PartType::Proton));
+        Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_nsr(Short_t nx, Short_t ny) {
             nsr_(0) = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
@@ -111,6 +111,8 @@ class HitStTRK : public VirtualHitSt {
         //    side_q_(1) = (Numc::Compare(qy) > 0);
         //    q_(0) = (side_q_(0) ? qx : Numc::ZERO<>);
         //    q_(1) = (side_q_(1) ? qy : Numc::ZERO<>);
+        //    nrmq_ = SVecD<2>();
+        //    divq_ = SVecD<2>();
         //}
         
         inline const Short_t&  seqIDqx() const { return seqIDqx_; }
@@ -169,25 +171,33 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     public :
-        HitStTOF(Short_t lay = 0) : VirtualHitSt(VirtualHitSt::Detector::TOF, lay, false, false), pdf_t_(nullptr), pdf_q_(nullptr) { clear(); }
+        HitStTOF(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false), pdf_t_(nullptr), pdf_q_(nullptr) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
-        void set_type(const PartInfo& info = PartInfo(PartType::Proton));
+        Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
-            side_t_ = (Numc::Compare(t) >= 0);
-            t_      = (side_t_ ? t : Numc::ZERO<>);
+            side_t_   = (Numc::Compare(t) >= 0);
+            orgt_     = (side_t_ ? t : Numc::ZERO<>);
+            sftt_     = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
+            nrmt_     = Numc::ZERO<>;
+            divt_     = Numc::ZERO<>;
+            divt_sft_ = Numc::ZERO<>;
         }
         
-        inline void set_q(Double_t q) {
-            side_q_ = (Numc::Compare(q) > 0);
-            q_      = (side_q_ ? q : Numc::ZERO<>);
-        }
+        // TODO: // rebuild template
+        //inline void set_q(Double_t q) {
+        //    side_q_ = (Numc::Compare(q) > 0);
+        //    q_      = (side_q_ ? q : Numc::ZERO<>);
+        //    nrmq_   = Numc::ZERO<>;
+        //    divq_   = Numc::ZERO<>;
+        //}
 
-        inline Double_t t() const { return (t_ + OFFSET_T_); }
+        inline const Double_t& orgt() const { return orgt_; }
+        inline const Double_t& sftt() const { return sftt_; }
 
         inline const Short_t&  seqIDt() const { return seqIDt_; }
         inline const Short_t&  seqIDq() const { return seqIDq_; }
@@ -197,6 +207,8 @@ class HitStTOF : public VirtualHitSt {
 
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divt() const { return divt_; }
+        
+        inline const Double_t& divt_sft() const { return divt_sft_; }
         
         inline const Double_t& nrmq() const { return nrmq_; }
         inline const Double_t& divq() const { return divq_; }
@@ -209,13 +221,16 @@ class HitStTOF : public VirtualHitSt {
         Short_t seqIDq_;
         
         Bool_t   side_t_;
-        Double_t t_; // T [cm]
+        Double_t orgt_; // T [cm]
+        Double_t sftt_; // [cm]
 
         Bool_t   side_q_;
         Double_t q_; // Q
         
         Double_t nrmt_; // T nrom
         Double_t divt_; // T div
+
+        Double_t divt_sft_; // T(shift) div
 
         Double_t nrmq_; // Q nrom
         Double_t divq_; // Q div
@@ -233,14 +248,76 @@ class HitStTOF : public VirtualHitSt {
         static void SetOffsetPath(Double_t offset_s = Numc::ZERO<>) { OFFSET_S_ = offset_s; }
         static const Double_t& OffsetTime() { return OFFSET_T_; }
         static const Double_t& OffsetPath() { return OFFSET_S_; }
-    
+   
+        static void SetTimeShiftCorr(Bool_t corr = true) { TShiftCorr_ = corr; }
+        static const Bool_t& TimeShiftCorr() { return TShiftCorr_; }
+
     protected :
-        static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF PART-TOF)
+        static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
+
+        static Bool_t TShiftCorr_;
 };
 
 Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
 Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
+
+Bool_t HitStTOF::TShiftCorr_ = true;
+
+
+class HitStRICH : public VirtualHitSt {
+    public :
+        static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::RICH;
+   
+        enum class Radiator { AGL, NAF };
+
+    public :
+        HitStRICH(const Radiator& rad) : VirtualHitSt(DEC, 0, false, false), rad_(rad), pdf_ib_(nullptr) { clear(); }
+        ~HitStRICH() { clear(); }
+        
+        Short_t set_seqID(Short_t seqID); 
+        
+        void cal(const PhySt& part);
+        Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
+
+        inline void set_ib(Double_t ib) {
+            side_ib_ = (Numc::Compare(ib) >= 0);
+            ib_      = (side_ib_ ? ib : Numc::ZERO<>);
+            nrmib_   = Numc::ZERO<>;
+            divib_   = Numc::ZERO<>;
+        }
+        
+        inline const Radiator& rad() const { return rad_; }
+        
+        inline const Double_t& ib() const { return ib_; }
+
+        inline const Short_t& seqIDib() const { return seqIDib_; }
+        
+        inline const Bool_t& sib() const { return side_ib_; }
+
+        inline const Double_t& nrmib() const { return nrmib_; }
+        inline const Double_t& divib() const { return divib_; }
+        
+    protected :
+        void clear();
+
+    protected :
+        Radiator rad_;
+
+        Short_t seqIDib_;
+        
+        Bool_t   side_ib_;
+        Double_t ib_; // 1/Beta
+
+        Double_t nrmib_; // 1/Beta nrom
+        Double_t divib_; // 1/Beta div
+
+        MultiGaus* pdf_ib_;
+    
+    protected :
+        static MultiGaus PDF_AGL_Q01_IB_;
+        static MultiGaus PDF_NAF_Q01_IB_;
+};
 
 
 template<class HitStType>
@@ -258,6 +335,7 @@ class Hit {
 
 template class Hit<HitStTRK>;
 template class Hit<HitStTOF>;
+template class Hit<HitStRICH>;
 
 
 } // namesapce TrackSys

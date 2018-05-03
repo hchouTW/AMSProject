@@ -264,7 +264,7 @@ void PhySt::set_rig(Double_t rig) {
 
 
 void PhySt::symbk(Bool_t is_rndm) {
-    if (!arg_()) { arg_.clear(); return; }
+    if (!(arg_.field() && arg_.mat())) { arg_.clear(); return; }
     if (is_rndm) arg_.rndm();
     
     if (arg_.mscat()) {

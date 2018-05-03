@@ -7,29 +7,32 @@ namespace TrackSys {
 namespace InterfaceAms {
 
 
-static std::vector<HitStTRK> GetHitStTRK(TrTrackR& trtk, Int_t patt, Bool_t hasQ) {
-    const int qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
-    Bool_t hasL1 = (patt == 0 || patt == 5 || patt == 7);
-    Bool_t hasL9 = (patt == 0 || patt == 6 || patt == 7);
+static std::vector<HitStTRK> GetHitStTRK(TrTrackR& trtk, const TrackerPatt& patt, Bool_t hasQ) {
+    Bool_t hasL1 = trtk.TestHitLayerJ(1);
+    Bool_t hasL9 = trtk.TestHitLayerJ(9);
+    
     std::vector<HitStTRK> hits;
-	
+    if (!hasL1 && (TrackerPatt::InnerL1 == patt || TrackerPatt::FullSpan == patt)) return hits;
+    if (!hasL9 && (TrackerPatt::InnerL9 == patt || TrackerPatt::FullSpan == patt)) return hits;
+
+    Int_t satLayJ = (TrackerPatt::MaxSpan == patt || TrackerPatt::InnerL1 == patt || TrackerPatt::FullSpan == patt) ? 1 : 2;
+    Int_t endLayJ = (TrackerPatt::MaxSpan == patt || TrackerPatt::InnerL9 == patt || TrackerPatt::FullSpan == patt) ? 9 : 8;
+
     std::vector<Short_t>  lay;
     std::vector<SVecS<2>> nsr;
     std::vector<SVecD<3>> coo;
     std::vector<SVecD<2>> chg;
-    for (Int_t layJ = 1; layJ <= 9; ++layJ) {
+    for (Int_t layJ = satLayJ; layJ <= endLayJ; ++layJ) {
 	    if (!trtk.TestHitLayerJ(layJ)) continue;
 		TrRecHitR* recHit = trtk.GetHitLJ(layJ);
 		if (recHit == nullptr) continue;
-        if (layJ == 1 && !hasL1) continue; 
-        if (layJ == 9 && !hasL9) continue; 
         
-        AMSPoint    pnt  = ((layJ==1 || layJ==9) ? (trtk.GetHitCooLJ(layJ, 0) + trtk.GetHitCooLJ(layJ, 1)) * Numc::HALF : trtk.GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
+        AMSPoint    pnt  = ((layJ == 1 || layJ == 9) ? (trtk.GetHitCooLJ(layJ, 0) + trtk.GetHitCooLJ(layJ, 1)) * Numc::HALF : trtk.GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
-		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
-		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
+		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, QOptTracker, 1, 0, 0); 
+		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, QOptTracker, 1, 0, 0); 
 			
         std::vector<float> xstripSig;
 		std::vector<float> xstripSgm;
@@ -92,8 +95,7 @@ static std::vector<HitStTRK> GetHitStTRK(TrTrackR& trtk, Int_t patt, Bool_t hasQ
 }
 
 
-static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasT, Bool_t hasQ) {
-    const int qopt = TofRecH::kThetaCor|TofRecH::kBirkCor|TofRecH::kReAttCor|TofRecH::kDAWeight|TofRecH::kQ2Q;
+static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasQ) {
     std::vector<HitStTOF> hits;
 
     Double_t minT = Numc::ZERO<>;
@@ -108,8 +110,8 @@ static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasT, Bool_t hasQ
         if (!cls->IsGoodTime()) continue;
         lay.push_back(il);
         coo.push_back(SVecD<3>(cls->Coo[0], cls->Coo[1], cls->Coo[2]));
-        tme.push_back(betaH.GetTime(il));
-        chg.push_back(betaH.GetQL(il, 2, qopt));
+        tme.push_back(betaH.GetTime(il)*HitStTOF::TRANS_NS_TO_CM);
+        chg.push_back(betaH.GetQL(il, 2, QOptTOF));
         minT = std::min(minT, tme.back());
     }
 
@@ -117,11 +119,24 @@ static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasT, Bool_t hasQ
         tme.at(it) -= minT;
         HitStTOF hit(lay.at(it));
         hit.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
-        if (hasT) hit.set_t(tme.at(it));
-        if (hasQ) hit.set_q(chg.at(it));
+        hit.set_t(tme.at(it));
+        //if (hasQ) hit.set_q(chg.at(it));
         hits.push_back(hit);
     }
     return hits;
+}
+
+
+static HitStRICH GetHitStRICH(RichRingR& rich) {
+    HitStRICH::Radiator radiator = (rich.IsNaF() ? HitStRICH::Radiator::NAF : HitStRICH::Radiator::AGL);
+    Double_t ibta = ((Numc::Compare(rich.getBeta()) > 0) ? (Numc::ONE<> / rich.getBeta()) : Numc::ZERO<>);
+    SVecD<3> coo (rich.getTrackEmissionPoint()[0], rich.getTrackEmissionPoint()[1], rich.getTrackEmissionPoint()[2]);
+
+    HitStRICH hit(radiator);
+    hit.set_coo(coo(0), coo(1), coo(2));
+    hit.set_ib(ibta);
+
+    return hit;
 }
 
 

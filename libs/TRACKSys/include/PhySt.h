@@ -7,7 +7,7 @@ namespace TrackSys {
 
 class PhyArg {
     public :
-        static void SetOpt(Bool_t opt_mscat = false, Bool_t opt_eloss = false) { opt_mscat_ = opt_mscat; opt_eloss_ = opt_eloss; }
+        static void SetOpt(Bool_t opt_mscat = true, Bool_t opt_eloss = true) { opt_mscat_ = opt_mscat; opt_eloss_ = opt_eloss; }
         static void SetOptMscat(Bool_t opt_mscat = true) { opt_mscat_ = opt_mscat; }
         static void SetOptEloss(Bool_t opt_eloss = true) { opt_eloss_ = opt_eloss; }
 
@@ -25,8 +25,6 @@ class PhyArg {
         inline void zero();
         inline void reset(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss());
         inline void clear() { reset(sw_mscat_, sw_eloss_); }
-
-        inline Bool_t operator() () const { return (field_ && mat_); }
 
         inline const Bool_t& mscat() const { return sw_mscat_; }
         inline const Bool_t& eloss() const { return sw_eloss_; }
@@ -135,8 +133,8 @@ class PhyArg {
         static MultiGaus pdf_elion_;
 };
 
-Bool_t PhyArg::opt_mscat_ = false;
-Bool_t PhyArg::opt_eloss_ = false;
+Bool_t PhyArg::opt_mscat_ = true;
+Bool_t PhyArg::opt_eloss_ = true;
 
 MultiGaus PhyArg::pdf_mscatu_(
     MultiGaus::Opt::NOROBUST,
@@ -207,7 +205,8 @@ class PhySt {
         inline const Double_t& gmbta() const { return gmbta_; }
         inline const Double_t& eta()   const { return eta_; }
       
-        inline Double_t gm() const { return ((Numc::EqualToZero(bta_)) ? Numc::ONE<> : (gmbta_/bta_)); }
+        inline Double_t ibta() const { return ((Numc::EqualToZero(bta_)) ? Numc::ZERO<> : (Numc::ONE<>/bta_)); }
+        inline Double_t gm()   const { return ((Numc::EqualToZero(bta_)) ? Numc::ONE<> : (gmbta_/bta_)); }
 
         inline Short_t  eta_sign() const { return (Numc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }

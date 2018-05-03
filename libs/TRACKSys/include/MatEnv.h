@@ -331,12 +331,8 @@ class MatPhy {
         // Beta Limit (0.2)
         static constexpr Double_t LMT_BTA           = 0.2;
         static constexpr Double_t LMT_SQR_BTA       = 0.04;
-        static constexpr Double_t LMT_INV_SQR_BTA   = 2.500000e+01;
         static constexpr Double_t LMT_GMBTA         = 2.041241e-01;
         static constexpr Double_t LMT_SQR_GMBTA     = 4.166666e-02;
-        static constexpr Double_t LMT_INV_GMBTA     = 4.898979e+00;
-        static constexpr Double_t LMT_INV_SQR_GMBTA = 2.400000e+01;
-        static constexpr Double_t LMT_GM            = 1.020620e+00;
        
         // Unit
         static constexpr Double_t MEV_TO_GEV = 1.0e-3;

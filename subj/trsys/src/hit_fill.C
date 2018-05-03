@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -53,7 +53,7 @@ int main(int argc, char * argv[]) {
     
     Axis AXmom("Momentum [GeV]", 100, 0.5, 2000., AxisScale::kLog);
     
-    Double_t mass = PIProton.mass();
+    Double_t mass = PartInfo(PartType::Proton).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -64,7 +64,7 @@ int main(int argc, char * argv[]) {
     Axis AXcut("Cut", 9, 0., 9.);
     Hist* hCut = Hist::New("hCut", HistAxis(AXmom, AXcut));
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
-    
+/*  
     // Coo
     Axis AXres("res [#mum]", 800, -200., 200.);
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
@@ -92,6 +92,9 @@ int main(int argc, char * argv[]) {
     
     Axis AXTDavg("TDavg", 400, 0., 1500.);
     Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
+*/
+    Axis AXTFtme("TFtme", 800, -20, 20);
+    Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -143,7 +146,7 @@ int main(int argc, char * argv[]) {
 
         // No Interaction
         if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100) continue;
-
+/*
         // REC hit
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
         for (auto&& hit : track.hits) { rec[hit.layJ-1] = &hit; }
@@ -207,6 +210,21 @@ int main(int argc, char * argv[]) {
             std::sort(vdedx.begin(), vdedx.end());
             Double_t avg = std::accumulate(vdedx.begin()+1, vdedx.end()-1, 0) / (vdedx.size()-2);
             hTDavg->fillH2D(mass/fG4mc->primPart.mom, avg);
+        }
+*/
+        SegPARTMCInfo* mcsTOF[4] = { nullptr };
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 1) mcsTOF[seg.lay] = &seg; }
+        for (Int_t sl = 0; sl < 2; ++sl) {
+            if (mcsTOF[sl*2+0] ==nullptr || mcsTOF[sl*2+1] == nullptr) continue;
+            if (fTof->mcBeta[sl*2+0] < 0.001 || fTof->mcBeta[sl*2+1] < 0.001) continue;
+            TrackSys::SVecD<3> vlen( (mcsTOF[sl*2+0]->coo[0] - mcsTOF[sl*2+1]->coo[0]), (mcsTOF[sl*2+0]->coo[1] - mcsTOF[sl*2+1]->coo[1]), (mcsTOF[sl*2+0]->coo[2] - mcsTOF[sl*2+1]->coo[2]) );
+            Double_t rat = (fTof->coo[sl*2+0][2] - fTof->coo[sl*2+1][2]) / (mcsTOF[sl*2+0]->coo[2] - mcsTOF[sl*2+1]->coo[2]);
+            Double_t len = rat * TrackSys::LA::Mag(vlen);
+            Double_t tme = 0.5 * len * (1.0/fTof->mcBeta[sl*2+0] + 1.0/fTof->mcBeta[sl*2+1]);
+            Double_t mes = 2.99792458e+01 * (fTof->T[sl*2+1] - fTof->T[sl*2+0]);
+            Double_t dlt = mes - tme;
+            hTFtme->fillH2D(mass/(mcsTOF[sl*2+0]->mom + mcsTOF[sl*2+1]->mom), dlt);
+            //CERR("TME %14.8f MES %14.8f DLT %14.8f\n", tme, mes, dlt);
         }
     }
 

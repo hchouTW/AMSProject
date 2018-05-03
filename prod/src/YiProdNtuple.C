@@ -16,6 +16,8 @@ int main(int argc, const char ** argv) {
 	COUT("\n**    YiProdNtuple START    **\n");
 	COUT("\n**--------------------------**\n");
 
+    google::InitGoogleLogging(argv[0]);
+
     TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
     TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
@@ -32,8 +34,8 @@ int main(int argc, const char ** argv) {
 	DataSelection::setOption(DataSelection::ACC, DataSelection::ON);
 	DataSelection::setOption(DataSelection::TRK, DataSelection::ON);
 	DataSelection::setOption(DataSelection::TRD, DataSelection::ON);
-	DataSelection::setOption(DataSelection::RICH, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::ECAL, DataSelection::OFF);
+	DataSelection::setOption(DataSelection::RICH, DataSelection::ON);
+	DataSelection::setOption(DataSelection::ECAL, DataSelection::ON);
 
 	EventBase::setEventVersion(EventBase::B950);
 

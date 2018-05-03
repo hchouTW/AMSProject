@@ -100,18 +100,12 @@ class RecEvent {
 	public :
 		double trackerZJ[9];
 
-    // Track Refit Option
-	// Algorithm     (CHOUTKO, KALMAN, HCHOU)
-	// Track Pattern (Inn, InnL1, InnL9, FS)
-    public :
-        inline void initTrRft() { std::fill_n(_trRft[0], 3*4, 22); }
-        inline int trRft(int i, int j) { 
-            if (_trRft[i][j]==22) { _trRft[i][j] = 21; return 22; }
-            else return _trRft[i][j];
-        }
-
-    protected :
-        int _trRft[3][4];
+        // Track Refit Option
+	    // Algorithm     (CHOUTKO, KALMAN, HCHOU)
+	    // Track Pattern (Inn, InnL1, InnL9, FS)
+        int    zin;
+        double mass;
+        double beta;
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;
@@ -346,10 +340,10 @@ class DataSelection {
 		void setEnvironment();
 		void fill();
 
-		int processEvent(AMSEventR * event, AMSChain * chain);
-		int preselectEvent(AMSEventR * event, const std::string& officialDir = "");
-		int selectEvent(AMSEventR * event);
-		int analysisEvent(AMSEventR * event);
+		int processEvent(AMSEventR* event, AMSChain* chain);
+		int preselectEvent(AMSEventR* event, const std::string& officialDir = "");
+		int selectEvent(AMSEventR* event);
+		int analysisEvent(AMSEventR* event);
 
 	protected :
 		bool isMultiTree;

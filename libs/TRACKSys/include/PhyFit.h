@@ -24,11 +24,13 @@ class TrFitPar {
     public :
         inline Bool_t check() { return check_hits(); }
 
-        inline void add_hit(const HitStTRK& hit) { hits_TRK_.push_back(hit); zero(); }
-        inline void add_hit(const HitStTOF& hit) { hits_TOF_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit); zero(); }
+        inline void add_hit(const HitStRICH& hit) { hits_RICH_.push_back(hit); zero(); }
         
-        inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
-        inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTRK>&  hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTOF>&  hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStRICH>& hits) { hits_RICH_.insert(hits_RICH_.end(), hits.begin(), hits.end()); zero(); }
        
         inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
@@ -56,6 +58,7 @@ class TrFitPar {
         std::vector<VirtualHitSt*> hits_;
         std::vector<HitStTRK>      hits_TRK_;
         std::vector<HitStTOF>      hits_TOF_;
+        std::vector<HitStRICH>     hits_RICH_;
 
         Short_t nseq_;
         Short_t nseg_;
@@ -67,6 +70,7 @@ class TrFitPar {
         Short_t nmes_TRKqy_;
         Short_t nmes_TOFq_;
         Short_t nmes_TOFt_;
+        Short_t nmes_RICHib_;
 
     private :
         Bool_t  is_check_;
@@ -75,7 +79,7 @@ class TrFitPar {
         // Number of Hit Requirement
         static constexpr Short_t LMTN_CX = 3;
         static constexpr Short_t LMTN_CY = 4;
-        static constexpr Short_t LMTN_TOF_T = 2;
+        static constexpr Short_t LMTN_TOF_T = 1;
 };
 
 
@@ -151,18 +155,28 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t lmtdiv_invu = Numc::ZERO<>) : 
             TrFitPar(fitPar), part_(part), is_mass_fixed_(is_mass_fixed),
-            is_invu_bound_(Numc::Compare(lmtdiv_invu)>0), lmtdiv_invu_(is_invu_bound_?lmtdiv_invu:Numc::ZERO<>),
-            DIMG_(Numc::SIX<Short_t>-is_mass_fixed), DIML_(Numc::FOUR<Short_t>), 
-            numOfRes_(0), numOfPar_(0) { if (check_hits()) setvar(nseq_+nseg_*DIML_+is_invu_bound_, DIMG_+nseg_*DIML_); }
+            is_invu_bound_((!is_mass_fixed_) && (Numc::Compare(lmtdiv_invu) > 0)),
+            lmtdiv_invu_(is_invu_bound_ ? lmtdiv_invu : Numc::ZERO<>),
+            DIMG_(Numc::SIX<Short_t> - is_mass_fixed), DIML_(Numc::FOUR<Short_t>), 
+            numOfRes_(0), numOfPar_(0),
+            seqIDinvu_(-1), parIDtsft_(-1)
+            { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
     protected :
         inline void setvar(const Short_t num_of_residual = 0, const Short_t num_of_parameter = 0) {
+            Double_t num_of_res = num_of_residual;
+            Double_t num_of_par = num_of_parameter;
+
+            if (is_invu_bound_) { seqIDinvu_ = num_of_res; num_of_res += 1; }
+            if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
+
+            set_num_residuals(0);
             mutable_parameter_block_sizes()->clear(); 
-            if (num_of_residual  > 0) { numOfRes_ = num_of_residual;  set_num_residuals(num_of_residual); }
-            if (num_of_parameter > 0) { numOfPar_ = num_of_parameter; mutable_parameter_block_sizes()->push_back(num_of_parameter); }
+            if (num_of_residual  > 0 && num_of_res > 0) { numOfRes_ = num_of_res; set_num_residuals(num_of_res); }
+            if (num_of_parameter > 0 && num_of_par > 0) { numOfPar_ = num_of_par; mutable_parameter_block_sizes()->push_back(num_of_par); }
         }
     
     protected :
@@ -176,6 +190,9 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         
         Short_t numOfRes_;
         Short_t numOfPar_;
+
+        Short_t seqIDinvu_;
+        Short_t parIDtsft_;
 };
 
 
@@ -234,6 +251,8 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t&     errL_rhou(Int_t it) const { return errL_.at(it)(1); }
         inline const Double_t&     errL_taul(Int_t it) const { return errL_.at(it)(2); }
         inline const Double_t&     errL_rhol(Int_t it) const { return errL_.at(it)(3); }
+        
+        inline const Double_t& errT() const { return errT_; } // TOF time shift error [cm]
 
     protected :
         void clear();
@@ -248,6 +267,8 @@ class PhyTrFit : public TrFitPar {
         Bool_t              succ_;
         PhySt               part_;
         std::vector<PhyArg> args_; 
+
+        Double_t TOFt_sft_; // TOF time shift
 
         Double_t lmtl_invu_;
         Double_t lmtu_invu_;
@@ -275,6 +296,7 @@ class PhyTrFit : public TrFitPar {
 
         SVecD<DIMG_>              errG_; // (cx, cy, ux, uy, eta, invu)
         std::vector<SVecD<DIML_>> errL_; // (tauu, rhou, taul, rhol)
+        Double_t                  errT_; // TOF time shift error [cm]
 
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;

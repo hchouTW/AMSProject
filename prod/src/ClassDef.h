@@ -744,9 +744,7 @@ class TOF : public TObject {
 			normChisqT = -1;
 			normChisqC = -1;
 			std::fill_n(coo[0], 4*3, 0);
-			std::fill_n(err[0], 4*3, 0);
 			std::fill_n(T, 4, -1);
-			std::fill_n(TErr, 4, 0);
 			std::fill_n(Q, 4, -1);
 			Qall = -1;
             Zall = -1;
@@ -774,9 +772,7 @@ class TOF : public TObject {
 		Float_t normChisqT;
 		Float_t normChisqC;
         Float_t coo[4][3];
-        Float_t err[4][3];
 		Float_t T[4];
-		Float_t TErr[4];
 		Float_t Q[4];
 		Float_t Qall;
         Short_t Zall;
