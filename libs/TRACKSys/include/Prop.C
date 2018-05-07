@@ -113,45 +113,6 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
         
         jb_gl_(JPX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
         jb_gl_(JPY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
-
-        //-----------------------------------------------
-        // (improve multiple-scatttering by eta) // testcode
-        //Double_t mscrr_eta = Numc::ONE<> / part.eta_abs();
-        //jb_gg_(JPX, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_ul() * arg.orth_tau(X) + 
-        //                     arg.rhou() * mscrr_eta * arg.mscat_ul() * arg.orth_rho(X) +
-        //                     arg.taul() * mscrr_eta * arg.mscat_ll() * arg.orth_tau(X) +
-        //                     arg.rhol() * mscrr_eta * arg.mscat_ll() * arg.orth_rho(X)
-        //                    );
-        //jb_gg_(JPY, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_ul() * arg.orth_tau(Y) + 
-        //                     arg.rhou() * mscrr_eta * arg.mscat_ul() * arg.orth_rho(Y) +
-        //                     arg.taul() * mscrr_eta * arg.mscat_ll() * arg.orth_tau(Y) +
-        //                     arg.rhol() * mscrr_eta * arg.mscat_ll() * arg.orth_rho(Y)
-        //                    );
-        //jb_gg_(JUX, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_uu() * arg.orth_tau(X) + 
-        //                     arg.rhou() * mscrr_eta * arg.mscat_uu() * arg.orth_rho(X)
-        //                    );
-        //jb_gg_(JUY, JEA) += (arg.tauu() * mscrr_eta * arg.mscat_uu() * arg.orth_tau(Y) + 
-        //                     arg.rhou() * mscrr_eta * arg.mscat_uu() * arg.orth_rho(Y)
-        //                    );
-        
-        // (improve multiple-scatttering by mass) // testcode
-        //Double_t mscrr_mas = Numc::ONE<> / part.info().invu();
-        //jb_gg_(JPX, JIU) += (arg.tauu() * mscrr_mas * arg.mscat_ul() * arg.orth_tau(X) + 
-        //                     arg.rhou() * mscrr_mas * arg.mscat_ul() * arg.orth_rho(X) +
-        //                     arg.taul() * mscrr_mas * arg.mscat_ll() * arg.orth_tau(X) +
-        //                     arg.rhol() * mscrr_mas * arg.mscat_ll() * arg.orth_rho(X)
-        //                    );
-        //jb_gg_(JPY, JIU) += (arg.tauu() * mscrr_mas * arg.mscat_ul() * arg.orth_tau(Y) + 
-        //                     arg.rhou() * mscrr_mas * arg.mscat_ul() * arg.orth_rho(Y) +
-        //                     arg.taul() * mscrr_mas * arg.mscat_ll() * arg.orth_tau(Y) +
-        //                     arg.rhol() * mscrr_mas * arg.mscat_ll() * arg.orth_rho(Y)
-        //                    );
-        //jb_gg_(JUX, JIU) += (arg.tauu() * mscrr_mas * arg.mscat_uu() * arg.orth_tau(X) + 
-        //                     arg.rhou() * mscrr_mas * arg.mscat_uu() * arg.orth_rho(X)
-        //                    );
-        //jb_gg_(JUY, JIU) += (arg.tauu() * mscrr_mas * arg.mscat_uu() * arg.orth_tau(Y) + 
-        //                     arg.rhou() * mscrr_mas * arg.mscat_uu() * arg.orth_rho(Y)
-        //                    );
     }
     if (arg.eloss()) {
     }

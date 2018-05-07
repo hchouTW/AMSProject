@@ -676,7 +676,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
 
     Double_t mscat_sgm = mscat_fat * part.info().invu() * (eta / bta);
     
-    // Correction (Tune) testcode
+    // Correction (Tune)
     mscat_sgm *= 1.05;
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
@@ -726,9 +726,6 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
     Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
-
-    // Correction (Tune) testcode
-    //elion_mpv *= 1.03;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
