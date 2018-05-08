@@ -659,8 +659,8 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     if (!part.arg().mscat()) return Numc::ZERO<>;
     
     Bool_t is_over_lmt = (Numc::Compare(part.bta(), LMT_BTA) > 0);
-    Double_t bta = ((is_over_lmt) ? part.bta() : LMT_BTA);
-    Double_t eta = ((is_over_lmt) ? part.eta_abs() : (Numc::ONE<> / LMT_GMBTA));
+    Double_t ibta = ((is_over_lmt) ? part.ibta() : LMT_INV_BTA);
+    Double_t eta  = ((is_over_lmt) ? part.eta_abs() : (LMT_INV_GMBTA / part.info().mu()));
 
     Double_t nrl      = mfld.nrl();
     Double_t sqrt_nrl = std::sqrt(nrl);
@@ -674,7 +674,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
     Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
 
-    Double_t mscat_sgm = mscat_fat * part.info().invu() * (eta / bta);
+    Double_t mscat_sgm = mscat_fat * (eta * ibta);
     
     // Correction (Tune)
     mscat_sgm *= 1.05;
@@ -694,7 +694,7 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     Double_t sqr_chrg    = part.chrg() * part.chrg();
     
     // Trans KE[MeV] to Eta[1]
-    Double_t eta_trans = ((std::sqrt(sqr_gmbta + Numc::ONE<>) / sqr_gmbta) / (PartInfo::ATOMIC_MASS * GEV_TO_MEV)); // [1/MeV]
+    Double_t eta_trans = (std::sqrt(Numc::ONE<> + sqr_gmbta) / (sqr_gmbta * part.info().mass() * GEV_TO_MEV)); // [1/MeV]
     if (!Numc::Valid(eta_trans)) eta_trans = Numc::ZERO<>;
     
     // Calculate Matterial Quality

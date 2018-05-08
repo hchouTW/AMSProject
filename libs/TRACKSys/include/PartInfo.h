@@ -27,13 +27,13 @@ enum class PartType {
 
 class PartInfo {
     public :
-        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), invu_(0), is_chrgless_(true), is_massless_(true), chrg_to_mass_(0), chrg_to_atomic_mass_(0) { reset(type); }
+        PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), mu_(0), is_chrgless_(true), is_massless_(true), chrg_to_mass_(0), chrg_to_atomic_mass_(0) { reset(type); }
         PartInfo(Short_t chrg, Double_t mass) { reset(chrg, mass); }
         ~PartInfo() {}
         
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass) { reset(PartType::Fixed, "", chrg, mass); }
-        inline void reset(Double_t invu) { reset(PartType::Fixed, "", chrg_, ((Numc::Compare(invu)<=0) ? Numc::ZERO<> : ATOMIC_MASS/invu) ); }
+        inline void reset(Double_t mu) { reset(PartType::Fixed, "", chrg_, ((Numc::Compare(mu)<=0) ? Numc::ZERO<> : mu * ATOMIC_MASS) ); }
 
         void print() const;
 
@@ -43,7 +43,7 @@ class PartInfo {
         inline const std::string&  name() const { return name_; }
         inline const Short_t&      chrg() const { return chrg_; } // [1]
         inline const Double_t&     mass() const { return mass_; } // [GeV]
-        inline const Double_t&     invu() const { return invu_; } // [1]
+        inline const Double_t&     mu()   const { return mu_; }   // [1]
 
         inline const Bool_t& is_chrgless() const { return is_chrgless_; }
         inline const Bool_t& is_massless() const { return is_massless_; }
@@ -59,7 +59,7 @@ class PartInfo {
         std::string name_;
         Short_t     chrg_;
         Double_t    mass_; // [GeV]
-        Double_t    invu_; // [1]
+        Double_t    mu_;   // Mass / AtomicMass [1]
 
         Bool_t      is_chrgless_;
         Bool_t      is_massless_;
@@ -72,7 +72,7 @@ class PartInfo {
         static inline void SetDefault(Short_t chrg, Double_t mass) { DefaultChrg_ = chrg; DefaultMass_ = (Numc::Compare(mass)<=0 ? Numc::ZERO<> : mass); }
         static inline void SetDefaultChrg(Short_t chrg) { DefaultChrg_ = chrg; }
         static inline void SetDefaultMass(Double_t mass) { DefaultMass_ = (Numc::Compare(mass)<=0 ? Numc::ZERO<> : mass); }
-        static inline void SetDefaultInvu(Double_t invu) { DefaultMass_ = (Numc::Compare(invu)<=0 ? Numc::ZERO<> : (ATOMIC_MASS/invu)); }
+        static inline void SetDefaultMu(Double_t mu) { DefaultMass_ = (Numc::Compare(mu)<=0 ? Numc::ZERO<> : (mu * ATOMIC_MASS)); }
         static inline const Short_t&  DefaultChrg() { return DefaultChrg_; }
         static inline const Double_t& DefaultMass() { return DefaultMass_; }
 

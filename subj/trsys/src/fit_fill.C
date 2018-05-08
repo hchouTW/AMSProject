@@ -244,7 +244,7 @@ int main(int argc, char * argv[]) {
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         //SimpleTrFit tr(fitPar);
-        PhyTrFit tr(fitPar);
+        PhyTrFit tr(fitPar, PhyTrFit::MomOpt::kFree, PhyTrFit::MassOpt::kFixed);
         sw.stop();
         Bool_t hc_succ = tr.status();
         //Bool_t hc_succ = false;

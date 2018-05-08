@@ -136,8 +136,8 @@ void PhySt::reset(Short_t chrg, Double_t mass) {
 }
 
 
-void PhySt::reset(Double_t invu) {
-    info_.reset(invu);
+void PhySt::reset(Double_t mu) {
+    info_.reset(mu);
     arg_.clear();
     zero();
     
@@ -206,7 +206,7 @@ void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double
 }
  
 
-void PhySt::set_mom(Double_t mom, Double_t sign) {
+void PhySt::set_mom(Double_t mom, Short_t sign) {
     Short_t mom_sign = Numc::Compare(mom);
     Short_t eta_sign = Numc::Compare(sign);
     if (mom_sign  < 0) return;
@@ -215,12 +215,12 @@ void PhySt::set_mom(Double_t mom, Double_t sign) {
     if (mom_sign == 0) zero();
     else {
         mom_   = mom;
-        eng_   = std::sqrt(mom_ * mom_ + info_.mass() * info_.mass());
+        eng_   = std::hypot(mom_, info_.mass());
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt((info_.mass() / mom_) * (info_.mass() / mom_) + Numc::ONE<>)));
+        eta_   = static_cast<Double_t>(eta_sign) * PartInfo::ATOMIC_MASS / mom_;
         gmbta_ = (info_.is_massless() ? mom_ : (mom_ / info_.mass()));
-        eta_   = static_cast<Double_t>(eta_sign) / gmbta_;
-        irig_  = info_.chrg_to_mass() * eta_;
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::hypot(Numc::ONE<>, Numc::ONE<> / gmbta_)));
+        irig_  = info_.chrg_to_atomic_mass() * eta_;
     }
 }
 
@@ -230,28 +230,28 @@ void PhySt::set_eta(Double_t eta) {
     if (eta_sign == 0) zero();
     else {
         eta_   = eta;
-        gmbta_ = (Numc::ONE<> / std::fabs(eta_));
-        irig_  = info_.chrg_to_mass() * eta_;
+        irig_  = info_.chrg_to_atomic_mass() * eta_;
+        gmbta_ = Numc::ONE<> / (info_.is_massless() ? std::fabs(eta_) : std::fabs(info_.mu() * eta_));
+        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::hypot(Numc::ONE<>, Numc::ONE<> / gmbta_)));
         mom_   = (info_.is_massless() ? gmbta_ : (info_.mass() * gmbta_));
-        eng_   = (info_.is_massless() ? gmbta_ : info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>));
+        eng_   = (info_.is_massless() ? gmbta_ : std::hypot(info_.mass(), mom_));
         ke_    = (eng_ - info_.mass());
-        bta_   = (info_.is_massless() ? Numc::ONE<> : (Numc::ONE<> / std::sqrt(info_.mass() * info_.mass() / mom_ / mom_ + Numc::ONE<>)));
     }
 }
 
 
 void PhySt::set_irig(Double_t irig) {
-    Short_t rig_sign = Numc::Compare(irig);
+    Short_t irig_sign = Numc::Compare(irig);
     if (info_.is_chrgless() || info_.is_massless()) { zero(); return; }
-    if (rig_sign == 0) zero();
+    if (irig_sign == 0) zero();
     else {
         irig_  = irig;
-        eta_   = irig / info_.chrg_to_mass();
-        gmbta_ = (Numc::ONE<> / std::fabs(eta_));
+        eta_   = irig / info_.chrg_to_atomic_mass();
+        gmbta_ = Numc::ONE<> / std::fabs(info_.mu() * eta_);
+        bta_   = (Numc::ONE<> / std::hypot(Numc::ONE<>, Numc::ONE<> / gmbta_));
         mom_   = (info_.mass() * gmbta_);
-        eng_   = info_.mass() * std::sqrt(gmbta_ * gmbta_ + Numc::ONE<>);
+        eng_   = std::hypot(info_.mass(), mom_);
         ke_    = (eng_ - info_.mass());
-        bta_   = (Numc::ONE<> / std::sqrt(eta_ * eta_ + Numc::ONE<>));
     }
 }
 
@@ -277,7 +277,7 @@ void PhySt::symbk(Bool_t is_rndm) {
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ * (Numc::ONE<> + info_.invu() * arg_.symbk_eloss()));
+        set_eta(eta_ * (Numc::ONE<> + arg_.symbk_eloss()));
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(Numc::ZERO<>);
     }

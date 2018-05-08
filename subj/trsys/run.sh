@@ -11,7 +11,8 @@ RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 CurDir=${PWD}
 
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Mar23
+Stream=/ams_home/hchou/tmp/flist.pr
+#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Mar23
 
 OutputDir=${CurDir}/dat
 
@@ -19,8 +20,8 @@ OutputDir=${CurDir}/dat
 #GroupSize=20
 #Nseq=70
 #Fit
-GroupSize=2
-Nseq=700
+GroupSize=3
+Nseq=450
 
 #for id in `seq 1 100`
 for id in `seq 0 ${Nseq}`

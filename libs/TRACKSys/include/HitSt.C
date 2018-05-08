@@ -25,8 +25,8 @@ void VirtualHitSt::clear() {
     coo_      = std::move(SVecD<3>());
     erc_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
     
-    nrmc_ = std::move(SVecD<2>());
-    divc_ = std::move(SVecD<2>());
+    nrmc_.fill(Numc::ZERO<>);
+    divc_.fill(Numc::ZERO<>);
 }
         
 
@@ -37,12 +37,13 @@ void HitStTRK::clear() {
     seqIDqx_ = -1;
     seqIDqy_ = -1;
 
-    nsr_    = std::move(SVecS<2>());
-    side_q_ = std::move(SVecO<2>());
-    q_      = std::move(SVecD<2>());
+    nsr_.fill(Numc::ZERO<Short_t>);
+
+    side_q_.fill(false);
+    q_.fill(Numc::ZERO<>);
     
-    nrmq_ = std::move(SVecD<2>());
-    divq_ = std::move(SVecD<2>());
+    nrmq_.fill(Numc::ZERO<>);
+    divq_.fill(Numc::ZERO<>);
 
     set_type();
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
@@ -55,8 +56,8 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
     Short_t iter = 0;
     if (side_coo_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
     if (side_coo_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (side_q_(0))   { seqIDqx_ = seqID + iter; iter++; } else seqIDqx_ = -1;
-    if (side_q_(1))   { seqIDqy_ = seqID + iter; iter++; } else seqIDqy_ = -1;
+    if (side_q_[0])   { seqIDqx_ = seqID + iter; iter++; } else seqIDqx_ = -1;
+    if (side_q_[1])   { seqIDqy_ = seqID + iter; iter++; } else seqIDqy_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -64,31 +65,33 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
 void HitStTRK::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
-    nrmc_ = std::move(SVecD<2>());
-    divc_ = std::move(SVecD<2>());
+    nrmc_.fill(Numc::ZERO<>);
+    divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_coo_(0)) {
         erc_(0)  = pdf_cx_->efft_sgm(crs(0));
-        nrmc_(0) = crs(0) / erc_(0);
-        divc_(0) = Numc::NEG<> / erc_(0);
+        nrmc_[0] = crs(0) / erc_(0);
+        divc_[0] = Numc::NEG<> / erc_(0);
     }
     if (side_coo_(1)) {
         erc_(1) = pdf_cy_->efft_sgm(crs(1));
-        nrmc_(1) = crs(1) / erc_(1);
-        divc_(1) = Numc::NEG<> / erc_(1);
+        nrmc_[1] = crs(1) / erc_(1);
+        divc_[1] = Numc::NEG<> / erc_(1);
     }
 
-    nrmq_ = std::move(SVecD<2>());
-    divq_ = std::move(SVecD<2>());
-    if (side_q_(0)) {
-        SVecD<2>&& ionx = (*pdf_qx_)(q_(0)*q_(0), part.eta());
-        nrmq_(0) = ionx(0);
-        divq_(0) = ionx(1);
+    nrmq_.fill(Numc::ZERO<>);
+    divq_.fill(Numc::ZERO<>);
+    if (side_q_[0]) {
+        SVecD<2>&& ionx = (*pdf_qx_)(q_[0]*q_[0], part.igmbta());
+        nrmq_[0] = ionx(0);
+        divq_[0] = ionx(1) * part.info().mu();
+        divq_[1] = ionx(1) * part.eta();
     }
-    if (side_q_(1)) {
-        SVecD<2>&& iony = (*pdf_qy_)(q_(1)*q_(1), part.eta());
-        nrmq_(1) = iony(0);
-        divq_(1) = iony(1);
+    if (side_q_[1]) {
+        SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
+        nrmq_[1] = iony(0);
+        divq_[2] = iony(1) * part.info().mu();
+        divq_[3] = iony(1) * part.eta();
     }
 
     set_dummy_x(part.cx());
@@ -102,14 +105,14 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
         case 1 : case -1 :
         {
             pdf_cx_ = &PDF_Q01_CX_NN_;
-            if      (nsr_(0) == 1) pdf_cx_ = &PDF_Q01_CX_N1_;
-            else if (nsr_(0) == 2) pdf_cx_ = &PDF_Q01_CX_N2_;
-            else if (nsr_(0) >= 3) pdf_cx_ = &PDF_Q01_CX_N3_;
+            if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_N1_;
+            else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_N2_;
+            else if (nsr_[0] >= 3) pdf_cx_ = &PDF_Q01_CX_N3_;
             pdf_cy_ = &PDF_Q01_CY_NN_;
-            if      (nsr_(1) == 1) pdf_cy_ = &PDF_Q01_CY_N1_;
-            else if (nsr_(1) == 2) pdf_cy_ = &PDF_Q01_CY_N2_;
-            else if (nsr_(1) == 3) pdf_cy_ = &PDF_Q01_CY_N3_;
-            else if (nsr_(1) >= 4) pdf_cy_ = &PDF_Q01_CY_N4_;
+            if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_N1_;
+            else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_N2_;
+            else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_N3_;
+            else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_N4_;
             pdf_qx_ = &PDF_Q01_QX_;
             pdf_qy_ = &PDF_Q01_QY_;
             type_ = info.type();
@@ -224,11 +227,11 @@ void HitStTOF::clear() {
     q_      = Numc::ZERO<>;
     
     nrmt_     = Numc::ZERO<>;
-    divt_     = Numc::ZERO<>;
     divt_sft_ = Numc::ZERO<>;
+    divt_.fill(Numc::ZERO<>);
     
     nrmq_ = Numc::ZERO<>;
-    divq_ = Numc::ZERO<>;
+    divq_.fill(Numc::ZERO<>);
 
     set_type();
 }
@@ -249,36 +252,39 @@ void HitStTOF::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
     nrmt_     = Numc::ZERO<>;
-    divt_     = Numc::ZERO<>;
     divt_sft_ = Numc::ZERO<>;
+    divt_.fill(Numc::ZERO<>);
     if (side_t_) {
-        // 1/bta := (1+eta*eta)^(1/2)
-        // t     := (delta_S / beta)
+        // 1/bta := (1+igmbta*igmbta)^(1/2)
+        // t     := (delta_S / bta)
         // res_t := (meas_t - part_t)
         sftt_ = orgt_ + OFFSET_T_; // update shift time
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
         Double_t dt = sftt_ - part.time();
         if (Numc::Compare(ds) >= 0) {
-            Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.eta_abs()) - 5.78158e-02 ) ); // ONE Layer [cm]
+            Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.igmbta()) - 5.78158e-02 ) ); // ONE Layer [cm]
             if (!TShiftCorr_) sgm *= Numc::SQRT_TWO; // TWO Layer [cm]
             Double_t ter = MultiGaus::RobustSgm(dt, sgm, pdf_t_->opt());
             nrmt_     = (dt / ter);
-            divt_     = (Numc::NEG<> * ds / ter) * (part.eta() * part.bta());
             divt_sft_ = (Numc::ONE<> / ter);
-            if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_) || !Numc::Valid(divt_sft_)) {
+            Double_t divt = ((Numc::NEG<> * ds / ter) / part.gm());
+            divt_[0] = divt * part.info().mu();
+            divt_[1] = divt * part.eta();
+            if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt)) {
                 nrmt_     = Numc::ZERO<>;
-                divt_     = Numc::ZERO<>;
                 divt_sft_ = Numc::ZERO<>;
+                divt_.fill(Numc::ZERO<>);
             }
         }
     }
     
     nrmq_ = Numc::ZERO<>;
-    divq_ = Numc::ZERO<>;
+    divq_.fill(Numc::ZERO<>);
     if (side_q_) {
-        SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.eta());
+        SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.igmbta());
         nrmq_ = ion(0);
-        divq_ = ion(1);
+        divq_[0] = ion(1) * part.info().mu();
+        divq_[1] = ion(1) * part.eta();
     }
 
     set_dummy_x(part.cx());
@@ -304,7 +310,7 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStTOF::PDF_Q01_T_(
-    MultiGaus::Opt::ROBUST,
+    MultiGaus::Opt::NOROBUST,
     6.698790e+00 // TWO Time Fluc
 );
 
@@ -333,7 +339,7 @@ void HitStRICH::clear() {
     ib_      = Numc::ZERO<>;
 
     nrmib_ = Numc::ZERO<>;
-    divib_ = Numc::ZERO<>;
+    divib_.fill(Numc::ZERO<>);
 
     set_type();
 }
@@ -353,13 +359,19 @@ void HitStRICH::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
     nrmib_ = Numc::ZERO<>;
-    divib_ = Numc::ZERO<>;
+    divib_.fill(Numc::ZERO<>);
     if (side_ib_) {
-        // 1/bta := (1+eta*eta)^(1/2)
+        // 1/bta := (1+igmbta*igmbta)^(1/2)
         Double_t dib = ib_ - part.ibta();
         Double_t sgm = pdf_ib_->efft_sgm(dib);
         nrmib_ = (dib / sgm);
-        divib_ = (Numc::NEG<> / sgm) * (part.eta() * part.bta());
+        Double_t divib = ((Numc::NEG<> / sgm) / part.gm());
+        divib_[0] = divib * part.info().mu();
+        divib_[1] = divib * part.eta();
+        if (!Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
+            nrmib_ = Numc::ZERO<>;
+            divib_.fill(Numc::ZERO<>);
+        }
     }
     
     set_dummy_x(part.cx());
@@ -387,12 +399,12 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    MultiGaus::Opt::ROBUST,
+    MultiGaus::Opt::NOROBUST,
     0.001 // TWO Time Fluc
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    MultiGaus::Opt::ROBUST,
+    MultiGaus::Opt::NOROBUST,
     0.001 // TWO Time Fluc
 );
 

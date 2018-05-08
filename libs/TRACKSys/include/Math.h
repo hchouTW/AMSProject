@@ -184,7 +184,7 @@ class MultiGaus {
         TF1*  rand_func_;
 
     public :
-        static long double RobustSgm(long double res = Numc::ZERO<long double>, long double sgm = Numc::ONE<long double>, Opt opt = Opt::ROBUST);
+        static long double RobustSgm(long double res = Numc::ZERO<long double>, long double sgm = Numc::ONE<long double>, Opt opt = Opt::NOROBUST);
 
     private :
         static TRandom* rndm_gen_;
@@ -249,16 +249,16 @@ class IonEloss {
         IonEloss(const std::array<long double, 3>& kpa, const std::array<long double, 5>& mpv, const std::array<long double, 5>& sgm, long double fluc = Numc::ZERO<long double>) : kpa_(kpa), mpv_(mpv), sgm_(sgm), fluc_(fluc) { if (Numc::Compare(fluc_) <= 0) fluc_ = Numc::ZERO<long double>; }
         ~IonEloss() {}
         
-        inline SVecD<2> operator() (long double x, long double eta) const { std::array<long double, 2>&& ion = eval(x, eta); return SVecD<2>(ion.at(0), ion.at(1)); }
+        inline SVecD<2> operator() (long double x, long double igmbta) const { std::array<long double, 2>&& ion = eval(x, igmbta); return SVecD<2>(ion.at(0), ion.at(1)); }
    
     protected :
-        std::array<long double, 2> eval(long double x, long double eta) const;
+        std::array<long double, 2> eval(long double x, long double igmbta) const;
 
-        inline long double eval_kpa(long double eta, long double ibsqr) const;
-        inline long double eval_mpv(long double eta, long double ibsqr) const;
-        inline long double eval_sgm(long double eta, long double ibsqr) const;
+        inline long double eval_kpa(long double igmbta, long double ibsqr) const;
+        inline long double eval_mpv(long double igmbta, long double ibsqr) const;
+        inline long double eval_sgm(long double igmbta, long double ibsqr) const;
         
-        inline long double eval_divmpv(long double eta, long double ibsqr) const;
+        inline long double eval_divmpv(long double igmbta, long double ibsqr) const;
 
     private :
         std::array<long double, 3> kpa_;

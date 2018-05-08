@@ -153,14 +153,14 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mass_fixed = true, Double_t lmtdiv_invu = Numc::ZERO<>) : 
-            TrFitPar(fitPar), part_(part), is_mass_fixed_(is_mass_fixed),
-            is_invu_bound_((!is_mass_fixed_) && (Numc::Compare(lmtdiv_invu) > 0)),
-            lmtdiv_invu_(is_invu_bound_ ? lmtdiv_invu : Numc::ZERO<>),
-            DIMG_(Numc::SIX<Short_t> - is_mass_fixed), DIML_(Numc::FOUR<Short_t>), 
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_eta_free = true, Bool_t is_mu_free = false, Double_t lmtdiv_mu = Numc::ZERO<>) : 
+            TrFitPar(fitPar), part_(part),
+            is_eta_free_(is_eta_free), is_mu_free_(is_mu_free),
+            is_mu_bound_(is_mu_free_ && (Numc::Compare(lmtdiv_mu) > 0)), lmtdiv_mu_(is_mu_bound_ ? lmtdiv_mu : Numc::ZERO<>),
+            DIMG_(4+(is_eta_free_?1:0)), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
-            seqIDinvu_(-1), parIDtsft_(-1)
-            { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+nseg_*DIML_); }
+            seqIDmu_(-1), parIDeta_(-1), parIDmu_(-1), parIDtsft_(-1)
+            { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
@@ -170,7 +170,9 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             Double_t num_of_res = num_of_residual;
             Double_t num_of_par = num_of_parameter;
 
-            if (is_invu_bound_) { seqIDinvu_ = num_of_res; num_of_res += 1; }
+            if (is_eta_free_) { parIDeta_ = DIMG_ - 1; }
+            if (is_mu_free_)  { parIDmu_ = DIMG_; }
+            if (is_mu_bound_) { seqIDmu_ = num_of_res; num_of_res += 1; }
             if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
 
             set_num_residuals(0);
@@ -180,37 +182,42 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         }
     
     protected :
+        const PhySt part_;
+        
+        const Bool_t   is_eta_free_;
+        const Bool_t   is_mu_free_;
+        const Bool_t   is_mu_bound_;
+        const Double_t lmtdiv_mu_;
+
         const Short_t DIMG_;
+        const Short_t DIMM_;
         const Short_t DIML_;
-       
-        const Bool_t   is_mass_fixed_;
-        const Bool_t   is_invu_bound_;
-        const Double_t lmtdiv_invu_;
-        const PhySt    part_;
         
         Short_t numOfRes_;
         Short_t numOfPar_;
 
-        Short_t seqIDinvu_;
+        Short_t seqIDmu_;
+        Short_t parIDeta_; 
+        Short_t parIDmu_;
         Short_t parIDtsft_;
 };
 
 
 class PhyTrFit : public TrFitPar {
     public :
-        enum class MassOpt {
-            kFixed = 0, kFree = 1
-        };
+        enum class MomOpt  { kFixed = 0, kFree = 1 };
+        enum class MassOpt { kFixed = 0, kFree = 1 };
         
     protected :
-        static constexpr Short_t DIMG_ = 6;
+        static constexpr Short_t DIMG_ = 5;
+        static constexpr Short_t DIMM_ = 1;
         static constexpr Short_t DIML_ = 4;
 
     public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar, const MassOpt& mass_opt = MassOpt::kFixed);
+        PhyTrFit(const TrFitPar& fitPar, const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
@@ -235,33 +242,23 @@ class PhyTrFit : public TrFitPar {
         
         inline const Double_t& nrm_mstau() const { return nrm_mstau_; }
         inline const Double_t& nrm_msrho() const { return nrm_msrho_; }
-        inline const Double_t& nrm_elion() const { return nrm_elion_; }
     
-        inline const SVecD<DIMG_>& errG()      const { return errG_; }
-        inline const Double_t&     errG_cx()   const { return errG_(0); }
-        inline const Double_t&     errG_cy()   const { return errG_(1); }
-        inline const Double_t&     errG_ux()   const { return errG_(2); }
-        inline const Double_t&     errG_uy()   const { return errG_(3); }
-        inline const Double_t&     errG_eta()  const { return errG_(4); }
-        inline const Double_t&     errG_invu() const { return errG_(5); }
-
-        inline const std::vector<SVecD<DIML_>>& errL() const { errL_; }
-        inline const SVecD<DIML_>& errL(Int_t it)      const { return errL_.at(it); }
-        inline const Double_t&     errL_tauu(Int_t it) const { return errL_.at(it)(0); }
-        inline const Double_t&     errL_rhou(Int_t it) const { return errL_.at(it)(1); }
-        inline const Double_t&     errL_taul(Int_t it) const { return errL_.at(it)(2); }
-        inline const Double_t&     errL_rhol(Int_t it) const { return errL_.at(it)(3); }
-        
-        inline const Double_t& errT() const { return errT_; } // TOF time shift error [cm]
+        inline const Double_t& err_cx()  const { return err_[0]; }
+        inline const Double_t& err_cy()  const { return err_[1]; }
+        inline const Double_t& err_ux()  const { return err_[2]; }
+        inline const Double_t& err_uy()  const { return err_[3]; }
+        inline const Double_t& err_eta() const { return err_[4]; }
+        inline const Double_t& err_mu()  const { return err_[5]; }
+        inline const Double_t& err_t()   const { return err_t_; } // TOF time shift error [cm]
 
     protected :
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_invu = Numc::ZERO<>, Double_t reduce = Numc::ONE<>);
+        Bool_t physicalFit(const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_eta = Numc::ZERO<>, Double_t sgm_mu = Numc::ZERO<>);
         Bool_t physicalMassFit();
 
-        Bool_t evolve();
+        Bool_t evolve(const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed);
 
     protected :
         Bool_t              succ_;
@@ -270,9 +267,9 @@ class PhyTrFit : public TrFitPar {
 
         Double_t TOFt_sft_; // TOF time shift
 
-        Double_t lmtl_invu_;
-        Double_t lmtu_invu_;
-        Double_t lmtdiv_invu_;
+        Double_t lmtl_mu_;
+        Double_t lmtu_mu_;
+        Double_t lmtdiv_mu_;
 
         Double_t quality_;
 
@@ -292,11 +289,9 @@ class PhyTrFit : public TrFitPar {
 
         Double_t nrm_mstau_;
         Double_t nrm_msrho_;
-        Double_t nrm_elion_;
 
-        SVecD<DIMG_>              errG_; // (cx, cy, ux, uy, eta, invu)
-        std::vector<SVecD<DIML_>> errL_; // (tauu, rhou, taul, rhol)
-        Double_t                  errT_; // TOF time shift error [cm]
+        std::array<Double_t, 6> err_; // (cx, cy, ux, uy, eta, mu)
+        Double_t                err_t_; // TOF time shift error [cm]
 
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;

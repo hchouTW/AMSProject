@@ -4,7 +4,7 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
-RunFile=${AMSCore}/subj/trsys/test8/track_fill
+RunFile=${AMSCore}/subj/trsys/test/track_fill
 
 CurDir=${PWD}
 
@@ -12,7 +12,7 @@ DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
 #Stream=${CurDir}/lst/flist.cern.mc.EL025200_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test42
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test43
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
@@ -22,8 +22,8 @@ mkdir -p $OutputDir/log
 #FitGroupSize=8
 #GroupSize=5
 #Nseq=250
-GroupSize=1
-Nseq=1400
+GroupSize=3
+Nseq=450
 
 #for id in `seq 1 100`
 for id in `seq 0 ${Nseq}`

@@ -21,7 +21,7 @@ class VirtualHitSt {
         virtual void cal(const PhySt& part) = 0;
         virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
-        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_ = SVecD<2>(); divc_ = SVecD<2>(); }
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_.fill(Numc::ZERO<>); divc_.fill(Numc::ZERO<>); }
         inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
         
@@ -33,7 +33,6 @@ class VirtualHitSt {
         inline const Detector& dec()  const { return dec_; }
         inline const Short_t&  lay()  const { return lay_; }
 
-        inline const SVecO<3>& sc()  const { return side_coo_; }
         inline const Bool_t&   scx() const { return side_coo_(0); }
         inline const Bool_t&   scy() const { return side_coo_(1); }
         inline const Bool_t&   scz() const { return side_coo_(2); }
@@ -43,17 +42,14 @@ class VirtualHitSt {
         inline const Double_t& cy() const { return coo_(1); }
         inline const Double_t& cz() const { return coo_(2); }
         
-        inline const SVecD<2>& ec()  const { return erc_; }
         inline const Double_t& ecx() const { return erc_(0); }
         inline const Double_t& ecy() const { return erc_(1); }
         
-        inline const SVecD<2>& nrmc()  const { return nrmc_; }
-        inline const Double_t& nrmcx() const { return nrmc_(0); }
-        inline const Double_t& nrmcy() const { return nrmc_(1); }
+        inline const Double_t& nrmcx() const { return nrmc_[0]; }
+        inline const Double_t& nrmcy() const { return nrmc_[1]; }
 
-        inline const SVecD<2>& divc()  const { return divc_; }
-        inline const Double_t& divcx() const { return divc_(0); }
-        inline const Double_t& divcy() const { return divc_(1); }
+        inline const Double_t& divcx() const { return divc_[0]; }
+        inline const Double_t& divcy() const { return divc_[1]; }
 
     protected :
         void clear();
@@ -72,8 +68,8 @@ class VirtualHitSt {
         SVecD<3> coo_;      // [cm] coord
         SVecD<2> erc_;      // [cm] error
         
-        SVecD<2> nrmc_; // coord norm
-        SVecD<2> divc_; // coord div
+        std::array<Double_t, 2> nrmc_; // coord norm
+        std::array<Double_t, 2> divc_; // coord div
     
     public :
         enum class Orientation {
@@ -102,32 +98,33 @@ class HitStTRK : public VirtualHitSt {
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_(0) = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
-            nsr_(1) = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
+            nsr_[0] = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
+            nsr_[1] = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
         // TODO: // rebuild template
         //inline void set_q(Double_t qx, Double_t qy) {
-        //    side_q_(0) = (Numc::Compare(qx) > 0);
-        //    side_q_(1) = (Numc::Compare(qy) > 0);
-        //    q_(0) = (side_q_(0) ? qx : Numc::ZERO<>);
-        //    q_(1) = (side_q_(1) ? qy : Numc::ZERO<>);
-        //    nrmq_ = SVecD<2>();
-        //    divq_ = SVecD<2>();
+        //    side_q_[0] = (Numc::Compare(qx) > 0);
+        //    side_q_[1] = (Numc::Compare(qy) > 0);
+        //    q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
+        //    q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
+        //    nrmq_.fill(Numc::ZERO<>);
+        //    divq_.fill(Numc::ZERO<>);
         //}
         
         inline const Short_t&  seqIDqx() const { return seqIDqx_; }
         inline const Short_t&  seqIDqy() const { return seqIDqy_; }
 
-        inline const Bool_t& sqx() const { return side_q_(0); }
-        inline const Bool_t& sqy() const { return side_q_(1); }
+        inline const Bool_t& sqx() const { return side_q_[0]; }
+        inline const Bool_t& sqy() const { return side_q_[1]; }
 
-        inline const SVecD<2>& nrmq()  const { return nrmq_; }
-        inline const Double_t& nrmqx() const { return nrmq_(0); }
-        inline const Double_t& nrmqy() const { return nrmq_(1); }
+        inline const Double_t& nrmqx() const { return nrmq_[0]; }
+        inline const Double_t& nrmqy() const { return nrmq_[1]; }
 
-        inline const SVecD<2>& divq()  const { return divq_; }
-        inline const Double_t& divqx() const { return divq_(0); }
-        inline const Double_t& divqy() const { return divq_(1); }
+        inline const Double_t& divqx_eta() const { return divq_[0]; }
+        inline const Double_t& divqx_mu()  const { return divq_[1]; }
+
+        inline const Double_t& divqy_eta() const { return divq_[2]; }
+        inline const Double_t& divqy_mu()  const { return divq_[3]; }
 
     protected :
         void clear();
@@ -136,13 +133,13 @@ class HitStTRK : public VirtualHitSt {
         Short_t seqIDqx_;
         Short_t seqIDqy_;
         
-        SVecS<2> nsr_; // Number of strip
+        std::array<Short_t, 2> nsr_; // Number of strip
         
-        SVecO<2> side_q_;
-        SVecD<2> q_; // ADC
+        std::array<Bool_t, 2>   side_q_;
+        std::array<Double_t, 2> q_; // ADC
 
-        SVecD<2> nrmq_; // q nrom
-        SVecD<2> divq_; // q div
+        std::array<Double_t, 2> nrmq_; // q nrom (x, y)
+        std::array<Double_t, 4> divq_; // q div (igmbta) (x, y) [eta, mu]
 
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
@@ -184,8 +181,8 @@ class HitStTOF : public VirtualHitSt {
             orgt_     = (side_t_ ? t : Numc::ZERO<>);
             sftt_     = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
             nrmt_     = Numc::ZERO<>;
-            divt_     = Numc::ZERO<>;
             divt_sft_ = Numc::ZERO<>;
+            divt_.fill(Numc::ZERO<>);
         }
         
         // TODO: // rebuild template
@@ -193,7 +190,7 @@ class HitStTOF : public VirtualHitSt {
         //    side_q_ = (Numc::Compare(q) > 0);
         //    q_      = (side_q_ ? q : Numc::ZERO<>);
         //    nrmq_   = Numc::ZERO<>;
-        //    divq_   = Numc::ZERO<>;
+        //    divq_.fill(Numc::ZERO<>);
         //}
 
         inline const Double_t& orgt() const { return orgt_; }
@@ -206,12 +203,13 @@ class HitStTOF : public VirtualHitSt {
         inline const Bool_t& sq() const { return side_q_; }
 
         inline const Double_t& nrmt() const { return nrmt_; }
-        inline const Double_t& divt() const { return divt_; }
-        
         inline const Double_t& divt_sft() const { return divt_sft_; }
+        inline const Double_t& divt_eta() const { return divt_[0]; }
+        inline const Double_t& divt_mu()  const { return divt_[1]; }
         
         inline const Double_t& nrmq() const { return nrmq_; }
-        inline const Double_t& divq() const { return divq_; }
+        inline const Double_t& divq_eta() const { return divq_[0]; }
+        inline const Double_t& divq_mu()  const { return divq_[1]; }
 
     protected :
         void clear();
@@ -228,12 +226,11 @@ class HitStTOF : public VirtualHitSt {
         Double_t q_; // Q
         
         Double_t nrmt_; // T nrom
-        Double_t divt_; // T div
-
-        Double_t divt_sft_; // T(shift) div
+        Double_t divt_sft_; // T(shift) div (igmbta) [eta, mu]
+        std::array<Double_t, 2> divt_; // T div (igmbta) [eta, mu]
 
         Double_t nrmq_; // Q nrom
-        Double_t divq_; // Q div
+        std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, mu]
 
         MultiGaus* pdf_t_;
         IonEloss*  pdf_q_;
@@ -284,7 +281,7 @@ class HitStRICH : public VirtualHitSt {
             side_ib_ = (Numc::Compare(ib) >= 0);
             ib_      = (side_ib_ ? ib : Numc::ZERO<>);
             nrmib_   = Numc::ZERO<>;
-            divib_   = Numc::ZERO<>;
+            divib_.fill(Numc::ZERO<>);
         }
         
         inline const Radiator& rad() const { return rad_; }
@@ -296,7 +293,8 @@ class HitStRICH : public VirtualHitSt {
         inline const Bool_t& sib() const { return side_ib_; }
 
         inline const Double_t& nrmib() const { return nrmib_; }
-        inline const Double_t& divib() const { return divib_; }
+        inline const Double_t& divib_eta() const { return divib_[0]; }
+        inline const Double_t& divib_mu()  const { return divib_[1]; }
         
     protected :
         void clear();
@@ -310,7 +308,7 @@ class HitStRICH : public VirtualHitSt {
         Double_t ib_; // 1/Beta
 
         Double_t nrmib_; // 1/Beta nrom
-        Double_t divib_; // 1/Beta div
+        std::array<Double_t, 2> divib_; // 1/Beta div (igmbta) [eta, mu]
 
         MultiGaus* pdf_ib_;
     

@@ -164,12 +164,12 @@ class PhySt {
         inline void reset(const PartInfo& info);
         inline void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass);
-        inline void reset(Double_t invu);
+        inline void reset(Double_t mu);
         
         inline void reset_info(const PartInfo& info) { info_ = info; }
         inline void reset_info(const PartType& type) { info_.reset(type); }
         inline void reset_info(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); }
-        inline void reset_info(Double_t invu) { info_.reset(invu); }
+        inline void reset_info(Double_t mu) { info_.reset(mu); }
         
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
@@ -181,7 +181,7 @@ class PhySt {
         inline void set_state_with_uxy(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_uxy(c(0), c(1), c(2), u(0), u(1), u(2)); }
         inline void set_state(const SVecD<3>& c, const SVecD<3>& m) { set_state(c(0), c(1), c(2), m(0), m(1), m(2)); }
         
-        void set_mom(Double_t mom, Double_t sign = 0.);
+        void set_mom(Double_t mom, Short_t sign = 0);
         
         void set_eta(Double_t eta);
         
@@ -205,8 +205,9 @@ class PhySt {
         inline const Double_t& gmbta() const { return gmbta_; }
         inline const Double_t& eta()   const { return eta_; }
       
-        inline Double_t ibta() const { return ((Numc::EqualToZero(bta_)) ? Numc::ZERO<> : (Numc::ONE<>/bta_)); }
-        inline Double_t gm()   const { return ((Numc::EqualToZero(bta_)) ? Numc::ONE<> : (gmbta_/bta_)); }
+        inline Double_t igmbta() const { return ((Numc::EqualToZero(gmbta_)) ? Numc::ZERO<> : (Numc::ONE<> / gmbta_)); }
+        inline Double_t ibta()   const { return ((Numc::EqualToZero(bta_))   ? Numc::ZERO<> : (Numc::ONE<> / bta_)); }
+        inline Double_t gm()     const { return ((Numc::EqualToZero(bta_))   ? Numc::ONE<> : (gmbta_ / bta_)); }
 
         inline Short_t  eta_sign() const { return (Numc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }

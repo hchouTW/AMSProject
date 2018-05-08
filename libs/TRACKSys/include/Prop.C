@@ -48,11 +48,11 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
     SVecD<3>&& crsub = LA::Cross(part.u(), mag());
     
     zeta_c_ = std::move(part.u());
-    zeta_u_ = std::move((Lambda * part.info().invu() * part.eta()) * crsub);
+    zeta_u_ = std::move((Lambda * part.eta()) * crsub);
     
     if (field) orth_.reset(part.u(), mag());
     
-    if (field && part.arg().eloss()) zeta_e_ = part.info().invu() * part.eta() * (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
+    if (field && part.arg().eloss()) zeta_e_ = part.eta() * (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
     else                             zeta_e_ = Numc::ZERO<>;
 }
 
@@ -74,12 +74,11 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
     kappa_uu_(1, 2) =  mag.x();
     kappa_uu_(2, 0) =  mag.y();
     kappa_uu_(2, 1) = -mag.x();
-    kappa_uu_ = std::move((Lambda * part.info().invu() * part.eta()) * kappa_uu_);
+    kappa_uu_ = std::move((Lambda * part.eta()) * kappa_uu_);
  
-    kappa_ue_ = std::move(Lambda * part.info().invu() * crsub);
-    kappa_um_ = std::move(Lambda * part.eta() * crsub);
+    kappa_ue_ = std::move(Lambda * crsub);
 
-    if (field && part.arg().eloss()) kappa_ee_ = part.info().invu() * (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
+    if (field && part.arg().eloss()) kappa_ee_ = (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
     else                             kappa_ee_ = Numc::ZERO<>;
 }
  
@@ -134,9 +133,6 @@ TransferPhyJb::TransferPhyJb(const TransferFunc& tf, PhyJb& jb) {
 
     ue_(X) = tf.uu(X, X) * jb.gg(JUX, JEA) + tf.uu(X, Y) * jb.gg(JUY, JEA) + tf.ue(X) * jb.gg(JEA, JEA);
     ue_(Y) = tf.uu(Y, X) * jb.gg(JUX, JEA) + tf.uu(Y, Y) * jb.gg(JUY, JEA) + tf.ue(Y) * jb.gg(JEA, JEA);
-    
-    um_(X) = tf.uu(X, X) * jb.gg(JUX, JIU) + tf.uu(X, Y) * jb.gg(JUY, JIU) + tf.ue(X) * jb.gg(JEA, JIU) + tf.um(X) * jb.gg(JIU, JIU);
-    um_(Y) = tf.uu(Y, X) * jb.gg(JUX, JIU) + tf.uu(Y, Y) * jb.gg(JUY, JIU) + tf.ue(Y) * jb.gg(JEA, JIU) + tf.um(Y) * jb.gg(JIU, JIU);
 
     ee_ = tf.ee() * jb.gg(JEA, JEA);
 }
@@ -245,8 +241,8 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
     }
     if (sw_eloss_) {
         MatPhyFld&& mphy = MatPhy::Get(mfld, part);
-        elion_sgm_ = part.info().invu() * mphy.elion_sgm(); // TODO
-        elbrm_men_ = mphy.elbrm_men(); // TODO
+        elion_sgm_ = mphy.elion_sgm();
+        elbrm_men_ = mphy.elbrm_men();
 
         if (!Numc::Valid(elion_sgm_) || Numc::Compare(elion_sgm_) <= 0) elion_sgm_ = Numc::ZERO<>;
         if (!Numc::Valid(elbrm_men_) || Numc::Compare(elbrm_men_) <= 0) elbrm_men_ = Numc::ZERO<>;
@@ -641,22 +637,18 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         phyJb->gg(JPX, JUX) += ss1o2 * tf0.uu(X, X);
         phyJb->gg(JPX, JUY) += ss1o2 * tf0.uu(X, Y);
         phyJb->gg(JPX, JEA) += ss1o2 * tf0.ue(X);
-        phyJb->gg(JPX, JIU) += ss1o2 * tf0.um(X);
         
         phyJb->gg(JPY, JUX) += ss1o2 * tf0.uu(Y, X);
         phyJb->gg(JPY, JUY) += ss1o2 * tf0.uu(Y, Y);
         phyJb->gg(JPY, JEA) += ss1o2 * tf0.ue(Y);
-        phyJb->gg(JPY, JIU) += ss1o2 * tf0.um(Y);
         
         phyJb->gg(JUX, JUX) += step * tf0.uu(X, X);
         phyJb->gg(JUX, JUY) += step * tf0.uu(X, Y);
         phyJb->gg(JUX, JEA) += step * tf0.ue(X);
-        phyJb->gg(JUX, JIU) += step * tf0.um(X);
         
         phyJb->gg(JUY, JUX) += step * tf0.uu(Y, X);
         phyJb->gg(JUY, JUY) += step * tf0.uu(Y, Y);
         phyJb->gg(JUY, JEA) += step * tf0.ue(Y);
-        phyJb->gg(JUY, JIU) += step * tf0.um(Y);
 
         if (withEloss) phyJb->gg(JEA, JEA) += step_ps * tf0.ee();
     }
@@ -739,22 +731,18 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         jb1.gg(JPX, JUX) += ss1o2 * tf0.uu(X, X);
         jb1.gg(JPX, JUY) += ss1o2 * tf0.uu(X, Y);
         jb1.gg(JPX, JEA) += ss1o2 * tf0.ue(X);
-        jb1.gg(JPX, JIU) += ss1o2 * tf0.um(X);
         
         jb1.gg(JPY, JUX) += ss1o2 * tf0.uu(Y, X);
         jb1.gg(JPY, JUY) += ss1o2 * tf0.uu(Y, Y);
         jb1.gg(JPY, JEA) += ss1o2 * tf0.ue(Y);
-        jb1.gg(JPY, JIU) += ss1o2 * tf0.um(Y);
     
         jb1.gg(JUX, JUX) += step * tf0.uu(X, X);
         jb1.gg(JUX, JUY) += step * tf0.uu(X, Y);
         jb1.gg(JUX, JEA) += step * tf0.ue(X);
-        jb1.gg(JUY, JIU) += step * tf0.um(X);
         
         jb1.gg(JUY, JUX) += step * tf0.uu(Y, X);
         jb1.gg(JUY, JUY) += step * tf0.uu(Y, Y);
         jb1.gg(JUY, JEA) += step * tf0.ue(Y);
-        jb1.gg(JUY, JIU) += step * tf0.um(Y);
 
         if (withEloss) jb1.gg(JEA, JEA) += step_ps * tf0.ee();
 
@@ -768,22 +756,18 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         phyJb->gg(JPX, JUX) += ss1o6 * (Numc::TWO<> * tf0.uu(X, X) + tj1.uu(X, X));
         phyJb->gg(JPX, JUY) += ss1o6 * (Numc::TWO<> * tf0.uu(X, Y) + tj1.uu(X, Y));
         phyJb->gg(JPX, JEA) += ss1o6 * (Numc::TWO<> * tf0.ue(X)    + tj1.ue(X)   );
-        phyJb->gg(JPX, JIU) += ss1o6 * (Numc::TWO<> * tf0.um(X)    + tj1.um(X)   );
         
         phyJb->gg(JPY, JUX) += ss1o6 * (Numc::TWO<> * tf0.uu(Y, X) + tj1.uu(Y, X));
         phyJb->gg(JPY, JUY) += ss1o6 * (Numc::TWO<> * tf0.uu(Y, Y) + tj1.uu(Y, Y));
         phyJb->gg(JPY, JEA) += ss1o6 * (Numc::TWO<> * tf0.ue(Y)    + tj1.ue(Y)   );
-        phyJb->gg(JPY, JIU) += ss1o6 * (Numc::TWO<> * tf0.um(Y)    + tj1.um(Y)   );
         
         phyJb->gg(JUX, JUX) += s1o2 * (tf0.uu(X, X) + tj1.uu(X, X));
         phyJb->gg(JUX, JUY) += s1o2 * (tf0.uu(X, Y) + tj1.uu(X, Y));
         phyJb->gg(JUX, JEA) += s1o2 * (tf0.ue(X)    + tj1.ue(X)   );
-        phyJb->gg(JUX, JIU) += s1o2 * (tf0.um(X)    + tj1.um(X)   );
         
         phyJb->gg(JUY, JUX) += s1o2 * (tf0.uu(Y, X) + tj1.uu(Y, X));
         phyJb->gg(JUY, JUY) += s1o2 * (tf0.uu(Y, Y) + tj1.uu(Y, Y));
         phyJb->gg(JUY, JEA) += s1o2 * (tf0.ue(Y)    + tj1.ue(Y)   );
-        phyJb->gg(JUY, JIU) += s1o2 * (tf0.um(Y)    + tj1.um(Y)   );
         
         if (withEloss) phyJb->gg(JEA, JEA) += s1o2_ps * (tf0.ee() + tj1.ee());
     }
@@ -909,22 +893,18 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb1.gg(JPX, JUX) += ss1o8 * tf0.uu(X, X);
         jb1.gg(JPX, JUY) += ss1o8 * tf0.uu(X, Y);
         jb1.gg(JPX, JEA) += ss1o8 * tf0.ue(X);
-        jb1.gg(JPX, JIU) += ss1o8 * tf0.um(X);
         
         jb1.gg(JPY, JUX) += ss1o8 * tf0.uu(Y, X);
         jb1.gg(JPY, JUY) += ss1o8 * tf0.uu(Y, Y);
         jb1.gg(JPY, JEA) += ss1o8 * tf0.ue(Y);
-        jb1.gg(JPY, JIU) += ss1o8 * tf0.um(Y);
         
         jb1.gg(JUX, JUX) += s1o2 * tf0.uu(X, X);
         jb1.gg(JUX, JUY) += s1o2 * tf0.uu(X, Y);
         jb1.gg(JUX, JEA) += s1o2 * tf0.ue(X);
-        jb1.gg(JUX, JIU) += s1o2 * tf0.um(X);
         
         jb1.gg(JUY, JUX) += s1o2 * tf0.uu(Y, X);
         jb1.gg(JUY, JUY) += s1o2 * tf0.uu(Y, Y);
         jb1.gg(JUY, JEA) += s1o2 * tf0.ue(Y);
-        jb1.gg(JUY, JIU) += s1o2 * tf0.um(Y);
 
         if (withEloss) jb1.gg(JEA, JEA) += s1o2_ps * tf0.ee();
 
@@ -938,22 +918,18 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb2.gg(JPX, JUX) += ss1o8 * tf0.uu(X, X);
         jb2.gg(JPX, JUY) += ss1o8 * tf0.uu(X, Y);
         jb2.gg(JPX, JEA) += ss1o8 * tf0.ue(X);
-        jb2.gg(JPX, JIU) += ss1o8 * tf0.um(X);
         
         jb2.gg(JPY, JUX) += ss1o8 * tf0.uu(Y, X);
         jb2.gg(JPY, JUY) += ss1o8 * tf0.uu(Y, Y);
         jb2.gg(JPY, JEA) += ss1o8 * tf0.ue(Y);
-        jb2.gg(JPY, JIU) += ss1o8 * tf0.um(Y);
         
         jb2.gg(JUX, JUX) += s1o2 * tj1.uu(X, X);
         jb2.gg(JUX, JUY) += s1o2 * tj1.uu(X, Y);
         jb2.gg(JUX, JEA) += s1o2 * tj1.ue(X);
-        jb2.gg(JUX, JIU) += s1o2 * tj1.um(X);
         
         jb2.gg(JUY, JUX) += s1o2 * tj1.uu(Y, X);
         jb2.gg(JUY, JUY) += s1o2 * tj1.uu(Y, Y);
         jb2.gg(JUY, JEA) += s1o2 * tj1.ue(Y);
-        jb2.gg(JUY, JIU) += s1o2 * tj1.um(Y);
 
         if (withEloss) jb2.gg(JEA, JEA) += s1o2_ps * tj1.ee();
         
@@ -967,22 +943,18 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         jb3.gg(JPX, JUX) += ss1o2 * tf2.uu(X, X);
         jb3.gg(JPX, JUY) += ss1o2 * tf2.uu(X, Y);
         jb3.gg(JPX, JEA) += ss1o2 * tf2.ue(X);
-        jb3.gg(JPX, JIU) += ss1o2 * tf2.um(X);
         
         jb3.gg(JPY, JUX) += ss1o2 * tf2.uu(Y, X);
         jb3.gg(JPY, JUY) += ss1o2 * tf2.uu(Y, Y);
         jb3.gg(JPY, JEA) += ss1o2 * tf2.ue(Y);
-        jb3.gg(JPY, JIU) += ss1o2 * tf2.um(Y);
         
         jb3.gg(JUX, JUX) += step * tj2.uu(X, X);
         jb3.gg(JUX, JUY) += step * tj2.uu(X, Y);
         jb3.gg(JUX, JEA) += step * tj2.ue(X);
-        jb3.gg(JUX, JIU) += step * tj2.um(X);
         
         jb3.gg(JUY, JUX) += step * tj2.uu(Y, X);
         jb3.gg(JUY, JUY) += step * tj2.uu(Y, Y);
         jb3.gg(JUY, JEA) += step * tj2.ue(Y);
-        jb3.gg(JUY, JIU) += step * tj2.um(Y);
 
         if (withEloss) jb3.gg(JEA, JEA) += step_ps * tj2.ee();
 
@@ -996,22 +968,18 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         phyJb->gg(JPX, JUX) += ss1o6 * (tf0.uu(X, X) + tj1.uu(X, X) + tj2.uu(X, X));
         phyJb->gg(JPX, JUY) += ss1o6 * (tf0.uu(X, Y) + tj1.uu(X, Y) + tj2.uu(X, Y));
         phyJb->gg(JPX, JEA) += ss1o6 * (tf0.ue(X)    + tj1.ue(X)    + tj2.ue(X)   );
-        phyJb->gg(JPX, JIU) += ss1o6 * (tf0.um(X)    + tj1.um(X)    + tj2.um(X)   );
         
         phyJb->gg(JPY, JUX) += ss1o6 * (tf0.uu(Y, X) + tj1.uu(Y, X) + tj2.uu(Y, X));
         phyJb->gg(JPY, JUY) += ss1o6 * (tf0.uu(Y, Y) + tj1.uu(Y, Y) + tj2.uu(Y, Y));
         phyJb->gg(JPY, JEA) += ss1o6 * (tf0.ue(Y)    + tj1.ue(Y)    + tj2.ue(Y)   );
-        phyJb->gg(JPY, JIU) += ss1o6 * (tf0.um(Y)    + tj1.um(Y)    + tj2.um(Y)   );
         
         phyJb->gg(JUX, JUX) += s1o6 * (tf0.uu(X, X) + Numc::TWO<> * tj1.uu(X, X) + Numc::TWO<> * tj2.uu(X, X) + tj3.uu(X, X));
         phyJb->gg(JUX, JUY) += s1o6 * (tf0.uu(X, Y) + Numc::TWO<> * tj1.uu(X, Y) + Numc::TWO<> * tj2.uu(X, Y) + tj3.uu(X, Y));
         phyJb->gg(JUX, JEA) += s1o6 * (tf0.ue(X)    + Numc::TWO<> * tj1.ue(X)    + Numc::TWO<> * tj2.ue(X)    + tj3.ue(X)   );
-        phyJb->gg(JUX, JIU) += s1o6 * (tf0.um(X)    + Numc::TWO<> * tj1.um(X)    + Numc::TWO<> * tj2.um(X)    + tj3.um(X)   );
         
         phyJb->gg(JUY, JUX) += s1o6 * (tf0.uu(Y, X) + Numc::TWO<> * tj1.uu(Y, X) + Numc::TWO<> * tj2.uu(Y, X) + tj3.uu(Y, X));
         phyJb->gg(JUY, JUY) += s1o6 * (tf0.uu(Y, Y) + Numc::TWO<> * tj1.uu(Y, Y) + Numc::TWO<> * tj2.uu(Y, Y) + tj3.uu(Y, Y));
         phyJb->gg(JUY, JEA) += s1o6 * (tf0.ue(Y)    + Numc::TWO<> * tj1.ue(Y)    + Numc::TWO<> * tj2.ue(Y)    + tj3.ue(Y)   );
-        phyJb->gg(JUY, JIU) += s1o6 * (tf0.um(Y)    + Numc::TWO<> * tj1.um(Y)    + Numc::TWO<> * tj2.um(Y)    + tj3.um(Y)   );
 
         if (withEloss) phyJb->gg(JEA, JEA) += s1o6_ps * (tf0.ee() + Numc::TWO<> * tj1.ee() + Numc::TWO<> * tj2.ee() + tj3.ee());
     }

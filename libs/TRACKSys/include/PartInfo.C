@@ -70,8 +70,8 @@ void PartInfo::reset(const PartType& type, const std::string& name, Short_t chrg
     chrg_to_mass_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(chrg_ / mass_));
     chrg_to_atomic_mass_ = ((is_chrgless_ || is_massless_) ? Numc::ZERO<> : std::fabs(chrg_ / ATOMIC_MASS));
 
-    if (is_massless_) invu_ = Numc::ZERO<>;
-    else              invu_ = (ATOMIC_MASS / mass_);
+    if (is_massless_) mu_ = Numc::ZERO<>;
+    else              mu_ = (mass_ / ATOMIC_MASS);
 }
 
 void PartInfo::print() const {
