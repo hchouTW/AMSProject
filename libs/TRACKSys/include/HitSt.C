@@ -310,7 +310,7 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStTOF::PDF_Q01_T_(
-    MultiGaus::Opt::NOROBUST,
+    MultiGaus::Opt::ROBUST,
     6.698790e+00 // TWO Time Fluc
 );
 
