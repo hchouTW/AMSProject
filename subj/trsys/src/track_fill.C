@@ -261,12 +261,12 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        //if (mc_mom > 0.8) continue; // testcode
+        if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MomOpt::kFree, PhyTrFit::MassOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MomOpt::kFree, PhyTrFit::MassOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -285,7 +285,7 @@ int main(int argc, char * argv[]) {
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
         //hc_irig = hc_lay_irig[topLay];
-        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -318,12 +318,12 @@ int main(int argc, char * argv[]) {
         Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
         //Double_t hc_chix = (hc_succ ? std::log(track.chisq[2][patt][0]) : 0.); 
-        Double_t hc_chix = (hc_succ ? std::log(tr.nchi())            : 0.); 
+        Double_t hc_chix = (hc_succ ? std::log(tr.nchi_cx())            : 0.); 
         
         Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
-        Double_t hc_chiy = (hc_succ ? std::log( (tr.ndof_cy()*tr.nchi_cy()+tr.nseg()*tr.nrm_msrho())/tr.ndof_cy() ) : 0.); 
+        Double_t hc_chiy = (hc_succ ? std::log(tr.nchi_cy()) : 0.); 
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));

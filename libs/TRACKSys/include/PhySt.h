@@ -207,7 +207,7 @@ class PhySt {
       
         inline Double_t igmbta() const { return ((Numc::EqualToZero(gmbta_)) ? Numc::ZERO<> : (Numc::ONE<> / gmbta_)); }
         inline Double_t ibta()   const { return ((Numc::EqualToZero(bta_))   ? Numc::ZERO<> : (Numc::ONE<> / bta_)); }
-        inline Double_t gm()     const { return ((Numc::EqualToZero(bta_))   ? Numc::ONE<> : (gmbta_ / bta_)); }
+        inline Double_t gm()     const { return ((Numc::EqualToZero(bta_))   ? Numc::ONE<>  : (gmbta_ / bta_)); }
 
         inline Short_t  eta_sign() const { return (Numc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }

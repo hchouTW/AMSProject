@@ -267,9 +267,9 @@ void HitStTOF::cal(const PhySt& part) {
             Double_t ter = MultiGaus::RobustSgm(dt, sgm, pdf_t_->opt());
             nrmt_     = (dt / ter);
             divt_sft_ = (Numc::ONE<> / ter);
-            Double_t divt = ((Numc::NEG<> * ds / ter) / part.gm());
-            divt_[0] = divt * part.info().mu();
-            divt_[1] = divt * part.eta();
+            Double_t divt = (Numc::NEG<> * ds / ter);
+            divt_[0] = divt * (part.eta_sign() * part.info().mu() / part.gm());
+            divt_[1] = divt;
             if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt)) {
                 nrmt_     = Numc::ZERO<>;
                 divt_sft_ = Numc::ZERO<>;
@@ -365,9 +365,9 @@ void HitStRICH::cal(const PhySt& part) {
         Double_t dib = ib_ - part.ibta();
         Double_t sgm = pdf_ib_->efft_sgm(dib);
         nrmib_ = (dib / sgm);
-        Double_t divib = ((Numc::NEG<> / sgm) / part.gm());
-        divib_[0] = divib * part.info().mu();
-        divib_[1] = divib * part.eta();
+        Double_t divib = (Numc::NEG<> / sgm);
+        divib_[0] = divib * (part.eta_sign() * part.info().mu() / part.gm());
+        divib_[1] = divib;
         if (!Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
             nrmib_ = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);

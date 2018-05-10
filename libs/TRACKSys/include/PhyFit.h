@@ -95,19 +95,15 @@ class SimpleTrFit : public TrFitPar {
         inline const Bool_t& status() const { return succ_; }
         inline const PhySt& part() const { return part_; }
         
-        inline const Short_t& ndof()      const { return ndof_; }
-        inline const Short_t& ndof_cx()   const { return ndof_cx_; }
-        inline const Short_t& ndof_cy()   const { return ndof_cy_; }
-        inline const Short_t& ndof_TRKq() const { return ndof_TRKq_; }
-        inline const Short_t& ndof_TOFq() const { return ndof_TOFq_; }
-        inline const Short_t& ndof_TOFt() const { return ndof_TOFt_; }
+        inline const Short_t& ndof()    const { return ndof_; }
+        inline const Short_t& ndof_cx() const { return ndof_cx_; }
+        inline const Short_t& ndof_cy() const { return ndof_cy_; }
+        inline const Short_t& ndof_ib() const { return ndof_ib_; }
         
-        inline const Double_t& nchi()      const { return nchi_; }
-        inline const Double_t& nchi_cx()   const { return nchi_cx_; }
-        inline const Double_t& nchi_cy()   const { return nchi_cy_; }
-        inline const Double_t& nchi_TRKq() const { return nchi_TRKq_; }
-        inline const Double_t& nchi_TOFq() const { return nchi_TOFq_; }
-        inline const Double_t& nchi_TOFt() const { return nchi_TOFt_; }
+        inline const Double_t& nchi()    const { return nchi_; }
+        inline const Double_t& nchi_cx() const { return nchi_cx_; }
+        inline const Double_t& nchi_cy() const { return nchi_cy_; }
+        inline const Double_t& nchi_ib() const { return nchi_ib_; }
 
     protected :
         void clear();
@@ -120,18 +116,14 @@ class SimpleTrFit : public TrFitPar {
         PhySt  part_;
 
         Short_t ndof_;
-        Short_t ndof_cx_;
-        Short_t ndof_cy_;
-        Short_t ndof_TRKq_;
-        Short_t ndof_TOFq_;
-        Short_t ndof_TOFt_;
+        Short_t ndof_cx_; // (cx)
+        Short_t ndof_cy_; // (cy)
+        Short_t ndof_ib_; // (TRKq + TOFt + TOFq)
         
         Double_t nchi_;
         Double_t nchi_cx_;
         Double_t nchi_cy_;
-        Double_t nchi_TRKq_;
-        Double_t nchi_TOFq_;
-        Double_t nchi_TOFt_;
+        Double_t nchi_ib_;
 
     protected :
         static constexpr Short_t DIMG = 5;
@@ -153,13 +145,11 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_eta_free = true, Bool_t is_mu_free = false, Double_t lmtdiv_mu = Numc::ZERO<>) : 
-            TrFitPar(fitPar), part_(part),
-            is_eta_free_(is_eta_free), is_mu_free_(is_mu_free),
-            is_mu_bound_(is_mu_free_ && (Numc::Compare(lmtdiv_mu) > 0)), lmtdiv_mu_(is_mu_bound_ ? lmtdiv_mu : Numc::ZERO<>),
-            DIMG_(4+(is_eta_free_?1:0)), DIMM_(is_mu_free_?1:0), DIML_(4), 
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false) : 
+            TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
+            DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
-            seqIDmu_(-1), parIDeta_(-1), parIDmu_(-1), parIDtsft_(-1)
+            seqIDnu_(-1), parIDnu_(-1), parIDtsft_(-1)
             { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
     
     public :
@@ -170,9 +160,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             Double_t num_of_res = num_of_residual;
             Double_t num_of_par = num_of_parameter;
 
-            if (is_eta_free_) { parIDeta_ = DIMG_ - 1; }
-            if (is_mu_free_)  { parIDmu_ = DIMG_; }
-            if (is_mu_bound_) { seqIDmu_ = num_of_res; num_of_res += 1; }
+            if (is_mu_free_) { parIDnu_ = DIMG_; }
             if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
 
             set_num_residuals(0);
@@ -182,12 +170,8 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         }
     
     protected :
-        const PhySt part_;
-        
-        const Bool_t   is_eta_free_;
-        const Bool_t   is_mu_free_;
-        const Bool_t   is_mu_bound_;
-        const Double_t lmtdiv_mu_;
+        const Bool_t is_mu_free_;
+        const PhySt  part_;
 
         const Short_t DIMG_;
         const Short_t DIMM_;
@@ -196,28 +180,25 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         Short_t numOfRes_;
         Short_t numOfPar_;
 
-        Short_t seqIDmu_;
-        Short_t parIDeta_; 
-        Short_t parIDmu_;
+        Short_t seqIDnu_;
+        Short_t parIDnu_;
         Short_t parIDtsft_;
 };
 
 
 class PhyTrFit : public TrFitPar {
     public :
-        enum class MomOpt  { kFixed = 0, kFree = 1 };
-        enum class MassOpt { kFixed = 0, kFree = 1 };
+        enum class MuOpt  { kFixed = 0, kFree = 1 };
         
     protected :
-        static constexpr Short_t DIMG_ = 5;
-        static constexpr Short_t DIMM_ = 1;
-        static constexpr Short_t DIML_ = 4;
+        static constexpr Short_t DIMG = 5;
+        static constexpr Short_t DIML = 4;
 
     public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar, const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed);
+        PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt = MuOpt::kFixed);
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
@@ -226,72 +207,52 @@ class PhyTrFit : public TrFitPar {
         
         inline const Double_t& quality() const { return quality_; }
 
-        inline const Short_t& ndof()      const { return ndof_; }
-        inline const Short_t& ndof_cx()   const { return ndof_cx_; }
-        inline const Short_t& ndof_cy()   const { return ndof_cy_; }
-        inline const Short_t& ndof_TRKq() const { return ndof_TRKq_; }
-        inline const Short_t& ndof_TOFq() const { return ndof_TOFq_; }
-        inline const Short_t& ndof_TOFt() const { return ndof_TOFt_; }
+        inline const Short_t& ndof()    const { return ndof_; }
+        inline const Short_t& ndof_cx() const { return ndof_cx_; }
+        inline const Short_t& ndof_cy() const { return ndof_cy_; }
+        inline const Short_t& ndof_ib() const { return ndof_ib_; }
         
-        inline const Double_t& nchi()      const { return nchi_; }
-        inline const Double_t& nchi_cx()   const { return nchi_cx_; }
-        inline const Double_t& nchi_cy()   const { return nchi_cy_; }
-        inline const Double_t& nchi_TRKq() const { return nchi_TRKq_; }
-        inline const Double_t& nchi_TOFq() const { return nchi_TOFq_; }
-        inline const Double_t& nchi_TOFt() const { return nchi_TOFt_; }
-        
-        inline const Double_t& nrm_mstau() const { return nrm_mstau_; }
-        inline const Double_t& nrm_msrho() const { return nrm_msrho_; }
+        inline const Double_t& nchi()    const { return nchi_; }
+        inline const Double_t& nchi_cx() const { return nchi_cx_; }
+        inline const Double_t& nchi_cy() const { return nchi_cy_; }
+        inline const Double_t& nchi_ib() const { return nchi_ib_; }
     
         inline const Double_t& err_cx()  const { return err_[0]; }
         inline const Double_t& err_cy()  const { return err_[1]; }
         inline const Double_t& err_ux()  const { return err_[2]; }
         inline const Double_t& err_uy()  const { return err_[3]; }
         inline const Double_t& err_eta() const { return err_[4]; }
-        inline const Double_t& err_mu()  const { return err_[5]; }
-        inline const Double_t& err_t()   const { return err_t_; } // TOF time shift error [cm]
+        inline const Double_t& err_nu()  const { return err_[5]; }
 
     protected :
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed, Double_t sgm_eta = Numc::ZERO<>, Double_t sgm_mu = Numc::ZERO<>);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed);
         Bool_t physicalMassFit();
 
-        Bool_t evolve(const MomOpt& mom_opt = MomOpt::kFree, const MassOpt& mass_opt = MassOpt::kFixed);
+        Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);
 
     protected :
+        MuOpt               mu_opt_;
         Bool_t              succ_;
         PhySt               part_;
         std::vector<PhyArg> args_; 
-
-        Double_t TOFt_sft_; // TOF time shift
-
-        Double_t lmtl_mu_;
-        Double_t lmtu_mu_;
-        Double_t lmtdiv_mu_;
+        Double_t            TOFt_sft_; // TOF time shift [cm]
 
         Double_t quality_;
 
         Short_t ndof_;
-        Short_t ndof_cx_;
-        Short_t ndof_cy_;
-        Short_t ndof_TRKq_;
-        Short_t ndof_TOFq_;
-        Short_t ndof_TOFt_;
-        
+        Short_t ndof_cx_; // (cx + mstau)
+        Short_t ndof_cy_; // (cy + msrho)
+        Short_t ndof_ib_; // (TRKq + TOFt + TOFq)
+
         Double_t nchi_;
         Double_t nchi_cx_;
         Double_t nchi_cy_;
-        Double_t nchi_TRKq_;
-        Double_t nchi_TOFq_;
-        Double_t nchi_TOFt_;
-
-        Double_t nrm_mstau_;
-        Double_t nrm_msrho_;
-
-        std::array<Double_t, 6> err_; // (cx, cy, ux, uy, eta, mu)
-        Double_t                err_t_; // TOF time shift error [cm]
+        Double_t nchi_ib_;
+        
+        std::array<Double_t, 6> err_; // (cx, cy, ux, uy, eta, nu)
 
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;
@@ -301,8 +262,12 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static Double_t NormQuality(Double_t nchi, Short_t ndof = Numc::THREE<Short_t>) {
-            if (ndof < Numc::THREE<Short_t>) return Numc::ZERO<>;
+        static constexpr Double_t LMTL_INV_BETA = 1.0e-8 + Numc::ONE<Double_t>;
+        static constexpr Double_t LMTU_INV_BETA = 1.0e+2;
+
+        static Double_t NormQuality(Double_t nchi, Short_t ndof) {
+            if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
+            if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
             Double_t chi   = nchi * static_cast<Double_t>(ndof);
             if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
             Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);

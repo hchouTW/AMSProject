@@ -87,6 +87,7 @@ void PhyJb::init() {
     field_ = false;
     jb_gg_ = std::move(SMtxId()); 
     jb_gl_ = std::move(SMtxDGL());
+    jb_bb_ = Numc::ONE<>;
 }
  
 
@@ -121,6 +122,7 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
 void PhyJb::multiplied(PhyJb& phyJb) {
     jb_gg_ = std::move(phyJb.gg() * jb_gg_);
     if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
+    jb_bb_ = phyJb.bb() * jb_bb_;
 }
 
 
@@ -651,6 +653,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         phyJb->gg(JUY, JEA) += step * tf0.ue(Y);
 
         if (withEloss) phyJb->gg(JEA, JEA) += step_ps * tf0.ee();
+        if (withEloss) phyJb->bb() = (part.ibta() / st0.ibta());
     }
 
     return true;
@@ -770,6 +773,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         phyJb->gg(JUY, JEA) += s1o2 * (tf0.ue(Y)    + tj1.ue(Y)   );
         
         if (withEloss) phyJb->gg(JEA, JEA) += s1o2_ps * (tf0.ee() + tj1.ee());
+        if (withEloss) phyJb->bb() = (part.ibta() / st0.ibta());
     }
 
     return true;
@@ -982,6 +986,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         phyJb->gg(JUY, JEA) += s1o6 * (tf0.ue(Y)    + Numc::TWO<> * tj1.ue(Y)    + Numc::TWO<> * tj2.ue(Y)    + tj3.ue(Y)   );
 
         if (withEloss) phyJb->gg(JEA, JEA) += s1o6_ps * (tf0.ee() + Numc::TWO<> * tj1.ee() + Numc::TWO<> * tj2.ee() + tj3.ee());
+        if (withEloss) phyJb->bb() = (part.ibta() / st0.ibta());
     }
 
     return true;
