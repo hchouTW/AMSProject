@@ -188,7 +188,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
 
 class PhyTrFit : public TrFitPar {
     public :
-        enum class MuOpt  { kFixed = 0, kFree = 1 };
+        enum class MuOpt { kFixed = 0, kFree = 1 };
         
     protected :
         static constexpr Short_t DIMG = 5;
@@ -202,10 +202,11 @@ class PhyTrFit : public TrFitPar {
         ~PhyTrFit() { PhyTrFit::clear(); }
         
     public :
+        inline const MuOpt&  muOpt()  const { return mu_opt_; }
         inline const Bool_t& status() const { return succ_; }
-        inline const PhySt& part() const { return part_; }
+        inline const PhySt&  part()   const { return part_; }
         
-        inline const Double_t& quality() const { return quality_; }
+        inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
 
         inline const Short_t& ndof()    const { return ndof_; }
         inline const Short_t& ndof_cx() const { return ndof_cx_; }
@@ -240,7 +241,7 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhyArg> args_; 
         Double_t            TOFt_sft_; // TOF time shift [cm]
 
-        Double_t quality_;
+        std::array<Double_t, 2> quality_;
 
         Short_t ndof_;
         Short_t ndof_cx_; // (cx + mstau)

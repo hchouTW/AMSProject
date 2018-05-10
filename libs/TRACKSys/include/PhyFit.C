@@ -414,32 +414,32 @@ Bool_t SimpleTrFit::simpleFit() {
             
             HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
             if (hitTRK != nullptr) {
-                SVecD<2>       rsTRK;
-                SMtxD<2, DIMG> jbTRK;
+                SVecD<2> rsTRK;
+                SVecD<2> jbTRK;
                 if (hitTRK->sqx()) rsTRK(0) += hitTRK->nrmqx();
                 if (hitTRK->sqy()) rsTRK(1) += hitTRK->nrmqy();
                     
-                if (hitTRK->sqx()) jbTRK(0, 4) += hitTRK->divqx_eta() * ppjb(4, 4);
-                if (hitTRK->sqy()) jbTRK(1, 4) += hitTRK->divqy_eta() * ppjb(4, 4);
+                if (hitTRK->sqx()) jbTRK(0) += hitTRK->divqx_eta() * ppjb(4, 4);
+                if (hitTRK->sqy()) jbTRK(1) += hitTRK->divqy_eta() * ppjb(4, 4);
                 
-                grdG += LA::Transpose(jbTRK) * rsTRK;
-                cvGG += LA::SimilarityT(jbTRK, SMtxSymD<2>(SMtxId()));
+                grdG(4)    += (jbTRK(0) * rsTRK(0) + jbTRK(1) * rsTRK(1));
+                cvGG(4, 4) += (jbTRK(0) * jbTRK(0) + jbTRK(1) * jbTRK(1));
                 if (hitTRK->sqx()) chi_ib += rsTRK(0) * rsTRK(0);
                 if (hitTRK->sqy()) chi_ib += rsTRK(1) * rsTRK(1);
             }
 
             HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
             if (hitTOF != nullptr) {
-                SVecD<2>       rsTOF;
-                SMtxD<2, DIMG> jbTOF;
+                SVecD<2> rsTOF;
+                SVecD<2> jbTOF;
                 if (hitTOF->st()) rsTOF(0) += hitTOF->nrmt();
                 if (hitTOF->sq()) rsTOF(1) += hitTOF->nrmq();
                 
-                if (hitTOF->st()) jbTOF(0, 4) += hitTOF->divt_eta() * ppjb(4, 4);
-                if (hitTOF->sq()) jbTOF(1, 4) += hitTOF->divq_eta() * ppjb(4, 4);
+                if (hitTOF->st()) jbTOF(0) += hitTOF->divt_eta() * ppjb(4, 4);
+                if (hitTOF->sq()) jbTOF(1) += hitTOF->divq_eta() * ppjb(4, 4);
                 
-                grdG += LA::Transpose(jbTOF) * rsTOF;
-                cvGG += LA::SimilarityT(jbTOF, SMtxSymD<2>(SMtxId()));
+                grdG(4)    += (jbTOF(0) * rsTOF(0) + jbTOF(1) * rsTOF(1));
+                cvGG(4, 4) += (jbTOF(0) * jbTOF(0) + jbTOF(1) * jbTOF(1));
                 if (hitTOF->st()) chi_ib += rsTOF(0) * rsTOF(0);
                 if (hitTOF->sq()) chi_ib += rsTOF(1) * rsTOF(1);
             }
@@ -542,7 +542,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
 
         TOFt_sft_ = rhs.TOFt_sft_;
       
-        quality_   = rhs.quality_;
+        quality_ = rhs.quality_;
 
         ndof_    = rhs.ndof_;
         ndof_cx_ = rhs.ndof_cx_;
@@ -569,7 +569,8 @@ void PhyTrFit::clear() {
 
     TOFt_sft_ = 0;
 
-    quality_   = 0;
+    quality_.at(0) = 0;
+    quality_.at(1) = 0;
 
     ndof_    = 0;
     ndof_cx_ = 0;
@@ -590,16 +591,16 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     if (!check_hits()) return;
     ndof_cx_ = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>) : 0;
     ndof_cy_ = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
-    ndof_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFq_ + ((nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0) - ((MuOpt::kFree == mu_opt) ? 1 : 0);
+    ndof_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFq_ + ((nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0) - ((MuOpt::kFree == mu_opt_) ? 1 : 0);
     ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
     if (ndof_cx_ < Numc::ONE<Short_t>)  { PhyTrFit::clear(); return; }
     if (ndof_cy_ < Numc::ONE<Short_t>)  { PhyTrFit::clear(); return; }
     if (ndof_ib_ < Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
-    if (MuOpt::kFree == mu_opt && ndof_ib_ <= Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
+    if (MuOpt::kFree == mu_opt_ && ndof_ib_ <= Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
 
     // Fitting
-    if (MuOpt::kFixed == mu_opt) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
-    else                         succ_ = physicalMassFit();
+    if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
+    else                          succ_ = physicalMassFit();
     
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
 }
@@ -707,8 +708,8 @@ Bool_t PhyTrFit::physicalMassFit() {
         if (!(simpleFit() ? physicalFit(MuOpt::kFixed) : false)) continue;
 
         Bool_t firstTime = (!condElem.succ);
-        if (firstTime || Numc::Compare(quality_, condElem.qlt) < 0)
-            condElem = std::move(PartElem(part_, args_, TOFt_sft_, quality_));
+        if (firstTime || Numc::Compare(quality_.at(1), condElem.qlt) < 0)
+            condElem = std::move(PartElem(part_, args_, TOFt_sft_, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
@@ -912,7 +913,8 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
 
     Short_t  ndof_cyib = (ndof_cy_ + ndof_ib_);
     Double_t nchi_cyib = ((ndof_cyib > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_cyib)) : 0);
-    quality_ = NormQuality(nchi_cyib, ndof_cyib);
+    quality_.at(0) = NormQuality(nchi_cx_ , ndof_cx_ );
+    quality_.at(1) = NormQuality(nchi_cyib, ndof_cyib);
 
     err_.fill(Numc::ZERO<>);
     err_.at(0) = errs.at(0);
@@ -925,7 +927,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     stts_ = stts;
     info_ = part_.info();
  
-    //CERR("MASS %14.8f NU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f (%14.8f %14.8f %14.8f) QLT %14.8f\n", part_.mass(), part_.ibta(), err_.at(5), part_.eta(), err_.at(4), part_.rig(), nchi_, nchi_cx_, nchi_cy_, nchi_ib_, quality_);
+    //CERR("MASS %14.8f NU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f (%14.8f %14.8f %14.8f) QLT %14.8f\n", part_.mass(), part_.ibta(), err_.at(5), part_.eta(), err_.at(4), part_.rig(), nchi_, nchi_cx_, nchi_cy_, nchi_ib_, quality_.at(1));
     return true;
 }
 

@@ -261,12 +261,12 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
        
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        if (mc_mom > 0.8) continue; // testcode
+        //if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -285,7 +285,7 @@ int main(int argc, char * argv[]) {
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
         //hc_irig = hc_lay_irig[topLay];
-        CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(1), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -341,7 +341,7 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFRchiy->fillH2D(mc_mom, kf_chiy);
         if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
         
-        if (hc_succ) hHCRqlt->fillH2D(mc_mom, tr.quality());
+        if (hc_succ) hHCRqlt->fillH2D(mc_mom, tr.quality(1));
 
         //for (Int_t it = 0; it < 9; ++it) {
         //    if (!hasLay[it]) continue;
