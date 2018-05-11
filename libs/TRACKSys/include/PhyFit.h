@@ -66,6 +66,7 @@ class TrFitPar {
         Short_t nmes_;
         Short_t nmes_cx_;
         Short_t nmes_cy_;
+        Short_t nmes_ib_;
         Short_t nmes_TRKqx_;
         Short_t nmes_TRKqy_;
         Short_t nmes_TOFq_;
@@ -77,8 +78,9 @@ class TrFitPar {
 
     protected :
         // Number of Hit Requirement
-        static constexpr Short_t LMTN_CX = 3;
-        static constexpr Short_t LMTN_CY = 4;
+        static constexpr Short_t LMTN_CX = 2;
+        static constexpr Short_t LMTN_CY = 3;
+        static constexpr Short_t LMTN_IB = 1;
         static constexpr Short_t LMTN_TOF_T = 1;
 };
 

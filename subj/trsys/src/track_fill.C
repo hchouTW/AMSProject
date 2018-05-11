@@ -222,7 +222,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            //fitPar.add_hit(mhit);
+            fitPar.add_hit(mhit);
         }
         
         if (!fitPar.check()) continue;
@@ -252,9 +252,9 @@ int main(int argc, char * argv[]) {
             if (!Numc::Valid(tmom)) tmom = topmc->mom;
         }
         else tmom = topmc->mom;
-        //Double_t mc_mom  = tmom;
+        Double_t mc_mom  = tmom;
 
-        Double_t mc_mom  = topmc->mom; // Layer 2
+        //Double_t mc_mom  = topmc->mom; // Layer 2
         Double_t mc_eta  = mass/mc_mom;
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
@@ -265,8 +265,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -284,8 +284,8 @@ int main(int argc, char * argv[]) {
             hc_lay_irig[it] = stt.irig();
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
-        hc_irig = hc_lay_irig[topLay];
-        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.nchi(), tr.quality(1), sw.time());
+        //hc_irig = hc_lay_irig[topLay];
+        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f QLT %14.8f %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.quality(0), tr.quality(1), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];

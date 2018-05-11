@@ -19,10 +19,11 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         nmes_          = rhs.nmes_;
         nmes_cx_       = rhs.nmes_cx_;
         nmes_cy_       = rhs.nmes_cy_;
+        nmes_ib_       = rhs.nmes_ib_;
         nmes_TRKqx_    = rhs.nmes_TRKqx_;
         nmes_TRKqy_    = rhs.nmes_TRKqy_;
-        nmes_TOFq_     = rhs.nmes_TOFq_;
         nmes_TOFt_     = rhs.nmes_TOFt_;
+        nmes_TOFq_     = rhs.nmes_TOFq_;
         nmes_RICHib_   = rhs.nmes_RICHib_;
         is_check_      = rhs.is_check_;
         
@@ -58,10 +59,11 @@ void TrFitPar::zero() {
     nmes_        = 0;
     nmes_cx_     = 0;
     nmes_cy_     = 0;
+    nmes_ib_     = 0;
     nmes_TRKqx_  = 0;
     nmes_TRKqy_  = 0;
-    nmes_TOFq_   = 0;
     nmes_TOFt_   = 0;
+    nmes_TOFq_   = 0;
     nmes_RICHib_ = 0;
     
     is_check_ = false;
@@ -115,17 +117,19 @@ Bool_t TrFitPar::sort_hits() {
     }
         
     for (auto&& hit : hits_TOF_) {
-        if (hit.sq()) nmes_TOFq_++;
         if (hit.st()) nmes_TOFt_++;
+        if (hit.sq()) nmes_TOFq_++;
     }
     
     for (auto&& hit : hits_RICH_) {
         if (hit.sib()) nmes_RICHib_++;
     }
     
+    nmes_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_;
+    
     nseq_ = nseq;
     nseg_ = ((sw_mscat_ && nseg > 0) ? nseg : 0);
-    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFt_ + nmes_TOFq_) + nmes_RICHib_;
+    nmes_ = (nmes_cx_ + nmes_cy_ + nmes_ib_);
 
     return true;
 }
@@ -134,7 +138,7 @@ Bool_t TrFitPar::check_hits() {
     if (is_check_) return is_check_;
     sort_hits();
    
-    Bool_t passed = (nmes_cx_ >= LMTN_CX && nmes_cy_ >= LMTN_CY);
+    Bool_t passed = (nmes_cx_ > LMTN_CX && nmes_cy_ > LMTN_CY);
     if (passed) is_check_ = true;
    
     return is_check_;
@@ -160,13 +164,12 @@ SimpleTrFit& SimpleTrFit::operator=(const SimpleTrFit& rhs) {
 SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
     if (!check_hits()) return;
-    ndof_cx_ = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>  ) : 0;
-    ndof_cy_ = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
-    ndof_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFq_ + ((nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0);
+    ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
+    ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
+    if (ndof_cx_ <= Numc::ZERO<Short_t>) { SimpleTrFit::clear(); return; }
+    if (ndof_cy_ <= Numc::ZERO<Short_t>) { SimpleTrFit::clear(); return; }
+    ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
     ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
-    if (ndof_cx_ < Numc::ONE<Short_t>)  { SimpleTrFit::clear(); return; }
-    if (ndof_cy_ < Numc::ONE<Short_t>)  { SimpleTrFit::clear(); return; }
-    if (ndof_ib_ < Numc::ZERO<Short_t>) { SimpleTrFit::clear(); return; }
 
     succ_ = (analyticalFit() ? simpleFit() : false);
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); COUT("SimpleTrFit::FAIL.\n"); }
@@ -352,6 +355,11 @@ Bool_t SimpleTrFit::analyticalFit() {
         prefit_ux, prefit_uy, prefit_uz
     );
     part_.set_eta(prefit_ea);
+
+    // Eta Limit Setting
+    const Double_t LMT_ETA = 5.0;
+    if (part_.eta_abs() > LMT_ETA)
+        part_.set_eta(part_.eta_sign() * LMT_ETA);
     
     return true;
 }
@@ -560,7 +568,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
 
 
 void PhyTrFit::clear() {
-    mu_opt_ = MuOpt::kFree;
+    mu_opt_ = MuOpt::kFixed;
     succ_   = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
@@ -586,17 +594,20 @@ void PhyTrFit::clear() {
 }
 
 
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPar), mu_opt_(mu_opt) {
+PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPar) {
     PhyTrFit::clear();
+    mu_opt_ = mu_opt;
     if (!check_hits()) return;
-    ndof_cx_ = (nmes_cx_ >= LMTN_CX) ? (nmes_cx_ - Numc::TWO<Short_t>) : 0;
-    ndof_cy_ = (nmes_cy_ >= LMTN_CY) ? (nmes_cy_ - Numc::THREE<Short_t>) : 0;
-    ndof_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFq_ + ((nmes_TOFt_ >= LMTN_TOF_T) ? (nmes_TOFt_ - Numc::ONE<Short_t>) : 0) - ((MuOpt::kFree == mu_opt_) ? 1 : 0);
-    ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
-    if (ndof_cx_ < Numc::ONE<Short_t>)  { PhyTrFit::clear(); return; }
-    if (ndof_cy_ < Numc::ONE<Short_t>)  { PhyTrFit::clear(); return; }
-    if (ndof_ib_ < Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
-    if (MuOpt::kFree == mu_opt_ && ndof_ib_ <= Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
+    ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
+    ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
+    if (ndof_cx_ == Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
+    if (ndof_cy_ == Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
+    ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
+    if (MuOpt::kFree == mu_opt_) {
+        if (ndof_ib_ <= LMTN_IB) { PhyTrFit::clear(); return; }
+        ndof_ib_ = ndof_ib_ - 1; 
+    }
+    ndof_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
 
     // Fitting
     if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
