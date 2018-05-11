@@ -4,7 +4,7 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
-RunFile=${AMSCore}/subj/trsys/test/track_fill
+RunFile=${AMSCore}/subj/trsys/test2/track_fill
 
 CurDir=${PWD}
 
@@ -12,7 +12,7 @@ DataType=MC
 Stream=${CurDir}/lst/flist.cern.mc.PR054000_B1119_18Mar23
 #Stream=${CurDir}/lst/flist.cern.mc.EL025200_B1119_18Mar23
 
-OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test43
+OutputDir=/afs/cern.ch/work/h/hchou/AMSData/test47
 mkdir -p $OutputDir
 mkdir -p $OutputDir/log
 
