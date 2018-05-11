@@ -125,7 +125,7 @@ Bool_t TrFitPar::sort_hits() {
     
     nseq_ = nseq;
     nseg_ = ((sw_mscat_ && nseg > 0) ? nseg : 0);
-    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFq_ + nmes_TOFt_) + nmes_RICHib_;
+    nmes_ = (nmes_cx_ + nmes_cy_) + (nmes_TRKqx_ + nmes_TRKqy_) + (nmes_TOFt_ + nmes_TOFq_) + nmes_RICHib_;
 
     return true;
 }
@@ -620,7 +620,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt) {
    
     Short_t parIDnu = -1;
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
-    if (is_mu_free) { parIDnu = parameters.size(); parameters.push_back(part_.igmbta()); }
+    if (is_mu_free) { parIDnu = parameters.size(); parameters.push_back(part_.ibta()); }
 
     if (nseg_ != 0) {
         std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
@@ -732,7 +732,6 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     Short_t numOfPar = (DIMG + DIMM + nseg_*DIML);
 
     Short_t parIDnu   = -1;
-    Short_t seqIDnu   = -1;
     Short_t parIDtsft = -1;
     if (is_mu_free) { parIDnu = DIMG; }
     if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft = numOfPar; numOfPar += 1; }
@@ -958,7 +957,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     else             ppst.arg().clear();
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
     ppst.set_eta(parameters[0][4]);
-    Double_t partib = ppst.ibta();
 
     // Interaction
     std::vector<PhyArg> args(nseg_, PhyArg(sw_mscat_, sw_eloss_));

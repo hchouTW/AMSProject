@@ -149,7 +149,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
             DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
-            seqIDnu_(-1), parIDnu_(-1), parIDtsft_(-1)
+            parIDnu_(-1), parIDtsft_(-1)
             { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
     
     public :
@@ -180,7 +180,6 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         Short_t numOfRes_;
         Short_t numOfPar_;
 
-        Short_t seqIDnu_;
         Short_t parIDnu_;
         Short_t parIDtsft_;
 };

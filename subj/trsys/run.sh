@@ -11,8 +11,8 @@ RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 CurDir=${PWD}
 
 DataType=MC
-Stream=/ams_home/hchou/tmp/flist.pr
-#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Mar23
+#Stream=/ams_home/hchou/tmp/flist.pr
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1119_18Mar23
 
 OutputDir=${CurDir}/dat
 
