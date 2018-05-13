@@ -84,13 +84,13 @@ void HitStTRK::cal(const PhySt& part) {
     if (side_q_[0]) {
         SVecD<2>&& ionx = (*pdf_qx_)(q_[0]*q_[0], part.igmbta());
         nrmq_[0] = ionx(0);
-        divq_[0] = ionx(1) * part.info().mu();
+        divq_[0] = ionx(1) * part.mu();
         divq_[1] = ionx(1) * part.eta();
     }
     if (side_q_[1]) {
         SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
         nrmq_[1] = iony(0);
-        divq_[2] = iony(1) * part.info().mu();
+        divq_[2] = iony(1) * part.mu();
         divq_[3] = iony(1) * part.eta();
     }
 
@@ -268,7 +268,7 @@ void HitStTOF::cal(const PhySt& part) {
             nrmt_     = (dt / ter);
             divt_sft_ = (Numc::ONE<> / ter);
             Double_t divt = (Numc::NEG<> * ds / ter);
-            divt_[0] = divt * (part.bta() * part.eta()) * (part.info().mu() * part.info().mu());
+            divt_[0] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
             divt_[1] = divt;
             if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt)) {
                 nrmt_     = Numc::ZERO<>;
@@ -283,7 +283,7 @@ void HitStTOF::cal(const PhySt& part) {
     if (side_q_) {
         SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.igmbta());
         nrmq_ = ion(0);
-        divq_[0] = ion(1) * part.info().mu();
+        divq_[0] = ion(1) * part.mu();
         divq_[1] = ion(1) * part.eta();
     }
 
@@ -366,7 +366,7 @@ void HitStRICH::cal(const PhySt& part) {
         Double_t sgm = pdf_ib_->efft_sgm(dib);
         nrmib_ = (dib / sgm);
         Double_t divib = (Numc::NEG<> / sgm);
-        divib_[0] = divib * (part.bta() * part.eta()) * (part.info().mu() * part.info().mu());
+        divib_[0] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
         divib_[1] = divib;
         if (!Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
             nrmib_ = Numc::ZERO<>;

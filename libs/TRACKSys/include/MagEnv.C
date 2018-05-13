@@ -17,7 +17,7 @@ MagGeoBoxCreator::MagGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::
         Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : File path not found."); return; 
     }
     
-    Long64_t flen = ((sizeof(Long64_t) + sizeof(Float_t) + sizeof(Float_t)) + (n[0] * n[1] * n[2]) * sizeof(Float_t)) * DIM_;
+    Long64_t flen = ((sizeof(Long64_t) + sizeof(Float_t) + sizeof(Float_t)) + (n[0] * n[1] * n[2]) * sizeof(Float_t)) * DIM;
     Long64_t fdes = open(fpath.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (fdes < 0) { 
         Sys::ShowWarning("MagGeoBoxCreator::MagGeoBoxCreator() : File not opened."); return; 
@@ -51,7 +51,7 @@ MagGeoBoxCreator::MagGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::
     geo_box_->max[1] = max[1];
     geo_box_->max[2] = max[2];
 
-    std::fill_n(static_cast<Float_t*>(&(geo_box_->mag)), max_len_ * DIM_, Numc::ZERO<Float_t>);
+    std::fill_n(static_cast<Float_t*>(&(geo_box_->mag)), max_len_ * DIM, Numc::ZERO<Float_t>);
 }
 
 
@@ -59,7 +59,7 @@ void MagGeoBoxCreator::fill(Long64_t idx, Float_t bx, Float_t by, Float_t bz) {
     if (!is_open_) return;
     if (idx < 0 || idx >= max_len_) return;
 
-    Float_t* mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM_);
+    Float_t* mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM);
     mag[0] = bx;
     mag[1] = by;
     mag[2] = bz;
@@ -83,7 +83,7 @@ void MagGeoBoxCreator::save_and_close(Float_t bx, Float_t by, Float_t bz) {
     if (!is_open_) return;
 
     for (Long64_t idx = 0; idx < max_len_; ++idx) {
-        Float_t* mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM_);
+        Float_t* mag = static_cast<Float_t*>(&(geo_box_->mag) + idx * DIM);
         mag[0] = bx;
         mag[1] = by;
         mag[2] = bz;
@@ -114,25 +114,38 @@ Bool_t MagGeoBoxReader::load(const std::string& fpath) {
     }
     Long64_t flen = lseek(fdes, 0, SEEK_END); 
 
-    void* fptr = mmap(nullptr, flen, PROT_READ, MAP_SHARED, fdes, 0);
+    void* fptr = mmap(nullptr, flen, PROT_READ, MAP_PRIVATE, fdes, 0);
     if (fptr == reinterpret_cast<void*>(-1)) {
         Sys::ShowWarningExit("MagGeoBoxReader::Load() : mmap() failure.");
         close(fdes);
         return is_load_;
     }
-    fptr_ = fptr;
 
-    MagGeoBox* geo_box = reinterpret_cast<MagGeoBox*>(fptr_);
-    for (Long64_t ig = 0; ig < DIM_; ++ig) {
+    MagGeoBox* geo_box = reinterpret_cast<MagGeoBox*>(fptr);
+    Float_t* mag_ptr = &(geo_box->mag);
+
+    for (Long64_t ig = 0; ig < DIM; ++ig) {
         n_.at(ig)   = geo_box->n[ig]; 
         min_.at(ig) = geo_box->min[ig];
         max_.at(ig) = geo_box->max[ig];
         dlt_.at(ig) = (max_.at(ig) - min_.at(ig)) / static_cast<Float_t>(n_.at(ig)-1);
     }
+    max_len_ = (n_.at(0) * n_.at(1) * n_.at(2));
     fact_.at(0) = n_.at(1) * n_.at(2);
     fact_.at(1) = n_.at(2);
-    mag_ptr_ = &(geo_box->mag);
-    
+
+    // Load To Memory
+    mag_ = std::vector<std::array<Float_t, DIM>>(max_len_, std::array<Float_t, DIM>());
+    for (Long64_t it = 0; it < mag_.size(); ++it) {
+        mag_.at(it).fill(Numc::ZERO<>);
+        mag_[it].at(0) = mag_ptr[it*DIM+0];
+        mag_[it].at(1) = mag_ptr[it*DIM+1];
+        mag_[it].at(2) = mag_ptr[it*DIM+2];
+    }
+
+    // Release File
+    if (fdes >= 0) close(fdes);
+
     is_load_ = true;
     fpath_ = fpath;
     COUT("MagGeoBoxReader::Load() : Open file (%s)\n", fpath.c_str());
@@ -144,17 +157,20 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     if (!is_load_) return MagFld();
     
     // Get Local Coord
-    Float_t xloc = (coo[0] - min_.at(0)) / dlt_.at(0);
-    Float_t yloc = (coo[1] - min_.at(1)) / dlt_.at(1);
-    Float_t zloc = (coo[2] - min_.at(2)) / dlt_.at(2);
+    Float_t xloc = (coo(0) - min_[0]) / dlt_[0];
+    Float_t yloc = (coo(1) - min_[1]) / dlt_[1];
+    Float_t zloc = (coo(2) - min_[2]) / dlt_[2];
+    
+    Bool_t valid = (Numc::Valid(xloc) && Numc::Valid(yloc) && Numc::Valid(zloc));
+    if (!valid) return MagFld();
 
     Long64_t xi = static_cast<Long64_t>(std::floor(xloc));
     Long64_t yi = static_cast<Long64_t>(std::floor(yloc));
     Long64_t zi = static_cast<Long64_t>(std::floor(zloc));
 
-    if (xi < 0 || xi >= (n_.at(0)-1) || 
-        yi < 0 || yi >= (n_.at(1)-1) || 
-        zi < 0 || zi >= (n_.at(2)-1)) return MagFld();
+    if (xi < 0 || xi >= (n_[0]-1) || 
+        yi < 0 || yi >= (n_[1]-1) || 
+        zi < 0 || zi >= (n_[2]-1)) return MagFld();
 
     // Do Trilinear Interpolation
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
@@ -164,16 +180,15 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     Float_t xl = (Numc::ONE<> - xu);
     Float_t yl = (Numc::ONE<> - yu);
     Float_t zl = (Numc::ONE<> - zu);
-
-    Float_t * cell = (mag_ptr_ + (idx * DIM_));
-    Float_t * clll = (cell                                          );
-    Float_t * cllu = (cell + (                          + 1) * DIM_ );
-    Float_t * clul = (cell + (            + fact_.at(1)    ) * DIM_ );
-    Float_t * cluu = (cell + (            + fact_.at(1) + 1) * DIM_ );
-    Float_t * cull = (cell + (fact_.at(0)                  ) * DIM_ );
-    Float_t * culu = (cell + (fact_.at(0)               + 1) * DIM_ );
-    Float_t * cuul = (cell + (fact_.at(0) + fact_.at(1)    ) * DIM_ );
-    Float_t * cuuu = (cell + (fact_.at(0) + fact_.at(1) + 1) * DIM_ );
+    
+    Float_t* clll = mag_[idx                                  ].data();
+    Float_t* cllu = mag_[idx + (                          + 1)].data();
+    Float_t* clul = mag_[idx + (            + fact_.at(1)    )].data();
+    Float_t* cluu = mag_[idx + (            + fact_.at(1) + 1)].data();
+    Float_t* cull = mag_[idx + (fact_.at(0)                  )].data();
+    Float_t* culu = mag_[idx + (fact_.at(0)               + 1)].data();
+    Float_t* cuul = mag_[idx + (fact_.at(0) + fact_.at(1)    )].data();
+    Float_t* cuuu = mag_[idx + (fact_.at(0) + fact_.at(1) + 1)].data();
 
     Float_t cll[3] { (clll[0] * xl + cull[0] * xu),  (clll[1] * xl + cull[1] * xu), (clll[2] * xl + cull[2] * xu) };
     Float_t clu[3] { (cllu[0] * xl + culu[0] * xu),  (cllu[1] * xl + culu[1] * xu), (cllu[2] * xl + culu[2] * xu) };

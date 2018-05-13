@@ -166,21 +166,18 @@ class PhySt {
         inline void reset(Short_t chrg, Double_t mass);
         inline void reset(Double_t mu);
         
-        inline void reset_info(const PartInfo& info) { info_ = info; }
-        inline void reset_info(const PartType& type) { info_.reset(type); }
-        inline void reset_info(Short_t chrg, Double_t mass) { info_.reset(chrg, mass); }
-        inline void reset_info(Double_t mu) { info_.reset(mu); }
-        
         void set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Double_t uz = -1.);
         void set_state_with_tan(Double_t cx, Double_t cy, Double_t cz, Double_t tx = 0., Double_t ty = 0., Double_t uz = -1.);
         void set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t ux = 0., Double_t uy = 0., Short_t signz = -1);
-        void set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz);
+        void set_state_with_mom(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz);
         
         inline void set_state_with_cos(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_cos(c(0), c(1), c(2), u(0), u(1), u(2)); }
         inline void set_state_with_tan(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_tan(c(0), c(1), c(2), u(0), u(1), u(2)); }
         inline void set_state_with_uxy(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_uxy(c(0), c(1), c(2), u(0), u(1), u(2)); }
-        inline void set_state(const SVecD<3>& c, const SVecD<3>& m) { set_state(c(0), c(1), c(2), m(0), m(1), m(2)); }
-        
+        inline void set_state_with_mom(const SVecD<3>& c, const SVecD<3>& m) { set_state_with_mom(c(0), c(1), c(2), m(0), m(1), m(2)); }
+       
+        inline void set_state(const SVecD<7>& stt) { set_state_with_cos(stt(0), stt(1), stt(2), stt(3), stt(4), stt(5)); set_eta(6); }
+
         void set_mom(Double_t mom, Short_t sign = 0);
         
         void set_eta(Double_t eta);
@@ -195,8 +192,9 @@ class PhySt {
         inline const Bool_t& mat()   const { return arg_.mat(); }
 
         inline const PartInfo& info() const { return info_; }
-        inline const Short_t&  chrg() const { return (info_.chrg()); }
-        inline const Double_t& mass() const { return (info_.mass()); }
+        inline const Short_t&  chrg() const { return info_.chrg(); }
+        inline const Double_t& mass() const { return info_.mass(); }
+        inline const Double_t& mu()   const { return info_.mu(); }
 
         inline const Double_t& mom()   const { return mom_; }
         inline const Double_t& eng()   const { return eng_; } 
@@ -226,6 +224,8 @@ class PhySt {
         inline const Double_t& uz() const { return dir_(2); } 
         inline Double_t        tx() const { return ((Numc::EqualToZero(dir_(2))) ? Numc::ZERO<> : dir_(0)/dir_(2)); } 
         inline Double_t        ty() const { return ((Numc::EqualToZero(dir_(2))) ? Numc::ZERO<> : dir_(1)/dir_(2)); } 
+
+        inline const SVecD<7> state() const { return SVecD<7>(coo_(0), coo_(1), coo_(2), dir_(0), dir_(1), dir_(2), eta_); }
 
         void symbk(Bool_t is_rndm = false);
 

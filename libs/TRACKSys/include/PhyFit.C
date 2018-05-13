@@ -166,10 +166,10 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (!check_hits()) return;
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
-    if (ndof_cx_ <= Numc::ZERO<Short_t>) { SimpleTrFit::clear(); return; }
-    if (ndof_cy_ <= Numc::ZERO<Short_t>) { SimpleTrFit::clear(); return; }
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
     ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
+    if (ndof_cx_            <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); return; }
+    if ((ndof_cy_+ndof_ib_) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); return; }
 
     succ_ = (analyticalFit() ? simpleFit() : false);
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); COUT("SimpleTrFit::FAIL.\n"); }
@@ -600,14 +600,15 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     if (!check_hits()) return;
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
-    if (ndof_cx_ == Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
-    if (ndof_cy_ == Numc::ZERO<Short_t>) { PhyTrFit::clear(); return; }
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
+    ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
+    if (MuOpt::kFree == mu_opt_) { ndof_ib_ -= 1; ndof_ -= 1; }
+    if (ndof_cx_            <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
+    if ((ndof_cy_+ndof_ib_) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
     if (MuOpt::kFree == mu_opt_) {
-        if (ndof_ib_ <= LMTN_IB) { PhyTrFit::clear(); return; }
-        ndof_ib_ = ndof_ib_ - 1; 
+        if (ndof_cy_ <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
+        if (ndof_ib_ <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
     }
-    ndof_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
 
     // Fitting
     if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
@@ -625,13 +626,35 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt) {
+Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_ibta) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
-   
-    Short_t parIDnu = -1;
-    std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
-    if (is_mu_free) { parIDnu = parameters.size(); parameters.push_back(part_.ibta()); }
+
+    Double_t eta = part_.eta();
+    const Bool_t is_fluc_eta = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_eta) > 0);
+    if (is_fluc_eta) {
+        const Int_t niter = 10; Int_t iter = 0;
+        do {
+            iter++;
+            eta = part_.eta() * (Numc::ONE<> + fluc_eta * Rndm::NormalGaussian());
+        } while ((iter < niter) && Numc::EqualToZero(eta));
+        if (iter >= niter) eta = part_.eta();
+    }
+
+    Double_t ibta = part_.ibta();
+    const Bool_t is_fluc_ibta = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_ibta) > 0);
+    if (is_fluc_ibta) {
+        const Int_t niter = 10; Int_t iter = 0;
+        do {
+            iter++;
+            ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * Rndm::NormalGaussian());
+        } while ((iter < niter) && (ibta < LMTL_INV_BETA || ibta > LMTU_INV_BETA));
+        if (iter >= niter) ibta = part_.ibta();
+    }
+    
+    Short_t parIDib = -1;
+    std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), eta });
+    if (is_mu_free) { parIDib = parameters.size(); parameters.push_back(ibta); }
 
     if (nseg_ != 0) {
         std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
@@ -658,8 +681,8 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt) {
     problem.SetParameterUpperBound(parameters.data(), 2,  1.0);
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
-    if (is_mu_free) problem.SetParameterLowerBound(parameters.data(), parIDnu, LMTL_INV_BETA);
-    if (is_mu_free) problem.SetParameterUpperBound(parameters.data(), parIDnu, LMTU_INV_BETA);
+    if (is_mu_free) problem.SetParameterLowerBound(parameters.data(), parIDib, LMTL_INV_BETA);
+    if (is_mu_free) problem.SetParameterUpperBound(parameters.data(), parIDib, LMTU_INV_BETA);
     
     ceres::Solver::Options options;
     //options.line_search_direction_type = ceres::LBFGS;
@@ -670,8 +693,8 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt) {
     
     Double_t partcz = part_.cz();
     Short_t  signuz = Numc::Compare(part_.uz());
-    Double_t igmbta = (is_mu_free ? std::sqrt((parameters.at(parIDnu) + Numc::ONE<>) * (parameters.at(parIDnu) - Numc::ONE<>)) : part_.igmbta());
-    Double_t partmu = (is_mu_free ? std::fabs(igmbta / parameters.at(4)) : part_.info().mu());
+    Double_t igmbta = (is_mu_free ? std::sqrt((parameters.at(parIDib) + Numc::ONE<>) * (parameters.at(parIDib) - Numc::ONE<>)) : part_.igmbta());
+    Double_t partmu = (is_mu_free ? std::fabs(igmbta / parameters.at(4)) : part_.mu());
     if (is_mu_free) part_.reset(partmu);
     else            part_.arg().clear();
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), partcz, parameters.at(2), parameters.at(3), signuz);
@@ -701,12 +724,14 @@ Bool_t PhyTrFit::physicalMassFit() {
 
     class PartElem {
         public :
-            PartElem() : succ(false), tsft(0), qlt(0) {}
-            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _tsft, Double_t _qlt) : succ(true), part(_part), args(_args), tsft(_tsft),qlt(_qlt) {}
+            PartElem() : succ(false), tsft(0), fluc_eta(0), fluc_ibta(0), qlt(0) {}
+            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _tsft, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), args(_args), tsft(_tsft), fluc_eta(_fluc_eta), fluc_ibta(_fluc_ibta), qlt(_qlt) {}
             Bool_t              succ;
             PhySt               part;
             std::vector<PhyArg> args;
             Double_t            tsft;
+            Double_t            fluc_eta;
+            Double_t            fluc_ibta;
             Double_t            qlt;
     };
     
@@ -717,18 +742,32 @@ Bool_t PhyTrFit::physicalMassFit() {
         info_.reset(chrg, mass);
         TOFt_sft_ = Numc::ZERO<>;
         if (!(simpleFit() ? physicalFit(MuOpt::kFixed) : false)) continue;
+        if (!evolve(MuOpt::kFree)) continue;
+
+        args_.clear();
+        TOFt_sft_ = Numc::ZERO<>;
+        Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
+        Double_t fluc_ibta = (err_.at(5) / part_.ibta());
+        if (!physicalFit(MuOpt::kFree, fluc_eta, fluc_ibta)) continue;
 
         Bool_t firstTime = (!condElem.succ);
         if (firstTime || Numc::Compare(quality_.at(1), condElem.qlt) < 0)
-            condElem = std::move(PartElem(part_, args_, TOFt_sft_, quality_.at(1)));
+            condElem = std::move(PartElem(part_, args_, TOFt_sft_, std::fabs(err_.at(4)/part_.eta()), err_.at(5)/part_.ibta(), quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
-    // Mass Fit
-    part_     = condElem.part;
-    args_     = condElem.args;
+    info_ = condElem.part.info();
+    part_ = condElem.part;
+    args_ = condElem.args;
     TOFt_sft_ = condElem.tsft;
-    if (!physicalFit(MuOpt::kFree)) return false;
+    if (!evolve(MuOpt::kFree)) return false;
+
+    // Mass Fit
+    //args_.clear();
+    //TOFt_sft_ = Numc::ZERO<>;
+    //info_     = condElem.part.info();
+    //part_     = condElem.part;
+    //if (!physicalFit(MuOpt::kFree, condElem.fluc_eta, condElem.fluc_ibta)) return false;
 
     return true;
 }
@@ -742,9 +781,9 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     Short_t numOfRes = (nseq_ + nseg_*DIML);
     Short_t numOfPar = (DIMG + DIMM + nseg_*DIML);
 
-    Short_t parIDnu   = -1;
+    Short_t parIDib   = -1;
     Short_t parIDtsft = -1;
-    if (is_mu_free) { parIDnu = DIMG; }
+    if (is_mu_free) { parIDib = DIMG; }
     if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft = numOfPar; numOfPar += 1; }
     
     // Seg
@@ -860,11 +899,11 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             if (hitTRK->sqx()) chi_ib += hitTRK->nrmqx() * hitTRK->nrmqx();
             if (hitTRK->sqy()) chi_ib += hitTRK->nrmqy() * hitTRK->nrmqy();
             if (hitTRK->sqx()) {
-                if (is_mu_free) jb(hitTRK->seqIDqx(), parIDnu) += hitTRK->divqx_nu()  * jbBB;
+                if (is_mu_free) jb(hitTRK->seqIDqx(), parIDib) += hitTRK->divqx_ib()  * jbBB;
                 else            jb(hitTRK->seqIDqx(),       4) += hitTRK->divqx_eta() * jbGG(4, 4);
             }
             if (hitTRK->sqy()) {
-                if (is_mu_free) jb(hitTRK->seqIDqy(), parIDnu) += hitTRK->divqy_nu()  * jbBB;
+                if (is_mu_free) jb(hitTRK->seqIDqy(), parIDib) += hitTRK->divqy_ib()  * jbBB;
                 else            jb(hitTRK->seqIDqy(),       4) += hitTRK->divqy_eta() * jbGG(4, 4);
             }    
         }
@@ -875,11 +914,11 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             if (hitTOF->st()) chi_ib += hitTOF->nrmt() * hitTOF->nrmt();
             if (hitTOF->sq()) chi_ib += hitTOF->nrmq() * hitTOF->nrmq();
             if (hitTOF->st()) {
-                if (is_mu_free) jb(hitTOF->seqIDt(), parIDnu) += hitTOF->divt_nu()  * jbBB;
+                if (is_mu_free) jb(hitTOF->seqIDt(), parIDib) += hitTOF->divt_ib()  * jbBB;
                 else            jb(hitTOF->seqIDt(),       4) += hitTOF->divt_eta() * jbGG(4, 4);
             }
             if (hitTOF->sq()) {
-                if (is_mu_free) jb(hitTOF->seqIDq(), parIDnu) += hitTOF->divq_nu()  * jbBB;
+                if (is_mu_free) jb(hitTOF->seqIDq(), parIDib) += hitTOF->divq_ib()  * jbBB;
                 else            jb(hitTOF->seqIDq(),       4) += hitTOF->divq_eta() * jbGG(4, 4);
             }
             if (hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divt_sft(); // TOF time shift
@@ -926,18 +965,30 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     quality_.at(0) = NormQuality(nchi_cx_ , ndof_cx_ );
     quality_.at(1) = NormQuality(nchi_cyib, ndof_cyib);
 
+    // Mu Error
+    Double_t errMu = Numc::ZERO<>;
+    if (is_mu_free) {
+        Double_t gmsqr = part_.gm() * part_.gm();
+        Double_t reEta = std::fabs(errs.at(4) / part_.eta());
+        Double_t reIb  = (errs.at(parIDib) / part_.ibta());
+        Double_t reMu  = std::sqrt(reEta * reEta + (gmsqr * reIb) * (gmsqr * reIb));
+        errMu = reMu * part_.mu();
+        if (!Numc::Valid(errMu)) errMu = Numc::ZERO<>;
+    }
+
     err_.fill(Numc::ZERO<>);
     err_.at(0) = errs.at(0);
     err_.at(1) = errs.at(1);
     err_.at(2) = errs.at(2);
     err_.at(3) = errs.at(3);
     err_.at(4) = errs.at(4);
-    if (is_mu_free) err_.at(5) = errs.at(parIDnu);
+    if (is_mu_free) err_.at(5) = errs.at(parIDib);
+    if (is_mu_free) err_.at(6) = errMu;
 
     stts_ = stts;
     info_ = part_.info();
  
-    //CERR("MASS %14.8f NU(%14.8f %14.8f) ETA(%14.8f %14.8f) RIG %14.8f NCHI %14.8f (%14.8f %14.8f %14.8f) QLT %14.8f\n", part_.mass(), part_.ibta(), err_.at(5), part_.eta(), err_.at(4), part_.rig(), nchi_, nchi_cx_, nchi_cy_, nchi_ib_, quality_.at(1));
+    //CERR("MASS %14.8f BTA %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.bta(), part_.rig(), quality_.at(0), quality_.at(1));
     return true;
 }
 
@@ -962,8 +1013,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     // Particle Status
     PhySt ppst(part_);
-    Double_t igmbta = (is_mu_free_ ? std::sqrt((parameters[0][parIDnu_] + Numc::ONE<>) * (parameters[0][parIDnu_] - Numc::ONE<>)) : part_.igmbta());
-    Double_t partmu = (is_mu_free_ ? std::fabs(igmbta / parameters[0][4]) : part_.info().mu());
+    Double_t igmbta = (is_mu_free_ ? std::sqrt((parameters[0][parIDib_] + Numc::ONE<>) * (parameters[0][parIDib_] - Numc::ONE<>)) : part_.igmbta());
+    Double_t partmu = (is_mu_free_ ? std::fabs(igmbta / parameters[0][4]) : part_.mu());
     if (is_mu_free_) ppst.reset(partmu);
     else             ppst.arg().clear();
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
@@ -1076,11 +1127,11 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
             if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacb && hitTRK->sqx()) {
-                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDnu_) += hitTRK->divqx_nu()  * jbBB;
+                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_ib()  * jbBB;
                 else             jb(hitTRK->seqIDqx(),        4) += hitTRK->divqx_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTRK->sqy()) {
-                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDnu_) += hitTRK->divqy_nu()  * jbBB;
+                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_ib()  * jbBB;
                 else             jb(hitTRK->seqIDqy(),        4) += hitTRK->divqy_eta() * jbGG(4, 4);
             } // hasJacb
         }
@@ -1091,11 +1142,11 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb && hitTOF->st()) {
-                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDnu_) += hitTOF->divt_nu()  * jbBB;
+                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_ib()  * jbBB;
                 else             jb(hitTOF->seqIDt(),        4) += hitTOF->divt_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->sq()) {
-                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDnu_) += hitTOF->divq_nu()  * jbBB;
+                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_ib()  * jbBB;
                 else             jb(hitTOF->seqIDq(),        4) += hitTOF->divq_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft_) += hitTOF->divt_sft(); // TOF time shift

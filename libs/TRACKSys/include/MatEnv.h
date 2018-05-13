@@ -206,7 +206,7 @@ class MatGeoBoxReader {
         MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);
         
     protected :
-        inline void clear() { is_load_ = false; mat_ptr_ = nullptr; var_ptr_ = nullptr; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; }
+        inline void clear() { is_load_ = false; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; mat_.clear(); var_.clear(); }
         
         inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
@@ -215,8 +215,6 @@ class MatGeoBoxReader {
         static constexpr Double_t FST_STEP_LEN = Numc::ONE<> + Numc::HALF;
 
         Bool_t                               is_load_;
-        Bool_t*                              mat_ptr_;
-        Double_t*                            var_ptr_;
         Long64_t                             max_len_;
         std::array<Long64_t, MATGEOBOX_NDIM> n_;
         std::array<Double_t, MATGEOBOX_NDIM> min_;
@@ -225,6 +223,9 @@ class MatGeoBoxReader {
         std::array<Double_t, MATGEOBOX_NDIM> dlt_;
         std::array<Long64_t, 2>              fact_;
         Double_t                             stp_;
+
+        std::vector<Bool_t>                               mat_;
+        std::vector<std::array<Double_t, MATGEOBOX_NPAR>> var_;
 
     private :
         std::pair<Long64_t, Double_t> tmp_dec_; // for speed up

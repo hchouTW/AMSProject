@@ -132,11 +132,11 @@ MatGeoBoxCreator::MatGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::
     max_len_  = (n[0] * n[1] * n[2]);
     
     dlt_.fill(0);
-    dlt_.at(0) = (max[0] - min[0]) / static_cast<Double_t>(n[0]);
-    dlt_.at(1) = (max[1] - min[1]) / static_cast<Double_t>(n[1]);
-    dlt_.at(2) = (max[2] - min[2]) / static_cast<Double_t>(n[2]);
+    dlt_[0] = (max[0] - min[0]) / static_cast<Double_t>(n[0]);
+    dlt_[1] = (max[1] - min[1]) / static_cast<Double_t>(n[1]);
+    dlt_[2] = (max[2] - min[2]) / static_cast<Double_t>(n[2]);
     
-    area_ = dlt_.at(0) * dlt_.at(1);
+    area_ = dlt_[0] * dlt_[1];
     
     fact_.fill(0);
     fact_.at(0) = n[1] * n[2];
@@ -165,9 +165,9 @@ void MatGeoBoxCreator::fill(const G4MatStep& g4mat) {
     if (!is_open_) return;
     if (g4mat.nstp <= 0) return;
     
-    Long64_t xi = static_cast<Long64_t>(std::floor((g4mat.x - gbox_inf_->min[0]) / dlt_.at(0)));
+    Long64_t xi = static_cast<Long64_t>(std::floor((g4mat.x - gbox_inf_->min[0]) / dlt_[0]));
     if (xi < 0 || xi >= gbox_inf_->n[0]) return;
-    Long64_t yi = static_cast<Long64_t>(std::floor((g4mat.y - gbox_inf_->min[1]) / dlt_.at(1)));
+    Long64_t yi = static_cast<Long64_t>(std::floor((g4mat.y - gbox_inf_->min[1]) / dlt_[1]));
     if (yi < 0 || yi >= gbox_inf_->n[1]) return;
    
     for (Long64_t istp = 0; istp < g4mat.nstp; ++istp) {
@@ -176,8 +176,8 @@ void MatGeoBoxCreator::fill(const G4MatStep& g4mat) {
         if (g4min > gbox_inf_->max[2]) continue;
         if (g4max < gbox_inf_->min[2]) continue;
 
-        Long64_t zimin = static_cast<Long64_t>(std::floor((g4min - gbox_inf_->min[2]) / dlt_.at(2)));
-        Long64_t zimax = static_cast<Long64_t>(std::floor((g4max - gbox_inf_->min[2]) / dlt_.at(2)));
+        Long64_t zimin = static_cast<Long64_t>(std::floor((g4min - gbox_inf_->min[2]) / dlt_[2]));
+        Long64_t zimax = static_cast<Long64_t>(std::floor((g4max - gbox_inf_->min[2]) / dlt_[2]));
         if (zimin <= 0              ) zimin = 0;    
         if (zimax >= gbox_inf_->n[2]) zimax = gbox_inf_->n[2]-1;    
 
@@ -185,8 +185,8 @@ void MatGeoBoxCreator::fill(const G4MatStep& g4mat) {
         Long64_t xyidx = (xi * fact_.at(0) + yi * fact_.at(1));
         for (Long64_t zi = zimin; zi <= zimax; ++zi) {
             Long64_t idx = (xyidx + zi);
-            Double_t lbv = gbox_inf_->min[2] + dlt_.at(2) * (zi);
-            Double_t ubv = gbox_inf_->min[2] + dlt_.at(2) * (zi+1);
+            Double_t lbv = gbox_inf_->min[2] + dlt_[2] * (zi);
+            Double_t ubv = gbox_inf_->min[2] + dlt_[2] * (zi+1);
             Double_t dbv = (ubv - lbv);
 
             if (g4min > lbv) lbv = g4min; 
@@ -259,9 +259,9 @@ void MatGeoBoxReader::print() const {
     if (!is_load_) return;
     std::string printStr;
     printStr += STR("===================== MatGeoBoxReader ====================\n");
-    printStr += STR("BOX X     (%3lld %7.2f %7.2f)\n", n_.at(0), min_.at(0), max_.at(0));
-    printStr += STR("BOX Y     (%3lld %7.2f %7.2f)\n", n_.at(1), min_.at(1), max_.at(1));
-    printStr += STR("BOX Z     (%3lld %7.2f %7.2f)\n", n_.at(2), min_.at(2), max_.at(2));
+    printStr += STR("BOX X     (%3lld %7.2f %7.2f)\n", n_.at(0), min_[0], max_[0]);
+    printStr += STR("BOX Y     (%3lld %7.2f %7.2f)\n", n_.at(1), min_[1], max_[1]);
+    printStr += STR("BOX Z     (%3lld %7.2f %7.2f)\n", n_.at(2), min_[2], max_[2]);
     printStr += STR("==========================================================\n");
     COUT(printStr.c_str());
 }
@@ -279,7 +279,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     }
     Long64_t flen_inf = lseek(fdes_inf, 0, SEEK_END); 
     
-    void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ, MAP_SHARED, fdes_inf, 0);
+    void* fptr_inf = mmap(nullptr, flen_inf, PROT_READ, MAP_PRIVATE, fdes_inf, 0);
     if (fptr_inf == reinterpret_cast<void*>(-1)) {
         Sys::ShowWarningExit("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_inf);
@@ -294,7 +294,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
     }
     Long64_t flen_var = lseek(fdes_var, 0, SEEK_END); 
     
-    void* fptr_var = mmap(nullptr, flen_var, PROT_READ, MAP_SHARED, fdes_var, 0);
+    void* fptr_var = mmap(nullptr, flen_var, PROT_READ, MAP_PRIVATE, fdes_var, 0);
     if (fptr_var == reinterpret_cast<void*>(-1)) {
         Sys::ShowWarningExit("MatGeoBoxReader::Load() : mmap() failure.");
         close(fdes_var);
@@ -303,7 +303,7 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
   
     // Inf
     MatGeoBoxInf* gbox_inf = reinterpret_cast<MatGeoBoxInf*>(fptr_inf);
-    mat_ptr_ = &(gbox_inf->mat);
+    Bool_t* mat_ptr = &(gbox_inf->mat);
     
     for (Int_t ig = 0; ig < MATGEOBOX_NDIM; ++ig) {
         n_.at(ig)   = gbox_inf->n[ig]; 
@@ -319,7 +319,23 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
 
     // Var
     MatGeoBoxVar* gbox_var = reinterpret_cast<MatGeoBoxVar*>(fptr_var);
-    var_ptr_ = &(gbox_var->var);
+    Double_t* var_ptr = &(gbox_var->var);
+        
+    // Load To Memory
+    mat_ = std::vector<Bool_t>(max_len_, false);
+    for (Long64_t it = 0; it < mat_.size(); ++it)
+        mat_[it] = mat_ptr[it];
+
+    var_ = std::vector<std::array<Double_t, MATGEOBOX_NPAR>>(max_len_, std::array<Double_t, MATGEOBOX_NPAR>());
+    for (Long64_t it = 0; it < var_.size(); ++it) {
+        var_.at(it).fill(Numc::ZERO<>);
+        for (Long64_t ipar = 0; ipar < MATGEOBOX_NPAR; ++ipar)
+            var_[it][ipar] = var_ptr[it*MATGEOBOX_NPAR+ipar];
+    }
+    
+    // Release File
+    if (fdes_inf >= 0) close(fdes_inf);
+    if (fdes_var >= 0) close(fdes_var);
 
     is_load_ = true;
     COUT("MatGeoBoxReader::Load() : Open file (%s/%s)\n", dpath.c_str(), fname.c_str());
@@ -329,19 +345,19 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
 
 Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t log10gb) {
     if (idx < 0 || idx >= max_len_) return Numc::ZERO<>;
-    if (!mat_ptr_[idx]) return Numc::ZERO<>;
+    if (!mat_[idx]) return Numc::ZERO<>;
     if (idx == tmp_dec_.first) return tmp_dec_.second;
     Double_t dec = Numc::ZERO<>;
     
-    Double_t& X0 = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_X0];
+    Double_t& X0 = var_[idx][MATVAR_X0];
     if (log10gb >= X0) {
-        Double_t& C = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_C];
+        Double_t& C = var_[idx][MATVAR_C];
         dec += Numc::TWO<> * Numc::LOG_TEN * log10gb - C;
         
-        Double_t& X1 = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_X1];
+        Double_t& X1 = var_[idx][MATVAR_X1];
         if (log10gb < X1) { 
-            Double_t& A = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_A];
-            Double_t& M = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_M];
+            Double_t& A = var_[idx][MATVAR_A];
+            Double_t& M = var_[idx][MATVAR_M];
             dec += A * std::pow(X1 - log10gb, M); 
         }
     }
@@ -354,9 +370,9 @@ Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t l
 
 Bool_t MatGeoBoxReader::is_in_box(const SVecD<3>& coo) {
     if (!is_load_) return false;
-    if (!Numc::Valid(coo(2)) || Numc::Compare(coo(2), min_.at(2)) <= 0 || Numc::Compare(coo(2), max_.at(2)) >= 0) return false;
-    if (!Numc::Valid(coo(1)) || Numc::Compare(coo(1), min_.at(1)) <= 0 || Numc::Compare(coo(1), max_.at(1)) >= 0) return false;
-    if (!Numc::Valid(coo(0)) || Numc::Compare(coo(0), min_.at(0)) <= 0 || Numc::Compare(coo(0), max_.at(0)) >= 0) return false;
+    if (!Numc::Valid(coo(2)) || Numc::Compare(coo(2), min_[2]) <= 0 || Numc::Compare(coo(2), max_[2]) >= 0) return false;
+    if (!Numc::Valid(coo(1)) || Numc::Compare(coo(1), min_[1]) <= 0 || Numc::Compare(coo(1), max_[1]) >= 0) return false;
+    if (!Numc::Valid(coo(0)) || Numc::Compare(coo(0), min_[0]) <= 0 || Numc::Compare(coo(0), max_[0]) >= 0) return false;
     return true;
 }
 
@@ -367,12 +383,12 @@ Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
                     Numc::Valid(vcoo(1)) && Numc::Valid(wcoo(1)) &&
                     Numc::Valid(vcoo(0)) && Numc::Valid(wcoo(0)));
     if (!valid) return false;
-    if (Numc::Compare(vcoo(2), min_.at(2)) <= 0 && Numc::Compare(wcoo(2), min_.at(2)) <= 0) return false;
-    if (Numc::Compare(vcoo(2), max_.at(2)) >= 0 && Numc::Compare(wcoo(2), max_.at(2)) >= 0) return false;
-    if (Numc::Compare(vcoo(1), min_.at(1)) <= 0 && Numc::Compare(wcoo(1), min_.at(1)) <= 0) return false;
-    if (Numc::Compare(vcoo(1), max_.at(1)) >= 0 && Numc::Compare(wcoo(1), max_.at(1)) >= 0) return false;
-    if (Numc::Compare(vcoo(0), min_.at(0)) <= 0 && Numc::Compare(wcoo(0), min_.at(0)) <= 0) return false;
-    if (Numc::Compare(vcoo(0), max_.at(0)) >= 0 && Numc::Compare(wcoo(0), max_.at(0)) >= 0) return false;
+    if (Numc::Compare(vcoo(2), min_[2]) <= 0 && Numc::Compare(wcoo(2), min_[2]) <= 0) return false;
+    if (Numc::Compare(vcoo(2), max_[2]) >= 0 && Numc::Compare(wcoo(2), max_[2]) >= 0) return false;
+    if (Numc::Compare(vcoo(1), min_[1]) <= 0 && Numc::Compare(wcoo(1), min_[1]) <= 0) return false;
+    if (Numc::Compare(vcoo(1), max_[1]) >= 0 && Numc::Compare(wcoo(1), max_[1]) >= 0) return false;
+    if (Numc::Compare(vcoo(0), min_[0]) <= 0 && Numc::Compare(wcoo(0), min_[0]) <= 0) return false;
+    if (Numc::Compare(vcoo(0), max_[0]) >= 0 && Numc::Compare(wcoo(0), max_[0]) >= 0) return false;
     return true;
 }
         
@@ -380,23 +396,23 @@ Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
 MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
     if (!is_load_) return MatFld();
 
-    Double_t zloc = (coo(2) - min_.at(2)) / dlt_.at(2);
+    Double_t zloc = (coo(2) - min_[2]) / dlt_[2];
     Long64_t zi = static_cast<Long64_t>(std::floor(zloc));
     if (!Numc::Valid(zloc) || !Numc::Valid(zi) || zi < 0 || zi >= n_.at(2)) return MatFld();
     
-    Double_t yloc = (coo(1) - min_.at(1)) / dlt_.at(1);
+    Double_t yloc = (coo(1) - min_[1]) / dlt_[1];
     Long64_t yi = static_cast<Long64_t>(std::floor(yloc));
     if (!Numc::Valid(yloc) || !Numc::Valid(yi) || yi < 0 || yi >= n_.at(1)) return MatFld();
 
-    Double_t xloc = (coo(0) - min_.at(0)) / dlt_.at(0);
+    Double_t xloc = (coo(0) - min_[0]) / dlt_[0];
     Long64_t xi = static_cast<Long64_t>(std::floor(xloc));
     if (!Numc::Valid(xloc) || !Numc::Valid(xi) || xi < 0 || xi >= n_.at(0)) return MatFld();
 
     Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-    Bool_t   mat = mat_ptr_[idx];
-    Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-    Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-    Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+    Bool_t   mat = mat_[idx];
+    Double_t irl = var_[idx][MATVAR_IRL];
+    Double_t eld = var_[idx][MATVAR_ELD];
+    Double_t lme = var_[idx][MATVAR_LME];
     Double_t dec = get_density_effect_correction(idx, log10gb);
 
     reset_tmp_dec();
@@ -408,24 +424,24 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
 MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb, Bool_t is_std) {
     if (!is_load_) return MatFld();
     
-    Double_t vzloc = (vcoo(2) - min_.at(2)) / dlt_.at(2);
-    Double_t wzloc = (wcoo(2) - min_.at(2)) / dlt_.at(2);
+    Double_t vzloc = (vcoo(2) - min_[2]) / dlt_[2];
+    Double_t wzloc = (wcoo(2) - min_[2]) / dlt_[2];
     Long64_t vzi = static_cast<Long64_t>(std::floor(vzloc));
     Long64_t wzi = static_cast<Long64_t>(std::floor(wzloc));
     if (!Numc::Valid(vzloc) || !Numc::Valid(vzi)) return MatFld();
     if (!Numc::Valid(wzloc) || !Numc::Valid(wzi)) return MatFld();
     if ((vzi < 0 && wzi < 0) || (vzi >= n_.at(2) && wzi >= n_.at(2))) return MatFld();
     
-    Double_t vyloc = (vcoo(1) - min_.at(1)) / dlt_.at(1);
-    Double_t wyloc = (wcoo(1) - min_.at(1)) / dlt_.at(1);
+    Double_t vyloc = (vcoo(1) - min_[1]) / dlt_[1];
+    Double_t wyloc = (wcoo(1) - min_[1]) / dlt_[1];
     Long64_t vyi = static_cast<Long64_t>(std::floor(vyloc));
     Long64_t wyi = static_cast<Long64_t>(std::floor(wyloc));
     if (!Numc::Valid(vyloc) || !Numc::Valid(vyi)) return MatFld();
     if (!Numc::Valid(wyloc) || !Numc::Valid(wyi)) return MatFld();
     if ((vyi < 0 && wyi < 0) || (vyi >= n_.at(1) && wyi >= n_.at(1))) return MatFld();
     
-    Double_t vxloc = (vcoo(0) - min_.at(0)) / dlt_.at(0);
-    Double_t wxloc = (wcoo(0) - min_.at(0)) / dlt_.at(0);
+    Double_t vxloc = (vcoo(0) - min_[0]) / dlt_[0];
+    Double_t wxloc = (wcoo(0) - min_[0]) / dlt_[0];
     Long64_t vxi = static_cast<Long64_t>(std::floor(vxloc));
     Long64_t wxi = static_cast<Long64_t>(std::floor(wxloc));
     if (!Numc::Valid(vxloc) || !Numc::Valid(vxi)) return MatFld();
@@ -435,10 +451,10 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Double_t rlen = LA::Mag((wcoo - vcoo));
     if (Numc::EqualToZero(rlen)) {
         Long64_t idx = (vxi * fact_.at(0) + vyi * fact_.at(1) + vzi);
-        Bool_t   mat = mat_ptr_[idx];
-        Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-        Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-        Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+        Bool_t   mat = mat_[idx];
+        Double_t irl = var_[idx][MATVAR_IRL];
+        Double_t eld = var_[idx][MATVAR_ELD];
+        Double_t lme = var_[idx][MATVAR_LME];
         Double_t dec = get_density_effect_correction(idx, log10gb);
         
         reset_tmp_dec();
@@ -496,12 +512,12 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
         if (xi < 0 || xi >= n_.at(0)) continue;
 
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
-        Bool_t   mat = mat_ptr_[idx];
+        Bool_t   mat = mat_[idx];
         if (mat) {
             Double_t itrat = ((Numc::HALF + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
-            Double_t irl = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_IRL];
-            Double_t eld = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_ELD];
-            Double_t lme = var_ptr_[idx*MATGEOBOX_NPAR+MATVAR_LME];
+            Double_t irl = var_[idx][MATVAR_IRL];
+            Double_t eld = var_[idx][MATVAR_ELD];
+            Double_t lme = var_[idx][MATVAR_LME];
             Double_t dec = get_density_effect_correction(idx, log10gb);
     
             sum_irl  += irl;
@@ -533,7 +549,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
 
 MatFld MatMgnt::Get(const SVecD<3>& coo, Double_t log10gb) {
     if (!Load()) return MatFld();
-
+    if (!(Numc::Valid(coo(0)) && Numc::Valid(coo(1)) && Numc::Valid(coo(2)))) return MatFld();
     Bool_t   mat  = false;
     Double_t irl  = 0.0;
     Double_t eld  = 0.0;
@@ -563,6 +579,8 @@ MatFld MatMgnt::Get(const SVecD<3>& coo, Double_t log10gb) {
 
 MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb, Bool_t is_std) {
     if (!Load()) return MatFld();
+    if (!(Numc::Valid(vcoo(0)) && Numc::Valid(vcoo(1)) && Numc::Valid(vcoo(2)))) return MatFld();
+    if (!(Numc::Valid(wcoo(0)) && Numc::Valid(wcoo(1)) && Numc::Valid(wcoo(2)))) return MatFld();
     
     Double_t rlen = LA::Mag(wcoo - vcoo);
     if (Numc::EqualToZero(rlen)) return Get(vcoo);
@@ -660,7 +678,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     
     Bool_t is_over_lmt = (Numc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t ibta = ((is_over_lmt) ? part.ibta() : LMT_INV_BTA);
-    Double_t eta  = ((is_over_lmt) ? part.eta_abs() : (LMT_INV_GMBTA / part.info().mu()));
+    Double_t eta  = ((is_over_lmt) ? part.eta_abs() : (LMT_INV_GMBTA / part.mu()));
 
     Double_t nrl      = mfld.nrl();
     Double_t sqrt_nrl = std::sqrt(nrl);

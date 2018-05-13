@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 
 using namespace std;
 
@@ -12,17 +12,19 @@ int main(int argc, char * argv[]) {
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
+    
+    google::InitGoogleLogging(argv[0]);
 
     //std::string dpath = "/ams_home/hchou/AMSData/new_material";
     //std::string fpath = "/ams_home/hchou/AMSData/material/g4mscan.root";
     //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree(dpath, fpath);
     //return true;
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
     MGConfig::JobOpt opt(argc, argv);
 

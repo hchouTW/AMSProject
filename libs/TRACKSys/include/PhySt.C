@@ -191,7 +191,7 @@ void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t u
 }
         
 
-void PhySt::set_state(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz) {
+void PhySt::set_state_with_mom(Double_t cx, Double_t cy, Double_t cz, Double_t mx, Double_t my, Double_t mz) {
     Double_t norm = std::sqrt(mx * mx + my * my + mz * mz);
     if (Numc::EqualToZero(norm)) zero();
     else {

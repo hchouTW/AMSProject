@@ -66,6 +66,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
+    //PhyArg::SetOpt(false, false);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
@@ -110,7 +111,7 @@ int main(int argc, char * argv[]) {
     Axis AXMrso("1/Mass [1/GeV]", 800, 0, 4);
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
-    Axis AXRchi("Log-Chi-square [1]", 800, -8.0, 8.0);
+    Axis AXRchi("Log-Chi-square [1]", 800, -6.0, 6.0);
     Hist* hCKRchix = Hist::New("hCKRchix", HistAxis(AXmom, AXRchi));
     Hist* hKFRchix = Hist::New("hKFRchix", HistAxis(AXmom, AXRchi));
     Hist* hHCRchix = Hist::New("hHCRchix", HistAxis(AXmom, AXRchi));
@@ -118,9 +119,6 @@ int main(int argc, char * argv[]) {
     Hist* hCKRchiy = Hist::New("hCKRchiy", HistAxis(AXmom, AXRchi));
     Hist* hKFRchiy = Hist::New("hKFRchiy", HistAxis(AXmom, AXRchi));
     Hist* hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
-    
-    Axis AXRqlt("Quality [1]", 800, -5.0, 5.0);
-    Hist* hHCRqlt = Hist::New("hHCRqlt", HistAxis(AXmom, AXRqlt));
     
     //Axis AXRres("Residual [#mum]", 4000, -800.0, 800.0);
     //std::vector<Hist*> hCKresx(9, nullptr);
@@ -217,6 +215,12 @@ int main(int argc, char * argv[]) {
         }
         Short_t cutNHit = 4 + optL1 + optL9;
 
+        Int_t cntCX = 0;
+        Int_t cntCY = 0;
+        for (auto&& hit : fitPar.hitsTRK()) { cntCX += hit.scx(); cntCY += hit.scy(); }
+        if (cntCX < 4) continue;
+        if (cntCY < 5) continue;
+
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
@@ -285,7 +289,7 @@ int main(int argc, char * argv[]) {
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
         //hc_irig = hc_lay_irig[topLay];
-        //CERR("FINAL FIT (MC MOM %14.8f) == MASS %14.8f RIG %14.8f QLT %14.8f %14.8f TIME %14.8f\n", mc_mom, tr.part().mass(), tr.part().rig(), tr.quality(0), tr.quality(1), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MU (%14.8f %14.8f) QLT (%14.8f %14.8f) TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mu(), tr.err_mu(), tr.quality(0), tr.quality(1), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = track.status[0][patt];
@@ -318,12 +322,12 @@ int main(int argc, char * argv[]) {
         Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
         //Double_t hc_chix = (hc_succ ? std::log(track.chisq[2][patt][0]) : 0.); 
-        Double_t hc_chix = (hc_succ ? std::log(tr.nchi_cx())            : 0.); 
+        Double_t hc_chix = (hc_succ ? std::log(tr.quality(0))            : 0.); 
         
         Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
         Double_t kf_chiy = (kf_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
         //Double_t hc_chiy = (hc_succ ? std::log(track.chisq[2][patt][1]) : 0.); 
-        Double_t hc_chiy = (hc_succ ? std::log(tr.nchi_cy()) : 0.); 
+        Double_t hc_chiy = (hc_succ ? std::log(tr.quality(1)) : 0.); 
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));
@@ -341,8 +345,6 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFRchiy->fillH2D(mc_mom, kf_chiy);
         if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
         
-        if (hc_succ) hHCRqlt->fillH2D(mc_mom, tr.quality(1));
-
         //for (Int_t it = 0; it < 9; ++it) {
         //    if (!hasLay[it]) continue;
         //    if (!(msh[it]->side[0] && msh[it]->adc[0]>0)) continue;

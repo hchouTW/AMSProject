@@ -41,6 +41,10 @@ class TrFitPar {
         inline const Short_t nhit() const { return hits_.size(); }
         inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
         inline const VirtualHitSt* hit(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
+        
+        inline const std::vector<HitStTRK>&  hitsTRK()  const { return hits_TRK_; }
+        inline const std::vector<HitStTOF>&  hitsTOF()  const { return hits_TOF_; }
+        inline const std::vector<HitStRICH>& hitsRICH() const { return hits_RICH_; }
 
     protected :
         void zero();
@@ -80,7 +84,6 @@ class TrFitPar {
         // Number of Hit Requirement
         static constexpr Short_t LMTN_CX = 2;
         static constexpr Short_t LMTN_CY = 3;
-        static constexpr Short_t LMTN_IB = 1;
         static constexpr Short_t LMTN_TOF_T = 1;
 };
 
@@ -151,7 +154,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
             DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
-            parIDnu_(-1), parIDtsft_(-1)
+            parIDib_(-1), parIDtsft_(-1)
             { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
     
     public :
@@ -162,7 +165,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             Double_t num_of_res = num_of_residual;
             Double_t num_of_par = num_of_parameter;
 
-            if (is_mu_free_) { parIDnu_ = DIMG_; }
+            if (is_mu_free_) { parIDib_ = DIMG_; }
             if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
 
             set_num_residuals(0);
@@ -182,7 +185,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         Short_t numOfRes_;
         Short_t numOfPar_;
 
-        Short_t parIDnu_;
+        Short_t parIDib_;
         Short_t parIDtsft_;
 };
 
@@ -219,18 +222,19 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& nchi_cy() const { return nchi_cy_; }
         inline const Double_t& nchi_ib() const { return nchi_ib_; }
     
-        inline const Double_t& err_cx()  const { return err_[0]; }
-        inline const Double_t& err_cy()  const { return err_[1]; }
-        inline const Double_t& err_ux()  const { return err_[2]; }
-        inline const Double_t& err_uy()  const { return err_[3]; }
-        inline const Double_t& err_eta() const { return err_[4]; }
-        inline const Double_t& err_nu()  const { return err_[5]; }
+        inline const Double_t& err_cx()   const { return err_[0]; }
+        inline const Double_t& err_cy()   const { return err_[1]; }
+        inline const Double_t& err_ux()   const { return err_[2]; }
+        inline const Double_t& err_uy()   const { return err_[3]; }
+        inline const Double_t& err_eta()  const { return err_[4]; }
+        inline const Double_t& err_ibta() const { return err_[5]; }
+        inline const Double_t& err_mu()   const { return err_[6]; }
 
     protected :
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_ibta = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>);
         Bool_t physicalMassFit();
 
         Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);
@@ -254,7 +258,7 @@ class PhyTrFit : public TrFitPar {
         Double_t nchi_cy_;
         Double_t nchi_ib_;
         
-        std::array<Double_t, 6> err_; // (cx, cy, ux, uy, eta, nu)
+        std::array<Double_t, 7> err_; // (cx, cy, ux, uy, eta, ibta, mu)
 
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;

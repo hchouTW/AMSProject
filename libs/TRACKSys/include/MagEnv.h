@@ -66,7 +66,7 @@ class MagGeoBoxCreator {
         inline void clear() { is_open_ = false; fdes_ = -1; flen_ = 0; fptr_ = reinterpret_cast<void*>(-1); max_len_ = 0; geo_box_ = nullptr; }
 
     private :
-        static constexpr Long64_t DIM_ = 3;
+        static constexpr Long64_t DIM = 3;
         Bool_t                    is_open_;
         Int_t                     fdes_;
         Int_t                     flen_;
@@ -88,19 +88,20 @@ class MagGeoBoxReader {
         Bool_t load(const std::string& fpath);
 
     protected :
-        inline void clear() { is_load_ = false; fpath_ = ""; fptr_ = reinterpret_cast<void*>(-1); mag_ptr_ = nullptr;  n_.fill(0); min_.fill(0.); max_.fill(0.); dlt_.fill(0.); fact_.fill(0); }
+        inline void clear() { is_load_ = false; fpath_ = ""; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); dlt_.fill(0.); fact_.fill(0); mag_.clear(); }
 
     private :
-        static constexpr Long64_t   DIM_ = 3;
-        Bool_t                      is_load_;
-        std::string                 fpath_;
-        void*                       fptr_;
-        Float_t*                    mag_ptr_;
-        std::array<Long64_t, DIM_>  n_;
-        std::array<Float_t,  DIM_>  min_;
-        std::array<Float_t,  DIM_>  max_;
-        std::array<Float_t,  DIM_>  dlt_;
-        std::array<Long64_t, 2>     fact_;
+        static constexpr Long64_t  DIM = 3;
+        Bool_t                     is_load_;
+        std::string                fpath_;
+        Long64_t                   max_len_;
+        std::array<Long64_t, DIM>  n_;
+        std::array<Float_t,  DIM>  min_;
+        std::array<Float_t,  DIM>  max_;
+        std::array<Float_t,  DIM>  dlt_;
+        std::array<Long64_t, 2>    fact_;
+        
+        std::vector<std::array<Float_t, DIM>> mag_;
 };
 
 
