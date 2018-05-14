@@ -172,7 +172,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if ((ndof_cy_+ndof_ib_) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); return; }
 
     succ_ = (analyticalFit() ? simpleFit() : false);
-    if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); COUT("SimpleTrFit::FAIL.\n"); }
+    if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); }
 }
 
 
@@ -614,7 +614,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
     else                          succ_ = physicalMassFit();
     
-    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); COUT("PhyTrFit::FAIL.\n"); }
+    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
 }
 
 
@@ -635,8 +635,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     if (is_fluc_eta) {
         const Int_t niter = 10; Int_t iter = 0;
         do {
+            //Double_t rndm = Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
+            Double_t rndm = Rndm::NormalGaussian();
+            eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
-            eta = part_.eta() * (Numc::ONE<> + fluc_eta * Rndm::NormalGaussian());
         } while ((iter < niter) && Numc::EqualToZero(eta));
         if (iter >= niter) eta = part_.eta();
     }
@@ -646,8 +648,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     if (is_fluc_ibta) {
         const Int_t niter = 10; Int_t iter = 0;
         do {
+            //Double_t rndm = Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
+            Double_t rndm = Rndm::NormalGaussian();
+            ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * rndm);
             iter++;
-            ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * Rndm::NormalGaussian());
         } while ((iter < niter) && (ibta < LMTL_INV_BETA || ibta > LMTU_INV_BETA));
         if (iter >= niter) ibta = part_.ibta();
     }
@@ -742,32 +746,28 @@ Bool_t PhyTrFit::physicalMassFit() {
         info_.reset(chrg, mass);
         TOFt_sft_ = Numc::ZERO<>;
         if (!(simpleFit() ? physicalFit(MuOpt::kFixed) : false)) continue;
+        
         if (!evolve(MuOpt::kFree)) continue;
-
-        args_.clear();
-        TOFt_sft_ = Numc::ZERO<>;
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
         Double_t fluc_ibta = (err_.at(5) / part_.ibta());
-        if (!physicalFit(MuOpt::kFree, fluc_eta, fluc_ibta)) continue;
 
         Bool_t firstTime = (!condElem.succ);
         if (firstTime || Numc::Compare(quality_.at(1), condElem.qlt) < 0)
-            condElem = std::move(PartElem(part_, args_, TOFt_sft_, std::fabs(err_.at(4)/part_.eta()), err_.at(5)/part_.ibta(), quality_.at(1)));
+            condElem = std::move(PartElem(part_, args_, TOFt_sft_, fluc_eta, fluc_ibta, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
+    args_.clear();
+    TOFt_sft_ = Numc::ZERO<>;
     info_ = condElem.part.info();
     part_ = condElem.part;
-    args_ = condElem.args;
-    TOFt_sft_ = condElem.tsft;
-    if (!evolve(MuOpt::kFree)) return false;
-
-    // Mass Fit
-    //args_.clear();
-    //TOFt_sft_ = Numc::ZERO<>;
-    //info_     = condElem.part.info();
-    //part_     = condElem.part;
-    //if (!physicalFit(MuOpt::kFree, condElem.fluc_eta, condElem.fluc_ibta)) return false;
+    if (!physicalFit(MuOpt::kFree, condElem.fluc_eta, condElem.fluc_ibta)) return false;
+    
+    args_.clear();
+    TOFt_sft_ = Numc::ZERO<>;
+    if (!physicalFit(MuOpt::kFree, 
+                     (Numc::HALF * Numc::HALF) * std::fabs(err_.at(4) / part_.eta()), 
+                     (Numc::HALF * Numc::HALF) * (err_.at(5) / part_.ibta()))) return false;
 
     return true;
 }

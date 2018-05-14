@@ -24,6 +24,7 @@ void RecEvent::init() {
     zin  = 1;
     mass = 0.93827230;
     beta = 1.0;
+    going = -1;
 }
 
 bool RecEvent::rebuild(AMSEventR * event) {
@@ -55,6 +56,8 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	if      (iBetaH >= 0) beta = event->pBetaH(iBetaH)->GetBeta();
 	else if (iBeta  >= 0) beta = event->pBeta(iBeta)->Beta;
 	else                  beta = 1;
+    going = -TrackSys::Numc::Compare(beta);
+    beta  = std::fabs(beta);
 
 	// Tracker Information
 	if (EventBase::checkEventMode(EventBase::ISS))
@@ -951,11 +954,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		const short _algo[_nalgo] = { 1, 6 };
 		const short _npatt = 4;
 		const short _patt[_npatt] = { 3, 5, 6, 7 };
-        
-        Int_t zin  = (track.QIn < 1.) ? 1 : std::lrint(track.QIn);
-        float mass = (zin < 2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
 		for (int algo = 0; algo < _nalgo; ++algo) {
-            if (algo == 1) continue; // testcode
 			for (int patt = 0; patt < _npatt; ++patt) {
                 MGClock::HrsStopwatch sw; sw.start();
                 TrFit trFit;
@@ -981,6 +980,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                         trtk->InterpolateLayerJ(il+1, pntLJ, dirLJ, fitid);
 				   
                     if (MGNumc::EqualToZero(rig)) continue;
+                    Double_t igmbta = std::fabs((recEv.mass / recEv.zin) * rig);
+                    Double_t bta = (1.0 / std::sqrt(1.0 + igmbta * igmbta));
                     
                     track.stateLJ[algo][patt][il][0] = pntLJ[0];
 				    track.stateLJ[algo][patt][il][1] = pntLJ[1];
@@ -989,64 +990,125 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 				    track.stateLJ[algo][patt][il][4] = -dirLJ[1];
 				    track.stateLJ[algo][patt][il][5] = -dirLJ[2];
 				    track.stateLJ[algo][patt][il][6] = rig;
+				    track.stateLJ[algo][patt][il][7] = bta;
                 }
-
-                track.cpuTime[algo][patt] = sw.time() * 1.0e3;
 			} // for loop - pattern
 		}
 		fTrk.track = track;
 
         // HChou Fitting
         TrackSys::PhyArg::SetOpt(true, true);
+        TrackSys::TrFitPar::Orientation ortt = (recEv.going > 0 ? TrackSys::TrFitPar::Orientation::kUpward : TrackSys::TrFitPar::Orientation::kDownward);
+        
         std::vector<TrackSys::InterfaceAms::TrackerPatt> trPatt({ 
             TrackSys::InterfaceAms::TrackerPatt::Inner }); 
             //TrackSys::InterfaceAms::TrackerPatt::Inner, 
             //TrackSys::InterfaceAms::TrackerPatt::InnerL1, 
             //TrackSys::InterfaceAms::TrackerPatt::InnerL9, 
             //TrackSys::InterfaceAms::TrackerPatt::FullSpan });
-        TrackSys::PartType partType = TrackSys::PartType::Proton;
+        
+        TrackSys::PartType partType = TrackSys::PartType::Proton; // Mass Fixed
+        //TrackSys::PartType partType = TrackSys::PartType::Q1;     // Mass Free
 
         for (auto&& patt : trPatt) {
-            TrackSys::TrFitPar fitPar(partType);
+            TrackSys::TrFitPar fitPar(partType, ortt);
             if (recEv.iTrTrack  >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTRK(event->TrTrack(recEv.iTrTrack), patt));
             if (recEv.iBetaH    >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH)));
             //if (recEv.iRichRing >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStRICH(event->RichRing(recEv.iRichRing)));
             
             MGClock::HrsStopwatch swhc; swhc.start();
-            TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFixed);
-            //TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MassOpt::kFree);
+            TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MuOpt::kFixed); // Mass Fixed
+            //TrackSys::PhyTrFit hctr(fitPar, TrackSys::PhyTrFit::MuOpt::kFree);    // Mass Free
             swhc.stop();
-            if (hctr.status()) {
-                //CERR("FINAL FIT == MASS %14.8f RIG %14.8f NCHI %14.8f QLT %14.8f TIME %14.8f\n", hctr.part().mass(), hctr.part().rig(), hctr.nchi(), hctr.quality(), swhc.time());
 
-                fTrk.hcTrack.status = hctr.status();
-                fTrk.hcTrack.chrg   = hctr.part().chrg();
-                fTrk.hcTrack.mass   = hctr.part().mass();
+            if (hctr.status()) {
+                HCTrackInfo hcTrack;
+
+                hcTrack.going = ((hctr.ortt() == TrackSys::TrFitPar::Orientation::kDownward) ? -1 : 1);
+                hcTrack.chrg  = hctr.part().chrg();
+                hcTrack.mass  = hctr.part().mass();
+               
+                hcTrack.status = hctr.status();
+                hcTrack.state[0] = hctr.part().cx();
+                hcTrack.state[1] = hctr.part().cy();
+                hcTrack.state[2] = hctr.part().cz();
+                hcTrack.state[3] = hctr.part().ux();
+                hcTrack.state[4] = hctr.part().uy();
+                hcTrack.state[5] = hctr.part().uz();
+                hcTrack.state[6] = hctr.part().rig();
+                hcTrack.state[7] = hctr.part().bta();
+
+                hcTrack.error[0] = hctr.err_cx();
+                hcTrack.error[1] = hctr.err_cy();
+                hcTrack.error[2] = hctr.err_ux();
+                hcTrack.error[3] = hctr.err_uy();
+                hcTrack.error[4] = hctr.err_eta() / TrackSys::PartInfo::ATOMIC_MASS;
+                hcTrack.error[5] = hctr.err_ibta();
+                hcTrack.error[6] = hctr.err_mu() * TrackSys::PartInfo::ATOMIC_MASS;
+
+                TrackSys::PhySt&& phyStTop = hctr.interpolate_to_z(RecEvent::TopZ);
+                if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {
+                    hcTrack.statusTop = true;
+                    hcTrack.stateTop[0] = phyStTop.cx();
+                    hcTrack.stateTop[1] = phyStTop.cy();
+                    hcTrack.stateTop[2] = phyStTop.cz();
+                    hcTrack.stateTop[3] = phyStTop.ux();
+                    hcTrack.stateTop[4] = phyStTop.uy();
+                    hcTrack.stateTop[5] = phyStTop.uz();
+                    hcTrack.stateTop[6] = phyStTop.rig();
+                    hcTrack.stateTop[7] = phyStTop.bta();
+                }
+
+                TrackSys::PhySt&& phyStBtm = hctr.interpolate_to_z(RecEvent::BtmZ);
+                if (!TrackSys::Numc::EqualToZero(phyStBtm.mom())) {
+                    hcTrack.statusBtm = true;
+                    hcTrack.stateBtm[0] = phyStBtm.cx();
+                    hcTrack.stateBtm[1] = phyStBtm.cy();
+                    hcTrack.stateBtm[2] = phyStBtm.cz();
+                    hcTrack.stateBtm[3] = phyStBtm.ux();
+                    hcTrack.stateBtm[4] = phyStBtm.uy();
+                    hcTrack.stateBtm[5] = phyStBtm.uz();
+                    hcTrack.stateBtm[6] = phyStBtm.rig();
+                    hcTrack.stateBtm[7] = phyStBtm.bta();
+                }
 
                 for (Int_t il = 0; il < 9; ++il) {
                     Double_t zcoo = recEv.trackerZJ[il];
                     TrackSys::PhySt&& phySt = hctr.interpolate_to_z(zcoo);
                     if (TrackSys::Numc::EqualToZero(phySt.mom())) continue;
-                    fTrk.hcTrack.statusLJ[il] = true;
-                    fTrk.hcTrack.stateLJ[il][0] = phySt.cx();
-                    fTrk.hcTrack.stateLJ[il][1] = phySt.cy();
-                    fTrk.hcTrack.stateLJ[il][2] = phySt.cz();
-                    fTrk.hcTrack.stateLJ[il][3] = phySt.ux();
-                    fTrk.hcTrack.stateLJ[il][4] = phySt.uy();
-                    fTrk.hcTrack.stateLJ[il][5] = phySt.uz();
-                    fTrk.hcTrack.stateLJ[il][6] = phySt.irig();
-                    fTrk.hcTrack.stateLJ[il][7] = phySt.bta();
+                    hcTrack.statusLJ[il] = true;
+                    hcTrack.stateLJ[il][0] = phySt.cx();
+                    hcTrack.stateLJ[il][1] = phySt.cy();
+                    hcTrack.stateLJ[il][2] = phySt.cz();
+                    hcTrack.stateLJ[il][3] = phySt.ux();
+                    hcTrack.stateLJ[il][4] = phySt.uy();
+                    hcTrack.stateLJ[il][5] = phySt.uz();
+                    hcTrack.stateLJ[il][6] = phySt.rig();
+                    hcTrack.stateLJ[il][7] = phySt.bta();
                 }
-                
-                fTrk.hcTrack.nchi = hctr.nchi();
-                fTrk.hcTrack.nchi_cx = hctr.nchi_cx();
-                fTrk.hcTrack.nchi_cy = hctr.nchi_cy();
-                fTrk.hcTrack.nrm_mstau = hctr.nrm_mstau();
-                fTrk.hcTrack.nrm_msrho = hctr.nrm_msrho();
 
-                fTrk.hcTrack.cpuTime = swhc.time() * 1.0e3;
-            }
-        }
+                TrackSys::MatFld&& matTrSL1 = hctr.get_mat(recEv.trackerZJ[2]+0.3, recEv.trackerZJ[3]-0.3);
+                TrackSys::MatFld&& matTrSL2 = hctr.get_mat(recEv.trackerZJ[4]+0.3, recEv.trackerZJ[5]-0.3);
+                TrackSys::MatFld&& matTrSL3 = hctr.get_mat(recEv.trackerZJ[6]+0.3, recEv.trackerZJ[7]-0.3);
+
+                hcTrack.matSL[0][0] = matTrSL1.nrl();
+                hcTrack.matSL[0][1] = matTrSL1.ela();
+                hcTrack.matSL[1][0] = matTrSL2.nrl();
+                hcTrack.matSL[1][1] = matTrSL2.ela();
+                hcTrack.matSL[2][0] = matTrSL3.nrl();
+                hcTrack.matSL[2][1] = matTrSL3.ela();
+
+                hcTrack.quality[0] = hctr.quality(0);
+                hcTrack.quality[1] = hctr.quality(1);
+
+                hcTrack.cpuTime = swhc.time() * 1.0e3;
+
+                fTrk.hcTrack = hcTrack;
+
+                // testcode
+                // CERR("GOING %2d MASS %14.8f RIG %14.8f %14.8f Mat %14.8f %14.8f %14.8f\n", hcTrack.going, hcTrack.mass, hcTrack.stateTop[6], hcTrack.stateBtm[6], hcTrack.matSL[0][0], hcTrack.matSL[1][0], hcTrack.matSL[2][0]);
+            } // succ
+        } // for loop --- patt
 	}
 
 
@@ -1243,7 +1305,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             
             HitTRDInfo hitInfo;
             hitInfo.lay = hit->TRDHit_Layer;
-            hitInfo.sub = hit->TRDHit_Ladder * 100 + hit->TRDHit_Tube;
             hitInfo.side = hit->TRDHit_Direction;
             hitInfo.amp = hit->TRDHit_Amp;
             hitInfo.len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
@@ -1369,7 +1430,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 
     
     // RichVeto - start
-	const float richPMTZ = -121.89;                      // pmt z-axis
+	const float richPMTZ = -121.89;                         // pmt z-axis
 	const float richRadZ[2] = {-74.35, -75.5 };             // aerogel / NaF
 	const float cut_aerogelExternalBorder = 3350;           // aerogel external border (r**2)
 	const float cut_aerogelNafBorder[2] = {17.475, 17.525}; // aerogel/NaF border (NaF, Aerogel)
@@ -1995,9 +2056,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 		if (hasY)  numOfTrInY++;
 		if (hasXY) numOfTrInX++;
 	}
-	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6002;
+	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6002;
 	
-    int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
+    //int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6003;
 		
@@ -2006,55 +2067,55 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (MGNumc::Compare(trQin) <= 0) return -6004;
 
     // ~7~ (Scale Events by Track)
-    if (EventBase::checkEventMode(EventBase::ISS) && MGNumc::Compare(trRin) > 0) {
-        int fitidIn = trtkSIG->iTrTrackPar(1, 3, 21);
-        int fitidL1 = trtkSIG->iTrTrackPar(1, 5, 21);
-        int fitidL9 = trtkSIG->iTrTrackPar(1, 6, 21);
-        int fitidFs = trtkSIG->iTrTrackPar(1, 7, 21);
-        
-        bool   isPosRig = true;
-	    if (fitidIn >= 0 && trtkSIG->GetRigidity(fitidIn) < 0) isPosRig = false;
-	    if (fitidL1 >= 0 && trtkSIG->GetRigidity(fitidL1) < 0) isPosRig = false;
-	    if (fitidL9 >= 0 && trtkSIG->GetRigidity(fitidL9) < 0) isPosRig = false;
-	    if (fitidFs >= 0 && trtkSIG->GetRigidity(fitidFs) < 0) isPosRig = false;
+    //if (EventBase::checkEventMode(EventBase::ISS) && MGNumc::Compare(trRin) > 0) {
+    //    int fitidIn = trtkSIG->iTrTrackPar(1, 3, 21);
+    //    int fitidL1 = trtkSIG->iTrTrackPar(1, 5, 21);
+    //    int fitidL9 = trtkSIG->iTrTrackPar(1, 6, 21);
+    //    int fitidFs = trtkSIG->iTrTrackPar(1, 7, 21);
+    //    
+    //    bool   isPosRig = true;
+	//    if (fitidIn >= 0 && trtkSIG->GetRigidity(fitidIn) < 0) isPosRig = false;
+	//    if (fitidL1 >= 0 && trtkSIG->GetRigidity(fitidL1) < 0) isPosRig = false;
+	//    if (fitidL9 >= 0 && trtkSIG->GetRigidity(fitidL9) < 0) isPosRig = false;
+	//    if (fitidFs >= 0 && trtkSIG->GetRigidity(fitidFs) < 0) isPosRig = false;
 
-        if (isPosRig) { // Scale Events by Positive Rigidity
-            double maxR = 0;
-            if (fitidIn >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidIn));
-            if (fitidL1 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL1));
-            if (fitidL9 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL9));
-            if (fitidFs >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidFs));
-	    	
-            double survivorProb = gScaleFunc1D.Eval(maxR);
-            //double survivorProb = gScaleFunc2D.Eval(maxR, trQin);
-	        if (MGNumc::Compare(MGRndm::DecimalUniform(), survivorProb) > 0) return -8001;
-	        else EventList::Weight *= (1. / survivorProb);
-        }
-    }
+    //    if (isPosRig) { // Scale Events by Positive Rigidity
+    //        double maxR = 0;
+    //        if (fitidIn >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidIn));
+    //        if (fitidL1 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL1));
+    //        if (fitidL9 >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidL9));
+    //        if (fitidFs >= 0) maxR = std::max(maxR, trtkSIG->GetRigidity(fitidFs));
+	//    	
+    //        double survivorProb = gScaleFunc1D.Eval(maxR);
+    //        //double survivorProb = gScaleFunc2D.Eval(maxR, trQin);
+	//        if (MGNumc::Compare(MGRndm::DecimalUniform(), survivorProb) > 0) return -8001;
+	//        else EventList::Weight *= (1. / survivorProb);
+    //    }
+    //}
 	
     // ~8~ (Based on RTI)
-	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
-        if (!rti.processEvent(event)) return -8001;
+	//if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
+    //    if (!rti.processEvent(event)) return -8001;
 
-	    const double cfSF = 0.8;
-        double minStormer = *std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4);
-		double minIGRF    = *std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4);
-		double minCf      = cfSF * std::min(minStormer, minIGRF);
+	//    const double cfSF = 0.8;
+    //    double minStormer = *std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4);
+	//	double minIGRF    = *std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4);
+	//	double minCf      = cfSF * std::min(minStormer, minIGRF);
 
-        int fitidIn = trtkSIG->iTrTrackPar(1, 3, 21);
-        int fitidL1 = trtkSIG->iTrTrackPar(1, 5, 21);
-        int fitidL9 = trtkSIG->iTrTrackPar(1, 6, 21);
-        int fitidFs = trtkSIG->iTrTrackPar(1, 7, 21);
+    //    int fitidIn = trtkSIG->iTrTrackPar(1, 3, 21);
+    //    int fitidL1 = trtkSIG->iTrTrackPar(1, 5, 21);
+    //    int fitidL9 = trtkSIG->iTrTrackPar(1, 6, 21);
+    //    int fitidFs = trtkSIG->iTrTrackPar(1, 7, 21);
 
-        double maxR = 0.0;
-        if (fitidIn >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidIn)));
-        if (fitidL1 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL1)));
-        if (fitidL9 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL9)));
-        if (fitidFs >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidFs)));
-        if (maxR < cfSF) maxR = cfSF; // [GV]
-    
-		if (maxR < minCf) return -8002;
-    }
+    //    double maxR = 0.0;
+    //    if (fitidIn >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidIn)));
+    //    if (fitidL1 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL1)));
+    //    if (fitidL9 >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidL9)));
+    //    if (fitidFs >= 0) maxR = std::max(maxR, std::fabs(trtkSIG->GetRigidity(fitidFs)));
+    //    if (maxR < cfSF) maxR = cfSF; // [GV]
+    //
+	//	if (maxR < minCf) return -8002;
+    //}
 
     //--------------------------//
 	//----  Reconstruction  ----//

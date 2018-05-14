@@ -47,9 +47,6 @@
 #pragma link C++ class HCTrackInfo;
 #pragma link C++ class std::vector<HCTrackInfo>+;
 
-#pragma link C++ class VertexInfo;
-#pragma link C++ class std::vector<VertexInfo>+;
-
 #pragma link C++ class ShowerInfo;
 #pragma link C++ class std::vector<ShowerInfo>+;
 

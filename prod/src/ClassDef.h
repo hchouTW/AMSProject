@@ -298,7 +298,6 @@ class HitTRDInfo : public TObject {
 
 		void init() {
 			lay  = 0;
-			sub  = 0;
 			side = 0;
 			amp  = 0;
 			len  = 0;
@@ -307,13 +306,12 @@ class HitTRDInfo : public TObject {
 
 	public :
 		Short_t lay;    // layer
-		Short_t sub;    // ladder * 100 + tube
 		Short_t side;   // side, 1 x, 2 y, 3 xy
 		Float_t amp;    // (elc) amp
 		Float_t len;    // (elc) len
 		Float_t coo[3];
 
-	ClassDef(HitTRDInfo, 3)
+	ClassDef(HitTRDInfo, 4)
 };
 
 struct HitTRDInfo_sort {
@@ -321,12 +319,8 @@ struct HitTRDInfo_sort {
 		if      (hit1.lay < hit2.lay) return true;
 		else if (hit1.lay > hit2.lay) return false;
 		else {
-			if      (hit1.sub < hit2.sub) return true;
-			else if (hit1.sub > hit2.sub) return false;
-			else {
-				if      (hit1.amp < hit2.amp) return true;
-				else if (hit1.amp > hit2.amp) return false;
-			}
+			if      (hit1.amp < hit2.amp) return true;
+			else if (hit1.amp > hit2.amp) return false;
 		}
 		return false;
 	}
@@ -457,9 +451,7 @@ class TrackInfo : public TObject {
 			std::fill_n(status[0], naglo * 4, false);
 			std::fill_n(rig[0], naglo * 4, 0);
 			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
-			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 7, 0);
-			
-            std::fill_n(cpuTime[0], naglo * 4, -1);
+			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 8, 0);
 			
 			hits.clear();
 		}
@@ -488,10 +480,8 @@ class TrackInfo : public TObject {
 		Bool_t  status[2][4];
 		Float_t rig[2][4];
 		Float_t chisq[2][4][3]; // normalized chisq (X, Y, XY)
-		Float_t stateLJ[2][4][9][7]; // track state at each layer (x y z dirx diry dirz rig)
+		Float_t stateLJ[2][4][9][8]; // track state at each layer (x y z dirx diry dirz rig bta)
         
-        Float_t cpuTime[2][4]; // [ms]
-	
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
 
@@ -506,56 +496,55 @@ class HCTrackInfo : public TObject {
 		~HCTrackInfo() {}
 
 		void init() {
-            status = false;
+            going = 0;
             chrg = 0;
             mass = 0;
+            
+            status = false;
+            std::fill_n(state, 8, 0);
+            std::fill_n(error, 7, 0);
+
+            statusTop = false;
+            std::fill_n(stateTop, 8, 0);
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 8, 0);
+
             std::fill_n(statusLJ, 9, false);
             std::fill_n(stateLJ[0], 9*8, 0);
-            nchi = 0;
-            nchi_cx = 0;
-            nchi_cy = 0;
-            nrm_mstau = 0;
-            nrm_msrho = 0;
+           
+            std::fill_n(matSL[0], 3*2, 0);
+
+            std::fill_n(quality, 2, 0);
+
             cpuTime = 0;
         }
 	
     public :
-        Bool_t  status;
-
+        Short_t going; // 0, nothing   -1, down-going   1, up-going
         Short_t chrg;
         Float_t mass;
+        
+        Bool_t  status;
+        Float_t state[8]; // (cx cy cz ux uy uz rig bta)
+        Float_t error[7]; // (cx cy ux uy irig ibta mass)
+        
+        Bool_t  statusTop; // track at top of detector (z = 195.)
+        Float_t stateTop[8];
+        
+        Bool_t  statusBtm; // track at bottom of detector (z = -195.)
+        Float_t stateBtm[8];
+
         Bool_t  statusLJ[9];
-        Float_t stateLJ[9][8]; // track state at each layer (x y z dirx diry dirz irig bta)
+        Float_t stateLJ[9][8]; // track state at each layer
+       
+        Float_t matSL[3][2]; // L34 L56 L78 (nrl ela)
 
-        Float_t nchi;
-        Float_t nchi_cx;
-        Float_t nchi_cy;
-        Float_t nrm_mstau;
-        Float_t nrm_msrho;
-
+        Float_t quality[2];
+        
         Float_t cpuTime;
-};
-
-
-// VertexInfo
-class VertexInfo : public TObject {
-	public :
-		VertexInfo() { init(); }
-		~VertexInfo() {}
-
-		void init() {
-			std::fill_n(vtxZqu, 5, 0.0);
-			std::fill_n(vtxR, 8, 0.0);
-			vtxR[7] = -1.0;
-			trackID.clear();
-		}
-
-	public :
-		Float_t vtxZqu[5]; // vertex (coo, dx, dy) based on Zqu
-		Float_t vtxR[8]; // vertex (coo, dir, mom, chi/ndf) based on VertexR
-		std::vector<Int_t> trackID;
-	
-	ClassDef(VertexInfo, 2)
+		
+        ClassDef(HCTrackInfo, 1)
 };
 
 
@@ -941,12 +930,12 @@ class RICH : public TObject {
 			vetoDistToBorder = -1;
 			vetoIsInFiducialVolume = false;
 
-            std::fill_n(vetoNumOfExpPE, 3, 0);
-            
-            vetoNumOfCrsHit = 0;
-            std::fill_n(vetoNumOfCkvHit[0], 3*3, 0);
-            
-            hits.clear();
+            //std::fill_n(vetoNumOfExpPE, 3, 0);
+            //
+            //vetoNumOfCrsHit = 0;
+            //std::fill_n(vetoNumOfCkvHit[0], 3*3, 0);
+            //
+            //hits.clear();
 		}
 
 	public :
@@ -970,17 +959,17 @@ class RICH : public TObject {
 		Bool_t  vetoIsInFiducialVolume;
         
         // [0] electron [1] proton [2] deuterium
-		Float_t vetoNumOfExpPE[3];     // number of photoelectrons expected for a given track, beta and charge.
-        Short_t vetoNumOfCrsHit;       // Particle Cross PMT
-        Short_t vetoNumOfCkvHit[3][3]; // Photo
+		//Float_t vetoNumOfExpPE[3];     // number of photoelectrons expected for a given track, beta and charge.
+        //Short_t vetoNumOfCrsHit;       // Particle Cross PMT
+        //Short_t vetoNumOfCkvHit[3][3]; // Photo
                                        // [0] In  Ring
                                        // [1] Out Ring
                                        // [2] Non Physics
 
         // Rich Hits
-        std::vector<HitRICHInfo> hits;
+        //std::vector<HitRICHInfo> hits;
 	
-    ClassDef(RICH, 8)
+    ClassDef(RICH, 9)
 };
 
 

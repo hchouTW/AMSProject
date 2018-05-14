@@ -98,6 +98,8 @@ class RecEvent {
 		int iRichRing;
 
 	public :
+        static constexpr double TopZ =  195.;
+        static constexpr double BtmZ = -195.;
 		double trackerZJ[9];
 
         // Track Refit Option
@@ -106,6 +108,7 @@ class RecEvent {
         int    zin;
         double mass;
         double beta;
+        short  going; // (0, nothing   -1, down-going   1, up-going)
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;

@@ -273,9 +273,9 @@ class PhyTrFit : public TrFitPar {
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {
             if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
-            if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
-            Double_t chi   = nchi * static_cast<Double_t>(ndof);
+            Double_t chi = nchi * static_cast<Double_t>(ndof);
             if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+            if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
             Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
             Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
             Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);

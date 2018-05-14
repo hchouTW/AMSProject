@@ -333,8 +333,19 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
             var_[it][ipar] = var_ptr[it*MATGEOBOX_NPAR+ipar];
     }
     
-    // Release File
+    // Release Memory and File
+    if (munmap(fptr_inf, flen_inf) == -1) {
+        Sys::ShowWarningExit("MatGeoBoxReader::Load() : Error un-mmapping the file");
+        if (fdes_inf >= 0) close(fdes_inf);
+        return is_load_;
+    }
     if (fdes_inf >= 0) close(fdes_inf);
+    
+    if (munmap(fptr_var, flen_var) == -1) {
+        Sys::ShowWarningExit("MatGeoBoxReader::Load() : Error un-mmapping the file");
+        if (fdes_var >= 0) close(fdes_var);
+        return is_load_;
+    }
     if (fdes_var >= 0) close(fdes_var);
 
     is_load_ = true;

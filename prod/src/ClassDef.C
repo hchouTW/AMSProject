@@ -21,7 +21,7 @@ ClassImp(HitECALInfo)
 ClassImp(ClsACCInfo)
 
 ClassImp(TrackInfo)
-ClassImp(VertexInfo)
+ClassImp(HCTrackInfo)
 ClassImp(ShowerInfo)
 
 ClassImp(LIST)

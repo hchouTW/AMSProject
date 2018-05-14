@@ -143,7 +143,12 @@ Bool_t MagGeoBoxReader::load(const std::string& fpath) {
         mag_[it].at(2) = mag_ptr[it*DIM+2];
     }
 
-    // Release File
+    // Release Memory and File
+    if (munmap(fptr, flen) == -1) {
+        Sys::ShowWarningExit("MagGeoBoxReader::Load() : Error un-mmapping the file");
+        if (fdes >= 0) close(fdes);
+        return is_load_;
+    }
     if (fdes >= 0) close(fdes);
 
     is_load_ = true;
