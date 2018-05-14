@@ -480,14 +480,14 @@ bool EventRti::selectEvent(AMSEventR * event) {
 	// RTI cut
 	if (!EventBase::checkEventMode(EventBase::ISS)) return true;
 
-	if (!fRti.flagRun) return false;
-	if (!fRti.isGoodSecond) return false;
-	if (fRti.zenith > 40) return false;
-	if (fRti.isInSAA) return false;
-	if (fRti.liveTime < 0.5) return false;
-	if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
+	//if (!fRti.flagRun) return false;
+	//if (!fRti.isGoodSecond) return false;
+	//if (fRti.zenith > 40) return false;
+	//if (fRti.isInSAA) return false;
+	//if (fRti.liveTime < 0.5) return false;
+	//if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
 
-	if (fRti.isInShadow == 1) return false;
+	//if (fRti.isInShadow == 1) return false;
 
 	return true;
 }
@@ -1098,6 +1098,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 hcTrack.matSL[2][0] = matTrSL3.nrl();
                 hcTrack.matSL[2][1] = matTrSL3.ela();
 
+                hcTrack.ndof[0] = hctr.ndof(0);
+                hcTrack.ndof[1] = hctr.ndof(1);
+                hcTrack.nchi[0] = hctr.nchi(0);
+                hcTrack.nchi[1] = hctr.nchi(1);
                 hcTrack.quality[0] = hctr.quality(0);
                 hcTrack.quality[1] = hctr.quality(1);
 
@@ -1106,7 +1110,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 fTrk.hcTrack = hcTrack;
 
                 // testcode
-                // CERR("GOING %2d MASS %14.8f RIG %14.8f %14.8f Mat %14.8f %14.8f %14.8f\n", hcTrack.going, hcTrack.mass, hcTrack.stateTop[6], hcTrack.stateBtm[6], hcTrack.matSL[0][0], hcTrack.matSL[1][0], hcTrack.matSL[2][0]);
+                //CERR("GOING %2d MASS %14.8f RIG %14.8f %14.8f Mat %14.8f %14.8f %14.8f\n", hcTrack.going, hcTrack.mass, hcTrack.stateTop[6], hcTrack.stateBtm[6], hcTrack.matSL[0][0], hcTrack.matSL[1][0], hcTrack.matSL[2][0]);
+                //CERR("X %2d %14.8f %14.8f Y %d %14.8f %14.8f\n", hcTrack.ndof[0], hcTrack.nchi[0], hcTrack.quality[0], hcTrack.ndof[1], hcTrack.nchi[1], hcTrack.quality[1]);
             } // succ
         } // for loop --- patt
 	}
@@ -2094,8 +2099,8 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     //}
 	
     // ~8~ (Based on RTI)
-	//if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
-    //    if (!rti.processEvent(event)) return -8001;
+	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
+        if (!rti.processEvent(event)) return -8001;
 
 	//    const double cfSF = 0.8;
     //    double minStormer = *std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4);
@@ -2115,7 +2120,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     //    if (maxR < cfSF) maxR = cfSF; // [GV]
     //
 	//	if (maxR < minCf) return -8002;
-    //}
+    }
 
     //--------------------------//
 	//----  Reconstruction  ----//

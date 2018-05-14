@@ -515,6 +515,8 @@ class HCTrackInfo : public TObject {
            
             std::fill_n(matSL[0], 3*2, 0);
 
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
             std::fill_n(quality, 2, 0);
 
             cpuTime = 0;
@@ -540,6 +542,8 @@ class HCTrackInfo : public TObject {
        
         Float_t matSL[3][2]; // L34 L56 L78 (nrl ela)
 
+        Short_t ndof[2];
+        Float_t nchi[2];
         Float_t quality[2];
         
         Float_t cpuTime;

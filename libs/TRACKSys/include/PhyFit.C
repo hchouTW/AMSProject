@@ -550,13 +550,15 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
 
         TOFt_sft_ = rhs.TOFt_sft_;
       
+        ndof_    = rhs.ndof_;
+        nchi_    = rhs.nchi_;
         quality_ = rhs.quality_;
 
-        ndof_    = rhs.ndof_;
+        ndof_tt_ = rhs.ndof_tt_;
         ndof_cx_ = rhs.ndof_cx_;
         ndof_cy_ = rhs.ndof_cy_;
         ndof_ib_ = rhs.ndof_ib_;
-        nchi_    = rhs.nchi_;
+        nchi_tt_ = rhs.nchi_tt_;
         nchi_cx_ = rhs.nchi_cx_;
         nchi_cy_ = rhs.nchi_cy_;
         nchi_ib_ = rhs.nchi_ib_;
@@ -577,15 +579,19 @@ void PhyTrFit::clear() {
 
     TOFt_sft_ = 0;
 
+    ndof_.at(0) = 0;
+    ndof_.at(1) = 0;
+    nchi_.at(0) = 0;
+    nchi_.at(1) = 0;
     quality_.at(0) = 0;
     quality_.at(1) = 0;
 
-    ndof_    = 0;
+    ndof_tt_ = 0;
     ndof_cx_ = 0;
     ndof_cy_ = 0;
     ndof_ib_ = 0;
         
-    nchi_    = 0;
+    nchi_tt_ = 0;
     nchi_cx_ = 0;
     nchi_cy_ = 0;
     nchi_ib_ = 0;
@@ -601,14 +607,16 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
-    ndof_    = (ndof_cx_ + ndof_cy_ + ndof_ib_);
-    if (MuOpt::kFree == mu_opt_) { ndof_ib_ -= 1; ndof_ -= 1; }
+    ndof_tt_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
+    if (MuOpt::kFree == mu_opt_) { ndof_ib_ -= 1; ndof_tt_ -= 1; }
     if (ndof_cx_            <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
     if ((ndof_cy_+ndof_ib_) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
     if (MuOpt::kFree == mu_opt_) {
         if (ndof_cy_ <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
         if (ndof_ib_ <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
     }
+    ndof_.at(0) = ndof_cx_;
+    ndof_.at(1) = ndof_cy_ + ndof_ib_;
 
     // Fitting
     if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
@@ -945,8 +953,9 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         errs.at(it) = err;
     }
     
-    Double_t chi  = (chi_cx + chi_cy + chi_ib);
-    Double_t nchi = (chi / static_cast<Double_t>(ndof_));
+    Double_t chi       = (chi_cx + chi_cy + chi_ib);
+    Double_t nchi_tt   = (chi / static_cast<Double_t>(ndof_tt_));
+    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_.at(1))) : 0);
 
     for (auto&& stt : stts) stt.arg().clear();
     for (UInt_t it = 0; it < args_.size(); ++it) {
@@ -958,12 +967,12 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     nchi_cx_ = ((ndof_cx_ > 0) ? (chi_cx / static_cast<Double_t>(ndof_cx_)) : 0);
     nchi_cy_ = ((ndof_cy_ > 0) ? (chi_cy / static_cast<Double_t>(ndof_cy_)) : 0);
     nchi_ib_ = ((ndof_ib_ > 0) ? (chi_ib / static_cast<Double_t>(ndof_ib_)) : 0);
-    nchi_    = nchi;
-
-    Short_t  ndof_cyib = (ndof_cy_ + ndof_ib_);
-    Double_t nchi_cyib = ((ndof_cyib > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_cyib)) : 0);
-    quality_.at(0) = NormQuality(nchi_cx_ , ndof_cx_ );
-    quality_.at(1) = NormQuality(nchi_cyib, ndof_cyib);
+    nchi_tt_ = nchi_tt;
+    
+    nchi_.at(0) = nchi_cx_;
+    nchi_.at(1) = nchi_cyib;
+    quality_.at(0) = NormQuality(nchi_.at(0), ndof_.at(0));
+    quality_.at(1) = NormQuality(nchi_.at(1), ndof_.at(1));
 
     // Mu Error
     Double_t errMu = Numc::ZERO<>;

@@ -210,14 +210,14 @@ class PhyTrFit : public TrFitPar {
         inline const Bool_t& status() const { return succ_; }
         inline const PhySt&  part()   const { return part_; }
         
+        inline const Short_t&  ndof(Int_t it)    const { return ndof_.at(it); }
+        inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
         inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
 
-        inline const Short_t& ndof()    const { return ndof_; }
         inline const Short_t& ndof_cx() const { return ndof_cx_; }
         inline const Short_t& ndof_cy() const { return ndof_cy_; }
         inline const Short_t& ndof_ib() const { return ndof_ib_; }
         
-        inline const Double_t& nchi()    const { return nchi_; }
         inline const Double_t& nchi_cx() const { return nchi_cx_; }
         inline const Double_t& nchi_cy() const { return nchi_cy_; }
         inline const Double_t& nchi_ib() const { return nchi_ib_; }
@@ -246,14 +246,16 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhyArg> args_; 
         Double_t            TOFt_sft_; // TOF time shift [cm]
 
+        std::array<Short_t,  2> ndof_;
+        std::array<Double_t, 2> nchi_;
         std::array<Double_t, 2> quality_;
 
-        Short_t ndof_;
+        Short_t ndof_tt_; // (total)
         Short_t ndof_cx_; // (cx + mstau)
         Short_t ndof_cy_; // (cy + msrho)
         Short_t ndof_ib_; // (TRKq + TOFt + TOFq)
 
-        Double_t nchi_;
+        Double_t nchi_tt_;
         Double_t nchi_cx_;
         Double_t nchi_cy_;
         Double_t nchi_ib_;
