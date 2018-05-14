@@ -1042,9 +1042,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 hcTrack.error[1] = hctr.err_cy();
                 hcTrack.error[2] = hctr.err_ux();
                 hcTrack.error[3] = hctr.err_uy();
-                hcTrack.error[4] = hctr.err_eta() / TrackSys::PartInfo::ATOMIC_MASS;
+                hcTrack.error[4] = hctr.err_eta()  / TrackSys::PartInfo::ATOMIC_MASS;
                 hcTrack.error[5] = hctr.err_ibta();
-                hcTrack.error[6] = hctr.err_mu() * TrackSys::PartInfo::ATOMIC_MASS;
+                hcTrack.error[6] = hctr.err_mu()   * TrackSys::PartInfo::ATOMIC_MASS;
 
                 TrackSys::PhySt&& phyStTop = hctr.interpolate_to_z(RecEvent::TopZ);
                 if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {
