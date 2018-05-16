@@ -3,8 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18May16/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May17/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -59,7 +59,7 @@ int main(int argc, char * argv[]) {
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     //Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 20, 0.3, 3., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 20, 0.5, 3., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
@@ -78,6 +78,9 @@ int main(int argc, char * argv[]) {
     Hist* hRpos_qlty = Hist::New("hRpos_qlty", HistAxis(AXrig, AXRqlt));
     Hist* hRneg_qlty = Hist::New("hRneg_qlty", HistAxis(AXrig, AXRqlt));
     
+    Axis AXMres("res", 100, -5., 5.);
+    Hist* hMres = Hist::New("hMres", HistAxis(AXrig, AXMres));
+    
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -88,8 +91,9 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        TrackInfo&   track   = fTrk->track;
-        HCTrackInfo& hcTrack = fTrk->hcTrack;
+        TrackInfo&   track = fTrk->track;
+        HCTrackInfo& hcTr  = fTrk->hcTr;
+        HCTrackInfo& hcMu  = fTrk->hcMu;
     
         // Reweight (MC)
         Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom, -1.7));
@@ -124,20 +128,25 @@ int main(int argc, char * argv[]) {
 */
         Bool_t ck_succ = track.status[0][0];
         Bool_t kf_succ = track.status[1][0];
-        Bool_t hc_succ = hcTrack.status;
+        Bool_t hc_succ = hcTr.status && hcMu.status;
+
+        Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[6]) : fG4mc->primPart.mom);
+        Short_t sign = (hcTr.stateTop[6] > 0) ? 1 : -1;
         
         if (ck_succ) hCKnum->fillH1D(track.rig[0][0], wgt);
-        if (kf_succ) hKFnum->fillH1D(track.rig[1][0], wgt);
-        if (hc_succ) hHCnum->fillH1D(hcTrack.stateTop[6], wgt);
+        if (kf_succ) hKFnum->fillH1D(track.rigKF[0][0], wgt);
+        if (hc_succ) hHCnum->fillH1D(hcTr.stateTop[6], wgt);
 
-        if (hc_succ) hRqltx->fillH2D(hcTrack.stateTop[6], hcTrack.quality[0], wgt);
-        if (hc_succ) hRqlty->fillH2D(hcTrack.stateTop[6], hcTrack.quality[1], wgt);
+        if (hc_succ) hRqltx->fillH2D(mom, hcTr.quality[0], wgt);
+        if (hc_succ) hRqlty->fillH2D(mom, hcTr.quality[1], wgt);
 
-        if (hc_succ && hcTrack.stateTop[6] > 0) hMpos->fillH2D(std::fabs(hcTrack.stateTop[6]), hcTrack.mass, wgt);
-        if (hc_succ && hcTrack.stateTop[6] < 0) hMneg->fillH2D(std::fabs(hcTrack.stateTop[6]), hcTrack.mass, wgt);
+        if (hc_succ && sign > 0) hMpos->fillH2D(mom, hcTr.mass, wgt);
+        if (hc_succ && sign < 0) hMneg->fillH2D(mom, hcTr.mass, wgt);
         
-        if (hc_succ && hcTrack.stateTop[6] > 0) hRpos_qlty->fillH2D(std::fabs(hcTrack.stateTop[6]), hcTrack.quality[1], wgt);
-        if (hc_succ && hcTrack.stateTop[6] < 0) hRneg_qlty->fillH2D(std::fabs(hcTrack.stateTop[6]), hcTrack.quality[1], wgt);
+        if (hc_succ && sign > 0) hRpos_qlty->fillH2D(mom, hcTr.quality[1], wgt);
+        if (hc_succ && sign < 0) hRneg_qlty->fillH2D(mom, hcTr.quality[1], wgt);
+        
+        if (hc_succ) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]));
     }
     
     ofle->Write();

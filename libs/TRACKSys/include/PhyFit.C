@@ -659,7 +659,6 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     if (is_fluc_eta) {
         const Int_t niter = 10; Int_t iter = 0;
         do {
-            //Double_t rndm = Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
             Double_t rndm = Rndm::NormalGaussian();
             eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
@@ -672,7 +671,6 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     if (is_fluc_ibta) {
         const Int_t niter = 10; Int_t iter = 0;
         do {
-            //Double_t rndm = Numc::HALF * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
             Double_t rndm = Rndm::NormalGaussian();
             ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * rndm);
             iter++;
@@ -785,17 +783,23 @@ Bool_t PhyTrFit::physicalMassFit() {
     }
     if (!condElem.succ) return false;
 
+    const std::array<Double_t, 3> fact({ Numc::HALF, (Numc::ONE<> / Numc::FIVE<>), (Numc::ONE<> / Numc::TEN<>) });
+
     args_.clear();
     TOFt_sft_ = Numc::ZERO<>;
     info_ = condElem.part.info();
     part_ = condElem.part;
-    if (!physicalFit(MuOpt::kFree, condElem.fluc_eta, condElem.fluc_ibta)) return false;
-    
-    args_.clear();
-    TOFt_sft_ = Numc::ZERO<>;
     if (!physicalFit(MuOpt::kFree, 
-                     (Numc::HALF * Numc::HALF) * std::fabs(err_.at(4) / part_.eta()), 
-                     (Numc::HALF * Numc::HALF) * (err_.at(5) / part_.ibta()))) return false;
+                     fact.at(0) * condElem.fluc_eta, 
+                     fact.at(0) * condElem.fluc_ibta)) return false;
+   
+    for (Int_t iter = 1; iter < fact.size(); ++iter) {
+        args_.clear();
+        TOFt_sft_ = Numc::ZERO<>;
+        if (!physicalFit(MuOpt::kFree, 
+                         fact.at(iter) * std::fabs(err_.at(4) / part_.eta()), 
+                         fact.at(iter) * (err_.at(5) / part_.ibta()))) return false;
+    }
 
     return true;
 }
@@ -1007,10 +1011,10 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     // Mu Error
     Double_t errMu = Numc::ZERO<>;
     if (is_mu_free) {
-        Double_t gmcrr = (part_.gm() * part_.ibta());
+        Double_t gmsqr = (part_.gm() * part_.gm());
         Double_t reEta = std::fabs(errs.at(4) / part_.eta());
-        Double_t reIb  = (errs.at(parIDib) / part_.ibta());
-        Double_t reMu  = std::sqrt((reEta * reEta) + (gmcrr * reIb) * (gmcrr * reIb));
+        Double_t reIb  = gmsqr * (errs.at(parIDib) / part_.ibta());
+        Double_t reMu  = std::sqrt((reEta * reEta) + (reIb * reIb));
         errMu = reMu * part_.mu();
         if (!Numc::Valid(errMu) || Numc::Compare(errMu) < 0) errMu = Numc::ZERO<>;
     }
