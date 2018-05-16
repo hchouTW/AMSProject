@@ -5,32 +5,27 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
-Version=test
-RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+Version=vdev
+RunFile=${AMSCore}/subj/adSearch/${Version}/fill
 
 CurDir=${PWD}
 
-DataType=MC
-#Stream=/ams_home/hchou/tmp/flist.pr
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May15
+DataType=ISS
+Stream=${CurDir}/lst/flist.ncu.iss.pass7.mfixed_B1130_18May15
 
 OutputDir=${CurDir}/dat
 
-#Hit
-GroupSize=20
-Nseq=70
+GroupSize=4
+Nseq=50
 #Fit
 #GroupSize=3
 #Nseq=450
 #GroupSize=10
 #Nseq=150
 
-#for id in `seq 1 100`
 for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
 ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
-#${RunFile} ${id} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
 done

@@ -28,9 +28,8 @@ class TrFitPar {
         inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit); zero(); }
         inline void add_hit(const HitStRICH& hit) { hits_RICH_.push_back(hit); zero(); }
         
-        inline void add_hit(const std::vector<HitStTRK>&  hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
-        inline void add_hit(const std::vector<HitStTOF>&  hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
-        inline void add_hit(const std::vector<HitStRICH>& hits) { hits_RICH_.insert(hits_RICH_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
        
         inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
@@ -234,7 +233,7 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_ibta = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_ibta = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>, Bool_t with_mu_est = true);
         Bool_t physicalMassFit();
 
         Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);

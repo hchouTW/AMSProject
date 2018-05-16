@@ -424,6 +424,7 @@ Bool_t SimpleTrFit::simpleFit() {
             if (hitTRK != nullptr) {
                 SVecD<2> rsTRK;
                 SVecD<2> jbTRK;
+
                 if (hitTRK->sqx()) rsTRK(0) += hitTRK->nrmqx();
                 if (hitTRK->sqy()) rsTRK(1) += hitTRK->nrmqy();
                     
@@ -440,6 +441,7 @@ Bool_t SimpleTrFit::simpleFit() {
             if (hitTOF != nullptr) {
                 SVecD<2> rsTOF;
                 SVecD<2> jbTOF;
+
                 if (hitTOF->st()) rsTOF(0) += hitTOF->nrmt();
                 if (hitTOF->sq()) rsTOF(1) += hitTOF->nrmq();
                 
@@ -450,6 +452,20 @@ Bool_t SimpleTrFit::simpleFit() {
                 cvGG(4, 4) += (jbTOF(0) * jbTOF(0) + jbTOF(1) * jbTOF(1));
                 if (hitTOF->st()) chi_ib += rsTOF(0) * rsTOF(0);
                 if (hitTOF->sq()) chi_ib += rsTOF(1) * rsTOF(1);
+            }
+            
+            HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
+            if (hitRICH != nullptr) {
+                Double_t rsRICH = Numc::ZERO<>;
+                Double_t jbRICH = Numc::ZERO<>;
+
+                if (hitRICH->sib()) rsRICH += hitRICH->nrmib();
+                if (hitRICH->sib()) jbRICH += hitRICH->divib_eta() * ppjb(4, 4);
+
+                grdG(4)    += (jbRICH * rsRICH);
+                cvGG(4, 4) += (jbRICH * jbRICH);
+
+                if (hitRICH->sib()) chi_ib += rsRICH * rsRICH;
             }
 
             cnt_nhit++;
@@ -563,7 +579,7 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         nchi_cy_ = rhs.nchi_cy_;
         nchi_ib_ = rhs.nchi_ib_;
 
-        err_   = rhs.err_;
+        err_ = rhs.err_;
     }
     return *this;
 }
@@ -634,7 +650,7 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_ibta) {
+Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_ibta, Bool_t with_mu_est) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
 
@@ -724,7 +740,11 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     else TOFt_sft_ = Numc::ZERO<>;
 
     //std::cerr << summary.FullReport() << std::endl;
+    Bool_t   rw_err_mu = (MuOpt::kFixed == mu_opt && with_mu_est && evolve(MuOpt::kFree) && Numc::Valid(err_.at(6)) && Numc::Compare(err_.at(6)) > 0);
+    Double_t err_mu    = (rw_err_mu ? err_.at(6) : Numc::ZERO<>);
+    
     Bool_t succ = evolve(mu_opt);
+    if (rw_err_mu) err_.at(6) = err_mu;
     return succ;
 }
 
@@ -753,7 +773,7 @@ Bool_t PhyTrFit::physicalMassFit() {
         args_.clear();
         info_.reset(chrg, mass);
         TOFt_sft_ = Numc::ZERO<>;
-        if (!(simpleFit() ? physicalFit(MuOpt::kFixed) : false)) continue;
+        if (!(simpleFit() ? physicalFit(MuOpt::kFixed, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
         
         if (!evolve(MuOpt::kFree)) continue;
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
@@ -932,6 +952,16 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             if (hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divt_sft(); // TOF time shift
         }
         
+        // RICH
+        HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
+        if (hitRICH != nullptr) {
+            if (hitRICH->sib()) chi_ib += hitRICH->nrmib() * hitRICH->nrmib();
+            if (hitRICH->sib()) {
+                if (is_mu_free) jb(hitRICH->seqIDib(), parIDib) += hitRICH->divib_ib()  * jbBB;
+                else            jb(hitRICH->seqIDib(),       4) += hitRICH->divib_eta() * jbGG(4, 4);
+            }
+        }
+        
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
@@ -977,12 +1007,12 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     // Mu Error
     Double_t errMu = Numc::ZERO<>;
     if (is_mu_free) {
-        Double_t gmsqr = part_.gm() * part_.gm();
+        Double_t gmcrr = (part_.gm() * part_.ibta());
         Double_t reEta = std::fabs(errs.at(4) / part_.eta());
         Double_t reIb  = (errs.at(parIDib) / part_.ibta());
-        Double_t reMu  = std::sqrt(reEta * reEta + (gmsqr * reIb) * (gmsqr * reIb));
+        Double_t reMu  = std::sqrt((reEta * reEta) + (gmcrr * reIb) * (gmcrr * reIb));
         errMu = reMu * part_.mu();
-        if (!Numc::Valid(errMu)) errMu = Numc::ZERO<>;
+        if (!Numc::Valid(errMu) || Numc::Compare(errMu) < 0) errMu = Numc::ZERO<>;
     }
 
     err_.fill(Numc::ZERO<>);
@@ -997,7 +1027,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     stts_ = stts;
     info_ = part_.info();
  
-    //CERR("MASS %14.8f BTA %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.bta(), part_.rig(), quality_.at(0), quality_.at(1));
+    //CERR("MASS %14.8f ERR %14.8f %14.8f %14.8f\n", part_.mass(), err_.at(4), err_.at(5), err_.at(6));
     return true;
 }
 
@@ -1159,6 +1189,16 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                 else             jb(hitTOF->seqIDq(),        4) += hitTOF->divq_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft_) += hitTOF->divt_sft(); // TOF time shift
+        }
+        
+        // RICH
+        HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
+        if (hitRICH != nullptr) {
+            if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
+            if (hasJacb && hitRICH->sib()) {
+                if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_ib()  * jbBB;
+                else             jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);
+            } // hasJacb
         }
 
         if (hasCxy) {

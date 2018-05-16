@@ -62,7 +62,7 @@ class SegPARTMCInfo : public TObject {
 		}
 
 	public :
-        Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL
+        Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL  [4] RICH
         Short_t lay;
 		Float_t bta;
 		Float_t mom;
@@ -450,8 +450,10 @@ class TrackInfo : public TObject {
             constexpr int naglo = 2;
 			std::fill_n(status[0], naglo * 4, false);
 			std::fill_n(rig[0], naglo * 4, 0);
-			std::fill_n(chisq[0][0], naglo * 4 * 3, -1);
+			std::fill_n(chisq[0][0], naglo * 4 * 2, -1);
 			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 8, 0);
+			
+            std::fill_n(rigKF[0], 4 * 4, 0);
 			
 			hits.clear();
 		}
@@ -479,8 +481,10 @@ class TrackInfo : public TObject {
 		// Track Pattern (Inn, InnL1, InnL9, FS)
 		Bool_t  status[2][4];
 		Float_t rig[2][4];
-		Float_t chisq[2][4][3]; // normalized chisq (X, Y, XY)
-		Float_t stateLJ[2][4][9][8]; // track state at each layer (x y z dirx diry dirz rig bta)
+		Float_t chisq[2][4][2]; // normalized chisq (X, Y)
+		Float_t stateLJ[2][4][9][8]; // track state at each layer (cx cy cz ux uy uz rig bta)
+		
+        Float_t rigKF[4][4]; // Z = (195, 0, -70, -136)
         
 		// Track Hits
 		std::vector<HitTRKInfo> hits;
@@ -496,6 +500,8 @@ class HCTrackInfo : public TObject {
 		~HCTrackInfo() {}
 
 		void init() {
+            algo = 0;
+
             going = 0;
             chrg = 0;
             mass = 0;
@@ -512,8 +518,11 @@ class HCTrackInfo : public TObject {
 
             std::fill_n(statusLJ, 9, false);
             std::fill_n(stateLJ[0], 9*8, 0);
+            
+            statusRich = false;
+            std::fill_n(stateRich, 8, 0);
            
-            std::fill_n(matSL[0], 3*2, 0);
+            std::fill_n(matSL[0], 4*2, 0);
 
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
@@ -523,6 +532,8 @@ class HCTrackInfo : public TObject {
         }
 	
     public :
+        Short_t algo; // 0, no  1, mass fixed  2, mass free
+
         Short_t going; // 0, nothing   -1, down-going   1, up-going
         Short_t chrg;
         Float_t mass;
@@ -539,8 +550,11 @@ class HCTrackInfo : public TObject {
 
         Bool_t  statusLJ[9];
         Float_t stateLJ[9][8]; // track state at each layer
+        
+        Bool_t  statusRich; // track at rich detector
+        Float_t stateRich[8];
        
-        Float_t matSL[3][2]; // L34 L56 L78 (nrl ela)
+        Float_t matSL[4][2]; // L34 L56 L78 RICH (nrl ela)
 
         Short_t ndof[2];
         Float_t nchi[2];
@@ -548,7 +562,7 @@ class HCTrackInfo : public TObject {
         
         Float_t cpuTime;
 		
-        ClassDef(HCTrackInfo, 1)
+        ClassDef(HCTrackInfo, 2)
 };
 
 
@@ -810,7 +824,8 @@ class TRK : public TObject {
             numOfTrack = 0;
 
 			track.init();
-            hcTrack.init();
+            hcTr.init();
+            hcMu.init();
 
             ftL56Dist = -1;
             survHeL56Prob = -1;
@@ -828,7 +843,8 @@ class TRK : public TObject {
 		TrackInfo track;
 
         // Hsin-Yi tools
-        HCTrackInfo hcTrack;
+        HCTrackInfo hcTr;
+        HCTrackInfo hcMu;
 
         // Haino's tools
         Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
@@ -923,6 +939,7 @@ class RICH : public TObject {
 			isGood = false;
             kind = -1;
             tile = -1;
+            refz =  0;
 			beta = -1;
 			Q = -1;
             numOfExpPE = -1;
@@ -950,6 +967,7 @@ class RICH : public TObject {
 		Bool_t  isGood;
         Short_t kind;
         Short_t tile;
+        Float_t refz;
 		Float_t beta;
 		Float_t Q;
         Float_t numOfExpPE;

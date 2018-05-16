@@ -3,7 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -18,6 +19,7 @@ int main(int argc, char * argv[]) {
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
 
     MGConfig::JobOpt opt(argc, argv);
+    PhyArg::SetOpt(true, true);
 
     TChain * dst = new TChain("data");
     for (auto&& file : opt.flist()) dst->Add(file.c_str());
@@ -43,8 +45,8 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
-    //dst->SetBranchAddress("rich", &fRich);
-    //dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("rich", &fRich);
+    dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -95,6 +97,12 @@ int main(int argc, char * argv[]) {
 */
     Axis AXTFtme("TFtme", 800, -20, 20);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
+    
+    Axis AXAGLib("AGLib", 800, -0.005, 0.005);
+    Hist* hAGLib = Hist::New("hAGLib", HistAxis(AXeta, AXAGLib));
+    
+    Axis AXNAFib("NAFib", 800, -0.015, 0.015);
+    Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXeta, AXNAFib));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -225,6 +233,16 @@ int main(int argc, char * argv[]) {
             Double_t dlt = mes - tme;
             hTFtme->fillH2D(mass/(mcsTOF[sl*2+0]->mom + mcsTOF[sl*2+1]->mom), dlt);
             //CERR("TME %14.8f MES %14.8f DLT %14.8f\n", tme, mes, dlt);
+        }
+
+        if (mcsTOF[3] != nullptr && fRich->status && fRich->isGood) {
+            PhySt st(PartType::Proton);
+            st.set_state_with_cos(mcsTOF[3]->coo[0], mcsTOF[3]->coo[1], mcsTOF[3]->coo[2], mcsTOF[3]->dir[0], mcsTOF[3]->dir[1], mcsTOF[3]->dir[2]);
+            st.set_mom(mcsTOF[3]->mom);
+            TrackSys::PropMgnt::PropToZ(-75.0, st);
+            Double_t dlt  = (1.0/fRich->beta - 1.0/st.bta());
+            if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
+            if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);
         }
     }
 

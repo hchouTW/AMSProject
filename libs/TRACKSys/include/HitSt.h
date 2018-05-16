@@ -294,7 +294,7 @@ class HitStRICH : public VirtualHitSt {
 
         inline const Double_t& nrmib() const { return nrmib_; }
         inline const Double_t& divib_eta() const { return divib_[0]; }
-        inline const Double_t& divib_nu()  const { return divib_[1]; }
+        inline const Double_t& divib_ib()  const { return divib_[1]; }
         
     protected :
         void clear();

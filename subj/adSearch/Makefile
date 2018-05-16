@@ -1,0 +1,44 @@
+-include $(AMSMKfile)
+
+# Test Ceres Solver
+LIBP += -lgflags -lglog -lceres
+
+TagetDir = $(AMSCoreSubj)/adSearch/vdev
+
+Version=18May15
+#Version=18May16
+ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
+#ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
+
+all :
+	@mkdir -p $(TagetDir)
+	@mkdir -p $(TagetDir)/env
+	@mkdir -p $(TagetDir)/obj
+	@mkdir -p $(TagetDir)/src
+	@mkdir -p $(TagetDir)/lst
+	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
+	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(PWD)/src/fill.C $(TagetDir)/src/fill.C 2> /dev/null
+	make $(TagetDir)/fill
+
+$(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/fill.d
+
+$(TagetDir)/fill : $(TagetDir)/obj/fill.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+#$(TagetDir)/obj/track_fit.o : $(TagetDir)/src/track_fit.C
+#	$(CXX) -c -o $@ $(FLGS) $< -MMD
+#-include $(TagetDir)/obj/track_fit.d
+#
+#$(TagetDir)/track_fit : $(TagetDir)/obj/track_fit.o
+#	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+
+clean :
+	@rm -fv $(TagetDir)/env/*
+	@rm -fv $(TagetDir)/obj/*
+	@rm -fv $(TagetDir)/src/*
+	@rm -fv $(TagetDir)/lst/*
+	@rm -fv $(TagetDir)/fill

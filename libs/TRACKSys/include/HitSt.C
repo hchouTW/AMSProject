@@ -399,13 +399,15 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    MultiGaus::Opt::NOROBUST,
-    0.001 // TWO Time Fluc
+    MultiGaus::Opt::ROBUST,
+    4.50204264345890337e-01, 9.12779e-04,
+    5.49795735654109663e-01, 1.51231e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    MultiGaus::Opt::NOROBUST,
-    0.001 // TWO Time Fluc
+    MultiGaus::Opt::ROBUST,
+    9.28354466225493113e-01, 3.24032e-03,
+    7.16455337745068865e-02, 6.91529e-03
 );
 
 

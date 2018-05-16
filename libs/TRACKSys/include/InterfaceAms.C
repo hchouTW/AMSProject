@@ -130,7 +130,7 @@ static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasQ) {
 static HitStRICH GetHitStRICH(RichRingR& rich) {
     HitStRICH::Radiator radiator = (rich.IsNaF() ? HitStRICH::Radiator::NAF : HitStRICH::Radiator::AGL);
     Double_t ibta = ((Numc::Compare(rich.getBeta()) > 0) ? (Numc::ONE<> / rich.getBeta()) : Numc::ZERO<>);
-    SVecD<3> coo (rich.getTrackEmissionPoint()[0], rich.getTrackEmissionPoint()[1], rich.getTrackEmissionPoint()[2]);
+    SVecD<3> coo(rich.AMSTrPars[0], rich.AMSTrPars[1], rich.AMSTrPars[2]);
 
     HitStRICH hit(radiator);
     hit.set_coo(coo(0), coo(1), coo(2));
