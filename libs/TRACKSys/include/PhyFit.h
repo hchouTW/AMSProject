@@ -228,6 +228,9 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& err_eta()  const { return err_[4]; }
         inline const Double_t& err_ibta() const { return err_[5]; }
         inline const Double_t& err_mu()   const { return err_[6]; }
+        
+        inline const Double_t err_irig() const { return (err_[4] / PartInfo::ATOMIC_MASS); }
+        inline const Double_t err_mass() const { return (err_[6] * PartInfo::ATOMIC_MASS); }
 
     protected :
         void clear();

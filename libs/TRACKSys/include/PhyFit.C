@@ -783,7 +783,8 @@ Bool_t PhyTrFit::physicalMassFit() {
     }
     if (!condElem.succ) return false;
 
-    const std::array<Double_t, 3> fact({ Numc::HALF, (Numc::ONE<> / Numc::FIVE<>), (Numc::ONE<> / Numc::TEN<>) });
+    //const std::array<Double_t, 3> fact({ Numc::HALF, (Numc::ONE<> / Numc::FIVE<>), (Numc::ONE<> / Numc::TEN<>) }); // org, OK version
+    const std::array<Double_t, 2> fact({ (Numc::ONE<> / Numc::THREE<>), (Numc::ONE<> / Numc::TEN<>) });
 
     args_.clear();
     TOFt_sft_ = Numc::ZERO<>;

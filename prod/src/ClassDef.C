@@ -20,7 +20,8 @@ ClassImp(HitRICHInfo)
 ClassImp(HitECALInfo)
 ClassImp(ClsACCInfo)
 
-ClassImp(TrackInfo)
+ClassImp(CKTrackInfo)
+ClassImp(KFTrackInfo)
 ClassImp(HCTrackInfo)
 ClassImp(ShowerInfo)
 

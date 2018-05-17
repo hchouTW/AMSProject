@@ -175,7 +175,7 @@ class PartMCInfo : public TObject {
 			partID = 0;
 			chrg   = 0;
 			mass   = 0;
-            beta   = 0;
+            bta    = 0;
 			mom    = 0;
 			ke     = 0;
 			std::fill_n(coo, 3, 0);
@@ -188,7 +188,7 @@ class PartMCInfo : public TObject {
 		Short_t partID;
 		Float_t chrg;
 		Float_t mass;
-        Float_t beta;
+        Float_t bta;
 		Float_t mom;
 		Float_t ke;    // kinetic energy
 		Float_t coo[3];
@@ -431,65 +431,93 @@ struct ClsACCInfo_sort {
 };
 
 
-// TrackInfo
-class TrackInfo : public TObject {
+// CKTrackInfo
+class CKTrackInfo : public TObject {
 	public :
-		TrackInfo() { init(); }
-		~TrackInfo() {}
+		CKTrackInfo() { init(); }
+		~CKTrackInfo() {}
 
 		void init() {
-			bitPattJ = 0;
-			bitPattXYJ = 0;
-			bitPatt = 0;
-			bitPattXY = 0;
-			QIn = -1;
-			QL2 = -1;
-			QL1 = -1;
-			QL9 = -1;
-		
-            constexpr int naglo = 2;
-			std::fill_n(status[0], naglo * 4, false);
-			std::fill_n(rig[0], naglo * 4, 0);
-			std::fill_n(chisq[0][0], naglo * 4 * 2, -1);
-			std::fill_n(stateLJ[0][0][0], naglo * 4 * 9 * 8, 0);
-			
-            std::fill_n(rigKF[0], 4 * 4, 0);
-			
-			hits.clear();
-		}
+            status = false;
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
+            
+            rig = 0;
+            bta = 0;
 
-	public :
-		UShort_t bitPattJ;
-		UShort_t bitPattXYJ;
-		
-		// bitPatt   := hasInner   * 1 + hasL2   * 2 + hasL1   * 4 + hasL9   * 8
-		// bitPattXY := hasInnerXY * 1 + hasL2XY * 2 + hasL1XY * 4 + hasL9XY * 8
-		// Inner    (XY) := ((bitPattXY&  1)==  1)
-		// InnerL1  (XY) := ((bitPattXY&  5)==  5)
-		// InnerL9  (XY) := ((bitPattXY&  9)==  9)
-		// FullSpan (XY) := ((bitPattXY& 13)== 13)
-		Short_t bitPatt;
-		Short_t bitPattXY;
+            statusTop = false;
+            std::fill_n(stateTop, 6, 0);
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 6, 0);
+            
+            std::fill_n(statusLJ, 6, false);
+            std::fill_n(stateLJ[0], 6*6, 0);
+        }
 
-		// Track Charge
-		Float_t QIn;
-		Float_t QL1;
-		Float_t QL2;
-		Float_t QL9;
-
-		// Algorithm     (CHOUTKO, KALMAN)
-		// Track Pattern (Inn, InnL1, InnL9, FS)
-		Bool_t  status[2][4];
-		Float_t rig[2][4];
-		Float_t chisq[2][4][2]; // normalized chisq (X, Y)
-		Float_t stateLJ[2][4][9][8]; // track state at each layer (cx cy cz ux uy uz rig bta)
-		
-        Float_t rigKF[4][4]; // Z = (195, 0, -70, -136)
+    public :
+        Bool_t  status;
+        Short_t ndof[2];
+		Float_t nchi[2];
         
-		// Track Hits
-		std::vector<HitTRKInfo> hits;
+        Float_t rig;
+        Float_t bta;
+        
+        Bool_t  statusTop;
+        Float_t stateTop[6]; // (cx cy cz ux uy uz)
+        
+        Bool_t  statusBtm;
+        Float_t stateBtm[6]; // (cx cy cz ux uy uz)
 
-	ClassDef(TrackInfo, 9)
+        Bool_t  statusLJ[6];
+        Float_t stateLJ[6][6]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+	
+    ClassDef(CKTrackInfo, 1)
+};
+
+
+// KFTrackInfo
+class KFTrackInfo : public TObject {
+	public :
+		KFTrackInfo() { init(); }
+		~KFTrackInfo() {}
+
+		void init() {
+            status = false;
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
+            
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
+
+            statusTop = false;
+            std::fill_n(stateTop, 8, 0);
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 8, 0);
+            
+            std::fill_n(statusLJ, 6, false);
+            std::fill_n(stateLJ[0], 6*8, 0);
+        }
+
+    public :
+        Bool_t  status;
+        Short_t ndof[2];
+		Float_t nchi[2];
+       
+        Float_t rig[4]; // z = 195, 0, -70, -136
+        Float_t bta[4]; // z = 195, 0, -70, -136
+
+        Bool_t  statusTop;
+        Float_t stateTop[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Bool_t  statusBtm;
+        Float_t stateBtm[8]; // (cx cy cz ux uy uz rig bta)
+
+        Bool_t  statusLJ[6];
+        Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+	
+    ClassDef(KFTrackInfo, 1)
 };
 
 
@@ -500,13 +528,15 @@ class HCTrackInfo : public TObject {
 		~HCTrackInfo() {}
 
 		void init() {
-            algo = 0;
-
+            status = false;
             going = 0;
             chrg = 0;
             mass = 0;
             
-            status = false;
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
+            std::fill_n(quality, 2, 0);
+            
             std::fill_n(state, 8, 0);
             std::fill_n(error, 7, 0);
 
@@ -516,29 +546,26 @@ class HCTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
 
-            std::fill_n(statusLJ, 9, false);
-            std::fill_n(stateLJ[0], 9*8, 0);
-            
-            statusRich = false;
-            std::fill_n(stateRich, 8, 0);
+            std::fill_n(statusLJ, 6, false);
+            std::fill_n(stateLJ[0], 6*8, 0);
            
-            std::fill_n(matSL[0], 4*2, 0);
-
-            std::fill_n(ndof, 2, 0);
-            std::fill_n(nchi, 2, 0);
-            std::fill_n(quality, 2, 0);
-
-            cpuTime = 0;
+            std::fill_n(len, 6, 0);
+            std::fill_n(nrl, 6, 0);
+            std::fill_n(ela, 6, 0);
+            
+            std::fill_n(distToFeet, 3, -1);
         }
 	
     public :
-        Short_t algo; // 0, no  1, mass fixed  2, mass free
-
-        Short_t going; // 0, nothing   -1, down-going   1, up-going
+        Bool_t  status;
+        Short_t going; // 0, no  1, up-going  -1, down-going
         Short_t chrg;
         Float_t mass;
         
-        Bool_t  status;
+        Short_t ndof[2];
+        Float_t nchi[2];
+        Float_t quality[2];
+        
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         Float_t error[7]; // (cx cy ux uy irig ibta mass)
         
@@ -548,21 +575,16 @@ class HCTrackInfo : public TObject {
         Bool_t  statusBtm; // track at bottom of detector (z = -195.)
         Float_t stateBtm[8];
 
-        Bool_t  statusLJ[9];
-        Float_t stateLJ[9][8]; // track state at each layer
-        
-        Bool_t  statusRich; // track at rich detector
-        Float_t stateRich[8];
-       
-        Float_t matSL[4][2]; // L34 L56 L78 RICH (nrl ela)
+        Bool_t  statusLJ[6];
+        Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
 
-        Short_t ndof[2];
-        Float_t nchi[2];
-        Float_t quality[2];
-        
-        Float_t cpuTime;
-		
-        ClassDef(HCTrackInfo, 2)
+        Float_t len[6]; // path length in material space
+        Float_t nrl[6]; // L12 L34 L56 L78 L89 RICH
+        Float_t ela[6]; // L12 L34 L56 L78 L89 RICH
+	
+        Float_t distToFeet[3]; // L34 L56 L78
+
+        ClassDef(HCTrackInfo, 3)
 };
 
 
@@ -822,8 +844,21 @@ class TRK : public TObject {
 
 		void init() {
             numOfTrack = 0;
+			
+            status = false;
+            bitPatt = 0;
+			bitPattXY = 0;
+			
+            QIn = -1;
+			QL2 = -1;
+			QL1 = -1;
+			QL9 = -1;
 
-			track.init();
+            hits.clear();
+
+            for (Int_t it = 0; it < 4; ++it) ckTr[it].init();
+            for (Int_t it = 0; it < 4; ++it) kfTr[it].init();
+
             hcTr.init();
             hcMu.init();
 
@@ -840,9 +875,32 @@ class TRK : public TObject {
 	public :
         Short_t numOfTrack;
 
-		TrackInfo track;
+		// bitPatt   := hasInner   * 1 + hasL2   * 2 + hasL1   * 4 + hasL9   * 8
+		// bitPattXY := hasInnerXY * 1 + hasL2XY * 2 + hasL1XY * 4 + hasL9XY * 8
+		// Inner    (XY) := ((bitPattXY&  1)==  1)
+		// InnerL1  (XY) := ((bitPattXY&  5)==  5)
+		// InnerL9  (XY) := ((bitPattXY&  9)==  9)
+		// FullSpan (XY) := ((bitPattXY& 13)== 13)
+        Bool_t   status;
+		Short_t  bitPatt;
+		Short_t  bitPattXY;
 
-        // Hsin-Yi tools
+		// Track Charge
+		Float_t QIn;
+		Float_t QL1;
+		Float_t QL2;
+		Float_t QL9;
+		
+        // Track Hits
+        std::vector<HitTRKInfo> hits;
+
+        // Choutko [Inn InnL1 InnL9 FS]
+        CKTrackInfo ckTr[4];
+
+        // Choutko [Inn InnL1 InnL9 FS]
+        KFTrackInfo kfTr[4];
+
+        // Hsin-Yi tools [Inn]
         HCTrackInfo hcTr;
         HCTrackInfo hcMu;
 

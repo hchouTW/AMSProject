@@ -59,7 +59,7 @@ int main(int argc, char * argv[]) {
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
     //Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 20, 0.5, 3., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.5, 5., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
@@ -67,18 +67,27 @@ int main(int argc, char * argv[]) {
     Hist* hKFnum = Hist::New("hKFnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
     
-    Axis AXRqlt("Quality", 100, -2., 6.);
-    Hist* hRqltx = Hist::New("hRqltx", HistAxis(AXrig, AXRqlt));
-    Hist* hRqlty = Hist::New("hRqlty", HistAxis(AXrig, AXRqlt));
-    
-    Axis AXMass("Mass", 100, 0., 3.);
+    Axis AXMass("Mass", 100, 0., 4.);
     Hist* hMpos = Hist::New("hMpos", HistAxis(AXrig, AXMass));
     Hist* hMneg = Hist::New("hMneg", HistAxis(AXrig, AXMass));
     
-    Hist* hRpos_qlty = Hist::New("hRpos_qlty", HistAxis(AXrig, AXRqlt));
-    Hist* hRneg_qlty = Hist::New("hRneg_qlty", HistAxis(AXrig, AXRqlt));
+    Axis AXQlt("Quality", 100, -2., 8.);
+    Hist* hQpos = Hist::New("hQpos", HistAxis(AXrig, AXQlt));
+    Hist* hQneg = Hist::New("hQneg", HistAxis(AXrig, AXQlt));
     
-    Axis AXMres("res", 100, -5., 5.);
+    Hist* hMQpos = Hist::New("hMQpos", HistAxis(AXMass, AXQlt));
+    Hist* hMQneg = Hist::New("hMQneg", HistAxis(AXMass, AXQlt));
+    
+    Hist* hM2pos = Hist::New("hM2pos", HistAxis(AXrig, AXMass));
+    Hist* hM2neg = Hist::New("hM2neg", HistAxis(AXrig, AXMass));
+    
+    Hist* hQ2pos = Hist::New("hQ2pos", HistAxis(AXrig, AXQlt));
+    Hist* hQ2neg = Hist::New("hQ2neg", HistAxis(AXrig, AXQlt));
+    
+    Hist* hMQ2pos = Hist::New("hMQ2pos", HistAxis(AXMass, AXQlt));
+    Hist* hMQ2neg = Hist::New("hMQ2neg", HistAxis(AXMass, AXQlt));
+    
+    Axis AXMres("res", 100, -6., 6.);
     Hist* hMres = Hist::New("hMres", HistAxis(AXrig, AXMres));
     
     MGClock::HrsStopwatch hrssw; hrssw.start();
@@ -96,7 +105,7 @@ int main(int argc, char * argv[]) {
         HCTrackInfo& hcMu  = fTrk->hcMu;
     
         // Reweight (MC)
-        Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom, -1.7));
+        Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXrig.min(), -1.7));
 
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -129,24 +138,37 @@ int main(int argc, char * argv[]) {
         Bool_t ck_succ = track.status[0][0];
         Bool_t kf_succ = track.status[1][0];
         Bool_t hc_succ = hcTr.status && hcMu.status;
+        if (!ck_succ || !kf_succ || !hc_succ) continue;
 
-        Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[6]) : fG4mc->primPart.mom);
+        Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcMu.stateTop[6]) : fG4mc->primPart.mom);
         Short_t sign = (hcTr.stateTop[6] > 0) ? 1 : -1;
-        
+       
+        Double_t TOFibta = 1.0/fTof->betaH;
+        Double_t TOFmass = ((TOFibta > 1.0) ? std::sqrt(TOFibta*TOFibta-1.0)*std::fabs(track.rig[1][0]) : 0.0);
+
         if (ck_succ) hCKnum->fillH1D(track.rig[0][0], wgt);
         if (kf_succ) hKFnum->fillH1D(track.rigKF[0][0], wgt);
-        if (hc_succ) hHCnum->fillH1D(hcTr.stateTop[6], wgt);
+        if (hc_succ) hHCnum->fillH1D(hcMu.stateTop[6], wgt);
 
-        if (hc_succ) hRqltx->fillH2D(mom, hcTr.quality[0], wgt);
-        if (hc_succ) hRqlty->fillH2D(mom, hcTr.quality[1], wgt);
-
-        if (hc_succ && sign > 0) hMpos->fillH2D(mom, hcTr.mass, wgt);
-        if (hc_succ && sign < 0) hMneg->fillH2D(mom, hcTr.mass, wgt);
+        if (hc_succ && sign > 0) hMpos->fillH2D(mom, hcMu.mass, wgt);
+        if (hc_succ && sign < 0) hMneg->fillH2D(mom, hcMu.mass, wgt);
         
-        if (hc_succ && sign > 0) hRpos_qlty->fillH2D(mom, hcTr.quality[1], wgt);
-        if (hc_succ && sign < 0) hRneg_qlty->fillH2D(mom, hcTr.quality[1], wgt);
+        if (hc_succ && sign > 0) hQpos->fillH2D(mom, hcMu.quality[1], wgt);
+        if (hc_succ && sign < 0) hQneg->fillH2D(mom, hcMu.quality[1], wgt);
         
-        if (hc_succ) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]));
+        if (hc_succ && sign > 0 && mom < 3.0) hMQpos->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
+        if (hc_succ && sign < 0 && mom < 3.0) hMQneg->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
+        
+        if (hc_succ && sign > 0 && (TOFibta > 1.0)) hM2pos->fillH2D(mom, TOFmass, wgt);
+        if (hc_succ && sign < 0 && (TOFibta > 1.0)) hM2neg->fillH2D(mom, TOFmass, wgt);
+        
+        if (hc_succ && sign > 0 && (TOFibta > 1.0)) hQ2pos->fillH2D(mom, std::log(track.chisq[1][0][1]), wgt);
+        if (hc_succ && sign < 0 && (TOFibta > 1.0)) hQ2neg->fillH2D(mom, std::log(track.chisq[1][0][1]), wgt);
+        
+        if (hc_succ && sign > 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2pos->fillH2D(TOFmass, std::log(track.chisq[1][0][1]), wgt);
+        if (hc_succ && sign < 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2neg->fillH2D(TOFmass, std::log(track.chisq[1][0][1]), wgt);
+        
+        if (hc_succ) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]), wgt);
     }
     
     ofle->Write();

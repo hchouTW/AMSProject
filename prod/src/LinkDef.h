@@ -41,8 +41,11 @@
 #pragma link C++ class ClsACCInfo;
 #pragma link C++ class std::vector<ClsACCInfo>+;
 
-#pragma link C++ class TrackInfo;
-#pragma link C++ class std::vector<TrackInfo>+;
+#pragma link C++ class CKTrackInfo;
+#pragma link C++ class std::vector<CKTrackInfo>+;
+
+#pragma link C++ class KFTrackInfo;
+#pragma link C++ class std::vector<KFTrackInfo>+;
 
 #pragma link C++ class HCTrackInfo;
 #pragma link C++ class std::vector<HCTrackInfo>+;
