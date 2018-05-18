@@ -553,7 +553,7 @@ class HCTrackInfo : public TObject {
             std::fill_n(nrl, 6, 0);
             std::fill_n(ela, 6, 0);
             
-            std::fill_n(distToFeet, 3, -1);
+            std::fill_n(distToTrFeet, 3, -1);
         }
 	
     public :
@@ -582,7 +582,7 @@ class HCTrackInfo : public TObject {
         Float_t nrl[6]; // L12 L34 L56 L78 L89 RICH
         Float_t ela[6]; // L12 L34 L56 L78 L89 RICH
 	
-        Float_t distToFeet[3]; // L34 L56 L78
+        Float_t distToTrFeet[3]; // L34 L56 L78
 
         ClassDef(HCTrackInfo, 3)
 };
@@ -856,13 +856,15 @@ class TRK : public TObject {
 
             hits.clear();
 
-            for (Int_t it = 0; it < 4; ++it) ckTr[it].init();
-            for (Int_t it = 0; it < 4; ++it) kfTr[it].init();
+            ckTr = std::vector<CKTrackInfo>(4);
+            kfTr = std::vector<KFTrackInfo>(4);
 
             hcTr.init();
             hcMu.init();
 
+            ftL34Dist = -1;
             ftL56Dist = -1;
+            ftL78Dist = -1;
             survHeL56Prob = -1;
             ratN10Smin = -1;
             std::fill_n(ratN10S, 7, -1);
@@ -895,17 +897,19 @@ class TRK : public TObject {
         std::vector<HitTRKInfo> hits;
 
         // Choutko [Inn InnL1 InnL9 FS]
-        CKTrackInfo ckTr[4];
+        std::vector<CKTrackInfo> ckTr;
 
         // Choutko [Inn InnL1 InnL9 FS]
-        KFTrackInfo kfTr[4];
+        std::vector<KFTrackInfo> kfTr;
 
         // Hsin-Yi tools [Inn]
         HCTrackInfo hcTr;
         HCTrackInfo hcMu;
 
         // Haino's tools
+        Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
         Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
+        Float_t ftL78Dist;     // tracker feet (typical cut is ftL78Dist < 0.5~6)
         Float_t survHeL56Prob; // The variable you can play with on cuts (typical cut is hsv<0.26)
         Float_t ratN10Smin;    //
         Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)

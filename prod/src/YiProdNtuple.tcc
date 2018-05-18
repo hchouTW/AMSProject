@@ -51,6 +51,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		isParticle = true;
 	}
 	if (!isParticle) { init(); fStopwatch.stop(); return false; }
+	if (iBetaH < 0 || iTrTrack < 0) { init(); fStopwatch.stop(); return false; }
 
 	// Beta Information
 	if      (iBetaH >= 0) beta = event->pBetaH(iBetaH)->GetBeta();
@@ -1009,7 +1010,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.stateBtm[4] = -dirBtm[1];
 			track.stateBtm[5] = -dirBtm[2];
             
-            fTrk.ckTr[patt] = track;
+            fTrk.ckTr.at(patt) = track;
         }
         
         // Kalman
@@ -1076,7 +1077,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			    track.stateBtm[7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rigBtm) * (recEv.mass/rigBtm)));
             }
 		
-            fTrk.kfTr[patt] = track;
+            fTrk.kfTr.at(patt) = track;
         }
 
         // HChou Fitting
@@ -1196,12 +1197,14 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
                 for (int sl = 0; sl < 3; ++sl) {
                     if (!track.statusLJ[2+sl]) continue;
-                    double dist[2] = { 0, 0 };
+                    float dist[2] = { 0, 0 };
+                    short sign = TrackSys::Numc::Compare(track.stateLJ[2+sl][5]);
                     AMSPoint pntSL(track.stateLJ[2+sl][0], track.stateLJ[2+sl][1], track.stateLJ[2+sl][2]);
-                    AMSDir   dirSL(track.stateLJ[2+sl][3], track.stateLJ[2+sl][4], track.stateLJ[2+sl][5]);
-                    AMSEventR::GetTkFeetDist(3+sl*2+0, pntSL, dirSL, track.stateLJ[2+sl][6], dist[0]);
-                    AMSEventR::GetTkFeetDist(3+sl*2+1, pntSL, dirSL, track.stateLJ[2+sl][6], dist[1]);
-                    track.distToFeet[sl] = std::min(dist[0], dist[1]);
+                    AMSDir   dirSL(sign * track.stateLJ[2+sl][3], sign * track.stateLJ[2+sl][4], sign * track.stateLJ[2+sl][5]);
+                    float    rigSL = (-sign) * track.stateLJ[2+sl][6];
+                    dist[0] = AMSEventR::GetTkFeetDist(3+sl*2+0, pntSL, dirSL, rigSL);
+                    dist[1] = AMSEventR::GetTkFeetDist(3+sl*2+1, pntSL, dirSL, rigSL);
+                    track.distToTrFeet[sl] = std::min(dist[0], dist[1]);
                 }
 
                 if (hctr.muOpt() == TrackSys::PhyTrFit::MuOpt::kFixed) fTrk.hcTr = track;
@@ -1217,7 +1220,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
     // Haino's tools
     if (trtk != nullptr && fitidInn >= 0) {
 		trtk->iTrTrackPar(1, 3, 21, recEv.mass, recEv.zin);
+        fTrk.ftL34Dist     = std::min(event->GetTkFeetDist(3), event->GetTkFeetDist(4));
         fTrk.ftL56Dist     = std::min(event->GetTkFeetDist(5), event->GetTkFeetDist(6));
+        fTrk.ftL78Dist     = std::min(event->GetTkFeetDist(7), event->GetTkFeetDist(8));
         fTrk.survHeL56Prob = event->GetHeSurvProbAtL56();
 
         float smin = 0;
@@ -2120,7 +2125,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (event->NTrTrack() != 1) return -2001;
 
 	// ~3~ (Based on TrdTrack)
-	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
+	//if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
 	// ~4~ (Based on Particle)
 	ParticleR  * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;

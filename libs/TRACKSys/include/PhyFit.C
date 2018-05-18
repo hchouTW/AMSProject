@@ -660,6 +660,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
         const Int_t niter = 10; Int_t iter = 0;
         do {
             Double_t rndm = Rndm::NormalGaussian();
+            //Double_t rndm = (Numc::TWO<> / Numc::THREE<>) * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
             eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
         } while ((iter < niter) && Numc::EqualToZero(eta));
@@ -672,6 +673,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
         const Int_t niter = 10; Int_t iter = 0;
         do {
             Double_t rndm = Rndm::NormalGaussian();
+            //Double_t rndm = (Numc::TWO<> / Numc::THREE<>) * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
             ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * rndm);
             iter++;
         } while ((iter < niter) && (ibta < LMTL_INV_BETA || ibta > LMTU_INV_BETA));
@@ -764,7 +766,7 @@ Bool_t PhyTrFit::physicalMassFit() {
             Double_t            fluc_ibta;
             Double_t            qlt;
     };
-    
+   
     // List of Particle Mass (Init)
     PartElem condElem;
     for (auto&& mass : PartListMassQ.at(chrg)) {
@@ -773,35 +775,30 @@ Bool_t PhyTrFit::physicalMassFit() {
         TOFt_sft_ = Numc::ZERO<>;
         if (!(simpleFit() ? physicalFit(MuOpt::kFixed, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
         
+        Bool_t firstTime = (!condElem.succ);
+        if (!firstTime && Numc::Compare(quality_.at(1), condElem.qlt) > 0) continue;
+        
         if (!evolve(MuOpt::kFree)) continue;
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
         Double_t fluc_ibta = (err_.at(5) / part_.ibta());
-
-        Bool_t firstTime = (!condElem.succ);
-        if (firstTime || Numc::Compare(quality_.at(1), condElem.qlt) < 0)
-            condElem = std::move(PartElem(part_, args_, TOFt_sft_, fluc_eta, fluc_ibta, quality_.at(1)));
+        
+        condElem = std::move(PartElem(part_, args_, TOFt_sft_, fluc_eta, fluc_ibta, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
     //const std::array<Double_t, 3> fact({ Numc::HALF, (Numc::ONE<> / Numc::FIVE<>), (Numc::ONE<> / Numc::TEN<>) }); // org, OK version
-    const std::array<Double_t, 2> fact({ (Numc::ONE<> / Numc::THREE<>), (Numc::ONE<> / Numc::TEN<>) });
 
-    args_.clear();
-    TOFt_sft_ = Numc::ZERO<>;
+    args_     = condElem.args;
+    TOFt_sft_ = condElem.tsft;
     info_ = condElem.part.info();
     part_ = condElem.part;
+    
+    //const Double_t fact = (Numc::ONE<> / Numc::TEN<>);
+    const Double_t fact = Numc::ZERO<>;
     if (!physicalFit(MuOpt::kFree, 
-                     fact.at(0) * condElem.fluc_eta, 
-                     fact.at(0) * condElem.fluc_ibta)) return false;
-   
-    for (Int_t iter = 1; iter < fact.size(); ++iter) {
-        args_.clear();
-        TOFt_sft_ = Numc::ZERO<>;
-        if (!physicalFit(MuOpt::kFree, 
-                         fact.at(iter) * std::fabs(err_.at(4) / part_.eta()), 
-                         fact.at(iter) * (err_.at(5) / part_.ibta()))) return false;
-    }
-
+                     fact * condElem.fluc_eta, 
+                     fact * condElem.fluc_ibta)) return false;
+    
     return true;
 }
 
@@ -1032,7 +1029,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     stts_ = stts;
     info_ = part_.info();
  
-    //CERR("MASS %14.8f ERR %14.8f %14.8f %14.8f\n", part_.mass(), err_.at(4), err_.at(5), err_.at(6));
+    //CERR("MASS %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.rig(), quality_.at(0), quality_.at(1));
     return true;
 }
 

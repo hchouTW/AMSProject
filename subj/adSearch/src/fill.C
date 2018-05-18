@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -63,6 +63,7 @@ int main(int argc, char * argv[]) {
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
+    Hist* hMCnum = Hist::New("hMCnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hKFnum = Hist::New("hKFnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
@@ -100,9 +101,10 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        TrackInfo&   track = fTrk->track;
-        HCTrackInfo& hcTr  = fTrk->hcTr;
-        HCTrackInfo& hcMu  = fTrk->hcMu;
+        CKTrackInfo& ckTr = fTrk->ckTr[0];
+        KFTrackInfo& kfTr = fTrk->kfTr[0];
+        HCTrackInfo& hcTr = fTrk->hcTr;
+        HCTrackInfo& hcMu = fTrk->hcMu;
     
         // Reweight (MC)
         Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXrig.min(), -1.7));
@@ -111,7 +113,7 @@ int main(int argc, char * argv[]) {
         if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
         if (fTof->betaHPatt != 15) continue;
-/*        
+       
         // Geometry (TRD)
         if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
@@ -119,13 +121,13 @@ int main(int argc, char * argv[]) {
         
         // Geometry (ACC)
         if (fAcc->clusters.size() != 0) continue;
-*/        
+        
         // Down-going
         if (fTof->betaH < 0.) continue;
-/*
+
         // Charge
         if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
@@ -134,41 +136,50 @@ int main(int argc, char * argv[]) {
         if (fTof->numOfInTimeCls > 4) continue;
         if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
             (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
-*/
-        Bool_t ck_succ = track.status[0][0];
-        Bool_t kf_succ = track.status[1][0];
-        Bool_t hc_succ = hcTr.status && hcMu.status;
-        if (!ck_succ || !kf_succ || !hc_succ) continue;
+
+        // TRD
+        if (fTrd->LLRep[0] < 0.7) continue;
+
+        if (!ckTr.status && !kfTr.status && !hcTr.status && !hcMu.status) continue;
+        
+        Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
+        Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
+        Short_t hcSign = (hcMu.stateTop[6] > 0) ? 1 : -1;
 
         Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcMu.stateTop[6]) : fG4mc->primPart.mom);
-        Short_t sign = (hcTr.stateTop[6] > 0) ? 1 : -1;
+
        
         Double_t TOFibta = 1.0/fTof->betaH;
-        Double_t TOFmass = ((TOFibta > 1.0) ? std::sqrt(TOFibta*TOFibta-1.0)*std::fabs(track.rig[1][0]) : 0.0);
+        Double_t TOFmass = ((TOFibta > 1.0) ? std::sqrt(TOFibta*TOFibta-1.0)*std::fabs(kfTr.rig[1]) : 0.0);
 
-        if (ck_succ) hCKnum->fillH1D(track.rig[0][0], wgt);
-        if (kf_succ) hKFnum->fillH1D(track.rigKF[0][0], wgt);
-        if (hc_succ) hHCnum->fillH1D(hcMu.stateTop[6], wgt);
+        hMCnum->fillH1D(mom, wgt);
+        if (ckSign > 0) hCKnum->fillH1D(ckTr.rig, wgt);
+        if (kfSign > 0) hKFnum->fillH1D(kfTr.rig[0], wgt);
+        if (hcTr.stateTop[6] > 0) hHCnum->fillH1D(hcTr.stateTop[6], wgt);
 
-        if (hc_succ && sign > 0) hMpos->fillH2D(mom, hcMu.mass, wgt);
-        if (hc_succ && sign < 0) hMneg->fillH2D(mom, hcMu.mass, wgt);
+        if (hcSign > 0) hMpos->fillH2D(mom, hcMu.mass, wgt);
+        if (hcSign < 0) hMneg->fillH2D(mom, hcMu.mass, wgt);
         
-        if (hc_succ && sign > 0) hQpos->fillH2D(mom, hcMu.quality[1], wgt);
-        if (hc_succ && sign < 0) hQneg->fillH2D(mom, hcMu.quality[1], wgt);
+        if (hcSign > 0) hQpos->fillH2D(mom, hcMu.quality[1], wgt);
+        if (hcSign < 0) hQneg->fillH2D(mom, hcMu.quality[1], wgt);
         
-        if (hc_succ && sign > 0 && mom < 3.0) hMQpos->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
-        if (hc_succ && sign < 0 && mom < 3.0) hMQneg->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
+        if (hcSign > 0 && mom < 3.0) hMQpos->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
+        if (hcSign < 0 && mom < 3.0) hMQneg->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
         
-        if (hc_succ && sign > 0 && (TOFibta > 1.0)) hM2pos->fillH2D(mom, TOFmass, wgt);
-        if (hc_succ && sign < 0 && (TOFibta > 1.0)) hM2neg->fillH2D(mom, TOFmass, wgt);
+        if (kfSign > 0 && (TOFibta > 1.0)) hM2pos->fillH2D(mom, TOFmass, wgt);
+        if (kfSign < 0 && (TOFibta > 1.0)) hM2neg->fillH2D(mom, TOFmass, wgt);
         
-        if (hc_succ && sign > 0 && (TOFibta > 1.0)) hQ2pos->fillH2D(mom, std::log(track.chisq[1][0][1]), wgt);
-        if (hc_succ && sign < 0 && (TOFibta > 1.0)) hQ2neg->fillH2D(mom, std::log(track.chisq[1][0][1]), wgt);
+        if (kfSign > 0 && (TOFibta > 1.0)) hQ2pos->fillH2D(mom, std::log(kfTr.nchi[1]), wgt);
+        if (kfSign < 0 && (TOFibta > 1.0)) hQ2neg->fillH2D(mom, std::log(kfTr.nchi[1]), wgt);
         
-        if (hc_succ && sign > 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2pos->fillH2D(TOFmass, std::log(track.chisq[1][0][1]), wgt);
-        if (hc_succ && sign < 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2neg->fillH2D(TOFmass, std::log(track.chisq[1][0][1]), wgt);
+        if (kfSign > 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2pos->fillH2D(TOFmass, std::log(kfTr.nchi[1]), wgt);
+        if (kfSign < 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2neg->fillH2D(TOFmass, std::log(kfTr.nchi[1]), wgt);
         
-        if (hc_succ) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]), wgt);
+        if (hcSign > 0) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]), wgt);
+
+        if (hcTr.stateTop[6] * hcMu.stateTop[6] < 0) {
+            CERR("TR %14.8f %14.8f  MU %14.8f %14.8f\n", hcTr.stateTop[6], hcTr.quality[1], hcMu.stateTop[6], hcMu.quality[1]);
+        }
     }
     
     ofle->Write();
