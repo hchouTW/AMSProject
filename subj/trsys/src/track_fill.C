@@ -74,9 +74,11 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     
-    Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
@@ -96,7 +98,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 3000, -5.0, 5.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 4000, -4.0, 4.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
@@ -108,7 +110,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
    
     // Fit M 
-    Axis AXMrso("Mass [GeV]", 800, 0, 5);
+    Axis AXMrso("Mass [GeV]", 400, 0, 4);
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
     Axis AXRchi("Log-Chi-square [1]", 800, -6.0, 6.0);

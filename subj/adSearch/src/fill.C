@@ -3,8 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -103,7 +103,7 @@ int main(int argc, char * argv[]) {
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcTr;
+        HCTrackInfo& hcTr = fTrk->hcTr.at(0);
         HCTrackInfo& hcMu = fTrk->hcMu;
     
         // Reweight (MC)

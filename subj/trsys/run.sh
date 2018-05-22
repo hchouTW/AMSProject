@@ -5,7 +5,7 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
-Version=test2
+Version=test
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 
@@ -21,10 +21,10 @@ OutputDir=${CurDir}/dat
 #GroupSize=20
 #Nseq=70
 #Fit
-#GroupSize=3
-#Nseq=450
-GroupSize=4
-Nseq=500
+GroupSize=10
+Nseq=200
+#GroupSize=4
+#Nseq=500
 
 #for id in `seq 1 100`
 for id in `seq 0 ${Nseq}`
