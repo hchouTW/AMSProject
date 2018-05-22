@@ -11,34 +11,66 @@
 namespace TrackSys {
 namespace InterfaceAms {
 
-/*
-class AMSEvent {
+
+class Event {
+    private :
+        static constexpr Int_t QOptTracker = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
+        static constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
+
     public :
-        AMSEvent(AMSEventR* event) {}
-        ~AMSEvent() {}
-    
+        enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
+
+    public :
+        Event(AMSEventR* event, Bool_t withQ = false);
+        ~Event() { init(); }
+
+        TrFitPar get(const PartInfo& info = PartInfo(PartType::Proton), const TrackerPatt& trPatt = TrackerPatt::MaxSpan, Bool_t withTOF = false, Bool_t withRICH = false);
+        
+        const Bool_t& status() const { return status_; }
+        const Short_t& going() const { return going_; }
+
     protected :
-        HitStTRK              get_HitStTRK(TrRecHitR& hit, Bool_t hasQ = false);
-        std::vector<HitStTOF> get_HitStTOF(BetaHR& betaH, Bool_t hasQ = false);
-        HitStRICH             get_HitStRICH(RichRingR& rich);
+        void init();
+
+        Bool_t bulid_HitStTRK();
+        Bool_t bulid_HitStTOF();
+        Bool_t bulid_HitStRICH();
 
     private :
+        Bool_t  status_;
+        Bool_t  withQ_;
+        Short_t going_; // 0, no  1, up-going  -1, down-going
+
+        // AMS Event
+        AMSEventR* event_;
+        TrTrackR*  trtk_;
+        BetaHR*    btah_;
+        RichRingR* rich_;
+
         // TRK
-        std::vector<HitStTRK> trHitIn;
-        HitStTRK              trHitL1;
-        HitStTRK              trHitL9;
+        std::vector<HitStTRK> trHitIn_;
+        HitStTRK              trHitL1_;
+        HitStTRK              trHitL9_;
 
         // TOF
-        std::vector<HitStTOF> tfHit;
+        std::vector<HitStTOF> tfHit_;
 
         // RICH
-        HitStRICH rhHit;
+        HitStRICH  rhHit_;
 };
-*/
 
 
 
 
+
+
+
+
+
+
+
+
+/*
 enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
 constexpr Int_t QOptTracker = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
 constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
@@ -47,7 +79,7 @@ constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::
 static std::vector<HitStTRK> GetHitStTRK(TrTrackR& track, const TrackerPatt& patt = TrackerPatt::MaxSpan, Bool_t hasQ = false);
 static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasQ = false);
 static HitStRICH             GetHitStRICH(RichRingR& rich);
-
+*/
 
 } // namespace InterfaceAms
 } // namespace TrackSys

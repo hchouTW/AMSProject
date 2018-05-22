@@ -1081,25 +1081,26 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
 
         // HChou Fitting
-        TrackSys::PhyArg::SetOpt(true, true);
-        TrackSys::TrFitPar::Orientation ortt = (recEv.going > 0 ? TrackSys::TrFitPar::Orientation::kUpward : TrackSys::TrFitPar::Orientation::kDownward);
-       
-        std::vector<std::tuple<TrackSys::PhyTrFit::MuOpt, TrackSys::PartType, TrackSys::InterfaceAms::TrackerPatt>> trArgs({
-                { TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton, TrackSys::InterfaceAms::TrackerPatt::Inner },
-                { TrackSys::PhyTrFit::MuOpt::kFree,  TrackSys::PartType::Q1,     TrackSys::InterfaceAms::TrackerPatt::Inner }
+        std::vector<std::tuple<TrackSys::PartType, TrackSys::InterfaceAms::Event::TrackerPatt, TrackSys::PhyTrFit::MuOpt>> trArgs({
+            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::Inner, TrackSys::PhyTrFit::MuOpt::kFixed },
+            { TrackSys::PartType::Q1,     TrackSys::InterfaceAms::Event::TrackerPatt::Inner, TrackSys::PhyTrFit::MuOpt::kFree  }
         });
-
+        
+        Bool_t withQ    = false;
+        Bool_t withTOF  = true;
+        Bool_t withRICH = false;
+        TrackSys::PhyArg::SetOpt(true, true);
+        TrackSys::InterfaceAms::Event eventAms(event, withQ);
         for (auto&& arg : trArgs) {
-            TrackSys::TrFitPar fitPar(std::get<1>(arg), ortt);
-            if (recEv.iTrTrack  >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTRK(event->TrTrack(recEv.iTrTrack), std::get<2>(arg)));
-            if (recEv.iBetaH    >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStTOF(event->BetaH(recEv.iBetaH)));
-            //if (recEv.iRichRing >= 0) fitPar.add_hit(TrackSys::InterfaceAms::GetHitStRICH(event->RichRing(recEv.iRichRing)));
+            if (!eventAms.status()) continue;
+            TrackSys::TrFitPar&& fitPar = eventAms.get(std::get<0>(arg), std::get<1>(arg), withTOF, withRICH);
+            if (!fitPar.check()) continue;
 
-            TrackSys::PhyTrFit hctr(fitPar, std::get<0>(arg));
+            TrackSys::PhyTrFit hctr(fitPar, std::get<2>(arg));
             if (hctr.status()) {
                 HCTrackInfo track;
                 track.status = true;
-                track.going = ((recEv.going > 0) ? 1 : -1);
+                track.going = ((eventAms.going() > 0) ? 1 : -1);
                 track.chrg = hctr.part().chrg();
                 track.mass = hctr.part().mass();
                 
@@ -1211,7 +1212,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 else                                                   fTrk.hcMu = track;
 
                 // testcode
-                //CERR("GO %2d MASS %14.8f %14.8f RIG %14.8f NRL %14.8f DIST %14.8f\n", track.going, track.mass, track.error[6], track.state[6], track.nrl[1], track.distToFeet[0]);
+                //CERR("GO %2d MASS %14.8f %14.8f RIG %14.8f NRL %14.8f DIST %14.8f\n", track.going, track.mass, track.error[6], track.state[6], track.nrl[1], track.distToTrFeet[0]);
             } // succ
         } // for loop --- patt
 	}

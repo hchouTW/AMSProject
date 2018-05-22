@@ -269,7 +269,7 @@ class HitStRICH : public VirtualHitSt {
         enum class Radiator { AGL, NAF };
 
     public :
-        HitStRICH(const Radiator& rad) : VirtualHitSt(DEC, 0, false, false), rad_(rad), pdf_ib_(nullptr) { clear(); }
+        HitStRICH(const Radiator& rad = Radiator::AGL) : VirtualHitSt(DEC, 0, false, false), rad_(rad), pdf_ib_(nullptr) { clear(); }
         ~HitStRICH() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
