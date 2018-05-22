@@ -432,7 +432,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
 }
 
 
-MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb, Bool_t is_std) {
+MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb) {
     if (!is_load_) return MatFld();
     
     Double_t vzloc = (vcoo(2) - min_[2]) / dlt_[2];
@@ -476,7 +476,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     SVecD<3> vwvec((wxloc - vxloc), (wyloc - vyloc), (wzloc - vzloc));
     
     Double_t   vwlen = LA::Mag(vwvec);
-    Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / (is_std ? STD_STEP_LEN : FST_STEP_LEN))) + 2;
+    Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / STD_STEP_LEN)) + 2;
     SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
 
     SVecD<3> itloc((vxloc + Numc::HALF * unit(0)), (vyloc + Numc::HALF * unit(1)), (vzloc + Numc::HALF * unit(2)));
@@ -588,7 +588,7 @@ MatFld MatMgnt::Get(const SVecD<3>& coo, Double_t log10gb) {
 }
     
 
-MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb, Bool_t is_std) {
+MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb) {
     if (!Load()) return MatFld();
     if (!(Numc::Valid(vcoo(0)) && Numc::Valid(vcoo(1)) && Numc::Valid(vcoo(2)))) return MatFld();
     if (!(Numc::Valid(wcoo(0)) && Numc::Valid(wcoo(1)) && Numc::Valid(wcoo(2)))) return MatFld();
@@ -607,7 +607,7 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb
         
     for (auto&& reader : *reader_) {
         if (!reader->is_cross(vcoo, wcoo)) continue;
-        MatFld&& mfld = reader->get(vcoo, wcoo, log10gb, is_std);
+        MatFld&& mfld = reader->get(vcoo, wcoo, log10gb);
         if (!mfld()) continue;
         
         Double_t nrl = mfld.nrl();
@@ -637,17 +637,17 @@ MatFld MatMgnt::Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb
 }
 
 
-MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part, Bool_t is_std) {
+MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part) {
     const SVecD<3>&  vcoo = part.c();
     SVecD<3>&&       wcoo = part.c() + stp_len * part.u();
     Double_t log10gb = std::log10(part.gmbta());
     if (!Numc::Valid(log10gb)) log10gb = Numc::ZERO<>;
 
-    return Get(vcoo, wcoo, log10gb, is_std);
+    return Get(vcoo, wcoo, log10gb);
 }
 
 
-MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
+MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part) {
     if (!part.field()) return MatPhyFld();
     if (part.info().is_chrgless() || part.info().is_massless()) return MatPhyFld();
     if (Numc::EqualToZero(stp_len)) return MatPhyFld();
@@ -658,7 +658,7 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part, Bool_t is_std) {
     Double_t log10gb = std::log10(part.gmbta());
     if (!Numc::Valid(log10gb)) log10gb = Numc::ZERO<>;
 
-    MatFld&& mfld = MatMgnt::Get(vcoo, wcoo, log10gb, is_std);
+    MatFld&& mfld = MatMgnt::Get(vcoo, wcoo, log10gb);
     
     if (!mfld()) return MatPhyFld();
 

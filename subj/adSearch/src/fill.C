@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May18/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -101,8 +101,8 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        CKTrackInfo& ckTr = fTrk->ckTr[0];
-        KFTrackInfo& kfTr = fTrk->kfTr[0];
+        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
+        KFTrackInfo& kfTr = fTrk->kfTr.at(0);
         HCTrackInfo& hcTr = fTrk->hcTr;
         HCTrackInfo& hcMu = fTrk->hcMu;
     
@@ -176,10 +176,6 @@ int main(int argc, char * argv[]) {
         if (kfSign < 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2neg->fillH2D(TOFmass, std::log(kfTr.nchi[1]), wgt);
         
         if (hcSign > 0) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]), wgt);
-
-        if (hcTr.stateTop[6] * hcMu.stateTop[6] < 0) {
-            CERR("TR %14.8f %14.8f  MU %14.8f %14.8f\n", hcTr.stateTop[6], hcTr.quality[1], hcMu.stateTop[6], hcMu.quality[1]);
-        }
     }
     
     ofle->Write();

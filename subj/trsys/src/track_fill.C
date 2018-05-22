@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -87,7 +87,7 @@ int main(int argc, char * argv[]) {
     Axis AXbta("Beta [1]", AXmom.nbin(), lbta, ubta, AxisScale::kLog);
 
     // Time
-    Axis AXtme("Time [ms]", 800, 0., 4.);
+    Axis AXtme("Time [ms]", 1600, 0., 1000.);
     Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXmom, AXtme));
     
     // Fit Eff
@@ -108,7 +108,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
    
     // Fit M 
-    Axis AXMrso("1/Mass [1/GeV]", 800, 0, 4);
+    Axis AXMrso("Mass [GeV]", 800, 0, 5);
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
     Axis AXRchi("Log-Chi-square [1]", 800, -6.0, 6.0);
@@ -160,8 +160,9 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        TrackInfo&   track   = fTrk->track;
-        HCTrackInfo& hcTrack = fTrk->hcTrack;
+        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
+        KFTrackInfo& kfTr = fTrk->kfTr.at(0);
+        HCTrackInfo& hcTr = fTrk->hcTr;
         
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -181,7 +182,7 @@ int main(int argc, char * argv[]) {
 
         // Charge
         if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
@@ -202,7 +203,7 @@ int main(int argc, char * argv[]) {
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
         TrFitPar fitPar(PartType::Proton);
-        for (auto&& hit : track.hits) {
+        for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
@@ -241,7 +242,7 @@ int main(int argc, char * argv[]) {
         HitTRKInfo*    msh[9] = { nullptr };
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0) mcs[seg.lay] = &seg; }
         for (auto&& hit : fG4mc->primPart.hits) mch[hit.layJ-1] = &hit;
-        for (auto&& hit :           track.hits) msh[hit.layJ-1] = &hit;
+        for (auto&& hit :           fTrk->hits) msh[hit.layJ-1] = &hit;
 
         Bool_t hasLay[9] = { false };
         for (Int_t it = 0; it < 9; ++it) hasLay[it] = (mcs[it] && mch[it] && msh[it]);
@@ -269,62 +270,62 @@ int main(int argc, char * argv[]) {
         //if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
-        //MGClock::HrsStopwatch sw; sw.start();
-        ////PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
-        //sw.stop();
-        //Bool_t hc_succ = tr.status();
-        //Double_t hc_irig = tr.part().irig();
-        //Double_t hc_tme  = sw.time()*1.0e3;
-        //Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
-        //Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
-        //Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
-        //for (Int_t it = 0; hc_succ && it < 9; ++it) {
-        //    PhySt&& stt = tr.interpolate_to_z(track.stateLJ[0][0][it][2]);
-        //    hc_coo[it][0] = stt.cx();
-        //    hc_coo[it][1] = stt.cy();
-        //    hc_coo[it][2] = stt.cz();
-        //    hc_dir[it][0] = stt.ux();
-        //    hc_dir[it][1] = stt.uy();
-        //    hc_lay_irig[it] = stt.irig();
-        //    //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
-        //}
-        //hc_irig = hc_lay_irig[topLay];
+        MGClock::HrsStopwatch sw; sw.start();
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        sw.stop();
+        Bool_t hc_succ = tr.status();
+        Double_t hc_irig = tr.part().irig();
+        Double_t hc_tme  = sw.time()*1.0e3;
+        Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
+        Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
+        Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
+        for (Int_t it = 0; hc_succ && it < 9; ++it) {
+            PhySt&& stt = tr.interpolate_to_z(ckTr.stateLJ[it][2]);
+            hc_coo[it][0] = stt.cx();
+            hc_coo[it][1] = stt.cy();
+            hc_coo[it][2] = stt.cz();
+            hc_dir[it][0] = stt.ux();
+            hc_dir[it][1] = stt.uy();
+            hc_lay_irig[it] = stt.irig();
+            //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
+        }
+        hc_irig = hc_lay_irig[topLay];
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MU (%14.8f %14.8f) QLT (%14.8f %14.8f) TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mu(), tr.err_mu(), tr.quality(0), tr.quality(1), sw.time());
         //-------------------------------------//
         
-        Bool_t ck_succ = track.status[0][patt];
-        Bool_t kf_succ = track.status[1][patt];
-        Bool_t hc_succ = hcTrack.status;
+        Bool_t ck_succ = ckTr.status;
+        Bool_t kf_succ = kfTr.status;
+        //Bool_t hc_succ = hcTr.status;
 
         if (ck_succ) hCKnum->fillH1D(mc_mom);
         if (kf_succ) hKFnum->fillH1D(mc_mom);
         if (hc_succ) hHCnum->fillH1D(mc_mom);
         
-        if (hc_succ) hHCtme->fillH2D(mc_mom, hcTrack.cpuTime);
-        //if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme*0.1);
+        //if (hc_succ) hHCtme->fillH2D(mc_mom, hcTr.cpuTime);
+        if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme);
 
-        Double_t ck_irig = (ck_succ ? MGMath::ONE/track.rig[0][patt] : 0.);
-        Double_t kf_irig = (kf_succ ? MGMath::ONE/track.rig[1][patt] : 0.);
+        Double_t ck_irig = (ck_succ ? MGMath::ONE/ckTr.rig : 0.);
+        Double_t kf_irig = (kf_succ ? MGMath::ONE/kfTr.stateTop[6] : 0.);
         //Double_t kf_irig = (kf_succ ? MGMath::ONE/track.stateLJ[1][patt][topmc->lay][6] : 0.);
-        Double_t hc_irig = (hc_succ ? MGMath::ONE/hcTrack.state[6] : 0.);
+        //Double_t hc_irig = (hc_succ ? MGMath::ONE/hcTr.state[6] : 0.);
         
         Double_t ck_bta = (ck_succ ? 1.0/std::sqrt(1.0+mass*ck_irig*mass*ck_irig) : 0.);
         Double_t kf_bta = (kf_succ ? 1.0/std::sqrt(1.0+mass*kf_irig*mass*kf_irig) : 0.);
         Double_t hc_bta = (hc_succ ? 1.0/std::sqrt(1.0+mass*hc_irig*mass*hc_irig) : 0.);
       
-        //if (hc_succ) hHCMrso->fillH2D(mc_bta, 1.0/tr.part().mass());
-        if (hc_succ) hHCMrso->fillH2D(mc_bta, 1.0/hcTrack.mass);
+        if (hc_succ) hHCMrso->fillH2D(mc_bta, tr.part().mass());
+        //if (hc_succ) hHCMrso->fillH2D(mc_bta, 1.0/hcTr.mass);
 
-        Double_t ck_chix = (ck_succ ? std::log(track.chisq[0][patt][0]) : 0.); 
-        Double_t kf_chix = (kf_succ ? std::log(track.chisq[1][patt][0]) : 0.); 
-        Double_t hc_chix = (hc_succ ? std::log(hcTrack.nchi[0]) : 0.); 
-        //Double_t hc_chix = (hc_succ ? tr.quality(0) : 0.); 
+        Double_t ck_chix = (ck_succ ? std::log(ckTr.nchi[0]) : 0.); 
+        Double_t kf_chix = (kf_succ ? std::log(kfTr.nchi[0]) : 0.); 
+        //Double_t hc_chix = (hc_succ ? std::log(hcTr.nchi[0]) : 0.); 
+        Double_t hc_chix = (hc_succ ? tr.quality(0) : 0.); 
         
-        Double_t ck_chiy = (ck_succ ? std::log(track.chisq[0][patt][1]) : 0.); 
-        Double_t kf_chiy = (kf_succ ? std::log(track.chisq[1][patt][1]) : 0.); 
-        Double_t hc_chiy = (hc_succ ? std::log(hcTrack.nchi[1]) : 0.); 
-        //Double_t hc_chiy = (hc_succ ? tr.quality(1) : 0.); 
+        Double_t ck_chiy = (ck_succ ? std::log(ckTr.nchi[1]) : 0.); 
+        Double_t kf_chiy = (kf_succ ? std::log(kfTr.nchi[1]) : 0.); 
+        //Double_t hc_chiy = (hc_succ ? std::log(hcTr.nchi[1]) : 0.); 
+        Double_t hc_chiy = (hc_succ ? tr.quality(1) : 0.); 
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (kf_succ) hKFRrso->fillH2D(mc_mom, bincen * (kf_irig - mc_irig));

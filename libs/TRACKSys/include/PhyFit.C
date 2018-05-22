@@ -657,10 +657,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     Double_t eta = part_.eta();
     const Bool_t is_fluc_eta = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_eta) > 0);
     if (is_fluc_eta) {
-        const Int_t niter = 10; Int_t iter = 0;
+        const Int_t niter = 5; Int_t iter = 0;
         do {
             Double_t rndm = Rndm::NormalGaussian();
-            //Double_t rndm = (Numc::TWO<> / Numc::THREE<>) * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
+            if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
         } while ((iter < niter) && Numc::EqualToZero(eta));
@@ -670,10 +670,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     Double_t ibta = part_.ibta();
     const Bool_t is_fluc_ibta = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_ibta) > 0);
     if (is_fluc_ibta) {
-        const Int_t niter = 10; Int_t iter = 0;
+        const Int_t niter = 5; Int_t iter = 0;
         do {
             Double_t rndm = Rndm::NormalGaussian();
-            //Double_t rndm = (Numc::TWO<> / Numc::THREE<>) * ((Rndm::DecimalUniform() - Numc::HALF) + Rndm::NormalGaussian());
+            if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * rndm);
             iter++;
         } while ((iter < niter) && (ibta < LMTL_INV_BETA || ibta > LMTU_INV_BETA));
@@ -756,12 +756,10 @@ Bool_t PhyTrFit::physicalMassFit() {
 
     class PartElem {
         public :
-            PartElem() : succ(false), tsft(0), fluc_eta(0), fluc_ibta(0), qlt(0) {}
-            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _tsft, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), args(_args), tsft(_tsft), fluc_eta(_fluc_eta), fluc_ibta(_fluc_ibta), qlt(_qlt) {}
+            PartElem() : succ(false), fluc_eta(0), fluc_ibta(0), qlt(0) {}
+            PartElem(const PhySt& _part, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), fluc_eta(_fluc_eta), fluc_ibta(_fluc_ibta), qlt(_qlt) {}
             Bool_t              succ;
             PhySt               part;
-            std::vector<PhyArg> args;
-            Double_t            tsft;
             Double_t            fluc_eta;
             Double_t            fluc_ibta;
             Double_t            qlt;
@@ -777,27 +775,38 @@ Bool_t PhyTrFit::physicalMassFit() {
         
         Bool_t firstTime = (!condElem.succ);
         if (!firstTime && Numc::Compare(quality_.at(1), condElem.qlt) > 0) continue;
-        
         if (!evolve(MuOpt::kFree)) continue;
+        
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
         Double_t fluc_ibta = (err_.at(5) / part_.ibta());
-        
-        condElem = std::move(PartElem(part_, args_, TOFt_sft_, fluc_eta, fluc_ibta, quality_.at(1)));
+        condElem = std::move(PartElem(part_, fluc_eta, fluc_ibta, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
-    //const std::array<Double_t, 3> fact({ Numc::HALF, (Numc::ONE<> / Numc::FIVE<>), (Numc::ONE<> / Numc::TEN<>) }); // org, OK version
+    for (Short_t iter = 1; iter <= LMTU_MU_ITER; ++iter) {
+        args_.clear();
+        TOFt_sft_ = Numc::ZERO<>;
+        info_ = condElem.part.info();
+        part_ = condElem.part;
 
-    args_     = condElem.args;
-    TOFt_sft_ = condElem.tsft;
-    info_ = condElem.part.info();
-    part_ = condElem.part;
-    
-    //const Double_t fact = (Numc::ONE<> / Numc::TEN<>);
-    const Double_t fact = Numc::ZERO<>;
-    if (!physicalFit(MuOpt::kFree, 
-                     fact * condElem.fluc_eta, 
-                     fact * condElem.fluc_ibta)) return false;
+        Double_t mass = part_.mass();
+        Double_t ibta = part_.ibta();
+        if (!physicalFit(MuOpt::kFree, 
+                         MU_FLUC * condElem.fluc_eta, 
+                         MU_FLUC * condElem.fluc_ibta)) return false;
+        
+        Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
+        Double_t fluc_ibta = (err_.at(5) / part_.ibta());
+        condElem = std::move(PartElem(part_, fluc_eta, fluc_ibta, quality_.at(1)));
+       
+        Double_t convg_m = std::fabs((part_.mass() - mass) / (part_.mass() + mass));
+        Double_t convg_b = std::fabs((part_.ibta() - ibta) / (part_.ibta() + ibta)) / fluc_ibta;
+        if (!Numc::Valid(convg_m)) convg_m = Numc::ONE<>;
+        if (!Numc::Valid(convg_b)) convg_b = Numc::ONE<>;
+
+        Bool_t convg = (convg_m < CONVG_FLUC || convg_b < CONVG_FLUC);
+        if (iter >= LMTL_MU_ITER && convg) break;
+    }
     
     return true;
 }

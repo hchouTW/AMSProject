@@ -203,7 +203,7 @@ class MatGeoBoxReader {
         inline Bool_t is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo);
         
         MatFld get(const SVecD<3>& coo, Double_t log10gb = -10);
-        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);
+        MatFld get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10);
         
     protected :
         inline void clear() { is_load_ = false; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; mat_.clear(); var_.clear(); }
@@ -212,7 +212,6 @@ class MatGeoBoxReader {
 
     private :
         static constexpr Double_t STD_STEP_LEN = Numc::ONE<>;
-        static constexpr Double_t FST_STEP_LEN = Numc::ONE<> + Numc::HALF;
 
         Bool_t                               is_load_;
         Long64_t                             max_len_;
@@ -241,9 +240,9 @@ class MatMgnt {
         static Bool_t Load();
 
         static MatFld Get(const SVecD<3>& coo, Double_t log10gb = -10);
-        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10, Bool_t is_std = true);
+        static MatFld Get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t log10gb = -10);
         
-        static MatFld Get(Double_t stp_len, const PhySt& part, Bool_t is_std = true);
+        static MatFld Get(Double_t stp_len, const PhySt& part);
 
     protected :
         static Bool_t is_load_;
@@ -285,7 +284,7 @@ class MatPhy {
         MatPhy() {}
         ~MatPhy() {}
 
-        static MatPhyFld Get(const Double_t stp_len, PhySt& part, Bool_t is_std = true);
+        static MatPhyFld Get(const Double_t stp_len, PhySt& part);
         static MatPhyFld Get(const MatFld& mfld, PhySt& part);
 
     protected :

@@ -244,8 +244,8 @@ int main(int argc, char * argv[]) {
 
 
     COUT("Mrso\n");
-    Hist* hHCMrsoM = Hist::New("hHCMrsoM", HistAxis(AXbta, "1/Mass Mean [1/GeV]"));
-    Hist* hHCMrsoS = Hist::New("hHCMrsoS", HistAxis(AXbta, "1/Mass Sigma [1/GeV]"));
+    Hist* hHCMrsoM = Hist::New("hHCMrsoM", HistAxis(AXbta, "Mass Mean [GeV]"));
+    Hist* hHCMrsoS = Hist::New("hHCMrsoS", HistAxis(AXbta, "Mass Sigma [GeV]"));
     
     std::vector<Hist*> vhHCMrso = Hist::ProjectAll(HistProj::kY, hHCMrso);
 

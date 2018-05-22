@@ -11,6 +11,34 @@
 namespace TrackSys {
 namespace InterfaceAms {
 
+/*
+class AMSEvent {
+    public :
+        AMSEvent(AMSEventR* event) {}
+        ~AMSEvent() {}
+    
+    protected :
+        HitStTRK              get_HitStTRK(TrRecHitR& hit, Bool_t hasQ = false);
+        std::vector<HitStTOF> get_HitStTOF(BetaHR& betaH, Bool_t hasQ = false);
+        HitStRICH             get_HitStRICH(RichRingR& rich);
+
+    private :
+        // TRK
+        std::vector<HitStTRK> trHitIn;
+        HitStTRK              trHitL1;
+        HitStTRK              trHitL9;
+
+        // TOF
+        std::vector<HitStTOF> tfHit;
+
+        // RICH
+        HitStRICH rhHit;
+};
+*/
+
+
+
+
 enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
 constexpr Int_t QOptTracker = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
 constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
