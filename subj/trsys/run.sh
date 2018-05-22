@@ -5,7 +5,7 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
-Version=test
+Version=test2
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 

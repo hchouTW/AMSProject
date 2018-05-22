@@ -1,17 +1,17 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  18May16
+PROJVERSION  =  18May23
 PROJTITLE    =  NCU_TEST
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.ncu.iss.B1130.pass7
 EVENTTYPE    =  ISS
-FILEPEREXE   =  1
+FILEPEREXE   =  3
 JOBREGION    =  WHOLE
 EXESATID     =  0
-EXEENDID     =  150 
+EXEENDID     =  735 
 
 [QUEUE]
 QUEUE      =  ams
 STORAGE    =  DPM
-EXEPERJOB  =  1
+EXEPERJOB  =  2
 CONFIRM    =  NONE

@@ -1082,8 +1082,11 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
         // HChou Fitting
         std::vector<std::tuple<TrackSys::PartType, TrackSys::InterfaceAms::Event::TrackerPatt, TrackSys::PhyTrFit::MuOpt>> trArgs({
-            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::Inner, TrackSys::PhyTrFit::MuOpt::kFixed },
-            { TrackSys::PartType::Q1,     TrackSys::InterfaceAms::Event::TrackerPatt::Inner, TrackSys::PhyTrFit::MuOpt::kFree  }
+            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::Inner,    TrackSys::PhyTrFit::MuOpt::kFixed },
+            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1,  TrackSys::PhyTrFit::MuOpt::kFixed },
+            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL9,  TrackSys::PhyTrFit::MuOpt::kFixed },
+            { TrackSys::PartType::Proton, TrackSys::InterfaceAms::Event::TrackerPatt::FullSpan, TrackSys::PhyTrFit::MuOpt::kFixed },
+            { TrackSys::PartType::Q1,     TrackSys::InterfaceAms::Event::TrackerPatt::Inner,    TrackSys::PhyTrFit::MuOpt::kFree  }
         });
         
         Bool_t withQ    = false;
@@ -1208,8 +1211,14 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                     track.distToTrFeet[sl] = std::min(dist[0], dist[1]);
                 }
 
-                if (hctr.muOpt() == TrackSys::PhyTrFit::MuOpt::kFixed) fTrk.hcTr = track;
-                else                                                   fTrk.hcMu = track;
+                if (hctr.muOpt() == TrackSys::PhyTrFit::MuOpt::kFixed) {
+                    TrackSys::InterfaceAms::Event::TrackerPatt trPatt = std::get<1>(arg);
+                    if (TrackSys::InterfaceAms::Event::TrackerPatt::Inner    == trPatt) fTrk.hcTr.at(0) = track;
+                    if (TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1  == trPatt) fTrk.hcTr.at(1) = track;
+                    if (TrackSys::InterfaceAms::Event::TrackerPatt::InnerL9  == trPatt) fTrk.hcTr.at(2) = track;
+                    if (TrackSys::InterfaceAms::Event::TrackerPatt::FullSpan == trPatt) fTrk.hcTr.at(3) = track;
+                }
+                else fTrk.hcMu = track;
 
                 // testcode
                 //CERR("GO %2d MASS %14.8f %14.8f RIG %14.8f NRL %14.8f DIST %14.8f\n", track.going, track.mass, track.error[6], track.state[6], track.nrl[1], track.distToTrFeet[0]);
@@ -2502,7 +2511,7 @@ void YiNtuple::loopEventChain() {
 
 		AMSEventR * event = fChain->GetEvent(ientry);
 	
-		//if (nprocessed > 1000) break; // testcode
+		//if (nprocessed > 10000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);
 

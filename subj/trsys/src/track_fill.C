@@ -60,8 +60,8 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("acc",  &fAcc);
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
-    //dst->SetBranchAddress("rich", &fRich);
-    //dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("rich", &fRich);
+    dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -230,7 +230,14 @@ int main(int argc, char * argv[]) {
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.add_hit(mhit);
         }
-        
+
+        if (!fRich->status) continue;
+        if (fRich->kind != 0) continue;
+        HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
+        richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
+        richHit.set_ib(Numc::ONE<> / fRich->beta);
+        fitPar.add_hit(richHit);
+
         if (!fitPar.check()) continue;
 
         if (optL1 && !(hasL1 && hasMCL1)) continue;
@@ -271,8 +278,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -291,7 +298,7 @@ int main(int argc, char * argv[]) {
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
         hc_irig = hc_lay_irig[topLay];
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MU (%14.8f %14.8f) QLT (%14.8f %14.8f) TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mu(), tr.err_mu(), tr.quality(0), tr.quality(1), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = ckTr.status;

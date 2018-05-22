@@ -858,8 +858,8 @@ class TRK : public TObject {
 
             ckTr = std::vector<CKTrackInfo>(4);
             kfTr = std::vector<KFTrackInfo>(4);
-
-            hcTr.init();
+            hcTr = std::vector<HCTrackInfo>(4);
+            
             hcMu.init();
 
             ftL34Dist = -1;
@@ -902,9 +902,9 @@ class TRK : public TObject {
         // Choutko [Inn InnL1 InnL9 FS]
         std::vector<KFTrackInfo> kfTr;
 
-        // Hsin-Yi tools [Inn]
-        HCTrackInfo hcTr;
-        HCTrackInfo hcMu;
+        // Hsin-Yi tools [Inn InnL1 InnL9 FS]
+        std::vector<HCTrackInfo> hcTr;
+        HCTrackInfo hcMu; // [Inn]
 
         // Haino's tools
         Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
@@ -921,7 +921,7 @@ class TRK : public TObject {
                                // [2] Tracker, TOF and/or TRD
         Float_t massEstSH;     // mass estimator log-likelihood
 
-	ClassDef(TRK, 6)
+	ClassDef(TRK, 7)
 };
 
 
