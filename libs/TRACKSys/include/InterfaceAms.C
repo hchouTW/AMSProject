@@ -206,7 +206,7 @@ Bool_t Event::bulid_HitStRICH() {
 }
         
 
-TrFitPar Event::get(const PartInfo& info, const TrackerPatt& trPatt, Bool_t withTOF, Bool_t withRICH) {
+TrFitPar Event::get(const PartInfo& info, const TrackerPatt& trPatt, Bool_t withTOF, Bool_t withRICH) const {
     TrFitPar::Orientation ortt = ((going_ <= 0) ? TrFitPar::Orientation::kDownward : TrFitPar::Orientation::kUpward);
     if (!status_) return TrFitPar();
     if (withTOF  && (btah_ == nullptr || tfHit_.size() == 0)) return TrFitPar();

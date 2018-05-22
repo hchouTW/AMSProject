@@ -24,7 +24,7 @@ class Event {
         Event(AMSEventR* event, Bool_t withQ = false);
         ~Event() { init(); }
 
-        TrFitPar get(const PartInfo& info = PartInfo(PartType::Proton), const TrackerPatt& trPatt = TrackerPatt::MaxSpan, Bool_t withTOF = false, Bool_t withRICH = false);
+        TrFitPar get(const PartInfo& info = PartInfo(PartType::Proton), const TrackerPatt& trPatt = TrackerPatt::MaxSpan, Bool_t withTOF = false, Bool_t withRICH = false) const;
         
         const Bool_t& status() const { return status_; }
         const Short_t& going() const { return going_; }
