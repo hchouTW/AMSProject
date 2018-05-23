@@ -60,27 +60,6 @@ class Event {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-/*
-enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
-constexpr Int_t QOptTracker = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
-constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
-
-// TODO :
-static std::vector<HitStTRK> GetHitStTRK(TrTrackR& track, const TrackerPatt& patt = TrackerPatt::MaxSpan, Bool_t hasQ = false);
-static std::vector<HitStTOF> GetHitStTOF(BetaHR& betaH, Bool_t hasQ = false);
-static HitStRICH             GetHitStRICH(RichRingR& rich);
-*/
-
 } // namespace InterfaceAms
 } // namespace TrackSys
 

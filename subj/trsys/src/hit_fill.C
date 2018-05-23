@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May15/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -85,16 +85,19 @@ int main(int argc, char * argv[]) {
     Axis AXTKadc("TKadc", 800, 0., 8.);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
-    
-    Axis AXTFadc("TFadc", 800, 0., 4.);
+*/    
+    Axis AXTFadc("TFadc", 400, 0.5, 2.5);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
-    Axis AXTDadc("TDadc", 800, 0., 4000.);
+    Axis AXTDadc("TDadc", 400, 0., 3000.);
     Hist* hTDadc = Hist::New("hTDadc", HistAxis(AXeta, AXTDadc));
     
     Axis AXTDavg("TDavg", 400, 0., 1500.);
     Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
-*/
+    
+    Axis AXTDtan("TDtan", 400, 0., 1500.);
+    Hist* hTDtan = Hist::New("hTDtan", HistAxis(AXeta, AXTDtan));
+/*    
     Axis AXTFtme("TFtme", 800, -20, 20);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
     
@@ -103,14 +106,14 @@ int main(int argc, char * argv[]) {
     
     Axis AXNAFib("NAFib", 800, -0.015, 0.015);
     Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXeta, AXNAFib));
-
+*/
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
         
-        TrackInfo& track = fTrk->track;
+        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
 
         for (Int_t ic = 0; ic < AXcut.nbin(); ++ic) hEvt->fillH2D(fG4mc->primPart.mom, ic);
         hCut->fillH2D(fG4mc->primPart.mom, 0);
@@ -137,7 +140,7 @@ int main(int argc, char * argv[]) {
 
         // Charge
         //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        //if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        //if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // TOF
@@ -157,7 +160,7 @@ int main(int argc, char * argv[]) {
 /*
         // REC hit
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
-        for (auto&& hit : track.hits) { rec[hit.layJ-1] = &hit; }
+        for (auto&& hit : fTrk->hits) { rec[hit.layJ-1] = &hit; }
 
         // MC hit
         HitTRKMCInfo * mch[9]; std::fill_n(mch, 9, nullptr);
@@ -196,7 +199,10 @@ int main(int argc, char * argv[]) {
             if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]*bta*bta);
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]*bta*bta);
         }
-            
+    */        
+        SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
+        
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
@@ -206,6 +212,11 @@ int main(int argc, char * argv[]) {
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]*bta*bta);
         }
 
+        Double_t mindedx = 9999, maxdedx = 0;
+        Double_t minde = 9999, maxde = 0;
+        Double_t mindx = 9999, maxdx = 0;
+        Double_t de = 0;
+        Double_t dx = 0;
         std::vector<Double_t> vdedx;
         for (auto&& hit : fTrd->hits[0]) {
             if (hit.len <= 0 || hit.amp <= 0) continue;
@@ -213,13 +224,21 @@ int main(int argc, char * argv[]) {
             Double_t dedx = hit.amp/hit.len;
             hTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
             vdedx.push_back(dedx);
+            de += hit.amp;
+            dx += hit.len;
+            if (mindedx > dedx) { mindedx = dedx; minde = hit.amp; mindx = hit.len; }
+            if (maxdedx < dedx) { maxdedx = dedx; maxde = hit.amp; maxdx = hit.len; }
         }
         if (vdedx.size() >= 5) {
             std::sort(vdedx.begin(), vdedx.end());
             Double_t avg = std::accumulate(vdedx.begin()+1, vdedx.end()-1, 0) / (vdedx.size()-2);
             hTDavg->fillH2D(mass/fG4mc->primPart.mom, avg);
+            
+            Double_t dedx = (de - minde - maxde) / (dx - mindx - maxdx);
+            hTDtan->fillH2D(mass/fG4mc->primPart.mom, dedx);
         }
-*/
+        
+        /*
         SegPARTMCInfo* mcsTOF[4] = { nullptr };
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 1) mcsTOF[seg.lay] = &seg; }
         for (Int_t sl = 0; sl < 2; ++sl) {
@@ -244,6 +263,7 @@ int main(int argc, char * argv[]) {
             if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);
         }
+        */
     }
 
     ofle->Write();

@@ -185,13 +185,12 @@ class HitStTOF : public VirtualHitSt {
             divt_.fill(Numc::ZERO<>);
         }
         
-        // TODO: // rebuild template
-        //inline void set_q(Double_t q) {
-        //    side_q_ = (Numc::Compare(q) > 0);
-        //    q_      = (side_q_ ? q : Numc::ZERO<>);
-        //    nrmq_   = Numc::ZERO<>;
-        //    divq_.fill(Numc::ZERO<>);
-        //}
+        inline void set_q(Double_t q) {
+            side_q_ = (Numc::Compare(q) > 0);
+            q_      = (side_q_ ? q : Numc::ZERO<>);
+            nrmq_   = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
+        }
 
         inline const Double_t& orgt() const { return orgt_; }
         inline const Double_t& sftt() const { return sftt_; }

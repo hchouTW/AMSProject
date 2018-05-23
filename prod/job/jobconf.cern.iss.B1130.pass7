@@ -5,7 +5,7 @@ PROJTITLE    =  CERN_TEST
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.iss.B1130.pass7
 EVENTTYPE    =  ISS
-FILEPEREXE   =  2
+FILEPEREXE   =  1
 JOBREGION    =  PART
 EXESATID     =  35000
 EXEENDID     =  37000
@@ -13,5 +13,5 @@ EXEENDID     =  37000
 [QUEUE]
 QUEUE      =  ams1nd
 STORAGE    =  EOS
-EXEPERJOB  =  4
+EXEPERJOB  =  1
 CONFIRM    =  NONE

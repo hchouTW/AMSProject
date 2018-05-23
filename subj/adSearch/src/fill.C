@@ -147,7 +147,6 @@ int main(int argc, char * argv[]) {
         Short_t hcSign = (hcMu.stateTop[6] > 0) ? 1 : -1;
 
         Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcMu.stateTop[6]) : fG4mc->primPart.mom);
-
        
         Double_t TOFibta = 1.0/fTof->betaH;
         Double_t TOFmass = ((TOFibta > 1.0) ? std::sqrt(TOFibta*TOFibta-1.0)*std::fabs(kfTr.rig[1]) : 0.0);
