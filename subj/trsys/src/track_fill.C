@@ -104,7 +104,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
     // Fit B Res
-    Axis AXBrso("(Bm/Bt - 1) [1]", 1000, -0.12, 0.12);
+    Axis AXBrso("(Bm/Bt - 1) [1]", 1000, -0.08, 0.08);
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
@@ -280,8 +280,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
