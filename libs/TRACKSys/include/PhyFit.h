@@ -276,8 +276,8 @@ class PhyTrFit : public TrFitPar {
         static constexpr Double_t LMTU_INV_BETA  = 1.0e+2;
         static constexpr Short_t  LMTL_MU_ITER   = 2;
         static constexpr Short_t  LMTU_MU_ITER   = 4;
-        static constexpr Double_t MU_FLUC        = 1.5e-2;
-        static constexpr Double_t CONVG_FLUC     = 1.0e-2;
+        static constexpr Double_t MU_FLUC        = 1.25e-2;
+        static constexpr Double_t CONVG_FLUC     = 1.00e-2;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {
             if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
