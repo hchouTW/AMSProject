@@ -946,6 +946,10 @@ class TRD : public TObject {
 			std::fill_n(LLRph, 2, -1);
 			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
+            
+            std::fill_n(ADCn, 2, 0);
+            std::fill_n(ADCv, 2, 0);
+            std::fill_n(ADCz, 2, 0);
 
             hits[0].clear();
             hits[1].clear();
@@ -974,6 +978,10 @@ class TRD : public TObject {
 		Float_t LLRph[2];
 		Short_t LLRnhit[2];
 		Float_t Q[2];
+        
+        Short_t ADCn[2];
+        Float_t ADCv[2];
+        Float_t ADCz[2];
 
         std::vector<HitTRDInfo> hits[2];
 

@@ -15,7 +15,7 @@ int main(int argc, char * argv[]) {
 
     // Fit
     Hist* hMrso = Hist::Head("hMpos");
-    Hist* hMres = Hist::Head("hMres");
+    Hist* hM2rso = Hist::Head("hM2pos");
  
     const Axis& AXrig = hMrso->xaxis();
     
@@ -51,31 +51,31 @@ int main(int argc, char * argv[]) {
     
     hMrsoM->write();
     hMrsoS->write();
-
-    COUT("Mres\n");
-    Hist* hMresM = Hist::New("hMresM", HistAxis(AXrig, "Mean"));
-    Hist* hMresS = Hist::New("hMresS", HistAxis(AXrig, "Sigma"));
     
-    std::vector<Hist*> vhMres = Hist::ProjectAll(HistProj::kY, hMres);
+    COUT("M2rso\n");
+    Hist* hM2rsoM = Hist::New("hM2rsoM", HistAxis(AXrig, "Mass Mean [GeV]"));
+    Hist* hM2rsoS = Hist::New("hM2rsoS", HistAxis(AXrig, "Mass Sigma [GeV]"));
+    
+    std::vector<Hist*> vhM2rso = Hist::ProjectAll(HistProj::kY, hM2rso);
     for (int it = 1; it <= AXrig.nbin(); ++it) {
-        Double_t Mmax = (*vhMres.at(it))()->GetBinCenter((*vhMres.at(it))()->GetMaximumBin());
-        Double_t Mrms = 0.5 * (*vhMres.at(it))()->GetRMS();
+        Double_t Mmax = (*vhM2rso.at(it))()->GetBinCenter((*vhM2rso.at(it))()->GetMaximumBin());
+        Double_t Mrms = 0.5 * (*vhM2rso.at(it))()->GetRMS();
         gaus->SetParameters(1000, Mmax, Mrms);
-        (*vhMres.at(it))()->Fit(gaus, "q0", "");
-        (*vhMres.at(it))()->Fit(gaus, "q0", "", Mmax-stable*Mrms, Mmax+stable*Mrms);
-        (*vhMres.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
-        (*vhMres.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
-        (*vhMres.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
-        (*vhMres.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "");
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "", Mmax-stable*Mrms, Mmax+stable*Mrms);
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
+        (*vhM2rso.at(it))()->Fit(gaus, "q0", "", Mmax-stable*gaus->GetParameter(2), Mmax+stable*gaus->GetParameter(2));
     
-        (*hMresM)()->SetBinContent(it, gaus->GetParameter(1));
-        (*hMresM)()->SetBinError  (it, gaus->GetParError(1));
-        (*hMresS)()->SetBinContent(it, gaus->GetParameter(2));
-        (*hMresS)()->SetBinError  (it, gaus->GetParError(2));
+        (*hM2rsoM)()->SetBinContent(it, gaus->GetParameter(1));
+        (*hM2rsoM)()->SetBinError  (it, gaus->GetParError(1));
+        (*hM2rsoS)()->SetBinContent(it, gaus->GetParameter(2));
+        (*hM2rsoS)()->SetBinError  (it, gaus->GetParError(2));
     } 
     
-    hMresM->write();
-    hMresS->write();
+    hM2rsoM->write();
+    hM2rsoS->write();
 
     ofle->Write();
     ofle->Close();

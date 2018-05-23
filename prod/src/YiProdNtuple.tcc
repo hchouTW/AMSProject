@@ -1425,13 +1425,33 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             hitInfo.side = hit->TRDHit_Direction;
             hitInfo.amp = hit->TRDHit_Amp;
             hitInfo.len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
-            hitInfo.coo[0] = hit->TRDHit_TRDTrack_x;
-            hitInfo.coo[1] = hit->TRDHit_TRDTrack_y;
-            hitInfo.coo[2] = hit->TRDHit_TRDTrack_z;
+            hitInfo.coo[0] = hit->TRDHit_x;
+            hitInfo.coo[1] = hit->TRDHit_y;
+            hitInfo.coo[2] = hit->TRDHit_z;
             fTrd.hits[kindOfFit].push_back(hitInfo);
 		}
 		if (fTrd.hits[kindOfFit].size() == 0) continue;
         std::sort(fTrd.hits[kindOfFit].begin(), fTrd.hits[kindOfFit].end(), HitTRDInfo_sort());
+
+        // Avg ADC Signal
+        Short_t  ndofEX = -2;
+        Double_t sumde = 0.0;
+        Double_t sumdx = 0.0;
+        Double_t sumcz = 0.0;
+        Double_t minEX[4] = {  1.0e+5,  1.0e+5,  1.0e+5, 0.0 }; // dedx, de, dx, cz
+        Double_t maxEX[4] = { -1.0e+5, -1.0e+5, -1.0e+5, 0.0 }; // dedx, de, dx, cz
+        for (auto&& hit : fTrd.hits[kindOfFit]) {
+            if (hit.len < 0.3) continue;
+            Double_t dedx = hit.amp / hit.len;
+            if (dedx < minEX[0]) { minEX[0] = dedx; minEX[1] = hit.amp; minEX[2] = hit.len; minEX[3] = hit.coo[2]; }
+            if (dedx > maxEX[0]) { maxEX[0] = dedx; maxEX[1] = hit.amp; maxEX[2] = hit.len; maxEX[3] = hit.coo[2]; }
+            sumde += hit.amp;
+            sumdx += hit.len;
+            sumcz += hit.coo[2];
+            ndofEX++;
+        }
+        Double_t avgvEX = (ndofEX > 0) ? (((sumde - minEX[1] - maxEX[1]) / (sumdx - minEX[2] - maxEX[2])) * 1.0e-2) : 0.0;
+        Double_t avgvCZ = (ndofEX > 0) ? ((sumcz - minEX[3] - maxEX[3]) / ndofEX) : 0.0;
 
 		fTrd.statusKCls[kindOfFit] = true;
 		fTrd.LLRep[kindOfFit]      = llr[0];
@@ -1439,8 +1459,13 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTrd.LLRph[kindOfFit]      = llr[2];
 		fTrd.LLRnhit[kindOfFit]    = fTrd.hits[kindOfFit].size();
 		fTrd.Q[kindOfFit]          = Q;
+        
+        if (ndofEX > 0) {
+            fTrd.ADCn[kindOfFit] = ndofEX;
+            fTrd.ADCv[kindOfFit] = avgvEX;
+            fTrd.ADCz[kindOfFit] = avgvCZ;
+        }
 	}
-
 
     // Vertex
     TRDVertex trdVtx;
