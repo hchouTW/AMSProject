@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May24/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -86,17 +86,12 @@ int main(int argc, char * argv[]) {
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
 */    
-    Axis AXTFadc("TFadc", 400, 0.5, 2.5);
+    Axis AXTFadc("TFadc", 400, 0.5, 5.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
-    Axis AXTDadc("TDadc", 400, 0., 3000.);
-    Hist* hTDadc = Hist::New("hTDadc", HistAxis(AXeta, AXTDadc));
-    
-    Axis AXTDavg("TDavg", 400, 0., 1500.);
+    Axis AXTDavg("TDavg", 400, 0.5, 10.);
     Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
-    
-    Axis AXTDtan("TDtan", 400, 0., 1500.);
-    Hist* hTDtan = Hist::New("hTDtan", HistAxis(AXeta, AXTDtan));
+
 /*    
     Axis AXTFtme("TFtme", 800, -20, 20);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
@@ -209,33 +204,11 @@ int main(int argc, char * argv[]) {
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
             eta = AXeta.center(AXeta.find(eta), AxisScale::kLog);
             Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
-            hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]*bta*bta);
+            hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
         }
 
-        Double_t mindedx = 9999, maxdedx = 0;
-        Double_t minde = 9999, maxde = 0;
-        Double_t mindx = 9999, maxdx = 0;
-        Double_t de = 0;
-        Double_t dx = 0;
-        std::vector<Double_t> vdedx;
-        for (auto&& hit : fTrd->hits[0]) {
-            if (hit.len <= 0 || hit.amp <= 0) continue;
-            if (hit.len < 0.3) continue;
-            Double_t dedx = hit.amp/hit.len;
-            hTDadc->fillH2D(mass/fG4mc->primPart.mom, dedx);
-            vdedx.push_back(dedx);
-            de += hit.amp;
-            dx += hit.len;
-            if (mindedx > dedx) { mindedx = dedx; minde = hit.amp; mindx = hit.len; }
-            if (maxdedx < dedx) { maxdedx = dedx; maxde = hit.amp; maxdx = hit.len; }
-        }
-        if (vdedx.size() >= 5) {
-            std::sort(vdedx.begin(), vdedx.end());
-            Double_t avg = std::accumulate(vdedx.begin()+1, vdedx.end()-1, 0) / (vdedx.size()-2);
-            hTDavg->fillH2D(mass/fG4mc->primPart.mom, avg);
-            
-            Double_t dedx = (de - minde - maxde) / (dx - mindx - maxdx);
-            hTDtan->fillH2D(mass/fG4mc->primPart.mom, dedx);
+        if (fTrd->ADCn[0] >= 3) {
+            hTDavg->fillH2D(mass/fG4mc->primPart.mom, fTrd->ADCv[0]);
         }
         
         /*

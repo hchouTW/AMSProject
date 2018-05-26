@@ -6,23 +6,23 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
 Version=test
-RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 
 CurDir=${PWD}
 
 DataType=MC
 #Stream=/ams_home/hchou/tmp/flist.pr
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May19
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May24
 
 OutputDir=${CurDir}/dat
 
 #Hit
-GroupSize=30
-Nseq=70
+#GroupSize=20
+#Nseq=30
 #Fit
-#GroupSize=10
-#Nseq=200
+GroupSize=10
+Nseq=200
 #GroupSize=4
 #Nseq=500
 

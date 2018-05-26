@@ -4,7 +4,8 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May24/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -74,11 +75,11 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     
-    //Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
+    Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
@@ -164,7 +165,7 @@ int main(int argc, char * argv[]) {
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcTr;
+        HCTrackInfo& hcTr = fTrk->hcTr.at(0);
         
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -228,17 +229,17 @@ int main(int argc, char * argv[]) {
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            //mhit.set_q(fTof->Q[il]);
+            mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.add_hit(mhit);
         }
 
-        if (!fRich->status) continue;
-        if (fRich->kind != 0) continue;
-        HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
-        richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
-        richHit.set_ib(Numc::ONE<> / fRich->beta);
-        fitPar.add_hit(richHit);
+        //if (!fRich->status) continue;
+        //if (fRich->kind != 0) continue;
+        //HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
+        //richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
+        //richHit.set_ib(Numc::ONE<> / fRich->beta);
+        //fitPar.add_hit(richHit);
 
         if (!fitPar.check()) continue;
 
@@ -280,8 +281,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 30.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -299,7 +300,7 @@ int main(int argc, char * argv[]) {
             hc_lay_irig[it] = stt.irig();
             //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         }
-        hc_irig = hc_lay_irig[topLay];
+        //hc_irig = hc_lay_irig[topLay];
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1), sw.time());
         //-------------------------------------//
         

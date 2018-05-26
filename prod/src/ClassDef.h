@@ -453,6 +453,8 @@ class CKTrackInfo : public TObject {
             
             std::fill_n(statusLJ, 6, false);
             std::fill_n(stateLJ[0], 6*6, 0);
+
+            cpuTime = 0;
         }
 
     public :
@@ -471,6 +473,8 @@ class CKTrackInfo : public TObject {
 
         Bool_t  statusLJ[6];
         Float_t stateLJ[6][6]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+
+        Float_t cpuTime; // [ms]
 	
     ClassDef(CKTrackInfo, 1)
 };
@@ -498,6 +502,8 @@ class KFTrackInfo : public TObject {
             
             std::fill_n(statusLJ, 6, false);
             std::fill_n(stateLJ[0], 6*8, 0);
+
+            cpuTime = 0;
         }
 
     public :
@@ -517,6 +523,8 @@ class KFTrackInfo : public TObject {
         Bool_t  statusLJ[6];
         Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
 	
+        Float_t cpuTime; // [ms]
+
     ClassDef(KFTrackInfo, 1)
 };
 
@@ -554,6 +562,8 @@ class HCTrackInfo : public TObject {
             std::fill_n(ela, 6, 0);
             
             std::fill_n(distToTrFeet, 3, -1);
+
+            cpuTime = 0;
         }
 	
     public :
@@ -583,6 +593,8 @@ class HCTrackInfo : public TObject {
         Float_t ela[6]; // L12 L34 L56 L78 L89 RICH
 	
         Float_t distToTrFeet[3]; // L34 L56 L78
+
+        Float_t cpuTime; // [ms]
 
         ClassDef(HCTrackInfo, 3)
 };

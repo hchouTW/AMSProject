@@ -33,21 +33,16 @@ int main(int argc, char * argv[]) {
     using namespace MGROOT;
     MGROOT::LoadDefaultEnvironment();
   
-    std::string iopath = "/ams_home/hchou/AMSProject/subj/trsys/dat";
-    //std::string iopath = "/afs/cern.ch/work/h/hchou/AMSData/test18";
-    Int_t idx = std::atoi(argv[1]);
-
-    //Hist::Load("hit_fill.root", "dat");
-    Hist::Load("hit_fill.root", iopath);
+    Hist::Load("hit_fill.root", "dat");
 
     // Fit
-    Hist* hAdc = Hist::Head("hTKadcy");
+    Hist* hAdc = Hist::Head("hTFadc");
     std::vector<Hist*>&& vhAdc = Hist::ProjectAll(HistProj::kY, hAdc);
 
     const Axis& AXeta = hAdc->xaxis();
     const Axis& AXadc = hAdc->yaxis();
     
-    TFile * ofle = new TFile(Form("%s/hit_fit%04d.root", iopath.c_str(), idx), "RECREATE");
+    TFile * ofle = new TFile("hit_fit.root", "RECREATE");
     ofle->cd();
     
     Hist* hAdcK = Hist::New("hAdcK", HistAxis(AXeta, "Kappa"));
@@ -56,10 +51,8 @@ int main(int argc, char * argv[]) {
     Hist* hAdcF = Hist::New("hAdcF", HistAxis(AXeta, "Fluc"));
 
     TF1* func = new TF1("func", flgcov, 0, 10, 5);
-    //for (int it = 1; it <= AXeta.nbin(); ++it) {
-    for (int it = idx; it <= idx && it <= AXeta.nbin(); ++it) {
+    for (int it = 30; it <= AXeta.nbin(); ++it) {
         Double_t eta = AXeta.center(it, AxisScale::kLog);
-        Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
         COUT("Process ITER %d\n", it);
         Double_t kpa = 0.02;
         Double_t mpv = (*vhAdc.at(it))()->GetBinCenter((*vhAdc.at(it))()->GetMaximumBin());
@@ -69,6 +62,7 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(2, 0.0, 5.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
         func->SetParLimits(4, 0.0, 10.0*rms);
+        func->FixParameter(4, 0.0824851); // TFadc
         //func->FixParameter(4, (bta*bta)*0.0829427); // TFadc
         //func->FixParameter(1, (1.0-0.5*TMath::Erfc(5.07474e-01*TMath::Log(1.0+4.16139e+00*eta)-1.96169e+00))); // TKadcx
         //func->FixParameter(4, (bta*bta)*0.230493); // TKadcx
@@ -85,12 +79,12 @@ int main(int argc, char * argv[]) {
     
         (*hAdcK)()->SetBinContent(it, func->GetParameter(1));
         (*hAdcK)()->SetBinError  (it, func->GetParError(1));
-        (*hAdcM)()->SetBinContent(it, (1.0/bta/bta)*func->GetParameter(2));
-        (*hAdcM)()->SetBinError  (it, (1.0/bta/bta)*func->GetParError(2));
-        (*hAdcS)()->SetBinContent(it, (1.0/bta/bta)*func->GetParameter(3));
-        (*hAdcS)()->SetBinError  (it, (1.0/bta/bta)*func->GetParError(3));
-        (*hAdcF)()->SetBinContent(it, (1.0/bta/bta)*func->GetParameter(4));
-        (*hAdcF)()->SetBinError  (it, (1.0/bta/bta)*func->GetParError(4));
+        (*hAdcM)()->SetBinContent(it, func->GetParameter(2));
+        (*hAdcM)()->SetBinError  (it, func->GetParError(2));
+        (*hAdcS)()->SetBinContent(it, func->GetParameter(3));
+        (*hAdcS)()->SetBinError  (it, func->GetParError(3));
+        (*hAdcF)()->SetBinContent(it, func->GetParameter(4));
+        (*hAdcF)()->SetBinError  (it, func->GetParError(4));
 
         CERR("FIT == KPA %14.8f MPV %14.8f SMG %14.8f FLUC %14.8f\n", func->GetParameter(1), func->GetParameter(2), func->GetParameter(3), func->GetParameter(4));
 
