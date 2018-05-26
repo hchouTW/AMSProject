@@ -305,7 +305,7 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     long double divmpv = eval_divmpv(igmbta, ibsqr); 
   
     // Landau-Gaus with noise fluctuation 
-    LandauGaus ldgaus(LandauGaus::Opt::NOROBUST, kpa, mpv, sgm, fluc_);
+    LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
     
     long double res = robust * lg_par.at(0);          // res normx

@@ -84,14 +84,14 @@ void HitStTRK::cal(const PhySt& part) {
     if (side_q_[0]) {
         SVecD<2>&& ionx = (*pdf_qx_)(q_[0]*q_[0], part.igmbta());
         nrmq_[0] = ionx(0);
-        divq_[0] = ionx(1) * part.mu();
-        divq_[1] = ionx(1) * part.eta();
+        divq_[0] = ionx(1) * part.mu() * part.eta_sign();
+        divq_[1] = ionx(1) * part.gm();
     }
     if (side_q_[1]) {
         SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
         nrmq_[1] = iony(0);
-        divq_[2] = iony(1) * part.mu();
-        divq_[3] = iony(1) * part.eta();
+        divq_[2] = iony(1) * part.mu() * part.eta_sign();
+        divq_[3] = iony(1) * part.gm();
     }
 
     set_dummy_x(part.cx());
@@ -283,8 +283,8 @@ void HitStTOF::cal(const PhySt& part) {
     if (side_q_) {
         SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.igmbta());
         nrmq_ = ion(0);
-        divq_[0] = ion(1) * part.mu();
-        divq_[1] = ion(1) * part.eta();
+        divq_[0] = ion(1) * part.mu() * part.eta_sign();
+        divq_[1] = ion(1) * part.gm();
     }
 
     set_dummy_x(part.cx());
@@ -321,10 +321,18 @@ MultiGaus HitStTOF::PDF_Q01_T_(
 //    3.9000000e-02 // Fluc
 //);
 
-IonEloss HitStTOF::PDF_Q01_Q_( // NEW
-    { 1.42180e+01, 1.03536e-01, -2.12863e+00 }, // Kpa
-    { 1.10206e-02, 8.62096e+01, 9.49522e-01, 3.59949e-04, 2.70646e+00 }, // Mpv
-    { 1.89554e-01, 2.80196e+00, 6.28283e-01, 4.37731e+00, 1.25767e+00 }, // Sgm
+//IonEloss HitStTOF::PDF_Q01_Q_( // NEW
+//    { 1.42180e+01, 1.03536e-01, -2.12863e+00 }, // Kpa
+//    { 1.10206e-02, 8.62096e+01, 9.49522e-01, 3.59949e-04, 2.70646e+00 }, // Mpv
+//    { 1.89554e-01, 2.80196e+00, 6.28283e-01, 4.37731e+00, 1.25767e+00 }, // Sgm
+//    0.0829427 // Fluc
+//);
+
+
+IonEloss HitStTOF::PDF_Q01_Q_( // NEW2
+    { 8.56923e+00, 2.03064e-01, -2.46093e+00 }, // Kpa
+    { 3.19209e-01, 3.78021e+00, 1.03394e+00, 6.42416e-01, 1.27161e+00 }, // Mpv
+    { 5.62652e-02, 1.84529e+00, 1.41309e+00, 7.72896e-01, 1.52086e+00 }, // Sgm
     0.0829427 // Fluc
 );
 
