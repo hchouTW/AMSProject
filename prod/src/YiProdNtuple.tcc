@@ -2565,7 +2565,7 @@ void YiNtuple::loopEventChain() {
 
 		AMSEventR * event = fChain->GetEvent(ientry);
 	
-		if (nprocessed > 2000) break; // testcode
+		//if (nprocessed > 2000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);
 

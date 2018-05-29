@@ -54,6 +54,9 @@
     TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[2] * ([1] - (1+x*x)^(-[2]) - TMath::Log([3] + abs(x)^[4]))");
     fmpv->SetParameters(10, 6.5, 1.0, 10.0, 1.0);
     
+    TF1* fmpv2 = new TF1("fmpv2", "[0] * (1+x*x)^[2] * ([1] - (1+x*x)^(-[2]) - TMath::Log([3] + abs(x)^[4])) + [5] * (TMath::Erfc([6] * TMath::Log(abs(x)) + [7]))");
+    fmpv2->SetParameters(8.77636e-02, 1.47297e+01, 1.20992e+00, 2.15340e-07, 3.07490e+00, 2.14623e+00, 8.23813e-01, 5.99981e+00);
+    
     //TF1* fkpa = new TF1("fkpa", "[0] * (1+x*x)^[1] * (1 + [2]*abs(x)^[3] - TMath::Log([4] + abs(x)^[5]))");
     //fkpa->SetParameters(10, 1.0, 1.5, 3.0, 1.0, 7.0);
     

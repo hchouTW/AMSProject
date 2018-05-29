@@ -7,6 +7,11 @@
 #include "Math.h"
 #include "Math.C"
 
+#include "IonEloss.h"
+#include "IonEloss.C"
+#include "GmIonEloss.h"
+#include "GmIonEloss.C"
+
 #include "PartInfo.h"
 #include "PartInfo.C"
 #include "PhySt.h"
