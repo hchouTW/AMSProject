@@ -36,7 +36,9 @@ int main(int argc, char * argv[]) {
     Hist::Load("hit_fill.root", "dat");
 
     // Fit
-    Hist* hAdc = Hist::Head("hTFadc");
+    //Hist* hAdc = Hist::Head("hTKadcx");
+    //Hist* hAdc = Hist::Head("hTKadcy");
+    Hist* hAdc = Hist::Head("hTDavg");
     std::vector<Hist*>&& vhAdc = Hist::ProjectAll(HistProj::kY, hAdc);
 
     const Axis& AXeta = hAdc->xaxis();
@@ -51,7 +53,7 @@ int main(int argc, char * argv[]) {
     Hist* hAdcF = Hist::New("hAdcF", HistAxis(AXeta, "Fluc"));
 
     TF1* func = new TF1("func", flgcov, 0, 10, 5);
-    for (int it = 30; it <= AXeta.nbin(); ++it) {
+    for (int it = 1; it <= AXeta.nbin(); ++it) {
         Double_t eta = AXeta.center(it, AxisScale::kLog);
         COUT("Process ITER %d\n", it);
         Double_t kpa = 0.02;
@@ -62,11 +64,10 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(2, 0.0, 5.0*mpv);
         func->SetParLimits(3, 0.0, 10.0*rms);
         func->SetParLimits(4, 0.0, 10.0*rms);
-        func->FixParameter(4, 0.0824851); // TFadc
-        //func->FixParameter(4, (bta*bta)*0.0829427); // TFadc
-        //func->FixParameter(1, (1.0-0.5*TMath::Erfc(5.07474e-01*TMath::Log(1.0+4.16139e+00*eta)-1.96169e+00))); // TKadcx
-        //func->FixParameter(4, (bta*bta)*0.230493); // TKadcx
+        //func->FixParameter(4, 0.0824851); // TFadc
+        //func->FixParameter(4, 0.223293); // TKadcx
         //func->FixParameter(4, 0.166633); // TKadcy
+        func->FixParameter(4, 0.17); // TDavg
         
         Double_t tmpsgm = rms;
         (*vhAdc.at(it))()->Fit(func, "q0", "", mpv-2*tmpsgm, mpv+2*tmpsgm);

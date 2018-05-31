@@ -45,6 +45,11 @@ void HitStTRK::clear() {
     nrmq_.fill(Numc::ZERO<>);
     divq_.fill(Numc::ZERO<>);
 
+    pdf_cx_ = nullptr;
+    pdf_cy_ = nullptr;
+    pdf_qx_ = nullptr;
+    pdf_qy_ = nullptr;
+
     set_type();
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
         erc_ = std::move(SVecD<2>(pdf_cx_->efft_sgm(), pdf_cy_->efft_sgm()));
@@ -183,20 +188,6 @@ MultiGaus HitStTRK::PDF_Q01_CY_N4_(
     1.40344016314640940e-01, 3.85202e-03
 );
 
-//IonEloss HitStTRK::PDF_Q01_QX_( // OLD
-//    { 6.05261e-03, 2.12431e-01, 5.25164e-01, 2.81963e+00, 2.40051e+00, 4.40867e+00 }, // Kpa
-//    { 1.06985e-01, 9.37601e+00, 8.91247e-01, 6.73657e-02, 1.83183e+00 }, // Mpv
-//    { 1.34009e-05, 4.93244e+03, 7.61516e-01, 0.00000e+00, 3.29793e+01 }, // Sgm
-//    0.178087 // Fluc
-//);
-//
-//IonEloss HitStTRK::PDF_Q01_QY_( // OLD
-//    { 8.52848e-03, 3.24435e+00, 2.06864e-01, 1.60633e+00, 2.09756e+00, 1.53539e+00 }, // Kpa
-//    { 1.40446e-01, 7.48716e+00, 9.13645e-01, 1.31821e-01, 1.07348e+00 }, // Mpv
-//    { 2.46606e-01, 2.89505e+00, 2.79787e-01, 3.49813e+00, 5.30240e-02 }, // Sgm
-//    0.166633 // Fluc
-//);
-
 IonEloss HitStTRK::PDF_Q01_QX_( // TEMP
     { 1.42180e+01, 1.03536e-01, -2.12863e+00 }, // Kpa
     { 1.10206e-02, 8.62096e+01, 9.49522e-01, 3.59949e-04, 2.70646e+00 }, // Mpv
@@ -215,7 +206,7 @@ IonEloss HitStTRK::PDF_Q01_QY_( // TEMP
 // HitStTOF
 void HitStTOF::clear() {
     seqIDcx_ = -1;
-    seqIDcx_ = -1;
+    seqIDcy_ = -1;
     seqIDt_  = -1;
     seqIDq_  = -1;
     
@@ -232,6 +223,9 @@ void HitStTOF::clear() {
     
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
+
+    pdf_t_ = nullptr;
+    pdf_q_ = nullptr;
 
     set_type();
 }
@@ -325,14 +319,18 @@ IonEloss HitStTOF::PDF_Q01_Q_( // NEW2
 // HitStRICH
 void HitStRICH::clear() {
     seqIDcx_ = -1;
-    seqIDcx_ = -1;
+    seqIDcy_ = -1;
     seqIDib_ = -1;
-    
+   
+    rad_ = Radiator::AGL;
+
     side_ib_ = false;
     ib_      = Numc::ZERO<>;
 
     nrmib_ = Numc::ZERO<>;
     divib_.fill(Numc::ZERO<>);
+
+    pdf_ib_ = nullptr;
 
     set_type();
 }
@@ -401,6 +399,75 @@ MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
     MultiGaus::Opt::ROBUST,
     9.28354466225493113e-01, 3.24032e-03,
     7.16455337745068865e-02, 6.91529e-03
+);
+
+
+void HitStTRD::clear() {
+    seqIDcx_ = -1;
+    seqIDcy_ = -1;
+    seqIDel_ = -1;
+    
+    side_el_ = false;
+    ndofel_  = Numc::ZERO<Short_t>;
+    el_      = Numc::ZERO<>;
+
+    nrmel_ = Numc::ZERO<>;
+    divel_.fill(Numc::ZERO<>);
+
+    pdf_el_ = nullptr;
+
+    set_type();
+}
+
+Short_t HitStTRD::set_seqID(Short_t seqID) {
+    if (seqID < 0) { seqID_ = -1; return 0; }
+
+    Short_t iter = 0;
+    if (side_coo_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
+    if (side_coo_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
+    if (side_el_    ) { seqIDel_ = seqID + iter; iter++; } else seqIDel_ = -1;
+    if (iter != 0) seqID_ = seqID; else seqID_ = -1;
+    return iter;
+}
+
+void HitStTRD::cal(const PhySt& part) {
+    if (!set_type(part.info())) return;
+    
+    nrmel_ = Numc::ZERO<>;
+    divel_.fill(Numc::ZERO<>);
+    if (side_el_) {
+        SVecD<2>&& gmion = (*pdf_el_)(el_, part.igmbta());
+        nrmel_ = gmion(0);
+        divel_[0] = gmion(1) * part.mu() * part.eta_sign();
+        divel_[1] = gmion(1) * part.gm();
+    }
+
+    set_dummy_x(part.cx());
+    set_dummy_y(part.cy());
+}
+
+Bool_t HitStTRD::set_type(const PartInfo& info) {
+    if ((info.is_std() && type_ == info.type()) && (pdf_el_)) return true;
+    
+    switch (info.chrg()) {
+        case 1 : case -1 :
+        {
+            pdf_el_ = &PDF_Q01_EL_;
+            type_ = info.type();
+            break;
+        }
+        default :
+            CERR("HitStTRD::set_type() NO PartType Setting.\n");
+            return false;
+    }
+    return true;
+}
+
+GmIonEloss HitStTRD::PDF_Q01_EL_(
+    { 3.42286e-01, 1.49108e+00, 3.79622e-01, 6.51468e-01, 1.45158e-01, 1.29064e-01, 1.16096e+00, 8.47144e+00 }, // Kpa
+    { 1.13611e-01, 1.13937e+01, 1.23836e+00, 2.67476e-06, 2.51050e+00, 2.14009e+00, 8.59030e-01, 6.26050e+00 }, // Mpv
+    { 7.30837e-02, 2.85852e+00, 1.18204e+00, 2.29138e-02, 5.94741e-01, 5.14559e-01, 9.92186e-01, 7.07455e+00 }, // Sgm
+    0.170 // Fluc
 );
 
 

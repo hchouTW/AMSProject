@@ -13,7 +13,7 @@ class IonEloss {
         IonEloss(const std::array<long double, 3>& kpa, const std::array<long double, 5>& mpv, const std::array<long double, 5>& sgm, long double fluc = Numc::ZERO<long double>) : kpa_(kpa), mpv_(mpv), sgm_(sgm), fluc_(fluc) { if (Numc::Compare(fluc_) <= 0) fluc_ = Numc::ZERO<long double>; }
         ~IonEloss() {}
         
-        inline SVecD<2> operator() (long double x, long double igmbta) const { std::array<long double, 2>&& ion = eval(x, igmbta); return SVecD<2>(ion.at(0), ion.at(1)); }
+        inline SVecD<2> operator()(long double x, long double igmbta) const { std::array<long double, 2>&& ion = eval(x, igmbta); return SVecD<2>(ion.at(0), ion.at(1)); }
    
     protected :
         std::array<long double, 2> eval(long double x, long double igmbta) const;

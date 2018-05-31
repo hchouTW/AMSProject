@@ -5,7 +5,7 @@
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May24/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -231,7 +231,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            fitPar.add_hit(mhit);
+            //fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -240,6 +240,13 @@ int main(int argc, char * argv[]) {
         //richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
         //richHit.set_ib(Numc::ONE<> / fRich->beta);
         //fitPar.add_hit(richHit);
+
+        if (fTrd->ADCn[1] < 5) continue;
+        //CERR("Z %14.8f ADC %14.8f\n", fTrd->ADCz[0], fTrd->ADCv[0]);
+        HitStTRD trdHit;
+        trdHit.set_coo(0, 0, fTrd->ADCz[1]);
+        trdHit.set_el(fTrd->ADCv[1], fTrd->ADCn[1]);
+        fitPar.add_hit(trdHit);
 
         if (!fitPar.check()) continue;
 
@@ -270,15 +277,16 @@ int main(int argc, char * argv[]) {
         else tmom = topmc->mom;
         Double_t mc_mom  = tmom;
 
+        mc_mom = fG4mc->primPart.mom;
         //Double_t mc_mom  = topmc->mom; // Layer 2
         Double_t mc_eta  = mass/mc_mom;
         Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
-       
+    
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
         //if (mc_mom > 0.8) continue; // testcode
-        //if (mc_mom < 30.0) continue; // testcode
+        //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
         PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
@@ -287,20 +295,24 @@ int main(int argc, char * argv[]) {
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
         Double_t hc_tme  = sw.time()*1.0e3;
-        Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
-        Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
-        Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
-        for (Int_t it = 0; hc_succ && it < 9; ++it) {
-            PhySt&& stt = tr.interpolate_to_z(ckTr.stateLJ[it][2]);
-            hc_coo[it][0] = stt.cx();
-            hc_coo[it][1] = stt.cy();
-            hc_coo[it][2] = stt.cz();
-            hc_dir[it][0] = stt.ux();
-            hc_dir[it][1] = stt.uy();
-            hc_lay_irig[it] = stt.irig();
-            //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
-        }
+        //Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
+        //Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
+        //Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
+        //for (Int_t it = 0; hc_succ && it < 9; ++it) {
+        //    PhySt&& stt = tr.interpolate_to_z(ckTr.stateLJ[it][2]);
+        //    hc_coo[it][0] = stt.cx();
+        //    hc_coo[it][1] = stt.cy();
+        //    hc_coo[it][2] = stt.cz();
+        //    hc_dir[it][0] = stt.ux();
+        //    hc_dir[it][1] = stt.uy();
+        //    hc_lay_irig[it] = stt.irig();
+        //    //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
+        //}
         //hc_irig = hc_lay_irig[topLay];
+        
+        PhySt&& sttTop = tr.interpolate_to_z(195.0);
+        if (Numc::EqualToZero(sttTop.mom())) continue;
+        hc_irig = sttTop.irig();
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1), sw.time());
         //-------------------------------------//
         

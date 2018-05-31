@@ -53,7 +53,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 2000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
@@ -81,15 +81,15 @@ int main(int argc, char * argv[]) {
     Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
-    
-    Axis AXTKadc("TKadc", 800, 0., 8.);
+*/    
+    Axis AXTKadc("TKadc", 400, 0., 15.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
-*/    
+    
     Axis AXTFadc("TFadc", 400, 0.5, 5.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
-    Axis AXTDavg("TDavg", 400, 0.5, 10.);
+    Axis AXTDavg("TDavg", 400, 0.5, 12.);
     Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
 
 /*    
@@ -166,7 +166,7 @@ int main(int argc, char * argv[]) {
         
         SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
-    
+        
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it] || !mcs[it]) continue;
             Double_t eta = (mass/mch[it]->mom);
@@ -191,10 +191,27 @@ int main(int argc, char * argv[]) {
                 if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
                 if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
             }
-            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]*bta*bta);
-            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]*bta*bta);
+            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
+            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
         }
-    */        
+*/
+            
+        HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
+        for (auto&& hit : fTrk->hits) { rec[hit.layJ-1] = &hit; }
+        
+        HitTRKMCInfo * mch[9]; std::fill_n(mch, 9, nullptr);
+        for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
+        
+        for (Int_t it = 2; it < 8; ++it) {
+            if (!rec[it] || !mch[it]) continue;
+            Double_t eta = (mass/mch[it]->mom);
+            if (eta < AXeta.min() || eta > AXeta.max()) continue;
+            Short_t ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
+            
+            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
+            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
+        }
+
         SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
         
@@ -202,8 +219,6 @@ int main(int argc, char * argv[]) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
-            eta = AXeta.center(AXeta.find(eta), AxisScale::kLog);
-            Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
         }
 

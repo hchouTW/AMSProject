@@ -13,13 +13,13 @@ CurDir=${PWD}
 
 DataType=MC
 #Stream=/ams_home/hchou/tmp/flist.pr
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May24
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May27
 
 OutputDir=${CurDir}/dat
 
 #Hit
 #GroupSize=20
-#Nseq=30
+#Nseq=110
 #Fit
 GroupSize=10
 Nseq=200

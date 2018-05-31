@@ -14,6 +14,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         hits_TRK_      = rhs.hits_TRK_;
         hits_TOF_      = rhs.hits_TOF_;
         hits_RICH_     = rhs.hits_RICH_;
+        hits_TRD_      = rhs.hits_TRD_;
         nseq_          = rhs.nseq_;
         nseg_          = rhs.nseg_;
         nmes_          = rhs.nmes_;
@@ -25,6 +26,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         nmes_TOFt_     = rhs.nmes_TOFt_;
         nmes_TOFq_     = rhs.nmes_TOFq_;
         nmes_RICHib_   = rhs.nmes_RICHib_;
+        nmes_TRDel_   = rhs.nmes_TRDel_;
         is_check_      = rhs.is_check_;
         
         hits_.clear();
@@ -32,6 +34,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
             for (auto&& hit : hits_TRK_ ) hits_.push_back(&hit); 
             for (auto&& hit : hits_TOF_ ) hits_.push_back(&hit); 
             for (auto&& hit : hits_RICH_) hits_.push_back(&hit); 
+            for (auto&& hit : hits_TRD_)  hits_.push_back(&hit); 
             
             if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
             else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
@@ -65,6 +68,7 @@ void TrFitPar::zero() {
     nmes_TOFt_   = 0;
     nmes_TOFq_   = 0;
     nmes_RICHib_ = 0;
+    nmes_TRDel_  = 0;
     
     is_check_ = false;
 }
@@ -79,6 +83,7 @@ void TrFitPar::clear() {
     hits_TRK_.clear();
     hits_TOF_.clear();
     hits_RICH_.clear();
+    hits_TRD_.clear();
 
     zero();
 }
@@ -92,10 +97,13 @@ Bool_t TrFitPar::sort_hits() {
     else                                 Hit<HitStTOF>::Sort(hits_TOF_, VirtualHitSt::Orientation::kUpward);
     if (ortt_ == Orientation::kDownward) Hit<HitStRICH>::Sort(hits_RICH_, VirtualHitSt::Orientation::kDownward);
     else                                 Hit<HitStRICH>::Sort(hits_RICH_, VirtualHitSt::Orientation::kUpward);
+    if (ortt_ == Orientation::kDownward) Hit<HitStTRD>::Sort(hits_TRD_, VirtualHitSt::Orientation::kDownward);
+    else                                 Hit<HitStTRD>::Sort(hits_TRD_, VirtualHitSt::Orientation::kUpward);
  
     for (auto&& hit : hits_TRK_ ) hits_.push_back(&hit); 
     for (auto&& hit : hits_TOF_ ) hits_.push_back(&hit); 
     for (auto&& hit : hits_RICH_) hits_.push_back(&hit); 
+    for (auto&& hit : hits_TRD_ ) hits_.push_back(&hit); 
     
     if (ortt_ == Orientation::kDownward) VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kDownward);
     else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
@@ -125,7 +133,11 @@ Bool_t TrFitPar::sort_hits() {
         if (hit.sib()) nmes_RICHib_++;
     }
     
-    nmes_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_;
+    for (auto&& hit : hits_TRD_) {
+        if (hit.sel()) nmes_TRDel_++;
+    }
+    
+    nmes_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_ + nmes_TRDel_;
     
     nseq_ = nseq;
     nseg_ = ((sw_mscat_ && nseg > 0) ? nseg : 0);
@@ -420,6 +432,7 @@ Bool_t SimpleTrFit::simpleFit() {
             if (hit->scx()) chi_cx += rsC(0) * rsC(0); 
             if (hit->scy()) chi_cy += rsC(1) * rsC(1);
             
+            // TRK
             HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
             if (hitTRK != nullptr) {
                 SVecD<2> rsTRK;
@@ -437,6 +450,7 @@ Bool_t SimpleTrFit::simpleFit() {
                 if (hitTRK->sqy()) chi_ib += rsTRK(1) * rsTRK(1);
             }
 
+            // TOF
             HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
             if (hitTOF != nullptr) {
                 SVecD<2> rsTOF;
@@ -454,6 +468,7 @@ Bool_t SimpleTrFit::simpleFit() {
                 if (hitTOF->sq()) chi_ib += rsTOF(1) * rsTOF(1);
             }
             
+            // RICH
             HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
             if (hitRICH != nullptr) {
                 Double_t rsRICH = Numc::ZERO<>;
@@ -466,6 +481,21 @@ Bool_t SimpleTrFit::simpleFit() {
                 cvGG(4, 4) += (jbRICH * jbRICH);
 
                 if (hitRICH->sib()) chi_ib += rsRICH * rsRICH;
+            }
+
+            // TRD
+            HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
+            if (hitTRD != nullptr) {
+                Double_t rsTRD = Numc::ZERO<>;
+                Double_t jbTRD = Numc::ZERO<>;
+
+                if (hitTRD->sel()) rsTRD += hitTRD->nrmel();
+                if (hitTRD->sel()) jbTRD += hitTRD->divel_eta() * ppjb(4, 4);
+
+                grdG(4)    += (jbTRD * rsTRD);
+                cvGG(4, 4) += (jbTRD * jbTRD);
+
+                if (hitTRD->sel()) chi_ib += rsTRD * rsTRD;
             }
 
             cnt_nhit++;
@@ -973,6 +1003,16 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             }
         }
         
+        // TRD
+        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
+        if (hitTRD != nullptr) {
+            if (hitTRD->sel()) chi_ib += hitTRD->nrmel() * hitTRD->nrmel();
+            if (hitTRD->sel()) {
+                if (is_mu_free) jb(hitTRD->seqIDel(), parIDib) += hitTRD->divel_ib()  * jbBB;
+                else            jb(hitTRD->seqIDel(),       4) += hitTRD->divel_eta() * jbGG(4, 4);
+            }
+        }
+        
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
@@ -1209,6 +1249,16 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hasJacb && hitRICH->sib()) {
                 if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_ib()  * jbBB;
                 else             jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);
+            } // hasJacb
+        }
+        
+        // TRD
+        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
+        if (hitTRD != nullptr) {
+            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
+            if (hasJacb && hitTRD->sel()) {
+                if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_ib()  * jbBB;
+                else             jb(hitTRD->seqIDel(),        4) += hitTRD->divel_eta() * jbGG(4, 4);
             } // hasJacb
         }
 

@@ -13,12 +13,12 @@ CurDir=${PWD}
 #DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7.mfixed_B1130_18May15
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May23
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May27
 
 OutputDir=${CurDir}/dat
 
-GroupSize=15
-Nseq=120
+GroupSize=35
+Nseq=39
 #Fit
 #GroupSize=3
 #Nseq=450
@@ -27,7 +27,8 @@ Nseq=120
 
 for id in `seq 0 ${Nseq}`
 do
-    echo "%!/bin/bash
-source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+#    echo "%!/bin/bash
+#source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done

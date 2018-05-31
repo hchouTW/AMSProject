@@ -14,7 +14,7 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     long double mpv    = eval_mpv(igmbta, ibsqr); 
     long double sgm    = eval_sgm(igmbta, ibsqr); 
     long double divmpv = eval_divmpv(igmbta, ibsqr); 
-  
+ 
     // Landau-Gaus with noise fluctuation 
     LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
@@ -69,6 +69,8 @@ long double IonEloss::eval_divmpv(long double igmbta, long double ibsqr) const {
     long double divmpv = mpv_.at(0) * (termA - termB - termC);
 
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
+    
+    //CERR("IGB %14.8f DIV %14.8f\n", static_cast<Double_t>(igmbta), static_cast<Double_t>(divmpv));
     return divmpv;
 }
 

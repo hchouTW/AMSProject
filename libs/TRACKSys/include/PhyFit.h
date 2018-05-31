@@ -27,6 +27,7 @@ class TrFitPar {
         inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit); zero(); }
         inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit); zero(); }
         inline void add_hit(const HitStRICH& hit) { hits_RICH_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTRD&  hit) { hits_TRD_.push_back(hit); zero(); }
         
         inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
@@ -44,6 +45,7 @@ class TrFitPar {
         inline const std::vector<HitStTRK>&  hitsTRK()  const { return hits_TRK_; }
         inline const std::vector<HitStTOF>&  hitsTOF()  const { return hits_TOF_; }
         inline const std::vector<HitStRICH>& hitsRICH() const { return hits_RICH_; }
+        inline const std::vector<HitStTRD>&  hitsTRD()  const { return hits_TRD_; }
 
     protected :
         void zero();
@@ -62,6 +64,7 @@ class TrFitPar {
         std::vector<HitStTRK>      hits_TRK_;
         std::vector<HitStTOF>      hits_TOF_;
         std::vector<HitStRICH>     hits_RICH_;
+        std::vector<HitStTRD>      hits_TRD_;
 
         Short_t nseq_;
         Short_t nseg_;
@@ -75,6 +78,7 @@ class TrFitPar {
         Short_t nmes_TOFq_;
         Short_t nmes_TOFt_;
         Short_t nmes_RICHib_;
+        Short_t nmes_TRDel_;
 
     private :
         Bool_t  is_check_;
@@ -122,7 +126,7 @@ class SimpleTrFit : public TrFitPar {
         Short_t ndof_;
         Short_t ndof_cx_; // (cx)
         Short_t ndof_cy_; // (cy)
-        Short_t ndof_ib_; // (TRKq + TOFt + TOFq)
+        Short_t ndof_ib_; // (TRKq + TOFt + TOFq + RICHib + TRDel)
         
         Double_t nchi_;
         Double_t nchi_cx_;
@@ -255,7 +259,7 @@ class PhyTrFit : public TrFitPar {
         Short_t ndof_tt_; // (total)
         Short_t ndof_cx_; // (cx + mstau)
         Short_t ndof_cy_; // (cy + msrho)
-        Short_t ndof_ib_; // (TRKq + TOFt + TOFq)
+        Short_t ndof_ib_; // (TRKq + TOFt + TOFq + RICHib + TRDel)
 
         Double_t nchi_tt_;
         Double_t nchi_cx_;

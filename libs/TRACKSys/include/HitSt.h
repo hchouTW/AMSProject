@@ -89,7 +89,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy), pdf_cx_(nullptr), pdf_cy_(nullptr), pdf_qx_(nullptr), pdf_qy_(nullptr) { clear(); }
+        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -168,7 +168,7 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     public :
-        HitStTOF(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false), pdf_t_(nullptr), pdf_q_(nullptr) { clear(); }
+        HitStTOF(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -268,7 +268,7 @@ class HitStRICH : public VirtualHitSt {
         enum class Radiator { AGL, NAF };
 
     public :
-        HitStRICH(const Radiator& rad = Radiator::AGL) : VirtualHitSt(DEC, 0, false, false), rad_(rad), pdf_ib_(nullptr) { clear(); }
+        HitStRICH(const Radiator& rad = Radiator::AGL) : VirtualHitSt(DEC, 0, false, false) { clear(); rad_ = rad; }
         ~HitStRICH() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -317,6 +317,57 @@ class HitStRICH : public VirtualHitSt {
 };
 
 
+class HitStTRD : public VirtualHitSt {
+    public :
+        static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;
+
+    public :
+        HitStTRD() : VirtualHitSt(DEC, 0, false, false) { clear(); }
+        ~HitStTRD() { clear(); }
+        
+        Short_t set_seqID(Short_t seqID); 
+        
+        void cal(const PhySt& part);
+        Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
+
+        inline void set_el(Double_t el, Short_t ndof) {
+            side_el_ = (Numc::Compare(el) >= 0 && ndof > 0);
+            ndofel_  = (side_el_ ? ndof : Numc::ZERO<Short_t>);
+            el_      = (side_el_ ? el : Numc::ZERO<>);
+            nrmel_   = Numc::ZERO<>;
+            divel_.fill(Numc::ZERO<>);
+        }
+        
+        inline const Double_t& el() const { return el_; }
+
+        inline const Short_t& seqIDel() const { return seqIDel_; }
+        
+        inline const Bool_t& sel() const { return side_el_; }
+
+        inline const Double_t& nrmel() const { return nrmel_; }
+        inline const Double_t& divel_eta() const { return divel_[0]; }
+        inline const Double_t& divel_ib()  const { return divel_[1]; }
+        
+    protected :
+        void clear();
+
+    protected :
+        Short_t seqIDel_;
+        
+        Bool_t   side_el_;
+        Short_t  ndofel_;
+        Double_t el_; // energy loss dE/dx
+
+        Double_t nrmel_; // dE/dx nrom
+        std::array<Double_t, 2> divel_; // dE/dx div (igmbta) [eta, ibta]
+
+        GmIonEloss* pdf_el_;
+    
+    protected :
+        static GmIonEloss PDF_Q01_EL_;
+};
+
+
 template<class HitStType>
 class Hit {
     public :
@@ -333,6 +384,7 @@ class Hit {
 template class Hit<HitStTRK>;
 template class Hit<HitStTOF>;
 template class Hit<HitStRICH>;
+template class Hit<HitStTRD>;
 
 
 } // namesapce TrackSys

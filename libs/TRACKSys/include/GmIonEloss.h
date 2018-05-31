@@ -11,7 +11,7 @@ class GmIonEloss {
         GmIonEloss(const std::array<long double, 8>& kpa, const std::array<long double, 8>& mpv, const std::array<long double, 8>& sgm, long double fluc = Numc::ZERO<long double>) : kpa_(kpa), mpv_(mpv), sgm_(sgm), fluc_(fluc) { if (Numc::Compare(fluc_) <= 0) fluc_ = Numc::ZERO<long double>; }
         ~GmIonEloss() {}
         
-        inline SVecD<2> operator() (long double x, long double igmbta) const { std::array<long double, 2>&& gmion = eval(x, igmbta); return SVecD<2>(gmion.at(0), gmion.at(1)); }
+        inline SVecD<2> operator()(long double x, long double igmbta) const { std::array<long double, 2>&& gmion = eval(x, igmbta); return SVecD<2>(gmion.at(0), gmion.at(1)); }
    
     protected :
         std::array<long double, 2> eval(long double x, long double igmbta) const;

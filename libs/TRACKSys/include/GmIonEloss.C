@@ -14,7 +14,7 @@ std::array<long double, 2> GmIonEloss::eval(long double x, long double igmbta) c
     long double mpv    = eval_mpv(igmbta, ibsqr); 
     long double sgm    = eval_sgm(igmbta, ibsqr); 
     long double divmpv = eval_divmpv(igmbta, ibsqr); 
-  
+ 
     // Landau-Gaus with noise fluctuation 
     LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus(x);
@@ -35,7 +35,7 @@ long double GmIonEloss::eval_kpa(long double igmbta, long double ibsqr) const {
          std::pow(ibsqr, -kpa_.at(2)) - 
          std::log(kpa_.at(3) + std::pow(igmbta, kpa_.at(4)))
         ) +
-        kpa_.at(5) * (std::erfc(kpa_.at(6) * std::log(igmbta) + kpa_.at(7)));
+        kpa_.at(5) * std::erfc(kpa_.at(6) * std::log(igmbta) + kpa_.at(7));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     return kpa;
 }
@@ -47,7 +47,7 @@ long double GmIonEloss::eval_mpv(long double igmbta, long double ibsqr) const {
          std::pow(ibsqr, -mpv_.at(2)) - 
          std::log(mpv_.at(3) + std::pow(igmbta, mpv_.at(4)))
         ) +
-        mpv_.at(5) * (std::erfc(mpv_.at(6) * std::log(igmbta) + mpv_.at(7)));
+        mpv_.at(5) * std::erfc(mpv_.at(6) * std::log(igmbta) + mpv_.at(7));
     if (!Numc::Valid(mpv)) mpv = Numc::ZERO<long double>;
     return mpv;
 }
@@ -58,8 +58,8 @@ long double GmIonEloss::eval_sgm(long double igmbta, long double ibsqr) const {
         (sgm_.at(1) - 
          std::pow(ibsqr, -sgm_.at(2)) - 
          std::log(sgm_.at(3) + std::pow(igmbta, sgm_.at(4)))
-        );
-        sgm_.at(5) * (std::erfc(sgm_.at(6) * std::log(igmbta) + sgm_.at(7)));
+        ) +
+        sgm_.at(5) * std::erfc(sgm_.at(6) * std::log(igmbta) + sgm_.at(7));
     if (!Numc::Valid(sgm)) sgm = Numc::ZERO<long double>;
     return sgm;
 }
@@ -76,12 +76,14 @@ long double GmIonEloss::eval_divmpv(long double igmbta, long double ibsqr) const
 
     long double logg    = (mpv_.at(6) * std::log(igmbta) + mpv_.at(7));
     long double divlogg = (mpv_.at(6) / igmbta);
-    long double diverfc = (Numc::TWO<> * Numc::INV_SQRT_PI) * std::exp(Numc::NEG<long double> * logg * logg) * divlogg;
-    long double divgm   = mpv_.at(5) * diverfc;
+    long double diverfc = Numc::NEG<long double> * (Numc::TWO<long double> * Numc::INV_SQRT_PI) * std::exp(Numc::NEG<long double> * logg * logg);
+    long double divgm   = mpv_.at(5) * diverfc * divlogg;
     if (!Numc::Valid(divgm)) divgm = Numc::ZERO<long double>;
 
     long double divmpv = (divion + divgm);
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
+
+    //CERR("IGMB %14.8f DIV %14.8f ION %14.8f GM %14.8f\n", static_cast<Double_t>(igmbta), static_cast<Double_t>(divmpv), static_cast<Double_t>(divion), static_cast<Double_t>(divgm));
     return divmpv;
 }
 

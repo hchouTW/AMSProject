@@ -67,8 +67,8 @@
     flg->SetParameters(1.0, 0.1, 0.0, 1.0);
     flg->SetParLimits(1, 0.0, 1.0);
     
-    TF1* flg2 = new TF1("flg2", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x*x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x*x-[2])*(x*x-[2])/[3]/[3]) )");
-    flg2->SetParameters(1.0, 0.1, 0.0, 1.0);
+    TF1* flg2 = new TF1("flg2", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) ) + [4] * ((x/[3])^[5]) * exp(-[6]*x/[3])");
+    flg2->SetParameters(1.0, 0.1, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0);
     flg2->SetParLimits(1, 0.0, 1.0);
     
     //TF1* flggm = new TF1("flggm", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) ) + [4]*TMath::Exp(-[5]/x)*TMath::Power([5]/x, [6])");

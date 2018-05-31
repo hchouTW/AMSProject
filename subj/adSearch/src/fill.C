@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -58,8 +58,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 100, 0.5, 5., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.55, 1000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
@@ -67,30 +66,25 @@ int main(int argc, char * argv[]) {
     Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hKFnum = Hist::New("hKFnum", HistAxis(AXrig, "Events/Bin"));
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
+
+    Hist* hMCtme = Hist::New("hMCtme", HistAxis(AXrig, ""));
+    Hist* hCKtme = Hist::New("hCKtme", HistAxis(AXrig, "Mean Time"));
+    Hist* hKFtme = Hist::New("hKFtme", HistAxis(AXrig, "Mean Time"));
+    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXrig, "Mean Time"));
     
-    Axis AXMass("Mass", 100, 0., 4.);
-    Hist* hMpos = Hist::New("hMpos", HistAxis(AXrig, AXMass));
-    Hist* hMneg = Hist::New("hMneg", HistAxis(AXrig, AXMass));
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 1600, -1.0, 1.0);
+    Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXrig, AXRrso));
+    Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
+    Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
     
-    Axis AXQlt("Quality", 100, -2., 8.);
-    Hist* hQpos = Hist::New("hQpos", HistAxis(AXrig, AXQlt));
-    Hist* hQneg = Hist::New("hQneg", HistAxis(AXrig, AXQlt));
-    
-    Hist* hMQpos = Hist::New("hMQpos", HistAxis(AXMass, AXQlt));
-    Hist* hMQneg = Hist::New("hMQneg", HistAxis(AXMass, AXQlt));
-    
-    Hist* hM2pos = Hist::New("hM2pos", HistAxis(AXrig, AXMass));
-    Hist* hM2neg = Hist::New("hM2neg", HistAxis(AXrig, AXMass));
-    
-    Hist* hQ2pos = Hist::New("hQ2pos", HistAxis(AXrig, AXQlt));
-    Hist* hQ2neg = Hist::New("hQ2neg", HistAxis(AXrig, AXQlt));
-    
-    Hist* hMQ2pos = Hist::New("hMQ2pos", HistAxis(AXMass, AXQlt));
-    Hist* hMQ2neg = Hist::New("hMQ2neg", HistAxis(AXMass, AXQlt));
-    
-    Axis AXMres("res", 100, -6., 6.);
-    Hist* hMres = Hist::New("hMres", HistAxis(AXrig, AXMres));
-    
+    Axis AXu("Cos", 400, -0.05, 0.05);
+    Hist* hCKux = Hist::New("hCKux", HistAxis(AXrig, AXu));
+    Hist* hKFux = Hist::New("hKFux", HistAxis(AXrig, AXu));
+    Hist* hHCux = Hist::New("hHCux", HistAxis(AXrig, AXu));
+    Hist* hCKuy = Hist::New("hCKuy", HistAxis(AXrig, AXu));
+    Hist* hKFuy = Hist::New("hKFuy", HistAxis(AXrig, AXu));
+    Hist* hHCuy = Hist::New("hHCuy", HistAxis(AXrig, AXu));
+
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -140,41 +134,47 @@ int main(int argc, char * argv[]) {
         // TRD
         if (fTrd->LLRep[0] < 0.7) continue;
 
-        if (!ckTr.status && !kfTr.status && !hcTr.status && !hcMu.status) continue;
+        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTr.statusTop);
+        if (!status) continue;
+        if (hcTr.cpuTime > 1000.) continue; // rmove material loading event
         
         Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
         Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
-        Short_t hcSign = (hcMu.stateTop[6] > 0) ? 1 : -1;
+        Short_t hcSign = (hcTr.stateTop[6] > 0) ? 1 : -1;
+        
+        Double_t ckRig = ckTr.rig;
+        Double_t kfRig = kfTr.rig[0];
+        Double_t hcRig = hcTr.stateTop[6];
+        
+        Double_t ckIRig = Numc::ONE<> / ckRig;
+        Double_t kfIRig = Numc::ONE<> / kfRig;
+        Double_t hcIRig = Numc::ONE<> / hcRig;
 
-        Double_t mom = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcMu.stateTop[6]) : fG4mc->primPart.mom);
-       
-        Double_t TOFibta = 1.0/fTof->betaH;
-        Double_t TOFmass = ((TOFibta > 1.0) ? std::sqrt(TOFibta*TOFibta-1.0)*std::fabs(kfTr.rig[1]) : 0.0);
+        Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[6]) : fG4mc->primPart.mom);
+        Double_t imom = Numc::ONE<> / mom;
+        Double_t cen  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
 
         hMCnum->fillH1D(mom, wgt);
-        if (ckSign > 0) hCKnum->fillH1D(ckTr.rig, wgt);
-        if (kfSign > 0) hKFnum->fillH1D(kfTr.rig[0], wgt);
-        if (hcTr.stateTop[6] > 0) hHCnum->fillH1D(hcTr.stateTop[6], wgt);
-
-        if (hcSign > 0) hMpos->fillH2D(mom, hcMu.mass, wgt);
-        if (hcSign < 0) hMneg->fillH2D(mom, hcMu.mass, wgt);
+        if (ckSign > 0) hCKnum->fillH1D(ckRig, wgt);
+        if (kfSign > 0) hKFnum->fillH1D(kfRig, wgt);
+        if (hcSign > 0) hHCnum->fillH1D(hcRig, wgt);
         
-        if (hcSign > 0) hQpos->fillH2D(mom, hcMu.quality[1], wgt);
-        if (hcSign < 0) hQneg->fillH2D(mom, hcMu.quality[1], wgt);
+        hMCtme->fillH1D(mom);
+        hCKtme->fillH1D(mom, ckTr.cpuTime);
+        hKFtme->fillH1D(mom, kfTr.cpuTime);
+        hHCtme->fillH1D(mom, hcTr.cpuTime);
         
-        if (hcSign > 0 && mom < 3.0) hMQpos->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
-        if (hcSign < 0 && mom < 3.0) hMQneg->fillH2D(hcMu.mass, hcMu.quality[1], wgt);
+        hCKRrso->fillH2D(mom, cen * (ckIRig - imom));
+        hKFRrso->fillH2D(mom, cen * (kfIRig - imom));
+        hHCRrso->fillH2D(mom, cen * (hcIRig - imom));
+       
+        hCKux->fillH2D(mom, cen * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        hKFux->fillH2D(mom, cen * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        hHCux->fillH2D(mom, cen * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
         
-        if (kfSign > 0 && (TOFibta > 1.0)) hM2pos->fillH2D(mom, TOFmass, wgt);
-        if (kfSign < 0 && (TOFibta > 1.0)) hM2neg->fillH2D(mom, TOFmass, wgt);
-        
-        if (kfSign > 0 && (TOFibta > 1.0)) hQ2pos->fillH2D(mom, std::log(kfTr.nchi[1]), wgt);
-        if (kfSign < 0 && (TOFibta > 1.0)) hQ2neg->fillH2D(mom, std::log(kfTr.nchi[1]), wgt);
-        
-        if (kfSign > 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2pos->fillH2D(TOFmass, std::log(kfTr.nchi[1]), wgt);
-        if (kfSign < 0 && mom < 3.0 && (TOFibta > 1.0)) hMQ2neg->fillH2D(TOFmass, std::log(kfTr.nchi[1]), wgt);
-        
-        if (hcSign > 0) hMres->fillH2D(mom, ((hcMu.mass - hcTr.mass) / hcTr.error[6]), wgt);
+        hCKuy->fillH2D(mom, cen * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        hKFuy->fillH2D(mom, cen * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        hHCuy->fillH2D(mom, cen * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
     }
     
     ofle->Write();
