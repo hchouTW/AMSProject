@@ -967,7 +967,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             recEv.trackerZJ[8] };
 
         // Choutko
-        Int_t ckRefit = 23;
+        Int_t ckRefit = 21;
 		for (int patt = 0; patt < _npatt; ++patt) {
             if (patt != 0) continue;
             MGClock::HrsStopwatch ckSw; ckSw.start();
@@ -1022,7 +1022,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
         
         // Kalman
-        Int_t kfRefit = 23;
+        Int_t kfRefit = 21;
 		for (int patt = 0; patt < _npatt; ++patt) {
             if (patt != 0) continue;
             TrFit trFit;
@@ -2168,17 +2168,18 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (event == nullptr) return -1;
 	EventList::Weight = 1.;
 
-	// Resolution tuning
+	// Resolution tuning (by Qi Yan)
 	if (EventBase::checkEventMode(EventBase::ISS)) {
         TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
-        TRFITFFKEY.Zshift = -1; // Enable the dZ correction
+        TRFITFFKEY.Zshift = 2; // Enable the dZ correction
     }
     else if (EventBase::checkEventMode(EventBase::MC)) {
-        TrExtAlignDB::SmearExtAlign();
+        TrExtAlignDB::SmearExtAlign(); // MC Smear Ext-Layer
         TRCLFFKEY.UseSensorAlign = 0;
         TRCLFFKEY.ClusterCofGOpt = 1;
         TRFITFFKEY.Zshift = -1; // // Disable the dZ correction
 	}
+    TRFITFFKEY.ErcHeY = 0;
 
 	//-----------------------------//
 	//----  Fast Preselection  ----//

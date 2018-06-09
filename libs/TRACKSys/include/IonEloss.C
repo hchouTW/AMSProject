@@ -21,10 +21,15 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     
     long double res = lg_par.at(0);          // res normx
     long double div = lg_par.at(1) * divmpv; // div r/x * div x/igmbta
+
+    long double controller = Numc::HALF * (Numc::ONE<long double> + std::erf(Numc::HALF * (res - THRESHOLD))); // (elc) Noise Controller
+    div *= controller;
+
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
         div = Numc::ZERO<long double>;
     }
+
     return std::array<long double, 2>({res, div});
 }
         

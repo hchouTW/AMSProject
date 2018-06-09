@@ -99,7 +99,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 4000, -4.0, 4.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 6000, -4.0, 4.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));

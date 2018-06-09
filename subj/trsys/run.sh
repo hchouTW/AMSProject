@@ -25,8 +25,8 @@ OutputDir=${CurDir}/dat
 #GroupSize=24
 #Nseq=20
 #Fit
-GroupSize=10
-Nseq=200
+GroupSize=7
+Nseq=300
 #GroupSize=4
 #Nseq=500
 

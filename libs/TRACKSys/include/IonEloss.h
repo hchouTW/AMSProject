@@ -30,6 +30,9 @@ class IonEloss {
         std::array<long double, 6> mpv_;
         std::array<long double, 6> sgm_;
         long double                fluc_;
+        
+    private :
+        static constexpr long double THRESHOLD = -3.2; // (elc) Noise Controller
 };
 
 } // namesapce TrackSys
