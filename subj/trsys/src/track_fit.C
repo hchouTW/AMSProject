@@ -75,6 +75,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCCKRrsoS = Hist::New("hHCCKRrsoS", HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
    
     const Double_t stable = 1.7;
+    //const Double_t stable = 1.2;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
     std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
     std::vector<Hist*> vhKFRrso = Hist::ProjectAll(HistProj::kY, hKFRrso);
@@ -116,7 +117,8 @@ int main(int argc, char * argv[]) {
         // Hsin-Yi Chou
         Double_t HCRmax = (*vhHCRrso.at(it))()->GetBinCenter((*vhHCRrso.at(it))()->GetMaximumBin());
         Double_t HCRrms = (*vhHCRrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, HCRmax, HCRrms);
+        gaus->SetParameters(1000, 0, HCRrms); // testcode
+        //gaus->SetParameters(1000, HCRmax, HCRrms);
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "");
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
@@ -205,7 +207,8 @@ int main(int argc, char * argv[]) {
         // Hsin-Yi Chou
         Double_t HCBmax = (*vhHCBrso.at(it))()->GetBinCenter((*vhHCBrso.at(it))()->GetMaximumBin());
         Double_t HCBrms = (*vhHCBrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, HCBmax, HCBrms);
+        gaus->SetParameters(1000, 0, HCBrms); // testcode
+        //gaus->SetParameters(1000, HCBmax, HCBrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "");
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", HCBmax-stable*HCBrms, HCBmax+stable*HCBrms);
         (*vhHCBrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));

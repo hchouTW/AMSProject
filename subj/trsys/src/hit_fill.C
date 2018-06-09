@@ -4,7 +4,7 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May24/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -53,9 +53,11 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, 0.30, 4000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
+    //Double_t mass = PartInfo(PartType::Electron).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -82,14 +84,21 @@ int main(int argc, char * argv[]) {
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
 */    
-    Axis AXTKadc("TKadc", 400, 0., 15.0);
+    Axis AXTKadc("TKadc", 3000, 0.2, 100.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
-    Axis AXTFadc("TFadc", 400, 0.5, 5.0);
+    Axis AXTFadc("TFadc", 800, 0.5, 10.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
     
-    Axis AXTDavg("TDavg", 400, 0.5, 12.);
+    Axis AXTDnh("TDnh", 25, 0., 25.);
+    Axis AXTDlx("TDlx", 200, 0.01, 0.7);
+    Axis AXTDex("TDex", 1600, 0.2, 40.);
+    Hist* hTDnh = Hist::New("hTDnh", HistAxis(AXeta, AXTDnh));
+    Hist* hTDlx = Hist::New("hTDlx", HistAxis(AXeta, AXTDlx));
+    Hist* hTDex = Hist::New("hTDex", HistAxis(AXeta, AXTDex));
+    
+    Axis AXTDavg("TDavg", 400, 0.2, 15.);
     Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
 
 /*    
@@ -121,6 +130,8 @@ int main(int argc, char * argv[]) {
         
         // Geometry (TRD)
         if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (!fTrd->statusKCls[1]) continue;
+        //if (fTrd->LLRnhit[1] < 10) continue;
         if (!fTrd->statusKCls[0]) continue;
         if (fTrd->LLRnhit[0] < 10) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 2);
@@ -221,9 +232,33 @@ int main(int argc, char * argv[]) {
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
         }
+        
+        SegPARTMCInfo * mtd[2]; std::fill_n(mtd, 2, nullptr);
+        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==2) mtd[seg.lay] = &seg; }
+        if (mtd[0] == nullptr || mtd[1] == nullptr) continue;
+        //CERR("Z %14.8f %14.8f\n", mtd[0]->coo[2], mtd[1]->coo[2]);
+        //CERR("M %14.8f %14.8f\n", mtd[0]->mom, mtd[1]->mom);
+        
+        if (fTrd->hits[0].size() >= 1) {
+            Double_t igmbta = fG4mc->primPart.mass * 2.0 / (mtd[0]->mom + mtd[1]->mom);
+            std::vector<Double_t> hh;
+            for (auto&& hit : fTrd->hits[0]) {
+                hTDlx->fillH2D(igmbta, hit.len);
+                if (hit.len < 0.25) continue;
+                hh.push_back(hit.amp/hit.len * 1.0e-2);
+                //hTDex->fillH2D(fG4mc->primPart.mass/fG4mc->primPart.mom, hit.amp/hit.len * 1.0e-2);
+            }
+            std::sort(hh.begin(), hh.end());
+            hTDnh->fillH2D(igmbta, hh.size());
+            if (hh.size() >= 6) {
+                for (Int_t it = 2; it < hh.size()-1; ++it) {
+                    hTDex->fillH2D(igmbta, hh.at(it));
+                }
+            }
+        }
 
         if (fTrd->ADCn[0] >= 3) {
-            hTDavg->fillH2D(mass/fG4mc->primPart.mom, fTrd->ADCv[0]);
+            hTDavg->fillH2D(fG4mc->primPart.mass/fG4mc->primPart.mom, fTrd->ADCv[0]);
         }
         
         /*

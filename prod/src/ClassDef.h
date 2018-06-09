@@ -135,17 +135,17 @@ class HitTRDMCInfo : public TObject {
 		void init() {
 			lay     = 0;
 			sub     = 0;
-			edep    = -1;
+            mom     = -1;
 			std::fill_n(coo, 3, 0);
 		}
 
 	public :
-		Short_t lay;     // layer
-		Short_t sub;     // Ladder * 100 + Tube
-		Float_t edep;    // (elc) edep
+		Short_t lay;    // layer
+		Short_t sub;    // Ladder * 100 + Tube
+        Float_t mom;
 		Float_t coo[3];
 
-	ClassDef(HitTRDMCInfo, 3)
+	ClassDef(HitTRDMCInfo, 5)
 };
 
 struct HitTRDMCInfo_sort {
@@ -153,12 +153,8 @@ struct HitTRDMCInfo_sort {
 		if      (hit1.lay < hit2.lay) return true;
 		else if (hit1.lay > hit2.lay) return false;
 		else {
-			if      (hit1.sub < hit2.sub) return true;
-			else if (hit1.sub > hit2.sub) return false;
-			else {
-				if      (hit1.edep < hit2.edep) return true;
-				else if (hit1.edep > hit2.edep) return false;
-			}
+			if      (hit1.sub <= hit2.sub) return true;
+			else if (hit1.sub >  hit2.sub) return false;
 		}
 		return false;
 	}
@@ -298,30 +294,42 @@ class HitTRDInfo : public TObject {
 
 		void init() {
 			lay  = 0;
+            sub  = 0;
 			side = 0;
 			amp  = 0;
 			len  = 0;
 			std::fill_n(coo, 3, 0);
+
+            dEdx  = 0;
+            mcMom = 0;
 		}
 
 	public :
 		Short_t lay;    // layer
+		Short_t sub;    // Ladder * 100 + Tube
 		Short_t side;   // side, 1 x, 2 y, 3 xy
 		Float_t amp;    // (elc) amp
 		Float_t len;    // (elc) len
 		Float_t coo[3];
 
-	ClassDef(HitTRDInfo, 4)
+        Float_t dEdx;   // dEdx = 0.01 * (amp/len)
+        Float_t mcMom;  // (MC Info) mom
+
+	ClassDef(HitTRDInfo, 5)
 };
 
 struct HitTRDInfo_sort {
 	bool operator() (const HitTRDInfo & hit1, const HitTRDInfo & hit2) {
 		if      (hit1.lay < hit2.lay) return true;
 		else if (hit1.lay > hit2.lay) return false;
-		else {
-			if      (hit1.amp < hit2.amp) return true;
-			else if (hit1.amp > hit2.amp) return false;
-		}
+        else {
+		    if      (hit1.sub < hit2.sub) return true;
+		    else if (hit1.sub > hit2.sub) return false;
+		    else {
+		    	if      (hit1.amp < hit2.amp) return true;
+		    	else if (hit1.amp > hit2.amp) return false;
+		    }
+        }
 		return false;
 	}
 };
@@ -792,7 +800,8 @@ class TOF : public TObject {
 
 			std::fill_n(numOfExtCls, 4, 0);
 			
-            std::fill_n(mcBeta, 4, 0);
+            std::fill_n(mcBeta, 4, -1);
+            std::fill_n(mcMom, 4, -1);
 		}
 
 	public :
@@ -823,6 +832,7 @@ class TOF : public TObject {
 
         // MC Beta
         Float_t mcBeta[4];
+        Float_t mcMom[4];
 
 	ClassDef(TOF, 10)
 };
@@ -959,10 +969,6 @@ class TRD : public TObject {
 			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
             
-            std::fill_n(ADCn, 2, 0);
-            std::fill_n(ADCv, 2, 0);
-            std::fill_n(ADCz, 2, 0);
-
             hits[0].clear();
             hits[1].clear();
 
@@ -991,10 +997,6 @@ class TRD : public TObject {
 		Short_t LLRnhit[2];
 		Float_t Q[2];
         
-        Short_t ADCn[2];
-        Float_t ADCv[2];
-        Float_t ADCz[2];
-
         std::vector<HitTRDInfo> hits[2];
 
         // TRDVertex

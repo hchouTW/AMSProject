@@ -49,8 +49,6 @@ $(TagetDir)/obj/time_fit.o : $(TagetDir)/src/time_fit.C
 $(TagetDir)/time_fit : $(TagetDir)/obj/time_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
-
-
 $(TagetDir)/obj/hit_fill.o : $(TagetDir)/src/hit_fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
 -include $(TagetDir)/obj/hit_fill.d

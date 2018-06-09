@@ -150,7 +150,7 @@ long double MultiGaus::efft_sgm(long double r) const {
             inv_nrm += prb / (nrm * nrm);
         }
         
-        sgm = bound_.second * ((Numc::Compare(ttl_wgt, LMTL_PROB_) <= 0 || Numc::EqualToZero(inv_nrm)) ? Numc::ONE<long double> : std::sqrt(ttl_wgt / inv_nrm));
+        sgm = bound_.second * ((Numc::Compare(ttl_wgt, LMTL_PROB) <= 0 || Numc::EqualToZero(inv_nrm)) ? Numc::ONE<long double> : std::sqrt(ttl_wgt / inv_nrm));
         if (!Numc::Valid(sgm) || Numc::Compare(sgm, bound_.second) > 0 || Numc::Compare(sgm) <= 0) sgm = bound_.second;
     }
    
@@ -171,8 +171,8 @@ long double MultiGaus::rndm() {
             int sgmID = 2 * it + 1;
             fmt += STR(" + ([%d]/[%d])*TMath::Exp(-0.5*(x/[%d])*(x/[%d]))", wgtID, sgmID, sgmID, sgmID);
         }
-        rand_func_ = new TF1("rand_func", fmt.c_str(), -(Numc::TWO<long double>*ROBUST_SGM_) * bound_.second, (Numc::TWO<long double>*ROBUST_SGM_) * bound_.second);
-        rand_func_->SetNpx(NPX_);
+        rand_func_ = new TF1("rand_func", fmt.c_str(), -(Numc::TWO<long double>*ROBUST_SGM) * bound_.second, (Numc::TWO<long double>*ROBUST_SGM) * bound_.second);
+        rand_func_->SetNpx(NPX);
         
         int count = 0;
         for (auto&& gauss : multi_gaus_) {
@@ -197,7 +197,7 @@ long double MultiGaus::RobustSgm(long double res, long double sgm, Opt opt) {
     if (opt == Opt::NOROBUST) return sigma;
 
     // Robust Method (Modify-Cauchy)
-    long double sftnrmr = (absr / sigma) - ROBUST_SGM_;
+    long double sftnrmr = (absr / sigma) - ROBUST_SGM;
     if (Numc::Compare(sftnrmr) > 0) {
         long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
         long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
@@ -224,7 +224,21 @@ LandauGaus::LandauGaus(Opt opt, long double kpa, long double mpv, long double sg
     fluc_ = ((Numc::Compare(fluc) <= 0) ? Numc::ZERO<long double> : fluc);
 }
 
-std::array<long double, 2> LandauGaus::operator() (long double x) const {
+long double LandauGaus::operator() (long double x, long double wgt) const {
+    long double norm = ((x - mpv_) / sgm_);
+    if (!Numc::Valid(norm)) return Numc::ZERO<long double>;
+    if (Numc::Compare(wgt) <= 0) return Numc::ZERO<long double>;
+
+    long double landau = TMath::Landau(norm) / LANDAU0;
+    long double gaus   = Numc::NEG<long double> * Numc::HALF * norm * norm;
+    long double expcom = (Numc::ONE<long double> - kpa_) * landau + kpa_ * gaus;
+    long double lg     = wgt * std::exp(lg);
+    
+    if (!Numc::Valid(lg) || Numc::Compare(lg) <= 0) lg = Numc::ZERO<long double>;
+    return lg;
+}
+
+std::array<long double, 2> LandauGaus::minimizer(long double x) const {
     long double norm = ((x - mpv_) / sgm_);
     if (!Numc::Valid(norm))
         return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
@@ -243,7 +257,7 @@ std::array<long double, 2> LandauGaus::operator() (long double x) const {
     // Robust Method (Modify-Cauchy)
     if (robust_ == Opt::ROBUST) {
         long double absnrmx = std::fabs(nrmx);
-        long double sftnrmr = absnrmx - ROBUST_SGM_;
+        long double sftnrmr = absnrmx - ROBUST_SGM;
         if (Numc::Compare(sftnrmr) > 0) {
             long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
             long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
@@ -263,7 +277,7 @@ std::array<long double, 2> LandauGaus::operator() (long double x) const {
 
 long double LandauGaus::eval(long double norm) const {
     short       sign   = Numc::Compare(norm);
-    long double landau = (Numc::NEG<long double> * Numc::TWO<long double>) * std::log(TMath::Landau(norm) / LANDAU0_);
+    long double landau = (Numc::NEG<long double> * Numc::TWO<long double>) * std::log(TMath::Landau(norm) / LANDAU0);
     long double gaus   = norm * norm;
     long double ldgaus = (Numc::ONE<long double> - kpa_) * landau + kpa_ * gaus;
     long double nrmx   = sign * std::sqrt(ldgaus);
@@ -272,11 +286,39 @@ long double LandauGaus::eval(long double norm) const {
 }
 
 long double LandauGaus::div(long double norm) const {
-    long double normxlw = norm - DELTA_;
-    long double normxup = norm + DELTA_;
-    long double div = Numc::NEG<long double> * Numc::HALF * ((eval(normxup) - eval(normxlw)) / DELTA_);
+    long double normxlw = norm - DELTA;
+    long double normxup = norm + DELTA;
+    long double div = Numc::NEG<long double> * Numc::HALF * ((eval(normxup) - eval(normxlw)) / DELTA);
     if (!Numc::Valid(div)) div = Numc::ZERO<long double>;
     return div;
+}
+
+} // namesapce TrackSys
+
+
+
+namespace TrackSys {
+
+ErfGamma::ErfGamma(long double alpha, long double beta, long double eftm, long double efts) : alpha_(Numc::ONE<long double>), beta_(Numc::ONE<long double>), eftm_(Numc::ZERO<long double>), efts_(Numc::ONE<long double>) {
+    if (Numc::Compare(alpha, Numc::ONE<long double>) <= 0) return;
+    if (Numc::Compare(beta) <= 0) return;
+    if (Numc::Compare(eftm) <= 0) return;
+    if (Numc::Compare(efts) <= 0) return;
+    alpha_  = alpha;
+    beta_   = beta;
+    eftm_   = eftm;
+    efts_   = efts;
+}
+
+long double ErfGamma::operator() (long double x, long double wgt) const {
+    if (Numc::Compare(wgt) <= 0) return Numc::ZERO<long double>;
+    
+    long double gm    = std::pow(x, alpha_) * std::exp(Numc::NEG<long double> * beta_ * x);
+    long double efft  = (std::erf((x - eftm_) / efts_) + Numc::ONE<long double>);
+    long double erfgm = wgt * efft * gm;
+    
+    if (!Numc::Valid(erfgm) || Numc::Compare(erfgm) <= 0) erfgm = Numc::ZERO<long double>;
+    return erfgm;
 }
 
 } // namesapce TrackSys

@@ -363,7 +363,7 @@ void EventRti::setEnvironment() {
 #endif
 	if (!checkEventMode(EventBase::ISS)) return;
 
-	AMSSetupR::RTI::UseLatest(6); // pass6
+	AMSSetupR::RTI::UseLatest(7); // pass7
 }
 
 bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -678,20 +678,24 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTof.numOfExtCls[il] = nearHitNm[il];
 	}
 
-	if (checkEventMode(EventBase::MC)) {
+	if (checkEventMode(EventBase::MC) && event->GetPrimaryMC() != nullptr) {
+	    MCEventgR * prim = event->GetPrimaryMC();
         int    mcnum[4] = {0};
         double mcbta[4] = {0};
         for (UInt_t it = 0; it < event->NTofMCCluster(); ++it) {
             TofMCClusterR* cls = event->pTofMCCluster(it);
             if (cls == nullptr) continue;
-            if (cls->GtrkID != 1) continue;
+            if (cls->GtrkID != prim->trkID) continue;
             int lay = cls->GetLayer();
             mcbta[lay] += cls->Beta;
             mcnum[lay]++;
         }
         for (int il = 0; il < 4; ++il) {
             if (mcnum[il] == 0) continue;
-            fTof.mcBeta[il] = (mcbta[il] / mcnum[il]);
+            double bta = (mcbta[il] / static_cast<double>(mcnum[il]));
+            double mom = prim->Mass / std::sqrt(1.0/bta/bta - 1.0); 
+            fTof.mcBeta[il] = bta;
+            fTof.mcMom[il]  = mom;
         }
     }
 
@@ -816,9 +820,7 @@ void EventTrk::setEnvironment() {
 	TRFITFFKEY.ReadFromFile = 0;
 
 	// Enable latest alignment
-	if (checkEventMode(EventBase::ISS)) {
-		TkDBc::UseFinal();
-	}
+	TkDBc::UseFinal();
 }
 
 bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -1369,6 +1371,25 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		break;
 	} // while loop --- trd track
 
+    // MC TRD hits
+    std::vector<HitTRDMCInfo> mcHits;
+	if (checkEventMode(EventBase::MC) && event->GetPrimaryMC() != nullptr) {
+	    MCEventgR * prim = event->GetPrimaryMC();
+        for (UInt_t icls = 0; icls < event->NTrdMCCluster(); icls++) {
+		    TrdMCClusterR * cluster = event->pTrdMCCluster(icls);
+		    if (cluster == nullptr) continue;
+		    if (cluster->GtrkID != prim->trkID) continue;
+            HitTRDMCInfo hit;
+            hit.lay  = cluster->Layer;
+            hit.sub  = 100 * cluster->Ladder + cluster->Tube;
+            hit.mom  = std::sqrt((cluster->Ekin + 2 * prim->Mass) * cluster->Ekin); 
+            hit.coo[0] = cluster->Xgl[0]; 
+            hit.coo[1] = cluster->Xgl[1]; 
+            hit.coo[2] = cluster->Xgl[2];
+            mcHits.push_back(hit);
+        }
+    }
+	std::sort(mcHits.begin(), mcHits.end(), HitTRDMCInfo_sort());
 
 	// TrdKCluster
 	TrdKCluster * trdkcls = TrdKCluster::gethead();
@@ -1445,36 +1466,30 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             
             HitTRDInfo hitInfo;
             hitInfo.lay = hit->TRDHit_Layer;
+            hitInfo.sub = 100 * hit->TRDHit_Ladder + hit->TRDHit_Tube;
             hitInfo.side = hit->TRDHit_Direction;
             hitInfo.amp = hit->TRDHit_Amp;
             hitInfo.len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
             hitInfo.coo[0] = hit->TRDHit_x;
             hitInfo.coo[1] = hit->TRDHit_y;
             hitInfo.coo[2] = hit->TRDHit_z;
+
+            hitInfo.dEdx = ((hitInfo.len > 0) ? (0.01 * (hitInfo.amp / hitInfo.len)) : 0.0);
+            
+            Float_t mcMom = 0.0;
+	        if (checkEventMode(EventBase::MC)) {
+                for (auto&& mchit : mcHits) {
+                    if (mchit.lay != hitInfo.lay || mchit.sub != hitInfo.sub) continue;
+                    mcMom = mchit.mom;
+                    break;
+                }
+            }
+            hitInfo.mcMom = mcMom;
+            
             fTrd.hits[kindOfFit].push_back(hitInfo);
 		}
 		if (fTrd.hits[kindOfFit].size() == 0) continue;
         std::sort(fTrd.hits[kindOfFit].begin(), fTrd.hits[kindOfFit].end(), HitTRDInfo_sort());
-
-        // Avg ADC Signal
-        Short_t  ndofEX = -2;
-        Double_t sumde = 0.0;
-        Double_t sumdx = 0.0;
-        Double_t sumcz = 0.0;
-        Double_t minEX[4] = {  1.0e+5,  1.0e+5,  1.0e+5, 0.0 }; // dedx, de, dx, cz
-        Double_t maxEX[4] = { -1.0e+5, -1.0e+5, -1.0e+5, 0.0 }; // dedx, de, dx, cz
-        for (auto&& hit : fTrd.hits[kindOfFit]) {
-            if (hit.len < 0.3) continue;
-            Double_t dedx = hit.amp / hit.len;
-            if (dedx < minEX[0]) { minEX[0] = dedx; minEX[1] = hit.amp; minEX[2] = hit.len; minEX[3] = hit.coo[2]; }
-            if (dedx > maxEX[0]) { maxEX[0] = dedx; maxEX[1] = hit.amp; maxEX[2] = hit.len; maxEX[3] = hit.coo[2]; }
-            sumde += hit.amp;
-            sumdx += hit.len;
-            sumcz += hit.coo[2];
-            ndofEX++;
-        }
-        Double_t avgvEX = (ndofEX > 0) ? (((sumde - minEX[1] - maxEX[1]) / (sumdx - minEX[2] - maxEX[2])) * 1.0e-2) : 0.0;
-        Double_t avgvCZ = (ndofEX > 0) ? ((sumcz - minEX[3] - maxEX[3]) / ndofEX) : 0.0;
 
 		fTrd.statusKCls[kindOfFit] = true;
 		fTrd.LLRep[kindOfFit]      = llr[0];
@@ -1482,12 +1497,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTrd.LLRph[kindOfFit]      = llr[2];
 		fTrd.LLRnhit[kindOfFit]    = fTrd.hits[kindOfFit].size();
 		fTrd.Q[kindOfFit]          = Q;
-        
-        if (ndofEX > 0) {
-            fTrd.ADCn[kindOfFit] = ndofEX;
-            fTrd.ADCv[kindOfFit] = avgvEX;
-            fTrd.ADCz[kindOfFit] = avgvCZ;
-        }
 	}
 
     // Vertex

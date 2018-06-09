@@ -14,8 +14,9 @@ namespace InterfaceAms {
 
 class Event {
     private :
-        static constexpr Int_t QOptTracker = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
-        static constexpr Int_t QOptTOF     = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
+        static constexpr Int_t QOptTrackerISS = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+        static constexpr Int_t QOptTrackerMC  = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
+        static constexpr Int_t QOptTOF        = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
 
     public :
         enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };

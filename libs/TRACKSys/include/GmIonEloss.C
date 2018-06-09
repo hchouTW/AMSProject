@@ -17,7 +17,7 @@ std::array<long double, 2> GmIonEloss::eval(long double x, long double igmbta) c
  
     // Landau-Gaus with noise fluctuation 
     LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
-    std::array<long double, 2>&& lg_par = ldgaus(x);
+    std::array<long double, 2>&& lg_par = ldgaus.minimizer(x);
     
     long double res = lg_par.at(0);          // res normx
     long double div = lg_par.at(1) * divmpv; // div r/x * div x/igmbta

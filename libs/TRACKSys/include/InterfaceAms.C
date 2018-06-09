@@ -80,8 +80,9 @@ Bool_t Event::bulid_HitStTRK() {
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
-		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, QOptTracker, 1, 0, 0); 
-		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, QOptTracker, 1, 0, 0); 
+        Int_t    qopt = ((event_->NMCEventg() > 0 && event_->Version() >= 1107) ? QOptTrackerMC : QOptTrackerISS);
+		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
+		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
 			
         std::vector<float> xstripSig;
 		std::vector<float> xstripSgm;
@@ -129,7 +130,7 @@ Bool_t Event::bulid_HitStTRK() {
         HitStTRK hit(scx, scy, layJ);
         hit.set_coo(pnt.x(), pnt.y(), pnt.z());
         hit.set_nsr(nsrx, nsry);
-        //if (withQ_) hit.set_q(qx, qy);
+        if (withQ_) hit.set_q(qx, qy);
 
         if      (layJ == 1) hitL1 = hit;
         else if (layJ == 9) hitL9 = hit;

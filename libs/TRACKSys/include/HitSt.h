@@ -101,15 +101,15 @@ class HitStTRK : public VirtualHitSt {
             nsr_[0] = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
             nsr_[1] = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
         }
-        // TODO: // rebuild template
-        //inline void set_q(Double_t qx, Double_t qy) {
-        //    side_q_[0] = (Numc::Compare(qx) > 0);
-        //    side_q_[1] = (Numc::Compare(qy) > 0);
-        //    q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
-        //    q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
-        //    nrmq_.fill(Numc::ZERO<>);
-        //    divq_.fill(Numc::ZERO<>);
-        //}
+        
+        inline void set_q(Double_t qx, Double_t qy) {
+            side_q_[0] = (Numc::Compare(qx) > 0);
+            side_q_[1] = (Numc::Compare(qy) > 0);
+            q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
+            q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
+            nrmq_.fill(Numc::ZERO<>);
+            divq_.fill(Numc::ZERO<>);
+        }
         
         inline const Short_t&  seqIDqx() const { return seqIDqx_; }
         inline const Short_t&  seqIDqy() const { return seqIDqy_; }
@@ -316,7 +316,7 @@ class HitStRICH : public VirtualHitSt {
         static MultiGaus PDF_NAF_Q01_IB_;
 };
 
-
+/*
 class HitStTRD : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;
@@ -366,7 +366,7 @@ class HitStTRD : public VirtualHitSt {
     protected :
         static GmIonEloss PDF_Q01_EL_;
 };
-
+*/
 
 template<class HitStType>
 class Hit {
@@ -384,7 +384,7 @@ class Hit {
 template class Hit<HitStTRK>;
 template class Hit<HitStTOF>;
 template class Hit<HitStRICH>;
-template class Hit<HitStTRD>;
+//template class Hit<HitStTRD>;
 
 
 } // namesapce TrackSys

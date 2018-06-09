@@ -191,9 +191,9 @@ class MultiGaus {
     private :
         static TRandom* rndm_gen_;
 
-        static constexpr Long64_t    NPX_ = 1000000;
-        static constexpr long double LMTL_PROB_ = 1.0e-20;
-        static constexpr long double ROBUST_SGM_ = 2.0;
+        static constexpr Long64_t    NPX = 1000000;
+        static constexpr long double LMTL_PROB = 1.0e-20;
+        static constexpr long double ROBUST_SGM = 2.0;
 };
 
 TRandom* MultiGaus::rndm_gen_ = nullptr;
@@ -212,7 +212,9 @@ class LandauGaus {
         LandauGaus(Opt opt, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        inline std::array<long double, 2> operator() (long double x) const;
+        long double operator() (long double x, long double wgt = Numc::ONE<long double>) const;
+        
+        std::array<long double, 2> minimizer(long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }
@@ -233,9 +235,34 @@ class LandauGaus {
         Opt robust_;
 
     private :
-        static constexpr long double LANDAU0_    = 1.78854160900000003e-01;
-        static constexpr long double DELTA_      = 0.01;
-        static constexpr long double ROBUST_SGM_ = 2.0;
+        static constexpr long double LANDAU0    = 1.78854160900000003e-01;
+        static constexpr long double DELTA      = 0.01;
+        static constexpr long double ROBUST_SGM = 2.0;
+};
+
+} // namesapce TrackSys
+
+
+namespace TrackSys {
+//TF1* fgm = new TF1("fgm", "[0] * TMath::Power(x, [1]) * TMath::Exp(-[2] * x) * (TMath::Erf((x - [3]) / [4]) + 1)");
+//fgm->SetParameters(1.0, 6.0, 1.0, 3.0, 0.3);
+class ErfGamma {
+    public :
+        ErfGamma(long double alpha, long double beta, long double eftm, long double efts);
+        ~ErfGamma() {}
+
+        long double operator() (long double x, long double wgt = Numc::ONE<long double>) const;
+
+        inline const long double& alpha() const { return alpha_; }
+        inline const long double& beta()  const { return beta_; }
+        inline const long double& eftm()  const { return eftm_; }
+        inline const long double& efts()  const { return efts_; }
+
+    protected :
+        long double alpha_;
+        long double beta_;
+        long double eftm_;
+        long double efts_;
 };
 
 } // namesapce TrackSys

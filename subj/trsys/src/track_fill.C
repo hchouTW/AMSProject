@@ -210,7 +210,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_q(hit.adc[0], hit.adc[1]);
+            mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
@@ -231,7 +231,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            //fitPar.add_hit(mhit);
+            fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -241,12 +241,12 @@ int main(int argc, char * argv[]) {
         //richHit.set_ib(Numc::ONE<> / fRich->beta);
         //fitPar.add_hit(richHit);
 
-        if (fTrd->ADCn[1] < 5) continue;
-        //CERR("Z %14.8f ADC %14.8f\n", fTrd->ADCz[0], fTrd->ADCv[0]);
-        HitStTRD trdHit;
-        trdHit.set_coo(0, 0, fTrd->ADCz[1]);
-        trdHit.set_el(fTrd->ADCv[1], fTrd->ADCn[1]);
-        fitPar.add_hit(trdHit);
+        //if (fTrd->ADCn[1] < 5) continue;
+        ////CERR("Z %14.8f ADC %14.8f\n", fTrd->ADCz[0], fTrd->ADCv[0]);
+        //HitStTRD trdHit;
+        //trdHit.set_coo(0, 0, fTrd->ADCz[1]);
+        //trdHit.set_el(fTrd->ADCv[1], fTrd->ADCn[1]);
+        //fitPar.add_hit(trdHit);
 
         if (!fitPar.check()) continue;
 
@@ -313,7 +313,7 @@ int main(int argc, char * argv[]) {
         PhySt&& sttTop = tr.interpolate_to_z(195.0);
         if (Numc::EqualToZero(sttTop.mom())) continue;
         hc_irig = sttTop.irig();
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1), sw.time());
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1), sw.time());
         //-------------------------------------//
         
         Bool_t ck_succ = ckTr.status;
