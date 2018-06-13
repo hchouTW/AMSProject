@@ -6,14 +6,14 @@ namespace TrackSys {
 
 std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) const {
     if (Numc::Compare(x) <= 0 || Numc::EqualToZero(igmbta))
-        return std::array<long double, 2>({Numc::ZERO<long double>, Numc::ZERO<long double>});
+        return std::array<long double, 2>({ Numc::ZERO<long double>, Numc::ZERO<long double> });
     long double ibsqr  = (Numc::ONE<long double> + igmbta * igmbta);
     
     // PDF parameters
-    long double kpa    = eval_kpa(igmbta, ibsqr); 
-    long double mpv    = eval_mpv(igmbta, ibsqr); 
-    long double sgm    = eval_sgm(igmbta, ibsqr); 
-    long double divmpv = eval_divmpv(igmbta, ibsqr); 
+    long double kpa    = get_kpa(igmbta, ibsqr); 
+    long double mpv    = get_mpv(igmbta, ibsqr); 
+    long double sgm    = get_sgm(igmbta, ibsqr); 
+    long double divmpv = get_divmpv(igmbta, ibsqr); 
  
     // Landau-Gaus with noise fluctuation 
     LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
@@ -21,9 +21,6 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     
     long double res = lg_par.at(0);          // res normx
     long double div = lg_par.at(1) * divmpv; // div r/x * div x/igmbta
-
-    long double controller = Numc::HALF * (Numc::ONE<long double> + std::erf(Numc::HALF * (res - THRESHOLD))); // (elc) Noise Controller
-    div *= controller;
 
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
@@ -33,10 +30,10 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     return std::array<long double, 2>({res, div});
 }
         
-long double IonEloss::eval_kpa(long double igmbta, long double ibsqr) const {
+long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {
     long double kpa = (Numc::ONE<long double> - kpa_.at(0)) + kpa_.at(0) * Numc::HALF *
         (Numc::ONE<long double> + 
-         std::erf(kpa_.at(1) * std::log(Numc::ONE<long double> + kpa_.at(3) * igmbta * igmbta) + kpa_.at(2)));
+         std::erf(kpa_.at(1) * std::log1p(kpa_.at(3) * igmbta * igmbta) + kpa_.at(2)));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     else {
         if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;
@@ -45,7 +42,7 @@ long double IonEloss::eval_kpa(long double igmbta, long double ibsqr) const {
     return kpa;
 }
 
-long double IonEloss::eval_mpv(long double igmbta, long double ibsqr) const {
+long double IonEloss::get_mpv(long double igmbta, long double ibsqr) const {
     long double mpv = mpv_.at(0) * std::pow(ibsqr,  mpv_.at(3)) * 
         (mpv_.at(1) - 
          mpv_.at(2) * std::pow(ibsqr, -mpv_.at(3)) - 
@@ -55,7 +52,7 @@ long double IonEloss::eval_mpv(long double igmbta, long double ibsqr) const {
     return mpv;
 }
 
-long double IonEloss::eval_sgm(long double igmbta, long double ibsqr) const {
+long double IonEloss::get_sgm(long double igmbta, long double ibsqr) const {
     long double sgm = sgm_.at(0) * std::pow(ibsqr,  sgm_.at(3)) * 
         (sgm_.at(1) - 
          sgm_.at(2) * std::pow(ibsqr, -sgm_.at(3)) - 
@@ -65,9 +62,9 @@ long double IonEloss::eval_sgm(long double igmbta, long double ibsqr) const {
     return sgm;
 }
 
-long double IonEloss::eval_divmpv(long double igmbta, long double ibsqr) const {
-    long double divbta = mpv_.at(3) * std::pow(ibsqr, mpv_.at(3)-Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
-    long double divlog = mpv_.at(5) * std::pow(igmbta, mpv_.at(5)-Numc::ONE<long double>) / (mpv_.at(4) + std::pow(igmbta, mpv_.at(5)));
+long double IonEloss::get_divmpv(long double igmbta, long double ibsqr) const {
+    long double divbta = mpv_.at(3) * std::pow(ibsqr, mpv_.at(3) - Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
+    long double divlog = mpv_.at(5) * std::pow(igmbta, mpv_.at(5) - Numc::ONE<long double>) / (mpv_.at(4) + std::pow(igmbta, mpv_.at(5)));
 
     long double termA  = mpv_.at(1) * divbta;
     long double termB  = divbta * std::log(mpv_.at(4) + std::pow(igmbta, mpv_.at(5)));
@@ -75,7 +72,6 @@ long double IonEloss::eval_divmpv(long double igmbta, long double ibsqr) const {
     long double divmpv = mpv_.at(0) * (termA - termB - termC);
 
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
-    
     return divmpv;
 }
 

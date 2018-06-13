@@ -5,6 +5,14 @@
 namespace TrackSys {
 
 // VirtualHitSt
+Double_t VirtualHitSt::DoNoiseController(Double_t norm) {
+    Double_t sqrnrm = (norm * norm);
+    Double_t sclnrm = (NOISE_THRESHOLD - std::log1p(sqrnrm * sqrnrm));
+    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(sclnrm));
+    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
+    return controller;
+}
+
 VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t scx, Bool_t scy, Bool_t scz) {
     clear();
     dec_ = dec;
@@ -67,7 +75,7 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTRK::cal(const PhySt& part) {
+void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
     if (!set_type(part.info())) return;
 
     nrmc_.fill(Numc::ZERO<>);
@@ -75,13 +83,25 @@ void HitStTRK::cal(const PhySt& part) {
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_coo_(0)) {
         erc_(0)  = pdf_cx_->efft_sgm(crs(0));
-        nrmc_[0] = crs(0) / erc_(0);
-        divc_[0] = Numc::NEG<> / erc_(0);
+        nrmc_[0] = (crs(0) / erc_(0));
+        divc_[0] = (Numc::NEG<> / erc_(0));
+        if (NoiseController::ON == ctler)
+            divc_[0] *= DoNoiseController(nrmc_[0]);
+        if (!Numc::Valid(nrmc_[0]) || !Numc::Valid(divc_[0])) {
+            nrmc_[0] = Numc::ZERO<>;
+            divc_[0] = Numc::ZERO<>;
+        }
     }
     if (side_coo_(1)) {
         erc_(1) = pdf_cy_->efft_sgm(crs(1));
-        nrmc_[1] = crs(1) / erc_(1);
-        divc_[1] = Numc::NEG<> / erc_(1);
+        nrmc_[1] = (crs(1) / erc_(1));
+        divc_[1] = (Numc::NEG<> / erc_(1));
+        if (NoiseController::ON == ctler)
+            divc_[1] *= DoNoiseController(nrmc_[1]); 
+        if (!Numc::Valid(nrmc_[1]) || !Numc::Valid(divc_[1])) {
+            nrmc_[1] = Numc::ZERO<>;
+            divc_[1] = Numc::ZERO<>;
+        }
     }
 
     nrmq_.fill(Numc::ZERO<>);
@@ -91,12 +111,32 @@ void HitStTRK::cal(const PhySt& part) {
         nrmq_[0] = ionx(0);
         divq_[0] = ionx(1) * part.mu() * part.eta_sign();
         divq_[1] = ionx(1) * part.gm();
+        if (NoiseController::ON == ctler) {
+            Double_t ctlerq = DoNoiseController(nrmq_[0]);
+            divq_[0] *= ctlerq;
+            divq_[1] *= ctlerq;
+        }
+        if (!Numc::Valid(nrmq_[0]) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
+            nrmq_[0] = Numc::ZERO<>;
+            divq_[0] = Numc::ZERO<>;
+            divq_[1] = Numc::ZERO<>;
+        }
     }
     if (side_q_[1]) {
         SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
         nrmq_[1] = iony(0);
         divq_[2] = iony(1) * part.mu() * part.eta_sign();
         divq_[3] = iony(1) * part.gm();
+        if (NoiseController::ON == ctler) {
+            Double_t ctlerq = DoNoiseController(nrmq_[1]);
+            divq_[2] *= ctlerq;
+            divq_[3] *= ctlerq;
+        }
+        if (!Numc::Valid(nrmq_[1]) || !Numc::Valid(divq_[2]) || !Numc::Valid(divq_[3])) {
+            nrmq_[1] = Numc::ZERO<>;
+            divq_[2] = Numc::ZERO<>;
+            divq_[3] = Numc::ZERO<>;
+        }
     }
 
     set_dummy_x(part.cx());
@@ -256,7 +296,7 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTOF::cal(const PhySt& part) {
+void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
     if (!set_type(part.info())) return;
 
     nrmt_     = Numc::ZERO<>;
@@ -278,7 +318,13 @@ void HitStTOF::cal(const PhySt& part) {
             Double_t divt = (Numc::NEG<> * ds / ter);
             divt_[0] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
             divt_[1] = divt;
-            if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt)) {
+            if (NoiseController::ON == ctler) {
+                Double_t ctlert = DoNoiseController(nrmt_);
+                divt_sft_ *= ctlert;
+                divt_[0] *= ctlert;
+                divt_[1] *= ctlert;
+            }
+            if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1])) {
                 nrmt_     = Numc::ZERO<>;
                 divt_sft_ = Numc::ZERO<>;
                 divt_.fill(Numc::ZERO<>);
@@ -293,6 +339,15 @@ void HitStTOF::cal(const PhySt& part) {
         nrmq_ = ion(0);
         divq_[0] = ion(1) * part.mu() * part.eta_sign();
         divq_[1] = ion(1) * part.gm();
+        if (NoiseController::ON == ctler) {
+            Double_t ctlerq = DoNoiseController(nrmq_);
+            divq_[0] *= ctlerq;
+            divq_[1] *= ctlerq;
+        }
+        if (!Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
+            nrmq_ = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
+        }
     }
 
     set_dummy_x(part.cx());
@@ -329,13 +384,6 @@ IonEloss HitStTOF::PDF_Q01_Q_(
     0.0829427 // Fluc
 );
 
-//IonEloss HitStTOF::PDF_Q01_Q_( // NEW2
-//    { 8.56923e+00, 2.03064e-01, -2.46093e+00 }, // Kpa
-//    { 3.19209e-01, 3.78021e+00, 1.03394e+00, 6.42416e-01, 1.27161e+00 }, // Mpv
-//    { 5.62652e-02, 1.84529e+00, 1.41309e+00, 7.72896e-01, 1.52086e+00 }, // Sgm
-//    0.0829427 // Fluc
-//);
-
 
 // HitStRICH
 void HitStRICH::clear() {
@@ -367,7 +415,7 @@ Short_t HitStRICH::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStRICH::cal(const PhySt& part) {
+void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
     if (!set_type(part.info())) return;
 
     nrmib_ = Numc::ZERO<>;
@@ -380,6 +428,11 @@ void HitStRICH::cal(const PhySt& part) {
         Double_t divib = (Numc::NEG<> / sgm);
         divib_[0] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
         divib_[1] = divib;
+        if (NoiseController::ON == ctler) {
+            Double_t ctlerib = DoNoiseController(nrmib_);
+            divib_[0] *= ctlerib;
+            divib_[1] *= ctlerib;
+        }
         if (!Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
             nrmib_ = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
@@ -422,14 +475,13 @@ MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
     7.16455337745068865e-02, 6.91529e-03
 );
 
-/*
+
 void HitStTRD::clear() {
     seqIDcx_ = -1;
     seqIDcy_ = -1;
     seqIDel_ = -1;
     
     side_el_ = false;
-    ndofel_  = Numc::ZERO<Short_t>;
     el_      = Numc::ZERO<>;
 
     nrmel_ = Numc::ZERO<>;
@@ -451,16 +503,25 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTRD::cal(const PhySt& part) {
+void HitStTRD::cal(const PhySt& part, const NoiseController& ctler) {
     if (!set_type(part.info())) return;
     
     nrmel_ = Numc::ZERO<>;
     divel_.fill(Numc::ZERO<>);
     if (side_el_) {
-        SVecD<2>&& gmion = (*pdf_el_)(el_, part.igmbta());
-        nrmel_ = gmion(0);
-        divel_[0] = gmion(1) * part.mu() * part.eta_sign();
-        divel_[1] = gmion(1) * part.gm();
+        SVecD<3>&& lgge = (*pdf_el_)(el_, part.igmbta());
+        nrmel_ = lgge(0);
+        divel_[0] = lgge(1) * part.mu() * part.eta_sign();
+        divel_[1] = lgge(1) * part.gm();
+        if (NoiseController::ON == ctler) {
+            Double_t ctlerel = DoNoiseController(nrmel_);
+            divel_[0] *= ctlerel;
+            divel_[1] *= ctlerel;
+        }
+        if (!Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
+            nrmel_ = Numc::ZERO<>;
+            divel_.fill(Numc::ZERO<>);
+        }
     }
 
     set_dummy_x(part.cx());
@@ -485,12 +546,16 @@ Bool_t HitStTRD::set_type(const PartInfo& info) {
 }
 
 GmIonEloss HitStTRD::PDF_Q01_EL_(
-    { 3.42286e-01, 1.49108e+00, 3.79622e-01, 6.51468e-01, 1.45158e-01, 1.29064e-01, 1.16096e+00, 8.47144e+00 }, // Kpa
-    { 1.13611e-01, 1.13937e+01, 1.23836e+00, 2.67476e-06, 2.51050e+00, 2.14009e+00, 8.59030e-01, 6.26050e+00 }, // Mpv
-    { 7.30837e-02, 2.85852e+00, 1.18204e+00, 2.29138e-02, 5.94741e-01, 5.14559e-01, 9.92186e-01, 7.07455e+00 }, // Sgm
-    0.170 // Fluc
+    { 6.87250e-01, 8.49158e-01, -6.50955e+00 }, // Ratio
+    { 2.17486e-04, 4.27812e+00 }, // Kpa
+    { 9.62033e+00, 1.26248e+00, 8.36500e-03, 1.24422e+00, 2.22255e+00, 8.06270e-02 }, // Mpv
+    { 2.13993e-01, 2.78925e+00, 1.65428e+00, 6.55129e-01, 1.17441e-01, 3.61303e-01 }, // Sgm
+    { 2.11427 }, // Alpha
+    { 1.83481e-01, 5.07634e-01, -5.30224e+00 }, // Beta
+    { 6.52658434 }, // Erf Man
+    { 1.79160092 }  // Erf Sgm
 );
-*/
+
 
 } // namesapce TrackSys
 

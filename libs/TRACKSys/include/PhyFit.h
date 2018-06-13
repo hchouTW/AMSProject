@@ -27,7 +27,7 @@ class TrFitPar {
         inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit); zero(); }
         inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit); zero(); }
         inline void add_hit(const HitStRICH& hit) { hits_RICH_.push_back(hit); zero(); }
-        //inline void add_hit(const HitStTRD&  hit) { hits_TRD_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTRD&  hit) { hits_TRD_.push_back(hit); zero(); }
         
         inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
@@ -45,7 +45,7 @@ class TrFitPar {
         inline const std::vector<HitStTRK>&  hitsTRK()  const { return hits_TRK_; }
         inline const std::vector<HitStTOF>&  hitsTOF()  const { return hits_TOF_; }
         inline const std::vector<HitStRICH>& hitsRICH() const { return hits_RICH_; }
-        //inline const std::vector<HitStTRD>&  hitsTRD()  const { return hits_TRD_; }
+        inline const std::vector<HitStTRD>&  hitsTRD()  const { return hits_TRD_; }
 
     protected :
         void zero();
@@ -64,7 +64,7 @@ class TrFitPar {
         std::vector<HitStTRK>      hits_TRK_;
         std::vector<HitStTOF>      hits_TOF_;
         std::vector<HitStRICH>     hits_RICH_;
-        //std::vector<HitStTRD>      hits_TRD_;
+        std::vector<HitStTRD>      hits_TRD_;
 
         Short_t nseq_;
         Short_t nseg_;

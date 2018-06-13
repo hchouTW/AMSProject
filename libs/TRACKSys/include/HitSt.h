@@ -12,13 +12,21 @@ class VirtualHitSt {
             NONE, TRK, TOF, TRD, RICH, ECAL
         };
 
+        enum class NoiseController {
+            OFF, ON
+        };
+        
+    protected :
+        static constexpr Double_t NOISE_THRESHOLD = 4.5;
+        Double_t DoNoiseController(Double_t norm);
+
     public :
         VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t scx = false, Bool_t scy = false, Bool_t scz = true);
         ~VirtualHitSt() { clear(); }
 
         virtual Short_t set_seqID(Short_t seqID) = 0; 
 
-        virtual void cal(const PhySt& part) = 0;
+        virtual void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF) = 0;
         virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_.fill(Numc::ZERO<>); divc_.fill(Numc::ZERO<>); }
@@ -94,7 +102,7 @@ class HitStTRK : public VirtualHitSt {
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part);
+        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_nsr(Short_t nx, Short_t ny) {
@@ -173,7 +181,7 @@ class HitStTOF : public VirtualHitSt {
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part);
+        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
@@ -273,11 +281,11 @@ class HitStRICH : public VirtualHitSt {
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part);
+        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_ib(Double_t ib) {
-            side_ib_ = (Numc::Compare(ib) >= 0);
+            side_ib_ = (Numc::Compare(ib) > 0);
             ib_      = (side_ib_ ? ib : Numc::ZERO<>);
             nrmib_   = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
@@ -316,23 +324,22 @@ class HitStRICH : public VirtualHitSt {
         static MultiGaus PDF_NAF_Q01_IB_;
 };
 
-/*
+
 class HitStTRD : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;
 
     public :
-        HitStTRD() : VirtualHitSt(DEC, 0, false, false) { clear(); }
+        HitStTRD(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false) { clear(); }
         ~HitStTRD() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part);
+        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
-        inline void set_el(Double_t el, Short_t ndof) {
-            side_el_ = (Numc::Compare(el) >= 0 && ndof > 0);
-            ndofel_  = (side_el_ ? ndof : Numc::ZERO<Short_t>);
+        inline void set_el(Double_t el) {
+            side_el_ = (Numc::Compare(el) > 0);
             el_      = (side_el_ ? el : Numc::ZERO<>);
             nrmel_   = Numc::ZERO<>;
             divel_.fill(Numc::ZERO<>);
@@ -355,7 +362,6 @@ class HitStTRD : public VirtualHitSt {
         Short_t seqIDel_;
         
         Bool_t   side_el_;
-        Short_t  ndofel_;
         Double_t el_; // energy loss dE/dx
 
         Double_t nrmel_; // dE/dx nrom
@@ -366,7 +372,7 @@ class HitStTRD : public VirtualHitSt {
     protected :
         static GmIonEloss PDF_Q01_EL_;
 };
-*/
+
 
 template<class HitStType>
 class Hit {
@@ -384,7 +390,7 @@ class Hit {
 template class Hit<HitStTRK>;
 template class Hit<HitStTOF>;
 template class Hit<HitStRICH>;
-//template class Hit<HitStTRD>;
+template class Hit<HitStTRD>;
 
 
 } // namesapce TrackSys

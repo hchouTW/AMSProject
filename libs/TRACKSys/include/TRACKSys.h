@@ -9,8 +9,8 @@
 
 #include "IonEloss.h"
 #include "IonEloss.C"
-//#include "GmIonEloss.h"
-//#include "GmIonEloss.C"
+#include "GmIonEloss.h"
+#include "GmIonEloss.C"
 
 #include "PartInfo.h"
 #include "PartInfo.C"

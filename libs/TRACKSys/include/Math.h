@@ -212,8 +212,6 @@ class LandauGaus {
         LandauGaus(Opt opt, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        long double operator() (long double x, long double wgt = Numc::ONE<long double>) const;
-        
         std::array<long double, 2> minimizer(long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
@@ -244,25 +242,47 @@ class LandauGaus {
 
 
 namespace TrackSys {
-//TF1* fgm = new TF1("fgm", "[0] * TMath::Power(x, [1]) * TMath::Exp(-[2] * x) * (TMath::Erf((x - [3]) / [4]) + 1)");
-//fgm->SetParameters(1.0, 6.0, 1.0, 3.0, 0.3);
-class ErfGamma {
+//TF1* flggm = new TF1("flggm", "[0] *  (1.0/sqrt(2.0*TMath::Pi())/[3]) * TMath::Exp((1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3])) + [4] * (pow([6], [5]) / TMath::Gamma([5])) * TMath::Power(x,[5]-1) * TMath::Exp(-[6]*x) * (0.5 * (TMath::Erf((x-[7])/[8])+1))", 0.1, 100);
+class LgGeFunc {
     public :
-        ErfGamma(long double alpha, long double beta, long double eftm, long double efts);
-        ~ErfGamma() {}
+        enum class Opt { NOROBUST = 0, ROBUST = 1 };
+    
+    public :
+        LgGeFunc(Opt opt, long double ratio, long double lg_k, long double lg_m, long double lg_s, long double ge_a, long double ge_b, long double ge_m, long double ge_s) : robust_(opt), ratio_(ratio), lg_k_(lg_k), lg_m_(lg_m), lg_s_(lg_s), ge_a_(ge_a), ge_b_(ge_b), ge_m_(ge_m), ge_s_(ge_s) {}
+        ~LgGeFunc() {}
 
-        long double operator() (long double x, long double wgt = Numc::ONE<long double>) const;
-
-        inline const long double& alpha() const { return alpha_; }
-        inline const long double& beta()  const { return beta_; }
-        inline const long double& eftm()  const { return eftm_; }
-        inline const long double& efts()  const { return efts_; }
+        std::array<long double, 3> minimizer(long double x) const;
 
     protected :
-        long double alpha_;
-        long double beta_;
-        long double eftm_;
-        long double efts_;
+        // transition
+        long double get_ratio(long double x) const;
+        long double get_lg(long double x) const;
+        long double get_ge(long double x) const;
+
+        // ionization
+        std::array<long double, 2> lg_minimizer(long double x, long double wgt = Numc::ONE<long double>) const;
+        long double lg_eval(long double norm) const;
+        long double lg_div(long double norm) const;
+
+    private :
+        long double ratio_; // ratio := TR / (ION + TR)
+
+        long double lg_k_;  // kpa
+        long double lg_m_;  // mpv
+        long double lg_s_;  // sgm
+
+        long double ge_a_;  // alpha
+        long double ge_b_;  // beta
+        long double ge_m_;  // men
+        long double ge_s_;  // sgm
+    
+    private :
+        Opt robust_;
+    
+    private :
+        static constexpr long double LANDAU0    = 1.78854160900000003e-01;
+        static constexpr long double DELTA      = 0.01;
+        static constexpr long double ROBUST_SGM = 2.0;
 };
 
 } // namesapce TrackSys
