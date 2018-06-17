@@ -80,6 +80,11 @@
     flggm->SetParLimits(1, 0.0, 1.0);
     flggm->SetNpx(10000);
     
+    TF1* flggm2 = new TF1("flggm2", "[0] * TMath::Exp((1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3])) + [4] * TMath::Power(x,[5]) * TMath::Exp(-[6]*x) * (TMath::Erf((x-[7])/[8])+1)");
+    flggm2->SetParameters(1.84683e+04, 2.53358e-04, 2.31822e+00, 6.54225e-01, 8.39894e+02, 1.18565e+00, 2.14286e-01, 6.60662e+00, 1.77739e+00);
+    flggm2->SetParLimits(1, 0.0, 1.0);
+    flggm2->SetNpx(10000);
+    
     
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
 

@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss(), const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON);
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -53,6 +53,9 @@ class TrFitPar {
         
         Bool_t sort_hits();
         Bool_t check_hits();
+        
+    protected :
+        VirtualHitSt::NoiseController noise_ctler_;
 
     protected :
         Bool_t      sw_mscat_;

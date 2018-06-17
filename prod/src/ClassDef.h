@@ -300,8 +300,8 @@ class HitTRDInfo : public TObject {
 			len  = 0;
 			std::fill_n(coo, 3, 0);
 
-            dEdx  = 0;
-            mcMom = 0;
+            dEdx  = -1;
+            mcMom = -1;
 		}
 
 	public :
@@ -880,10 +880,13 @@ class TRK : public TObject {
 
             ckTr = std::vector<CKTrackInfo>(4);
             kfTr = std::vector<KFTrackInfo>(4);
-            hcTr = std::vector<HCTrackInfo>(4);
+            hcPrTr = std::vector<HCTrackInfo>(4);
+            hcDeTr = std::vector<HCTrackInfo>(4);
             
-            hcMu.init();
-
+            hcPrInTr = std::vector<HCTrackInfo>(2);
+            hcDeInTr = std::vector<HCTrackInfo>(2);
+            hcMuInTr = std::vector<HCTrackInfo>(2);
+            
             ftL34Dist = -1;
             ftL56Dist = -1;
             ftL78Dist = -1;
@@ -923,10 +926,15 @@ class TRK : public TObject {
 
         // Choutko [Inn InnL1 InnL9 FS]
         std::vector<KFTrackInfo> kfTr;
+        
+        // HYChou [Inn InnL1 InnL9 FS]
+        std::vector<HCTrackInfo> hcPrTr;
+        std::vector<HCTrackInfo> hcDeTr;
 
-        // Hsin-Yi tools [Inn InnL1 InnL9 FS]
-        std::vector<HCTrackInfo> hcTr;
-        HCTrackInfo hcMu; // [Inn]
+        // Hsin-Yi tools [Tracker+TOF, Tracker+TOF+RICH]
+        std::vector<HCTrackInfo> hcPrInTr;
+        std::vector<HCTrackInfo> hcDeInTr;
+        std::vector<HCTrackInfo> hcMuInTr;
 
         // Haino's tools
         Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)

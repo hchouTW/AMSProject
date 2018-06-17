@@ -4,7 +4,8 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;

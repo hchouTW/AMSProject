@@ -13,7 +13,7 @@ CurDir=${PWD}
 #DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7.mfixed_B1130_18May15
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18May27
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jun10
 
 OutputDir=${CurDir}/dat
 

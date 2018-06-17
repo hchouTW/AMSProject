@@ -7,27 +7,28 @@ namespace TrackSys {
     
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
-        sw_mscat_      = rhs.sw_mscat_;
-        sw_eloss_      = rhs.sw_eloss_;
-        info_          = rhs.info_;
-        ortt_          = rhs.ortt_;
-        hits_TRK_      = rhs.hits_TRK_;
-        hits_TOF_      = rhs.hits_TOF_;
-        hits_RICH_     = rhs.hits_RICH_;
-        hits_TRD_      = rhs.hits_TRD_;
-        nseq_          = rhs.nseq_;
-        nseg_          = rhs.nseg_;
-        nmes_          = rhs.nmes_;
-        nmes_cx_       = rhs.nmes_cx_;
-        nmes_cy_       = rhs.nmes_cy_;
-        nmes_ib_       = rhs.nmes_ib_;
-        nmes_TRKqx_    = rhs.nmes_TRKqx_;
-        nmes_TRKqy_    = rhs.nmes_TRKqy_;
-        nmes_TOFt_     = rhs.nmes_TOFt_;
-        nmes_TOFq_     = rhs.nmes_TOFq_;
-        nmes_RICHib_   = rhs.nmes_RICHib_;
+        noise_ctler_  = rhs.noise_ctler_;
+        sw_mscat_     = rhs.sw_mscat_;
+        sw_eloss_     = rhs.sw_eloss_;
+        info_         = rhs.info_;
+        ortt_         = rhs.ortt_;
+        hits_TRK_     = rhs.hits_TRK_;
+        hits_TOF_     = rhs.hits_TOF_;
+        hits_RICH_    = rhs.hits_RICH_;
+        hits_TRD_     = rhs.hits_TRD_;
+        nseq_         = rhs.nseq_;
+        nseg_         = rhs.nseg_;
+        nmes_         = rhs.nmes_;
+        nmes_cx_      = rhs.nmes_cx_;
+        nmes_cy_      = rhs.nmes_cy_;
+        nmes_ib_      = rhs.nmes_ib_;
+        nmes_TRKqx_   = rhs.nmes_TRKqx_;
+        nmes_TRKqy_   = rhs.nmes_TRKqy_;
+        nmes_TOFt_    = rhs.nmes_TOFt_;
+        nmes_TOFq_    = rhs.nmes_TOFq_;
+        nmes_RICHib_  = rhs.nmes_RICHib_;
         nmes_TRDel_   = rhs.nmes_TRDel_;
-        is_check_      = rhs.is_check_;
+        is_check_     = rhs.is_check_;
         
         hits_.clear();
         if (is_check_) {
@@ -45,9 +46,10 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     return *this;
 }
     
-TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, Bool_t sw_mscat, Bool_t sw_eloss) {
+TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss, const VirtualHitSt::NoiseController& noise_ctler) {
     clear();
 
+    noise_ctler_ = noise_ctler;
     sw_mscat_ = sw_mscat;
     sw_eloss_ = sw_eloss;
     info_ = info;
@@ -74,6 +76,8 @@ void TrFitPar::zero() {
 }
 
 void TrFitPar::clear() {
+    noise_ctler_ = VirtualHitSt::NoiseController::OFF;
+
     sw_mscat_ = false;
     sw_eloss_ = false;
     
@@ -189,6 +193,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 
 void SimpleTrFit::clear() {
+    noise_ctler_ = VirtualHitSt::NoiseController::OFF;
     sw_mscat_ = false;
     sw_eloss_ = false;
     
@@ -416,7 +421,7 @@ Bool_t SimpleTrFit::simpleFit() {
                 HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->orgt());
                 resetTOF = false;
             }
-            hit->cal(ppst, VirtualHitSt::NoiseController::OFF);
+            hit->cal(ppst, noise_ctler_);
 
             SVecD<2>       rsC;
             SMtxD<2, DIMG> jbC;
@@ -933,7 +938,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
                 resetTOF = false;
             }
         }
-        hit->cal(ppst, VirtualHitSt::NoiseController::OFF); // testcode
+        hit->cal(ppst, noise_ctler_);
         
         // Update Jacb
         jbGG = curjb.gg() * jbGG;
@@ -1182,7 +1187,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                 resetTOF = false;
             }
         }
-        hit->cal(ppst, VirtualHitSt::NoiseController::OFF); // testcode
+        hit->cal(ppst, noise_ctler_);
 
         // Update Jacb
         if (hasJacb) {

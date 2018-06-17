@@ -270,6 +270,8 @@ class EventTrk : virtual public EventBase {
 		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
 		bool selectEvent(AMSEventR * event = nullptr);
 
+        HCTrackInfo processHCTr(AMSEventR* event, TrackSys::PhyTrFit::MuOpt muOpt, TrackSys::PartType part, Bool_t withQ, TrackSys::InterfaceAms::Event::TrackerPatt trPatt, Bool_t withTOF, Bool_t withRICH);
+
 	public :
 		TRK fTrk;
 };

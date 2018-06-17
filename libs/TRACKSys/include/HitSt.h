@@ -17,8 +17,10 @@ class VirtualHitSt {
         };
         
     protected :
-        static constexpr Double_t NOISE_THRESHOLD = 4.5;
-        Double_t DoNoiseController(Double_t norm);
+        static constexpr Double_t NOISE_THRESHOLD = 3.5;
+        Double_t DoNoiseControllerLU(Double_t norm);
+        Double_t DoNoiseControllerL(Double_t norm);
+        Double_t DoNoiseControllerU(Double_t norm);
 
     public :
         VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t scx = false, Bool_t scy = false, Bool_t scz = true);

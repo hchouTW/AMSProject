@@ -3,8 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -83,23 +83,20 @@ int main(int argc, char * argv[]) {
     Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
-*/    
+*/
+/*
     Axis AXTKadc("TKadc", 3000, 0.2, 100.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
     Axis AXTFadc("TFadc", 800, 0.5, 10.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
+*/   
+    Axis AXTDzz("TDzz", 350, 80, 150.);
+    Hist* hTDzz = Hist::New("hTDzz", HistAxis(AXeta, AXTDzz));
     
-    Axis AXTDnh("TDnh", 25, 0., 25.);
-    Axis AXTDlx("TDlx", 200, 0.01, 0.7);
-    Axis AXTDex("TDex", 1600, 0.2, 40.);
-    Hist* hTDnh = Hist::New("hTDnh", HistAxis(AXeta, AXTDnh));
-    Hist* hTDlx = Hist::New("hTDlx", HistAxis(AXeta, AXTDlx));
+    Axis AXTDex("TDex", 1600, 0.01, 40.);
     Hist* hTDex = Hist::New("hTDex", HistAxis(AXeta, AXTDex));
-    
-    Axis AXTDavg("TDavg", 400, 0.2, 15.);
-    Hist* hTDavg = Hist::New("hTDavg", HistAxis(AXeta, AXTDavg));
 
 /*    
     Axis AXTFtme("TFtme", 800, -20, 20);
@@ -130,10 +127,8 @@ int main(int argc, char * argv[]) {
         
         // Geometry (TRD)
         if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
-        //if (!fTrd->statusKCls[1]) continue;
-        //if (fTrd->LLRnhit[1] < 10) continue;
         if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 10) continue;
+        if (fTrd->LLRnhit[0] < 8) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 2);
         
         // Geometry (ACC)
@@ -206,7 +201,8 @@ int main(int argc, char * argv[]) {
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
         }
 */
-            
+           
+        /*
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
         for (auto&& hit : fTrk->hits) { rec[hit.layJ-1] = &hit; }
         
@@ -232,35 +228,36 @@ int main(int argc, char * argv[]) {
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
         }
+        */
         
-        SegPARTMCInfo * mtd[2]; std::fill_n(mtd, 2, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==2) mtd[seg.lay] = &seg; }
-        if (mtd[0] == nullptr || mtd[1] == nullptr) continue;
+        //SegPARTMCInfo * mtd[2]; std::fill_n(mtd, 2, nullptr);
+        //for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==2) mtd[seg.lay] = &seg; }
+        //if (mtd[0] == nullptr || mtd[1] == nullptr) continue;
         //CERR("Z %14.8f %14.8f\n", mtd[0]->coo[2], mtd[1]->coo[2]);
         //CERR("M %14.8f %14.8f\n", mtd[0]->mom, mtd[1]->mom);
         
         if (fTrd->hits[0].size() >= 1) {
-            Double_t igmbta = fG4mc->primPart.mass * 2.0 / (mtd[0]->mom + mtd[1]->mom);
-            std::vector<Double_t> hh;
+            std::vector<Double_t> avge;
+            std::vector<Double_t> avgz;
+            std::vector<Double_t> dedx;
             for (auto&& hit : fTrd->hits[0]) {
-                hTDlx->fillH2D(igmbta, hit.len);
-                if (hit.len < 0.25) continue;
-                hh.push_back(hit.amp/hit.len * 1.0e-2);
-                //hTDex->fillH2D(fG4mc->primPart.mass/fG4mc->primPart.mom, hit.amp/hit.len * 1.0e-2);
+                if (hit.mcMom < 0.0001) continue;
+                if (hit.len < 0.3) continue;
+                Double_t igmbta = (fG4mc->primPart.mass / hit.mcMom);
+                avge.push_back(igmbta);
+                avgz.push_back(hit.coo[2]);
+                dedx.push_back(hit.dEdx);
             }
-            std::sort(hh.begin(), hh.end());
-            hTDnh->fillH2D(igmbta, hh.size());
-            if (hh.size() >= 6) {
-                for (Int_t it = 2; it < hh.size()-1; ++it) {
-                    hTDex->fillH2D(igmbta, hh.at(it));
+            if (dedx.size() >= 8) {
+                Double_t ee = std::accumulate(avge.begin(), avge.end(), 0.0) / avge.size();
+                Double_t zz = std::accumulate(avgz.begin(), avgz.end(), 0.0) / avgz.size();
+                hTDzz->fillH2D(ee, zz);
+                for (auto&& ex : dedx) {
+                    hTDex->fillH2D(ee, ex);
                 }
             }
         }
 
-        if (fTrd->ADCn[0] >= 3) {
-            hTDavg->fillH2D(fG4mc->primPart.mass/fG4mc->primPart.mom, fTrd->ADCv[0]);
-        }
-        
         /*
         SegPARTMCInfo* mcsTOF[4] = { nullptr };
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 1) mcsTOF[seg.lay] = &seg; }
