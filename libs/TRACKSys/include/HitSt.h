@@ -131,10 +131,12 @@ class HitStTRK : public VirtualHitSt {
         inline const Double_t& nrmqy() const { return nrmq_[1]; }
 
         inline const Double_t& divqx_eta() const { return divq_[0]; }
-        inline const Double_t& divqx_ib()  const { return divq_[1]; }
+        //inline const Double_t& divqx_ib()  const { return divq_[1]; }
+        inline const Double_t& divqx_igb() const { return divq_[1]; }
 
         inline const Double_t& divqy_eta() const { return divq_[2]; }
-        inline const Double_t& divqy_ib()  const { return divq_[3]; }
+        //inline const Double_t& divqy_ib()  const { return divq_[3]; }
+        inline const Double_t& divqy_igb() const { return divq_[3]; }
 
     protected :
         void clear();
@@ -214,11 +216,13 @@ class HitStTOF : public VirtualHitSt {
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divt_sft() const { return divt_sft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
-        inline const Double_t& divt_ib()  const { return divt_[1]; }
+        //inline const Double_t& divt_ib()  const { return divt_[1]; }
+        inline const Double_t& divt_igb() const { return divt_[1]; }
         
         inline const Double_t& nrmq() const { return nrmq_; }
         inline const Double_t& divq_eta() const { return divq_[0]; }
-        inline const Double_t& divq_ib()  const { return divq_[1]; }
+        //inline const Double_t& divq_ib()  const { return divq_[1]; }
+        inline const Double_t& divq_igb() const { return divq_[1]; }
 
     protected :
         void clear();
@@ -303,7 +307,8 @@ class HitStRICH : public VirtualHitSt {
 
         inline const Double_t& nrmib() const { return nrmib_; }
         inline const Double_t& divib_eta() const { return divib_[0]; }
-        inline const Double_t& divib_ib()  const { return divib_[1]; }
+        //inline const Double_t& divib_ib()  const { return divib_[1]; }
+        inline const Double_t& divib_igb() const { return divib_[1]; }
         
     protected :
         void clear();
@@ -355,7 +360,8 @@ class HitStTRD : public VirtualHitSt {
 
         inline const Double_t& nrmel() const { return nrmel_; }
         inline const Double_t& divel_eta() const { return divel_[0]; }
-        inline const Double_t& divel_ib()  const { return divel_[1]; }
+        //inline const Double_t& divel_ib()  const { return divel_[1]; }
+        inline const Double_t& divel_igb() const { return divel_[1]; }
         
     protected :
         void clear();

@@ -117,7 +117,7 @@ int main(int argc, char * argv[]) {
     Axis AXMrso("Mass [GeV]", 400, 0, 4);
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
-    Axis AXRchi("Log-Chi-square [1]", 800, -6.0, 6.0);
+    Axis AXRchi("Log-Chi-square [1]", 800, -3.0, 8.0);
     Hist* hCKRchix = Hist::New("hCKRchix", HistAxis(AXmom, AXRchi));
     Hist* hKFRchix = Hist::New("hKFRchix", HistAxis(AXmom, AXRchi));
     Hist* hHCRchix = Hist::New("hHCRchix", HistAxis(AXmom, AXRchi));

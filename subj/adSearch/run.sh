@@ -5,7 +5,8 @@
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 #RunFile=${AMSCore}/subj/trsys/vdev/track_fill
 
-Version=test
+Version=vdev
+#Version=test
 RunFile=${AMSCore}/subj/adSearch/${Version}/fill
 
 CurDir=${PWD}
@@ -13,11 +14,12 @@ CurDir=${PWD}
 #DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7.mfixed_B1130_18May15
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jun10
+#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jun10
+Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jun18
 
 OutputDir=${CurDir}/dat
 
-GroupSize=35
+GroupSize=50
 Nseq=39
 #Fit
 #GroupSize=3

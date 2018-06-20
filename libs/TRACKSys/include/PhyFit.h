@@ -279,8 +279,8 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static constexpr Double_t LMTL_INV_BETA  = 1.0e-10 + Numc::ONE<Double_t>;
-        static constexpr Double_t LMTU_INV_BETA  = 1.0e+2;
+        static constexpr Double_t LMTL_INV_BETA  = 1.0e-12 + Numc::ONE<Double_t>; // org 1.0e-10
+        static constexpr Double_t LMTU_INV_BETA  = 1.0e+3; // org 1.0e+3
         static constexpr Short_t  LMTL_MU_ITER   = 2;
         static constexpr Short_t  LMTU_MU_ITER   = 4;
         static constexpr Double_t MU_FLUC        = 1.25e-2;

@@ -1222,11 +1222,13 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
             if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacb && hitTRK->sqx()) {
-                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_ib()  * jbBB;
+                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_igb()  * jbBB;
                 else             jb(hitTRK->seqIDqx(),        4) += hitTRK->divqx_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTRK->sqy()) {
-                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_ib()  * jbBB;
+                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_igb()  * jbBB;
                 else             jb(hitTRK->seqIDqy(),        4) += hitTRK->divqy_eta() * jbGG(4, 4);
             } // hasJacb
         }
@@ -1237,11 +1239,13 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb && hitTOF->st()) {
-                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_ib()  * jbBB;
+                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_igb()  * jbBB;
                 else             jb(hitTOF->seqIDt(),        4) += hitTOF->divt_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->sq()) {
-                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_ib()  * jbBB;
+                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_igb()  * jbBB;
                 else             jb(hitTOF->seqIDq(),        4) += hitTOF->divq_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft_) += hitTOF->divt_sft(); // TOF time shift
@@ -1252,7 +1256,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
             if (hasJacb && hitRICH->sib()) {
-                if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_ib()  * jbBB;
+                if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_igb()  * jbBB;
                 else             jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);
             } // hasJacb
         }
@@ -1262,7 +1267,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
             if (hasJacb && hitTRD->sel()) {
-                if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_ib()  * jbBB;
+                //if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_ib()  * jbBB;
+                if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_igb()  * jbBB;
                 else             jb(hitTRD->seqIDel(),        4) += hitTRD->divel_eta() * jbGG(4, 4);
             } // hasJacb
         }

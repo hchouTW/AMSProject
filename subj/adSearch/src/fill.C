@@ -5,7 +5,8 @@
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -59,7 +60,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXrig("Rigidity [GV]", 100, 0.55, 1000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.50, 1000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
@@ -77,6 +78,22 @@ int main(int argc, char * argv[]) {
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXrig, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
+    Hist* hHCRrso2 = Hist::New("hHCRrso2", HistAxis(AXrig, AXRrso));
+    
+    Axis AXMrso("1/Mass [1/GeV]", 1600, 0.0, 10.0);
+    Hist* hCKMrso = Hist::New("hCKMrso", HistAxis(AXrig, AXMrso));
+    Hist* hKFMrso = Hist::New("hKFMrso", HistAxis(AXrig, AXMrso));
+    Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXrig, AXMrso));
+    Hist* hHCMrso2 = Hist::New("hHCMrso2", HistAxis(AXrig, AXMrso));
+    
+    Axis AXchi("Log-Chi-square [1]", 800, -3.0, 8.0);
+    Hist* hCKchix = Hist::New("hCKchix", HistAxis(AXrig, AXchi));
+    Hist* hKFchix = Hist::New("hKFchix", HistAxis(AXrig, AXchi));
+    Hist* hHCchix = Hist::New("hHCchix", HistAxis(AXrig, AXchi));
+    
+    Hist* hCKchiy = Hist::New("hCKchiy", HistAxis(AXrig, AXchi));
+    Hist* hKFchiy = Hist::New("hKFchiy", HistAxis(AXrig, AXchi));
+    Hist* hHCchiy = Hist::New("hHCchiy", HistAxis(AXrig, AXchi));
     
     Axis AXu("Cos", 400, -0.05, 0.05);
     Hist* hCKux = Hist::New("hCKux", HistAxis(AXrig, AXu));
@@ -98,8 +115,10 @@ int main(int argc, char * argv[]) {
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcTr.at(0);
-        HCTrackInfo& hcMu = fTrk->hcMu;
+        HCTrackInfo& hcTr = fTrk->hcPrTr.at(0);
+        
+        HCTrackInfo& hcPrTr = fTrk->hcPrInTr.at(0); // Tracker + TOF
+        HCTrackInfo& hcMuTr = fTrk->hcMuInTr.at(0); // Tracker + TOF
     
         // Reweight (MC)
         Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXrig.min(), -1.7));
@@ -112,7 +131,7 @@ int main(int argc, char * argv[]) {
         // Geometry (TRD)
         if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 10) continue;
+        if (fTrd->LLRnhit[0] < 8) continue;
         
         // Geometry (ACC)
         if (fAcc->clusters.size() != 0) continue;
@@ -135,21 +154,37 @@ int main(int argc, char * argv[]) {
         // TRD
         if (fTrd->LLRep[0] < 0.7) continue;
 
-        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTr.statusTop);
+        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTr.statusTop && hcMuTr.status && hcMuTr.statusTop);
         if (!status) continue;
         if (hcTr.cpuTime > 1000.) continue; // rmove material loading event
         
         Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
         Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
         Short_t hcSign = (hcTr.stateTop[6] > 0) ? 1 : -1;
+        Short_t hcSign2 = (hcMuTr.stateTop[6] > 0) ? 1 : -1;
         
         Double_t ckRig = ckTr.rig;
         Double_t kfRig = kfTr.rig[0];
         Double_t hcRig = hcTr.stateTop[6];
+        Double_t hcRig2 = hcMuTr.stateTop[6];
         
         Double_t ckIRig = Numc::ONE<> / ckRig;
         Double_t kfIRig = Numc::ONE<> / kfRig;
         Double_t hcIRig = Numc::ONE<> / hcRig;
+        Double_t hcIRig2 = Numc::ONE<> / hcRig2;
+        
+        Double_t ck_chix = std::log(ckTr.nchi[0]); 
+        Double_t kf_chix = std::log(kfTr.nchi[0]); 
+        Double_t hc_chix = hcMuTr.quality[0]; 
+        
+        Double_t ck_chiy = std::log(ckTr.nchi[1]); 
+        Double_t kf_chiy = std::log(kfTr.nchi[1]); 
+        Double_t hc_chiy = hcMuTr.quality[1]; 
+        
+        Double_t ckMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(ckTr.rig           * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t kfMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(kfTr.rig[1]        * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t hcMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(hcTr.stateLJ[3][6] * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t hcMass2 = 1.0/hcMuTr.mass;
 
         Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[6]) : fG4mc->primPart.mom);
         Double_t imom = Numc::ONE<> / mom;
@@ -168,7 +203,21 @@ int main(int argc, char * argv[]) {
         hCKRrso->fillH2D(mom, cen * (ckIRig - imom));
         hKFRrso->fillH2D(mom, cen * (kfIRig - imom));
         hHCRrso->fillH2D(mom, cen * (hcIRig - imom));
-       
+        hHCRrso2->fillH2D(mom, cen * (hcIRig2 - imom));
+        
+        hCKMrso->fillH2D(mom, ckMass);
+        hKFMrso->fillH2D(mom, kfMass);
+        hHCMrso->fillH2D(mom, hcMass);
+        hHCMrso2->fillH2D(mom, hcMass2);
+        
+        hCKchix->fillH2D(mom, ck_chix);
+        hKFchix->fillH2D(mom, kf_chix);
+        hHCchix->fillH2D(mom, hc_chix);
+        
+        hCKchiy->fillH2D(mom, ck_chiy);
+        hKFchiy->fillH2D(mom, kf_chiy);
+        hHCchiy->fillH2D(mom, hc_chiy);
+
         hCKux->fillH2D(mom, cen * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
         hKFux->fillH2D(mom, cen * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
         hHCux->fillH2D(mom, cen * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));

@@ -128,7 +128,8 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         SVecD<2>&& ionx = (*pdf_qx_)(q_[0]*q_[0], part.igmbta());
         nrmq_[0] = ionx(0);
         divq_[0] = ionx(1) * part.mu() * part.eta_sign();
-        divq_[1] = ionx(1) * part.gm();
+        //divq_[1] = ionx(1) * part.gm();
+        divq_[1] = ionx(1);
         if (NoiseController::ON == ctler) {
             Double_t ctlerq = DoNoiseControllerL(nrmq_[0]);
             divq_[0] *= ctlerq;
@@ -144,7 +145,8 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
         nrmq_[1] = iony(0);
         divq_[2] = iony(1) * part.mu() * part.eta_sign();
-        divq_[3] = iony(1) * part.gm();
+        //divq_[3] = iony(1) * part.gm();
+        divq_[3] = iony(1);
         if (NoiseController::ON == ctler) {
             Double_t ctlerq = DoNoiseControllerL(nrmq_[1]);
             divq_[2] *= ctlerq;
@@ -321,7 +323,8 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
             divt_sft_ = (Numc::ONE<> / ter);
             Double_t divt = (Numc::NEG<> * ds / ter);
             divt_[0] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
-            divt_[1] = divt;
+            //divt_[1] = divt;
+            divt_[1] = divt * (part.bta() * part.eta()) * (part.mu());
             //if (NoiseController::ON == ctler) {
             //    Double_t ctlert = DoNoiseControllerLU(nrmt_);
             //    divt_sft_ *= ctlert;
@@ -342,7 +345,8 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
         SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.igmbta());
         nrmq_ = ion(0);
         divq_[0] = ion(1) * part.mu() * part.eta_sign();
-        divq_[1] = ion(1) * part.gm();
+        //divq_[1] = ion(1) * part.gm();
+        divq_[1] = ion(1);
         if (NoiseController::ON == ctler) {
             Double_t ctlerq = DoNoiseControllerL(nrmq_);
             divq_[0] *= ctlerq;
@@ -431,7 +435,8 @@ void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
         nrmib_ = (dib / sgm);
         Double_t divib = (Numc::NEG<> / sgm);
         divib_[0] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
-        divib_[1] = divib;
+        //divib_[1] = divib;
+        divib_[1] = divib * (part.bta() * part.eta_abs()) * (part.mu());
         //if (NoiseController::ON == ctler) {
         //    Double_t ctlerib = DoNoiseControllerLU(nrmib_);
         //    divib_[0] *= ctlerib;
@@ -516,7 +521,8 @@ void HitStTRD::cal(const PhySt& part, const NoiseController& ctler) {
         SVecD<3>&& lgge = (*pdf_el_)(el_, part.igmbta());
         nrmel_ = lgge(0);
         divel_[0] = lgge(1) * part.mu() * part.eta_sign();
-        divel_[1] = lgge(1) * part.gm();
+        //divel_[1] = lgge(1) * part.gm();
+        divel_[1] = lgge(1);
         if (NoiseController::ON == ctler) {
             Double_t ctlerel = DoNoiseControllerL(nrmel_);
             divel_[0] *= ctlerel;
