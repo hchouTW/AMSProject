@@ -134,13 +134,10 @@ class PhyJb {
         inline Double_t& gg(Int_t i, Int_t j) { return jb_gg_(i, j); }
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
 
-        inline Double_t& bb() { return jb_bb_; }
-
     private :
         Bool_t   field_;
         SMtxDGG  jb_gg_;
         SMtxDGL  jb_gl_;
-        Double_t jb_bb_;
 
     private :
         static constexpr Short_t X = 0;

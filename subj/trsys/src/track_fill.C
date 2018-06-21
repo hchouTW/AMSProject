@@ -6,7 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -17,11 +18,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -168,7 +169,7 @@ int main(int argc, char * argv[]) {
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcTr.at(0);
+        HCTrackInfo& hcTr = fTrk->hcPrInTr.at(0);
         
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -213,7 +214,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_q(hit.adc[0], hit.adc[1]);
+            mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
@@ -234,7 +235,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            //fitPar.add_hit(mhit);
+            fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -298,7 +299,7 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
     
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        //if (mc_mom > 0.8) continue; // testcode
+        if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();

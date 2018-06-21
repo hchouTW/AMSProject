@@ -160,7 +160,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
             DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
-            parIDib_(-1), parIDtsft_(-1)
+            parIDigb_(-1), parIDtsft_(-1)
             { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
     
     public :
@@ -171,7 +171,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
             Double_t num_of_res = num_of_residual;
             Double_t num_of_par = num_of_parameter;
 
-            if (is_mu_free_) { parIDib_ = DIMG_; }
+            if (is_mu_free_) { parIDigb_ = DIMG_; }
             if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
 
             set_num_residuals(0);
@@ -191,7 +191,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         Short_t numOfRes_;
         Short_t numOfPar_;
 
-        Short_t parIDib_;
+        Short_t parIDigb_;
         Short_t parIDtsft_;
 };
 
@@ -243,7 +243,7 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_ibta = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>, Bool_t with_mu_est = true);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_igb = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>, Bool_t with_mu_est = true);
         Bool_t physicalMassFit();
 
         Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);
@@ -279,12 +279,12 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static constexpr Double_t LMTL_INV_BETA  = 1.0e-12 + Numc::ONE<Double_t>; // org 1.0e-10
-        static constexpr Double_t LMTU_INV_BETA  = 1.0e+3; // org 1.0e+3
-        static constexpr Short_t  LMTL_MU_ITER   = 2;
-        static constexpr Short_t  LMTU_MU_ITER   = 4;
-        static constexpr Double_t MU_FLUC        = 1.25e-2;
-        static constexpr Double_t CONVG_FLUC     = 1.00e-2;
+        static constexpr Double_t LMTL_INV_GB  = 1.0e-13;
+        static constexpr Double_t LMTU_INV_GB  = 1.0e+4;
+        static constexpr Short_t  LMTL_MU_ITER = 2;
+        static constexpr Short_t  LMTU_MU_ITER = 4;
+        static constexpr Double_t MU_FLUC      = 1.25e-2;
+        static constexpr Double_t CONVG_FLUC   = 1.00e-2;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {
             if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;

@@ -685,7 +685,7 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_ibta, Bool_t with_mu_est) {
+Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_igb, Bool_t with_mu_est) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
 
@@ -702,22 +702,22 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
         if (iter >= niter) eta = part_.eta();
     }
 
-    Double_t ibta = part_.ibta();
-    const Bool_t is_fluc_ibta = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_ibta) > 0);
-    if (is_fluc_ibta) {
+    Double_t igb = part_.igmbta();
+    const Bool_t is_fluc_igb = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_igb) > 0);
+    if (is_fluc_igb) {
         const Int_t niter = 5; Int_t iter = 0;
         do {
             Double_t rndm = Rndm::NormalGaussian();
             if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
-            ibta = part_.ibta() * (Numc::ONE<> + fluc_ibta * rndm);
+            igb = part_.igmbta() * (Numc::ONE<> + fluc_igb * rndm);
             iter++;
-        } while ((iter < niter) && (ibta < LMTL_INV_BETA || ibta > LMTU_INV_BETA));
-        if (iter >= niter) ibta = part_.ibta();
+        } while ((iter < niter) && (igb < LMTL_INV_GB || igb > LMTU_INV_GB));
+        if (iter >= niter) igb = part_.igmbta();
     }
     
-    Short_t parIDib = -1;
+    Short_t parIDigb = -1;
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), eta });
-    if (is_mu_free) { parIDib = parameters.size(); parameters.push_back(ibta); }
+    if (is_mu_free) { parIDigb = parameters.size(); parameters.push_back(igb); }
 
     if (nseg_ != 0) {
         std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
@@ -744,8 +744,8 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     problem.SetParameterUpperBound(parameters.data(), 2,  1.0);
     problem.SetParameterLowerBound(parameters.data(), 3, -1.0);
     problem.SetParameterUpperBound(parameters.data(), 3,  1.0);
-    if (is_mu_free) problem.SetParameterLowerBound(parameters.data(), parIDib, LMTL_INV_BETA);
-    if (is_mu_free) problem.SetParameterUpperBound(parameters.data(), parIDib, LMTU_INV_BETA);
+    if (is_mu_free) problem.SetParameterLowerBound(parameters.data(), parIDigb, LMTL_INV_GB);
+    if (is_mu_free) problem.SetParameterUpperBound(parameters.data(), parIDigb, LMTU_INV_GB);
     
     ceres::Solver::Options options;
     //options.line_search_direction_type = ceres::LBFGS;
@@ -756,8 +756,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     
     Double_t partcz = part_.cz();
     Short_t  signuz = Numc::Compare(part_.uz());
-    Double_t igmbta = (is_mu_free ? std::sqrt((parameters.at(parIDib) + Numc::ONE<>) * (parameters.at(parIDib) - Numc::ONE<>)) : part_.igmbta());
-    Double_t partmu = (is_mu_free ? std::fabs(igmbta / parameters.at(4)) : part_.mu());
+    Double_t partmu = (is_mu_free ? std::fabs(parameters.at(parIDigb) / parameters.at(4)) : part_.mu());
     if (is_mu_free) part_.reset(partmu);
     else            part_.arg().clear();
     part_.set_state_with_uxy(parameters.at(0), parameters.at(1), partcz, parameters.at(2), parameters.at(3), signuz);
@@ -791,12 +790,12 @@ Bool_t PhyTrFit::physicalMassFit() {
 
     class PartElem {
         public :
-            PartElem() : succ(false), fluc_eta(0), fluc_ibta(0), qlt(0) {}
-            PartElem(const PhySt& _part, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), fluc_eta(_fluc_eta), fluc_ibta(_fluc_ibta), qlt(_qlt) {}
+            PartElem() : succ(false), fluc_eta(0), fluc_igb(0), qlt(0) {}
+            PartElem(const PhySt& _part, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), fluc_eta(_fluc_eta), fluc_igb(_fluc_ibta), qlt(_qlt) {}
             Bool_t              succ;
             PhySt               part;
             Double_t            fluc_eta;
-            Double_t            fluc_ibta;
+            Double_t            fluc_igb;
             Double_t            qlt;
     };
    
@@ -813,8 +812,8 @@ Bool_t PhyTrFit::physicalMassFit() {
         if (!evolve(MuOpt::kFree)) continue;
         
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
-        Double_t fluc_ibta = (err_.at(5) / part_.ibta());
-        condElem = std::move(PartElem(part_, fluc_eta, fluc_ibta, quality_.at(1)));
+        Double_t fluc_igb = (err_.at(5) / part_.igmbta());
+        condElem = std::move(PartElem(part_, fluc_eta, fluc_igb, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
@@ -825,17 +824,17 @@ Bool_t PhyTrFit::physicalMassFit() {
         part_ = condElem.part;
 
         Double_t mass = part_.mass();
-        Double_t ibta = part_.ibta();
+        Double_t igb  = part_.igmbta();
         if (!physicalFit(MuOpt::kFree, 
                          MU_FLUC * condElem.fluc_eta, 
-                         MU_FLUC * condElem.fluc_ibta)) return false;
+                         MU_FLUC * condElem.fluc_igb)) return false;
         
         Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
-        Double_t fluc_ibta = (err_.at(5) / part_.ibta());
-        condElem = std::move(PartElem(part_, fluc_eta, fluc_ibta, quality_.at(1)));
+        Double_t fluc_igb = (err_.at(5) / part_.igmbta());
+        condElem = std::move(PartElem(part_, fluc_eta, fluc_igb, quality_.at(1)));
        
-        Double_t convg_m = std::fabs((part_.mass() - mass) / (part_.mass() + mass));
-        Double_t convg_b = std::fabs((part_.ibta() - ibta) / (part_.ibta() + ibta)) / fluc_ibta;
+        Double_t convg_m = std::fabs((part_.mass()   - mass) / (part_.mass()   + mass));
+        Double_t convg_b = std::fabs((part_.igmbta() - igb)  / (part_.igmbta() + igb)) / fluc_igb;
         if (!Numc::Valid(convg_m)) convg_m = Numc::ONE<>;
         if (!Numc::Valid(convg_b)) convg_b = Numc::ONE<>;
 
@@ -855,9 +854,9 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     Short_t numOfRes = (nseq_ + nseg_*DIML);
     Short_t numOfPar = (DIMG + DIMM + nseg_*DIML);
 
-    Short_t parIDib   = -1;
+    Short_t parIDigb  = -1;
     Short_t parIDtsft = -1;
-    if (is_mu_free) { parIDib = DIMG; }
+    if (is_mu_free) { parIDigb = DIMG; }
     if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft = numOfPar; numOfPar += 1; }
     
     // Seg
@@ -884,7 +883,6 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     
     // Matrix (Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
-    Double_t         jbBB = Numc::ONE<>;
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes, numOfPar);
     
@@ -906,7 +904,6 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     Short_t cnt_nseg = -1;
     PhySt nearPpst                       = ppst;
     PhyJb::SMtxDGG nearJbGG              = jbGG;
-    Double_t nearJbBB                    = jbBB;
     std::vector<PhyJb::SMtxDGL> nearJbGL = jbGL;
     for (auto&& hit : hits_) {
         // Interaction Local Parameters
@@ -918,7 +915,6 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         if (isInner && !hasCxy) {
             ppst = nearPpst;
             jbGG = nearJbGG;
-            jbBB = nearJbBB;
             jbGL = nearJbGL;
         }
         
@@ -942,7 +938,6 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         
         // Update Jacb
         jbGG = curjb.gg() * jbGG;
-        jbBB = curjb.bb() * jbBB;
         if (hasLoc && hasCxy) jbGL.at(cnt_nseg) = curjb.gl();
         for (Short_t is = 0; is < cnt_nseg; ++is)
             jbGL.at(is) = curjb.gg() * jbGL.at(is);
@@ -973,12 +968,12 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             if (hitTRK->sqx()) chi_ib += hitTRK->nrmqx() * hitTRK->nrmqx();
             if (hitTRK->sqy()) chi_ib += hitTRK->nrmqy() * hitTRK->nrmqy();
             if (hitTRK->sqx()) {
-                if (is_mu_free) jb(hitTRK->seqIDqx(), parIDib) += hitTRK->divqx_ib()  * jbBB;
-                else            jb(hitTRK->seqIDqx(),       4) += hitTRK->divqx_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitTRK->seqIDqx(), parIDigb) += hitTRK->divqx_igb() * jbGG(4, 4);
+                else            jb(hitTRK->seqIDqx(),        4) += hitTRK->divqx_eta() * jbGG(4, 4);
             }
             if (hitTRK->sqy()) {
-                if (is_mu_free) jb(hitTRK->seqIDqy(), parIDib) += hitTRK->divqy_ib()  * jbBB;
-                else            jb(hitTRK->seqIDqy(),       4) += hitTRK->divqy_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitTRK->seqIDqy(), parIDigb) += hitTRK->divqy_igb() * jbGG(4, 4);
+                else            jb(hitTRK->seqIDqy(),        4) += hitTRK->divqy_eta() * jbGG(4, 4);
             }    
         }
 
@@ -988,12 +983,12 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
             if (hitTOF->st()) chi_ib += hitTOF->nrmt() * hitTOF->nrmt();
             if (hitTOF->sq()) chi_ib += hitTOF->nrmq() * hitTOF->nrmq();
             if (hitTOF->st()) {
-                if (is_mu_free) jb(hitTOF->seqIDt(), parIDib) += hitTOF->divt_ib()  * jbBB;
-                else            jb(hitTOF->seqIDt(),       4) += hitTOF->divt_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitTOF->seqIDt(), parIDigb) += hitTOF->divt_igb() * jbGG(4, 4);
+                else            jb(hitTOF->seqIDt(),        4) += hitTOF->divt_eta() * jbGG(4, 4);
             }
             if (hitTOF->sq()) {
-                if (is_mu_free) jb(hitTOF->seqIDq(), parIDib) += hitTOF->divq_ib()  * jbBB;
-                else            jb(hitTOF->seqIDq(),       4) += hitTOF->divq_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitTOF->seqIDq(), parIDigb) += hitTOF->divq_igb() * jbGG(4, 4);
+                else            jb(hitTOF->seqIDq(),        4) += hitTOF->divq_eta() * jbGG(4, 4);
             }
             if (hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divt_sft(); // TOF time shift
         }
@@ -1003,8 +998,8 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) chi_ib += hitRICH->nrmib() * hitRICH->nrmib();
             if (hitRICH->sib()) {
-                if (is_mu_free) jb(hitRICH->seqIDib(), parIDib) += hitRICH->divib_ib()  * jbBB;
-                else            jb(hitRICH->seqIDib(),       4) += hitRICH->divib_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitRICH->seqIDib(), parIDigb) += hitRICH->divib_igb() * jbGG(4, 4);
+                else            jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);
             }
         }
         
@@ -1013,15 +1008,14 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) chi_ib += hitTRD->nrmel() * hitTRD->nrmel();
             if (hitTRD->sel()) {
-                if (is_mu_free) jb(hitTRD->seqIDel(), parIDib) += hitTRD->divel_ib()  * jbBB;
-                else            jb(hitTRD->seqIDel(),       4) += hitTRD->divel_eta() * jbGG(4, 4);
+                if (is_mu_free) jb(hitTRD->seqIDel(), parIDigb) += hitTRD->divel_igb() * jbGG(4, 4);
+                else            jb(hitTRD->seqIDel(),        4) += hitTRD->divel_eta() * jbGG(4, 4);
             }
         }
         
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
-            nearJbBB = jbBB;
             nearJbGL = jbGL;
             if (hasSeg) cnt_nseg++;
         }
@@ -1063,10 +1057,9 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     // Mu Error
     Double_t errMu = Numc::ZERO<>;
     if (is_mu_free) {
-        Double_t gmsqr = (part_.gm() * part_.gm());
         Double_t reEta = std::fabs(errs.at(4) / part_.eta());
-        Double_t reIb  = gmsqr * (errs.at(parIDib) / part_.ibta());
-        Double_t reMu  = std::sqrt((reEta * reEta) + (reIb * reIb));
+        Double_t reIgb = (errs.at(parIDigb) / part_.igmbta());
+        Double_t reMu  = std::sqrt((reEta * reEta) + (reIgb * reIgb));
         errMu = reMu * part_.mu();
         if (!Numc::Valid(errMu) || Numc::Compare(errMu) < 0) errMu = Numc::ZERO<>;
     }
@@ -1077,7 +1070,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     err_.at(2) = errs.at(2);
     err_.at(3) = errs.at(3);
     err_.at(4) = errs.at(4);
-    if (is_mu_free) err_.at(5) = errs.at(parIDib);
+    if (is_mu_free) err_.at(5) = errs.at(parIDigb);
     if (is_mu_free) err_.at(6) = errMu;
 
     stts_ = stts;
@@ -1108,8 +1101,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     // Particle Status
     PhySt ppst(part_);
-    Double_t igmbta = (is_mu_free_ ? std::sqrt((parameters[0][parIDib_] + Numc::ONE<>) * (parameters[0][parIDib_] - Numc::ONE<>)) : part_.igmbta());
-    Double_t partmu = (is_mu_free_ ? std::fabs(igmbta / parameters[0][4]) : part_.mu());
+    Double_t partmu = (is_mu_free_ ? std::fabs(parameters[0][parIDigb_] / parameters[0][4]) : part_.mu());
     if (is_mu_free_) ppst.reset(partmu);
     else             ppst.arg().clear();
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
@@ -1127,7 +1119,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 
     // Matrix (Rs, Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
-    Double_t         jbBB = Numc::ONE<>;
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);
@@ -1149,7 +1140,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     Short_t cnt_nseg = -1;
     PhySt                       nearPpst = ppst;
     PhyJb::SMtxDGG              nearJbGG = jbGG;
-    Double_t                    nearJbBB = jbBB;
     std::vector<PhyJb::SMtxDGL> nearJbGL = jbGL;
     for (auto&& hit : hits_) {
         // Interaction Local Parameters
@@ -1161,7 +1151,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (isInner && !hasCxy) {
             ppst = nearPpst;
             jbGG = nearJbGG;
-            jbBB = nearJbBB;
             jbGL = nearJbGL;
         }
        
@@ -1192,7 +1181,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         // Update Jacb
         if (hasJacb) {
             jbGG = curjb.gg() * jbGG;
-            jbBB = curjb.bb() * jbBB;
             if (hasLoc && hasCxy) jbGL.at(cnt_nseg) = curjb.gl();
             for (Short_t is = 0; is < cnt_nseg; ++is)
                 jbGL.at(is) = curjb.gg() * jbGL.at(is);
@@ -1222,14 +1210,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
             if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacb && hitTRK->sqx()) {
-                //if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_ib()  * jbBB;
-                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDib_) += hitTRK->divqx_igb()  * jbBB;
-                else             jb(hitTRK->seqIDqx(),        4) += hitTRK->divqx_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitTRK->seqIDqx(), parIDigb_) += hitTRK->divqx_igb() * jbGG(4, 4);
+                else             jb(hitTRK->seqIDqx(),         4) += hitTRK->divqx_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTRK->sqy()) {
-                //if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_ib()  * jbBB;
-                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDib_) += hitTRK->divqy_igb()  * jbBB;
-                else             jb(hitTRK->seqIDqy(),        4) += hitTRK->divqy_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitTRK->seqIDqy(), parIDigb_) += hitTRK->divqy_igb() * jbGG(4, 4);
+                else             jb(hitTRK->seqIDqy(),         4) += hitTRK->divqy_eta() * jbGG(4, 4);
             } // hasJacb
         }
         
@@ -1239,14 +1225,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb && hitTOF->st()) {
-                //if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_ib()  * jbBB;
-                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDib_) += hitTOF->divt_igb()  * jbBB;
-                else             jb(hitTOF->seqIDt(),        4) += hitTOF->divt_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitTOF->seqIDt(), parIDigb_) += hitTOF->divt_igb() * jbGG(4, 4);
+                else             jb(hitTOF->seqIDt(),         4) += hitTOF->divt_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->sq()) {
-                //if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_ib()  * jbBB;
-                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDib_) += hitTOF->divq_igb()  * jbBB;
-                else             jb(hitTOF->seqIDq(),        4) += hitTOF->divq_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitTOF->seqIDq(), parIDigb_) += hitTOF->divq_igb() * jbGG(4, 4);
+                else             jb(hitTOF->seqIDq(),         4) += hitTOF->divq_eta() * jbGG(4, 4);
             } // hasJacb
             if (hasJacb && hitTOF->st() && (nmes_TOFt_ >= LMTN_TOF_T)) jb(hitTOF->seqIDt(), parIDtsft_) += hitTOF->divt_sft(); // TOF time shift
         }
@@ -1256,9 +1240,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
             if (hasJacb && hitRICH->sib()) {
-                //if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_ib()  * jbBB;
-                if (is_mu_free_) jb(hitRICH->seqIDib(), parIDib_) += hitRICH->divib_igb()  * jbBB;
-                else             jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitRICH->seqIDib(), parIDigb_) += hitRICH->divib_igb() * jbGG(4, 4);
+                else             jb(hitRICH->seqIDib(),         4) += hitRICH->divib_eta() * jbGG(4, 4);
             } // hasJacb
         }
         
@@ -1267,16 +1250,14 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
             if (hasJacb && hitTRD->sel()) {
-                //if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_ib()  * jbBB;
-                if (is_mu_free_) jb(hitTRD->seqIDel(), parIDib_) += hitTRD->divel_igb()  * jbBB;
-                else             jb(hitTRD->seqIDel(),        4) += hitTRD->divel_eta() * jbGG(4, 4);
+                if (is_mu_free_) jb(hitTRD->seqIDel(), parIDigb_) += hitTRD->divel_igb() * jbGG(4, 4);
+                else             jb(hitTRD->seqIDel(),         4) += hitTRD->divel_eta() * jbGG(4, 4);
             } // hasJacb
         }
 
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
-            nearJbBB = jbBB;
             nearJbGL = jbGL;
             if (hasSeg) cnt_nseg++;
         }

@@ -131,11 +131,9 @@ class HitStTRK : public VirtualHitSt {
         inline const Double_t& nrmqy() const { return nrmq_[1]; }
 
         inline const Double_t& divqx_eta() const { return divq_[0]; }
-        //inline const Double_t& divqx_ib()  const { return divq_[1]; }
         inline const Double_t& divqx_igb() const { return divq_[1]; }
 
         inline const Double_t& divqy_eta() const { return divq_[2]; }
-        //inline const Double_t& divqy_ib()  const { return divq_[3]; }
         inline const Double_t& divqy_igb() const { return divq_[3]; }
 
     protected :
@@ -151,7 +149,7 @@ class HitStTRK : public VirtualHitSt {
         std::array<Double_t, 2> q_; // ADC
 
         std::array<Double_t, 2> nrmq_; // q nrom (x, y)
-        std::array<Double_t, 4> divq_; // q div (igmbta) (x, y) [eta, ibta]
+        std::array<Double_t, 4> divq_; // q div (igmbta) (x, y) [eta, igb]
 
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
@@ -216,12 +214,10 @@ class HitStTOF : public VirtualHitSt {
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divt_sft() const { return divt_sft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
-        //inline const Double_t& divt_ib()  const { return divt_[1]; }
         inline const Double_t& divt_igb() const { return divt_[1]; }
         
         inline const Double_t& nrmq() const { return nrmq_; }
         inline const Double_t& divq_eta() const { return divq_[0]; }
-        //inline const Double_t& divq_ib()  const { return divq_[1]; }
         inline const Double_t& divq_igb() const { return divq_[1]; }
 
     protected :
@@ -240,10 +236,10 @@ class HitStTOF : public VirtualHitSt {
         
         Double_t nrmt_; // T nrom
         Double_t divt_sft_; // T(shift)
-        std::array<Double_t, 2> divt_; // T div (ibta) [eta, ib]
+        std::array<Double_t, 2> divt_; // T div (igmbta) [eta, igb]
 
         Double_t nrmq_; // Q nrom
-        std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, ib]
+        std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, igb]
 
         MultiGaus* pdf_t_;
         IonEloss*  pdf_q_;
@@ -307,7 +303,6 @@ class HitStRICH : public VirtualHitSt {
 
         inline const Double_t& nrmib() const { return nrmib_; }
         inline const Double_t& divib_eta() const { return divib_[0]; }
-        //inline const Double_t& divib_ib()  const { return divib_[1]; }
         inline const Double_t& divib_igb() const { return divib_[1]; }
         
     protected :
@@ -322,7 +317,7 @@ class HitStRICH : public VirtualHitSt {
         Double_t ib_; // 1/Beta
 
         Double_t nrmib_; // 1/Beta nrom
-        std::array<Double_t, 2> divib_; // 1/Beta div (igmbta) [eta, ibta]
+        std::array<Double_t, 2> divib_; // 1/Beta div (igmbta) [eta, igb]
 
         MultiGaus* pdf_ib_;
     
@@ -360,7 +355,6 @@ class HitStTRD : public VirtualHitSt {
 
         inline const Double_t& nrmel() const { return nrmel_; }
         inline const Double_t& divel_eta() const { return divel_[0]; }
-        //inline const Double_t& divel_ib()  const { return divel_[1]; }
         inline const Double_t& divel_igb() const { return divel_[1]; }
         
     protected :
@@ -373,7 +367,7 @@ class HitStTRD : public VirtualHitSt {
         Double_t el_; // energy loss dE/dx
 
         Double_t nrmel_; // dE/dx nrom
-        std::array<Double_t, 2> divel_; // dE/dx div (igmbta) [eta, ibta]
+        std::array<Double_t, 2> divel_; // dE/dx div (igmbta) [eta, igb]
 
         GmIonEloss* pdf_el_;
     
