@@ -24,7 +24,7 @@ all :
 	@cp -fa $(PWD)/src/YiProdNtuple.h $(TagetDir)/src/YiProdNtuple.h 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.tcc $(TagetDir)/src/YiProdNtuple.tcc 2> /dev/null
 	@cp -fa $(PWD)/src/YiProdNtuple.C $(TagetDir)/src/YiProdNtuple.C 2> /dev/null
-	make $(TagetDir)/testing
+	#make $(TagetDir)/testing
 	make $(TagetDir)/obj/dict.o
 	make $(TagetDir)/lib/libClassDef.so
 	make $(TagetDir)/YiProdNtuple

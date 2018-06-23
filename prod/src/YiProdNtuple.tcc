@@ -969,7 +969,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Choutko
         Int_t ckRefit = 23;
 		for (int patt = 0; patt < _npatt; ++patt) {
-            if (patt != 0) continue; // test for Inner
+            if (patt != 0 && patt != 1) continue; // test for Inner
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
 			if (fitid < 0) continue;
@@ -1024,7 +1024,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Kalman
         Int_t kfRefit = 23;
 		for (int patt = 0; patt < _npatt; ++patt) {
-            if (patt != 0) continue; // test for Inner
+            if (patt != 0 && patt != 1) continue; // test for Inner
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
 			int fitid = trtk->iTrTrackPar(trFit, 6, _patt[patt], kfRefit, recEv.mass, recEv.zin);
@@ -1102,14 +1102,14 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::InterfaceAms::Event::TrackerPatt::FullSpan });
 
 	    for (int patt = 0; patt < _npatt; ++patt) {
-            if (patt != 0) continue; // test for Inner
+            if (patt != 0 && patt != 1) continue; // test for Inner
             fTrk.hcPrTr.at(patt) = processHCTr(event, // Tracker
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton, 
                 false, trPatt.at(patt), false, false);
         }
 	    
         for (int patt = 0; patt < _npatt; ++patt) {
-            if (patt != 0) continue; // test for Inner
+            if (patt != 0 && patt != 1) continue; // test for Inner
             fTrk.hcDeTr.at(patt) = processHCTr(event, // Tracker
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Deuterium,
                 false, trPatt.at(patt), false, false);

@@ -13,5 +13,5 @@ EXEENDID     =  2230
 [QUEUE]
 QUEUE      =  ams1nd
 STORAGE    =  EOS
-EXEPERJOB  =  4
+EXEPERJOB  =  3
 CONFIRM    =  NONE
