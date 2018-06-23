@@ -79,12 +79,14 @@ int main(int argc, char * argv[]) {
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
     Hist* hHCRrso2 = Hist::New("hHCRrso2", HistAxis(AXrig, AXRrso));
+    Hist* hHCRrso3 = Hist::New("hHCRrso3", HistAxis(AXrig, AXRrso));
     
     Axis AXMrso("1/Mass [1/GeV]", 1600, 0.0, 10.0);
     Hist* hCKMrso = Hist::New("hCKMrso", HistAxis(AXrig, AXMrso));
     Hist* hKFMrso = Hist::New("hKFMrso", HistAxis(AXrig, AXMrso));
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXrig, AXMrso));
     Hist* hHCMrso2 = Hist::New("hHCMrso2", HistAxis(AXrig, AXMrso));
+    Hist* hHCMrso3 = Hist::New("hHCMrso3", HistAxis(AXrig, AXMrso));
     
     Axis AXchi("Log-Chi-square [1]", 800, -3.0, 8.0);
     Hist* hCKchix = Hist::New("hCKchix", HistAxis(AXrig, AXchi));
@@ -205,10 +207,14 @@ int main(int argc, char * argv[]) {
         hHCRrso->fillH2D(mom, cen * (hcIRig - imom));
         hHCRrso2->fillH2D(mom, cen * (hcIRig2 - imom));
         
+        if (hcTr.nrl[1] < 0.018) hHCRrso3->fillH2D(mom, cen * (hcIRig - imom));
+        
         hCKMrso->fillH2D(mom, ckMass);
         hKFMrso->fillH2D(mom, kfMass);
         hHCMrso->fillH2D(mom, hcMass);
         hHCMrso2->fillH2D(mom, hcMass2);
+        
+        if (hcMuTr.nrl[1] < 0.018) hHCMrso3->fillH2D(mom, hcMass2);
         
         hCKchix->fillH2D(mom, ck_chix);
         hKFchix->fillH2D(mom, kf_chix);

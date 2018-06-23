@@ -670,8 +670,12 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
 
     // Fitting
-    if (MuOpt::kFixed == mu_opt_) succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed) : false);
-    else                          succ_ = physicalMassFit();
+    if (MuOpt::kFixed == mu_opt_) {
+        succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF) : false);
+        if (succ_ && (VirtualHitSt::NoiseController::ON == noise_ctler_))
+            succ_ = physicalFit(MuOpt::kFixed, noise_ctler_);
+    }
+    else succ_ = physicalMassFit();
     
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
 }
@@ -685,7 +689,7 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_igb, Bool_t with_mu_est) {
+Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseController& noise_ctler, Double_t fluc_eta, Double_t fluc_igb, Bool_t with_mu_est) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
 
@@ -701,7 +705,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
         } while ((iter < niter) && Numc::EqualToZero(eta));
         if (iter >= niter) eta = part_.eta();
     }
-
+    
     Double_t igb = part_.igmbta();
     const Bool_t is_fluc_igb = (MuOpt::kFree == mu_opt && Numc::Compare(fluc_igb) > 0);
     if (is_fluc_igb) {
@@ -714,13 +718,14 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
         } while ((iter < niter) && (igb < LMTL_INV_GB || igb > LMTU_INV_GB));
         if (iter >= niter) igb = part_.igmbta();
     }
-    
+
     Short_t parIDigb = -1;
     std::vector<double> parameters({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), eta });
     if (is_mu_free) { parIDigb = parameters.size(); parameters.push_back(igb); }
 
     if (nseg_ != 0) {
         std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
+        if (VirtualHitSt::NoiseController::ON == noise_ctler) args_.clear();
         if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
         else {
             for (Short_t is = 0; is < nseg_; ++is) {
@@ -736,7 +741,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     if (nmes_TOFt_ >= LMTN_TOF_T) { TOFt_sft_ = Numc::ZERO<>; parameters.push_back(Numc::ZERO<>); } // TOF Shift Time
     else TOFt_sft_ = Numc::ZERO<>;
 
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mu_free);
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mu_free, noise_ctler);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -774,10 +779,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fl
     else TOFt_sft_ = Numc::ZERO<>;
 
     //std::cerr << summary.FullReport() << std::endl;
-    Bool_t   rw_err_mu = (MuOpt::kFixed == mu_opt && with_mu_est && evolve(MuOpt::kFree) && Numc::Valid(err_.at(6)) && Numc::Compare(err_.at(6)) > 0);
+    Bool_t   rw_err_mu = (MuOpt::kFixed == mu_opt && with_mu_est && evolve(MuOpt::kFree, noise_ctler) && Numc::Valid(err_.at(6)) && Numc::Compare(err_.at(6)) > 0);
     Double_t err_mu    = (rw_err_mu ? err_.at(6) : Numc::ZERO<>);
     
-    Bool_t succ = evolve(mu_opt);
+    Bool_t succ = evolve(mu_opt, noise_ctler);
     if (rw_err_mu) err_.at(6) = err_mu;
     return succ;
 }
@@ -791,7 +796,7 @@ Bool_t PhyTrFit::physicalMassFit() {
     class PartElem {
         public :
             PartElem() : succ(false), fluc_eta(0), fluc_igb(0), qlt(0) {}
-            PartElem(const PhySt& _part, Double_t _fluc_eta, Double_t _fluc_ibta, Double_t _qlt) : succ(true), part(_part), fluc_eta(_fluc_eta), fluc_igb(_fluc_ibta), qlt(_qlt) {}
+            PartElem(const PhySt& _part, Double_t _fluc_eta, Double_t _fluc_igb, Double_t _qlt) : succ(true), part(_part), fluc_eta(_fluc_eta), fluc_igb(_fluc_igb), qlt(_qlt) {}
             Bool_t              succ;
             PhySt               part;
             Double_t            fluc_eta;
@@ -805,48 +810,45 @@ Bool_t PhyTrFit::physicalMassFit() {
         args_.clear();
         info_.reset(chrg, mass);
         TOFt_sft_ = Numc::ZERO<>;
-        if (!(simpleFit() ? physicalFit(MuOpt::kFixed, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
+        if (!(simpleFit() ? physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
         
         Bool_t firstTime = (!condElem.succ);
         if (!firstTime && Numc::Compare(quality_.at(1), condElem.qlt) > 0) continue;
         if (!evolve(MuOpt::kFree)) continue;
         
-        Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
+        Double_t fluc_eta = std::fabs(err_.at(4) / part_.eta());
         Double_t fluc_igb = (err_.at(5) / part_.igmbta());
         condElem = std::move(PartElem(part_, fluc_eta, fluc_igb, quality_.at(1)));
     }
     if (!condElem.succ) return false;
 
+    info_ = condElem.part.info();
+    part_ = condElem.part;
+    Double_t fluc_eta = condElem.fluc_eta;
+    Double_t fluc_igb = condElem.fluc_igb;
     for (Short_t iter = 1; iter <= LMTU_MU_ITER; ++iter) {
+        Double_t wgt_eta = fluc_eta * fluc_eta;
+        Double_t wgt_igb = fluc_igb * fluc_igb;
+        Double_t rat_eta = wgt_eta / (wgt_eta + wgt_igb);
+        Double_t rat_igb = wgt_igb / (wgt_eta + wgt_igb);
+
         args_.clear();
         TOFt_sft_ = Numc::ZERO<>;
-        info_ = condElem.part.info();
-        part_ = condElem.part;
-
-        Double_t mass = part_.mass();
-        Double_t igb  = part_.igmbta();
-        if (!physicalFit(MuOpt::kFree, 
-                         MU_FLUC * condElem.fluc_eta, 
-                         MU_FLUC * condElem.fluc_igb)) return false;
-        
-        Double_t fluc_eta  = std::fabs(err_.at(4) / part_.eta());
-        Double_t fluc_igb = (err_.at(5) / part_.igmbta());
-        condElem = std::move(PartElem(part_, fluc_eta, fluc_igb, quality_.at(1)));
-       
-        Double_t convg_m = std::fabs((part_.mass()   - mass) / (part_.mass()   + mass));
-        Double_t convg_b = std::fabs((part_.igmbta() - igb)  / (part_.igmbta() + igb)) / fluc_igb;
-        if (!Numc::Valid(convg_m)) convg_m = Numc::ONE<>;
-        if (!Numc::Valid(convg_b)) convg_b = Numc::ONE<>;
-
-        Bool_t convg = (convg_m < CONVG_FLUC || convg_b < CONVG_FLUC);
-        if (iter >= LMTL_MU_ITER && convg) break;
+        if (!physicalFit(MuOpt::kFree,
+                         VirtualHitSt::NoiseController::OFF,
+                         MU_FLUC * rat_eta * fluc_eta,
+                         MU_FLUC * rat_igb * fluc_igb)) return false;
+        fluc_eta = std::fabs(err_.at(4) / part_.eta());
+        fluc_igb = (err_.at(5) / part_.igmbta());
     }
-    
+    if (VirtualHitSt::NoiseController::ON == noise_ctler_)
+        if (!physicalFit(MuOpt::kFree, noise_ctler_)) return false;
+
     return true;
 }
 
 
-Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
+Bool_t PhyTrFit::evolve(const MuOpt& mu_opt, const VirtualHitSt::NoiseController& noise_ctler) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
     
@@ -934,7 +936,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
                 resetTOF = false;
             }
         }
-        hit->cal(ppst, noise_ctler_);
+        hit->cal(ppst, noise_ctler);
         
         // Update Jacb
         jbGG = curjb.gg() * jbGG;
@@ -1053,13 +1055,17 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     nchi_.at(1) = nchi_cyib;
     quality_.at(0) = NormQuality(nchi_.at(0), ndof_.at(0));
     quality_.at(1) = NormQuality(nchi_.at(1), ndof_.at(1));
-
+    
     // Mu Error
     Double_t errMu = Numc::ZERO<>;
     if (is_mu_free) {
         Double_t reEta = std::fabs(errs.at(4) / part_.eta());
         Double_t reIgb = (errs.at(parIDigb) / part_.igmbta());
-        Double_t reMu  = std::sqrt((reEta * reEta) + (reIgb * reIgb));
+        if (Numc::Compare(reIgb, Numc::TEN<>) > 0) {
+            errs.at(parIDigb) = Numc::TEN<> * part_.igmbta();
+            reIgb = Numc::TEN<>;
+        }
+        Double_t reMu = std::hypot(reEta, reIgb);
         errMu = reMu * part_.mu();
         if (!Numc::Valid(errMu) || Numc::Compare(errMu) < 0) errMu = Numc::ZERO<>;
     }

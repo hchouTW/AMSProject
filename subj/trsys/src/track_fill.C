@@ -6,8 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -18,11 +18,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -77,10 +77,10 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.5, 1000., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     
-    Axis AXrig("Rigidity [GV]", 100, 0.5, 4000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.5, 1000., AxisScale::kLog);
     //Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
@@ -299,7 +299,7 @@ int main(int argc, char * argv[]) {
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
     
         //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
-        if (mc_mom > 0.8) continue; // testcode
+        //if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();

@@ -20,7 +20,7 @@ class OrthCoord {
         OrthCoord(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X) : OrthCoord() { reset(org, seed); }
         ~OrthCoord() {}
 
-        inline void reset(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X);
+        void reset(const SVecD<3>& org, const SVecD<3>& seed = AXIS_X);
 
         inline const SVecD<3>& org() const { return org_; }
         inline const SVecD<3>& tau() const { return tau_; }

@@ -83,7 +83,7 @@ class MagGeoBoxReader {
         ~MagGeoBoxReader() { clear(); }
 
         inline const Bool_t& exist() const { return is_load_; }
-        inline MagFld get(const SVecD<3>& coo);
+        MagFld get(const SVecD<3>& coo);
         
         Bool_t load(const std::string& fpath);
 

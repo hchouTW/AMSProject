@@ -156,12 +156,12 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false) : 
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF) : 
             TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
             DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
             parIDigb_(-1), parIDtsft_(-1)
-            { if (check_hits()) setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); }
+            { if (check_hits()) { setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); noise_ctler_ = noise_ctler; } }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
@@ -228,13 +228,13 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& nchi_cy() const { return nchi_cy_; }
         inline const Double_t& nchi_ib() const { return nchi_ib_; }
     
-        inline const Double_t& err_cx()   const { return err_[0]; }
-        inline const Double_t& err_cy()   const { return err_[1]; }
-        inline const Double_t& err_ux()   const { return err_[2]; }
-        inline const Double_t& err_uy()   const { return err_[3]; }
-        inline const Double_t& err_eta()  const { return err_[4]; }
-        inline const Double_t& err_ibta() const { return err_[5]; }
-        inline const Double_t& err_mu()   const { return err_[6]; }
+        inline const Double_t& err_cx()  const { return err_[0]; }
+        inline const Double_t& err_cy()  const { return err_[1]; }
+        inline const Double_t& err_ux()  const { return err_[2]; }
+        inline const Double_t& err_uy()  const { return err_[3]; }
+        inline const Double_t& err_eta() const { return err_[4]; }
+        inline const Double_t& err_igb() const { return err_[5]; }
+        inline const Double_t& err_mu()  const { return err_[6]; }
         
         inline const Double_t err_irig() const { return (err_[4] / PartInfo::ATOMIC_MASS); }
         inline const Double_t err_mass() const { return (err_[6] * PartInfo::ATOMIC_MASS); }
@@ -243,10 +243,10 @@ class PhyTrFit : public TrFitPar {
         void clear();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_igb = Numc::ZERO<>, Double_t fluc_eta = Numc::ZERO<>, Bool_t with_mu_est = true);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
         Bool_t physicalMassFit();
 
-        Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);
+        Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF);
 
     protected :
         MuOpt               mu_opt_;
@@ -269,7 +269,7 @@ class PhyTrFit : public TrFitPar {
         Double_t nchi_cy_;
         Double_t nchi_ib_;
         
-        std::array<Double_t, 7> err_; // (cx, cy, ux, uy, eta, ibta, mu)
+        std::array<Double_t, 7> err_; // (cx, cy, ux, uy, eta, igb, mu)
 
     public :
         PhySt interpolate_to_z(Double_t zcoo = 0) const;
@@ -279,11 +279,11 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static constexpr Double_t LMTL_INV_GB  = 1.0e-13;
-        static constexpr Double_t LMTU_INV_GB  = 1.0e+4;
+        static constexpr Double_t LMTL_INV_GB  = 1.0e-12;
+        static constexpr Double_t LMTU_INV_GB  = 1.0e+3;
         static constexpr Short_t  LMTL_MU_ITER = 2;
-        static constexpr Short_t  LMTU_MU_ITER = 4;
-        static constexpr Double_t MU_FLUC      = 1.25e-2;
+        static constexpr Short_t  LMTU_MU_ITER = 2;
+        static constexpr Double_t MU_FLUC      = 5.00e-3;
         static constexpr Double_t CONVG_FLUC   = 1.00e-2;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {

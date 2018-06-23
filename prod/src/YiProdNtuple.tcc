@@ -1135,6 +1135,27 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         fTrk.hcMuInTr.at(1) = processHCTr(event, // Tracker TOF RICH
                 TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
                 true, TrackSys::InterfaceAms::Event::TrackerPatt::Inner, true, true);
+        
+        fTrk.hcPrL1Tr.at(0) = processHCTr(event, // Tracker TOF
+                TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, false);
+        fTrk.hcPrL1Tr.at(1) = processHCTr(event, // Tracker TOF RICH
+                TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, true);
+        
+        fTrk.hcDeL1Tr.at(0) = processHCTr(event, // Tracker TOF
+                TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Deuterium,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, false);
+        fTrk.hcDeL1Tr.at(1) = processHCTr(event, // Tracker TOF RICH
+                TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Deuterium,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, true);
+        
+        fTrk.hcMuL1Tr.at(0) = processHCTr(event, // Tracker TOF
+                TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, false);
+        fTrk.hcMuL1Tr.at(1) = processHCTr(event, // Tracker TOF RICH
+                TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
+                true, TrackSys::InterfaceAms::Event::TrackerPatt::InnerL1, true, true);
     }
 
     // Haino's tools
@@ -1218,7 +1239,7 @@ HCTrackInfo EventTrk::processHCTr(AMSEventR* event, TrackSys::PhyTrFit::MuOpt mu
     track.error[2] = hctr.err_ux();
     track.error[3] = hctr.err_uy();
     track.error[4] = hctr.err_irig();
-    track.error[5] = hctr.err_ibta();
+    track.error[5] = hctr.err_igb();
     track.error[6] = hctr.err_mass();
     
     for (int il = 0; il < _npl; ++il) {

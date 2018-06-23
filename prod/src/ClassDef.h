@@ -585,7 +585,7 @@ class HCTrackInfo : public TObject {
         Float_t quality[2];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
-        Float_t error[7]; // (cx cy ux uy irig ibta mass)
+        Float_t error[7]; // (cx cy ux uy irig igb mass)
         
         Bool_t  statusTop; // track at top of detector (z = 195.)
         Float_t stateTop[8];
@@ -887,6 +887,10 @@ class TRK : public TObject {
             hcDeInTr = std::vector<HCTrackInfo>(2);
             hcMuInTr = std::vector<HCTrackInfo>(2);
             
+            hcPrL1Tr = std::vector<HCTrackInfo>(2);
+            hcDeL1Tr = std::vector<HCTrackInfo>(2);
+            hcMuL1Tr = std::vector<HCTrackInfo>(2);
+            
             ftL34Dist = -1;
             ftL56Dist = -1;
             ftL78Dist = -1;
@@ -935,6 +939,10 @@ class TRK : public TObject {
         std::vector<HCTrackInfo> hcPrInTr;
         std::vector<HCTrackInfo> hcDeInTr;
         std::vector<HCTrackInfo> hcMuInTr;
+        
+        std::vector<HCTrackInfo> hcPrL1Tr;
+        std::vector<HCTrackInfo> hcDeL1Tr;
+        std::vector<HCTrackInfo> hcMuL1Tr;
 
         // Haino's tools
         Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)

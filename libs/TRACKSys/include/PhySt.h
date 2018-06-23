@@ -19,6 +19,7 @@ class PhyArg {
         static Bool_t opt_eloss_;
 
     public :
+        PhyArg(const PhyArg& arg) { *this = arg; }
         PhyArg(Bool_t sw_mscat = OptMscat(), Bool_t sw_eloss = OptEloss()) { reset(sw_mscat, sw_eloss); }
         ~PhyArg() {}
 
@@ -155,6 +156,7 @@ MultiGaus PhyArg::pdf_elion_(
 
 class PhySt {
     public :
+        PhySt(const PhySt& part) { *this = part; }
         PhySt(const PartInfo& info = PartInfo(PartType::Proton), Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(info); }
         PhySt(const PartType& type, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(type); }
         PhySt(Short_t chrg, Double_t mass, Bool_t sw_mscat = PhyArg::OptMscat(), Bool_t sw_eloss = PhyArg::OptEloss()) : arg_(sw_mscat, sw_eloss) { reset(chrg, mass); }
