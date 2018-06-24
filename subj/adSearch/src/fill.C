@@ -6,7 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -64,46 +65,48 @@ int main(int argc, char * argv[]) {
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
 
     // Fit Eff
-    Hist* hMCnum = Hist::New("hMCnum", HistAxis(AXrig, "Events/Bin"));
-    Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXrig, "Events/Bin"));
-    Hist* hKFnum = Hist::New("hKFnum", HistAxis(AXrig, "Events/Bin"));
-    Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
+    Hist* hMCnum   = Hist::New("hMCnum",   HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKnum   = Hist::New("hCKnum",   HistAxis(AXrig, "Events/Bin"));
+    Hist* hKFnum   = Hist::New("hKFnum",   HistAxis(AXrig, "Events/Bin"));
+    Hist* hHCnum   = Hist::New("hHCnum",   HistAxis(AXrig, "Events/Bin"));
+    Hist* hHCnumMU = Hist::New("hHCnumMU", HistAxis(AXrig, "Events/Bin"));
 
-    Hist* hMCtme = Hist::New("hMCtme", HistAxis(AXrig, ""));
-    Hist* hCKtme = Hist::New("hCKtme", HistAxis(AXrig, "Mean Time"));
-    Hist* hKFtme = Hist::New("hKFtme", HistAxis(AXrig, "Mean Time"));
-    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXrig, "Mean Time"));
+    Hist* hMCtme   = Hist::New("hMCtme",   HistAxis(AXrig, ""));
+    Hist* hCKtme   = Hist::New("hCKtme",   HistAxis(AXrig, "Mean Time"));
+    Hist* hKFtme   = Hist::New("hKFtme",   HistAxis(AXrig, "Mean Time"));
+    Hist* hHCtme   = Hist::New("hHCtme",   HistAxis(AXrig, "Mean Time"));
+    Hist* hHCtmeMU = Hist::New("hHCtmeMU", HistAxis(AXrig, "Mean Time"));
     
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 1600, -1.0, 1.0);
-    Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXrig, AXRrso));
-    Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
-    Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
-    Hist* hHCRrso2 = Hist::New("hHCRrso2", HistAxis(AXrig, AXRrso));
-    Hist* hHCRrso3 = Hist::New("hHCRrso3", HistAxis(AXrig, AXRrso));
+    Hist* hCKRrso   = Hist::New("hCKRrso",   HistAxis(AXrig, AXRrso));
+    Hist* hKFRrso   = Hist::New("hKFRrso",   HistAxis(AXrig, AXRrso));
+    Hist* hHCRrso   = Hist::New("hHCRrso",   HistAxis(AXrig, AXRrso));
+    Hist* hHCRrsoMU = Hist::New("hHCRrsoMU", HistAxis(AXrig, AXRrso));
     
     Axis AXMrso("1/Mass [1/GeV]", 1600, 0.0, 10.0);
-    Hist* hCKMrso = Hist::New("hCKMrso", HistAxis(AXrig, AXMrso));
-    Hist* hKFMrso = Hist::New("hKFMrso", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrso2 = Hist::New("hHCMrso2", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrso3 = Hist::New("hHCMrso3", HistAxis(AXrig, AXMrso));
+    Hist* hCKMrso   = Hist::New("hCKMrso",   HistAxis(AXrig, AXMrso));
+    Hist* hKFMrso   = Hist::New("hKFMrso",   HistAxis(AXrig, AXMrso));
+    Hist* hHCMrso   = Hist::New("hHCMrso",   HistAxis(AXrig, AXMrso));
+    Hist* hHCMrsoMU = Hist::New("hHCMrsoMU", HistAxis(AXrig, AXMrso));
     
     Axis AXchi("Log-Chi-square [1]", 800, -3.0, 8.0);
-    Hist* hCKchix = Hist::New("hCKchix", HistAxis(AXrig, AXchi));
-    Hist* hKFchix = Hist::New("hKFchix", HistAxis(AXrig, AXchi));
-    Hist* hHCchix = Hist::New("hHCchix", HistAxis(AXrig, AXchi));
+    Hist* hCKchix   = Hist::New("hCKchix",   HistAxis(AXrig, AXchi));
+    Hist* hKFchix   = Hist::New("hKFchix",   HistAxis(AXrig, AXchi));
+    Hist* hHCchix   = Hist::New("hHCchix",   HistAxis(AXrig, AXchi));
+    Hist* hHCchixMU = Hist::New("hHCchixMU", HistAxis(AXrig, AXchi));
     
-    Hist* hCKchiy = Hist::New("hCKchiy", HistAxis(AXrig, AXchi));
-    Hist* hKFchiy = Hist::New("hKFchiy", HistAxis(AXrig, AXchi));
-    Hist* hHCchiy = Hist::New("hHCchiy", HistAxis(AXrig, AXchi));
+    Hist* hCKchiy   = Hist::New("hCKchiy",   HistAxis(AXrig, AXchi));
+    Hist* hKFchiy   = Hist::New("hKFchiy",   HistAxis(AXrig, AXchi));
+    Hist* hHCchiy   = Hist::New("hHCchiy",   HistAxis(AXrig, AXchi));
+    Hist* hHCchiyMU = Hist::New("hHCchiyMU", HistAxis(AXrig, AXchi));
     
-    Axis AXu("Cos", 400, -0.05, 0.05);
-    Hist* hCKux = Hist::New("hCKux", HistAxis(AXrig, AXu));
-    Hist* hKFux = Hist::New("hKFux", HistAxis(AXrig, AXu));
-    Hist* hHCux = Hist::New("hHCux", HistAxis(AXrig, AXu));
-    Hist* hCKuy = Hist::New("hCKuy", HistAxis(AXrig, AXu));
-    Hist* hKFuy = Hist::New("hKFuy", HistAxis(AXrig, AXu));
-    Hist* hHCuy = Hist::New("hHCuy", HistAxis(AXrig, AXu));
+    //Axis AXu("Cos", 400, -0.05, 0.05);
+    //Hist* hCKux = Hist::New("hCKux", HistAxis(AXrig, AXu));
+    //Hist* hKFux = Hist::New("hKFux", HistAxis(AXrig, AXu));
+    //Hist* hHCux = Hist::New("hHCux", HistAxis(AXrig, AXu));
+    //Hist* hCKuy = Hist::New("hCKuy", HistAxis(AXrig, AXu));
+    //Hist* hKFuy = Hist::New("hKFuy", HistAxis(AXrig, AXu));
+    //Hist* hHCuy = Hist::New("hHCuy", HistAxis(AXrig, AXu));
 
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
@@ -156,81 +159,83 @@ int main(int argc, char * argv[]) {
         // TRD
         if (fTrd->LLRep[0] < 0.7) continue;
 
-        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTr.statusTop && hcMuTr.status && hcMuTr.statusTop);
+        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcMuTr.status);
         if (!status) continue;
         if (hcTr.cpuTime > 1000.) continue; // rmove material loading event
         
-        Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
-        Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
-        Short_t hcSign = (hcTr.stateTop[6] > 0) ? 1 : -1;
-        Short_t hcSign2 = (hcMuTr.stateTop[6] > 0) ? 1 : -1;
+        Short_t ckSign   = (ckTr.rig > 0) ? 1 : -1;
+        Short_t kfSign   = (kfTr.rig[0] > 0) ? 1 : -1;
+        Short_t hcSign   = (hcTr.stateTop[6] > 0) ? 1 : -1;
+        Short_t hcSignMU = (hcMuTr.stateTop[6] > 0) ? 1 : -1;
         
-        Double_t ckRig = ckTr.rig;
-        Double_t kfRig = kfTr.rig[0];
-        Double_t hcRig = hcTr.stateTop[6];
-        Double_t hcRig2 = hcMuTr.stateTop[6];
+        Double_t ckRig   = ckTr.rig;
+        Double_t kfRig   = kfTr.rig[0];
+        Double_t hcRig   = hcTr.stateTop[6];
+        Double_t hcRigMU = hcMuTr.stateTop[6];
         
-        Double_t ckIRig = Numc::ONE<> / ckRig;
-        Double_t kfIRig = Numc::ONE<> / kfRig;
-        Double_t hcIRig = Numc::ONE<> / hcRig;
-        Double_t hcIRig2 = Numc::ONE<> / hcRig2;
+        Double_t ckIRig   = Numc::ONE<> / ckRig;
+        Double_t kfIRig   = Numc::ONE<> / kfRig;
+        Double_t hcIRig   = Numc::ONE<> / hcRig;
+        Double_t hcIRigMU = Numc::ONE<> / hcRigMU;
         
-        Double_t ck_chix = std::log(ckTr.nchi[0]); 
-        Double_t kf_chix = std::log(kfTr.nchi[0]); 
-        Double_t hc_chix = hcMuTr.quality[0]; 
+        Double_t ck_chix   = std::log(ckTr.nchi[0]); 
+        Double_t kf_chix   = std::log(kfTr.nchi[0]); 
+        Double_t hc_chix   = hcTr.quality[0]; 
+        Double_t hc_chixMU = hcMuTr.quality[0]; 
         
-        Double_t ck_chiy = std::log(ckTr.nchi[1]); 
-        Double_t kf_chiy = std::log(kfTr.nchi[1]); 
-        Double_t hc_chiy = hcMuTr.quality[1]; 
+        Double_t ck_chiy   = std::log(ckTr.nchi[1]); 
+        Double_t kf_chiy   = std::log(kfTr.nchi[1]); 
+        Double_t hc_chiy   = hcTr.quality[1]; 
+        Double_t hc_chiyMU = hcMuTr.quality[1]; 
         
-        Double_t ckMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(ckTr.rig           * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
-        Double_t kfMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(kfTr.rig[1]        * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
-        Double_t hcMass = ((fTof->betaH >= 1.0) ? -1.0 : 1.0/std::fabs(hcTr.stateLJ[3][6] * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
-        Double_t hcMass2 = 1.0/hcMuTr.mass;
+        Double_t ckMass   = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(ckTr.rig           * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t kfMass   = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(kfTr.rig[1]        * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t hcMass   = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(hcTr.stateLJ[3][6] * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
+        Double_t hcMassMU = (hcMuTr.mass); 
 
         Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[6]) : fG4mc->primPart.mom);
         Double_t imom = Numc::ONE<> / mom;
         Double_t cen  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
 
         hMCnum->fillH1D(mom, wgt);
-        if (ckSign > 0) hCKnum->fillH1D(ckRig, wgt);
-        if (kfSign > 0) hKFnum->fillH1D(kfRig, wgt);
-        if (hcSign > 0) hHCnum->fillH1D(hcRig, wgt);
+        if (ckSign   > 0) hCKnum  ->fillH1D(ckRig, wgt);
+        if (kfSign   > 0) hKFnum  ->fillH1D(kfRig, wgt);
+        if (hcSign   > 0) hHCnum  ->fillH1D(hcRig, wgt);
+        if (hcSignMU > 0) hHCnumMU->fillH1D(hcRig, wgt);
         
         hMCtme->fillH1D(mom);
-        hCKtme->fillH1D(mom, ckTr.cpuTime);
-        hKFtme->fillH1D(mom, kfTr.cpuTime);
-        hHCtme->fillH1D(mom, hcTr.cpuTime);
+        hCKtme  ->fillH1D(mom, ckTr.cpuTime);
+        hKFtme  ->fillH1D(mom, kfTr.cpuTime);
+        hHCtme  ->fillH1D(mom, hcTr.cpuTime);
+        hHCtmeMU->fillH1D(mom, hcMuTr.cpuTime);
         
-        hCKRrso->fillH2D(mom, cen * (ckIRig - imom));
-        hKFRrso->fillH2D(mom, cen * (kfIRig - imom));
-        hHCRrso->fillH2D(mom, cen * (hcIRig - imom));
-        hHCRrso2->fillH2D(mom, cen * (hcIRig2 - imom));
+        hCKRrso  ->fillH2D(mom, cen * (ckIRig   - imom));
+        hKFRrso  ->fillH2D(mom, cen * (kfIRig   - imom));
+        hHCRrso  ->fillH2D(mom, cen * (hcIRig   - imom));
+        hHCRrsoMU->fillH2D(mom, cen * (hcIRigMU - imom));
         
-        if (hcTr.nrl[1] < 0.018) hHCRrso3->fillH2D(mom, cen * (hcIRig - imom));
+        hCKMrso  ->fillH2D(mom, ckMass);
+        hKFMrso  ->fillH2D(mom, kfMass);
+        hHCMrso  ->fillH2D(mom, hcMass);
+        hHCMrsoMU->fillH2D(mom, hcMassMU);
         
-        hCKMrso->fillH2D(mom, ckMass);
-        hKFMrso->fillH2D(mom, kfMass);
-        hHCMrso->fillH2D(mom, hcMass);
-        hHCMrso2->fillH2D(mom, hcMass2);
+        hCKchix  ->fillH2D(mom, ck_chix);
+        hKFchix  ->fillH2D(mom, kf_chix);
+        hHCchix  ->fillH2D(mom, hc_chix);
+        hHCchixMU->fillH2D(mom, hc_chixMU);
         
-        if (hcMuTr.nrl[1] < 0.018) hHCMrso3->fillH2D(mom, hcMass2);
-        
-        hCKchix->fillH2D(mom, ck_chix);
-        hKFchix->fillH2D(mom, kf_chix);
-        hHCchix->fillH2D(mom, hc_chix);
-        
-        hCKchiy->fillH2D(mom, ck_chiy);
-        hKFchiy->fillH2D(mom, kf_chiy);
-        hHCchiy->fillH2D(mom, hc_chiy);
+        hCKchiy  ->fillH2D(mom, ck_chiy);
+        hKFchiy  ->fillH2D(mom, kf_chiy);
+        hHCchiy  ->fillH2D(mom, hc_chiy);
+        hHCchiyMU->fillH2D(mom, hc_chiyMU);
 
-        hCKux->fillH2D(mom, cen * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hKFux->fillH2D(mom, cen * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hHCux->fillH2D(mom, cen * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        
-        hCKuy->fillH2D(mom, cen * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hKFuy->fillH2D(mom, cen * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hHCuy->fillH2D(mom, cen * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hCKux->fillH2D(mom, cen * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //hKFux->fillH2D(mom, cen * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //hHCux->fillH2D(mom, cen * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //
+        //hCKuy->fillH2D(mom, cen * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hKFuy->fillH2D(mom, cen * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hHCuy->fillH2D(mom, cen * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
     }
     
     ofle->Write();
