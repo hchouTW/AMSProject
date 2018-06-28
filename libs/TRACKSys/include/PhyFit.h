@@ -138,6 +138,9 @@ class SimpleTrFit : public TrFitPar {
 
     protected :
         static constexpr Short_t DIMG = 5;
+
+        // Minimization (Analytical Method)
+        static constexpr Double_t LMTU_ETA = 5.0;
         
         // Minimization (Levenberg-Marquardt Method)
         static constexpr Short_t LMTL_ITER = 3;

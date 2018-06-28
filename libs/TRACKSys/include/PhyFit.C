@@ -374,9 +374,8 @@ Bool_t SimpleTrFit::analyticalFit() {
     part_.set_eta(prefit_ea);
 
     // Eta Limit Setting
-    const Double_t LMT_ETA = 5.0;
-    if (part_.eta_abs() > LMT_ETA)
-        part_.set_eta(part_.eta_sign() * LMT_ETA);
+    if (part_.eta_abs() > LMTU_ETA)
+        part_.set_eta(part_.eta_sign() * LMTU_ETA);
     
     return true;
 }

@@ -208,7 +208,7 @@ class MatGeoBoxReader {
     protected :
         inline void clear() { is_load_ = false; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; mat_.clear(); var_.clear(); }
         
-        inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
+        Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
     private :
         static constexpr Double_t STD_STEP_LEN = Numc::ONE<>;
