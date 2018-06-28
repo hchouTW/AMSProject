@@ -2,6 +2,13 @@
 #define __TRACKLibs_MatEnv_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "MatEnv.h"
+
+
 namespace TrackSys {
 
 
@@ -354,56 +361,6 @@ Bool_t MatGeoBoxReader::load(const std::string& fname, const std::string& dpath)
 }
 
 
-Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t log10gb) {
-    if (idx < 0 || idx >= max_len_) return Numc::ZERO<>;
-    if (!mat_[idx]) return Numc::ZERO<>;
-    if (idx == tmp_dec_.first) return tmp_dec_.second;
-    Double_t dec = Numc::ZERO<>;
-    
-    Double_t& X0 = var_[idx][MATVAR_X0];
-    if (log10gb >= X0) {
-        Double_t& C = var_[idx][MATVAR_C];
-        dec += Numc::TWO<> * Numc::LOG_TEN * log10gb - C;
-        
-        Double_t& X1 = var_[idx][MATVAR_X1];
-        if (log10gb < X1) { 
-            Double_t& A = var_[idx][MATVAR_A];
-            Double_t& M = var_[idx][MATVAR_M];
-            dec += A * std::pow(X1 - log10gb, M); 
-        }
-    }
-    
-    if (!Numc::Valid(dec)) dec = Numc::ZERO<>;
-    tmp_dec_.first  = idx;
-    tmp_dec_.second = dec; 
-    return dec;  
-}
-
-Bool_t MatGeoBoxReader::is_in_box(const SVecD<3>& coo) {
-    if (!is_load_) return false;
-    if (!Numc::Valid(coo(2)) || Numc::Compare(coo(2), min_[2]) <= 0 || Numc::Compare(coo(2), max_[2]) >= 0) return false;
-    if (!Numc::Valid(coo(1)) || Numc::Compare(coo(1), min_[1]) <= 0 || Numc::Compare(coo(1), max_[1]) >= 0) return false;
-    if (!Numc::Valid(coo(0)) || Numc::Compare(coo(0), min_[0]) <= 0 || Numc::Compare(coo(0), max_[0]) >= 0) return false;
-    return true;
-}
-
-
-Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
-    if (!is_load_) return false;
-    Bool_t valid = (Numc::Valid(vcoo(2)) && Numc::Valid(wcoo(2)) && 
-                    Numc::Valid(vcoo(1)) && Numc::Valid(wcoo(1)) &&
-                    Numc::Valid(vcoo(0)) && Numc::Valid(wcoo(0)));
-    if (!valid) return false;
-    if (Numc::Compare(vcoo(2), min_[2]) <= 0 && Numc::Compare(wcoo(2), min_[2]) <= 0) return false;
-    if (Numc::Compare(vcoo(2), max_[2]) >= 0 && Numc::Compare(wcoo(2), max_[2]) >= 0) return false;
-    if (Numc::Compare(vcoo(1), min_[1]) <= 0 && Numc::Compare(wcoo(1), min_[1]) <= 0) return false;
-    if (Numc::Compare(vcoo(1), max_[1]) >= 0 && Numc::Compare(wcoo(1), max_[1]) >= 0) return false;
-    if (Numc::Compare(vcoo(0), min_[0]) <= 0 && Numc::Compare(wcoo(0), min_[0]) <= 0) return false;
-    if (Numc::Compare(vcoo(0), max_[0]) >= 0 && Numc::Compare(wcoo(0), max_[0]) >= 0) return false;
-    return true;
-}
-        
-
 MatFld MatGeoBoxReader::get(const SVecD<3>& coo, Double_t log10gb) {
     if (!is_load_) return MatFld();
 
@@ -558,6 +515,10 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
 }
 
 
+Bool_t MatMgnt::is_load_ = false;
+std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
+
+
 MatFld MatMgnt::Get(const SVecD<3>& coo, Double_t log10gb) {
     if (!Load()) return MatFld();
     if (!(Numc::Valid(coo(0)) && Numc::Valid(coo(1)) && Numc::Valid(coo(2)))) return MatFld();
@@ -645,6 +606,12 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part) {
 
     return Get(vcoo, wcoo, log10gb);
 }
+
+
+Bool_t MatPhy::corr_sw_mscat_      = false;
+Bool_t MatPhy::corr_sw_eloss_      = false;
+Bool_t MatPhy::corr_use_elion_mpv_ = false;
+MatFld MatPhy::corr_mfld_;
 
 
 MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part) {
@@ -785,6 +752,17 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     
     if (!Numc::Valid(elbrm_men) || Numc::Compare(elbrm_men) <= 0) elbrm_men = Numc::ZERO<>;
     return elbrm_men;
+}
+
+
+void MatPhy::SetCorrFactor(const MatFld* mfld, PhySt* part, Bool_t sw_mscat, Bool_t sw_eloss) {
+    Bool_t sw = ((mfld != nullptr) && (*mfld)()) && (sw_mscat || sw_eloss); 
+    if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_use_elion_mpv_ = false; corr_mfld_ = *mfld; }
+    else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_use_elion_mpv_ = false; corr_mfld_ = std::move(MatFld()); }
+    if (corr_sw_eloss_ && corr_mfld_() && part != nullptr) {
+        MatPhyFld&& mpfld = MatPhy::Get(corr_mfld_, *part);
+        corr_use_elion_mpv_ = (Numc::Compare(mpfld.elion_mpv(), mpfld.elion_men()) < 0);
+    }
 }
 
 

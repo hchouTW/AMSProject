@@ -91,7 +91,7 @@ class VirtualHitSt {
             kDownward = 0, kUpward = 1
         };
 
-        static void Sort(std::vector<VirtualHitSt*>& hits, const Orientation& ortt = Orientation::kDownward) {
+        inline static void Sort(std::vector<VirtualHitSt*>& hits, const Orientation& ortt = Orientation::kDownward) {
             if (hits.size() < 2) return;
             if (ortt == Orientation::kDownward) std::sort(hits.begin(), hits.end(), [](const VirtualHitSt* hit1, const VirtualHitSt* hit2) { return (hit1->cz() > hit2->cz()); } );
             else                                std::sort(hits.begin(), hits.end(), [](const VirtualHitSt* hit1, const VirtualHitSt* hit2) { return (hit1->cz() < hit2->cz()); } );
@@ -277,11 +277,6 @@ class HitStTOF : public VirtualHitSt {
 
         static Bool_t TShiftCorr_;
 };
-
-Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
-Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
-
-Bool_t HitStTOF::TShiftCorr_ = true;
 
 
 class HitStRICH : public VirtualHitSt {

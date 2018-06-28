@@ -2,6 +2,11 @@
 #define __TRACKLibs_GmIonEloss_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "GmIonEloss.h"
+
+
 namespace TrackSys {
 
 

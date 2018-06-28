@@ -2,44 +2,35 @@
 #define __TRACKLibs_PhySt_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+
+
 namespace TrackSys {
 
-
-void PhyArg::zero() {
-    mat_ = false;
-    tme_ = 0.;
-    len_ = 0.;
-    nrl_ = 0.;
-    ela_ = 0.;
-    
-    sign_ = 1;
-    orth_tau_ = SVecD<3>(1, 0, 0);
-    orth_rho_ = SVecD<3>(0, 1, 0);
-
-    mscat_uu_ = 0.;
-    mscat_ul_ = 0.;
-    mscat_ll_ = 0.;
-
-    elion_sgm_ = 0.;
-    elbrm_men_ = 0.;
-}
+Bool_t PhyArg::opt_mscat_ = true;
+Bool_t PhyArg::opt_eloss_ = true;
 
 
-void PhyArg::reset(Bool_t sw_mscat, Bool_t sw_eloss) {
-    sw_mscat_ = sw_mscat;
-    sw_eloss_ = sw_eloss;
+MultiGaus PhyArg::pdf_mscatu_(
+    MultiGaus::Opt::NOROBUST,
+    7.99549384311964539e-01, 1.000000e+00,
+    1.78119391133381794e-01, 1.579653e+00,
+    1.94920516860290043e-02, 3.418158e+00,
+    2.83917286862460675e-03, 9.314250e+00
+);
 
-    field_ = (sw_mscat || sw_eloss);
 
-    tauu_ = 0.;
-    rhou_ = 0.;
-    taul_ = 0.;
-    rhol_ = 0.;
-    elion_ = 0.;
-    elbrm_ = 0.;
+MultiGaus PhyArg::pdf_mscatl_(
+    MultiGaus::Opt::NOROBUST, 1.0
+);
 
-    zero();
-}
+
+MultiGaus PhyArg::pdf_elion_(
+    MultiGaus::Opt::NOROBUST, 1.0
+);
 
 
 void PhyArg::cal_nrm(SVecD<5>& nrm) const {
@@ -96,58 +87,6 @@ void PhySt::print() const {
     COUT(printStr.c_str());
 }
         
-
-void PhySt::reset(const PartInfo& info) {
-    info_ = info;
-    arg_.clear();
-    zero();
-    
-    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
-    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
-    
-    path_ = Numc::ZERO<>;
-    time_ = Numc::ZERO<>;
-}
-
-
-void PhySt::reset(const PartType& type) {
-    info_.reset(type);
-    arg_.clear();
-    zero();
-    
-    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
-    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
-    
-    path_ = Numc::ZERO<>;
-    time_ = Numc::ZERO<>;
-}
-
-
-void PhySt::reset(Short_t chrg, Double_t mass) {
-    info_.reset(chrg, mass);
-    arg_.clear();
-    zero();
-    
-    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
-    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
-    
-    path_ = Numc::ZERO<>;
-    time_ = Numc::ZERO<>;
-}
-
-
-void PhySt::reset(Double_t mu) {
-    info_.reset(mu);
-    arg_.clear();
-    zero();
-    
-    coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
-    dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
-    
-    path_ = Numc::ZERO<>;
-    time_ = Numc::ZERO<>;
-}
-
 
 void PhySt::set_state_with_cos(Double_t cx, Double_t cy, Double_t cz, Double_t ux, Double_t uy, Double_t uz) {
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);

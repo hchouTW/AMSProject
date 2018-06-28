@@ -27,11 +27,12 @@ enum class PartType {
 
 class PartInfo {
     public :
+        PartInfo(const PartInfo& info) { *this = info; }
         PartInfo(const PartType& type = PartType::Proton) : type_(PartType::Fixed), name_(""), chrg_(0), mass_(0), mu_(0), is_chrgless_(true), is_massless_(true), chrg_to_mass_(0), chrg_to_atomic_mass_(0) { reset(type); }
         PartInfo(Short_t chrg, Double_t mass) { reset(chrg, mass); }
         ~PartInfo() {}
         
-        inline void reset(const PartType& type);
+        void reset(const PartType& type);
         inline void reset(Short_t chrg, Double_t mass) { reset(PartType::Fixed, "", chrg, mass); }
         inline void reset(Double_t mu) { reset(PartType::Fixed, "", chrg_, ((Numc::Compare(mu)<=0) ? Numc::ZERO<> : mu * ATOMIC_MASS) ); }
 
@@ -52,7 +53,7 @@ class PartInfo {
         inline const Double_t& chrg_to_atomic_mass() const { return chrg_to_atomic_mass_; } // [1/GeV]
 
     protected :
-        inline void reset(const PartType& type, const std::string& name, Short_t chrg, Double_t mass);
+        void reset(const PartType& type, const std::string& name, Short_t chrg, Double_t mass);
 
     private :
         PartType    type_;
@@ -84,11 +85,6 @@ class PartInfo {
         // Atomic mass unit u = 0.931494095 GeV/c^2
         static constexpr Double_t ATOMIC_MASS = 0.931494095;
 };
-
-
-// Self Particle
-Short_t  PartInfo::DefaultChrg_ = 0;
-Double_t PartInfo::DefaultMass_ = 0;
 
 
 // List of Particle

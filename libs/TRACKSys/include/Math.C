@@ -2,6 +2,10 @@
 #define __TRACKLibs_Math_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+
+
 namespace TrackSys {
 namespace Numc { 
 } // namesapce Numc
@@ -16,6 +20,8 @@ namespace Rndm {
 
 
 namespace TrackSys {
+
+TRandom* MultiGaus::rndm_gen_ = nullptr;
 
 MultiGaus::MultiGaus(Opt opt, long double sgm) : MultiGaus()  {
     multi_gaus_.push_back(std::make_pair(Numc::ONE<long double>, sgm));

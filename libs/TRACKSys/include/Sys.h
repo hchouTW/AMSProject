@@ -34,10 +34,11 @@ inline void        SetEnv(const std::string& var, const std::string& val = "", i
 using Msg  = std::string;
 using Msgs = std::vector<Msg>;
 
-inline void ShowMsg(const Msg& info = Msg(), const Msg& msg = Msg(), const Msg& type = Msg("MSG"), std::ostream& out = std::cout);
+void ShowMsg(const Msg& info = Msg(), const Msg& msg = Msg(), const Msg& type = Msg("MSG"), std::ostream& out = std::cout);
+
 inline void ShowMsgExit(const Msg& info = Msg(), const Msg& msg = Msg(), const Msg& type = Msg("MSG"), std::ostream& out = std::cout) { ShowMsg(info, msg, type, out); std::exit(EXIT_FAILURE); }
 
-inline void ShowMsg(const Msg& info, const Msgs& msgs, const Msg& type = Msg("MSG"), std::ostream& out = std::cout);
+void ShowMsg(const Msg& info, const Msgs& msgs, const Msg& type = Msg("MSG"), std::ostream& out = std::cout);
 inline void ShowMsgExit(const Msg& info, const Msgs& msgs, const Msg& type = Msg("MSG"), std::ostream& out = std::cout) { ShowMsg(info, msgs, type, out); std::exit(EXIT_FAILURE); }
 
 inline void ShowLog(const Msg& info = Msg(), const Msg& msg = Msg()) { ShowMsg(info, msg, "Log", std::cerr); }

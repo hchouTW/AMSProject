@@ -2,7 +2,17 @@
 #define __TRACKLibs_PartInfo_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "PartInfo.h"
+
+
 namespace TrackSys {
+
+
+// Self Particle
+Short_t  PartInfo::DefaultChrg_ = 0;
+Double_t PartInfo::DefaultMass_ = 0;
 
 
 void PartInfo::reset(const PartType& type) {

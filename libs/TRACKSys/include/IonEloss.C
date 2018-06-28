@@ -2,6 +2,11 @@
 #define __TRACKLibs_IonEloss_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "IonEloss.h"
+
+
 namespace TrackSys {
 
 std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) const {

@@ -3,6 +3,20 @@
 #define __TRACKLibs_InterfaceAms_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "IonEloss.h"
+#include "GmIonEloss.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "MagEnv.h"
+#include "MatEnv.h"
+#include "Prop.h"
+#include "HitSt.h"
+#include "PhyFit.h"
+#include "InterfaceAms.h"
+
+
 namespace TrackSys {
 namespace InterfaceAms {
 

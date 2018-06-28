@@ -1,6 +1,7 @@
 #ifndef __TRACKLibs_MatEnv_H__
 #define __TRACKLibs_MatEnv_H__
 
+#include <list>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -208,7 +209,7 @@ class MatGeoBoxReader {
     protected :
         inline void clear() { is_load_ = false; max_len_ = 0; n_.fill(0); min_.fill(0.); max_.fill(0.); len_.fill(0.); dlt_.fill(0.); fact_.fill(0); stp_ = 0; tmp_dec_.first = -1; tmp_dec_.second = 0.; mat_.clear(); var_.clear(); }
         
-        Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
+        inline Double_t get_density_effect_correction(Long64_t idx = -1, Double_t log10gb = -10);
 
     private :
         static constexpr Double_t STD_STEP_LEN = Numc::ONE<>;
@@ -232,6 +233,57 @@ class MatGeoBoxReader {
 };
 
 
+Bool_t MatGeoBoxReader::is_in_box(const SVecD<3>& coo) {
+    if (!is_load_) return false;
+    if (!Numc::Valid(coo(2)) || Numc::Compare(coo(2), min_[2]) <= 0 || Numc::Compare(coo(2), max_[2]) >= 0) return false;
+    if (!Numc::Valid(coo(1)) || Numc::Compare(coo(1), min_[1]) <= 0 || Numc::Compare(coo(1), max_[1]) >= 0) return false;
+    if (!Numc::Valid(coo(0)) || Numc::Compare(coo(0), min_[0]) <= 0 || Numc::Compare(coo(0), max_[0]) >= 0) return false;
+    return true;
+}
+
+
+Bool_t MatGeoBoxReader::is_cross(const SVecD<3>& vcoo, const SVecD<3>& wcoo) {
+    if (!is_load_) return false;
+    Bool_t valid = (Numc::Valid(vcoo(2)) && Numc::Valid(wcoo(2)) && 
+                    Numc::Valid(vcoo(1)) && Numc::Valid(wcoo(1)) &&
+                    Numc::Valid(vcoo(0)) && Numc::Valid(wcoo(0)));
+    if (!valid) return false;
+    if (Numc::Compare(vcoo(2), min_[2]) <= 0 && Numc::Compare(wcoo(2), min_[2]) <= 0) return false;
+    if (Numc::Compare(vcoo(2), max_[2]) >= 0 && Numc::Compare(wcoo(2), max_[2]) >= 0) return false;
+    if (Numc::Compare(vcoo(1), min_[1]) <= 0 && Numc::Compare(wcoo(1), min_[1]) <= 0) return false;
+    if (Numc::Compare(vcoo(1), max_[1]) >= 0 && Numc::Compare(wcoo(1), max_[1]) >= 0) return false;
+    if (Numc::Compare(vcoo(0), min_[0]) <= 0 && Numc::Compare(wcoo(0), min_[0]) <= 0) return false;
+    if (Numc::Compare(vcoo(0), max_[0]) >= 0 && Numc::Compare(wcoo(0), max_[0]) >= 0) return false;
+    return true;
+}
+
+
+Double_t MatGeoBoxReader::get_density_effect_correction(Long64_t idx, Double_t log10gb) {
+    if (idx < 0 || idx >= max_len_) return Numc::ZERO<>;
+    if (!mat_[idx]) return Numc::ZERO<>;
+    if (idx == tmp_dec_.first) return tmp_dec_.second;
+    Double_t dec = Numc::ZERO<>;
+    
+    Double_t& X0 = var_[idx][MATVAR_X0];
+    if (log10gb >= X0) {
+        Double_t& C = var_[idx][MATVAR_C];
+        dec += Numc::TWO<> * Numc::LOG_TEN * log10gb - C;
+        
+        Double_t& X1 = var_[idx][MATVAR_X1];
+        if (log10gb < X1) { 
+            Double_t& A = var_[idx][MATVAR_A];
+            Double_t& M = var_[idx][MATVAR_M];
+            dec += A * std::pow(X1 - log10gb, M); 
+        }
+    }
+    
+    if (!Numc::Valid(dec)) dec = Numc::ZERO<>;
+    tmp_dec_.first  = idx;
+    tmp_dec_.second = dec; 
+    return dec;  
+}
+
+
 class MatMgnt {
     public :
         MatMgnt() {}
@@ -248,9 +300,6 @@ class MatMgnt {
         static Bool_t is_load_;
         static std::list<MatGeoBoxReader*> * reader_;
 };
-
-Bool_t MatMgnt::is_load_ = false;
-std::list<MatGeoBoxReader*> * MatMgnt::reader_ = nullptr;
 
 
 class MatPhyFld {
@@ -294,17 +343,9 @@ class MatPhy {
     
     // Expert only
     public :
-        static void SetCorrFactor(const MatFld* mfld = nullptr, PhySt* part = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true) {
-            Bool_t sw = ((mfld != nullptr) && (*mfld)()) && (sw_mscat || sw_eloss); 
-            if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_use_elion_mpv_ = false; corr_mfld_ = *mfld; }
-            else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_use_elion_mpv_ = false; corr_mfld_ = std::move(MatFld()); }
-            if (corr_sw_eloss_ && corr_mfld_() && part != nullptr) {
-                MatPhyFld&& mpfld = MatPhy::Get(corr_mfld_, *part);
-                corr_use_elion_mpv_ = (Numc::Compare(mpfld.elion_mpv(), mpfld.elion_men()) < 0);
-            }
-        }
+        static void SetCorrFactor(const MatFld* mfld = nullptr, PhySt* part = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true); 
 
-        static const Bool_t& UseElionMpv() { return corr_use_elion_mpv_; }
+        inline static const Bool_t& UseElionMpv() { return corr_use_elion_mpv_; }
 
     private :
         static Bool_t corr_sw_mscat_;
@@ -341,12 +382,6 @@ class MatPhy {
         static constexpr Double_t GEV_TO_MEV = 1.0e+3; // (GeV/MeV)
 };
         
-
-Bool_t   MatPhy::corr_sw_mscat_      = false;
-Bool_t   MatPhy::corr_sw_eloss_      = false;
-Bool_t   MatPhy::corr_use_elion_mpv_ = false;
-MatFld   MatPhy::corr_mfld_;
-
 
 } // namespace TrackSys
 

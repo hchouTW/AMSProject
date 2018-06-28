@@ -2,12 +2,26 @@
 #define __TRACKLibs_Prop_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "MagEnv.h"
+#include "MatEnv.h"
+#include "Prop.h"
+
+
 #if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)
-#include <TrFit.h>
+#include "TrFit.h"
 #endif // _PGTRACK_ __ROOTSHAREDLIBRARY__ 
 
 
 namespace TrackSys {
+
+    
+const SVecD<3> OrthCoord::AXIS_X(1, 0, 0);
+const SVecD<3> OrthCoord::AXIS_Y(0, 1, 0);
+const SVecD<3> OrthCoord::AXIS_Z(0, 0, 1);
 
 
 void OrthCoord::reset(const SVecD<3>& org, const SVecD<3>& seed) {
@@ -83,13 +97,6 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
 }
  
 
-void PhyJb::init() {
-    field_ = false;
-    jb_gg_ = std::move(SMtxId()); 
-    jb_gl_ = std::move(SMtxDGL());
-}
- 
-
 void PhyJb::set(PhySt& part, Double_t eta_abs) {
     if (part.info().is_massless() || part.info().is_chrgless()) return;
     const PhyArg& arg = part.arg();
@@ -115,12 +122,6 @@ void PhyJb::set(PhySt& part, Double_t eta_abs) {
     }
     if (arg.eloss()) {
     }
-}
-
-
-void PhyJb::multiplied(PhyJb& phyJb) {
-    jb_gg_ = std::move(phyJb.gg() * jb_gg_);
-    if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
 }
 
 
@@ -262,6 +263,11 @@ void PropPhyCal::set_PhyArg(PhySt& part) const {
     part.set_time(part.time() + part.arg().tme());
     part.set_path(part.path() + part.arg().len());
 }
+
+
+PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
+//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 
 
 #if defined(_PGTRACK_) || defined(__ROOTSHAREDLIBRARY__)

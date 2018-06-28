@@ -2,6 +2,14 @@
 #define __TRACKLibs_MatEnvAms_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "MatEnv.h"
+#include "MatEnvAms.h"
+
+
 namespace TrackSys {
 
 // Set to MatMgnt::Load()

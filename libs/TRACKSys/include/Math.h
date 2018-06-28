@@ -135,7 +135,7 @@ inline std::function<RealType()> ChiSquare(RealType k = 1.0) {
 }
 
 // Special Distributions
-static std::function<double()> DecimalUniform = Uniform<double>(0.0, 1.0);
+static std::function<double()> DecimalUniform = Uniform<double>(0.0, 1.0); // [0 ~ 1]
 static std::function<double()> NormalGaussian = Normal<double>(0.0, 1.0);
 
 } // namesapce Rndm
@@ -203,9 +203,9 @@ class MultiGaus {
         inline const long double& wgt(Int_t i) const { return multi_gaus_.at(i).first; }
         inline const long double& sgm(Int_t i) const { return multi_gaus_.at(i).second; }
 
-        inline long double efft_sgm(long double r = 0.) const; 
+        long double efft_sgm(long double r = 0.) const; 
 
-        inline long double rndm();
+        long double rndm();
 
     private :
         std::pair<long double, long double> bound_;
@@ -226,7 +226,6 @@ class MultiGaus {
         static constexpr long double ROBUST_SGM = 2.0;
 };
 
-TRandom* MultiGaus::rndm_gen_ = nullptr;
 } // namesapce TrackSys
 
 

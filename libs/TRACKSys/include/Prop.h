@@ -44,10 +44,6 @@ class OrthCoord {
         SVecD<3> rho_;
 };
         
-const SVecD<3> OrthCoord::AXIS_X(1, 0, 0);
-const SVecD<3> OrthCoord::AXIS_Y(0, 1, 0);
-const SVecD<3> OrthCoord::AXIS_Z(0, 0, 1);
-
 
 class MotionFunc {
     public :
@@ -122,9 +118,9 @@ class PhyJb {
 
         inline void init();
         
-        inline void set(PhySt& part, Double_t eta_abs = 0);
-
         inline void multiplied(PhyJb& phyJb);
+        
+        void set(PhySt& part, Double_t eta_abs = 0);
 
         inline const Bool_t& field() const { return field_; }
 
@@ -154,6 +150,19 @@ class PhyJb {
         static constexpr Short_t JRHOL = 3;
         static constexpr Short_t JION  = 4;
 };
+
+
+void PhyJb::init() {
+    field_ = false;
+    jb_gg_ = std::move(SMtxId()); 
+    jb_gl_ = std::move(SMtxDGL());
+}
+ 
+
+void PhyJb::multiplied(PhyJb& phyJb) {
+    jb_gg_ = std::move(phyJb.gg() * jb_gg_);
+    if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
+}
 
 
 class TransferPhyJb {
@@ -242,8 +251,8 @@ class PropMgnt {
             kEuler = 1, kEulerHeun = 2, kRungeKuttaNystrom = 4
         };
 
-        static void   SetMethod(Method method = Method::kRungeKuttaNystrom) { method_ = method; }
-        static Bool_t CheckMethod(Method method) { return (method == method_); }
+        inline static void   SetMethod(Method method = Method::kRungeKuttaNystrom) { method_ = method; }
+        inline static Bool_t CheckMethod(Method method) { return (method == method_); }
 
     private :
         static Method method_;
@@ -300,10 +309,6 @@ class PropMgnt {
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
 };
-
-PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kRungeKuttaNystrom;
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEulerHeun;
-//PropMgnt::Method PropMgnt::method_ = PropMgnt::Method::kEuler;
 
 
 } // namespace TrackSys

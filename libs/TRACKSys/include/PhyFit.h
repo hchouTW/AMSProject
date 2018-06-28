@@ -38,7 +38,7 @@ class TrFitPar {
         inline const Short_t& nseq() const { return nseq_; }
         inline const Short_t& nseg() const { return nseg_; }
 
-        inline const Short_t nhit() const { return hits_.size(); }
+        inline Short_t nhit() const { return hits_.size(); }
         inline const std::vector<VirtualHitSt*>& hits() const { return hits_; }
         inline const VirtualHitSt* hit(Int_t idx) const { return ((idx<0 || idx>=hits_.size()) ? nullptr : hits_.at(idx)); }
         
@@ -239,8 +239,8 @@ class PhyTrFit : public TrFitPar {
         inline const Double_t& err_igb() const { return err_[5]; }
         inline const Double_t& err_mu()  const { return err_[6]; }
         
-        inline const Double_t err_irig() const { return (err_[4] / PartInfo::ATOMIC_MASS); }
-        inline const Double_t err_mass() const { return (err_[6] * PartInfo::ATOMIC_MASS); }
+        inline Double_t err_irig() const { return (err_[4] / PartInfo::ATOMIC_MASS); }
+        inline Double_t err_mass() const { return (err_[6] * PartInfo::ATOMIC_MASS); }
 
     protected :
         void clear();
@@ -293,19 +293,7 @@ class PhyTrFit : public TrFitPar {
         static constexpr Double_t MU_FLUC_BASE  = 3.00e-1;
         static constexpr Double_t MU_FLUC       = 7.00e-3;
 
-        static Double_t NormQuality(Double_t nchi, Short_t ndof) {
-            if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
-            Double_t chi = nchi * static_cast<Double_t>(ndof);
-            if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
-            if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
-            Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
-            Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
-            Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
-            if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
-            Double_t xfunc = sign * std::sqrt(qfunc / static_cast<Double_t>(ndof));
-            if (Numc::Valid(xfunc)) return xfunc;
-            return Numc::ZERO<>;
-        }
+        static Double_t NormQuality(Double_t nchi, Short_t ndof);
 };
 
 

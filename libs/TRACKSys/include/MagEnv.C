@@ -2,6 +2,11 @@
 #define __TRACKLibs_MagEnv_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "MagEnv.h"
+
+
 namespace TrackSys {
 
 

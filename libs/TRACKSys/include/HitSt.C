@@ -2,6 +2,15 @@
 #define __TRACKLibs_HitSt_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "IonEloss.h"
+#include "GmIonEloss.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "HitSt.h"
+
+
 namespace TrackSys {
 
 // VirtualHitSt
@@ -297,6 +306,11 @@ IonEloss HitStTRK::PDF_Q01_QY_(
 
 
 // HitStTOF
+Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
+Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
+Bool_t HitStTOF::TShiftCorr_ = true;
+
+
 void HitStTOF::clear() {
     seqIDcx_ = -1;
     seqIDcy_ = -1;

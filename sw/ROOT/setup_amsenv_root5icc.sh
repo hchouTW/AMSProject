@@ -30,7 +30,7 @@ source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 #fi
 
 #### CERN CVMFS %% INTEL Compiler
-ICCTAG=17
+ICCTAG=18
 ICCDIR=/cvmfs/projects.cern.ch/intelsw/psxe/linux
 ICCLUX=${ICCDIR}/x86_64/20${ICCTAG}/compilers_and_libraries/linux
 source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null

@@ -3,7 +3,18 @@
 #define __TRACKLibs_MagEnvAms_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "MagEnv.h"
+#include "MagEnvAms.h"
+
+
 namespace TrackSys {
+
+
+Bool_t MagGeoBoxAms::is_load_ = false;
+MagField* MagGeoBoxAms::mag_field_ = nullptr;
+
 
 Bool_t MagGeoBoxAms::Load() {
     if (is_load_) return is_load_;

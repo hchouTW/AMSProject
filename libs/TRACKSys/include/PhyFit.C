@@ -2,6 +2,19 @@
 #define __TRACKLibs_PhyFit_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "IonEloss.h"
+#include "GmIonEloss.h"
+#include "PartInfo.h"
+#include "PhySt.h"
+#include "MagEnv.h"
+#include "MatEnv.h"
+#include "Prop.h"
+#include "HitSt.h"
+#include "PhyFit.h"
+
+
 namespace TrackSys {
         
     
@@ -1381,6 +1394,21 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) const {
     
     MatFld&& mfld = MatFld::Merge(mflds);
     return mfld;
+}
+
+
+Double_t PhyTrFit::NormQuality(Double_t nchi, Short_t ndof) {
+    if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
+    Double_t chi = nchi * static_cast<Double_t>(ndof);
+    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+    if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
+    Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
+    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
+    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
+    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
+    Double_t xfunc = sign * std::sqrt(qfunc / static_cast<Double_t>(ndof));
+    if (Numc::Valid(xfunc)) return xfunc;
+    return Numc::ZERO<>;
 }
 
 

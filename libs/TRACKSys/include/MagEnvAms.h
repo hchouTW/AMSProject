@@ -15,7 +15,7 @@ class MagGeoBoxAms {
 
         static Bool_t Load();
 
-        inline static MagFld Get(const SVecD<3>& coo);
+        static MagFld Get(const SVecD<3>& coo);
 
         static void Output(const std::string& file_path = "AMS02Mag.bin");
 
@@ -23,9 +23,6 @@ class MagGeoBoxAms {
         static Bool_t    is_load_;
         static MagField* mag_field_;
 };
-
-Bool_t MagGeoBoxAms::is_load_ = false;
-MagField* MagGeoBoxAms::mag_field_ = nullptr;
 
 } // namespace TrackSys
 
