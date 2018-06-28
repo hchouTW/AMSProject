@@ -241,6 +241,8 @@ class PhyTrFit : public TrFitPar {
 
     protected :
         void clear();
+        
+        Bool_t survivalTestAndModify();
 
         Bool_t simpleFit();
         Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
@@ -279,13 +281,14 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static constexpr Double_t LMTL_INV_GB  = 1.0e-12;
-        static constexpr Double_t LMTU_INV_GB  = 1.0e+3;
-        static constexpr Short_t  LMTL_MU_ITER = 2;
-        static constexpr Short_t  LMTU_MU_ITER = 2;
-        static constexpr Double_t MU_FLUC_BASE = 3.00e-1;
-        static constexpr Double_t MU_FLUC      = 7.00e-3;
-        static constexpr Double_t CONVG_FLUC   = 1.00e-2;
+        static constexpr Short_t  SURVIVAL_LMTN = 10;
+        static constexpr Double_t SURVIVAL_FACT = 0.8;
+        static constexpr Double_t SURVIVAL_BETA = 0.3;
+        static constexpr Double_t LMTL_INV_GB   = 1.0e-12;
+        static constexpr Double_t LMTU_INV_GB   = 1.0e+3;
+        static constexpr Short_t  LMT_MU_ITER   = 2;
+        static constexpr Double_t MU_FLUC_BASE  = 3.00e-1;
+        static constexpr Double_t MU_FLUC       = 7.00e-3;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {
             if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;

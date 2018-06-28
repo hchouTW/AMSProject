@@ -56,10 +56,20 @@ inline bool Valid(RealType var) { int clf = std::fpclassify(var); return (clf ==
 
 // Commpare
 template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
-inline short Compare(IntType a, IntType b = IntType(0));
+inline short Compare(IntType a, IntType b = IntType(0)) {
+	if (a == b)     return  0;
+	else if (a > b) return  1;
+	else            return -1;
+}
 
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
-inline short Compare(RealType a, RealType b = RealType(0.0));
+inline short Compare(RealType a, RealType b = RealType(0.0)) {
+	RealType diff = std::fabs(a - b);
+    if (!std::isfinite(diff)) return 0;
+	if (diff < std::numeric_limits<RealType>::epsilon() * 5.0e3) return  0;
+	else if (a > b)                                              return  1;
+	else                                                         return -1;
+}
 
 // EqualToZero
 template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
@@ -87,22 +97,42 @@ static std::mt19937_64 rndmEngMT64(rndmSeed);
 
 // Uniform Distributions
 template <class IntType = long, typename std::enable_if<std::is_integral<IntType>::value, int>::type = 0>
-inline std::function<IntType()> Uniform(IntType a = 0, IntType b = std::numeric_limits<IntType>::max());
+inline std::function<IntType()> Uniform(IntType a = 0, IntType b = std::numeric_limits<IntType>::max()) {
+	std::uniform_int_distribution<IntType> distribution(a, b);
+	std::function<IntType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
-inline std::function<RealType()> Uniform(RealType a = 0.0, RealType b = std::numeric_limits<RealType>::max());
+inline std::function<RealType()> Uniform(RealType a = 0.0, RealType b = std::numeric_limits<RealType>::max()) {
+	std::uniform_real_distribution<RealType> distribution(a, b);
+	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 
 // Normal Distributions
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
-inline std::function<RealType()> Normal(RealType mean = 0.0, RealType stddev = 1.0);
+inline std::function<RealType()> Normal(RealType mean = 0.0, RealType stddev = 1.0) {
+	std::normal_distribution<RealType> distribution(mean, stddev);
+	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 
 // Gamma Distributions
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
-inline std::function<RealType()> Gamma(RealType alpha = 1.0, RealType beta = 1.0);
+inline std::function<RealType()> Gamma(RealType alpha = 1.0, RealType beta = 1.0) {
+	std::gamma_distribution<RealType> distribution(alpha, beta);
+	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 
 // Chi-Square Distributions
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
-inline std::function<RealType()> ChiSquare(RealType k = 1.0);
+inline std::function<RealType()> ChiSquare(RealType k = 1.0) {
+    std::chi_squared_distribution<RealType> distribution(k);
+	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
+	return rngfunc;
+}
 
 // Special Distributions
 static std::function<double()> DecimalUniform = Uniform<double>(0.0, 1.0);

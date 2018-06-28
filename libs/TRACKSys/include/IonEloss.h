@@ -19,11 +19,11 @@ class IonEloss {
     protected :
         std::array<long double, 2> eval(long double x, long double igmbta) const;
 
-        inline long double get_kpa(long double igmbta, long double ibsqr) const;
-        inline long double get_mpv(long double igmbta, long double ibsqr) const;
-        inline long double get_sgm(long double igmbta, long double ibsqr) const;
+        long double get_kpa(long double igmbta, long double ibsqr) const;
+        long double get_mpv(long double igmbta, long double ibsqr) const;
+        long double get_sgm(long double igmbta, long double ibsqr) const;
         
-        inline long double get_divmpv(long double igmbta, long double ibsqr) const;
+        long double get_divmpv(long double igmbta, long double ibsqr) const;
 
     private :
         std::array<long double, 4> kpa_;

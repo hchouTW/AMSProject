@@ -4,73 +4,12 @@
 
 namespace TrackSys {
 namespace Numc { 
-
-// Compare
-template <class IntType, typename std::enable_if<std::is_integral<IntType>::value, int>::type>
-inline short Compare(IntType a, IntType b) {
-	if (a == b)     return  0;
-	else if (a > b) return  1;
-	else            return -1;
-}
-
-// Compare
-template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
-inline short Compare(RealType a, RealType b) {
-	RealType diff = std::fabs(a - b);
-    if (!std::isfinite(diff)) return 0;
-	if (diff < std::numeric_limits<RealType>::epsilon() * 5.0e3) return  0;
-	else if (a > b)                                              return  1;
-	else                                                         return -1;
-}
-
 } // namesapce Numc
 } // namesapce TrackSys
 
 
 namespace TrackSys {
 namespace Rndm {
-
-// Uniform Distributions
-template <class IntType, typename std::enable_if<std::is_integral<IntType>::value, int>::type>
-std::function<IntType()> Uniform(IntType a, IntType b) {
-	std::uniform_int_distribution<IntType> distribution(a, b);
-	std::function<IntType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
-	return rngfunc;
-}
-
-template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
-std::function<RealType()> Uniform(RealType a, RealType b) {
-	std::uniform_real_distribution<RealType> distribution(a, b);
-	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
-	return rngfunc;
-}
-
-
-// Normal Distributions
-template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
-std::function<RealType()> Gamma(RealType alpha, RealType beta) {
-	std::gamma_distribution<RealType> distribution(alpha, beta);
-	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
-	return rngfunc;
-}	
-
-
-// Gamma Distributions
-template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
-std::function<RealType()> Normal(RealType mean, RealType stddev) {
-	std::normal_distribution<RealType> distribution(mean, stddev);
-	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
-	return rngfunc;
-}
-
-// Chi-Square Distributions
-template <class RealType, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type>
-inline std::function<RealType()> ChiSquare(RealType k) {
-    std::chi_squared_distribution<RealType> distribution(k);
-	std::function<RealType()>&& rngfunc = std::bind(distribution, std::ref(rndmEngMT64));
-	return rngfunc;
-}
-	
 } // namesapce Rndm
 } // namesapce TrackSys
 

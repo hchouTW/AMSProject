@@ -681,11 +681,33 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
 }
 
 
+Bool_t PhyTrFit::survivalTestAndModify() {
+    if (Numc::EqualToZero(part_.mom())) return false;
+    Double_t finalZ = hits_.back()->cz();
+   
+    Bool_t   succ = false;
+    Short_t  survival_iter = 0;
+    Double_t survival_fact = 1.0;
+    while (!succ && survival_iter <= SURVIVAL_LMTN) {
+        PhySt ppst(part_);
+        ppst.set_eta(part_.eta() * survival_fact);
+        succ = (PropMgnt::PropToZ(finalZ, ppst) && ppst.bta() > SURVIVAL_BETA);
+        if (!succ) survival_fact *= SURVIVAL_FACT;
+        survival_iter++;
+    }
+    
+    if (succ && Numc::Compare(survival_fact, Numc::ONE<>) < 0)
+        part_.set_eta(part_.eta() * survival_fact);
+    return succ;
+}
+
+
 Bool_t PhyTrFit::simpleFit() {
     SimpleTrFit simple(dynamic_cast<TrFitPar&>(*this));
     if (simple.status()) part_ = simple.part();
     part_.arg().reset(sw_mscat_, sw_eloss_);
-    return simple.status();
+    Bool_t succ = (simple.status() && survivalTestAndModify());
+    return succ;
 }
 
 
@@ -826,7 +848,7 @@ Bool_t PhyTrFit::physicalMassFit() {
     part_ = condElem.part;
     Double_t fluc_eta = condElem.fluc_eta;
     Double_t fluc_igb = condElem.fluc_igb;
-    for (Short_t iter = 1; iter <= LMTU_MU_ITER; ++iter) {
+    for (Short_t iter = 1; iter <= LMT_MU_ITER; ++iter) {
         Double_t wgt_eta = fluc_eta * fluc_eta;
         Double_t wgt_igb = fluc_igb * fluc_igb;
         Double_t rat_eta = wgt_eta / (wgt_eta + wgt_igb);

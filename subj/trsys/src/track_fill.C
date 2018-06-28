@@ -6,8 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -18,11 +18,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -72,7 +72,6 @@ int main(int argc, char * argv[]) {
     //PartInfo::SetDefault(PartType::Electron);
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
-    //PhyArg::SetOpt(false, false);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
@@ -167,6 +166,8 @@ int main(int argc, char * argv[]) {
             COUT("Entry %lld/%lld Time %14.8f\n", entry, dst->GetEntries(), hrssw.time());
         }
         dst->GetEntry(entry);
+        
+        //if (fG4mc->primPart.mom > 0.7) continue; // testcode
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
@@ -305,8 +306,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
