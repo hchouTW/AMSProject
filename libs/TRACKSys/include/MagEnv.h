@@ -115,9 +115,6 @@ class MagMgnt {
         static MagGeoBoxReader geo_box_reader_;
 };
 
-Bool_t          MagMgnt::is_load_ = false;
-MagGeoBoxReader MagMgnt::geo_box_reader_;
-
 
 } // namespace TrackSys
 

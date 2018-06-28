@@ -12,6 +12,47 @@
 
 namespace TrackSys {
 
+
+Bool_t MatGeoBoxAms::is_load_ = false;
+std::list<MatGeoBoxReader*> MatGeoBoxAms::reader_;
+
+MatGeoBoxReader MatGeoBoxAms::reader_TRL1_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL2_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL3_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL4_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL5_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL6_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL7_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL8_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRL9_;
+
+MatGeoBoxReader MatGeoBoxAms::reader_TR34_;
+MatGeoBoxReader MatGeoBoxAms::reader_TR56_;
+MatGeoBoxReader MatGeoBoxAms::reader_TR78_;
+
+MatGeoBoxReader MatGeoBoxAms::reader_TRS1_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS2_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS3_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS4_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS5_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS6_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS7_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS8_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRS9_;
+
+MatGeoBoxReader MatGeoBoxAms::reader_RAD_;
+MatGeoBoxReader MatGeoBoxAms::reader_TRD_;
+MatGeoBoxReader MatGeoBoxAms::reader_SUPU_;
+MatGeoBoxReader MatGeoBoxAms::reader_SPIU_;
+MatGeoBoxReader MatGeoBoxAms::reader_TOFU_;
+MatGeoBoxReader MatGeoBoxAms::reader_TOFL_;
+MatGeoBoxReader MatGeoBoxAms::reader_SPIL_;
+MatGeoBoxReader MatGeoBoxAms::reader_SUPL_;
+MatGeoBoxReader MatGeoBoxAms::reader_RICH_;
+MatGeoBoxReader MatGeoBoxAms::reader_PMT_;
+MatGeoBoxReader MatGeoBoxAms::reader_ECAL_;
+
+
 // Set to MatMgnt::Load()
 Bool_t MatMgnt::Load() {
     if (is_load_ && reader_ != nullptr) return true;

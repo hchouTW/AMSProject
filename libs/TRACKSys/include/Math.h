@@ -87,7 +87,7 @@ inline bool EqualToZero(RealType a) { return (Compare(a) == 0); }
 namespace TrackSys {
 namespace Rndm {
 
-TRandom3 rndmEngTR3(0);
+static TRandom3 rndmEngTR3(0);
 inline Double_t Gaus(Double_t mean = 0.0, Double_t sigma = 1.0) { return rndmEngTR3.Gaus(mean, sigma); }
 inline Double_t Landau(Double_t mpv = 0.0, Double_t sigma = 1.0) { return rndmEngTR3.Landau(mpv, sigma); }
 

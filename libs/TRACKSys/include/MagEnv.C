@@ -214,6 +214,10 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
 }
 
 
+Bool_t          MagMgnt::is_load_ = false;
+MagGeoBoxReader MagMgnt::geo_box_reader_;
+
+
 Bool_t MagMgnt::Load() {
     if (is_load_) return is_load_;
 
