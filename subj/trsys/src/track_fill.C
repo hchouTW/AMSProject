@@ -306,8 +306,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();

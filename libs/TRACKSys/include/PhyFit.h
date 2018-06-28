@@ -291,7 +291,7 @@ class PhyTrFit : public TrFitPar {
         static constexpr Double_t LMTU_INV_GB   = 1.0e+3;
         static constexpr Short_t  LMT_MU_ITER   = 2;
         static constexpr Double_t MU_FLUC_BASE  = 3.00e-1;
-        static constexpr Double_t MU_FLUC       = 7.00e-3;
+        static constexpr Double_t MU_FLUC       = 5.00e-3;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof);
 };

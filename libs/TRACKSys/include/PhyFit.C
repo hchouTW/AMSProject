@@ -202,6 +202,8 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
     succ_ = (analyticalFit() ? simpleFit() : false);
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); }
+
+    //if (!succ_) CERR("FAILURE === SimpleTrFit\n"); // testcode
 }
 
 
@@ -690,6 +692,8 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     else succ_ = physicalMassFit();
     
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
+    
+    //if (!succ_) CERR("FAILURE === PhyTrFit\n"); // testcode
 }
 
 
@@ -732,7 +736,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     if (is_fluc_eta) {
         const Int_t niter = 5; Int_t iter = 0;
         do {
-            Double_t rndm = Rndm::NormalGaussian() + Numc::TWO<> * MU_FLUC_BASE * (Rndm::DecimalUniform() - Numc::HALF);
+            Double_t rndm = Rndm::NormalGaussian() + MU_FLUC_BASE * Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF);
             if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
@@ -745,7 +749,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     if (is_fluc_igb) {
         const Int_t niter = 5; Int_t iter = 0;
         do {
-            Double_t rndm = Rndm::NormalGaussian() + Numc::TWO<> * MU_FLUC_BASE * (Rndm::DecimalUniform() - Numc::HALF);
+            Double_t rndm = Rndm::NormalGaussian() + MU_FLUC_BASE * Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF);
             if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             igb = part_.igmbta() * (Numc::ONE<> + fluc_igb * rndm);
             iter++;
@@ -877,7 +881,7 @@ Bool_t PhyTrFit::physicalMassFit() {
     }
     if (VirtualHitSt::NoiseController::ON == noise_ctler_)
         if (!physicalFit(MuOpt::kFree, noise_ctler_)) return false;
-
+    
     return true;
 }
 
@@ -1095,9 +1099,9 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt, const VirtualHitSt::NoiseController
     if (is_mu_free) {
         Double_t reEta = std::fabs(errs.at(4) / part_.eta());
         Double_t reIgb = (errs.at(parIDigb) / part_.igmbta());
-        if (Numc::Compare(reIgb, Numc::TEN<>) > 0) {
-            errs.at(parIDigb) = Numc::TEN<> * part_.igmbta();
-            reIgb = Numc::TEN<>;
+        if (Numc::Compare(reIgb, Numc::HUNDRED<>) > 0) {
+            errs.at(parIDigb) = Numc::HUNDRED<> * part_.igmbta();
+            reIgb = Numc::HUNDRED<>;
         }
         Double_t reMu = std::hypot(reEta, reIgb);
         errMu = reMu * part_.mu();
