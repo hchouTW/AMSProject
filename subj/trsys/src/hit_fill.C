@@ -4,8 +4,8 @@
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -69,7 +69,7 @@ int main(int argc, char * argv[]) {
     Axis AXcut("Cut", 9, 0., 9.);
     Hist* hCut = Hist::New("hCut", HistAxis(AXmom, AXcut));
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
-/*  
+  
     // Coo
     Axis AXres("res [#mum]", 800, -200., 200.);
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
@@ -84,22 +84,22 @@ int main(int argc, char * argv[]) {
     Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
     Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
-*/
-/*
+
+
     Axis AXTKadc("TKadc", 3000, 0.2, 100.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
     Axis AXTFadc("TFadc", 800, 0.5, 10.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
-*/   
+/*   
     Axis AXTDzz("TDzz", 350, 80, 150.);
     Hist* hTDzz = Hist::New("hTDzz", HistAxis(AXeta, AXTDzz));
     
     Axis AXTDex("TDex", 1600, 0.01, 40.);
     Hist* hTDex = Hist::New("hTDex", HistAxis(AXeta, AXTDex));
-
-/*    
+*/
+    
     Axis AXTFtme("TFtme", 800, -20, 20);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
     
@@ -108,7 +108,7 @@ int main(int argc, char * argv[]) {
     
     Axis AXNAFib("NAFib", 800, -0.015, 0.015);
     Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXeta, AXNAFib));
-*/
+
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
@@ -159,7 +159,7 @@ int main(int argc, char * argv[]) {
 
         // No Interaction
         if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100) continue;
-/*
+
         // REC hit
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
         for (auto&& hit : fTrk->hits) { rec[hit.layJ-1] = &hit; }
@@ -201,7 +201,7 @@ int main(int argc, char * argv[]) {
             if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
         }
-*/
+
            
         /*
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
@@ -236,7 +236,7 @@ int main(int argc, char * argv[]) {
         //if (mtd[0] == nullptr || mtd[1] == nullptr) continue;
         //CERR("Z %14.8f %14.8f\n", mtd[0]->coo[2], mtd[1]->coo[2]);
         //CERR("M %14.8f %14.8f\n", mtd[0]->mom, mtd[1]->mom);
-        
+       /* 
         if (fTrd->hits[0].size() >= 1) {
             std::vector<Double_t> avge;
             std::vector<Double_t> avgz;
@@ -258,8 +258,9 @@ int main(int argc, char * argv[]) {
                 }
             }
         }
+        */
 
-        /*
+        
         SegPARTMCInfo* mcsTOF[4] = { nullptr };
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 1) mcsTOF[seg.lay] = &seg; }
         for (Int_t sl = 0; sl < 2; ++sl) {
@@ -284,7 +285,7 @@ int main(int argc, char * argv[]) {
             if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);
         }
-        */
+        
     }
 
     ofle->Write();

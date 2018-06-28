@@ -17,11 +17,15 @@ class VirtualHitSt {
         };
         
     protected :
-        // norm -> log(1 + norm^4)
         static constexpr Double_t NOISE_THRESHOLD_DEFAULT = 6.5;
-        Double_t DoNoiseControllerLU(Double_t norm, Double_t threshold = -1.0);
-        Double_t DoNoiseControllerL(Double_t norm, Double_t threshold = -1.0);
-        Double_t DoNoiseControllerU(Double_t norm, Double_t threshold = -1.0);
+        // norm -> log(1 + norm^4)
+        static Double_t DoNoiseControllerLU(Double_t norm, Double_t threshold = -1.0);
+        static Double_t DoNoiseControllerL(Double_t norm, Double_t threshold = -1.0);
+        static Double_t DoNoiseControllerU(Double_t norm, Double_t threshold = -1.0);
+        // norm -> log(1 + norm^2)
+        static Double_t DoNoiseSlowControllerLU(Double_t norm, Double_t threshold = -1.0);
+        static Double_t DoNoiseSlowControllerL(Double_t norm, Double_t threshold = -1.0);
+        static Double_t DoNoiseSlowControllerU(Double_t norm, Double_t threshold = -1.0);
 
     public :
         VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t scx = false, Bool_t scy = false, Bool_t scz = true);
@@ -100,7 +104,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     protected :
-        static constexpr Double_t NOISE_THRESHOLD_COORD = 6.0;
+        static constexpr Double_t NOISE_THRESHOLD_COORD = 5.0;
         static constexpr Double_t NOISE_THRESHOLD_DEDX  = 3.5;
 
     public :
@@ -183,7 +187,7 @@ class HitStTOF : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
     protected :
-        static constexpr Double_t NOISE_THRESHOLD_TIME = 6.0;
+        static constexpr Double_t NOISE_THRESHOLD_TIME = 4.5;
         static constexpr Double_t NOISE_THRESHOLD_DEDX = 3.5;
     
     public :
@@ -286,7 +290,7 @@ class HitStRICH : public VirtualHitSt {
         enum class Radiator { AGL, NAF };
 
     protected :
-        static constexpr Double_t NOISE_THRESHOLD_BETA = 5.5;
+        static constexpr Double_t NOISE_THRESHOLD_BETA = 4.5;
 
     public :
         HitStRICH(const Radiator& rad = Radiator::AGL) : VirtualHitSt(DEC, 0, false, false) { clear(); rad_ = rad; }

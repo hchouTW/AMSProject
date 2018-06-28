@@ -698,7 +698,13 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     // Highland-Lynch-Dahl formula
     //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
     //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
-    
+   
+    // Lynch & Dahl formula (PDG 2018)
+    //Double_t nrl_crr   = (ibta * ibta * part.chrg() * part.chrg());
+    //Double_t log_nrl   = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl() * nrl_crr) : std::log(nrl * nrl_crr));
+    //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
+    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
+
     // Modified Highland-Lynch-Dahl formula
     Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
     Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);

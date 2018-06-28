@@ -46,7 +46,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     return *this;
 }
     
-TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss, const VirtualHitSt::NoiseController& noise_ctler) {
+TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const VirtualHitSt::NoiseController& noise_ctler, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
     clear();
 
     noise_ctler_ = noise_ctler;
@@ -698,7 +698,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     if (is_fluc_eta) {
         const Int_t niter = 5; Int_t iter = 0;
         do {
-            Double_t rndm = Rndm::NormalGaussian();
+            Double_t rndm = Rndm::NormalGaussian() + Numc::TWO<> * MU_FLUC_BASE * (Rndm::DecimalUniform() - Numc::HALF);
             if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             eta = part_.eta() * (Numc::ONE<> + fluc_eta * rndm);
             iter++;
@@ -711,7 +711,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     if (is_fluc_igb) {
         const Int_t niter = 5; Int_t iter = 0;
         do {
-            Double_t rndm = Rndm::NormalGaussian();
+            Double_t rndm = Rndm::NormalGaussian() + Numc::TWO<> * MU_FLUC_BASE * (Rndm::DecimalUniform() - Numc::HALF);
             if (std::fabs(rndm) > Numc::TWO<>) { iter++; continue; }
             igb = part_.igmbta() * (Numc::ONE<> + fluc_igb * rndm);
             iter++;

@@ -22,16 +22,16 @@ OutputDir=${CurDir}/dat
 
 #Hit
 #GroupSize=50
-#Nseq=40
+#Nseq=60
 #GroupSize=24
 #Nseq=20
 #Fit
-GroupSize=1
-#GroupSize=7
-#Nseq=450
-Nseq=550
+#GroupSize=1
+GroupSize=7
+Nseq=450
+#Nseq=550
 
-for id in `seq 100 ${Nseq}`
+for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh

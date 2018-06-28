@@ -14,6 +14,7 @@ Double_t VirtualHitSt::DoNoiseControllerLU(Double_t norm, Double_t threshold) {
     return controller;
 }
 
+
 Double_t VirtualHitSt::DoNoiseControllerL(Double_t norm, Double_t threshold) {
     Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
     Short_t  sign   = Numc::Compare(norm);
@@ -24,6 +25,7 @@ Double_t VirtualHitSt::DoNoiseControllerL(Double_t norm, Double_t threshold) {
     return controller;
 }
 
+
 Double_t VirtualHitSt::DoNoiseControllerU(Double_t norm, Double_t threshold) {
     Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
     Short_t  sign   = Numc::Compare(norm);
@@ -33,6 +35,36 @@ Double_t VirtualHitSt::DoNoiseControllerU(Double_t norm, Double_t threshold) {
     if (!Numc::Valid(controller)) controller = Numc::ONE<>;
     return controller;
 }
+
+
+Double_t VirtualHitSt::DoNoiseSlowControllerLU(Double_t norm, Double_t threshold) {
+    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
+    Double_t sclnrm = std::log1p(norm * norm);
+    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
+    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
+    return controller;
+}
+
+
+Double_t VirtualHitSt::DoNoiseSlowControllerL(Double_t norm, Double_t threshold) {
+    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
+    Short_t  sign   = Numc::Compare(norm);
+    Double_t sclnrm = sign * std::log1p(norm * norm);
+    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres + sclnrm));
+    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
+    return controller;
+}
+
+
+Double_t VirtualHitSt::DoNoiseSlowControllerU(Double_t norm, Double_t threshold) {
+    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
+    Short_t  sign   = Numc::Compare(norm);
+    Double_t sclnrm = sign * std::log1p(norm * norm);
+    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
+    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
+    return controller;
+}
+
 
 VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t scx, Bool_t scy, Bool_t scz) {
     clear();
@@ -107,7 +139,7 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         nrmc_[0] = (crs(0) / erc_(0));
         divc_[0] = (Numc::NEG<> / erc_(0));
         if (NoiseController::ON == ctler)
-            divc_[0] *= DoNoiseControllerLU(nrmc_[0], NOISE_THRESHOLD_COORD);
+            divc_[0] *= DoNoiseSlowControllerLU(nrmc_[0], NOISE_THRESHOLD_COORD);
         if (!Numc::Valid(nrmc_[0]) || !Numc::Valid(divc_[0])) {
             nrmc_[0] = Numc::ZERO<>;
             divc_[0] = Numc::ZERO<>;
@@ -118,7 +150,7 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         nrmc_[1] = (crs(1) / erc_(1));
         divc_[1] = (Numc::NEG<> / erc_(1));
         if (NoiseController::ON == ctler)
-            divc_[1] *= DoNoiseControllerLU(nrmc_[1], NOISE_THRESHOLD_COORD); 
+            divc_[1] *= DoNoiseSlowControllerLU(nrmc_[1], NOISE_THRESHOLD_COORD); 
         if (!Numc::Valid(nrmc_[1]) || !Numc::Valid(divc_[1])) {
             nrmc_[1] = Numc::ZERO<>;
             divc_[1] = Numc::ZERO<>;
@@ -326,7 +358,7 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
             divt_[0] = divt * (part.mu() * part.eta_sign());
             divt_[1] = divt;
             if (NoiseController::ON == ctler) {
-                Double_t ctlert = DoNoiseControllerLU(nrmt_, NOISE_THRESHOLD_TIME);
+                Double_t ctlert = DoNoiseSlowControllerLU(nrmt_, NOISE_THRESHOLD_TIME);
                 divt_sft_ *= ctlert;
                 divt_[0] *= ctlert;
                 divt_[1] *= ctlert;
@@ -436,7 +468,7 @@ void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
         divib_[0] = divib * (part.mu() * part.eta_sign());
         divib_[1] = divib;
         if (NoiseController::ON == ctler) {
-            Double_t ctlerib = DoNoiseControllerLU(nrmib_, NOISE_THRESHOLD_BETA);
+            Double_t ctlerib = DoNoiseSlowControllerLU(nrmib_, NOISE_THRESHOLD_BETA);
             divib_[0] *= ctlerib;
             divib_[1] *= ctlerib;
         }
@@ -472,14 +504,15 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
     MultiGaus::Opt::ROBUST,
-    4.50204264345890337e-01, 9.12779e-04,
-    5.49795735654109663e-01, 1.51231e-03
+    4.64372169946583258e-01, 9.46452e-04,
+    5.35627830053416742e-01, 1.55197e-03
+
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
     MultiGaus::Opt::ROBUST,
-    9.28354466225493113e-01, 3.24032e-03,
-    7.16455337745068865e-02, 6.91529e-03
+    8.30132503718388537e-01, 3.20352e-03,
+    1.69867496281611519e-01, 5.35715e-03
 );
 
 

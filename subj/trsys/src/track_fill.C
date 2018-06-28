@@ -69,6 +69,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
+    //PartInfo::SetDefault(PartType::Electron);
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
     //PhyArg::SetOpt(false, false);
@@ -210,6 +211,7 @@ int main(int argc, char * argv[]) {
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
         TrFitPar fitPar(PartType::Proton);
+        //TrFitPar fitPar(PartType::Electron);
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
@@ -303,8 +305,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -324,10 +326,12 @@ int main(int argc, char * argv[]) {
         //}
         //hc_irig = hc_lay_irig[topLay];
        
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
         PhySt&& sttTop = tr.interpolate_to_z(195.0);
         if (Numc::EqualToZero(sttTop.mom())) continue;
         hc_irig = sttTop.irig();
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f  (Z %6.1f)\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1), sw.time(), tr.part().cz());
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
         //-------------------------------------//
         
         Bool_t ck_succ = ckTr.status;

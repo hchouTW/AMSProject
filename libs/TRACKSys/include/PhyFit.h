@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss(), const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON);
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -283,7 +283,8 @@ class PhyTrFit : public TrFitPar {
         static constexpr Double_t LMTU_INV_GB  = 1.0e+3;
         static constexpr Short_t  LMTL_MU_ITER = 2;
         static constexpr Short_t  LMTU_MU_ITER = 2;
-        static constexpr Double_t MU_FLUC      = 5.00e-3;
+        static constexpr Double_t MU_FLUC_BASE = 3.00e-1;
+        static constexpr Double_t MU_FLUC      = 7.00e-3;
         static constexpr Double_t CONVG_FLUC   = 1.00e-2;
 
         static Double_t NormQuality(Double_t nchi, Short_t ndof) {
