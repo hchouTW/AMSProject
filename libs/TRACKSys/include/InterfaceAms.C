@@ -22,9 +22,9 @@ namespace InterfaceAms {
 
 
 void Event::init() {
-    status_ = false;
-    withQ_  = false;
-    going_  = 0;
+    status_  = false;
+    dedxOpt_ = DedxOpt::OFF; 
+    going_   = 0;
     
     event_  = nullptr;
     trtk_   = nullptr;
@@ -44,7 +44,7 @@ void Event::init() {
 }
 
 
-Event::Event(AMSEventR* event, Bool_t withQ) {
+Event::Event(AMSEventR* event, const DedxOpt& dedxOpt) {
     init();
     if (event == nullptr) return;
     ParticleR* part = event->pParticle(0);
@@ -58,9 +58,9 @@ Event::Event(AMSEventR* event, Bool_t withQ) {
     RichRingR* rich = (iRichRing >= 0) ? event->pRichRing(iRichRing) : nullptr;
     if (trtk == nullptr) return;
 
-    status_ = true;
-    withQ_  = withQ;
-    going_  = -1;
+    status_  = true;
+    dedxOpt_ = dedxOpt;
+    going_   = -1;
 
     event_ = event;
     trtk_  = trtk;
@@ -90,7 +90,9 @@ Bool_t Event::bulid_HitStTRK() {
 		TrRecHitR* recHit = trtk_->GetHitLJ(layJ);
 		if (recHit == nullptr) continue;
         
-        AMSPoint    pnt  = ((layJ == 1 || layJ == 9) ? (trtk_->GetHitCooLJ(layJ, 0) + trtk_->GetHitCooLJ(layJ, 1)) * Numc::HALF : trtk_->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
+        //AMSPoint pnt = ((layJ == 1 || layJ == 9) ? (trtk_->GetHitCooLJ(layJ, 0) + trtk_->GetHitCooLJ(layJ, 1)) * Numc::HALF : trtk_->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
+        AMSPoint pnt = TrTrackR::FitCoo[ilay]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
+
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
@@ -144,7 +146,7 @@ Bool_t Event::bulid_HitStTRK() {
         HitStTRK hit(scx, scy, layJ);
         hit.set_coo(pnt.x(), pnt.y(), pnt.z());
         hit.set_nsr(nsrx, nsry);
-        if (withQ_) hit.set_q(qx, qy);
+        if (DedxOpt::ON == dedxOpt_) hit.set_q(qx, qy);
 
         if      (layJ == 1) hitL1 = hit;
         else if (layJ == 9) hitL9 = hit;
@@ -189,7 +191,7 @@ Bool_t Event::bulid_HitStTOF() {
         HitStTOF hit(lay.at(it));
         hit.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
         hit.set_t(tme.at(it));
-        if (withQ_) hit.set_q(chg.at(it));
+        if (DedxOpt::ON == dedxOpt_) hit.set_q(chg.at(it));
         hits.push_back(hit);
     }
 

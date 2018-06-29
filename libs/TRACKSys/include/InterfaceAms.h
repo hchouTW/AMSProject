@@ -20,9 +20,10 @@ class Event {
 
     public :
         enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
+        enum class DedxOpt { ON, OFF };
 
     public :
-        Event(AMSEventR* event, Bool_t withQ = false);
+        Event(AMSEventR* event, const DedxOpt& dedxOpt = DedxOpt::OFF);
         ~Event() { init(); }
 
         TrFitPar get(const PartInfo& info = PartInfo(PartType::Proton), const TrackerPatt& trPatt = TrackerPatt::MaxSpan, Bool_t withTOF = false, Bool_t withRICH = false) const;
@@ -39,7 +40,7 @@ class Event {
 
     private :
         Bool_t  status_;
-        Bool_t  withQ_;
+        DedxOpt dedxOpt_;
         Short_t going_; // 0, no  1, up-going  -1, down-going
 
         // AMS Event
