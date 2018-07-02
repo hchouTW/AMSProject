@@ -100,16 +100,16 @@ int main(int argc, char * argv[]) {
     Hist* hHCMrso   = Hist::New("hHCMrso",   HistAxis(AXrig, AXMrso));
     Hist* hHCMrsoMU = Hist::New("hHCMrsoMU", HistAxis(AXrig, AXMrso));
        
-    Axis AXnrl("NRL [1/cm]", 1600, 0.0, 0.1);
-    Hist* hNRL = Hist::New("hNRL", HistAxis(AXrig, AXnrl));
-
+    Hist* hHCMrsoMUCO = Hist::New("hHCMrsoMUCO", HistAxis(AXrig));
     Hist* hHCMrsoMUEO = Hist::New("hHCMrsoMUEO", HistAxis(AXrig));
     Hist* hHCMrsoMUSO = Hist::New("hHCMrsoMUSO", HistAxis(AXrig, AXMrso));
    
-    Hist* hHCMrsoMUE[6] = { nullptr };
-    Hist* hHCMrsoMUS[6] = { nullptr };
-    std::vector<Double_t> cuts({ 0.4, 0.4, 0.7, 0.7, 1.0, 1.0 });
-    for (Int_t is = 0; is < 6; ++is) {
+    Hist* hHCMrsoMUC[3] = { nullptr };
+    Hist* hHCMrsoMUE[3] = { nullptr };
+    Hist* hHCMrsoMUS[3] = { nullptr };
+    std::vector<Double_t> cuts({ 0.5, 0.7, 1.0 });
+    for (Int_t is = 0; is < 3; ++is) {
+        hHCMrsoMUC[is] = Hist::New(Form("hHCMrsoMUC%d", is), HistAxis(AXrig));
         hHCMrsoMUE[is] = Hist::New(Form("hHCMrsoMUE%d", is), HistAxis(AXrig));
         hHCMrsoMUS[is] = Hist::New(Form("hHCMrsoMUS%d", is), HistAxis(AXrig, AXMrso));
     }
@@ -189,7 +189,6 @@ int main(int argc, char * argv[]) {
         // RICH
         //if (!fRich->status || !fRich->isGood) continue;
         //if (fRich->kind != 0) continue; // AGL
-        //if (fRich->kind != 1) continue; // NAF
 
         Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcMu.status);
         if (!status) continue;
@@ -272,17 +271,13 @@ int main(int argc, char * argv[]) {
         hHCMrso  ->fillH2D(mom, hcMass);
         hHCMrsoMU->fillH2D(mom, hcMassMU);
   
-        hNRL->fillH2D(mom, hcMu.nrl[1]);
-        hNRL->fillH2D(mom, hcMu.nrl[2]);
-        hNRL->fillH2D(mom, hcMu.nrl[3]);
-        Bool_t clearIn = (hcMu.nrl[1] < 0.025 && hcMu.nrl[2] < 0.025 && hcMu.nrl[3] < 0.025);
-
+        if (hcMu.mass > 1.5) hHCMrsoMUCO->fillH1D(mom);
         hHCMrsoMUEO->fillH1D(mom);
         hHCMrsoMUSO->fillH2D(mom, hcMassMU);
-        for (Int_t is = 0; is < 6; ++is) {
-            if (is%2 == 1 && !clearIn) continue;
+        for (Int_t is = 0; is < 3; ++is) {
             if (hcMu.quality[0] > 2.0) continue;
             if (hcMu.quality[1] > cuts.at(is)) continue;
+            if (hcMu.mass > 1.5) hHCMrsoMUC[is]->fillH1D(mom);
             hHCMrsoMUE[is]->fillH1D(mom);
             hHCMrsoMUS[is]->fillH2D(mom, hcMassMU);
         }

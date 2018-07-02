@@ -10,9 +10,7 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
    
-    //Hist::Load("fill.root", "dat");
-    //Hist::Load("fill.root", "/eos/ams/user/h/hchou/AMSData/subj/adSearch/vdev/MassIn3");
-    Hist::Load("fill.root", "/eos/ams/user/h/hchou/AMSData/subj/adSearch/vdev/MassInTOF");
+    Hist::Load("fill.root", "dat");
     
     // Num
     Hist* hMCnum   = Hist::Head("hMCnum");
@@ -48,12 +46,15 @@ int main(int argc, char * argv[]) {
     Hist* hHCMrso   = Hist::Head("hHCMrso");
     Hist* hHCMrsoMU = Hist::Head("hHCMrsoMU");
 
+    Hist* hHCMrsoMUCO = Hist::Head("hHCMrsoMUCO");
     Hist* hHCMrsoMUEO = Hist::Head("hHCMrsoMUEO");
     Hist* hHCMrsoMUSO = Hist::Head("hHCMrsoMUSO");
     
-    Hist* hHCMrsoMUE[6] = { nullptr };
-    Hist* hHCMrsoMUS[6] = { nullptr };
-    for (Int_t is = 0; is < 6; ++is) {
+    Hist* hHCMrsoMUC[4] = { nullptr };
+    Hist* hHCMrsoMUE[4] = { nullptr };
+    Hist* hHCMrsoMUS[4] = { nullptr };
+    for (Int_t is = 0; is < 4; ++is) {
+        hHCMrsoMUC[is] = Hist::Head(Form("hHCMrsoMUC%d", is));
         hHCMrsoMUE[is] = Hist::Head(Form("hHCMrsoMUE%d", is));
         hHCMrsoMUS[is] = Hist::Head(Form("hHCMrsoMUS%d", is));
     }
@@ -370,10 +371,10 @@ int main(int argc, char * argv[]) {
     hHCMrsoSMU->write();
    
   
-    Hist* hHCMrsoMMUS[6] = { nullptr };
-    Hist* hHCMrsoSMUS[6] = { nullptr };
-    std::vector<Hist*> vhHCMrsoMUS[6];
-    for (Int_t is = 0; is < 6; ++is) {
+    Hist* hHCMrsoMMUS[4] = { nullptr };
+    Hist* hHCMrsoSMUS[4] = { nullptr };
+    std::vector<Hist*> vhHCMrsoMUS[4];
+    for (Int_t is = 0; is < 4; ++is) {
         COUT("HCMrsoMUS%d\n", is);
         hHCMrsoMMUS[is] = Hist::New(Form("hHCMrsoMMUS%d", is), HistAxis(AXrig, "Mean [GeV]"));
         hHCMrsoSMUS[is] = Hist::New(Form("hHCMrsoSMUS%d", is), HistAxis(AXrig, "Sigma [GeV]"));
@@ -399,33 +400,37 @@ int main(int argc, char * argv[]) {
         hHCMrsoSMUS[is]->write();
         hHCMrsoMMUS[is]->style(Fill(), Line(kViolet+is), Marker(kViolet+is));
         hHCMrsoSMUS[is]->style(Fill(), Line(kViolet+is), Marker(kViolet+is));
+        
+        (*(hHCMrsoMUC[is]))()->Divide((*hHCMrsoMUCO)());
+        hHCMrsoMUC[is]->style(Fill(), Line(kViolet+is), Marker(kViolet+is));
 
         (*(hHCMrsoMUE[is]))()->Divide((*hHCMrsoMUEO)());
         hHCMrsoMUE[is]->style(Fill(), Line(kViolet+is), Marker(kViolet+is));
     }
     hHCMrsoMUEO->style(Fill(), Line(kRed), Marker(kRed));
     
-    //THStack* chSetMrsoE = Hist::Collect("chSetMrsoE", HistList({ hHCMrsoMUE[0], hHCMrsoMUE[1], hHCMrsoMUE[2], hHCMrsoMUE[3], hHCMrsoMUE[4], hHCMrsoMUE[5], hHCMrsoMUE[6] }));
-    THStack* chSetMrsoE = Hist::Collect("chSetMrsoE", HistList({ hHCMrsoMUE[3], hHCMrsoMUE[4], hHCMrsoMUE[5] }));
+    THStack* chSetMrsoC = Hist::Collect("chSetMrsoC", HistList({ hHCMrsoMUC[3], hHCMrsoMUC[2], hHCMrsoMUC[1] }));
+    chSetMrsoC->Write();
+    
+    THStack* chSetMrsoE = Hist::Collect("chSetMrsoE", HistList({ hHCMrsoMUE[3], hHCMrsoMUE[2], hHCMrsoMUE[1] }));
     chSetMrsoE->Write();
     
-    //THStack* chSetMrsoM = Hist::Collect("chSetMrsoM", HistList({ hHCMrsoMMUS[0], hHCMrsoMMUS[1], hHCMrsoMMUS[2], hHCMrsoMMUS[3], hHCMrsoMMUS[4], hHCMrsoMMUS[5], hHCMrsoMMUS[6] }));
-    THStack* chSetMrsoM = Hist::Collect("chSetMrsoM", HistList({ hHCMrsoMMUS[3], hHCMrsoMMUS[4], hHCMrsoMMUS[5] }));
+    THStack* chSetMrsoM = Hist::Collect("chSetMrsoM", HistList({ hHCMrsoMMUS[3], hHCMrsoMMUS[2], hHCMrsoMMUS[1] }));
     chSetMrsoM->Write();
     
-    //THStack* chSetMrsoS = Hist::Collect("chSetMrsoS", HistList({ hHCMrsoSMUS[0], hHCMrsoSMUS[1], hHCMrsoSMUS[2], hHCMrsoSMUS[3], hHCMrsoSMUS[4], hHCMrsoSMUS[5], hHCMrsoSMUS[6] }));
-    THStack* chSetMrsoS = Hist::Collect("chSetMrsoS", HistList({ hHCMrsoSMUS[3], hHCMrsoSMUS[4], hHCMrsoSMUS[5] }));
+    THStack* chSetMrsoS = Hist::Collect("chSetMrsoS", HistList({ hHCMrsoSMUS[3], hHCMrsoSMUS[2], hHCMrsoSMUS[1] }));
     chSetMrsoS->Write();
     
     for (int it = 1; it <= AXrig.nbin(); ++it) {
         //THStack* cvhSetMrso = Hist::Collect(Form("cvhSetMrso%03d", it), HistList({ vhHCMrsoMU.at(it), vhHCMrsoMUS[0].at(it), vhHCMrsoMUS[1].at(it), vhHCMrsoMUS[2].at(it), vhHCMrsoMUS[3].at(it), vhHCMrsoMUS[4].at(it), vhHCMrsoMUS[5].at(it), vhHCMrsoMUS[6].at(it) }));
             
         (*vhHCMrsoMU.at(it))()->Scale(1.0/(*vhHCMrsoMU.at(it))()->GetEntries());
+        (*vhHCMrsoMUS[0].at(it))()->Scale(1.0/(*vhHCMrsoMUS[0].at(it))()->GetEntries());
+        (*vhHCMrsoMUS[1].at(it))()->Scale(1.0/(*vhHCMrsoMUS[1].at(it))()->GetEntries());
+        (*vhHCMrsoMUS[2].at(it))()->Scale(1.0/(*vhHCMrsoMUS[2].at(it))()->GetEntries());
         (*vhHCMrsoMUS[3].at(it))()->Scale(1.0/(*vhHCMrsoMUS[3].at(it))()->GetEntries());
-        (*vhHCMrsoMUS[4].at(it))()->Scale(1.0/(*vhHCMrsoMUS[4].at(it))()->GetEntries());
-        (*vhHCMrsoMUS[5].at(it))()->Scale(1.0/(*vhHCMrsoMUS[5].at(it))()->GetEntries());
 
-        THStack* cvhSetMrso = Hist::Collect(Form("cvhSetMrso%03d", it), HistList({ vhHCMrsoMU.at(it), vhHCMrsoMUS[3].at(it), vhHCMrsoMUS[4].at(it), vhHCMrsoMUS[5].at(it) }));
+        THStack* cvhSetMrso = Hist::Collect(Form("cvhSetMrso%03d", it), HistList({ vhHCMrsoMU.at(it), vhHCMrsoMUS[3].at(it), vhHCMrsoMUS[2].at(it), vhHCMrsoMUS[1].at(it) }));
         cvhSetMrso->Write();
     }
 

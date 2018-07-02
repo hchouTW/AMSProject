@@ -6,8 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -18,11 +18,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -77,10 +77,10 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 1000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.55, 2000., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     
-    Axis AXrig("Rigidity [GV]", 100, 0.5, 1000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 0.55, 2000., AxisScale::kLog);
     //Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
@@ -167,8 +167,6 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
         
-        if (fG4mc->primPart.mom < 10.0) continue; // testcode
-
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
         HCTrackInfo& hcTr = fTrk->hcPrInTr.at(0);
@@ -216,8 +214,8 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            //mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_q(hit.adc[0], hit.adc[1]);
+            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
+            //mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
@@ -236,9 +234,9 @@ int main(int argc, char * argv[]) {
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            mhit.set_q(fTof->Q[il]);
+            //mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            //fitPar.add_hit(mhit);
+            fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -307,8 +305,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
