@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -249,7 +249,7 @@ class PhyTrFit : public TrFitPar {
 
         Bool_t simpleFit();
         Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
-        Bool_t physicalMassFit();
+        Bool_t physicalMuFit();
 
         Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF);
 
@@ -287,6 +287,7 @@ class PhyTrFit : public TrFitPar {
         static constexpr Short_t  SURVIVAL_LMTN = 10;
         static constexpr Double_t SURVIVAL_FACT = 0.8;
         static constexpr Double_t SURVIVAL_BETA = 0.3;
+        static constexpr Double_t SURVIVAL_MASS = 0.000510999;
         static constexpr Double_t LMTL_INV_GB   = 1.0e-12;
         static constexpr Double_t LMTU_INV_GB   = 1.0e+3;
         static constexpr Short_t  LMT_MU_ITER   = 2;

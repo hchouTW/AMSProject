@@ -306,15 +306,23 @@ do
 
     echo -e \"==== (Job) Start Time: \`date\`\\n\\n\" | tee \${logLog}
     
+    ls -alh \${PWD} | tee -a \${locLog}
+    echo -e \"\\n\\n\" | tee -a \${locLog}
     ldd \${jobDir}/jobexe | tee -a \${logLog}
     
     echo -e \"\\n\\n==== (Exe) Start Time: \`date\`\" | tee -a \${logLog}
     \${jobDir}/jobexe ${event_type} \${jobDir}/flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${logLog}
     echo -e \"==== (Exe) End Time: \`date\`\\n\\n\" | tee -a \${logLog}
    
-    FileID=\$(printf "%07i" \${exeID})
+    FileID=\$(printf "%i" \${exeID})
     rootFile=\`ls \${tmpData} | grep \${FileID}.root\`
     rootPath=\${tmpData}/\${rootFile}
+    
+    echo -e \"\\n\\n\" | tee -a \${locLog}
+    ls -alh \${tmpData} | tee -a \${locLog}
+    ls -alh \${rootPath} | tee -a \${locLog}
+    echo -e \"\\n\\n\" | tee -a \${locLog}
+    
     if [ ! -f \${rootPath} ]; then
         echo \"ROOT file is not exist.\" | tee -a \${logLog}
     else

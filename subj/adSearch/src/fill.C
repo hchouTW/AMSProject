@@ -7,8 +7,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun23/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jun23/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun28/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -19,11 +19,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
@@ -94,21 +94,27 @@ int main(int argc, char * argv[]) {
     Hist* hAGLBrso  = Hist::New("hAGLBrso",  HistAxis(AXrig, AXBrso));
     Hist* hNAFBrso  = Hist::New("hNAFBrso",  HistAxis(AXrig, AXBrso));
     
-    Axis AXMrso("Mass [GeV]", 1600, 0.03, 8.0);
+    Axis AXMrso("Mass [GeV]", 400, 0.03, 5.0);
     Hist* hCKMrso   = Hist::New("hCKMrso",   HistAxis(AXrig, AXMrso));
     Hist* hKFMrso   = Hist::New("hKFMrso",   HistAxis(AXrig, AXMrso));
     Hist* hHCMrso   = Hist::New("hHCMrso",   HistAxis(AXrig, AXMrso));
     Hist* hHCMrsoMU = Hist::New("hHCMrsoMU", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrsoMU2 = Hist::New("hHCMrsoMU2", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrsoMU3 = Hist::New("hHCMrsoMU3", HistAxis(AXrig, AXMrso));
+       
+    Axis AXnrl("NRL [1/cm]", 1600, 0.0, 0.1);
+    Hist* hNRL = Hist::New("hNRL", HistAxis(AXrig, AXnrl));
+
+    Hist* hHCMrsoMUEO = Hist::New("hHCMrsoMUEO", HistAxis(AXrig));
+    Hist* hHCMrsoMUSO = Hist::New("hHCMrsoMUSO", HistAxis(AXrig, AXMrso));
+   
+    Hist* hHCMrsoMUE[6] = { nullptr };
+    Hist* hHCMrsoMUS[6] = { nullptr };
+    std::vector<Double_t> cuts({ 0.4, 0.4, 0.7, 0.7, 1.0, 1.0 });
+    for (Int_t is = 0; is < 6; ++is) {
+        hHCMrsoMUE[is] = Hist::New(Form("hHCMrsoMUE%d", is), HistAxis(AXrig));
+        hHCMrsoMUS[is] = Hist::New(Form("hHCMrsoMUS%d", is), HistAxis(AXrig, AXMrso));
+    }
     
-    Hist* hCKUrso   = Hist::New("hCKUrso",   HistAxis(AXrig, AXMrso));
-    Hist* hKFUrso   = Hist::New("hKFUrso",   HistAxis(AXrig, AXMrso));
-    Hist* hHCUrso   = Hist::New("hHCUrso",   HistAxis(AXrig, AXMrso));
-    Hist* hHCUrsoMU = Hist::New("hHCUrsoMU", HistAxis(AXrig, AXMrso));
-    Hist* hHCUrsoMU2 = Hist::New("hHCUrsoMU2", HistAxis(AXrig, AXMrso));
-    
-    Axis AXchi("Log-Chi-square [1]", 800, -3.0, 8.0);
+    Axis AXchi("Log-Chi-square [1]", 400, -3.0, 8.0);
     Hist* hCKchix   = Hist::New("hCKchix",   HistAxis(AXrig, AXchi));
     Hist* hKFchix   = Hist::New("hKFchix",   HistAxis(AXrig, AXchi));
     Hist* hHCchix   = Hist::New("hHCchix",   HistAxis(AXrig, AXchi));
@@ -137,12 +143,12 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        CKTrackInfo& ckTr = fTrk->ckTr.at(1);
-        KFTrackInfo& kfTr = fTrk->kfTr.at(1);
+        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
+        KFTrackInfo& kfTr = fTrk->kfTr.at(0);
         //HCTrackInfo& hcTr = fTrk->hcPrTr.at(0); // Tracker
         //HCTrackInfo& hcMu = fTrk->hcMuInTr.at(0); // Tracker + TOF
-        HCTrackInfo& hcTr = fTrk->hcPrL1Tr.at(0); // Tracker + TOF
-        HCTrackInfo& hcMu = fTrk->hcMuL1Tr.at(0); // Tracker + TOF
+        HCTrackInfo& hcTr = fTrk->hcPrInTr.at(0); // Tracker + TOF
+        HCTrackInfo& hcMu = fTrk->hcMuInTr.at(0); // Tracker + TOF
         //HCTrackInfo& hcTr = fTrk->hcPrInTr.at(1); // Tracker + TOF + RICH
         //HCTrackInfo& hcMu = fTrk->hcMuInTr.at(1); // Tracker + TOF + RICH
     
@@ -183,7 +189,7 @@ int main(int argc, char * argv[]) {
         // RICH
         //if (!fRich->status || !fRich->isGood) continue;
         //if (fRich->kind != 0) continue; // AGL
-        ////if (fRich->kind != 1) continue; // NAF
+        //if (fRich->kind != 1) continue; // NAF
 
         Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcMu.status);
         if (!status) continue;
@@ -265,16 +271,21 @@ int main(int argc, char * argv[]) {
         hKFMrso  ->fillH2D(mom, kfMass);
         hHCMrso  ->fillH2D(mom, hcMass);
         hHCMrsoMU->fillH2D(mom, hcMassMU);
-        
-        if (hcMu.quality[0] < 2.0 && hcMu.quality[1] < 1.0) hHCMrsoMU2->fillH2D(mom, hcMassMU);
-        if (hcTr.quality[0] < 2.0 && hcTr.quality[1] < 1.0 && hcMu.quality[0] < 2.0 && hcMu.quality[1] < 1.0) hHCMrsoMU3->fillH2D(mom, hcMassMU);
-        
-        if (ckRig   > 0) hCKUrso  ->fillH2D(ckRig,   ckMass,   wgt);
-        if (kfRig   > 0) hKFUrso  ->fillH2D(kfRig,   kfMass,   wgt);
-        if (hcRig   > 0) hHCUrso  ->fillH2D(hcRig,   hcMass,   wgt);
-        if (hcRigMU > 0) hHCUrsoMU->fillH2D(hcRigMU, hcMassMU, wgt);
-        
-        if (hcRig > 0) hHCUrsoMU2->fillH2D(hcRig, hcMassMU, wgt);
+  
+        hNRL->fillH2D(mom, hcMu.nrl[1]);
+        hNRL->fillH2D(mom, hcMu.nrl[2]);
+        hNRL->fillH2D(mom, hcMu.nrl[3]);
+        Bool_t clearIn = (hcMu.nrl[1] < 0.025 && hcMu.nrl[2] < 0.025 && hcMu.nrl[3] < 0.025);
+
+        hHCMrsoMUEO->fillH1D(mom);
+        hHCMrsoMUSO->fillH2D(mom, hcMassMU);
+        for (Int_t is = 0; is < 6; ++is) {
+            if (is%2 == 1 && !clearIn) continue;
+            if (hcMu.quality[0] > 2.0) continue;
+            if (hcMu.quality[1] > cuts.at(is)) continue;
+            hHCMrsoMUE[is]->fillH1D(mom);
+            hHCMrsoMUS[is]->fillH2D(mom, hcMassMU);
+        }
         
         hCKchix  ->fillH2D(mom, ck_chix);
         hKFchix  ->fillH2D(mom, kf_chix);

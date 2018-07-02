@@ -12,57 +12,146 @@ namespace TrackSys {
 namespace InterfaceAms {
 
 
-class Event {
-    private :
-        static constexpr Int_t QOptTrackerISS = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
-        static constexpr Int_t QOptTrackerMC  = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
-        static constexpr Int_t QOptTOF        = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
+class TkOpt {
+    public :
+        static constexpr Int_t QOptISS = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+        static constexpr Int_t QOptMC  = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
+    
+    public :
+        enum Patt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
 
     public :
-        enum class TrackerPatt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
-        enum class DedxOpt { ON, OFF };
+        TkOpt(Patt patt = Patt::Inner, Bool_t dedx = false) : used_(true), patt_(patt), dedx_(dedx) {}
+        ~TkOpt() {}
 
-    public :
-        Event(AMSEventR* event, const DedxOpt& dedxOpt = DedxOpt::OFF);
-        ~Event() { init(); }
+        inline const Bool_t& used() const { return used_; }
+        inline const Patt&   patt() const { return patt_; }
+        inline const Bool_t& dedx() const { return dedx_; }
 
-        TrFitPar get(const PartInfo& info = PartInfo(PartType::Proton), const TrackerPatt& trPatt = TrackerPatt::MaxSpan, Bool_t withTOF = false, Bool_t withRICH = false) const;
+        inline Bool_t reqL1() const { return (Patt::InnerL1 == patt_ || Patt::FullSpan == patt_); }
+        inline Bool_t reqL9() const { return (Patt::InnerL9 == patt_ || Patt::FullSpan == patt_); }
         
-        const Bool_t& status() const { return status_; }
-        const Short_t& going() const { return going_; }
+        inline Bool_t useL1() const { return (Patt::InnerL1 == patt_ || Patt::FullSpan == patt_ || Patt::MaxSpan == patt_); }
+        inline Bool_t useL9() const { return (Patt::InnerL9 == patt_ || Patt::FullSpan == patt_ || Patt::MaxSpan == patt_); }
+
+    private :
+        Bool_t used_;
+        Patt   patt_;
+        Bool_t dedx_;
+};
+
+
+class TfOpt {
+    public :
+        static constexpr Int_t QOpt = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
+
+    public :
+        TfOpt(Bool_t time = false, Bool_t dedx = false) : time_(time), dedx_(dedx) { used_ = (time_ || dedx_); }
+        ~TfOpt() {}
+
+        inline const Bool_t& used() const { return used_; }
+        inline const Bool_t& time() const { return time_; }
+        inline const Bool_t& dedx() const { return dedx_; }
+
+    private :
+        Bool_t used_;
+        Bool_t time_;
+        Bool_t dedx_;
+};
+
+
+class RhOpt {
+    public :
+        enum Rad { NO, AGL, NAF };
+
+    public :
+        RhOpt(Rad rad = Rad::NO) : rad_(rad) { used_ = (rad_ != Rad::NO); }
+        ~RhOpt() {}
+
+        inline const Bool_t& used() const { return used_; }
+        inline const Rad&    rad()  const { return rad_; }
+
+    private :
+        Bool_t used_;
+        Rad    rad_;
+};
+
+
+class Event {
+    public :
+        Event() {}
+        ~Event() {}
+
+    public : 
+        inline static void SetArg(
+            const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward,
+            const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF,
+            const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss())
+        { ArgOrtt = ortt; ArgNoiseCtler = noise_ctler; ArgSwMscat = sw_mscat; ArgSwEloss = sw_eloss; }
 
     protected :
-        void init();
+        static TrFitPar::Orientation         ArgOrtt;
+        static VirtualHitSt::NoiseController ArgNoiseCtler;
+        static Bool_t                        ArgSwMscat;
+        static Bool_t                        ArgSwEloss;
 
-        Bool_t bulid_HitStTRK();
-        Bool_t bulid_HitStTOF();
-        Bool_t bulid_HitStRICH();
+    public :
+        static Bool_t   Status() { return (Ev != nullptr && StatusTk); }
 
-    private :
-        Bool_t  status_;
-        DedxOpt dedxOpt_;
-        Short_t going_; // 0, no  1, up-going  -1, down-going
-
+        static void     Clear();
+        static Bool_t   Load(AMSEventR* event = nullptr, UInt_t ipart = 0, Bool_t rebuild = true);
+        static TrFitPar Get(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
+   
+    protected :
         // AMS Event
-        AMSEventR* event_;
-        TrTrackR*  trtk_;
-        BetaHR*    btah_;
-        RichRingR* rich_;
-
+        static UInt_t     RunID;
+        static UInt_t     EvID;
+        static UInt_t     PtID;
+        static AMSEventR* Ev;
+        static TrTrackR*  Trtk;
+        static BetaHR*    Btah;
+        static RichRingR* Rich;
+        static Bool_t     StatusTk;
+        static Bool_t     StatusTf;
+        static Bool_t     StatusRh;
+    
+    protected :
+        static void   Init();
+        static Bool_t BulidHitStTRK();
+        static Bool_t BulidHitStTOF();
+        static Bool_t BulidHitStRICH();
+        
+    protected :
         // TRK
-        std::vector<HitStTRK> trHitIn_;
-        HitStTRK              trHitL1_;
-        HitStTRK              trHitL9_;
+        static std::vector<HitStTRK> TkHitIn;
+        static HitStTRK              TkHitL1;
+        static HitStTRK              TkHitL9;
+        
+        static std::vector<HitStTRK> TkHitInQ;
+        static HitStTRK              TkHitL1Q;
+        static HitStTRK              TkHitL9Q;
 
         // TOF
-        std::vector<HitStTOF> tfHit_;
+        static std::vector<HitStTOF> TfHitT;
+        static std::vector<HitStTOF> TfHitQ;
+        static std::vector<HitStTOF> TfHitTQ;
 
         // RICH
-        HitStRICH  rhHit_;
+        static HitStRICH RhHit;
 };
 
 
 } // namespace InterfaceAms
+} // namespace TrackSys
+
+
+namespace TrackSys {
+
+using AmsTkOpt = InterfaceAms::TkOpt;
+using AmsTfOpt = InterfaceAms::TfOpt;
+using AmsRhOpt = InterfaceAms::RhOpt;
+using AmsEvent = InterfaceAms::Event;
+
 } // namespace TrackSys
 
 

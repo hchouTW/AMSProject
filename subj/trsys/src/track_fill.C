@@ -6,8 +6,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -18,11 +18,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -167,7 +167,7 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
         
-        //if (fG4mc->primPart.mom > 0.7) continue; // testcode
+        if (fG4mc->primPart.mom < 10.0) continue; // testcode
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(0);
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
@@ -216,7 +216,7 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
+            //mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
             mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
@@ -238,7 +238,7 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            fitPar.add_hit(mhit);
+            //fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -248,22 +248,23 @@ int main(int argc, char * argv[]) {
         //richHit.set_ib(Numc::ONE<> / fRich->beta);
         //fitPar.add_hit(richHit);
 
-        //if (fTrd->hits[0].size() >= 1) {
-        //    std::vector<std::pair<Double_t, std::pair<Int_t, Double_t>>> sigs;
-        //    for (auto&& hit : fTrd->hits[0]) {
-        //        if (hit.len < 0.3) continue;
-        //        sigs.push_back(std::make_pair(static_cast<Double_t>(hit.dEdx), std::make_pair(hit.lay, static_cast<Double_t>(hit.coo[2]))));
-        //    }
-        //    std::sort(sigs.begin(), sigs.end());
-        //    if (sigs.size() <= 5) continue;
-        //    for (UInt_t it = 2; it < sigs.size(); ++it) {
-        //        HitStTRD trdHit(sigs.at(it).second.first);
-        //        trdHit.set_coo(0, 0, sigs.at(it).second.second);
-        //        trdHit.set_el(sigs.at(it).first);
-        //        //fitPar.add_hit(trdHit);
-        //    }
-        //}
-        //else continue;
+        if (fTrd->hits[0].size() >= 1) {
+            std::vector<std::pair<Double_t, std::pair<Int_t, Double_t>>> sigs;
+            for (auto&& hit : fTrd->hits[0]) {
+                if (hit.len < 0.3) continue;
+                sigs.push_back(std::make_pair(static_cast<Double_t>(hit.dEdx), std::make_pair(hit.lay, static_cast<Double_t>(hit.coo[2]))));
+            }
+            //CERR("TRD %2d/%2d\n", sigs.size(), fTrd->hits[0].size());
+            std::sort(sigs.begin(), sigs.end());
+            if (sigs.size() <= 5) continue;
+            for (UInt_t it = 2; it < sigs.size(); ++it) {
+                HitStTRD trdHit(sigs.at(it).second.first);
+                trdHit.set_coo(0, 0, sigs.at(it).second.second);
+                trdHit.set_el(sigs.at(it).first);
+                //fitPar.add_hit(trdHit);
+            }
+        }
+        else continue;
 
         if (!fitPar.check()) continue;
 
@@ -306,8 +307,8 @@ int main(int argc, char * argv[]) {
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -326,8 +327,7 @@ int main(int argc, char * argv[]) {
         //    //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
         //}
         //hc_irig = hc_lay_irig[topLay];
-       
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
+      
         PhySt&& sttTop = tr.interpolate_to_z(195.0);
         if (Numc::EqualToZero(sttTop.mom())) continue;
         hc_irig = sttTop.irig();

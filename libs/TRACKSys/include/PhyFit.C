@@ -689,7 +689,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
         if (succ_ && (VirtualHitSt::NoiseController::ON == noise_ctler_))
             succ_ = physicalFit(MuOpt::kFixed, noise_ctler_);
     }
-    else succ_ = physicalMassFit();
+    else succ_ = physicalMuFit();
     
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
     
@@ -826,7 +826,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
 }
 
 
-Bool_t PhyTrFit::physicalMassFit() {
+Bool_t PhyTrFit::physicalMuFit() {
     Short_t chrg = std::abs(info_.chrg());
     if (chrg <= Numc::ZERO<Short_t> || chrg >= PartListMassQ.size()) return false;
     if (PartListMassQ.at(chrg).size() == 0) return false;
@@ -881,7 +881,7 @@ Bool_t PhyTrFit::physicalMassFit() {
     }
     if (VirtualHitSt::NoiseController::ON == noise_ctler_)
         if (!physicalFit(MuOpt::kFree, noise_ctler_)) return false;
-    
+
     return true;
 }
 

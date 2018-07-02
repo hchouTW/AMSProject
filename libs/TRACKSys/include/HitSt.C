@@ -147,8 +147,8 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         erc_(0)  = pdf_cx_->efft_sgm(crs(0));
         nrmc_[0] = (crs(0) / erc_(0));
         divc_[0] = (Numc::NEG<> / erc_(0));
-        if (NoiseController::ON == ctler)
-            divc_[0] *= DoNoiseSlowControllerLU(nrmc_[0], NOISE_THRESHOLD_COORD);
+        //if (NoiseController::ON == ctler)
+        //    divc_[0] *= DoNoiseSlowControllerLU(nrmc_[0], NOISE_THRESHOLD_COORD);
         if (!Numc::Valid(nrmc_[0]) || !Numc::Valid(divc_[0])) {
             nrmc_[0] = Numc::ZERO<>;
             divc_[0] = Numc::ZERO<>;
@@ -158,8 +158,8 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         erc_(1) = pdf_cy_->efft_sgm(crs(1));
         nrmc_[1] = (crs(1) / erc_(1));
         divc_[1] = (Numc::NEG<> / erc_(1));
-        if (NoiseController::ON == ctler)
-            divc_[1] *= DoNoiseSlowControllerLU(nrmc_[1], NOISE_THRESHOLD_COORD); 
+        //if (NoiseController::ON == ctler)
+        //    divc_[1] *= DoNoiseSlowControllerLU(nrmc_[1], NOISE_THRESHOLD_COORD); 
         if (!Numc::Valid(nrmc_[1]) || !Numc::Valid(divc_[1])) {
             nrmc_[1] = Numc::ZERO<>;
             divc_[1] = Numc::ZERO<>;
