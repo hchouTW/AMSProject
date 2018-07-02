@@ -970,7 +970,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Choutko
         Int_t ckRefit = 21;
 		for (int patt = 0; patt < _npatt; ++patt) {
-            //if (patt != 0 && patt != 1) continue; // test for Inner
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
 			if (fitid < 0) continue;
@@ -1025,7 +1024,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Kalman
         Int_t kfRefit = 21;
 		for (int patt = 0; patt < _npatt; ++patt) {
-            //if (patt != 0 && patt != 1) continue; // test for Inner
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
 			int fitid = trtk->iTrTrackPar(trFit, 6, _patt[patt], kfRefit, recEv.mass, recEv.zin);
@@ -1103,17 +1101,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::FullSpan });
 
 	    for (int patt = 0; patt < _npatt; ++patt) {
-            //if (patt != 0 && patt != 1) continue; // test for Inner
             fTrk.hcPrTr.at(patt) = processHCTr( // Tracker
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton, TrackSys::AmsTkOpt(trPatt.at(patt))); 
         }
 	    
         for (int patt = 0; patt < _npatt; ++patt) {
-            //if (patt != 0 && patt != 1) continue; // test for Inner
             fTrk.hcDeTr.at(patt) = processHCTr( // Tracker
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Deuterium, TrackSys::AmsTkOpt(trPatt.at(patt)));
         }
-	    
+	   
+        // Inner 
         fTrk.hcPrInTr.at(0) = processHCTr( // Tracker TOF
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
                 TrackSys::AmsTkOpt(TrackSys::AmsTkOpt::Inner, 1),
@@ -1143,7 +1140,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 TrackSys::AmsTkOpt(TrackSys::AmsTkOpt::Inner, 1),
                 TrackSys::AmsTfOpt(1, 1),
                 TrackSys::AmsRhOpt(TrackSys::AmsRhOpt::AGL));
-        
+       
+        // InnerL1
         fTrk.hcPrL1Tr.at(0) = processHCTr( // Tracker TOF
                 TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
                 TrackSys::AmsTkOpt(TrackSys::AmsTkOpt::InnerL1, 1),
@@ -1176,28 +1174,28 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
     }
 
     // Haino's tools
-    if (trtk != nullptr && fitidInn >= 0) {
-		trtk->iTrTrackPar(1, 3, 21, recEv.mass, recEv.zin);
-        fTrk.ftL34Dist     = std::min(event->GetTkFeetDist(3), event->GetTkFeetDist(4));
-        fTrk.ftL56Dist     = std::min(event->GetTkFeetDist(5), event->GetTkFeetDist(6));
-        fTrk.ftL78Dist     = std::min(event->GetTkFeetDist(7), event->GetTkFeetDist(8));
-        fTrk.survHeL56Prob = event->GetHeSurvProbAtL56();
+    //if (trtk != nullptr && fitidInn >= 0) {
+	//	trtk->iTrTrackPar(1, 3, 21, recEv.mass, recEv.zin);
+    //    fTrk.ftL34Dist     = std::min(event->GetTkFeetDist(3), event->GetTkFeetDist(4));
+    //    fTrk.ftL56Dist     = std::min(event->GetTkFeetDist(5), event->GetTkFeetDist(6));
+    //    fTrk.ftL78Dist     = std::min(event->GetTkFeetDist(7), event->GetTkFeetDist(8));
+    //    fTrk.survHeL56Prob = event->GetHeSurvProbAtL56();
 
-        float smin = 0;
-        for (int il = 0; il < 7; il++) { // Loop on inner Layers 2-8
-            // Get a ratio of raw ADC used for the hit over the sum of n=10 strips around.
-            float sr = event->GetTrackerRawSignalRatio(il+2, 10);
-            if (sr > 0 && (smin == 0 || sr < smin)) smin = sr;
-            fTrk.ratN10S[il] = sr;
-        }
-        if (smin > 0) fTrk.ratN10Smin = smin;
+    //    float smin = 0;
+    //    for (int il = 0; il < 7; il++) { // Loop on inner Layers 2-8
+    //        // Get a ratio of raw ADC used for the hit over the sum of n=10 strips around.
+    //        float sr = event->GetTrackerRawSignalRatio(il+2, 10);
+    //        if (sr > 0 && (smin == 0 || sr < smin)) smin = sr;
+    //        fTrk.ratN10S[il] = sr;
+    //    }
+    //    if (smin > 0) fTrk.ratN10Smin = smin;
 
-        fTrk.noiseInTrSH = event->IsTrackPickingUpNoise();
-        fTrk.betaSH[0]   = TrMass::GetBeta(event, 1, trtk); 
-        fTrk.betaSH[1]   = TrMass::GetBeta(event, 11, trtk); 
-        fTrk.betaSH[2]   = TrMass::GetBeta(event, 111, trtk); 
-        fTrk.massEstSH   = TrMass::GetMQL(event, trtk);
-    }
+    //    fTrk.noiseInTrSH = event->IsTrackPickingUpNoise();
+    //    fTrk.betaSH[0]   = TrMass::GetBeta(event, 1, trtk); 
+    //    fTrk.betaSH[1]   = TrMass::GetBeta(event, 11, trtk); 
+    //    fTrk.betaSH[2]   = TrMass::GetBeta(event, 111, trtk); 
+    //    fTrk.massEstSH   = TrMass::GetMQL(event, trtk);
+    //}
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -1227,8 +1225,7 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PhyTrFit::MuOpt muOpt, TrackSys::Par
     
     HCTrackInfo track;
     track.status = true;
-    //track.going = ((eventAms.going() > 0) ? 1 : -1);
-    track.going = -1; // testcode
+    track.going = ((TrackSys::TrFitPar::Orientation::kDownward == fitPar.ortt()) ? -1 : 1);
     track.chrg = hctr.part().chrg();
     track.mass = hctr.part().mass();
     
@@ -1294,46 +1291,6 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PhyTrFit::MuOpt muOpt, TrackSys::Par
         track.stateBtm[5] = phyStBtm.uz();
         track.stateBtm[6] = phyStBtm.rig();
         track.stateBtm[7] = phyStBtm.bta();
-    }
-    
-    TrackSys::MatFld&& matTrL12 = hctr.get_mat(recEv.trackerZJ[0]+0.2, recEv.trackerZJ[1]-0.2);
-    TrackSys::MatFld&& matTrL34 = hctr.get_mat(recEv.trackerZJ[2]+0.2, recEv.trackerZJ[3]-0.2);
-    TrackSys::MatFld&& matTrL56 = hctr.get_mat(recEv.trackerZJ[4]+0.2, recEv.trackerZJ[5]-0.2);
-    TrackSys::MatFld&& matTrL78 = hctr.get_mat(recEv.trackerZJ[6]+0.2, recEv.trackerZJ[7]-0.2);
-    TrackSys::MatFld&& matTrL89 = hctr.get_mat(recEv.trackerZJ[7]-0.2, recEv.trackerZJ[8]);
-    TrackSys::MatFld&& matRich  = hctr.get_mat(recEv.RichZ[0], recEv.RichZ[1]);
-    
-    track.len[0] = matTrL12.elen();
-    track.len[1] = matTrL34.elen();
-    track.len[2] = matTrL56.elen();
-    track.len[3] = matTrL78.elen();
-    track.len[4] = matTrL89.elen();
-    track.len[5] = matRich.elen();
-
-    track.nrl[0] = matTrL12.nrl();
-    track.nrl[1] = matTrL34.nrl();
-    track.nrl[2] = matTrL56.nrl();
-    track.nrl[3] = matTrL78.nrl();
-    track.nrl[4] = matTrL89.nrl();
-    track.nrl[5] = matRich.nrl();
-    
-    track.ela[0] = matTrL12.ela();
-    track.ela[1] = matTrL34.ela();
-    track.ela[2] = matTrL56.ela();
-    track.ela[3] = matTrL78.ela();
-    track.ela[4] = matTrL89.ela();
-    track.ela[5] = matRich.ela();
-
-    for (int sl = 0; sl < 3; ++sl) {
-        if (!track.statusLJ[2+sl]) continue;
-        float dist[2] = { 0, 0 };
-        short sign = TrackSys::Numc::Compare(track.stateLJ[2+sl][5]);
-        AMSPoint pntSL(track.stateLJ[2+sl][0], track.stateLJ[2+sl][1], track.stateLJ[2+sl][2]);
-        AMSDir   dirSL(sign * track.stateLJ[2+sl][3], sign * track.stateLJ[2+sl][4], sign * track.stateLJ[2+sl][5]);
-        float    rigSL = (-sign) * track.stateLJ[2+sl][6];
-        dist[0] = AMSEventR::GetTkFeetDist(3+sl*2+0, pntSL, dirSL, rigSL);
-        dist[1] = AMSEventR::GetTkFeetDist(3+sl*2+1, pntSL, dirSL, rigSL);
-        track.distToTrFeet[sl] = std::min(dist[0], dist[1]);
     }
     
     track.cpuTime = hcSw.time() * 1.0e+3;
@@ -2300,8 +2257,8 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
 
     TrackSys::PhyArg::SetOpt(true, true);
-    TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward, TrackSys::VirtualHitSt::NoiseController::OFF);
-    if (!TrackSys::AmsEvent::Load(event, 0)) return -6004;
+    TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward, TrackSys::VirtualHitSt::NoiseController::ON);
+    if (!TrackSys::AmsEvent::Load(event)) return -6004;
     
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6005;

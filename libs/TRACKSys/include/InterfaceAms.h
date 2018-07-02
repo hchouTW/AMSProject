@@ -85,7 +85,7 @@ class Event {
     public : 
         inline static void SetArg(
             const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward,
-            const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF,
+            const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON,
             const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss())
         { ArgOrtt = ortt; ArgNoiseCtler = noise_ctler; ArgSwMscat = sw_mscat; ArgSwEloss = sw_eloss; }
 

@@ -104,7 +104,6 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     protected :
-        static constexpr Double_t NOISE_THRESHOLD_COORD = 5.0;
         static constexpr Double_t NOISE_THRESHOLD_DEDX  = 3.5;
 
     public :

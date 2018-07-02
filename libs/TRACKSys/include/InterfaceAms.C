@@ -22,7 +22,7 @@ namespace InterfaceAms {
 
  
 TrFitPar::Orientation         Event::ArgOrtt       = TrFitPar::Orientation::kDownward;
-VirtualHitSt::NoiseController Event::ArgNoiseCtler = VirtualHitSt::NoiseController::OFF;
+VirtualHitSt::NoiseController Event::ArgNoiseCtler = VirtualHitSt::NoiseController::ON;
 Bool_t                        Event::ArgSwMscat    = PhyArg::OptMscat();
 Bool_t                        Event::ArgSwEloss    = PhyArg::OptEloss();
 
@@ -102,7 +102,7 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Bool_t rebuild) {
 
 
 TrFitPar Event::Get(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
-    if (Ev == nullptr)
+    if (Ev == nullptr) return TrFitPar();
     if (Trtk == nullptr || !StatusTk) return TrFitPar();
     Bool_t hasL1 = (tkOpt.dedx() ? (TkHitL1Q.scx() || TkHitL1Q.scy()) : (TkHitL1.scx() || TkHitL1.scy()));
     Bool_t hasL9 = (tkOpt.dedx() ? (TkHitL9Q.scx() || TkHitL9Q.scy()) : (TkHitL9.scx() || TkHitL9.scy()));
@@ -293,7 +293,7 @@ Bool_t Event::BulidHitStTOF() {
         hitTQ.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
         hitTQ.set_t(tme.at(it));
         hitTQ.set_q(chg.at(it));
-        TfHitQ.push_back(hitTQ);
+        TfHitTQ.push_back(hitTQ);
     }
     if (TfHitT.size()  <= 2) return false;
     if (TfHitQ.size()  <= 2) return false;

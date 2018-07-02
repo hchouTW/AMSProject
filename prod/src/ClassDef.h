@@ -565,12 +565,6 @@ class HCTrackInfo : public TObject {
             std::fill_n(statusLJ, 6, false);
             std::fill_n(stateLJ[0], 6*8, 0);
            
-            std::fill_n(len, 6, 0);
-            std::fill_n(nrl, 6, 0);
-            std::fill_n(ela, 6, 0);
-            
-            std::fill_n(distToTrFeet, 3, -1);
-
             cpuTime = 0;
         }
 	
@@ -596,15 +590,9 @@ class HCTrackInfo : public TObject {
         Bool_t  statusLJ[6];
         Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
 
-        Float_t len[6]; // path length in material space
-        Float_t nrl[6]; // L12 L34 L56 L78 L89 RICH
-        Float_t ela[6]; // L12 L34 L56 L78 L89 RICH
-	
-        Float_t distToTrFeet[3]; // L34 L56 L78
-
         Float_t cpuTime; // [ms]
 
-        ClassDef(HCTrackInfo, 3)
+        ClassDef(HCTrackInfo, 4)
 };
 
 
@@ -891,16 +879,16 @@ class TRK : public TObject {
             hcDeL1Tr = std::vector<HCTrackInfo>(2);
             hcMuL1Tr = std::vector<HCTrackInfo>(2);
             
-            ftL34Dist = -1;
-            ftL56Dist = -1;
-            ftL78Dist = -1;
-            survHeL56Prob = -1;
-            ratN10Smin = -1;
-            std::fill_n(ratN10S, 7, -1);
-            
-            noiseInTrSH = -1;
-            std::fill_n(betaSH, 3, -1);
-            massEstSH = -99;
+            //ftL34Dist = -1;
+            //ftL56Dist = -1;
+            //ftL78Dist = -1;
+            //survHeL56Prob = -1;
+            //ratN10Smin = -1;
+            //std::fill_n(ratN10S, 7, -1);
+            //
+            //noiseInTrSH = -1;
+            //std::fill_n(betaSH, 3, -1);
+            //massEstSH = -99;
 		}
 
 	public :
@@ -945,21 +933,21 @@ class TRK : public TObject {
         std::vector<HCTrackInfo> hcMuL1Tr;
 
         // Haino's tools
-        Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
-        Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
-        Float_t ftL78Dist;     // tracker feet (typical cut is ftL78Dist < 0.5~6)
-        Float_t survHeL56Prob; // The variable you can play with on cuts (typical cut is hsv<0.26)
-        Float_t ratN10Smin;    //
-        Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)
-        
-        Short_t noiseInTrSH;   // keep (noiseInTrSH == 0) events
-        Float_t betaSH[3];     // from dE/dx by 
-                               // [0] Tracker
-                               // [1] Tracker, TOF
-                               // [2] Tracker, TOF and/or TRD
-        Float_t massEstSH;     // mass estimator log-likelihood
+        //Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
+        //Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
+        //Float_t ftL78Dist;     // tracker feet (typical cut is ftL78Dist < 0.5~6)
+        //Float_t survHeL56Prob; // The variable you can play with on cuts (typical cut is hsv<0.26)
+        //Float_t ratN10Smin;    //
+        //Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)
+        //
+        //Short_t noiseInTrSH;   // keep (noiseInTrSH == 0) events
+        //Float_t betaSH[3];     // from dE/dx by 
+        //                       // [0] Tracker
+        //                       // [1] Tracker, TOF
+        //                       // [2] Tracker, TOF and/or TRD
+        //Float_t massEstSH;     // mass estimator log-likelihood
 
-	ClassDef(TRK, 7)
+	ClassDef(TRK, 8)
 };
 
 
@@ -1079,7 +1067,7 @@ class RICH : public TObject {
 		Float_t vetoRfrIndex;      // refractive index
 		Float_t vetoDistToBorder;  // dist To Border Edge
 		Bool_t  vetoIsInFiducialVolume;
-        
+       
         // [0] electron [1] proton [2] deuterium
 		//Float_t vetoNumOfExpPE[3];     // number of photoelectrons expected for a given track, beta and charge.
         //Short_t vetoNumOfCrsHit;       // Particle Cross PMT
