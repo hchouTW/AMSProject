@@ -117,19 +117,15 @@ int main(int argc, char * argv[]) {
     Hist* hHCuy = Hist::New("hHCuy", HistAxis(AXrig, AXu));
     
     Axis AXBrso("(Bm - Bt) [1]", 1600, -0.1, 0.1);
-    Hist* hCKBrso   = Hist::New("hCKBrso", HistAxis(AXrig, AXBrso));
-    Hist* hKFBrso   = Hist::New("hKFBrso", HistAxis(AXrig, AXBrso));
-    Hist* hHCBrso   = Hist::New("hHCBrso", HistAxis(AXrig, AXBrso));
-    
-    Hist* hTFBrso   = Hist::New("hTFBrso",  HistAxis(AXrig, AXBrso));
-    Hist* hAGLBrso  = Hist::New("hAGLBrso", HistAxis(AXrig, AXBrso));
-    Hist* hNAFBrso  = Hist::New("hNAFBrso", HistAxis(AXrig, AXBrso));
+    Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXrig, AXBrso));
+    Hist* hTFBrso = Hist::New("hTFBrso", HistAxis(AXrig, AXBrso));
+    Hist* hRHBrso = Hist::New("hRHBrso", HistAxis(AXrig, AXBrso));
     
     Axis AXMrso("Mass [GeV]", 400, 0.03, 5.0);
     Hist* hCKMrso = Hist::New("hCKMrso", HistAxis(AXrig, AXMrso));
     Hist* hKFMrso = Hist::New("hKFMrso", HistAxis(AXrig, AXMrso));
     Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXrig, AXMrso));
-       
+/*       
     Hist* hHCMrsoCO = Hist::New("hHCMrsoCO", HistAxis(AXrig));
     Hist* hHCMrsoEO = Hist::New("hHCMrsoEO", HistAxis(AXrig));
     Hist* hHCMrsoSO = Hist::New("hHCMrsoSO", HistAxis(AXrig, AXMrso));
@@ -143,7 +139,7 @@ int main(int argc, char * argv[]) {
         hHCMrsoE[is] = Hist::New(Form("hHCMrsoE%d", is), HistAxis(AXrig));
         hHCMrsoS[is] = Hist::New(Form("hHCMrsoS%d", is), HistAxis(AXrig, AXMrso));
     }
-
+*/
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -239,10 +235,6 @@ int main(int argc, char * argv[]) {
         Double_t hc_qltyTR = hcTR.quality[1]; 
         Double_t hc_qltyMU = hcMU.quality[1]; 
        
-        Double_t ckBta = ckTr.bta;
-        Double_t kfBta = kfTr.bta[0];
-        Double_t hcBta = hcTR.stateTop[7];
-
         Double_t ckMass = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(ckTr.rig    * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
         Double_t kfMass = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(kfTr.rig[1] * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
         Double_t hcMass = (hcMU.mass); 
@@ -255,7 +247,7 @@ int main(int argc, char * argv[]) {
         if (ckSign   > 0) hCKnum  ->fillH1D(ckRig,   wgt);
         if (kfSign   > 0) hKFnum  ->fillH1D(kfRig,   wgt);
         if (hcSign   > 0) hHCnum  ->fillH1D(hcRig,   wgt);
-        if (hcSignTR > 0) hHCnum  ->fillH1D(hcRigTR, wgt);
+        if (hcSignTR > 0) hHCnumTR->fillH1D(hcRigTR, wgt);
         if (hcSignMU > 0) hHCnumMU->fillH1D(hcRigMU, wgt);
         
         hMCtme->fillH1D(mom);
@@ -299,18 +291,15 @@ int main(int argc, char * argv[]) {
         hKFuy->fillH2D(mom, cen * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
         hHCuy->fillH2D(mom, cen * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
         
-        hCKBrso->fillH2D(mom, (ckBta - bta));
-        hKFBrso->fillH2D(mom, (kfBta - bta));
-        hHCBrso->fillH2D(mom, (hcBta - bta));
-        
+        hHCBrso->fillH2D(mom, (hcTR.stateTop[7] - bta));
         hTFBrso->fillH2D(mom, (fTof->betaH - bta));
-        if (fRich->kind == 0 && fRich->status) hAGLBrso->fillH2D(mom, (fRich->beta - bta));
-        if (fRich->kind == 1 && fRich->status) hNAFBrso->fillH2D(mom, (fRich->beta - bta));
+        if (fRich->kind == 0 && fRich->status)
+            hRHBrso->fillH2D(mom, (fRich->beta - bta));
         
         hCKMrso->fillH2D(mom, ckMass);
         hKFMrso->fillH2D(mom, kfMass);
         hHCMrso->fillH2D(mom, hcMass);
-  
+ /* 
         if (hcMU.mass > 1.6) hHCMrsoCO->fillH1D(mom);
         hHCMrsoEO->fillH1D(mom);
         hHCMrsoSO->fillH2D(mom, hcMass);
@@ -321,6 +310,7 @@ int main(int argc, char * argv[]) {
             hHCMrsoE[is]->fillH1D(mom);
             hHCMrsoS[is]->fillH2D(mom, hcMass);
         }
+*/
     }
     
     ofle->Write();
