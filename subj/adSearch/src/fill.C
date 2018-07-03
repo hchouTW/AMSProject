@@ -8,7 +8,8 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun23/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -19,11 +20,11 @@ int main(int argc, char * argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
     
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
@@ -62,7 +63,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXrig("Rigidity [GV]", 100, 0.55, 1000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 80, 0.55, 2000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff
@@ -154,8 +155,9 @@ int main(int argc, char * argv[]) {
         KFTrackInfo& kfTr = fTrk->kfTr.at(0);
         HCTrackInfo& hcTr = fTrk->hcPrTr.at(0); // Tracker
         
-        HCTrackInfo& hcTR = fTrk->hcPrInTr.at(0); // Tracker + TOF
-        HCTrackInfo& hcMU = fTrk->hcMuInTr.at(0); // Tracker + TOF
+        HCTrackInfo& hcTR = fTrk->hcPrL1Tr.at(0); // Tracker + TOF
+        HCTrackInfo& hcMU = fTrk->hcMuL1Tr.at(0); // Tracker + TOF
+        
         //HCTrackInfo& hcTR = fTrk->hcPrInTr.at(1); // Tracker + TOF + RICH
         //HCTrackInfo& hcMU = fTrk->hcMuInTr.at(1); // Tracker + TOF + RICH
     
@@ -203,7 +205,7 @@ int main(int argc, char * argv[]) {
         Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[7]) : fG4mc->primPart.bta);
         Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.stateTop[6] : fG4mc->primPart.mom);
         Double_t imom = Numc::ONE<> / mom;
-        Double_t cen  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
+        Double_t scl  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
         
         Short_t ckSign   = (ckTr.rig > 0) ? 1 : -1;
         Short_t kfSign   = (kfTr.rig[0] > 0) ? 1 : -1;
@@ -257,11 +259,11 @@ int main(int argc, char * argv[]) {
         hHCtmeTR->fillH1D(mom, hcTR.cpuTime);
         hHCtmeMU->fillH1D(mom, hcMU.cpuTime);
         
-        hCKRrso  ->fillH2D(mom, cen * (ckIRig   - imom));
-        hKFRrso  ->fillH2D(mom, cen * (kfIRig   - imom));
-        hHCRrso  ->fillH2D(mom, cen * (hcIRig   - imom));
-        hHCRrsoTR->fillH2D(mom, cen * (hcIRigTR - imom));
-        hHCRrsoMU->fillH2D(mom, cen * (hcIRigMU - imom));
+        hCKRrso  ->fillH2D(mom, scl * (ckIRig   - imom));
+        hKFRrso  ->fillH2D(mom, scl * (kfIRig   - imom));
+        hHCRrso  ->fillH2D(mom, scl * (hcIRig   - imom));
+        hHCRrsoTR->fillH2D(mom, scl * (hcIRigTR - imom));
+        hHCRrsoMU->fillH2D(mom, scl * (hcIRigMU - imom));
         
         hCKqltx  ->fillH2D(mom, ck_qltx);
         hKFqltx  ->fillH2D(mom, kf_qltx);
@@ -275,21 +277,21 @@ int main(int argc, char * argv[]) {
         hHCqltyTR->fillH2D(mom, hc_qltyTR);
         hHCqltyMU->fillH2D(mom, hc_qltyMU);
         
-        hCKcx->fillH2D(mom, cen * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
-        hKFcx->fillH2D(mom, cen * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
-        hHCcx->fillH2D(mom, cen * (hcTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        hCKcx->fillH2D(mom, scl * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        hKFcx->fillH2D(mom, scl * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        hHCcx->fillH2D(mom, scl * (hcTr.stateTop[0] - fG4mc->primPart.coo[0]));
         
-        hCKcy->fillH2D(mom, cen * (ckTr.stateTop[1] - fG4mc->primPart.coo[1]));
-        hKFcy->fillH2D(mom, cen * (kfTr.stateTop[1] - fG4mc->primPart.coo[1]));
-        hHCcy->fillH2D(mom, cen * (hcTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        hCKcy->fillH2D(mom, scl * (ckTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        hKFcy->fillH2D(mom, scl * (kfTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        hHCcy->fillH2D(mom, scl * (hcTr.stateTop[1] - fG4mc->primPart.coo[1]));
         
-        hCKux->fillH2D(mom, cen * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hKFux->fillH2D(mom, cen * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hHCux->fillH2D(mom, cen * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        hCKux->fillH2D(mom, scl * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        hKFux->fillH2D(mom, scl * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        hHCux->fillH2D(mom, scl * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
         
-        hCKuy->fillH2D(mom, cen * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hKFuy->fillH2D(mom, cen * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hHCuy->fillH2D(mom, cen * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        hCKuy->fillH2D(mom, scl * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        hKFuy->fillH2D(mom, scl * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        hHCuy->fillH2D(mom, scl * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
         
         hHCBrso->fillH2D(mom, (hcTR.stateTop[7] - bta));
         hTFBrso->fillH2D(mom, (fTof->betaH - bta));

@@ -46,7 +46,8 @@ class TfOpt {
         static constexpr Int_t QOpt = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
 
     public :
-        TfOpt(Bool_t time = false, Bool_t dedx = false) : time_(time), dedx_(dedx) { used_ = (time_ || dedx_); }
+        TfOpt() : time_(false), dedx_(false), used_(false) {}
+        TfOpt(Bool_t dedx) : time_(true), dedx_(dedx) { used_ = (time_ || dedx_); }
         ~TfOpt() {}
 
         inline const Bool_t& used() const { return used_; }
