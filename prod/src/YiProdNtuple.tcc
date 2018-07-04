@@ -1111,22 +1111,22 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
                 TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
                 TrackSys::AmsTfOpt(withDedx));
         
-            fTrk.hcMuTF.at(patt) = processHCTr( // Tracker TOF
-                TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
-                TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
-                TrackSys::AmsTfOpt(withDedx));
+            //fTrk.hcMuTF.at(patt) = processHCTr( // Tracker TOF
+            //    TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
+            //    TrackSys::AmsTfOpt(withDedx));
             
-            fTrk.hcTrRH.at(patt) = processHCTr( // Tracker TOF RICH
-                TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
-                TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
-                TrackSys::AmsTfOpt(withDedx),
-                TrackSys::AmsRhOpt(TrackSys::AmsRhOpt::AGL));
+            //fTrk.hcTrRH.at(patt) = processHCTr( // Tracker TOF RICH
+            //    TrackSys::PhyTrFit::MuOpt::kFixed, TrackSys::PartType::Proton,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
+            //    TrackSys::AmsTfOpt(withDedx),
+            //    TrackSys::AmsRhOpt(TrackSys::AmsRhOpt::AGL));
 
-            fTrk.hcMuRH.at(patt) = processHCTr( // Tracker TOF RICH
-                TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
-                TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
-                TrackSys::AmsTfOpt(withDedx),
-                TrackSys::AmsRhOpt(TrackSys::AmsRhOpt::AGL));
+            //fTrk.hcMuRH.at(patt) = processHCTr( // Tracker TOF RICH
+            //    TrackSys::PhyTrFit::MuOpt::kFree, TrackSys::PartType::Q1,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
+            //    TrackSys::AmsTfOpt(withDedx),
+            //    TrackSys::AmsRhOpt(TrackSys::AmsRhOpt::AGL));
         }
     }
 
