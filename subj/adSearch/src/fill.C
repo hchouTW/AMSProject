@@ -8,7 +8,7 @@
 //#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -151,12 +151,14 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
-        KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcPrTr.at(0); // Tracker
+        Int_t patt = 3;
+
+        CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
+        KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
+        HCTrackInfo& hcTr = fTrk->hcTr.at(patt); // Tracker
         
-        HCTrackInfo& hcTR = fTrk->hcPrL1Tr.at(0); // Tracker + TOF
-        HCTrackInfo& hcMU = fTrk->hcMuL1Tr.at(0); // Tracker + TOF
+        HCTrackInfo& hcTR = fTrk->hcTrTF.at(patt); // Tracker + TOF
+        HCTrackInfo& hcMU = fTrk->hcMuTF.at(patt); // Tracker + TOF
         
         //HCTrackInfo& hcTR = fTrk->hcPrInTr.at(1); // Tracker + TOF + RICH
         //HCTrackInfo& hcMU = fTrk->hcMuInTr.at(1); // Tracker + TOF + RICH
@@ -199,7 +201,8 @@ int main(int argc, char * argv[]) {
         //if (!fRich->status || !fRich->isGood) continue;
         //if (fRich->kind != 0) continue; // AGL
 
-        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTR.status && hcMU.status);
+        //Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTR.status && hcMU.status);
+        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTR.status);
         if (!status) continue;
         
         Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[7]) : fG4mc->primPart.bta);
