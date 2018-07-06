@@ -7,7 +7,7 @@
 //#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
 //#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -64,7 +64,7 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
-    dst->SetBranchAddress("ecal", &fEcal);
+    //dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
     //PartInfo::SetDefault(PartType::Electron);
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = false;
+    Bool_t optL1 = true;
     Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
@@ -167,9 +167,11 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
         
-        CKTrackInfo& ckTr = fTrk->ckTr.at(0);
-        KFTrackInfo& kfTr = fTrk->kfTr.at(0);
-        HCTrackInfo& hcTr = fTrk->hcPrInTr.at(0);
+        Int_t trPatt = 1;
+
+        CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
+        KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
+        HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -300,13 +302,13 @@ int main(int argc, char * argv[]) {
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
     
-        //if (mc_mom < 1.0 || mc_mom > 10.0) continue; // testcode
+        if (mc_mom < 10.0 || mc_mom > 50.0) continue; // testcode
         //if (mc_mom > 0.8) continue; // testcode
         //if (mc_mom < 300.0) continue; // testcode
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
+        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
@@ -331,6 +333,7 @@ int main(int argc, char * argv[]) {
         hc_irig = sttTop.irig();
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f  (Z %6.1f)\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1), sw.time(), tr.part().cz());
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
+        CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f (%14.8f) MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, hcTr.state[6], tr.part().info().mass(), tr.quality(1));
         //-------------------------------------//
         
         Bool_t ck_succ = ckTr.status;

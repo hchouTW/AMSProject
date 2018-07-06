@@ -603,6 +603,7 @@ Bool_t SimpleTrFit::simpleFit() {
     return succ;
 }
 
+
 PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
     if (this != &rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
@@ -684,12 +685,8 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar, const MuOpt& mu_opt) : TrFitPar(fitPa
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
 
     // Fitting
-    if (MuOpt::kFixed == mu_opt_) {
-        succ_ = (simpleFit() ? physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF) : false);
-        if (succ_ && (VirtualHitSt::NoiseController::ON == noise_ctler_))
-            succ_ = physicalFit(MuOpt::kFixed, noise_ctler_);
-    }
-    else succ_ = physicalMuFit();
+    if (MuOpt::kFixed == mu_opt_) succ_ = physicalTrFit();
+    else                          succ_ = physicalMuFit();
     
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
     
@@ -822,6 +819,15 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     
     Bool_t succ = evolve(mu_opt, noise_ctler);
     if (rw_err_mu) err_.at(6) = err_mu;
+    return succ;
+}
+
+
+Bool_t PhyTrFit::physicalTrFit() {
+    if (!simpleFit()) return false;
+    Bool_t succ = physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF);
+    if (succ && (VirtualHitSt::NoiseController::ON == noise_ctler_))
+        succ = physicalFit(MuOpt::kFixed, noise_ctler_);
     return succ;
 }
 

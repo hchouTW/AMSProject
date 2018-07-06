@@ -249,6 +249,7 @@ class PhyTrFit : public TrFitPar {
 
         Bool_t simpleFit();
         Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
+        Bool_t physicalTrFit();
         Bool_t physicalMuFit();
 
         Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF);
