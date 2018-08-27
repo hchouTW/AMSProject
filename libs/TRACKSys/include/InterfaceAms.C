@@ -187,52 +187,11 @@ Bool_t Event::BulidHitStTRK() {
 		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
 		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
 			
-        std::vector<float> xstripSig;
-		std::vector<float> xstripSgm;
-		std::vector<float> xstripSS;
-		for (int it = 0; (xcls!=nullptr) && (it < xcls->GetLength()); ++it) {
-			xstripSig.push_back(xcls->GetSignal(it));
-			xstripSgm.push_back(xcls->GetNoise(it));
-            xstripSS.push_back(xcls->GetSignal(it)/xcls->GetNoise(it));
-		}
-		
-		std::vector<float> ystripSig;
-		std::vector<float> ystripSgm;
-		std::vector<float> ystripSS;
-		for (int it = 0; (ycls!=nullptr) && (it < ycls->GetLength()); ++it) {
-			ystripSig.push_back(ycls->GetSignal(it));
-			ystripSgm.push_back(ycls->GetNoise(it));
-            ystripSS.push_back(ycls->GetSignal(it)/ycls->GetNoise(it));
-		}
-        
-        const float GateTh = 0.3;
-        const float LenTh  = 0.082;
-        short xseedAddr = (xcls) ? xcls->GetSeedAddress() : -1;
-        short xseedIndx = (xcls) ? xcls->GetSeedIndex() : -1;
-        float xlenTh    = (xcls) ? LenTh*xstripSS.at(xseedIndx) : 0.;
-        short xreg[2] = { xseedIndx, xseedIndx };
-		for (int it = xseedIndx-1; (xcls!=nullptr) && it >= 0; --it)
-            if (xstripSS.at(it) < xstripSS.at(it+1)+GateTh && xstripSS.at(it) > xlenTh) xreg[0] = it; else break;
-		for (int it = xseedIndx+1; (xcls!=nullptr) && it < xstripSS.size(); ++it)
-            if (xstripSS.at(it) < xstripSS.at(it-1)+GateTh && xstripSS.at(it) > xlenTh) xreg[1] = it; else break;
-        
-        short yseedAddr = (ycls) ? ycls->GetSeedAddress() : -1;
-        short yseedIndx = (ycls) ? ycls->GetSeedIndex() : -1;
-        float ylenTh    = (ycls) ? LenTh*ystripSS.at(yseedIndx) : 0.;
-        short yreg[2] = { yseedIndx, yseedIndx };
-		for (int it = yseedIndx-1; (ycls!=nullptr) && it >= 0; --it)
-            if (ystripSS.at(it) < ystripSS.at(it+1)+GateTh && ystripSS.at(it) > ylenTh) yreg[0] = it; else break;
-		for (int it = yseedIndx+1; (ycls!=nullptr) && it < ystripSS.size(); ++it)
-            if (ystripSS.at(it) < ystripSS.at(it-1)+GateTh && ystripSS.at(it) > ylenTh) yreg[1] = it; else break;
-            
-        Short_t nsrx = (xcls != nullptr) ? (xreg[1]-xreg[0]+1) : -1;
-        Short_t nsry = (ycls != nullptr) ? (yreg[1]-yreg[0]+1) : -1;
-        Bool_t scx = (nsrx > 0);
-        Bool_t scy = (nsry > 0);
+        Bool_t scx = (xcls != nullptr && qx > 0);
+        Bool_t scy = (ycls != nullptr && qy > 0);
 
         HitStTRK hit(scx, scy, layJ);
         hit.set_coo(pnt.x(), pnt.y(), pnt.z());
-        hit.set_nsr(nsrx, nsry);
         
         if      (layJ == 1) TkHitL1 = hit;
         else if (layJ == 9) TkHitL9 = hit;
@@ -240,7 +199,6 @@ Bool_t Event::BulidHitStTRK() {
         
         HitStTRK hitQ(scx, scy, layJ);
         hitQ.set_coo(pnt.x(), pnt.y(), pnt.z());
-        hitQ.set_nsr(nsrx, nsry);
         hitQ.set_q(qx, qy);
         
         if      (layJ == 1) TkHitL1Q = hitQ;

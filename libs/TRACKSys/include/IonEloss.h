@@ -4,8 +4,8 @@
 
 namespace TrackSys {
 //x := igmbta
-//TF1* fkpa = new TF1("fkpa", "(1 - [0]) + [0] * 0.5 * (1.0 + TMath::Erf([1] * TMath::Log(1+[3]*(x*x)) + [2]))");
-//fkpa->SetParameters(1.0, 1.0, 0.3, 1.0);
+//TF1* fkpa = new TF1("fkpa", "0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(x*x)) + [2]))");
+//fkpa->SetParameters(1.5, 1.6, -2.0);
 //TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[3] * ([1] - [2]*(1+x*x)^(-[3]) - TMath::Log([4]+x^[5]))");
 //fmpv->SetParameters(10, 6.5, 1.0, 1.0, 10.0, 1.0);
     

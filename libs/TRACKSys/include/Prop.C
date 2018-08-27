@@ -66,7 +66,7 @@ MotionFunc::MotionFunc(PhySt& part, const MatPhyFld* mphy) {
     
     if (field) orth_.reset(part.u(), mag());
     
-    if (field && part.arg().eloss()) zeta_e_ = part.eta() * (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
+    if (field && part.arg().eloss()) zeta_e_ = part.eta() * mphy->elion_els();
     else                             zeta_e_ = Numc::ZERO<>;
 }
 
@@ -92,7 +92,7 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
  
     kappa_ue_ = std::move(Lambda * crsub);
 
-    if (field && part.arg().eloss()) kappa_ee_ = (MatPhy::UseElionMpv() ? mphy->elion_mpv() : mphy->elion_men());
+    if (field && part.arg().eloss()) kappa_ee_ = mphy->elion_els();
     else                             kappa_ee_ = Numc::ZERO<>;
 }
  

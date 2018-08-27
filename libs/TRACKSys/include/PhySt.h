@@ -46,12 +46,12 @@ class PhyArg {
         inline const Double_t& elion() const { return elion_; }
         inline const Double_t& elbrm() const { return elbrm_; }
        
-        inline Double_t etauu() const { return pdf_mscatu_.efft_sgm(tauu_); }
-        inline Double_t erhou() const { return pdf_mscatu_.efft_sgm(rhou_); }
-        inline Double_t etaul() const { return pdf_mscatl_.efft_sgm(taul_); }
-        inline Double_t erhol() const { return pdf_mscatl_.efft_sgm(rhol_); }
+        inline Double_t etauu() const { return pdf_mscatu_.sgm(); }
+        inline Double_t erhou() const { return pdf_mscatu_.sgm(); }
+        inline Double_t etaul() const { return pdf_mscatl_.sgm(); }
+        inline Double_t erhol() const { return pdf_mscatl_.sgm(); }
         
-        inline Double_t eelion() const { return pdf_elion_.efft_sgm(elion_); }
+        inline Double_t eelion() const { return pdf_elion_.sgm(); }
   
         inline const Short_t&  sign() const { return sign_; }
         inline const SVecD<3>& orth_tau() const { return orth_tau_; }

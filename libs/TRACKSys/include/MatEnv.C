@@ -610,7 +610,6 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part) {
 
 Bool_t MatPhy::corr_sw_mscat_      = false;
 Bool_t MatPhy::corr_sw_eloss_      = false;
-Bool_t MatPhy::corr_use_elion_mpv_ = false;
 MatFld MatPhy::corr_mfld_;
 
 
@@ -630,10 +629,10 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part) {
     if (!mfld()) return MatPhyFld();
 
     Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
-    std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
+    std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
 
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
 }
 
 
@@ -644,10 +643,10 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     if (Numc::EqualToZero(part.mom())) return MatPhyFld();
     
     Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
-    std::tuple<Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
+    std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
     Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
     
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
 }
         
 
@@ -660,11 +659,16 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
 
     Double_t nrl      = mfld.nrl();
     Double_t sqrt_nrl = std::sqrt(nrl);
-    Double_t log_nrl  = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
 
     // Highland-Lynch-Dahl formula
-    //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
-    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
+    Double_t log_nrl   = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
+    Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
+    Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
+    
+    // Modified Highland-Lynch-Dahl formula
+    //Double_t log_nrl   = ((corr_sw_mscat_) ? std::log(corr_mfld_.nrl()) : std::log(nrl));
+    //Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
+    //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
    
     // Lynch & Dahl formula (PDG 2018)
     //Double_t nrl_crr   = (ibta * ibta * part.chrg() * part.chrg());
@@ -672,22 +676,18 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     //Double_t mscat_crr = (Numc::ONE<> + NRL_CORR_FACT * log_nrl);
     //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
 
-    // Modified Highland-Lynch-Dahl formula
-    Double_t mscat_crr = std::sqrt(Numc::ONE<> + NRL_CORR_FACT1 * log_nrl + NRL_CORR_FACT2 * log_nrl * log_nrl);
-    Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * (Numc::Valid(mscat_crr) ? mscat_crr : Numc::ZERO<>);
-
     Double_t mscat_sgm = mscat_fat * (eta * ibta);
     
     // Correction (Tune)
-    mscat_sgm *= 1.05;
+    //mscat_sgm *= 1.0;
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;
 }
 
 
-std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part) {
-    if (!part.arg().eloss()) return std::make_tuple(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>);
+std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part) {
+    if (!part.arg().eloss()) return std::make_tuple(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>);
 
     Bool_t is_over_lmt   = (Numc::Compare(part.bta(), LMT_BTA) > 0);
     Double_t sqr_gmbta   = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
@@ -728,12 +728,19 @@ std::tuple<Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLoss(const M
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
     Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
+    
+    // Els := min(Mean, Mpv)
+    Double_t elion_els = std::min(elion_men, elion_mpv);
+    
+    // Correction (Tune)
+    elion_els *= 1.03;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
     if (!Numc::Valid(elion_men) || Numc::Compare(elion_men) <= 0) elion_men = Numc::ZERO<>;
+    if (!Numc::Valid(elion_els) || Numc::Compare(elion_els) <= 0) elion_els = Numc::ZERO<>;
    
-    return std::make_tuple(elion_mpv, elion_sgm, elion_men);
+    return std::make_tuple(elion_mpv, elion_sgm, elion_men, elion_els);
 }
 
 
@@ -757,12 +764,8 @@ Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
 
 void MatPhy::SetCorrFactor(const MatFld* mfld, PhySt* part, Bool_t sw_mscat, Bool_t sw_eloss) {
     Bool_t sw = ((mfld != nullptr) && (*mfld)()) && (sw_mscat || sw_eloss); 
-    if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_use_elion_mpv_ = false; corr_mfld_ = *mfld; }
-    else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_use_elion_mpv_ = false; corr_mfld_ = std::move(MatFld()); }
-    if (corr_sw_eloss_ && corr_mfld_() && part != nullptr) {
-        MatPhyFld&& mpfld = MatPhy::Get(corr_mfld_, *part);
-        corr_use_elion_mpv_ = (Numc::Compare(mpfld.elion_mpv(), mpfld.elion_men()) < 0);
-    }
+    if (sw) { corr_sw_mscat_ = sw_mscat; corr_sw_eloss_ = sw_eloss; corr_mfld_ = *mfld; }
+    else    { corr_sw_mscat_ = false;    corr_sw_eloss_ = false;    corr_mfld_ = std::move(MatFld()); }
 }
 
 

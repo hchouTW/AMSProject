@@ -107,8 +107,6 @@ void HitStTRK::clear() {
     seqIDqx_ = -1;
     seqIDqy_ = -1;
 
-    nsr_.fill(Numc::ZERO<Short_t>);
-
     side_q_.fill(false);
     q_.fill(Numc::ZERO<>);
     
@@ -122,7 +120,7 @@ void HitStTRK::clear() {
 
     set_type();
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
-        erc_ = std::move(SVecD<2>(pdf_cx_->efft_sgm(), pdf_cy_->efft_sgm()));
+        erc_ = std::move(SVecD<2>(pdf_cx_->sgm(0), pdf_cy_->sgm(0)));
 }
 
 Short_t HitStTRK::set_seqID(Short_t seqID) {
@@ -144,18 +142,18 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
     divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_coo_(0)) {
-        erc_(0)  = pdf_cx_->efft_sgm(crs(0));
-        nrmc_[0] = (crs(0) / erc_(0));
-        divc_[0] = (Numc::NEG<> / erc_(0));
+        std::array<long double, 2> minix = pdf_cx_->minimizer(crs(0));
+        nrmc_[0] = minix.at(0);
+        divc_[0] = Numc::NEG<> * minix.at(1);
         if (!Numc::Valid(nrmc_[0]) || !Numc::Valid(divc_[0])) {
             nrmc_[0] = Numc::ZERO<>;
             divc_[0] = Numc::ZERO<>;
         }
     }
     if (side_coo_(1)) {
-        erc_(1) = pdf_cy_->efft_sgm(crs(1));
-        nrmc_[1] = (crs(1) / erc_(1));
-        divc_[1] = (Numc::NEG<> / erc_(1));
+        std::array<long double, 2> miniy = pdf_cy_->minimizer(crs(1));
+        nrmc_[1] = miniy.at(0);
+        divc_[1] = Numc::NEG<> * miniy.at(1);
         if (!Numc::Valid(nrmc_[1]) || !Numc::Valid(divc_[1])) {
             nrmc_[1] = Numc::ZERO<>;
             divc_[1] = Numc::ZERO<>;
@@ -207,15 +205,8 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
     switch (info.chrg()) {
         case 1 : case -1 :
         {
-            pdf_cx_ = &PDF_Q01_CX_NN_;
-            if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_N1_;
-            else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_N2_;
-            else if (nsr_[0] >= 3) pdf_cx_ = &PDF_Q01_CX_N3_;
-            pdf_cy_ = &PDF_Q01_CY_NN_;
-            if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_N1_;
-            else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_N2_;
-            else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_N3_;
-            else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_N4_;
+            pdf_cx_ = &PDF_Q01_CX_;
+            pdf_cy_ = &PDF_Q01_CY_;
             pdf_qx_ = &PDF_Q01_QX_;
             pdf_qy_ = &PDF_Q01_QY_;
             type_ = info.type();
@@ -228,84 +219,53 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
     return true;
 }
 
-MultiGaus HitStTRK::PDF_Q01_CX_NN_(
-    MultiGaus::Opt::ROBUST,
-    3.31376712664997630e-01, 1.77875e-03,
-    5.10255425401639595e-01, 2.65271e-03,
-    1.58367861933362775e-01, 5.15837e-03
+MultiGaus HitStTRK::PDF_Q01_CX_(
+    Robust::Opt::ON,
+    7.82641585556508090e-01, 1.96972e-03,
+    2.17358414443491854e-01, 5.23170e-03
 );
 
-MultiGaus HitStTRK::PDF_Q01_CX_N1_(
-    MultiGaus::Opt::ROBUST,
-    2.75608e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CX_N2_(
-    MultiGaus::Opt::ROBUST,
-    6.02616961110044480e-01, 1.82559e-03,
-    3.97383038889955520e-01, 4.18164e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CX_N3_(
-    MultiGaus::Opt::ROBUST,
-    6.75185841999877190e-01, 1.84066e-03,
-    3.24814158000122755e-01, 4.90605e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_NN_(
-    MultiGaus::Opt::ROBUST,
-    5.50759994181610257e-01, 7.90750e-04,
-    3.74341189078839287e-01, 1.52916e-03,
-    7.48988167395504278e-02, 3.63939e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_N1_(
-    MultiGaus::Opt::ROBUST,
-    5.45247134760751928e-01, 9.87256e-04,
-    4.54752865239248016e-01, 1.65822e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_N2_(
-    MultiGaus::Opt::ROBUST,
-    4.53177772355239150e-01, 7.32341e-04,
-    4.29177717623073274e-01, 1.19994e-03,
-    1.17644510021687618e-01, 2.17922e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_N3_(
-    MultiGaus::Opt::ROBUST,
-    5.08190182558828307e-01, 7.74660e-04,
-    3.39669567581713017e-01, 1.56378e-03,
-    1.52140249859458648e-01, 3.18597e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_N4_(
-    MultiGaus::Opt::ROBUST,
-    5.19847432537280163e-01, 7.84945e-04,
-    3.39808551148078952e-01, 1.72969e-03,
-    1.40344016314640940e-01, 3.85202e-03
+MultiGaus HitStTRK::PDF_Q01_CY_(
+    Robust::Opt::ON,
+    6.49340441291077486e-01, 7.62258e-04,
+    2.95655485170381982e-01, 1.34376e-03,
+    5.23290530119385547e-02, 2.57560e-03,
+    2.67502052660201174e-03, 6.15151e-03
 );
 
 IonEloss HitStTRK::PDF_Q01_QX_(
-    { 9.97328e-01, 1.26479e+00, -1.33731e+01, 2.21958e+03 }, // Kpa
-    { 5.35798e-02, 1.31568e+01, -6.12405e+00, 1.89315e+00, 1.12457e-03, 2.64436e+00 }, // Mpv
-    { 2.49410e-03, 6.80308e+01, -5.45630e+00, 1.54873e+00, 2.68543e-10, 5.02291e+00 }, // Sgm
-    0.266246 // Fluc
+    { 1.00000e+00, 1.07629e+04, -1.23171e+01 }, // Kpa
+    { 6.37951e-02, 1.00878e+01, -6.12065e+00, 1.92281e+00, 3.26620e-03, 1.62024e+00 }, // Mpv
+    { 6.79662e-05, 1.09175e+03, -3.53937e+03, 2.38184e+00, 8.08407e-38, 5.56362e+02 }, // Sgm
+    0.200000 // Fluc
 );
 
 IonEloss HitStTRK::PDF_Q01_QY_(
-    { 9.96926e-01, 1.33625e+00, -1.32089e+01, 1.23685e+03 }, // Kpa
-    { 7.07719e-02, 1.09349e+01, -2.19142e+00, 1.96544e+00, 1.79601e-03, 1.92512e+00 }, // Mpv
-    { 1.94316e-03, 1.03082e+02, -3.56452e+01, 1.62118e+00, 3.08950e-15, 8.63832e+00 }, // Sgm
-    0.152518 // Fluc
+    { 1.00000e+00, 1.38677e+01, -5.63572e+00 }, // Kpa
+    { 1.13078e-01, 6.63146e+00, -8.65647e-01, 1.97895e+00, 1.44020e-02, 1.33740e+00 }, // Mpv
+    { 7.16082e-03, 3.30044e+01, -1.37265e+01, 1.63458e+00, 5.48096e-06, 2.97555e+00 }, // Sgm
+    0.110000 // Fluc
 );
+
+//IonEloss HitStTRK::PDF_Q01_QX_(
+//    { 9.97328e-01, 1.26479e+00, -1.33731e+01, 2.21958e+03 }, // Kpa
+//    { 5.35798e-02, 1.31568e+01, -6.12405e+00, 1.89315e+00, 1.12457e-03, 2.64436e+00 }, // Mpv
+//    { 2.49410e-03, 6.80308e+01, -5.45630e+00, 1.54873e+00, 2.68543e-10, 5.02291e+00 }, // Sgm
+//    0.266246 // Fluc
+//);
+//
+//IonEloss HitStTRK::PDF_Q01_QY_(
+//    { 9.96926e-01, 1.33625e+00, -1.32089e+01, 1.23685e+03 }, // Kpa
+//    { 7.07719e-02, 1.09349e+01, -2.19142e+00, 1.96544e+00, 1.79601e-03, 1.92512e+00 }, // Mpv
+//    { 1.94316e-03, 1.03082e+02, -3.56452e+01, 1.62118e+00, 3.08950e-15, 8.63832e+00 }, // Sgm
+//    0.152518 // Fluc
+//);
 
 
 // HitStTOF
 Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
 Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
 Bool_t HitStTOF::TShiftCorr_ = true;
-
 
 void HitStTOF::clear() {
     seqIDcx_ = -1;
@@ -361,10 +321,11 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
         if (Numc::Compare(ds) >= 0) {
             Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.igmbta()) - 5.78158e-02 ) ); // ONE Layer [cm]
             if (!TShiftCorr_) sgm *= Numc::SQRT_TWO; // TWO Layer [cm]
-            Double_t ter = MultiGaus::RobustSgm(dt, sgm, pdf_t_->opt());
-            nrmt_     = (dt / ter);
-            divt_sft_ = (Numc::ONE<> / ter);
-            Double_t divt = (Numc::NEG<> * ds / ter) * (part.bta() * part.igmbta());
+            MultiGaus pdf_t(pdf_t_->robust(), sgm);
+            std::array<long double, 2> minit = pdf_t.minimizer(dt);
+            nrmt_     = minit.at(0);
+            divt_sft_ = minit.at(1);
+            Double_t divt = (Numc::NEG<> * minit.at(1) * ds) * (part.bta() * part.igmbta());
             divt_[0] = divt * (part.mu() * part.eta_sign());
             divt_[1] = divt;
             if (NoiseController::ON == ctler) {
@@ -422,16 +383,23 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStTOF::PDF_Q01_T_(
-    MultiGaus::Opt::ROBUST,
+    Robust::Opt::ON,
     6.698790e+00 // TWO Time Fluc
 );
 
 IonEloss HitStTOF::PDF_Q01_Q_(
-    { 1.00000e+00, 1.23333e+00, -2.31113e+00, 1.97051e+00 }, // Kpa
-    { 4.90401e-01, 2.21732e+00, 4.49282e-03, 1.33820e+00, 1.11419e+00, 1.21069e+00 }, // Mpv
-    { 1.21818e+00, 9.31334e+00, 9.55853e+00, 1.42066e-01, 7.40717e-01, 1.98209e+00 }, // Sgm
-    0.0829427 // Fluc
+    { 1.39506e+00, 1.80190e+00, -2.23104e+00 }, // Kpa
+    { 4.41922e-01, 2.24614e+00, 1.17808e-02, 1.36798e+00, 9.43086e-01, 1.26089e+00 }, // Mpv
+    { 5.77739e+00, 1.63125e+02, 1.63097e+02, 6.20364e-03, 1.01299e+00, 1.97666e+00 }, // Sgm
+    0.0751353 // Fluc
 );
+
+//IonEloss HitStTOF::PDF_Q01_Q_(
+//    { 1.00000e+00, 1.23333e+00, -2.31113e+00, 1.97051e+00 }, // Kpa
+//    { 4.90401e-01, 2.21732e+00, 4.49282e-03, 1.33820e+00, 1.11419e+00, 1.21069e+00 }, // Mpv
+//    { 1.21818e+00, 9.31334e+00, 9.55853e+00, 1.42066e-01, 7.40717e-01, 1.98209e+00 }, // Sgm
+//    0.0829427 // Fluc
+//);
 
 
 // HitStRICH
@@ -472,9 +440,9 @@ void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
     if (side_ib_) {
         // 1/bta := (1+igmbta*igmbta)^(1/2)
         Double_t dib = ib_ - part.ibta();
-        Double_t sgm = pdf_ib_->efft_sgm(dib);
-        nrmib_ = (dib / sgm);
-        Double_t divib = (Numc::NEG<> / sgm) * (part.bta() * part.igmbta());
+        std::array<long double, 2> miniib = pdf_ib_->minimizer(dib);
+        nrmib_ = miniib.at(0);
+        Double_t divib = (Numc::NEG<> * miniib.at(1)) * (part.bta() * part.igmbta());
         divib_[0] = divib * (part.mu() * part.eta_sign());
         divib_[1] = divib;
         if (NoiseController::ON == ctler) {
@@ -513,16 +481,15 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    MultiGaus::Opt::ROBUST,
-    4.64372169946583258e-01, 9.46452e-04,
-    5.35627830053416742e-01, 1.55197e-03
-
+    Robust::Opt::ON,
+    8.84159092979881156e-01, 9.43386e-04,
+    1.15840907020118802e-01, 1.94402e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    MultiGaus::Opt::ROBUST,
-    8.30132503718388537e-01, 3.20352e-03,
-    1.69867496281611519e-01, 5.35715e-03
+    Robust::Opt::ON,
+    8.53098145164126631e-01, 3.26879e-03,
+    1.46901854835873258e-01, 5.62675e-03
 );
 
 

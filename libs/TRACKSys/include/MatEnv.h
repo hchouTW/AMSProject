@@ -305,7 +305,7 @@ class MatMgnt {
 class MatPhyFld {
     public :
         MatPhyFld() { clear(); }
-        MatPhyFld(Bool_t mat, Double_t mscat_sgm = 0, Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elion_men = 0, Double_t elbrm_men = 0) : mat_(mat), mscat_sgm_(mscat_sgm), elion_mpv_(elion_mpv), elion_sgm_(elion_sgm), elion_men_(elion_men), elbrm_men_(elbrm_men) {}
+        MatPhyFld(Bool_t mat, Double_t mscat_sgm = 0, Double_t elion_mpv = 0, Double_t elion_sgm = 0, Double_t elion_men = 0, Double_t elion_els = 0, Double_t elbrm_men = 0) : mat_(mat), mscat_sgm_(mscat_sgm), elion_mpv_(elion_mpv), elion_sgm_(elion_sgm), elion_men_(elion_men), elion_els_(elion_els), elbrm_men_(elbrm_men) {}
         ~MatPhyFld() {}
 
         inline const Bool_t& operator() () const { return mat_; }
@@ -313,10 +313,11 @@ class MatPhyFld {
         inline const Double_t& elion_mpv() const { return elion_mpv_; }
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elion_men() const { return elion_men_; }
+        inline const Double_t& elion_els() const { return elion_els_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
         
     protected :
-        inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elbrm_men_ = 0; }
+        inline void clear() { mat_ = false; mscat_sgm_ = 0; elion_mpv_ = 0; elion_sgm_ = 0; elion_men_ = 0; elion_els_ = 0; elbrm_men_ = 0; }
 
     private :
         Bool_t   mat_;       // has matter?
@@ -324,6 +325,7 @@ class MatPhyFld {
         Double_t elion_mpv_; // ionization-energy-loss MPV [1]
         Double_t elion_sgm_; // ionization-energy-loss SGM [1]
         Double_t elion_men_; // ionization-energy-loss MEN [1]
+        Double_t elion_els_; // ionization-energy-loss ELS [1]
         Double_t elbrm_men_; // bremsstrahlung-energy-loss MEN [1]
 };
 
@@ -338,19 +340,16 @@ class MatPhy {
 
     protected :
         static Double_t GetMultipleScattering(const MatFld& mfld, PhySt& part);
-        static std::tuple<Double_t, Double_t, Double_t> GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
+        static std::tuple<Double_t, Double_t, Double_t, Double_t> GetIonizationEnergyLoss(const MatFld& mfld, PhySt& part);
         static Double_t GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part);
     
     // Expert only
     public :
         static void SetCorrFactor(const MatFld* mfld = nullptr, PhySt* part = nullptr, Bool_t sw_mscat = true, Bool_t sw_eloss = true); 
 
-        inline static const Bool_t& UseElionMpv() { return corr_use_elion_mpv_; }
-
     private :
         static Bool_t corr_sw_mscat_;
         static Bool_t corr_sw_eloss_;
-        static Bool_t corr_use_elion_mpv_;
         static MatFld corr_mfld_;
 
     private :

@@ -115,11 +115,6 @@ class HitStTRK : public VirtualHitSt {
         void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
-        inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_[0] = ((Numc::Compare(nx)>0) ? nx : Numc::ZERO<Short_t>);
-            nsr_[1] = ((Numc::Compare(ny)>0) ? ny : Numc::ZERO<Short_t>);
-        }
-        
         inline void set_q(Double_t qx, Double_t qy) {
             side_q_[0] = (Numc::Compare(qx) > 0);
             side_q_[1] = (Numc::Compare(qy) > 0);
@@ -151,8 +146,6 @@ class HitStTRK : public VirtualHitSt {
         Short_t seqIDqx_;
         Short_t seqIDqy_;
         
-        std::array<Short_t, 2> nsr_; // Number of strip
-        
         std::array<Bool_t, 2>   side_q_;
         std::array<Double_t, 2> q_; // ADC
 
@@ -165,16 +158,8 @@ class HitStTRK : public VirtualHitSt {
         IonEloss*  pdf_qy_;
     
     protected :
-        static MultiGaus PDF_Q01_CX_NN_;
-        static MultiGaus PDF_Q01_CX_N1_;
-        static MultiGaus PDF_Q01_CX_N2_;
-        static MultiGaus PDF_Q01_CX_N3_;
-        
-        static MultiGaus PDF_Q01_CY_NN_;
-        static MultiGaus PDF_Q01_CY_N1_;
-        static MultiGaus PDF_Q01_CY_N2_;
-        static MultiGaus PDF_Q01_CY_N3_;
-        static MultiGaus PDF_Q01_CY_N4_;
+        static MultiGaus PDF_Q01_CX_;
+        static MultiGaus PDF_Q01_CY_;
 
         static IonEloss PDF_Q01_QX_;
         static IonEloss PDF_Q01_QY_;

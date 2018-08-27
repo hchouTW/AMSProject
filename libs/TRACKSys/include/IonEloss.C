@@ -20,25 +20,22 @@ std::array<long double, 2> IonEloss::eval(long double x, long double igmbta) con
     long double sgm    = get_sgm(igmbta, ibsqr); 
     long double divmpv = get_divmpv(igmbta, ibsqr); 
  
-    // Landau-Gaus with noise fluctuation 
-    LandauGaus ldgaus(LandauGaus::Opt::ROBUST, kpa, mpv, sgm, fluc_);
+    // approximate Landau-Gaussian
+    LandauGaus ldgaus(Robust::Opt::ON, kpa, mpv, sgm, fluc_);
     std::array<long double, 2>&& lg_par = ldgaus.minimizer(x);
     
-    long double res = lg_par.at(0);          // res normx
-    long double div = lg_par.at(1) * divmpv; // div r/x * div x/igmbta
+    long double res = lg_par.at(0);                                   // res normx
+    long double div = Numc::NEG<long double> * lg_par.at(1) * divmpv; // div r/x * div x/igmbta
 
     if (!Numc::Valid(res) || !Numc::Valid(div)) { 
         res = Numc::ZERO<long double>;
         div = Numc::ZERO<long double>;
     }
-
-    return std::array<long double, 2>({res, div});
+    return std::array<long double, 2>({ res, div });
 }
         
 long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {
-    long double kpa = (Numc::ONE<long double> - kpa_.at(0)) + kpa_.at(0) * Numc::HALF *
-        (Numc::ONE<long double> + 
-         std::erf(kpa_.at(1) * std::log1p(kpa_.at(3) * igmbta * igmbta) + kpa_.at(2)));
+    long double kpa = Numc::HALF * (Numc::ONE<long double> + std::erf(kpa_.at(0) * std::log1p(kpa_.at(1) * igmbta * igmbta) + kpa_.at(2)));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     else {
         if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;

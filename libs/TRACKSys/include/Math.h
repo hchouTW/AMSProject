@@ -178,33 +178,57 @@ namespace LA { // Linear Algebra
 
 } // namesapce TrackSys
 	
+        
+namespace TrackSys {
+// Robust
+// S := chi * chi
+// H := thres * thres  (H>0)
+// R := rate           (0<=R<=1)
+// alpha := log(1+(S/H)^2) / (S/H)^2
+// rho(S) := S * alpha^(R/2)
+// scl(S) := sqrt( alpha^(R/2) * ((1-R) + 1/alpha/(1+(S/H)^2)) )
+class Robust {
+    public :
+        enum class Opt { OFF = 0, ON = 1 };
+    
+    public :
+        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rat = Numc::HALF) { opt_ = opt; threshold_ = thres; rate_ = rat; }
+        ~Robust() {}
+
+    public :
+        const Opt& opt() const { return opt_; } 
+        long double chisq(long double chi) const;
+        long double rescale(long double chi) const;
+
+    private :
+        Opt         opt_;
+        long double threshold_;
+        long double rate_;
+};
+} // namesapce TrackSys
+
 
 #include <TF1.h>
 namespace TrackSys {
 // MultiGaus
-// Gaussian Core f ~ ([0]/[1])*exp(-0.5*x*x/[1]/[1])
-// Robust Method : efft_sigma = sigma * robust_factor if value/sigma > robust
+// Gaussian Core f ~ [0]*exp(-0.5*x*x/[1]/[1])
 class MultiGaus {
     public :
-        enum class Opt { NOROBUST = 0, ROBUST = 1 };
-
-    public :
-        MultiGaus() : robust_(Opt::NOROBUST), rand_func_(nullptr) {}
-        MultiGaus(Opt opt, long double sgm);
-        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
-        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
-        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
-        MultiGaus(Opt opt, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
+        MultiGaus() : robust_(Robust::Opt::OFF), rand_func_(nullptr) {}
+        MultiGaus(Robust robust, long double sgm);
+        MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
+        MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
+        MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4);
+        MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5);
         ~MultiGaus() { if (rand_func_ != nullptr) { delete rand_func_; rand_func_ = nullptr; } }
 
-        inline const Opt& opt() const { return robust_; }
+        inline const Robust& robust() const { return robust_; }
 
         inline Int_t num() const { return multi_gaus_.size(); }
-        inline const long double& wgt(Int_t i) const { return multi_gaus_.at(i).first; }
-        inline const long double& sgm(Int_t i) const { return multi_gaus_.at(i).second; }
+        inline const long double& wgt(Int_t i = 0) const { return multi_gaus_.at(i).first; }
+        inline const long double& sgm(Int_t i = 0) const { return multi_gaus_.at(i).second; }
 
-        long double efft_sgm(long double r = 0.) const; 
-
+        std::array<long double, 2> minimizer(long double r = 0.) const; 
         long double rndm();
 
     private :
@@ -212,33 +236,26 @@ class MultiGaus {
         std::vector<std::pair<long double, long double>> multi_gaus_;
 
     private :
-        Opt   robust_;
-        TF1*  rand_func_;
-
-    public :
-        static long double RobustSgm(long double res = Numc::ZERO<long double>, long double sgm = Numc::ONE<long double>, Opt opt = Opt::NOROBUST);
+        Robust robust_;
+        TF1*   rand_func_;
 
     private :
         static TRandom* rndm_gen_;
 
         static constexpr Long64_t    NPX = 1000000;
         static constexpr long double LMTL_PROB = 1.0e-20;
-        static constexpr long double ROBUST_SGM = 2.0;
 };
 
 } // namesapce TrackSys
 
 
 namespace TrackSys {
-//TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
+//TF1* flg = new TF1("flg", "[0] * TMath::Exp([1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-[1]) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/[3]-2.22782980e-01)/1.80655634e-01))");
 //flg->SetParameters(1.0, 0.1, 0.0, 1.0);
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        enum class Opt { NOROBUST = 0, ROBUST = 1 };
-    
-    public :
-        LandauGaus(Opt opt, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
+        LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
         std::array<long double, 2> minimizer(long double x) const;
@@ -250,21 +267,22 @@ class LandauGaus {
 
     protected :
         long double eval(long double norm) const;
-        long double div(long double norm) const;
+        long double icov(long double norm) const;
 
     protected :
         long double kpa_;
         long double mpv_;
         long double sgm_;
         long double fluc_;
+        long double corr_; // corr = 1 / sqrt(1 + (fluc/sgm)^2)
     
     private :
-        Opt robust_;
+        Robust robust_;
 
     private :
-        static constexpr long double LANDAU0    = 1.78854160900000003e-01;
-        static constexpr long double DELTA      = 0.01;
-        static constexpr long double ROBUST_SGM = 2.0;
+        static constexpr long double LANDAU0    =  1.80655634e-01;
+        static constexpr long double LANDAU0_X  = -2.22782980e-01;
+        static constexpr long double WIDTH_SCL  =  1.17741002e+00; // sqrt( 2*log(2) )
 };
 
 } // namesapce TrackSys
@@ -309,7 +327,8 @@ class LgGeFunc {
         Opt robust_;
     
     private :
-        static constexpr long double LANDAU0    = 1.78854160900000003e-01;
+        static constexpr long double LANDAU0    =  1.80655634e-01;
+        static constexpr long double LANDAU0_X  = -2.22782980e-01;
         static constexpr long double DELTA      = 0.01;
         static constexpr long double ROBUST_SGM = 2.0;
 };
