@@ -13,67 +13,6 @@
 
 namespace TrackSys {
 
-// VirtualHitSt
-Double_t VirtualHitSt::DoNoiseControllerLU(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Double_t sqrnrm = (norm * norm);
-    Double_t sclnrm = std::log1p(sqrnrm * sqrnrm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
-
-Double_t VirtualHitSt::DoNoiseControllerL(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Short_t  sign   = Numc::Compare(norm);
-    Double_t sqrnrm = (norm * norm);
-    Double_t sclnrm = sign * std::log1p(sqrnrm * sqrnrm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres + sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
-
-Double_t VirtualHitSt::DoNoiseControllerU(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Short_t  sign   = Numc::Compare(norm);
-    Double_t sqrnrm = (norm * norm);
-    Double_t sclnrm = sign * std::log1p(sqrnrm * sqrnrm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
-
-Double_t VirtualHitSt::DoNoiseSlowControllerLU(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Double_t sclnrm = std::log1p(norm * norm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
-
-Double_t VirtualHitSt::DoNoiseSlowControllerL(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Short_t  sign   = Numc::Compare(norm);
-    Double_t sclnrm = sign * std::log1p(norm * norm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres + sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
-
-Double_t VirtualHitSt::DoNoiseSlowControllerU(Double_t norm, Double_t threshold) {
-    Double_t thres  = ((Numc::Compare(threshold) < 0) ? NOISE_THRESHOLD_DEFAULT : threshold);
-    Short_t  sign   = Numc::Compare(norm);
-    Double_t sclnrm = sign * std::log1p(norm * norm);
-    Double_t controller = Numc::HALF * (Numc::ONE<> + std::erf(thres - sclnrm));
-    if (!Numc::Valid(controller)) controller = Numc::ONE<>;
-    return controller;
-}
-
 
 VirtualHitSt::VirtualHitSt(Detector dec, Short_t lay, Bool_t scx, Bool_t scy, Bool_t scz) {
     clear();
@@ -135,7 +74,7 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
+void HitStTRK::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
     nrmc_.fill(Numc::ZERO<>);
@@ -163,14 +102,10 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
     nrmq_.fill(Numc::ZERO<>);
     divq_.fill(Numc::ZERO<>);
     if (side_q_[0]) {
-        SVecD<2>&& ionx = (*pdf_qx_)(q_[0]*q_[0], part.igmbta());
-        nrmq_[0] = ionx(0);
-        divq_[0] = ionx(1) * (part.mu() * part.eta_sign());
-        divq_[1] = ionx(1);
-        
-        Double_t ctlerq = DoNoiseControllerL(nrmq_[0], NOISE_THRESHOLD_DEDX);
-        divq_[0] *= ctlerq;
-        divq_[1] *= ctlerq;
+        std::array<long double, 2>&& ionx = pdf_qx_->minimizer(q_[0]*q_[0], part.igmbta());
+        nrmq_[0] = ionx.at(0);
+        divq_[0] = ionx.at(1) * (part.mu() * part.eta_sign());
+        divq_[1] = ionx.at(1);
         
         if (!Numc::Valid(nrmq_[0]) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
             nrmq_[0] = Numc::ZERO<>;
@@ -179,14 +114,10 @@ void HitStTRK::cal(const PhySt& part, const NoiseController& ctler) {
         }
     }
     if (side_q_[1]) {
-        SVecD<2>&& iony = (*pdf_qy_)(q_[1]*q_[1], part.igmbta());
-        nrmq_[1] = iony(0);
-        divq_[2] = iony(1) * (part.mu() * part.eta_sign());
-        divq_[3] = iony(1);
-        
-        Double_t ctlerq = DoNoiseControllerL(nrmq_[1], NOISE_THRESHOLD_DEDX);
-        divq_[2] *= ctlerq;
-        divq_[3] *= ctlerq;
+        std::array<long double, 2>&& iony = pdf_qy_->minimizer(q_[1]*q_[1], part.igmbta());
+        nrmq_[1] = iony.at(0);
+        divq_[2] = iony.at(1) * (part.mu() * part.eta_sign());
+        divq_[3] = iony.at(1);
         
         if (!Numc::Valid(nrmq_[1]) || !Numc::Valid(divq_[2]) || !Numc::Valid(divq_[3])) {
             nrmq_[1] = Numc::ZERO<>;
@@ -237,6 +168,7 @@ IonEloss HitStTRK::PDF_Q01_QX_(
     { 1.00000e+00, 1.07629e+04, -1.23171e+01 }, // Kpa
     { 6.37951e-02, 1.00878e+01, -6.12065e+00, 1.92281e+00, 3.26620e-03, 1.62024e+00 }, // Mpv
     { 6.79662e-05, 1.09175e+03, -3.53937e+03, 2.38184e+00, 8.08407e-38, 5.56362e+02 }, // Sgm
+    { 5.16261e-02, 1.22170e+01, -8.76369e+00, 1.93889e+00, 9.67711e-04, 2.12383e+00 }, // Mode
     0.200000 // Fluc
 );
 
@@ -244,22 +176,9 @@ IonEloss HitStTRK::PDF_Q01_QY_(
     { 1.00000e+00, 1.38677e+01, -5.63572e+00 }, // Kpa
     { 1.13078e-01, 6.63146e+00, -8.65647e-01, 1.97895e+00, 1.44020e-02, 1.33740e+00 }, // Mpv
     { 7.16082e-03, 3.30044e+01, -1.37265e+01, 1.63458e+00, 5.48096e-06, 2.97555e+00 }, // Sgm
+    { 2.93377e-02, 1.83070e+01, -2.21313e+01, 2.29597e+00, 4.55659e+00, 8.05005e+00 }, // Mode
     0.110000 // Fluc
 );
-
-//IonEloss HitStTRK::PDF_Q01_QX_(
-//    { 9.97328e-01, 1.26479e+00, -1.33731e+01, 2.21958e+03 }, // Kpa
-//    { 5.35798e-02, 1.31568e+01, -6.12405e+00, 1.89315e+00, 1.12457e-03, 2.64436e+00 }, // Mpv
-//    { 2.49410e-03, 6.80308e+01, -5.45630e+00, 1.54873e+00, 2.68543e-10, 5.02291e+00 }, // Sgm
-//    0.266246 // Fluc
-//);
-//
-//IonEloss HitStTRK::PDF_Q01_QY_(
-//    { 9.96926e-01, 1.33625e+00, -1.32089e+01, 1.23685e+03 }, // Kpa
-//    { 7.07719e-02, 1.09349e+01, -2.19142e+00, 1.96544e+00, 1.79601e-03, 1.92512e+00 }, // Mpv
-//    { 1.94316e-03, 1.03082e+02, -3.56452e+01, 1.62118e+00, 3.08950e-15, 8.63832e+00 }, // Sgm
-//    0.152518 // Fluc
-//);
 
 
 // HitStTOF
@@ -305,7 +224,7 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
+void HitStTOF::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
     nrmt_     = Numc::ZERO<>;
@@ -328,12 +247,7 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
             Double_t divt = (Numc::NEG<> * minit.at(1) * ds) * (part.bta() * part.igmbta());
             divt_[0] = divt * (part.mu() * part.eta_sign());
             divt_[1] = divt;
-            if (NoiseController::ON == ctler) {
-                Double_t ctlert = DoNoiseSlowControllerLU(nrmt_, NOISE_THRESHOLD_TIME);
-                divt_sft_ *= ctlert;
-                divt_[0] *= ctlert;
-                divt_[1] *= ctlert;
-            }
+            
             if (!Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1])) {
                 nrmt_     = Numc::ZERO<>;
                 divt_sft_ = Numc::ZERO<>;
@@ -345,14 +259,10 @@ void HitStTOF::cal(const PhySt& part, const NoiseController& ctler) {
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
     if (side_q_) {
-        SVecD<2>&& ion = (*pdf_q_)(q_*q_, part.igmbta());
-        nrmq_ = ion(0);
-        divq_[0] = ion(1) * (part.mu() * part.eta_sign());
-        divq_[1] = ion(1);
-        
-        Double_t ctlerq = DoNoiseControllerL(nrmq_, NOISE_THRESHOLD_DEDX);
-        divq_[0] *= ctlerq;
-        divq_[1] *= ctlerq;
+        std::array<long double, 2>&& ion = pdf_q_->minimizer(q_*q_, part.igmbta());
+        nrmq_    = ion.at(0);
+        divq_[0] = ion.at(1) * (part.mu() * part.eta_sign());
+        divq_[1] = ion.at(1);
         
         if (!Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
             nrmq_ = Numc::ZERO<>;
@@ -391,6 +301,8 @@ IonEloss HitStTOF::PDF_Q01_Q_(
     { 1.39506e+00, 1.80190e+00, -2.23104e+00 }, // Kpa
     { 4.41922e-01, 2.24614e+00, 1.17808e-02, 1.36798e+00, 9.43086e-01, 1.26089e+00 }, // Mpv
     { 5.77739e+00, 1.63125e+02, 1.63097e+02, 6.20364e-03, 1.01299e+00, 1.97666e+00 }, // Sgm
+    //{ 5.97153e+00, -8.51391e-01, 5.05831e-01, -9.96197e+00, -4.13979e-01, 1.87597e+00, 2.74693e-01 }, // Shft
+    { 2.54924e-01, 3.03910e+00, 2.94049e-01, 1.40558e+00, 2.76002e-01, 1.78231e+00 }, // Mode
     0.0751353 // Fluc
 );
 
@@ -432,7 +344,7 @@ Short_t HitStRICH::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
+void HitStRICH::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
     nrmib_ = Numc::ZERO<>;
@@ -445,11 +357,7 @@ void HitStRICH::cal(const PhySt& part, const NoiseController& ctler) {
         Double_t divib = (Numc::NEG<> * miniib.at(1)) * (part.bta() * part.igmbta());
         divib_[0] = divib * (part.mu() * part.eta_sign());
         divib_[1] = divib;
-        if (NoiseController::ON == ctler) {
-            Double_t ctlerib = DoNoiseSlowControllerLU(nrmib_, NOISE_THRESHOLD_BETA);
-            divib_[0] *= ctlerib;
-            divib_[1] *= ctlerib;
-        }
+        
         if (!Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
             nrmib_ = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
@@ -520,7 +428,7 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
     return iter;
 }
 
-void HitStTRD::cal(const PhySt& part, const NoiseController& ctler) {
+void HitStTRD::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
     
     nrmel_ = Numc::ZERO<>;
@@ -530,11 +438,7 @@ void HitStTRD::cal(const PhySt& part, const NoiseController& ctler) {
         nrmel_ = lgge(0);
         divel_[0] = lgge(1) * part.mu() * part.eta_sign();
         divel_[1] = lgge(1);
-        if (NoiseController::ON == ctler) {
-            Double_t ctlerel = DoNoiseControllerL(nrmel_, NOISE_THRESHOLD_DEDX);
-            divel_[0] *= ctlerel;
-            divel_[1] *= ctlerel;
-        }
+        
         if (!Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
             nrmel_ = Numc::ZERO<>;
             divel_.fill(Numc::ZERO<>);

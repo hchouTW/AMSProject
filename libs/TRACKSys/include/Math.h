@@ -181,7 +181,7 @@ namespace LA { // Linear Algebra
         
 namespace TrackSys {
 // Robust
-// S := chi * chi
+// S := nrm * nrm
 // H := thres * thres  (H>0)
 // R := rate           (0<=R<=1)
 // alpha := log(1+(S/H)^2) / (S/H)^2
@@ -197,8 +197,8 @@ class Robust {
 
     public :
         const Opt& opt() const { return opt_; } 
-        long double chisq(long double chi) const;
-        long double rescale(long double chi) const;
+        long double chisq(long double nrm) const;
+        long double rescale(long double nrm) const;
 
     private :
         Opt         opt_;
@@ -255,7 +255,7 @@ namespace TrackSys {
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
+        LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
         std::array<long double, 2> minimizer(long double x) const;
@@ -263,19 +263,25 @@ class LandauGaus {
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }
         inline const long double& sgm() const { return sgm_; }
+        inline const long double& mode() const { return mode_; }
         inline const long double& fluc() const { return fluc_; }
+        inline const long double& shft() const { return shft_; }
+        
+    protected :
+        long double eval_norm(long double norm) const;
+        long double eval_icov(long double norm) const;
+
+        std::array<long double, 2> eval_conv(long double norm) const; // (nrm, icov)
 
     protected :
-        long double eval(long double norm) const;
-        long double icov(long double norm) const;
-
-    protected :
+        bool isfluc_;
         long double kpa_;
         long double mpv_;
         long double sgm_;
+        long double mode_;
         long double fluc_;
-        long double corr_; // corr = 1 / sqrt(1 + (fluc/sgm)^2)
-    
+        long double shft_;
+
     private :
         Robust robust_;
 
@@ -283,7 +289,33 @@ class LandauGaus {
         static constexpr long double LANDAU0    =  1.80655634e-01;
         static constexpr long double LANDAU0_X  = -2.22782980e-01;
         static constexpr long double WIDTH_SCL  =  1.17741002e+00; // sqrt( 2*log(2) )
+    
+        static const std::array<long double, 8> LAND_CONV;
+
+        static constexpr int GAUS_CONV_N = 25;
+        static const std::array<long double, GAUS_CONV_N> GAUS_CONV_X;
+        static const std::array<long double, GAUS_CONV_N> GAUS_CONV_P;
+
+    private :
+        std::array<long double, GAUS_CONV_N> convprob(long double norm) const;
 };
+
+const std::array<long double, 8> LandauGaus::LAND_CONV 
+    { 1.71213e-01, 1.05335e+00, 1.22843e-01, 2.44705e-01, 2.95471e-01, 5.75783e-01, 1.61325e-02, 6.61252e-02 };
+
+const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
+    { -2.40, -2.20, -2.00, -1.80, -1.60,
+      -1.40, -1.20, -1.00, -0.80, -0.60,
+      -0.40, -0.20,  0.00,  0.20,  0.40,
+       0.60,  0.80,  1.00,  1.20,  1.40,
+       1.60,  1.80,  2.00,  2.20,  2.40 };
+
+const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P 
+    { 0.05613476, 0.08892162, 0.13533528, 0.19789870, 0.27803730,  
+      0.37531110, 0.48675226, 0.60653066, 0.72614904, 0.83527021,
+      0.92311635, 0.98019867, 1.00000000, 0.98019867, 0.92311635,
+      0.83527021, 0.72614904, 0.60653066, 0.48675226, 0.37531110, 
+      0.27803730, 0.19789870, 0.13533528, 0.08892162, 0.05613476 };
 
 } // namesapce TrackSys
 

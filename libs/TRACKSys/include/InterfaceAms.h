@@ -86,15 +86,13 @@ class Event {
     public : 
         inline static void SetArg(
             const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward,
-            const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON,
             const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss())
-        { ArgOrtt = ortt; ArgNoiseCtler = noise_ctler; ArgSwMscat = sw_mscat; ArgSwEloss = sw_eloss; }
+        { ArgOrtt = ortt; ArgSwMscat = sw_mscat; ArgSwEloss = sw_eloss; }
 
     protected :
-        static TrFitPar::Orientation         ArgOrtt;
-        static VirtualHitSt::NoiseController ArgNoiseCtler;
-        static Bool_t                        ArgSwMscat;
-        static Bool_t                        ArgSwEloss;
+        static TrFitPar::Orientation ArgOrtt;
+        static Bool_t                ArgSwMscat;
+        static Bool_t                ArgSwEloss;
 
     public :
         static Bool_t   Status() { return (Ev != nullptr && StatusTk); }

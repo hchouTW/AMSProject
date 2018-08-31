@@ -13,7 +13,6 @@ namespace TrackSys {
 Bool_t PhyArg::opt_mscat_ = true;
 Bool_t PhyArg::opt_eloss_ = true;
 
-
 MultiGaus PhyArg::pdf_mscatu_(
     Robust::Opt::OFF,
     8.38103686633676292e-01, 1.000000e+00 * 9.67719020129811813e-01,
@@ -22,11 +21,9 @@ MultiGaus PhyArg::pdf_mscatu_(
     4.89527633401695347e-03, 1.076454e+01 * 9.67719020129811813e-01
 );
 
-
 MultiGaus PhyArg::pdf_mscatl_(
     Robust::Opt::OFF, 1.0
 );
-
 
 MultiGaus PhyArg::pdf_elion_(
     Robust::Opt::OFF, 1.0

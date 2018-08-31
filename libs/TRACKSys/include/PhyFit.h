@@ -18,7 +18,7 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::ON, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
@@ -53,9 +53,6 @@ class TrFitPar {
         
         Bool_t sort_hits();
         Bool_t check_hits();
-        
-    protected :
-        VirtualHitSt::NoiseController noise_ctler_;
 
     protected :
         Bool_t      sw_mscat_;
@@ -159,12 +156,12 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF) : 
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false) : 
             TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
             DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
             numOfRes_(0), numOfPar_(0),
             parIDigb_(-1), parIDtsft_(-1)
-            { if (check_hits()) { setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); noise_ctler_ = noise_ctler; } }
+            { if (check_hits()) { setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); } }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
@@ -248,11 +245,11 @@ class PhyTrFit : public TrFitPar {
         Bool_t survivalTestAndModify();
 
         Bool_t simpleFit();
-        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
+        Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
         Bool_t physicalTrFit();
         Bool_t physicalMuFit();
 
-        Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed, const VirtualHitSt::NoiseController& noise_ctler = VirtualHitSt::NoiseController::OFF);
+        Bool_t evolve(const MuOpt& mu_opt = MuOpt::kFixed);
 
     protected :
         MuOpt               mu_opt_;

@@ -21,10 +21,9 @@ namespace TrackSys {
 namespace InterfaceAms {
 
  
-TrFitPar::Orientation         Event::ArgOrtt       = TrFitPar::Orientation::kDownward;
-VirtualHitSt::NoiseController Event::ArgNoiseCtler = VirtualHitSt::NoiseController::ON;
-Bool_t                        Event::ArgSwMscat    = PhyArg::OptMscat();
-Bool_t                        Event::ArgSwEloss    = PhyArg::OptEloss();
+TrFitPar::Orientation         Event::ArgOrtt    = TrFitPar::Orientation::kDownward;
+Bool_t                        Event::ArgSwMscat = PhyArg::OptMscat();
+Bool_t                        Event::ArgSwEloss = PhyArg::OptEloss();
 
 UInt_t     Event::RunID    = 0;
 UInt_t     Event::EvID     = 0;
@@ -127,7 +126,7 @@ TrFitPar Event::Get(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt
         if (!RhHit.sib()) return TrFitPar(); 
     }
 
-    TrFitPar fitPar(info, ArgOrtt, ArgNoiseCtler, ArgSwMscat, ArgSwEloss);
+    TrFitPar fitPar(info, ArgOrtt, ArgSwMscat, ArgSwEloss);
 
     fitPar.add_hit(tkOpt.dedx() ? TkHitInQ : TkHitIn);
     if (tkOpt.useL1()) fitPar.add_hit(tkOpt.dedx() ? TkHitL1Q : TkHitL1);

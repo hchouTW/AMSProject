@@ -12,28 +12,13 @@ class VirtualHitSt {
             NONE, TRK, TOF, TRD, RICH, ECAL
         };
 
-        enum class NoiseController {
-            OFF, ON
-        };
-        
-    protected :
-        static constexpr Double_t NOISE_THRESHOLD_DEFAULT = 6.5;
-        // norm -> log(1 + norm^4)
-        static Double_t DoNoiseControllerLU(Double_t norm, Double_t threshold = -1.0);
-        static Double_t DoNoiseControllerL(Double_t norm, Double_t threshold = -1.0);
-        static Double_t DoNoiseControllerU(Double_t norm, Double_t threshold = -1.0);
-        // norm -> log(1 + norm^2)
-        static Double_t DoNoiseSlowControllerLU(Double_t norm, Double_t threshold = -1.0);
-        static Double_t DoNoiseSlowControllerL(Double_t norm, Double_t threshold = -1.0);
-        static Double_t DoNoiseSlowControllerU(Double_t norm, Double_t threshold = -1.0);
-
     public :
         VirtualHitSt(Detector dec = Detector::NONE, Short_t lay = 0, Bool_t scx = false, Bool_t scy = false, Bool_t scz = true);
         ~VirtualHitSt() { clear(); }
 
         virtual Short_t set_seqID(Short_t seqID) = 0; 
 
-        virtual void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF) = 0;
+        virtual void cal(const PhySt& part) = 0;
         virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_.fill(Numc::ZERO<>); divc_.fill(Numc::ZERO<>); }
@@ -103,16 +88,13 @@ class HitStTRK : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
-    protected :
-        static constexpr Double_t NOISE_THRESHOLD_DEDX  = 3.5;
-
     public :
         HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
+        void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_q(Double_t qx, Double_t qy) {
@@ -170,17 +152,13 @@ class HitStTOF : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TOF;
     
-    protected :
-        static constexpr Double_t NOISE_THRESHOLD_TIME = 4.5;
-        static constexpr Double_t NOISE_THRESHOLD_DEDX = 3.5;
-    
     public :
         HitStTOF(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false) { clear(); }
         ~HitStTOF() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
+        void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
@@ -268,16 +246,13 @@ class HitStRICH : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::RICH;
         enum class Radiator { AGL, NAF };
 
-    protected :
-        static constexpr Double_t NOISE_THRESHOLD_BETA = 4.5;
-
     public :
         HitStRICH(const Radiator& rad = Radiator::AGL) : VirtualHitSt(DEC, 0, false, false) { clear(); rad_ = rad; }
         ~HitStRICH() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
+        void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_ib(Double_t ib) {
@@ -325,16 +300,13 @@ class HitStTRD : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;
 
-    protected :
-        static constexpr Double_t NOISE_THRESHOLD_DEDX = 3.5;
-
     public :
         HitStTRD(Short_t lay = 0) : VirtualHitSt(DEC, lay, false, false) { clear(); }
         ~HitStTRD() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
         
-        void cal(const PhySt& part, const NoiseController& ctler = NoiseController::OFF);
+        void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_el(Double_t el) {

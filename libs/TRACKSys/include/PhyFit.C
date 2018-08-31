@@ -20,7 +20,6 @@ namespace TrackSys {
     
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
-        noise_ctler_  = rhs.noise_ctler_;
         sw_mscat_     = rhs.sw_mscat_;
         sw_eloss_     = rhs.sw_eloss_;
         info_         = rhs.info_;
@@ -59,10 +58,9 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     return *this;
 }
     
-TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const VirtualHitSt::NoiseController& noise_ctler, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
+TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
     clear();
 
-    noise_ctler_ = noise_ctler;
     sw_mscat_ = sw_mscat;
     sw_eloss_ = sw_eloss;
     info_ = info;
@@ -89,8 +87,6 @@ void TrFitPar::zero() {
 }
 
 void TrFitPar::clear() {
-    noise_ctler_ = VirtualHitSt::NoiseController::OFF;
-
     sw_mscat_ = false;
     sw_eloss_ = false;
     
@@ -208,7 +204,6 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
 
 
 void SimpleTrFit::clear() {
-    noise_ctler_ = VirtualHitSt::NoiseController::OFF;
     sw_mscat_ = false;
     sw_eloss_ = false;
     
@@ -435,7 +430,7 @@ Bool_t SimpleTrFit::simpleFit() {
                 HitStTOF::SetOffsetTime(ppst.time()-Hit<HitStTOF>::Cast(hit)->orgt());
                 resetTOF = false;
             }
-            hit->cal(ppst, noise_ctler_);
+            hit->cal(ppst);
 
             SVecD<2>       rsC;
             SMtxD<2, DIMG> jbC;
@@ -724,7 +719,7 @@ Bool_t PhyTrFit::simpleFit() {
 }
 
 
-Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseController& noise_ctler, Double_t fluc_eta, Double_t fluc_igb, Bool_t with_mu_est) {
+Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, Double_t fluc_eta, Double_t fluc_igb, Bool_t with_mu_est) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
 
@@ -760,7 +755,6 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
 
     if (nseg_ != 0) {
         std::vector<double> interaction_parameters(nseg_*DIML, Numc::ZERO<>);
-        if (VirtualHitSt::NoiseController::ON == noise_ctler) args_.clear();
         if (args_.size() != nseg_) args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
         else {
             for (Short_t is = 0; is < nseg_; ++is) {
@@ -776,7 +770,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     if (nmes_TOFt_ >= LMTN_TOF_T) { TOFt_sft_ = Numc::ZERO<>; parameters.push_back(Numc::ZERO<>); } // TOF Shift Time
     else TOFt_sft_ = Numc::ZERO<>;
 
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mu_free, noise_ctler);
+    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_, is_mu_free);
 
     ceres::Problem problem;
     problem.AddResidualBlock(cost_function, nullptr, parameters.data());
@@ -814,10 +808,10 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
     else TOFt_sft_ = Numc::ZERO<>;
 
     //std::cerr << summary.FullReport() << std::endl;
-    Bool_t   rw_err_mu = (MuOpt::kFixed == mu_opt && with_mu_est && evolve(MuOpt::kFree, noise_ctler) && Numc::Valid(err_.at(6)) && Numc::Compare(err_.at(6)) > 0);
+    Bool_t   rw_err_mu = (MuOpt::kFixed == mu_opt && with_mu_est && evolve(MuOpt::kFree) && Numc::Valid(err_.at(6)) && Numc::Compare(err_.at(6)) > 0);
     Double_t err_mu    = (rw_err_mu ? err_.at(6) : Numc::ZERO<>);
     
-    Bool_t succ = evolve(mu_opt, noise_ctler);
+    Bool_t succ = evolve(mu_opt);
     if (rw_err_mu) err_.at(6) = err_mu;
     return succ;
 }
@@ -825,9 +819,7 @@ Bool_t PhyTrFit::physicalFit(const MuOpt& mu_opt, const VirtualHitSt::NoiseContr
 
 Bool_t PhyTrFit::physicalTrFit() {
     if (!simpleFit()) return false;
-    Bool_t succ = physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF);
-    if (succ && (VirtualHitSt::NoiseController::ON == noise_ctler_))
-        succ = physicalFit(MuOpt::kFixed, noise_ctler_);
+    Bool_t succ = physicalFit(MuOpt::kFixed);
     return succ;
 }
 
@@ -854,7 +846,7 @@ Bool_t PhyTrFit::physicalMuFit() {
         args_.clear();
         info_.reset(chrg, mass);
         TOFt_sft_ = Numc::ZERO<>;
-        if (!(simpleFit() ? physicalFit(MuOpt::kFixed, VirtualHitSt::NoiseController::OFF, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
+        if (!(simpleFit() ? physicalFit(MuOpt::kFixed, Numc::ZERO<>, Numc::ZERO<>, false) : false)) continue;
         
         Bool_t firstTime = (!condElem.succ);
         if (!firstTime && Numc::Compare(quality_.at(1), condElem.qlt) > 0) continue;
@@ -879,20 +871,17 @@ Bool_t PhyTrFit::physicalMuFit() {
         args_.clear();
         TOFt_sft_ = Numc::ZERO<>;
         if (!physicalFit(MuOpt::kFree,
-                         VirtualHitSt::NoiseController::OFF,
                          MU_FLUC * rat_eta * fluc_eta,
                          MU_FLUC * rat_igb * fluc_igb)) return false;
         fluc_eta = std::fabs(err_.at(4) / part_.eta());
         fluc_igb = (err_.at(5) / part_.igmbta());
     }
-    if (VirtualHitSt::NoiseController::ON == noise_ctler_)
-        if (!physicalFit(MuOpt::kFree, noise_ctler_)) return false;
 
     return true;
 }
 
 
-Bool_t PhyTrFit::evolve(const MuOpt& mu_opt, const VirtualHitSt::NoiseController& noise_ctler) {
+Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     const Bool_t is_mu_free = (MuOpt::kFree == mu_opt);
     const Short_t DIMM = (is_mu_free ? 1 : 0);
     
@@ -980,7 +969,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt, const VirtualHitSt::NoiseController
                 resetTOF = false;
             }
         }
-        hit->cal(ppst, noise_ctler);
+        hit->cal(ppst);
         
         // Update Jacb
         jbGG = curjb.gg() * jbGG;
@@ -1226,7 +1215,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
                 resetTOF = false;
             }
         }
-        hit->cal(ppst, noise_ctler_);
+        hit->cal(ppst);
 
         // Update Jacb
         if (hasJacb) {
