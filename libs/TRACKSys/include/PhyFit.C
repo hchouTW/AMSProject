@@ -434,8 +434,8 @@ Bool_t SimpleTrFit::simpleFit() {
 
             SVecD<2>       rsC;
             SMtxD<2, DIMG> jbC;
-            if (hit->scx()) rsC(0) += hit->nrmcx();
-            if (hit->scy()) rsC(1) += hit->nrmcy();
+            if (hit->scx()) rsC(0) = hit->nrmcx();
+            if (hit->scy()) rsC(1) = hit->nrmcy();
             for (Short_t it = 0; it < DIMG; ++it) {
                 if (hit->scx()) jbC(0, it) += hit->divcx() * ppjb(0, it);
                 if (hit->scy()) jbC(1, it) += hit->divcy() * ppjb(1, it);
@@ -443,8 +443,8 @@ Bool_t SimpleTrFit::simpleFit() {
            
             grdG += LA::Transpose(jbC) * rsC;
             cvGG += LA::SimilarityT(jbC, SMtxSymD<2>(SMtxId()));
-            if (hit->scx()) chi_cx += rsC(0) * rsC(0); 
-            if (hit->scy()) chi_cy += rsC(1) * rsC(1);
+            if (hit->scx()) chi_cx += hit->chicx() * hit->chicx();
+            if (hit->scy()) chi_cy += hit->chicy() * hit->chicy();
             
             // TRK
             HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
@@ -452,16 +452,16 @@ Bool_t SimpleTrFit::simpleFit() {
                 SVecD<2> rsTRK;
                 SVecD<2> jbTRK;
 
-                if (hitTRK->sqx()) rsTRK(0) += hitTRK->nrmqx();
-                if (hitTRK->sqy()) rsTRK(1) += hitTRK->nrmqy();
+                if (hitTRK->sqx()) rsTRK(0) = hitTRK->nrmqx();
+                if (hitTRK->sqy()) rsTRK(1) = hitTRK->nrmqy();
                     
-                if (hitTRK->sqx()) jbTRK(0) += hitTRK->divqx_eta() * ppjb(4, 4);
-                if (hitTRK->sqy()) jbTRK(1) += hitTRK->divqy_eta() * ppjb(4, 4);
+                if (hitTRK->sqx()) jbTRK(0) = hitTRK->divqx_eta() * ppjb(4, 4);
+                if (hitTRK->sqy()) jbTRK(1) = hitTRK->divqy_eta() * ppjb(4, 4);
                 
                 grdG(4)    += (jbTRK(0) * rsTRK(0) + jbTRK(1) * rsTRK(1));
                 cvGG(4, 4) += (jbTRK(0) * jbTRK(0) + jbTRK(1) * jbTRK(1));
-                if (hitTRK->sqx()) chi_ib += rsTRK(0) * rsTRK(0);
-                if (hitTRK->sqy()) chi_ib += rsTRK(1) * rsTRK(1);
+                if (hitTRK->sqx()) chi_ib += hitTRK->chiqx() * hitTRK->chiqx();
+                if (hitTRK->sqy()) chi_ib += hitTRK->chiqy() * hitTRK->chiqy();
             }
 
             // TOF
@@ -470,16 +470,16 @@ Bool_t SimpleTrFit::simpleFit() {
                 SVecD<2> rsTOF;
                 SVecD<2> jbTOF;
 
-                if (hitTOF->st()) rsTOF(0) += hitTOF->nrmt();
-                if (hitTOF->sq()) rsTOF(1) += hitTOF->nrmq();
+                if (hitTOF->st()) rsTOF(0) = hitTOF->nrmt();
+                if (hitTOF->sq()) rsTOF(1) = hitTOF->nrmq();
                 
-                if (hitTOF->st()) jbTOF(0) += hitTOF->divt_eta() * ppjb(4, 4);
-                if (hitTOF->sq()) jbTOF(1) += hitTOF->divq_eta() * ppjb(4, 4);
+                if (hitTOF->st()) jbTOF(0) = hitTOF->divt_eta() * ppjb(4, 4);
+                if (hitTOF->sq()) jbTOF(1) = hitTOF->divq_eta() * ppjb(4, 4);
                 
                 grdG(4)    += (jbTOF(0) * rsTOF(0) + jbTOF(1) * rsTOF(1));
                 cvGG(4, 4) += (jbTOF(0) * jbTOF(0) + jbTOF(1) * jbTOF(1));
-                if (hitTOF->st()) chi_ib += rsTOF(0) * rsTOF(0);
-                if (hitTOF->sq()) chi_ib += rsTOF(1) * rsTOF(1);
+                if (hitTOF->st()) chi_ib += hitTOF->chit() * hitTOF->chit();
+                if (hitTOF->sq()) chi_ib += hitTOF->chiq() * hitTOF->chiq();
             }
             
             // RICH
@@ -488,13 +488,13 @@ Bool_t SimpleTrFit::simpleFit() {
                 Double_t rsRICH = Numc::ZERO<>;
                 Double_t jbRICH = Numc::ZERO<>;
 
-                if (hitRICH->sib()) rsRICH += hitRICH->nrmib();
-                if (hitRICH->sib()) jbRICH += hitRICH->divib_eta() * ppjb(4, 4);
+                if (hitRICH->sib()) rsRICH = hitRICH->nrmib();
+                if (hitRICH->sib()) jbRICH = hitRICH->divib_eta() * ppjb(4, 4);
 
                 grdG(4)    += (jbRICH * rsRICH);
                 cvGG(4, 4) += (jbRICH * jbRICH);
 
-                if (hitRICH->sib()) chi_ib += rsRICH * rsRICH;
+                if (hitRICH->sib()) chi_ib += hitRICH->chiib() * hitRICH->chiib();
             }
 
             // TRD
@@ -503,8 +503,8 @@ Bool_t SimpleTrFit::simpleFit() {
                 Double_t rsTRD = Numc::ZERO<>;
                 Double_t jbTRD = Numc::ZERO<>;
 
-                if (hitTRD->sel()) rsTRD += hitTRD->nrmel();
-                if (hitTRD->sel()) jbTRD += hitTRD->divel_eta() * ppjb(4, 4);
+                if (hitTRD->sel()) rsTRD = hitTRD->nrmel();
+                if (hitTRD->sel()) jbTRD = hitTRD->divel_eta() * ppjb(4, 4);
 
                 grdG(4)    += (jbTRD * rsTRD);
                 cvGG(4, 4) += (jbTRD * jbTRD);
@@ -981,8 +981,8 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         if (hasCxy) stts.push_back(ppst);
 
         // Coord
-        if (hit->scx()) chi_cx += hit->nrmcx() * hit->nrmcx(); 
-        if (hit->scy()) chi_cy += hit->nrmcy() * hit->nrmcy();
+        if (hit->scx()) chi_cx += hit->chicx() * hit->chicx(); 
+        if (hit->scy()) chi_cy += hit->chicy() * hit->chicy();
         for (Short_t it = 0; it < DIMG; ++it) {
             if (hit->scx()) jb(hit->seqIDcx(), it) += hit->divcx() * jbGG(0, it);
             if (hit->scy()) jb(hit->seqIDcy(), it) += hit->divcy() * jbGG(1, it);
@@ -1000,8 +1000,8 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) chi_ib += hitTRK->nrmqx() * hitTRK->nrmqx();
-            if (hitTRK->sqy()) chi_ib += hitTRK->nrmqy() * hitTRK->nrmqy();
+            if (hitTRK->sqx()) chi_ib += hitTRK->chiqx() * hitTRK->chiqx();
+            if (hitTRK->sqy()) chi_ib += hitTRK->chiqy() * hitTRK->chiqy();
             if (hitTRK->sqx()) {
                 if (is_mu_free) jb(hitTRK->seqIDqx(), parIDigb) += hitTRK->divqx_igb() * jbGG(4, 4);
                 else            jb(hitTRK->seqIDqx(),        4) += hitTRK->divqx_eta() * jbGG(4, 4);
@@ -1015,8 +1015,8 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         // TOF
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
-            if (hitTOF->st()) chi_ib += hitTOF->nrmt() * hitTOF->nrmt();
-            if (hitTOF->sq()) chi_ib += hitTOF->nrmq() * hitTOF->nrmq();
+            if (hitTOF->st()) chi_ib += hitTOF->chit() * hitTOF->chit();
+            if (hitTOF->sq()) chi_ib += hitTOF->chiq() * hitTOF->chiq();
             if (hitTOF->st()) {
                 if (is_mu_free) jb(hitTOF->seqIDt(), parIDigb) += hitTOF->divt_igb() * jbGG(4, 4);
                 else            jb(hitTOF->seqIDt(),        4) += hitTOF->divt_eta() * jbGG(4, 4);
@@ -1031,7 +1031,7 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
         // RICH
         HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
         if (hitRICH != nullptr) {
-            if (hitRICH->sib()) chi_ib += hitRICH->nrmib() * hitRICH->nrmib();
+            if (hitRICH->sib()) chi_ib += hitRICH->chiib() * hitRICH->chiib();
             if (hitRICH->sib()) {
                 if (is_mu_free) jb(hitRICH->seqIDib(), parIDigb) += hitRICH->divib_igb() * jbGG(4, 4);
                 else            jb(hitRICH->seqIDib(),        4) += hitRICH->divib_eta() * jbGG(4, 4);

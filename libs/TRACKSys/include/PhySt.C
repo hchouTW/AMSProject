@@ -50,22 +50,22 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
     div = std::move(SVecD<5>());
     if (!field_) return;
     if (sw_mscat_) {
-        std::array<long double, 2>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
-        std::array<long double, 2>&& minirhou = pdf_mscatu_.minimizer(Numc::NEG<> * rhou_);
-        std::array<long double, 2>&& minitaul = pdf_mscatl_.minimizer(Numc::NEG<> * taul_);
-        std::array<long double, 2>&& minirhol = pdf_mscatl_.minimizer(Numc::NEG<> * rhol_);
-        div(0) = (Numc::NEG<> * minitauu.at(1));
-        div(1) = (Numc::NEG<> * minirhou.at(1));
-        div(2) = (Numc::NEG<> * minitaul.at(1));
-        div(3) = (Numc::NEG<> * minirhol.at(1));
+        std::array<long double, 3>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
+        std::array<long double, 3>&& minirhou = pdf_mscatu_.minimizer(Numc::NEG<> * rhou_);
+        std::array<long double, 3>&& minitaul = pdf_mscatl_.minimizer(Numc::NEG<> * taul_);
+        std::array<long double, 3>&& minirhol = pdf_mscatl_.minimizer(Numc::NEG<> * rhol_);
+        div(0) = (Numc::NEG<> * minitauu.at(2));
+        div(1) = (Numc::NEG<> * minirhou.at(2));
+        div(2) = (Numc::NEG<> * minitaul.at(2));
+        div(3) = (Numc::NEG<> * minirhol.at(2));
         nrm(0) = (minitauu.at(0)); 
         nrm(1) = (minirhou.at(0)); 
         nrm(2) = (minitaul.at(0)); 
         nrm(3) = (minirhol.at(0)); 
     }
     if (sw_eloss_) {
-        std::array<long double, 2>&& minielion = pdf_elion_.minimizer(Numc::NEG<> * elion_);
-        div(4) = (Numc::NEG<> * minielion.at(1));
+        std::array<long double, 3>&& minielion = pdf_elion_.minimizer(Numc::NEG<> * elion_);
+        div(4) = (Numc::NEG<> * minielion.at(2));
         nrm(4) = (minielion.at(0));
     }
 }

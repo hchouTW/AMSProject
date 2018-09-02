@@ -21,7 +21,13 @@ class VirtualHitSt {
         virtual void cal(const PhySt& part) = 0;
         virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
         
-        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { coo_ = std::move(SVecD<3>(cx, cy, cz)); nrmc_.fill(Numc::ZERO<>); divc_.fill(Numc::ZERO<>); }
+        inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { 
+            coo_ = std::move(SVecD<3>(cx, cy, cz)); 
+            chic_.fill(Numc::ZERO<>); 
+            nrmc_.fill(Numc::ZERO<>); 
+            divc_.fill(Numc::ZERO<>); 
+        }
+
         inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
         
@@ -44,6 +50,9 @@ class VirtualHitSt {
         
         inline const Double_t& ecx() const { return erc_(0); }
         inline const Double_t& ecy() const { return erc_(1); }
+        
+        inline const Double_t& chicx() const { return chic_[0]; }
+        inline const Double_t& chicy() const { return chic_[1]; }
         
         inline const Double_t& nrmcx() const { return nrmc_[0]; }
         inline const Double_t& nrmcy() const { return nrmc_[1]; }
@@ -68,6 +77,7 @@ class VirtualHitSt {
         SVecD<3> coo_;      // [cm] coord
         SVecD<2> erc_;      // [cm] error
         
+        std::array<Double_t, 2> chic_; // coord chi
         std::array<Double_t, 2> nrmc_; // coord norm
         std::array<Double_t, 2> divc_; // coord div
     
@@ -102,6 +112,7 @@ class HitStTRK : public VirtualHitSt {
             side_q_[1] = (Numc::Compare(qy) > 0);
             q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
             q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
+            chiq_.fill(Numc::ZERO<>);
             nrmq_.fill(Numc::ZERO<>);
             divq_.fill(Numc::ZERO<>);
         }
@@ -111,6 +122,9 @@ class HitStTRK : public VirtualHitSt {
 
         inline const Bool_t& sqx() const { return side_q_[0]; }
         inline const Bool_t& sqy() const { return side_q_[1]; }
+        
+        inline const Double_t& chiqx() const { return chiq_[0]; }
+        inline const Double_t& chiqy() const { return chiq_[1]; }
 
         inline const Double_t& nrmqx() const { return nrmq_[0]; }
         inline const Double_t& nrmqy() const { return nrmq_[1]; }
@@ -131,6 +145,7 @@ class HitStTRK : public VirtualHitSt {
         std::array<Bool_t, 2>   side_q_;
         std::array<Double_t, 2> q_; // ADC
 
+        std::array<Double_t, 2> chiq_; // q chi (x, y)
         std::array<Double_t, 2> nrmq_; // q nrom (x, y)
         std::array<Double_t, 4> divq_; // q div (igmbta) (x, y) [eta, igb]
 
@@ -165,6 +180,7 @@ class HitStTOF : public VirtualHitSt {
             side_t_   = (Numc::Compare(t) >= 0);
             orgt_     = (side_t_ ? t : Numc::ZERO<>);
             sftt_     = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
+            chit_     = Numc::ZERO<>;
             nrmt_     = Numc::ZERO<>;
             divt_sft_ = Numc::ZERO<>;
             divt_.fill(Numc::ZERO<>);
@@ -173,6 +189,7 @@ class HitStTOF : public VirtualHitSt {
         inline void set_q(Double_t q) {
             side_q_ = (Numc::Compare(q) > 0);
             q_      = (side_q_ ? q : Numc::ZERO<>);
+            chiq_   = Numc::ZERO<>;
             nrmq_   = Numc::ZERO<>;
             divq_.fill(Numc::ZERO<>);
         }
@@ -186,11 +203,13 @@ class HitStTOF : public VirtualHitSt {
         inline const Bool_t& st() const { return side_t_; }
         inline const Bool_t& sq() const { return side_q_; }
 
+        inline const Double_t& chit() const { return chit_; }
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divt_sft() const { return divt_sft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
         inline const Double_t& divt_igb() const { return divt_[1]; }
         
+        inline const Double_t& chiq() const { return chiq_; }
         inline const Double_t& nrmq() const { return nrmq_; }
         inline const Double_t& divq_eta() const { return divq_[0]; }
         inline const Double_t& divq_igb() const { return divq_[1]; }
@@ -209,10 +228,12 @@ class HitStTOF : public VirtualHitSt {
         Bool_t   side_q_;
         Double_t q_; // Q
         
+        Double_t chit_; // T chi
         Double_t nrmt_; // T nrom
         Double_t divt_sft_; // T(shift)
         std::array<Double_t, 2> divt_; // T div (igmbta) [eta, igb]
 
+        Double_t chiq_; // Q chi
         Double_t nrmq_; // Q nrom
         std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, igb]
 
@@ -258,6 +279,7 @@ class HitStRICH : public VirtualHitSt {
         inline void set_ib(Double_t ib) {
             side_ib_ = (Numc::Compare(ib) > 0);
             ib_      = (side_ib_ ? ib : Numc::ZERO<>);
+            chiib_   = Numc::ZERO<>;
             nrmib_   = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
         }
@@ -270,6 +292,7 @@ class HitStRICH : public VirtualHitSt {
         
         inline const Bool_t& sib() const { return side_ib_; }
 
+        inline const Double_t& chiib() const { return chiib_; }
         inline const Double_t& nrmib() const { return nrmib_; }
         inline const Double_t& divib_eta() const { return divib_[0]; }
         inline const Double_t& divib_igb() const { return divib_[1]; }
@@ -285,6 +308,7 @@ class HitStRICH : public VirtualHitSt {
         Bool_t   side_ib_;
         Double_t ib_; // 1/Beta
 
+        Double_t chiib_; // 1/Beta chi
         Double_t nrmib_; // 1/Beta nrom
         std::array<Double_t, 2> divib_; // 1/Beta div (igmbta) [eta, igb]
 

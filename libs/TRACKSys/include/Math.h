@@ -184,27 +184,37 @@ namespace TrackSys {
 // S := nrm * nrm
 // H := thres * thres  (H>0)
 // R := rate           (0<=R<=1)
-// alpha := log(1+(S/H)^2) / (S/H)^2
-// rho(S) := S * alpha^(R/2)
-// scl(S) := sqrt( alpha^(R/2) * ((1-R) + 1/alpha/(1+(S/H)^2)) )
+// X := (S/H)
+// A := log(1+X*X) / (X*X)
+// chisq(S)  := S * A^(R/4)
+// div1st(S) := A^(R/4) * (
+//                  (1-R/2) + 
+//                  (R/2) * (1/A) * (1/(1+X*X))
+//              )
+// S*div2nd(S) := (R/4 * X*X) * A^(1+R/4) * (
+//                    (R-4) * (1/A)^3 * (1/X)^2 * (1/(1+X*X))^2 +
+//                    (R-2) * (1/A) * (1/X)^2 -
+//                    2*((R-1)*X*X + (R-3)) * (1/A)^2 * (1/X)^2 * (1/(1+X*X))^2
+//                )
+
 class Robust {
     public :
         enum class Opt { OFF = 0, ON = 1 };
     
     public :
-        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rat = Numc::HALF) { opt_ = opt; threshold_ = thres; rate_ = rat; }
+        Robust(Opt opt = Opt::OFF, long double thres = Numc::FIVE<long double>, long double rate = Numc::HALF) : opt_(opt), thres_(thres), rate_(rate) { if (Numc::Compare(thres_) <= 0 || Numc::Compare(rate_) < 0 || Numc::Compare(rate_, Numc::ONE<long double>) > 0) { opt_ = Opt::OFF; thres = Numc::FIVE<long double>; rate_ = Numc::HALF; } }
         ~Robust() {}
 
     public :
         const Opt& opt() const { return opt_; } 
-        long double chisq(long double nrm) const;
-        long double rescale(long double nrm) const;
-
+        std::array<long double, 3> minimizer(long double nrm) const;
+        
     private :
         Opt         opt_;
-        long double threshold_;
+        long double thres_;
         long double rate_;
 };
+
 } // namesapce TrackSys
 
 
@@ -228,7 +238,7 @@ class MultiGaus {
         inline const long double& wgt(Int_t i = 0) const { return multi_gaus_.at(i).first; }
         inline const long double& sgm(Int_t i = 0) const { return multi_gaus_.at(i).second; }
 
-        std::array<long double, 2> minimizer(long double r = 0.) const; 
+        std::array<long double, 3> minimizer(long double r = 0.) const; 
         long double rndm();
 
     private :
@@ -258,7 +268,7 @@ class LandauGaus {
         LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        std::array<long double, 2> minimizer(long double x) const;
+        std::array<long double, 3> minimizer(long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }

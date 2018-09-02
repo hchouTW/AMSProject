@@ -9,9 +9,9 @@
 
 namespace TrackSys {
 
-std::array<long double, 2> IonEloss::minimizer(long double x, long double igmbta) const {
+std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta) const {
     if (Numc::Compare(x) <= 0 || Numc::EqualToZero(igmbta))
-        return std::array<long double, 2>({ Numc::ZERO<long double>, Numc::ZERO<long double> });
+        return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
     long double ibsqr = (Numc::ONE<long double> + igmbta * igmbta);
     
     // PDF parameters
@@ -23,18 +23,19 @@ std::array<long double, 2> IonEloss::minimizer(long double x, long double igmbta
     long double divmpv = ((isfluc_) ? get_mode(igmbta, ibsqr) : get_divmpv(igmbta, ibsqr));
  
     // approximate Landau-Gaussian
-    //LandauGaus ldgaus(Robust::Opt::ON, kpa, mpv, sgm, mode, fluc_);
-    LandauGaus ldgaus(Robust::Opt::OFF, kpa, mpv, sgm, mode, fluc_); // testcode
-    std::array<long double, 2>&& lg_par = ldgaus.minimizer(x);
+    LandauGaus ldgaus(robust_, kpa, mpv, sgm, mode, fluc_);
+    std::array<long double, 3>&& lg_par = ldgaus.minimizer(x);
     
-    long double res = lg_par.at(0);                                   // res normx
-    long double div = Numc::NEG<long double> * lg_par.at(1) * divmpv; // div r/x * div x/igmbta
+    long double chi = lg_par.at(0);                                   // res chix
+    long double nrm = lg_par.at(1);                                   // res normx
+    long double div = Numc::NEG<long double> * lg_par.at(2) * divmpv; // div r/x * div x/igmbta
     
-    if (!Numc::Valid(res) || !Numc::Valid(div)) { 
-        res = Numc::ZERO<long double>;
-        div = Numc::ZERO<long double>;
+    if (!Numc::Valid(chi) || !Numc::Valid(nrm) || !Numc::Valid(div)) { 
+        chi = Numc::ZERO<long double>;
+        nrm = Numc::ZERO<long double>;
+        div = Numc::ONE<long double>;
     }
-    return std::array<long double, 2>({ res, div });
+    return std::array<long double, 3>({ chi, nrm, div });
 }
         
 long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {
