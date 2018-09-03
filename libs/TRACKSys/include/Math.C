@@ -49,7 +49,7 @@ std::array<long double, 3> Robust::minimizer(long double nrm) const {
     long double div2ndS = (rate_ * sqrsh / FOUR) * std::pow(alpha, ONE + rate_ / FOUR) * (
                           ((rate_ - FOUR) / (std::pow(alpha, THREE) * sqrsh * onesqrsh * onesqrsh)) +
                           ((rate_ - TWO) * invalpha / sqrsh) -
-                          (TWO * ((rate_-ONE) * sqrsh + (rate_-THREE)) * (invalpha * invalpha) / (sqrsh * onesqrsh * onesqrsh))
+                          (TWO * ((rate_ - ONE) * sqrsh + (rate_ - THREE)) * (invalpha * invalpha) / (sqrsh * onesqrsh * onesqrsh))
                           );
     if (!Numc::Valid(div2ndS) || Numc::Compare(div2ndS) >= 0) div2ndS = Numc::ZERO<long double>;
 
@@ -233,12 +233,12 @@ std::array<long double, 3> LandauGaus::minimizer(long double x) const {
     long double divx = Numc::ONE<long double>;  // div x
     if (!isfluc_) {
         nrmx = eval_norm(norm);           
-        divx = std::sqrt(eval_icov(norm)) / sgm_;
+        divx = std::sqrt(eval_icov(norm));
     }
     else {
         std::array<long double, 2>&& conv = eval_conv(norm);
         nrmx = conv.at(0);
-        divx = std::sqrt(conv.at(1)) / sgm_;
+        divx = std::sqrt(conv.at(1));
     }
     if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
     if (!Numc::Valid(divx)) divx = Numc::ONE<long double>;
