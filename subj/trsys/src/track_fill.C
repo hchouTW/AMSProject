@@ -62,7 +62,7 @@ int main(int argc, char * argv[]) {
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
-    Bool_t optL9 = true;
+    Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
@@ -156,8 +156,8 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
       
-        //if (entry > 100) break;
-        //if (fG4mc->primPart.mom < 500.0) continue; // testcode
+        //if (entry > 1000) break;
+        //if (fG4mc->primPart.mom > 1.0) continue; // testcode
         //COUT("==== ENTRY %ld ====\n", entry);
         //COUT("MOM %14.8f\n", fG4mc->primPart.mom);
         //if (mc_mom < 10.0 || mc_mom > 50.0) continue; // testcode
@@ -212,7 +212,7 @@ int main(int argc, char * argv[]) {
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            //mhit.set_q(hit.adc[0], hit.adc[1]);
+            mhit.set_q(hit.adc[0], hit.adc[1]);
          
             if (hit.layJ >= 2 && hit.layJ <= 8) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
