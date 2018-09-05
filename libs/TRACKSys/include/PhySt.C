@@ -22,7 +22,7 @@ MultiGaus PhyArg::pdf_mscatu_(
 );
 
 MultiGaus PhyArg::pdf_mscatl_(
-    Robust::Opt::OFF, 1.0
+    Robust::Opt::OFF, 1.0 
 );
 
 MultiGaus PhyArg::pdf_elion_(
@@ -30,17 +30,58 @@ MultiGaus PhyArg::pdf_elion_(
 );
 
 
+void PhyArg::cal_chi(SVecD<5>& chi) const {
+    chi = std::move(SVecD<5>());
+    if (!field_) return;
+    if (sw_mscat_) {
+        chi(0) = (pdf_mscatu_.minimizer(Numc::NEG<> * tauu_).at(0)); 
+        chi(1) = (pdf_mscatu_.minimizer(Numc::NEG<> * rhou_).at(0)); 
+        chi(2) = (pdf_mscatl_.minimizer(Numc::NEG<> * taul_).at(0)); 
+        chi(3) = (pdf_mscatl_.minimizer(Numc::NEG<> * rhol_).at(0));
+    }
+    if (sw_eloss_) {
+        chi(4) = (pdf_elion_.minimizer(Numc::NEG<> * elion_).at(0));
+    }
+}
+
+
 void PhyArg::cal_nrm(SVecD<5>& nrm) const {
     nrm = std::move(SVecD<5>());
     if (!field_) return;
     if (sw_mscat_) {
-        nrm(0) = (pdf_mscatu_.minimizer(Numc::NEG<> * tauu_).at(0)); 
-        nrm(1) = (pdf_mscatu_.minimizer(Numc::NEG<> * rhou_).at(0)); 
-        nrm(2) = (pdf_mscatl_.minimizer(Numc::NEG<> * taul_).at(0)); 
-        nrm(3) = (pdf_mscatl_.minimizer(Numc::NEG<> * rhol_).at(0));
+        nrm(0) = (pdf_mscatu_.minimizer(Numc::NEG<> * tauu_).at(1)); 
+        nrm(1) = (pdf_mscatu_.minimizer(Numc::NEG<> * rhou_).at(1)); 
+        nrm(2) = (pdf_mscatl_.minimizer(Numc::NEG<> * taul_).at(1)); 
+        nrm(3) = (pdf_mscatl_.minimizer(Numc::NEG<> * rhol_).at(1));
     }
     if (sw_eloss_) {
-        nrm(4) = (pdf_elion_.minimizer(Numc::NEG<> * elion_).at(0));
+        nrm(4) = (pdf_elion_.minimizer(Numc::NEG<> * elion_).at(1));
+    }
+}
+
+
+void PhyArg::cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const {
+    chi = std::move(SVecD<5>());
+    div = std::move(SVecD<5>());
+    if (!field_) return;
+    if (sw_mscat_) {
+        std::array<long double, 3>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
+        std::array<long double, 3>&& minirhou = pdf_mscatu_.minimizer(Numc::NEG<> * rhou_);
+        std::array<long double, 3>&& minitaul = pdf_mscatl_.minimizer(Numc::NEG<> * taul_);
+        std::array<long double, 3>&& minirhol = pdf_mscatl_.minimizer(Numc::NEG<> * rhol_);
+        div(0) = (Numc::NEG<> * minitauu.at(2));
+        div(1) = (Numc::NEG<> * minirhou.at(2));
+        div(2) = (Numc::NEG<> * minitaul.at(2));
+        div(3) = (Numc::NEG<> * minirhol.at(2));
+        chi(0) = (minitauu.at(0)); 
+        chi(1) = (minirhou.at(0)); 
+        chi(2) = (minitaul.at(0)); 
+        chi(3) = (minirhol.at(0)); 
+    }
+    if (sw_eloss_) {
+        std::array<long double, 3>&& minielion = pdf_elion_.minimizer(Numc::NEG<> * elion_);
+        div(4) = (Numc::NEG<> * minielion.at(2));
+        chi(4) = (minielion.at(0));
     }
 }
 
@@ -58,15 +99,15 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
         div(1) = (Numc::NEG<> * minirhou.at(2));
         div(2) = (Numc::NEG<> * minitaul.at(2));
         div(3) = (Numc::NEG<> * minirhol.at(2));
-        nrm(0) = (minitauu.at(0)); 
-        nrm(1) = (minirhou.at(0)); 
-        nrm(2) = (minitaul.at(0)); 
-        nrm(3) = (minirhol.at(0)); 
+        nrm(0) = (minitauu.at(1)); 
+        nrm(1) = (minirhou.at(1)); 
+        nrm(2) = (minitaul.at(1)); 
+        nrm(3) = (minirhol.at(1)); 
     }
     if (sw_eloss_) {
         std::array<long double, 3>&& minielion = pdf_elion_.minimizer(Numc::NEG<> * elion_);
         div(4) = (Numc::NEG<> * minielion.at(2));
-        nrm(4) = (minielion.at(0));
+        nrm(4) = (minielion.at(1));
     }
 }
 

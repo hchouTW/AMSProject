@@ -20,21 +20,16 @@ std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta
     long double sgm  = get_sgm(igmbta, ibsqr); 
     long double mode = get_mode(igmbta, ibsqr); 
     
-    long double divmpv = ((isfluc_) ? get_divmode(igmbta, ibsqr) : get_divmpv(igmbta, ibsqr));
-    long double divsgm = get_divsgm(igmbta, ibsqr);
-
-    // div r/z
-    long double normx = ((x - (isfluc_ ? mode : mpv)) / sgm);
-    //long double divnx = (Numc::NEG<long double> / sgm) * (divmpv);
-    long double divnx = (Numc::NEG<long double> / sgm) * (divmpv + normx * divsgm); // testcode
+    long double divmpv = get_divmpv(igmbta, ibsqr);
+    long double divnrm = (Numc::NEG<long double> / sgm) * divmpv;
 
     // approximate Landau-Gaussian
     LandauGaus ldgaus(robust_, kpa, mpv, sgm, mode, fluc_);
     std::array<long double, 3>&& lg_par = ldgaus.minimizer(x);
     
-    long double chi = lg_par.at(0);         // res chiz  (z)
-    long double nrm = lg_par.at(1);         // res normz (z)
-    long double div = lg_par.at(2) * divnx; // div r/z * div z/igmbta
+    long double chi = lg_par.at(0);          // res chiz  (z)
+    long double nrm = lg_par.at(1);          // res normz (z)
+    long double div = lg_par.at(2) * divnrm; // div r/z * div z/igmbta
     
     if (!Numc::Valid(chi) || !Numc::Valid(nrm) || !Numc::Valid(div)) { 
         chi = Numc::ZERO<long double>;
@@ -45,7 +40,7 @@ std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta
 }
         
 long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {
-    long double kpa = kpa_[0] + (Numc::ONE<long double> - kpa_[0]) * Numc::HALF * (Numc::ONE<long double> + std::erf(kpa_[1] * std::log1p(kpa_[2] * std::pow(ibsqr, kpa_[3])) - kpa_[4]));
+    long double kpa = Numc::HALF * (Numc::ONE<long double> + std::erf(kpa_[0] * std::log1p(kpa_[1] * std::pow(ibsqr, kpa_[2])) - kpa_[3]));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     else {
         if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;
@@ -55,30 +50,30 @@ long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {
 }
 
 long double IonEloss::get_mpv(long double igmbta, long double ibsqr) const {
-    long double mpv = mpv_[0] * std::pow(ibsqr,  mpv_[3]) * 
+    long double mpv = mpv_[0] * std::pow(ibsqr, mpv_[3]) * 
         (mpv_[1] + 
          mpv_[2] * std::pow(ibsqr, -mpv_[3]) - 
-         std::log1p(std::pow(igmbta * igmbta, mpv_[4]))
+         std::log(mpv_[4] + std::pow(igmbta * igmbta, mpv_[5]))
         );
     if (!Numc::Valid(mpv)) mpv = Numc::ZERO<long double>;
     return mpv;
 }
 
 long double IonEloss::get_sgm(long double igmbta, long double ibsqr) const {
-    long double sgm = sgm_[0] * std::pow(ibsqr,  sgm_[3]) * 
+    long double sgm = sgm_[0] * std::pow(ibsqr, sgm_[3]) * 
         (sgm_[1] + 
          sgm_[2] * std::pow(ibsqr, -sgm_[3]) - 
-         std::log1p(std::pow(igmbta * igmbta, sgm_[4]))
+         std::log(sgm_[4] + std::pow(igmbta * igmbta, sgm_[5]))
         );
     if (!Numc::Valid(sgm)) sgm = Numc::ZERO<long double>;
     return sgm;
 }
 
 long double IonEloss::get_mode(long double igmbta, long double ibsqr) const {
-    long double mode = mode_[0] * std::pow(ibsqr,  mode_[3]) * 
+    long double mode = mode_[0] * std::pow(ibsqr, mode_[3]) * 
         (mode_[1] + 
          mode_[2] * std::pow(ibsqr, -mode_[3]) - 
-         std::log1p(std::pow(igmbta * igmbta, mode_[4]))
+         std::log(mode_[4] + std::pow(igmbta * igmbta, mode_[5]))
         );
     if (!Numc::Valid(mode)) mode = Numc::ZERO<long double>;
     return mode;
@@ -87,43 +82,15 @@ long double IonEloss::get_mode(long double igmbta, long double ibsqr) const {
 long double IonEloss::get_divmpv(long double igmbta, long double ibsqr) const {
     long double igmbtasqr = igmbta * igmbta;
     long double divbta = mpv_[3] * std::pow(ibsqr, mpv_[3] - Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
-    long double divlog = (Numc::TWO<long double> * mpv_[4]) * std::pow(igmbtasqr, mpv_[4] - Numc::HALF) / (Numc::ONE<long double> + std::pow(igmbtasqr, mpv_[4]));
+    long double divlog = (Numc::TWO<long double> * mpv_[5]) * std::pow(igmbtasqr, mpv_[5] - Numc::HALF) / (mpv_[4] + std::pow(igmbtasqr, mpv_[5]));
 
     long double termA  = mpv_[1] * divbta;
-    long double termB  = divbta * std::log1p(std::pow(igmbtasqr, mpv_[4]));
+    long double termB  = divbta * std::log(mpv_[4] + std::pow(igmbtasqr, mpv_[5]));
     long double termC  = std::pow(ibsqr, mpv_[3]) * divlog;
     long double divmpv = mpv_[0] * (termA - termB - termC);
 
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
     return divmpv;
-}
-
-long double IonEloss::get_divsgm(long double igmbta, long double ibsqr) const {
-    long double igmbtasqr = igmbta * igmbta;
-    long double divbta = sgm_[3] * std::pow(ibsqr, sgm_[3] - Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
-    long double divlog = (Numc::TWO<long double> * sgm_[4]) * std::pow(igmbtasqr, sgm_[4] - Numc::HALF) / (Numc::ONE<long double> + std::pow(igmbtasqr, sgm_[4]));
-
-    long double termA  = sgm_[1] * divbta;
-    long double termB  = divbta * std::log1p(std::pow(igmbtasqr, sgm_[4]));
-    long double termC  = std::pow(ibsqr, sgm_[3]) * divlog;
-    long double divsgm = sgm_[0] * (termA - termB - termC);
-
-    if (!Numc::Valid(divsgm)) divsgm = Numc::ZERO<long double>;
-    return divsgm;
-}
-
-long double IonEloss::get_divmode(long double igmbta, long double ibsqr) const {
-    long double igmbtasqr = igmbta * igmbta;
-    long double divbta = mode_[3] * std::pow(ibsqr, mode_[3] - Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
-    long double divlog = (Numc::TWO<long double> * mode_[4]) * std::pow(igmbtasqr, mode_[4] - Numc::HALF) / (Numc::ONE<long double> + std::pow(igmbtasqr, mode_[4]));
-
-    long double termA  = mode_[1] * divbta;
-    long double termB  = divbta * std::log1p(std::pow(igmbtasqr, mode_[4]));
-    long double termC  = std::pow(ibsqr, mode_[3]) * divlog;
-    long double divmode = mode_[0] * (termA - termB - termC);
-
-    if (!Numc::Valid(divmode)) divmode = Numc::ZERO<long double>;
-    return divmode;
 }
 
 } // namesapce TrackSys

@@ -180,6 +180,31 @@ namespace LA { // Linear Algebra
 	
         
 namespace TrackSys {
+
+class LandauNumc {
+    public :
+        LandauNumc() {}
+        ~LandauNumc() {}
+
+        static long double EvalLn(long double x);
+
+    private :
+        static constexpr long double LANDAU0   =  1.80655634e-01;
+        static constexpr long double LANDAU0_X = -2.22782980e-01;
+        static constexpr long double WIDTH_SCL =  1.17741002e+00; // sqrt( 2*log(2) )
+
+        static constexpr long double BOUNDL = -3.0;
+        static constexpr long double BOUNDU = 22.0;
+        static constexpr long        NSET = 10000;
+        static constexpr long double STEP = 0.0025;
+
+        static std::vector<long double> data;
+};
+
+} // namesapce TrackSys
+
+
+namespace TrackSys {
 // Robust
 // S := nrm * nrm
 // H := thres * thres  (H>0)
@@ -202,7 +227,7 @@ class Robust {
         enum class Opt { OFF = 0, ON = 1 };
     
     public :
-        Robust(Opt opt = Opt::OFF, long double thres = Numc::FIVE<long double>, long double rate = Numc::HALF) : opt_(opt), thres_(thres), rate_(rate) { if (Numc::Compare(thres_) <= 0 || Numc::Compare(rate_) < 0 || Numc::Compare(rate_, Numc::ONE<long double>) > 0) { opt_ = Opt::OFF; thres = Numc::FIVE<long double>; rate_ = Numc::HALF; } }
+        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rate = Numc::HALF) : opt_(opt), thres_(thres), rate_(rate) { if (Numc::Compare(thres_) <= 0 || Numc::Compare(rate_) < 0 || Numc::Compare(rate_, Numc::ONE<long double>) > 0) { opt_ = Opt::OFF; thres = Numc::FOUR<long double>; rate_ = Numc::HALF; } }
         ~Robust() {}
 
     public :
@@ -296,13 +321,9 @@ class LandauGaus {
         Robust robust_;
 
     private :
-        static constexpr long double LANDAU0    =  1.80655634e-01;
-        static constexpr long double LANDAU0_X  = -2.22782980e-01;
-        static constexpr long double WIDTH_SCL  =  1.17741002e+00; // sqrt( 2*log(2) )
-    
         static const std::array<long double, 8> LAND_CONV;
 
-        static constexpr int GAUS_CONV_N = 25;
+        static constexpr int GAUS_CONV_N = 26;
         static const std::array<long double, GAUS_CONV_N> GAUS_CONV_X;
         static const std::array<long double, GAUS_CONV_N> GAUS_CONV_P;
 
@@ -314,18 +335,28 @@ const std::array<long double, 8> LandauGaus::LAND_CONV
     { 1.71213e-01, 1.05335e+00, 1.22843e-01, 2.44705e-01, 2.95471e-01, 5.75783e-01, 1.61325e-02, 6.61252e-02 };
 
 const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
-    { -2.40, -2.20, -2.00, -1.80, -1.60,
-      -1.40, -1.20, -1.00, -0.80, -0.60,
-      -0.40, -0.20,  0.00,  0.20,  0.40,
-       0.60,  0.80,  1.00,  1.20,  1.40,
-       1.60,  1.80,  2.00,  2.20,  2.40 };
+    { -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, 
+      -0.5, -0.3, -0.1,  0.1,  0.3,  0.5,  0.7,  0.9,  1.1,  1.3, 
+       1.5,  1.7,  1.9,  2.1,  2.3,  2.5 };
 
 const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P 
-    { 0.05613476, 0.08892162, 0.13533528, 0.19789870, 0.27803730,  
-      0.37531110, 0.48675226, 0.60653066, 0.72614904, 0.83527021,
-      0.92311635, 0.98019867, 1.00000000, 0.98019867, 0.92311635,
-      0.83527021, 0.72614904, 0.60653066, 0.48675226, 0.37531110, 
-      0.27803730, 0.19789870, 0.13533528, 0.08892162, 0.05613476 };
+    { 0.0439, 0.0710, 0.1103, 0.1645, 0.2357, 0.3247, 0.4296, 0.5461, 0.6670, 0.7827,  
+      0.8825, 0.9560, 0.9950, 0.9950, 0.9560, 0.8825, 0.7827, 0.6670, 0.5461, 0.4296,  
+      0.3247, 0.2357, 0.1645, 0.1103, 0.0710, 0.0439 };
+
+//static constexpr int GAUS_CONV_N = 51;
+//const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
+//    { -2.5, -2.4, -2.3, -2.2, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, 
+//      -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, -0.6, 
+//      -0.5, -0.4, -0.3, -0.2, -0.1,  0.0,  0.1,  0.2,  0.3,  0.4, 
+//       0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4, 
+//       1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,  2.4,  2.5 };
+//const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P 
+//    { 0.0439, 0.0561, 0.0710, 0.0889, 0.1103, 0.1353, 0.1645, 0.1979, 0.2357, 0.2780, 
+//      0.3247, 0.3753, 0.4296, 0.4868, 0.5461, 0.6065, 0.6670, 0.7261, 0.7827, 0.8353, 
+//      0.8825, 0.9231, 0.9560, 0.9802, 0.9950, 1.0000, 0.9950, 0.9802, 0.9560, 0.9231, 
+//      0.8825, 0.8353, 0.7827, 0.7261, 0.6670, 0.6065, 0.5461, 0.4868, 0.4296, 0.3753, 
+//      0.3247, 0.2780, 0.2357, 0.1979, 0.1645, 0.1353, 0.1103, 0.0889, 0.0710, 0.0561, 0.0439 };
 
 } // namesapce TrackSys
 

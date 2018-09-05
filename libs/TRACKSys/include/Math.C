@@ -18,6 +18,25 @@ namespace Rndm {
 } // namesapce TrackSys
 
 
+std::vector<long double> TrackSys::LandauNumc::data;
+long double TrackSys::LandauNumc::EvalLn(long double x) {
+    // Build data set
+    long double newx = (LANDAU0_X + x * WIDTH_SCL);
+    if (data.size() == 0) {
+        for (long it = 0; it <= NSET; ++it)
+            data.push_back( std::log(TMath::Landau(LANDAU0_X + (BOUNDL+it*STEP) * WIDTH_SCL) / LANDAU0) );
+    }
+    
+    long double landln = Numc::ZERO<long double>;
+    if (x <= BOUNDL || x >= BOUNDU) landln = std::log(TMath::Landau(newx) / LANDAU0);
+    else {
+        long iset = std::lrint( ((x - BOUNDL) / STEP) );
+        landln = data.at(iset);
+    }
+    return landln;
+}
+
+
 namespace TrackSys {
 
 std::array<long double, 3> Robust::minimizer(long double nrm) const {
@@ -54,13 +73,13 @@ std::array<long double, 3> Robust::minimizer(long double nrm) const {
     if (!Numc::Valid(div2ndS) || Numc::Compare(div2ndS) >= 0) div2ndS = Numc::ZERO<long double>;
 
     long double corr = std::sqrt(ONE + TWO * div2ndS / div1st);
-    if (!Numc::Valid(corr) || Numc::Compare(corr) <= 0) corr = Numc::ONE<long double>;
+    if (!Numc::Valid(corr) || Numc::Compare(corr) <= 0) corr = ONE;
 
     long double sqrtdiv = std::sqrt(div1st);
     long double crnorm  = sqrtdiv / corr;
     long double crjacb  = sqrtdiv * corr;
-    if (!Numc::Valid(crnorm)) crnorm = Numc::ONE<long double>;
-    if (!Numc::Valid(crjacb)) crjacb = Numc::ONE<long double>;
+    if (!Numc::Valid(crnorm)) crnorm = ONE;
+    if (!Numc::Valid(crjacb)) crjacb = ONE;
     
     mini.at(0) = crchi;
     mini.at(1) = crnorm;
@@ -255,7 +274,7 @@ std::array<long double, 3> LandauGaus::minimizer(long double x) const {
 
 long double LandauGaus::eval_norm(long double norm) const {
     short       sign   = Numc::Compare(norm);
-    long double landau = (-Numc::TWO<long double>) * std::log(TMath::Landau(norm * WIDTH_SCL + LANDAU0_X) / LANDAU0);
+    long double landau = (-Numc::TWO<long double>) * LandauNumc::EvalLn(norm);
     long double ldgaus = (kpa_ * norm * norm) + (Numc::ONE<long double> - kpa_) * landau;
     long double nrmx   = sign * std::sqrt(ldgaus);
     if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
@@ -269,10 +288,8 @@ long double LandauGaus::eval_icov(long double norm) const {
          LAND_CONV[4] * std::exp(-LAND_CONV[5] * norm) + 
          LAND_CONV[6] * std::exp(-LAND_CONV[7] * norm));
     long double icov = (kpa_ + (Numc::ONE<long double> - kpa_) * ldinvc);
-    if (!Numc::Valid(icov) || Numc::Compare(icov) < 0) icov = Numc::ONE<long double>;
     return icov;
 }
-        
 
 std::array<long double, 2> LandauGaus::eval_conv(long double norm) const { // (nrm, icov)
     std::array<long double, 2> mini { Numc::ZERO<long double>, Numc::ONE<long double> };
@@ -308,7 +325,7 @@ std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::convprob(long doubl
     std::array<long double, GAUS_CONV_N> prob; prob.fill(Numc::ZERO<long double>);
     for (int it = 0; it < GAUS_CONV_N; ++it) {
         long double newx = norm - GAUS_CONV_X[it] * (fluc_ / sgm_);
-        long double land = (-Numc::TWO<long double>) * std::log(TMath::Landau(newx * WIDTH_SCL + LANDAU0_X) / LANDAU0);
+        long double land = (-Numc::TWO<long double>) * LandauNumc::EvalLn(newx);
         long double ldgs = kpa_ * (newx * newx) + (Numc::ONE<long double> - kpa_) * land;
         long double elem = std::exp(-Numc::HALF * ldgs) * GAUS_CONV_P[it];
         prob[it] = elem;

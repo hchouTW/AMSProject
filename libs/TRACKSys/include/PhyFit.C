@@ -923,13 +923,13 @@ Bool_t PhyTrFit::evolve(const MuOpt& mu_opt) {
     
     // Interaction Local Parameters
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
-        SVecD<5> inrm, idiv;
-        args_.at(is).cal_nrm_and_div(inrm, idiv);
+        SVecD<5> ichi, idiv;
+        args_.at(is).cal_chi_and_div(ichi, idiv);
         
-        chi_cx += inrm(0) * inrm(0); // tauu
-        chi_cx += inrm(2) * inrm(2); // taul
-        chi_cy += inrm(1) * inrm(1); // rhou
-        chi_cy += inrm(3) * inrm(3); // rhol
+        chi_cx += ichi(0) * ichi(0); // tauu
+        chi_cx += ichi(2) * ichi(2); // taul
+        chi_cy += ichi(1) * ichi(1); // rhou
+        chi_cy += ichi(3) * ichi(3); // rhol
 
         for (Short_t it = 0; it < DIML; ++it)
             jb(nseq_+is*DIML+it, DIMG+DIMM+is*DIML+it) += idiv(it);

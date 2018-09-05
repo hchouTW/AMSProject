@@ -66,7 +66,9 @@ class PhyArg {
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
+        void cal_chi(SVecD<5>& chi) const;
         void cal_nrm(SVecD<5>& nrm) const;
+        void cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const;
         void cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const;
 
     public :
