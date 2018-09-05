@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 using namespace std;
 
@@ -20,11 +20,11 @@ int main(int argc, char * argv[]) {
     //MatGeoBoxAms::CreateMatGeoBoxFromG4MatTree(dpath, fpath);
     //return true;
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
     
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
 
     MGConfig::JobOpt opt(argc, argv);
 
@@ -61,8 +61,8 @@ int main(int argc, char * argv[]) {
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
     Int_t decSel = 0;
-    Int_t laySat = 4;
-    Int_t layEnd = 5;
+    Int_t laySat = 0;
+    Int_t layEnd = 1;
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
@@ -107,8 +107,6 @@ int main(int argc, char * argv[]) {
         if (entry%printRate==0) COUT("Entry %lld/%lld\n", entry, dst->GetEntries());
         dst->GetEntry(entry);
 
-        TrackInfo& track = fTrk->track;
-       
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
@@ -127,7 +125,7 @@ int main(int argc, char * argv[]) {
 
         // Charge
         if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (track.QIn < 0.8 || track.QIn > 1.3) continue;
+        if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
 
         // TOF
         if (fTof->normChisqT > 10.) continue;

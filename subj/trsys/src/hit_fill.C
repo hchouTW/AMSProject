@@ -2,10 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -74,17 +72,9 @@ int main(int argc, char * argv[]) {
     Axis AXres("res [#mum]", 800, -200., 200.);
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxN1 = Hist::New("hMrxN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxN2 = Hist::New("hMrxN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxN3 = Hist::New("hMrxN3", HistAxis(AXres, "Events/Bin"));
     
     Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
     Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryN1 = Hist::New("hMryN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryN2 = Hist::New("hMryN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryN3 = Hist::New("hMryN3", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryN4 = Hist::New("hMryN4", HistAxis(AXres, "Events/Bin"));
-
 
     Axis AXTKadc("TKadc", 3000, 0.2, 100.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
@@ -187,32 +177,19 @@ int main(int argc, char * argv[]) {
             if (ntp[0]!=0) hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
             if (ntp[1]!=0) hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
             if (mch[it]->mom > 50.0) {
-                if (ntp[0]!=0) hMrxNN->fillH1D(CM2UM * res[0]);
-                if (ntp[0]==1) hMrxN1->fillH1D(CM2UM * res[0]);
-                if (ntp[0]==2) hMrxN2->fillH1D(CM2UM * res[0]);
-                if (ntp[0]>=3) hMrxN3->fillH1D(CM2UM * res[0]);
-                
-                if (ntp[1]!=0) hMryNN->fillH1D(CM2UM * res[1]);
-                if (ntp[1]==1) hMryN1->fillH1D(CM2UM * res[1]);
-                if (ntp[1]==2) hMryN2->fillH1D(CM2UM * res[1]);
-                if (ntp[1]==3) hMryN3->fillH1D(CM2UM * res[1]);
-                if (ntp[1]>=4) hMryN4->fillH1D(CM2UM * res[1]);
+                hMrxNN->fillH1D(CM2UM * res[0]);
+                hMryNN->fillH1D(CM2UM * res[1]);
             }
             if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
         }
 
-           
-        /*
-        HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
-        for (auto&& hit : fTrk->hits) { rec[hit.layJ-1] = &hit; }
-        
-        HitTRKMCInfo * mch[9]; std::fill_n(mch, 9, nullptr);
-        for (auto&& hit : fG4mc->primPart.hits) { mch[hit.layJ-1] = &hit; }
+        HitTRKMCInfo * mchm[9]; std::fill_n(mchm, 9, nullptr);
+        for (auto&& hit : fG4mc->primPart.hits) { mchm[hit.layJ-1] = &hit; }
         
         for (Int_t it = 2; it < 8; ++it) {
-            if (!rec[it] || !mch[it]) continue;
-            Double_t eta = (mass/mch[it]->mom);
+            if (!rec[it] || !mchm[it]) continue;
+            Double_t eta = (mass/mchm[it]->mom);
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
             Short_t ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
             
@@ -220,8 +197,8 @@ int main(int argc, char * argv[]) {
             if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
         }
 
-        SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
+        //SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
+        //for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==1) mtf[seg.lay] = &seg; }
         
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
@@ -229,7 +206,6 @@ int main(int argc, char * argv[]) {
             if (eta < AXeta.min() || eta > AXeta.max()) continue;
             hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
         }
-        */
         
         //SegPARTMCInfo * mtd[2]; std::fill_n(mtd, 2, nullptr);
         //for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec==2) mtd[seg.lay] = &seg; }
@@ -280,7 +256,7 @@ int main(int argc, char * argv[]) {
             PhySt st(PartType::Proton);
             st.set_state_with_cos(mcsTOF[3]->coo[0], mcsTOF[3]->coo[1], mcsTOF[3]->coo[2], mcsTOF[3]->dir[0], mcsTOF[3]->dir[1], mcsTOF[3]->dir[2]);
             st.set_mom(mcsTOF[3]->mom);
-            TrackSys::PropMgnt::PropToZ(-75.0, st);
+            TrackSys::PropMgnt::PropToZ(fRich->refz, st);
             Double_t dlt  = (1.0/fRich->beta - 1.0/st.bta());
             if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);

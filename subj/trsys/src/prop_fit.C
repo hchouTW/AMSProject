@@ -5,7 +5,7 @@
 
 static constexpr Double_t stable = 2.0;    
 static TF1* fgaus = new TF1("fgaus", "gaus", -3.0, 3.0);
-static TF1* flg = new TF1("flg", "[0] * TMath::Exp( (1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/1.78854160900000003e-01) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) )");
+static TF1* flg = new TF1("flg", "[0] * TMath::Exp([1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-[1]) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/[3]-2.22782980e-01)/1.80655634e-01))");
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;

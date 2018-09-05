@@ -2,14 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18May15/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18May19/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18May27/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun10/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun18/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Jun23/src/ClassDef.h"
 #include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul03/src/ClassDef.h"
+//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -151,7 +145,7 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        Int_t patt = 3;
+        Int_t patt = 2;
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
