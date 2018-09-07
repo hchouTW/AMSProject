@@ -156,41 +156,47 @@ class SimpleTrFit : public TrFitPar {
 
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t is_mu_free = false) : 
-            TrFitPar(fitPar), part_(part), is_mu_free_(is_mu_free),
-            DIMG_(5), DIMM_(is_mu_free_?1:0), DIML_(4), 
-            numOfRes_(0), numOfPar_(0),
-            parIDigb_(-1), parIDtsft_(-1)
-            { if (check_hits()) { setvar(nseq_+nseg_*DIML_, DIMG_+DIMM_+nseg_*DIML_); } }
+        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t opt_mu = false) : 
+            TrFitPar(fitPar), part_(part), opt_mu_(opt_mu), opt_int_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
+            DIMG_(5+opt_mu_+opt_tsft_), DIML_(4), 
+            numOfRes_(0), numOfParGlb_(0), numOfParInt_(0),
+            parIDeta_(-1), parIDigb_(-1), parIDtsft_(-1)
+            { if (check_hits()) { setvar(nseq_, (opt_int_?nseg_:0)); } }
     
     public :
         virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
     protected :
-        inline void setvar(const Short_t num_of_residual = 0, const Short_t num_of_parameter = 0) {
-            Double_t num_of_res = num_of_residual;
-            Double_t num_of_par = num_of_parameter;
+        inline void setvar(const Short_t nseq = 0, const Short_t nseg = 0) {
+            if (nseq <= 0 || nseg < 0) return;
+            numOfRes_    = nseq + nseg * DIML_;
+            numOfParGlb_ = DIMG_;
+            numOfParInt_ = nseg * DIML_;
 
-            if (is_mu_free_) { parIDigb_ = DIMG_; }
-            if (nmes_TOFt_ >= LMTN_TOF_T) { parIDtsft_ = num_of_par; num_of_par += 1; }
+            parIDeta_ = 4;
+            if (opt_mu_)   parIDigb_  = 5;
+            if (opt_tsft_) parIDtsft_ = DIMG_ - 1;
 
-            set_num_residuals(0);
+            set_num_residuals(numOfRes_);
             mutable_parameter_block_sizes()->clear(); 
-            if (num_of_residual  > 0 && num_of_res > 0) { numOfRes_ = num_of_res; set_num_residuals(num_of_res); }
-            if (num_of_parameter > 0 && num_of_par > 0) { numOfPar_ = num_of_par; mutable_parameter_block_sizes()->push_back(num_of_par); }
+            mutable_parameter_block_sizes()->push_back(numOfParGlb_);
+            if (opt_int_) mutable_parameter_block_sizes()->push_back(numOfParInt_);
         }
     
     protected :
-        const Bool_t is_mu_free_;
+        const Bool_t opt_mu_;
+        const Bool_t opt_int_;
+        const Bool_t opt_tsft_;
         const PhySt  part_;
-
+        
         const Short_t DIMG_;
-        const Short_t DIMM_;
         const Short_t DIML_;
         
         Short_t numOfRes_;
-        Short_t numOfPar_;
+        Short_t numOfParGlb_;
+        Short_t numOfParInt_;
 
+        Short_t parIDeta_;
         Short_t parIDigb_;
         Short_t parIDtsft_;
 };
@@ -241,7 +247,8 @@ class PhyTrFit : public TrFitPar {
 
     protected :
         void clear();
-        
+       
+        inline void resetPhyArg(Bool_t sw_mscat, Bool_t sw_eloss) { sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; part_.arg().reset(sw_mscat_, sw_eloss_); }
         Bool_t survivalTestAndModify();
 
         Bool_t simpleFit();
