@@ -60,8 +60,6 @@ void HitStTRK::clear() {
     pdf_qy_ = nullptr;
 
     set_type();
-    if (pdf_cx_ != nullptr && pdf_cy_ != nullptr)
-        erc_ = std::move(SVecD<2>(pdf_cx_->sgm(0), pdf_cy_->sgm(0)));
 }
 
 Short_t HitStTRK::set_seqID(Short_t seqID) {
@@ -159,6 +157,13 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
             CERR("HitStTRK::set_type() NO PartType Setting.\n");
             return false;
     }
+    if (pdf_cx_ != nullptr && pdf_cy_ != nullptr) {
+        erc_ = std::move(SVecD<2>(
+                   (Numc::ONE<> / pdf_cx_->minimizer(0.0L).at(2)),
+                   (Numc::ONE<> / pdf_cy_->minimizer(0.0L).at(2))
+               ));
+    }
+
     return true;
 }
 

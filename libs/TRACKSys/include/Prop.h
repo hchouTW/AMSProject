@@ -139,8 +139,8 @@ class PhyJb {
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;
         static constexpr Short_t E = 2;
-        static constexpr Short_t JPX = 0;
-        static constexpr Short_t JPY = 1;
+        static constexpr Short_t JCX = 0;
+        static constexpr Short_t JCY = 1;
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
@@ -187,8 +187,8 @@ class TransferPhyJb {
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;
         static constexpr Short_t E = 2;
-        static constexpr Short_t JPX = 0;
-        static constexpr Short_t JPY = 1;
+        static constexpr Short_t JCX = 0;
+        static constexpr Short_t JCY = 1;
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;
@@ -303,8 +303,8 @@ class PropMgnt {
         static constexpr Short_t X = 0;
         static constexpr Short_t Y = 1;
         static constexpr Short_t E = 2;
-        static constexpr Short_t JPX = 0;
-        static constexpr Short_t JPY = 1;
+        static constexpr Short_t JCX = 0;
+        static constexpr Short_t JCY = 1;
         static constexpr Short_t JUX = 2;
         static constexpr Short_t JUY = 3;
         static constexpr Short_t JEA = 4;

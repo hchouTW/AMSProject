@@ -250,12 +250,11 @@ void PhySt::symbk(Bool_t is_rndm) {
     if (is_rndm) arg_.rndm();
     
     if (arg_.mscat()) {
-        //coo_ = std::move(coo_ + arg_.symbk_mscatl());
+        SVecD<3>&& mscatu = arg_.symbk_mscatu();
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
         mscatl(2) = Numc::ZERO<>; // set dz to zero
         coo_ = std::move(coo_ + mscatl);
-
-        dir_ = std::move(LA::Unit(dir_ + arg_.symbk_mscatu()));
+        dir_ = std::move(LA::Unit(dir_ + mscatu));
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
