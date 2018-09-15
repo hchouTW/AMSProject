@@ -97,28 +97,32 @@ TransferFunc::TransferFunc(PhySt& part, const MatPhyFld* mphy) {
 }
  
 
-void PhyJb::set(PhySt& part, Double_t eta_abs) {
+void PhyJb::set(PhySt& part, Double_t mspar_mscatu, Double_t mspar_mslen1, Double_t mspar_mslen2) {
     if (part.info().is_massless() || part.info().is_chrgless()) return;
     const PhyArg& arg = part.arg();
     if (!(arg.field() && arg.mat())) return;
     field_ = true;
 
     if (arg.mscat()) {
+        Double_t crrl = std::fabs(Numc::ONE<> / part.uz());
+
         jb_gl_(JUX, JTAUU) = arg.mscat_uu() * arg.orth_tau(X);
         jb_gl_(JUY, JTAUU) = arg.mscat_uu() * arg.orth_tau(Y);
-        jb_gl_(JCX, JTAUU) = arg.mscat_ul() * arg.orth_tau(X);
-        jb_gl_(JCY, JTAUU) = arg.mscat_ul() * arg.orth_tau(Y);
+        jb_gl_(JCX, JTAUU) = arg.mscat_ul() * arg.orth_tau(X) * crrl;
+        jb_gl_(JCY, JTAUU) = arg.mscat_ul() * arg.orth_tau(Y) * crrl;
         
         jb_gl_(JUX, JRHOU) = arg.mscat_uu() * arg.orth_rho(X);
         jb_gl_(JUY, JRHOU) = arg.mscat_uu() * arg.orth_rho(Y);
-        jb_gl_(JCX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
-        jb_gl_(JCY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
+        jb_gl_(JCX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X) * crrl;
+        jb_gl_(JCY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y) * crrl;
        
-        jb_gl_(JCX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
-        jb_gl_(JCY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
+        jb_gl_(JCX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X) * crrl;
+        jb_gl_(JCY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y) * crrl;
         
-        jb_gl_(JCX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
-        jb_gl_(JCY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
+        jb_gl_(JCX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X) * crrl;
+        jb_gl_(JCY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y) * crrl;
+
+        jb_ms_.reset(mspar_mscatu, mspar_mslen1, mspar_mslen2);
 
         // testcode (This can improve mom < 1GeV for proton) TODO more detail
         //Double_t dltcx = arg.tauu() * jb_gl_(JCX, JTAUU) + arg.taul() * jb_gl_(JCX, JTAUL) + arg.rhou() * jb_gl_(JCX, JRHOU) + arg.rhol() * jb_gl_(JCX, JRHOL);
@@ -176,6 +180,10 @@ void PropPhyCal::init() {
     vec_mscatw_.clear();
     vec_invloc1_.clear();
     vec_invloc2_.clear();
+
+    mspar_mscatu_ = 0.;
+    mspar_mslen1_ = 0.;
+    mspar_mslen2_ = 0.;
 }
 
 
@@ -215,6 +223,10 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
         mscat_ul_ = 0.;
         mscat_ll_ = 0.;
 
+        mspar_mscatu_ = 0.;
+        mspar_mslen1_ = 0.;
+        mspar_mslen2_ = 0.;
+
         Double_t cvThaSqr = 0.;
         Double_t cvLenSqr = 0.;
         Double_t cvThaLen = 0.;
@@ -231,6 +243,12 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
         vec_mscatw_.clear();
         vec_invloc1_.clear();
         vec_invloc2_.clear();
+        
+        if (Numc::Compare(cvThaSqr) > 0) {
+            mspar_mscatu_ = std::sqrt(cvThaSqr);
+            mspar_mslen1_ = (cvThaLen / cvThaSqr);
+            mspar_mslen2_ = (cvLenSqr / cvThaSqr);
+        }
 
         Double_t sgmTha = std::sqrt(cvThaSqr);
         Double_t sgmLen = std::sqrt(cvLenSqr);
@@ -249,6 +267,10 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
         if (!Numc::Valid(mscat_uu_) || Numc::Compare(mscat_uu_) <= 0) mscat_uu_ = Numc::ZERO<>;
         if (!Numc::Valid(mscat_ul_) || Numc::Compare(mscat_ul_) <= 0) mscat_ul_ = Numc::ZERO<>;
         if (!Numc::Valid(mscat_ll_) || Numc::Compare(mscat_ll_) <= 0) mscat_ll_ = Numc::ZERO<>;
+
+        OrthCoord orth(part.u());
+        orth_tau_ = orth.tau();
+        orth_rho_ = orth.rho();
     }
     if (sw_eloss_) {
         MatPhyFld&& mphy = MatPhy::Get(mfld, part);
@@ -460,7 +482,7 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
         
     ppcal.normalized(mgfld, part);
     ppcal.set_PhyArg(part);
-    if (withJb) phyJb->set(part, ppcal.eft_eta());
+    if (withJb) phyJb->set(part, ppcal.mspar_mscatu(), ppcal.mspar_mslen1(), ppcal.mspar_mslen2());
 
     MatPhy::SetCorrFactor();
     return is_succ;
@@ -520,7 +542,7 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
     
     ppcal.normalized(mgfld, part);
     ppcal.set_PhyArg(part);
-    if (withJb) phyJb->set(part, ppcal.eft_eta());
+    if (withJb) phyJb->set(part, ppcal.mspar_mscatu(), ppcal.mspar_mslen1(), ppcal.mspar_mslen2());
    
     MatPhy::SetCorrFactor();
     return is_succ;
@@ -667,6 +689,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         phyJb->gg(JUY, JEA) += step * tf0.ue(Y);
 
         if (withEloss) phyJb->gg(JEA, JEA) += step_ps * tf0.ee();
+        phyJb->len() += std::fabs(step);
     }
 
     return true;
@@ -786,6 +809,7 @@ Bool_t PropMgnt::PropWithEulerHeun(const Double_t step, PhySt& part, const MatFl
         phyJb->gg(JUY, JEA) += s1o2 * (tf0.ue(Y)    + tj1.ue(Y)   );
         
         if (withEloss) phyJb->gg(JEA, JEA) += s1o2_ps * (tf0.ee() + tj1.ee());
+        phyJb->len() += std::fabs(step);
     }
 
     return true;
@@ -998,6 +1022,7 @@ Bool_t PropMgnt::PropWithRungeKuttaNystrom(const Double_t step, PhySt& part, con
         phyJb->gg(JUY, JEA) += s1o6 * (tf0.ue(Y)    + Numc::TWO<> * tj1.ue(Y)    + Numc::TWO<> * tj2.ue(Y)    + tj3.ue(Y)   );
 
         if (withEloss) phyJb->gg(JEA, JEA) += s1o6_ps * (tf0.ee() + Numc::TWO<> * tj1.ee() + Numc::TWO<> * tj2.ee() + tj3.ee());
+        phyJb->len() += std::fabs(step);
     }
 
     return true;

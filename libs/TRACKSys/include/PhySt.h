@@ -70,6 +70,7 @@ class PhyArg {
         void cal_nrm(SVecD<5>& nrm) const;
         void cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const;
         void cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const;
+        void cal_chi_and_nrm_and_div(SVecD<5>& chi, SVecD<5>& nrm, SVecD<5>& div) const;
 
     public :
         // Set Parameters

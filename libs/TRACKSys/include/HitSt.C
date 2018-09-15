@@ -25,7 +25,14 @@ void VirtualHitSt::clear() {
     seqID_   = -1;
     seqIDcx_ = -1;
     seqIDcy_ = -1;
+    
+    onlyc_seqID_   = -1;
+    onlyc_seqIDcx_ = -1;
+    onlyc_seqIDcy_ = -1;
 
+    onlycx_seqID_ = -1;
+    onlycy_seqID_ = -1;
+    
     type_ = PartType::Proton;
     dec_  = Detector::NONE;
     lay_  = 0;
@@ -38,7 +45,34 @@ void VirtualHitSt::clear() {
     nrmc_.fill(Numc::ZERO<>);
     divc_.fill(Numc::ZERO<>);
 }
-        
+
+
+Short_t VirtualHitSt::set_onlycx_seqID(Short_t onlycx_seqID) {
+    if (onlycx_seqID < 0) { onlycx_seqID_ = -1; return 0; }
+    if (side_coo_(0)) onlycx_seqID_ = onlycx_seqID;
+    else              onlycx_seqID_ = -1;
+    return (side_coo_(0)?1:0);
+}
+
+
+Short_t VirtualHitSt::set_onlycy_seqID(Short_t onlycy_seqID) {
+    if (onlycy_seqID < 0) { onlycy_seqID_ = -1; return 0; }
+    if (side_coo_(1)) onlycy_seqID_ = onlycy_seqID;
+    else              onlycy_seqID_ = -1;
+    return (side_coo_(1)?1:0);
+}
+
+
+Short_t VirtualHitSt::set_onlyc_seqID(Short_t onlyc_seqID) {
+    if (onlyc_seqID < 0) { onlyc_seqID_ = -1; return 0; }
+    
+    Short_t iter = 0;
+    if (side_coo_(0)) { onlyc_seqIDcx_ = onlyc_seqID + iter; iter++; } else onlyc_seqIDcx_ = -1;
+    if (side_coo_(1)) { onlyc_seqIDcy_ = onlyc_seqID + iter; iter++; } else onlyc_seqIDcy_ = -1;
+    if (iter != 0) onlyc_seqID_ = onlyc_seqID; else onlyc_seqID_ = -1;
+    return iter;
+}
+ 
 
 // HitStTRK
 void HitStTRK::clear() {
@@ -159,8 +193,8 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
     }
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr) {
         erc_ = std::move(SVecD<2>(
-                   (Numc::ONE<> / pdf_cx_->minimizer(0.0L).at(2)),
-                   (Numc::ONE<> / pdf_cy_->minimizer(0.0L).at(2))
+                   pdf_cx_->eftsgm(),
+                   pdf_cy_->eftsgm()
                ));
     }
 
@@ -213,14 +247,14 @@ void HitStTOF::clear() {
     
     side_t_ = false;
     orgt_   = Numc::ZERO<>;
-    sftt_   = Numc::ZERO<>;
+    tsft_   = Numc::ZERO<>;
 
     side_q_ = false;
     q_      = Numc::ZERO<>;
     
-    chit_     = Numc::ZERO<>;
-    nrmt_     = Numc::ZERO<>;
-    divt_sft_ = Numc::ZERO<>;
+    chit_    = Numc::ZERO<>;
+    nrmt_    = Numc::ZERO<>;
+    divtsft_ = Numc::ZERO<>;
     divt_.fill(Numc::ZERO<>);
     
     chiq_ = Numc::ZERO<>;
@@ -248,33 +282,33 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
 void HitStTOF::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
-    chit_     = Numc::ZERO<>;
-    nrmt_     = Numc::ZERO<>;
-    divt_sft_ = Numc::ZERO<>;
+    chit_    = Numc::ZERO<>;
+    nrmt_    = Numc::ZERO<>;
+    divtsft_ = Numc::ZERO<>;
     divt_.fill(Numc::ZERO<>);
     if (side_t_) {
         // 1/bta := (1+igmbta*igmbta)^(1/2)
         // t     := (delta_S / bta)
         // res_t := (meas_t - part_t)
-        sftt_ = orgt_ + OFFSET_T_; // update shift time
+        tsft_ = orgt_ + OFFSET_T_; // update shift time
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
-        Double_t dt = sftt_ - part.time();
+        Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
             Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.igmbta()) - 5.78158e-02 ) ); // ONE Layer [cm]
             if (!TShiftCorr_) sgm *= Numc::SQRT_TWO; // TWO Layer [cm]
             MultiGaus pdf_t(pdf_t_->robust(), sgm);
             std::array<long double, 3> minit = pdf_t.minimizer(dt);
-            chit_     = minit.at(0);
-            nrmt_     = minit.at(1);
-            divt_sft_ = minit.at(2);
+            chit_    = minit.at(0);
+            nrmt_    = minit.at(1);
+            divtsft_ = minit.at(2);
             Double_t divt = (Numc::NEG<> * minit.at(2) * ds) * (part.bta() * part.igmbta());
             divt_[0] = divt * (part.mu() * part.eta_sign());
             divt_[1] = divt;
             
-            if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divt_sft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1])) {
-                chit_     = Numc::ZERO<>;
-                nrmt_     = Numc::ZERO<>;
-                divt_sft_ = Numc::ZERO<>;
+            if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1])) {
+                chit_    = Numc::ZERO<>;
+                nrmt_    = Numc::ZERO<>;
+                divtsft_ = Numc::ZERO<>;
                 divt_.fill(Numc::ZERO<>);
             }
         }

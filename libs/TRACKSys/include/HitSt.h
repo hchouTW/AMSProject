@@ -17,6 +17,9 @@ class VirtualHitSt {
         ~VirtualHitSt() { clear(); }
 
         virtual Short_t set_seqID(Short_t seqID) = 0; 
+        virtual Short_t set_onlycx_seqID(Short_t onlycx_seqID); 
+        virtual Short_t set_onlycy_seqID(Short_t onlycy_seqID); 
+        virtual Short_t set_onlyc_seqID(Short_t onlyc_seqID); 
 
         virtual void cal(const PhySt& part) = 0;
         virtual Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton)) = 0;
@@ -31,9 +34,16 @@ class VirtualHitSt {
         inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
         inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
         
-        inline const Short_t&  seqID() const { return seqID_; }
+        inline const Short_t&  seqID()   const { return seqID_; }
         inline const Short_t&  seqIDcx() const { return seqIDcx_; }
         inline const Short_t&  seqIDcy() const { return seqIDcy_; }
+        
+        inline const Short_t&  onlyc_seqID()   const { return onlyc_seqID_; }
+        inline const Short_t&  onlyc_seqIDcx() const { return onlyc_seqIDcx_; }
+        inline const Short_t&  onlyc_seqIDcy() const { return onlyc_seqIDcy_; }
+        
+        inline const Short_t&  onlycx_seqID() const { return onlycx_seqID_; }
+        inline const Short_t&  onlycy_seqID() const { return onlycy_seqID_; }
         
         inline const PartType& type() const { return type_; }
         inline const Detector& dec()  const { return dec_; }
@@ -67,6 +77,13 @@ class VirtualHitSt {
         Short_t seqID_;
         Short_t seqIDcx_;
         Short_t seqIDcy_;
+        
+        Short_t onlyc_seqID_;
+        Short_t onlyc_seqIDcx_;
+        Short_t onlyc_seqIDcy_;
+        
+        Short_t onlycx_seqID_;
+        Short_t onlycy_seqID_;
 
         PartType type_; // particle type
         
@@ -177,12 +194,12 @@ class HitStTOF : public VirtualHitSt {
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
-            side_t_   = (Numc::Compare(t) >= 0);
-            orgt_     = (side_t_ ? t : Numc::ZERO<>);
-            sftt_     = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
-            chit_     = Numc::ZERO<>;
-            nrmt_     = Numc::ZERO<>;
-            divt_sft_ = Numc::ZERO<>;
+            side_t_  = (Numc::Compare(t) >= 0);
+            orgt_    = (side_t_ ? t : Numc::ZERO<>);
+            tsft_    = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
+            chit_    = Numc::ZERO<>;
+            nrmt_    = Numc::ZERO<>;
+            divtsft_ = Numc::ZERO<>;
             divt_.fill(Numc::ZERO<>);
         }
         
@@ -195,7 +212,7 @@ class HitStTOF : public VirtualHitSt {
         }
 
         inline const Double_t& orgt() const { return orgt_; }
-        inline const Double_t& sftt() const { return sftt_; }
+        inline const Double_t& tsft() const { return tsft_; }
 
         inline const Short_t&  seqIDt() const { return seqIDt_; }
         inline const Short_t&  seqIDq() const { return seqIDq_; }
@@ -205,7 +222,7 @@ class HitStTOF : public VirtualHitSt {
 
         inline const Double_t& chit() const { return chit_; }
         inline const Double_t& nrmt() const { return nrmt_; }
-        inline const Double_t& divt_sft() const { return divt_sft_; }
+        inline const Double_t& divtsft() const { return divtsft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
         inline const Double_t& divt_igb() const { return divt_[1]; }
         
@@ -223,14 +240,14 @@ class HitStTOF : public VirtualHitSt {
         
         Bool_t   side_t_;
         Double_t orgt_; // T [cm]
-        Double_t sftt_; // [cm]
+        Double_t tsft_; // [cm]
 
         Bool_t   side_q_;
         Double_t q_; // Q
         
         Double_t chit_; // T chi
         Double_t nrmt_; // T nrom
-        Double_t divt_sft_; // T(shift)
+        Double_t divtsft_; // T(shift)
         std::array<Double_t, 2> divt_; // T div (igmbta) [eta, igb]
 
         Double_t chiq_; // Q chi

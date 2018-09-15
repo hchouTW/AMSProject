@@ -13,7 +13,9 @@
 #include "MatEnv.h"
 #include "Prop.h"
 #include "HitSt.h"
-#include "PhyFit.h"
+#include "TrFitPar.h"
+#include "SimpleTrFit.h"
+#include "PhyTrFit.h"
 #include "InterfaceAms.h"
 
 
@@ -64,12 +66,27 @@ void Event::Clear() {
     StatusRh = false;
 }
 
+        
+Bool_t Event::Rebuild(AMSEventR* event, UInt_t ipart) {
+    if (event == nullptr || ipart >= event->NParticle()) return false;
+    ParticleR* part = event->pParticle(ipart);
+    if (part == nullptr) return false;
+	
+    Short_t   iTrtk = (part->iTrTrack() < 0) ? -1 : part->iTrTrack();
+    TrTrackR*  trtk = (iTrtk >= 0) ? event->pTrTrack(iTrtk) : nullptr;
+    if (trtk == nullptr) return false;
+    
+    trtk->iTrTrackPar(1, 0, 23);
+    return true;
+}
 
-Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Bool_t rebuild) {
+
+Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     MagMgnt::Load();
     MatMgnt::Load();
 
     Clear(); Init();
+    //Rebuild(event, ipart); // testcode
     if (event == nullptr || ipart >= event->NParticle()) return false;
     ParticleR* part = event->pParticle(ipart);
     if (part == nullptr) return false;
@@ -81,7 +98,6 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Bool_t rebuild) {
     BetaHR*    btah = (iBetaH    >= 0) ? event->pBetaH(iBetaH)       : nullptr;
     RichRingR* rich = (iRichRing >= 0) ? event->pRichRing(iRichRing) : nullptr;
     if (trtk == nullptr) return false;
-    if (rebuild) trtk->iTrTrackPar(1, 0, 23);
 
     RunID  = event->Run();
     EvID   = event->Event();

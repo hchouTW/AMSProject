@@ -103,15 +103,88 @@ class TransferFunc {
 };
 
 
-class PhyJb {
+class PhyJbMS {
+    public :
+        static constexpr Int_t DIM = 2;
+        using SMtxDMS = SMtxD<DIM, DIM>;
+
+    public :
+        PhyJbMS() : field_(false), jb_ms_(SMtxDMS()), mscatu_(0), mslen1_(0), mslen2_(0), extlen_(0) {}
+        PhyJbMS(Double_t mscatu, Double_t mslen1, Double_t mslen2, Double_t extlen = 0) { reset(mscatu, mslen1, mslen2, extlen); }
+        ~PhyJbMS() {}
+        
+        inline void init() { jb_ms_ = std::move(SMtxDMS()); }
+        inline void reset(Double_t mscatu, Double_t mslen1, Double_t mslen2, Double_t extlen = 0);
+        inline void multiplied(Double_t len) { if (len > 0) extlen_ += len; calculate(); }
+        
+        inline SMtxDMS& operator()() { return jb_ms_; }
+        inline Double_t& operator()(Int_t i, Int_t j) { return jb_ms_(i, j); }
+
+    protected :
+        inline void calculate();
+
     private :
+        Bool_t  field_;
+        SMtxDMS jb_ms_;
+
+        Double_t mscatu_; // <theta>
+        Double_t mslen1_; // <len>
+        Double_t mslen2_; // <len^2>
+        Double_t extlen_; // extern len
+        
+    private :
+        static constexpr Short_t JL = 0;
+        static constexpr Short_t JU = 1;
+};
+
+
+void PhyJbMS::reset(Double_t mscatu, Double_t mslen1, Double_t mslen2, Double_t extlen) {
+    field_ = (Numc::Compare(mscatu) > 0);
+    jb_ms_ = SMtxDMS();
+    if (field_) {
+        mscatu_ = mscatu;
+        mslen1_ = mslen1;
+        mslen2_ = mslen2;
+        extlen_ = extlen;
+        calculate();
+    }
+    else {
+        mscatu_ = Numc::ZERO<>;
+        mslen1_ = Numc::ZERO<>;
+        mslen2_ = Numc::ZERO<>;
+        extlen_ = Numc::ZERO<>;
+    }
+}
+
+
+void PhyJbMS::calculate() {
+    if (!field_) return;
+    else jb_ms_ = SMtxDMS();
+    Double_t rel2num = (mslen2_ - mslen1_ * mslen1_);
+    Double_t rel2den = (mslen2_ + Numc::TWO<> * mslen1_ * extlen_ + extlen_ * extlen_);
+    Double_t relLL = ((Numc::Compare(rel2den) > 0) ? std::sqrt(rel2num / rel2den) : Numc::ZERO<>);
+    Double_t relLU = std::sqrt(Numc::ONE<> - relLL * relLL);
+    if (!Numc::Valid(relLL) || !Numc::Valid(relLU)) { relLL = Numc::ZERO<>; relLU = Numc::ONE<>; }
+    
+    Double_t mscatu = mscatu_;
+    Double_t mscatl = mscatu_ * std::sqrt(rel2den);
+    
+    jb_ms_(JU, JU) = mscatu;
+    jb_ms_(JL, JL) = mscatl * relLL;
+    jb_ms_(JL, JU) = mscatl * relLU;
+    jb_ms_(JU, JL) = Numc::ZERO<>;
+}
+
+
+class PhyJb {
+    public :
         static constexpr Int_t DIMG = 5;
         static constexpr Int_t DIML = 4;
 
     public :
         using SMtxDGG = SMtxD<DIMG, DIMG>;
         using SMtxDGL = SMtxD<DIMG, DIML>;
-        
+
     public :
         PhyJb() { init(); }
         ~PhyJb() {}
@@ -120,20 +193,26 @@ class PhyJb {
         
         inline void multiplied(PhyJb& phyJb);
         
-        void set(PhySt& part, Double_t eta_abs = 0);
+        void set(PhySt& part, Double_t mspar_mscatu = 0, Double_t mspar_mslen1 = 0, Double_t mspar_mslen2 = 0);
 
         inline const Bool_t& field() const { return field_; }
+        inline Double_t& len() { return len_; }
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
         
         inline Double_t& gg(Int_t i, Int_t j) { return jb_gg_(i, j); }
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
+        
+        inline PhyJbMS& ms() { return jb_ms_; }
 
     private :
         Bool_t   field_;
-        SMtxDGG  jb_gg_;
-        SMtxDGL  jb_gl_;
+        Double_t len_;
+
+        SMtxDGG jb_gg_;
+        SMtxDGL jb_gl_;
+        PhyJbMS jb_ms_;
 
     private :
         static constexpr Short_t X = 0;
@@ -154,12 +233,15 @@ class PhyJb {
 
 void PhyJb::init() {
     field_ = false;
+    len_   = Numc::ZERO<>;
     jb_gg_ = std::move(SMtxId()); 
     jb_gl_ = std::move(SMtxDGL());
+    jb_ms_.init();
 }
  
 
 void PhyJb::multiplied(PhyJb& phyJb) {
+    len_ += phyJb.len();
     jb_gg_ = std::move(phyJb.gg() * jb_gg_);
     if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
 }
@@ -209,6 +291,10 @@ class PropPhyCal {
 
         inline Double_t eft_eta() const { return (Numc::HALF * (eta_abs_sat_ + eta_abs_end_)); }
 
+        inline const Double_t& mspar_mscatu() const { return mspar_mscatu_; }
+        inline const Double_t& mspar_mslen1() const { return mspar_mslen1_; }
+        inline const Double_t& mspar_mslen2() const { return mspar_mslen2_; }
+
     private :
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
@@ -238,6 +324,10 @@ class PropPhyCal {
         std::vector<Double_t> vec_mscatw_;
         std::vector<Double_t> vec_invloc1_;
         std::vector<Double_t> vec_invloc2_;
+        
+        Double_t mspar_mscatu_; // <theta>
+        Double_t mspar_mslen1_; // <len>
+        Double_t mspar_mslen2_; // <len^2>
 };
 
 

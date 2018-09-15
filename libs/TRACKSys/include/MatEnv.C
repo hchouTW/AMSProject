@@ -608,9 +608,9 @@ MatFld MatMgnt::Get(Double_t stp_len, const PhySt& part) {
 }
 
 
-Bool_t MatPhy::corr_sw_mscat_      = false;
-Bool_t MatPhy::corr_sw_eloss_      = false;
 MatFld MatPhy::corr_mfld_;
+Bool_t MatPhy::corr_sw_mscat_  = false;
+Bool_t MatPhy::corr_sw_eloss_  = false;
 
 
 MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part) {
@@ -679,7 +679,7 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     Double_t mscat_sgm = mscat_fat * (eta * ibta);
     
     // Correction (Tune)
-    //mscat_sgm *= 1.0;
+    //mscat_sgm *= 1.01001619337256598e+00;
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;
@@ -728,12 +728,16 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
     Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
-    
+   
+    // Correction (Tune)
+    //elion_men *= 9.72577696526508273e-01;
+    //elion_mpv *= 1.02514814814814826e+00;
+
     // Els := min(Mean, Mpv)
     Double_t elion_els = std::min(elion_men, elion_mpv);
-    
-    // Correction (Tune)
-    elion_els *= 1.03;
+
+    // Correction (Tune) 
+    //elion_els *= 1.0;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;

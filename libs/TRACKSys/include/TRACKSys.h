@@ -33,8 +33,17 @@
 #include "HitSt.h"
 #include "HitSt.C"
 
-#include "PhyFit.h"
-#include "PhyFit.C"
+//#include "PhyFit.h"
+//#include "PhyFit.C"
+
+#include "TrFitPar.h"
+#include "TrFitPar.C"
+
+#include "SimpleTrFit.h"
+#include "SimpleTrFit.C"
+
+#include "PhyTrFit.h"
+#include "PhyTrFit.C"
 
 #include "InterfaceAms.h"
 #include "InterfaceAms.C"

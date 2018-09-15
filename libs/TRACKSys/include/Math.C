@@ -99,6 +99,7 @@ MultiGaus::MultiGaus(Robust robust, long double sgm) : MultiGaus()  {
     bound_.first  = sgm;
     bound_.second = sgm;
     robust_ = robust;
+    eftsgm_ = find_eftsgm();
 }
 
 MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2) : MultiGaus()  {
@@ -108,6 +109,7 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     bound_.first  = std::min(sgm1, sgm2);
     bound_.second = std::max(sgm1, sgm2);
     robust_ = robust;
+    eftsgm_ = find_eftsgm();
 }
 
 MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3) : MultiGaus()  {
@@ -118,6 +120,7 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     bound_.first  = std::min(std::min(sgm1, sgm2), sgm3);
     bound_.second = std::max(std::max(sgm1, sgm2), sgm3);
     robust_ = robust;
+    eftsgm_ = find_eftsgm();
 }
 
 MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4) : MultiGaus()  {
@@ -129,6 +132,7 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     bound_.first  = std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4);
     bound_.second = std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4);
     robust_ = robust;
+    eftsgm_ = find_eftsgm();
 }
 
 MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5) : MultiGaus()  {
@@ -141,6 +145,7 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     bound_.first  = std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5);
     bound_.second = std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5);
     robust_ = robust;
+    eftsgm_ = find_eftsgm();
     
     // find max sigma
     //long double max_sgm = std::max_element(
@@ -148,6 +153,26 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     //            [](const std::pair<long double, long double>& gauss1, const std::pair<long double, long double>& gauss2) { return (gauss1.second < gauss2.second); }
     //        )->second;
 }
+        
+
+long double MultiGaus::chi(long double r) const {
+    long double chival = Numc::ZERO<long double>;
+    if      (multi_gaus_.size() == 0) return Numc::ZERO<long double>;
+    else if (multi_gaus_.size() == 1) return (r / multi_gaus_.at(0).second);
+    else {
+        long double sum_prb = Numc::ZERO<long double>;
+        for (auto&& gaus : multi_gaus_) {
+            long double res = (r / gaus.second);
+            long double prb = gaus.first * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
+            sum_prb += prb;
+        }
+        long double nrm = Numc::Compare(r) * std::sqrt(Numc::NEG<long double> * Numc::TWO<long double> * std::log(sum_prb));
+        if (!Numc::Valid(nrm)) nrm = Numc::ZERO<long double>;
+        chival = nrm;
+    }
+    return chival;
+}
+
 
 std::array<long double, 3> MultiGaus::minimizer(long double r) const {
     std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> };
@@ -219,6 +244,50 @@ long double MultiGaus::rndm() {
     }
     return Numc::ZERO<long double>;
 }
+        
+
+long double MultiGaus::find_eftsgm() const {
+    long double sgm = Numc::ONE<long double>;
+    if      (multi_gaus_.size() == 0) return Numc::ONE<long double>;
+    else if (multi_gaus_.size() == 1) return multi_gaus_.at(0).second;
+    else {
+        std::vector<long double> chivec;
+        for (auto&& gaus : multi_gaus_) chivec.push_back( chi(gaus.second) );
+        
+        long double chil = Numc::ZERO<>;
+        long double sgml = Numc::ZERO<>;
+        for (int it = 0; it < chivec.size(); ++it)
+            if (chivec.at(it) < Numc::ONE<long double>)
+                { chil = chivec.at(it); sgml = multi_gaus_.at(it).second; }
+
+        long double chiu = Numc::ZERO<>;
+        long double sgmu = Numc::ZERO<>;
+        for (int it = chivec.size()-1; it >= 0; --it)
+            if (chivec.at(it) > Numc::ONE<long double>)
+                { chiu = chivec.at(it); sgmu = multi_gaus_.at(it).second; }
+
+        const int max_iter = 50;
+        const long double lmt = 1.0e-04;
+        if (std::fabs(chiu - chil) < lmt) sgm = 0.5L * (sgml + sgmu);
+        else {
+            for (int iter = 1; iter <= max_iter; ++iter) {
+                if (std::fabs(chiu - chil) < lmt) { sgm = 0.5L * (sgml + sgmu); break; }
+                long double wgtl = std::exp(-Numc::HALF * (chil * chil - Numc::ONE<long double>));
+                long double wgtu = std::exp(-Numc::HALF * (chiu * chiu - Numc::ONE<long double>));
+                long double sgmm = (wgtl * sgmu + wgtu * sgml) / (wgtl + wgtu);
+                long double chim = chi(sgmm);
+
+                sgm = sgmm;
+                if (std::fabs(chim - Numc::ONE<long double>) < lmt) break;
+                if (chim < Numc::ONE<long double>) { chil = chim; sgml = sgmm; }
+                else                               { chiu = chim; sgmu = sgmm; }
+            }
+        }
+    }
+    if (!Numc::Valid(sgm)) sgm = multi_gaus_.at(0).second;
+    return sgm;
+}
+
 
 } // namesapce TrackSys
 

@@ -231,7 +231,7 @@ class Robust {
         ~Robust() {}
 
     public :
-        const Opt& opt() const { return opt_; } 
+        const Opt& opt() const { return opt_; }
         std::array<long double, 3> minimizer(long double nrm) const;
         
     private :
@@ -249,7 +249,7 @@ namespace TrackSys {
 // Gaussian Core f ~ [0]*exp(-0.5*x*x/[1]/[1])
 class MultiGaus {
     public :
-        MultiGaus() : robust_(Robust::Opt::OFF), rand_func_(nullptr) {}
+        MultiGaus() : robust_(Robust::Opt::OFF), rand_func_(nullptr), eftsgm_(Numc::ONE<long double>) {}
         MultiGaus(Robust robust, long double sgm);
         MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
         MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);
@@ -262,13 +262,20 @@ class MultiGaus {
         inline Int_t num() const { return multi_gaus_.size(); }
         inline const long double& wgt(Int_t i = 0) const { return multi_gaus_.at(i).first; }
         inline const long double& sgm(Int_t i = 0) const { return multi_gaus_.at(i).second; }
+        
+        inline const long double eftsgm() const { return eftsgm_; }
+        long double chi(long double r) const;
 
         std::array<long double, 3> minimizer(long double r = 0.) const; 
         long double rndm();
 
+    protected :
+        long double find_eftsgm() const;
+
     private :
         std::pair<long double, long double> bound_;
         std::vector<std::pair<long double, long double>> multi_gaus_;
+        long double eftsgm_;
 
     private :
         Robust robust_;

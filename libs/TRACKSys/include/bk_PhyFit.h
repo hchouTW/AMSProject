@@ -35,6 +35,7 @@ class TrFitPar {
         inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
 
+        inline const Short_t& onlyc_nseq() const { return onlyc_nseq_; }
         inline const Short_t& nseq() const { return nseq_; }
         inline const Short_t& nseg() const { return nseg_; }
 
@@ -54,6 +55,8 @@ class TrFitPar {
         Bool_t sort_hits();
         Bool_t check_hits();
 
+        Bool_t survival_test_and_modify(PhySt& part, Bool_t with_eloss = false);
+
     protected :
         Bool_t      sw_mscat_;
         Bool_t      sw_eloss_;
@@ -66,6 +69,7 @@ class TrFitPar {
         std::vector<HitStRICH>     hits_RICH_;
         std::vector<HitStTRD>      hits_TRD_;
 
+        Short_t onlyc_nseq_;
         Short_t nseq_;
         Short_t nseg_;
 
@@ -88,6 +92,47 @@ class TrFitPar {
         static constexpr Short_t LMTN_CX = 2;
         static constexpr Short_t LMTN_CY = 3;
         static constexpr Short_t LMTN_TOF_T = 1;
+        
+        // Survival Test
+        static constexpr Short_t  SURVIVAL_LMTN = 12;
+        static constexpr Double_t SURVIVAL_FACT = 0.85;
+        static constexpr Double_t SURVIVAL_BETA = 0.50;
+};
+
+
+class VirtualSimpleTrFit : public TrFitPar, public ceres::FirstOrderFunction {
+    public :
+        VirtualSimpleTrFit(const TrFitPar& fitPar, const PhySt& part) :
+            TrFitPar(fitPar), part_(part), opt_int_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
+            DIMG_(PhyJb::DIMG+opt_tsft_), DIML_(PhyJb::DIML), 
+            numOfRes_(0), numOfPar_(0), parIDtsft_(-1) 
+            { if (check_hits()) setvar(nseq_, DIMG_); } 
+    
+    public :
+        virtual bool Evaluate(const double* parameters, double* cost, double* gradient) const;
+        virtual int NumParameters() const { return numOfPar_; }
+        
+    protected :
+        inline void setvar(const Short_t nres = 0, const Short_t npar = 0) {
+            if (nres <= 0 || npar <= 0) return;
+            numOfRes_ = nres; 
+            numOfPar_ = npar; 
+            if (opt_tsft_) parIDtsft_ = npar - 1;
+            else           parIDtsft_ = -1;
+        }
+
+    protected :
+        const Bool_t opt_int_;
+        const Bool_t opt_tsft_;
+        const PhySt  part_;
+        
+        const Short_t DIMG_;
+        const Short_t DIML_;
+        
+        Short_t numOfRes_;
+        Short_t numOfPar_;
+        
+        Short_t parIDtsft_;
 };
 
 
@@ -96,7 +141,7 @@ class SimpleTrFit : public TrFitPar {
         SimpleTrFit& operator=(const SimpleTrFit& rhs);
         SimpleTrFit(const SimpleTrFit& trFit) { *this = trFit; }
         
-        SimpleTrFit(const TrFitPar& fitPar); 
+        SimpleTrFit(const TrFitPar& fitPar, Bool_t advanced = false); 
         ~SimpleTrFit() { SimpleTrFit::clear(); }
         
     public :
@@ -118,10 +163,13 @@ class SimpleTrFit : public TrFitPar {
 
         Bool_t analyticalFit();
         Bool_t simpleFit();
+        Bool_t advancedSimpleFit();
 
     protected :
         Bool_t succ_;
         PhySt  part_;
+        
+        Double_t TOFt_sft_; // TOF time shift [cm]
 
         Short_t ndof_;
         Short_t ndof_cx_; // (cx)
@@ -134,10 +182,10 @@ class SimpleTrFit : public TrFitPar {
         Double_t nchi_ib_;
 
     protected :
-        static constexpr Short_t DIMG = 5;
-
+        static constexpr Short_t DIMG = PhyJb::DIMG;
+        
         // Minimization (Analytical Method)
-        static constexpr Double_t LMTU_ETA = 5.0;
+        static constexpr Double_t LMTU_ETA = 3.0;
         
         // Minimization (Levenberg-Marquardt Method)
         static constexpr Short_t LMTL_ITER = 3;
@@ -158,7 +206,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part, Bool_t opt_mu = false) : 
             TrFitPar(fitPar), part_(part), opt_mu_(opt_mu), opt_int_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
-            DIMG_(5+opt_mu_+opt_tsft_), DIML_(4), 
+            DIMG_(PhyJb::DIMG+opt_mu_+opt_tsft_), DIML_(PhyJb::DIML), 
             numOfRes_(0), numOfParGlb_(0), numOfParInt_(0),
             parIDeta_(-1), parIDigb_(-1), parIDtsft_(-1)
             { if (check_hits()) { setvar(nseq_, (opt_int_?nseg_:0)); } }
@@ -206,10 +254,6 @@ class PhyTrFit : public TrFitPar {
     public :
         enum class MuOpt { kFixed = 0, kFree = 1 };
         
-    protected :
-        static constexpr Short_t DIMG = 5;
-        static constexpr Short_t DIML = 4;
-
     public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
@@ -249,7 +293,7 @@ class PhyTrFit : public TrFitPar {
         void clear();
        
         inline void resetPhyArg(Bool_t sw_mscat, Bool_t sw_eloss) { sw_mscat_ = sw_mscat; sw_eloss_ = sw_eloss; part_.arg().reset(sw_mscat_, sw_eloss_); }
-        Bool_t survivalTestAndModify();
+        inline Bool_t survivalTestAndModify() { return survival_test_and_modify(part_, sw_eloss_); }
 
         Bool_t simpleFit();
         Bool_t physicalFit(const MuOpt& mu_opt = MuOpt::kFixed, Double_t fluc_eta = Numc::ZERO<>, Double_t fluc_igb = Numc::ZERO<>, Bool_t with_mu_est = true);
@@ -289,10 +333,6 @@ class PhyTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     private :
-        static constexpr Short_t  SURVIVAL_LMTN = 12;
-        static constexpr Double_t SURVIVAL_FACT = 0.85;
-        static constexpr Double_t SURVIVAL_BETA = 0.25;
-        static constexpr Double_t SURVIVAL_MASS = 0.000510999;
         static constexpr Double_t LMTL_INV_GB   = 1.0e-12;
         static constexpr Double_t LMTU_INV_GB   = 1.0e+3;
         static constexpr Short_t  LMT_MU_ITER   = 2;

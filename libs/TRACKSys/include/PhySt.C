@@ -14,11 +14,7 @@ Bool_t PhyArg::opt_mscat_ = true;
 Bool_t PhyArg::opt_eloss_ = true;
 
 MultiGaus PhyArg::pdf_mscatu_(
-    Robust::Opt::OFF,
-    8.38103686633676292e-01, 1.000000e+00 * 9.67719020129811813e-01,
-    1.52093383261288712e-01, 1.465145e+00 * 9.67719020129811813e-01,
-    4.90765377101826019e-03, 3.730767e+00 * 9.67719020129811813e-01,
-    4.89527633401695347e-03, 1.076454e+01 * 9.67719020129811813e-01
+    Robust::Opt::OFF, 1.0
 );
 
 MultiGaus PhyArg::pdf_mscatl_(
@@ -112,6 +108,38 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
 }
 
 
+void PhyArg::cal_chi_and_nrm_and_div(SVecD<5>& chi, SVecD<5>& nrm, SVecD<5>& div) const {
+    chi = std::move(SVecD<5>());
+    nrm = std::move(SVecD<5>());
+    div = std::move(SVecD<5>());
+    if (!field_) return;
+    if (sw_mscat_) {
+        std::array<long double, 3>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
+        std::array<long double, 3>&& minirhou = pdf_mscatu_.minimizer(Numc::NEG<> * rhou_);
+        std::array<long double, 3>&& minitaul = pdf_mscatl_.minimizer(Numc::NEG<> * taul_);
+        std::array<long double, 3>&& minirhol = pdf_mscatl_.minimizer(Numc::NEG<> * rhol_);
+        div(0) = (Numc::NEG<> * minitauu.at(2));
+        div(1) = (Numc::NEG<> * minirhou.at(2));
+        div(2) = (Numc::NEG<> * minitaul.at(2));
+        div(3) = (Numc::NEG<> * minirhol.at(2));
+        nrm(0) = (minitauu.at(1)); 
+        nrm(1) = (minirhou.at(1)); 
+        nrm(2) = (minitaul.at(1)); 
+        nrm(3) = (minirhol.at(1)); 
+        chi(0) = (minitauu.at(0)); 
+        chi(1) = (minirhou.at(0)); 
+        chi(2) = (minitaul.at(0)); 
+        chi(3) = (minirhol.at(0)); 
+    }
+    if (sw_eloss_) {
+        std::array<long double, 3>&& minielion = pdf_elion_.minimizer(Numc::NEG<> * elion_);
+        div(4) = (Numc::NEG<> * minielion.at(2));
+        nrm(4) = (minielion.at(1));
+        chi(4) = (minielion.at(0));
+    }
+}
+
+
 void PhySt::print() const {
     std::string printStr;
     printStr += STR("============ %-15s ============\n", info_.name().c_str());
@@ -161,7 +189,7 @@ void PhySt::set_state_with_uxy(Double_t cx, Double_t cy, Double_t cz, Double_t u
     if (sign == 0) return;
     Double_t uz = (Numc::ONE<> - ux * ux - uy * uy);
     if (Numc::Compare(uz) <= 0) uz = Numc::ZERO<>;
-    else                          uz = sign * std::sqrt(uz);
+    else                        uz = sign * std::sqrt(uz);
     Double_t norm = std::sqrt(ux * ux + uy * uy + uz * uz);
     if (Numc::EqualToZero(norm)) return;
     coo_(0) = cx;
@@ -252,9 +280,10 @@ void PhySt::symbk(Bool_t is_rndm) {
     if (arg_.mscat()) {
         SVecD<3>&& mscatu = arg_.symbk_mscatu();
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
-        mscatl(2) = Numc::ZERO<>; // set dz to zero
-        coo_ = std::move(coo_ + mscatl);
+        mscatl /= std::fabs(dir_(2)); // proj to z-plane: corr rate
+        mscatl(2) = Numc::ZERO<>;     // proj to z-plane: set dz to zero
         dir_ = std::move(LA::Unit(dir_ + mscatu));
+        coo_ = std::move(coo_ + mscatl);
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
