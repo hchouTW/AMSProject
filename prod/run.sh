@@ -1,6 +1,6 @@
 #!/bin/bash
 Version=vdev
-Version=18Sep15
+Version=18Sep16
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
@@ -12,7 +12,7 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 DataType=MC
 Stream=lst/flist.cern.mc.pr.pl1.l1.054000.B1200
 
-GroupId=105
+GroupId=1005
 GroupSize=1
 OutputDir=.
 

@@ -292,7 +292,6 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			
 			HitTRKMCInfo hit;
 			hit.layJ = layJ;
-			hit.tkid = tkid;
 			hit.edep = cluster->GetEdep();
 			hit.mom  = cluster->GetMomentum();
 			hit.coo[0] = coo[0];
@@ -927,6 +926,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Choutko
         Int_t ckRefit = 23;
 		for (int patt = 0; patt < _npatt; ++patt) {
+            if (ckRefit == -1) continue;
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
 			if (fitid < 0) continue;
@@ -981,6 +981,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         // Kalman
         Int_t kfRefit = 23;
 		for (int patt = 0; patt < _npatt; ++patt) {
+            if (kfRefit == -1) continue;
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
 			int fitid = trtk->iTrTrackPar(trFit, 6, _patt[patt], kfRefit, recEv.mass, recEv.zin);
@@ -1180,6 +1181,19 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PartInfo info, const TrackSys::AmsTk
         track.stateBtm[7] = phyStBtm.bta();
     }
     
+    TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
+    if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
+        track.statusRh = true;
+        track.stateRh[0] = phyStRh.cx();
+        track.stateRh[1] = phyStRh.cy();
+        track.stateRh[2] = phyStRh.cz();
+        track.stateRh[3] = phyStRh.ux();
+        track.stateRh[4] = phyStRh.uy();
+        track.stateRh[5] = phyStRh.uz();
+        track.stateRh[6] = phyStRh.rig();
+        track.stateRh[7] = phyStRh.bta();
+    }
+    
     track.cpuTime = hcSw.time() * 1.0e+3;
 
     return track;
@@ -1281,9 +1295,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		    if (cluster == nullptr) continue;
 		    if (cluster->GtrkID != prim->trkID) continue;
             HitTRDMCInfo hit;
-            hit.lay  = cluster->Layer;
-            hit.sub  = 100 * cluster->Ladder + cluster->Tube;
-            hit.mom  = std::sqrt((cluster->Ekin + 2 * prim->Mass) * cluster->Ekin); 
+            hit.lay = cluster->Layer;
+            hit.mom = std::sqrt((cluster->Ekin + 2 * prim->Mass) * cluster->Ekin); 
             hit.coo[0] = cluster->Xgl[0]; 
             hit.coo[1] = cluster->Xgl[1]; 
             hit.coo[2] = cluster->Xgl[2];
@@ -1367,7 +1380,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             
             HitTRDInfo hitInfo;
             hitInfo.lay = hit->TRDHit_Layer;
-            hitInfo.sub = 100 * hit->TRDHit_Ladder + hit->TRDHit_Tube;
             hitInfo.side = hit->TRDHit_Direction;
             hitInfo.amp = hit->TRDHit_Amp;
             hitInfo.len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
@@ -1380,7 +1392,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             Float_t mcMom = -1.0;
 	        if (checkEventMode(EventBase::MC)) {
                 for (auto&& mchit : mcHits) {
-                    if (mchit.lay != hitInfo.lay || mchit.sub != hitInfo.sub) continue;
+                    if (mchit.lay != hitInfo.lay) continue;
                     mcMom = mchit.mom;
                     break;
                 }
@@ -2130,10 +2142,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	                    (trBitPattXYJ&TrPtL56) > 0 && 
 					    (trBitPattXYJ&TrPtL78) > 0);
 	if (!isTrInner) return -6001;
-	bool hasTrPtL1   = ((trBitPattJ&  1) > 0);
-	bool hasTrPtL9   = ((trBitPattJ&256) > 0);
-	bool hasTrPtL1XY = ((trBitPattXYJ&  1) > 0);
-	bool hasTrPtL9XY = ((trBitPattXYJ&256) > 0);
+	if (!isTrInnerXY) return -6002;
 	
 	Int_t numOfTrInX = 0;
 	Int_t numOfTrInY = 0;
@@ -2144,17 +2153,21 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 		if (hasXY) numOfTrInX++;
 	}
 	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
-
-    TrackSys::PhyArg::SetOpt(true, true);
-    TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward);
-    if (!TrackSys::AmsEvent::Load(event)) return -6004;
+    
+    int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
+	if (fitidMax < 0) return -6004;
     
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6005;
 		
     double trRin = trtkSIG->GetRigidity(fitidInn, 1);
     double trQin = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
-	if (MGNumc::Compare(trQin) <= 0) return -6006;
+	if (MGNumc::Compare(trRin) == 0) return -6006;
+	if (MGNumc::Compare(trQin) <= 0) return -6007;
+    
+    TrackSys::PhyArg::SetOpt(true, true);
+    TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward);
+    if (!TrackSys::AmsEvent::Load(event)) return -6008;
 
     // ~7~ (Scale Events by Track)
     //if (EventBase::checkEventMode(EventBase::ISS) && MGNumc::Compare(trRin) > 0) {

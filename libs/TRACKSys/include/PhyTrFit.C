@@ -148,7 +148,6 @@ Bool_t PhyTrFit::physicalFit() {
     ceres::Solver::Options options;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     //options.trust_region_strategy_type = ceres::DOGLEG;
-    options.max_num_iterations = 50;
     options.max_solver_time_in_seconds = 1.0;
 
     // CeresSolver: Summary

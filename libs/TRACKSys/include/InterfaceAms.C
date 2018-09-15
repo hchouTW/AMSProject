@@ -67,26 +67,11 @@ void Event::Clear() {
 }
 
         
-Bool_t Event::Rebuild(AMSEventR* event, UInt_t ipart) {
-    if (event == nullptr || ipart >= event->NParticle()) return false;
-    ParticleR* part = event->pParticle(ipart);
-    if (part == nullptr) return false;
-	
-    Short_t   iTrtk = (part->iTrTrack() < 0) ? -1 : part->iTrTrack();
-    TrTrackR*  trtk = (iTrtk >= 0) ? event->pTrTrack(iTrtk) : nullptr;
-    if (trtk == nullptr) return false;
-    
-    trtk->iTrTrackPar(1, 0, 23);
-    return true;
-}
-
-
 Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     MagMgnt::Load();
     MatMgnt::Load();
 
     Clear(); Init();
-    //Rebuild(event, ipart); // testcode
     if (event == nullptr || ipart >= event->NParticle()) return false;
     ParticleR* part = event->pParticle(ipart);
     if (part == nullptr) return false;
@@ -194,7 +179,7 @@ Bool_t Event::BulidHitStTRK() {
         
         //AMSPoint pnt = ((layJ == 1 || layJ == 9) ? (Trtk->GetHitCooLJ(layJ, 0) + Trtk->GetHitCooLJ(layJ, 1)) * Numc::HALF : Trtk->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
         AMSPoint pnt = TrTrackR::FitCoo[layJ-1]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
-
+        
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
@@ -224,7 +209,7 @@ Bool_t Event::BulidHitStTRK() {
         if (isInn && scx) cntX++;
         if (isInn && scy) cntY++;
     }
-    if (cntX <= 2 || cntY <= 3) return false;
+    if (cntX <= 3 || cntY <= 4) return false;
     
     return true;
 }

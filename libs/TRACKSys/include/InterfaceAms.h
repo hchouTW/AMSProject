@@ -98,7 +98,6 @@ class Event {
         static Bool_t   Status() { return (Ev != nullptr && StatusTk); }
 
         static void     Clear();
-        static Bool_t   Rebuild(AMSEventR* event = nullptr, UInt_t ipart = 0);
         static Bool_t   Load(AMSEventR* event = nullptr, UInt_t ipart = 0);
         static TrFitPar Get(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
    

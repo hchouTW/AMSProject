@@ -93,7 +93,6 @@ class HitTRKMCInfo : public TObject {
 
 		void init() {
 			layJ = 0;
-			tkid = 0;
 			edep = -1;
 			mom  = -1;
 			std::fill_n(coo, 3, 0);
@@ -103,14 +102,13 @@ class HitTRKMCInfo : public TObject {
 
 	public :
 		Short_t layJ;    // layerJ
-		Short_t tkid;    // tkID
 		Float_t edep;    // edep
 		Float_t mom;     // momentum
 		Float_t coo[3];
         Float_t smr[2];
         Float_t loc[2];
 
-	ClassDef(HitTRKMCInfo, 6)
+	ClassDef(HitTRKMCInfo, 7)
 };
 
 struct HitTRKMCInfo_sort {
@@ -133,29 +131,23 @@ class HitTRDMCInfo : public TObject {
 		~HitTRDMCInfo() {}
 
 		void init() {
-			lay     = 0;
-			sub     = 0;
-            mom     = -1;
+			lay = 0;
+            mom = -1;
 			std::fill_n(coo, 3, 0);
 		}
 
 	public :
 		Short_t lay;    // layer
-		Short_t sub;    // Ladder * 100 + Tube
         Float_t mom;
 		Float_t coo[3];
 
-	ClassDef(HitTRDMCInfo, 5)
+	ClassDef(HitTRDMCInfo, 6)
 };
 
 struct HitTRDMCInfo_sort {
 	bool operator() (const HitTRDMCInfo & hit1, const HitTRDMCInfo & hit2) {
 		if      (hit1.lay < hit2.lay) return true;
 		else if (hit1.lay > hit2.lay) return false;
-		else {
-			if      (hit1.sub <= hit2.sub) return true;
-			else if (hit1.sub >  hit2.sub) return false;
-		}
 		return false;
 	}
 };
@@ -186,7 +178,7 @@ class PartMCInfo : public TObject {
 		Float_t mass;
         Float_t bta;
 		Float_t mom;
-		Float_t ke;    // kinetic energy
+		Float_t ke; // kinetic energy
 		Float_t coo[3];
 		Float_t dir[3];
 
@@ -292,7 +284,6 @@ class HitTRDInfo : public TObject {
 
 		void init() {
 			lay  = 0;
-            sub  = 0;
 			side = 0;
 			amp  = 0;
 			len  = 0;
@@ -304,7 +295,6 @@ class HitTRDInfo : public TObject {
 
 	public :
 		Short_t lay;    // layer
-		Short_t sub;    // Ladder * 100 + Tube
 		Short_t side;   // side, 1 x, 2 y, 3 xy
 		Float_t amp;    // (elc) amp
 		Float_t len;    // (elc) len
@@ -313,7 +303,7 @@ class HitTRDInfo : public TObject {
         Float_t dEdx;   // dEdx = 0.01 * (amp/len)
         Float_t mcMom;  // (MC Info) mom
 
-	ClassDef(HitTRDInfo, 5)
+	ClassDef(HitTRDInfo, 7)
 };
 
 struct HitTRDInfo_sort {
@@ -321,12 +311,8 @@ struct HitTRDInfo_sort {
 		if      (hit1.lay < hit2.lay) return true;
 		else if (hit1.lay > hit2.lay) return false;
         else {
-		    if      (hit1.sub < hit2.sub) return true;
-		    else if (hit1.sub > hit2.sub) return false;
-		    else {
-		    	if      (hit1.amp < hit2.amp) return true;
-		    	else if (hit1.amp > hit2.amp) return false;
-		    }
+		    if      (hit1.amp < hit2.amp) return true;
+		    else if (hit1.amp > hit2.amp) return false;
         }
 		return false;
 	}
@@ -552,13 +538,15 @@ class HCTrackInfo : public TObject {
             std::fill_n(quality, 2, 0);
             
             std::fill_n(state, 8, 0);
-            std::fill_n(error, 7, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
+            
+            statusRh = false;
+            std::fill_n(stateRh, 8, 0);
 
             std::fill_n(statusLJ, 9, false);
             std::fill_n(stateLJ[0], 9*8, 0);
@@ -577,20 +565,22 @@ class HCTrackInfo : public TObject {
         Float_t quality[2];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
-        Float_t error[7]; // (cx cy ux uy irig igb mass)
         
         Bool_t  statusTop; // track at top of detector (z = 195.)
         Float_t stateTop[8];
         
-        Bool_t  statusBtm; // track at bottom of detector (z = -195.)
+        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
         Float_t stateBtm[8];
+        
+        Bool_t  statusRh; // track at bottom of detector (z = -70.)
+        Float_t stateRh[8];
 
         Bool_t  statusLJ[9];
         Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 
-        ClassDef(HCTrackInfo, 4)
+        ClassDef(HCTrackInfo, 5)
 };
 
 
@@ -958,11 +948,11 @@ class TRD : public TObject {
             hits[0].clear();
             hits[1].clear();
 
-            std::fill_n(vtxNum, 3, 0);
-            vtxNTrk = 0;
-            vtxNHit = 0;
-            vtxChi2 = 0;
-            std::fill_n(vtxCoo, 3, 0);
+            //std::fill_n(vtxNum, 3, 0);
+            //vtxNTrk = 0;
+            //vtxNHit = 0;
+            //vtxChi2 = 0;
+            //std::fill_n(vtxCoo, 3, 0);
 		}
 
 	public :
@@ -986,11 +976,11 @@ class TRD : public TObject {
         std::vector<HitTRDInfo> hits[2];
 
         // TRDVertex
-        Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
-        Short_t vtxNTrk;
-        Short_t vtxNHit;
-        Float_t vtxChi2;
-        Float_t vtxCoo[3];
+        //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
+        //Short_t vtxNTrk;
+        //Short_t vtxNHit;
+        //Float_t vtxChi2;
+        //Float_t vtxCoo[3];
 
 	ClassDef(TRD, 8)
 };

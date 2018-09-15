@@ -2,7 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep15/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -61,39 +62,29 @@ int main(int argc, char * argv[]) {
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff
-    Hist* hMCnum   = Hist::New("hMCnum",   HistAxis(AXrig, "Events/Bin"));
-    Hist* hCKnum   = Hist::New("hCKnum",   HistAxis(AXrig, "Events/Bin"));
-    Hist* hKFnum   = Hist::New("hKFnum",   HistAxis(AXrig, "Events/Bin"));
-    Hist* hHCnum   = Hist::New("hHCnum",   HistAxis(AXrig, "Events/Bin"));
-    Hist* hHCnumTR = Hist::New("hHCnumTR", HistAxis(AXrig, "Events/Bin"));
-    Hist* hHCnumMU = Hist::New("hHCnumMU", HistAxis(AXrig, "Events/Bin"));
+    Hist* hMCnum = Hist::New("hMCnum", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXrig, "Events/Bin"));
+    Hist* hKFnum = Hist::New("hKFnum", HistAxis(AXrig, "Events/Bin"));
+    Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
 
-    Hist* hMCtme   = Hist::New("hMCtme",   HistAxis(AXrig, ""));
-    Hist* hCKtme   = Hist::New("hCKtme",   HistAxis(AXrig, "Mean Time"));
-    Hist* hKFtme   = Hist::New("hKFtme",   HistAxis(AXrig, "Mean Time"));
-    Hist* hHCtme   = Hist::New("hHCtme",   HistAxis(AXrig, "Mean Time"));
-    Hist* hHCtmeTR = Hist::New("hHCtmeTR", HistAxis(AXrig, "Mean Time"));
-    Hist* hHCtmeMU = Hist::New("hHCtmeMU", HistAxis(AXrig, "Mean Time"));
+    Hist* hMCtme = Hist::New("hMCtme", HistAxis(AXrig, ""));
+    Hist* hCKtme = Hist::New("hCKtme", HistAxis(AXrig, "Mean Time"));
+    Hist* hKFtme = Hist::New("hKFtme", HistAxis(AXrig, "Mean Time"));
+    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXrig, "Mean Time"));
     
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 1600, -1.0, 1.0);
-    Hist* hCKRrso   = Hist::New("hCKRrso",   HistAxis(AXrig, AXRrso));
-    Hist* hKFRrso   = Hist::New("hKFRrso",   HistAxis(AXrig, AXRrso));
-    Hist* hHCRrso   = Hist::New("hHCRrso",   HistAxis(AXrig, AXRrso));
-    Hist* hHCRrsoTR = Hist::New("hHCRrsoTR", HistAxis(AXrig, AXRrso));
-    Hist* hHCRrsoMU = Hist::New("hHCRrsoMU", HistAxis(AXrig, AXRrso));
+    Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXrig, AXRrso));
+    Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
+    Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
     
     Axis AXqlt("Quality [1]", 400, -2.5, 8.0);
-    Hist* hCKqltx   = Hist::New("hCKqltx",   HistAxis(AXrig, AXqlt));
-    Hist* hKFqltx   = Hist::New("hKFqltx",   HistAxis(AXrig, AXqlt));
-    Hist* hHCqltx   = Hist::New("hHCqltx",   HistAxis(AXrig, AXqlt));
-    Hist* hHCqltxTR = Hist::New("hHCqltxTR", HistAxis(AXrig, AXqlt));
-    Hist* hHCqltxMU = Hist::New("hHCqltxMU", HistAxis(AXrig, AXqlt));
+    Hist* hCKqltx = Hist::New("hCKqltx", HistAxis(AXrig, AXqlt));
+    Hist* hKFqltx = Hist::New("hKFqltx", HistAxis(AXrig, AXqlt));
+    Hist* hHCqltx = Hist::New("hHCqltx", HistAxis(AXrig, AXqlt));
     
-    Hist* hCKqlty   = Hist::New("hCKqlty",   HistAxis(AXrig, AXqlt));
-    Hist* hKFqlty   = Hist::New("hKFqlty",   HistAxis(AXrig, AXqlt));
-    Hist* hHCqlty   = Hist::New("hHCqlty",   HistAxis(AXrig, AXqlt));
-    Hist* hHCqltyTR = Hist::New("hHCqltyTR", HistAxis(AXrig, AXqlt));
-    Hist* hHCqltyMU = Hist::New("hHCqltyMU", HistAxis(AXrig, AXqlt));
+    Hist* hCKqlty = Hist::New("hCKqlty", HistAxis(AXrig, AXqlt));
+    Hist* hKFqlty = Hist::New("hKFqlty", HistAxis(AXrig, AXqlt));
+    Hist* hHCqlty = Hist::New("hHCqlty", HistAxis(AXrig, AXqlt));
     
     Axis AXc("Cos", 1000, -0.5, 0.5);
     Hist* hCKcx = Hist::New("hCKcx", HistAxis(AXrig, AXc));
@@ -111,32 +102,8 @@ int main(int argc, char * argv[]) {
     Hist* hKFuy = Hist::New("hKFuy", HistAxis(AXrig, AXu));
     Hist* hHCuy = Hist::New("hHCuy", HistAxis(AXrig, AXu));
     
-    Axis AXBrso("(Bm - Bt) [1]", 1600, -0.1, 0.1);
-    Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXrig, AXBrso));
-    Hist* hTFBrso = Hist::New("hTFBrso", HistAxis(AXrig, AXBrso));
-    Hist* hRHBrso = Hist::New("hRHBrso", HistAxis(AXrig, AXBrso));
-    
-    Axis AXMrso("Mass [GeV]", 400, 0.03, 5.0);
-    Hist* hCKMrso = Hist::New("hCKMrso", HistAxis(AXrig, AXMrso));
-    Hist* hKFMrso = Hist::New("hKFMrso", HistAxis(AXrig, AXMrso));
-    Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXrig, AXMrso));
-/*       
-    Hist* hHCMrsoCO = Hist::New("hHCMrsoCO", HistAxis(AXrig));
-    Hist* hHCMrsoEO = Hist::New("hHCMrsoEO", HistAxis(AXrig));
-    Hist* hHCMrsoSO = Hist::New("hHCMrsoSO", HistAxis(AXrig, AXMrso));
-   
-    Hist* hHCMrsoC[3] = { nullptr };
-    Hist* hHCMrsoE[3] = { nullptr };
-    Hist* hHCMrsoS[3] = { nullptr };
-    std::vector<Double_t> cuts({ 0.5, 0.7, 1.0 });
-    for (Int_t is = 0; is < 3; ++is) {
-        hHCMrsoC[is] = Hist::New(Form("hHCMrsoC%d", is), HistAxis(AXrig));
-        hHCMrsoE[is] = Hist::New(Form("hHCMrsoE%d", is), HistAxis(AXrig));
-        hHCMrsoS[is] = Hist::New(Form("hHCMrsoS%d", is), HistAxis(AXrig, AXMrso));
-    }
-*/
     MGClock::HrsStopwatch hrssw; hrssw.start();
-    Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
+    Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) {
@@ -145,17 +112,11 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        Int_t patt = 2;
+        Int_t patt = 0;
 
         CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
         HCTrackInfo& hcTr = fTrk->hcTr.at(patt); // Tracker
-        
-        HCTrackInfo& hcTR = fTrk->hcTrTF.at(patt); // Tracker + TOF
-        HCTrackInfo& hcMU = fTrk->hcMuTF.at(patt); // Tracker + TOF
-        
-        //HCTrackInfo& hcTR = fTrk->hcPrInTr.at(1); // Tracker + TOF + RICH
-        //HCTrackInfo& hcMU = fTrk->hcMuInTr.at(1); // Tracker + TOF + RICH
     
         // Reweight (MC)
         Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXrig.min(), -1.7));
@@ -191,12 +152,7 @@ int main(int argc, char * argv[]) {
         // TRD
         if (fTrd->LLRep[0] < 0.7) continue;
 
-        // RICH
-        //if (!fRich->status || !fRich->isGood) continue;
-        //if (fRich->kind != 0) continue; // AGL
-
-        //Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTR.status && hcMU.status);
-        Bool_t status = (ckTr.status && kfTr.status && hcTr.status && hcTR.status);
+        Bool_t status = (ckTr.status && kfTr.status && hcTr.status);
         if (!status) continue;
         
         Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[7]) : fG4mc->primPart.bta);
@@ -204,75 +160,47 @@ int main(int argc, char * argv[]) {
         Double_t imom = Numc::ONE<> / mom;
         Double_t scl  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
         
-        Short_t ckSign   = (ckTr.rig > 0) ? 1 : -1;
-        Short_t kfSign   = (kfTr.rig[0] > 0) ? 1 : -1;
-        Short_t hcSign   = (hcTr.stateTop[6] > 0) ? 1 : -1;
-        Short_t hcSignTR = (hcTR.stateTop[6] > 0) ? 1 : -1;
-        Short_t hcSignMU = (hcMU.stateTop[6] > 0) ? 1 : -1;
+        Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
+        Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
+        Short_t hcSign = (hcTr.stateTop[6] > 0) ? 1 : -1;
         
-        Double_t ckRig   = ckTr.rig;
-        Double_t kfRig   = kfTr.rig[0];
-        Double_t hcRig   = hcTr.stateTop[6];
-        Double_t hcRigTR = hcTR.stateTop[6];
-        Double_t hcRigMU = hcMU.stateTop[6];
+        Double_t ckRig = ckTr.rig;
+        Double_t kfRig = kfTr.rig[0];
+        Double_t hcRig = hcTr.stateTop[6];
         
-        Double_t ckIRig   = Numc::ONE<> / ckRig;
-        Double_t kfIRig   = Numc::ONE<> / kfRig;
-        Double_t hcIRig   = Numc::ONE<> / hcRig;
-        Double_t hcIRigTR = Numc::ONE<> / hcRigTR;
-        Double_t hcIRigMU = Numc::ONE<> / hcRigMU;
+        Double_t ckIRig = Numc::ONE<> / ckRig;
+        Double_t kfIRig = Numc::ONE<> / kfRig;
+        Double_t hcIRig = Numc::ONE<> / hcRig;
         
-        Double_t ck_qltx   = std::log(ckTr.nchi[0]); 
-        Double_t kf_qltx   = std::log(kfTr.nchi[0]); 
-        Double_t hc_qltx   = hcTr.quality[0]; 
-        Double_t hc_qltxTR = hcTR.quality[0]; 
-        Double_t hc_qltxMU = hcMU.quality[0]; 
+        Double_t ck_qltx = std::log(ckTr.nchi[0]); 
+        Double_t kf_qltx = std::log(kfTr.nchi[0]); 
+        Double_t hc_qltx = hcTr.quality[0]; 
         
-        Double_t ck_qlty   = std::log(ckTr.nchi[1]); 
-        Double_t kf_qlty   = std::log(kfTr.nchi[1]); 
-        Double_t hc_qlty   = hcTr.quality[1]; 
-        Double_t hc_qltyTR = hcTR.quality[1]; 
-        Double_t hc_qltyMU = hcMU.quality[1]; 
+        Double_t ck_qlty = std::log(ckTr.nchi[1]); 
+        Double_t kf_qlty = std::log(kfTr.nchi[1]); 
+        Double_t hc_qlty = hcTr.quality[1]; 
        
-        Double_t ckMass = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(ckTr.rig    * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
-        Double_t kfMass = ((fTof->betaH >= 1.0) ? -1.0 : std::fabs(kfTr.rig[1] * std::sqrt(1.0/fTof->betaH/fTof->betaH - 1.0)));
-        Double_t hcMass = (hcMU.mass); 
-        
-        //Double_t ckMass = ((fRich->beta >= 1.0) ? -1.0 : std::fabs(ckTr.rig    * std::sqrt(1.0/fRich->beta/fRich->beta - 1.0)));
-        //Double_t kfMass = ((fRich->beta >= 1.0) ? -1.0 : std::fabs(kfTr.rig[2] * std::sqrt(1.0/fRich->beta/fRich->beta - 1.0)));
-        //Double_t hcMass = (hcMU.mass); 
-
         hMCnum->fillH1D(mom, wgt);
-        if (ckSign   > 0) hCKnum  ->fillH1D(ckRig,   wgt);
-        if (kfSign   > 0) hKFnum  ->fillH1D(kfRig,   wgt);
-        if (hcSign   > 0) hHCnum  ->fillH1D(hcRig,   wgt);
-        if (hcSignTR > 0) hHCnumTR->fillH1D(hcRigTR, wgt);
-        if (hcSignMU > 0) hHCnumMU->fillH1D(hcRigMU, wgt);
+        if (ckSign > 0) hCKnum->fillH1D(ckRig, wgt);
+        if (kfSign > 0) hKFnum->fillH1D(kfRig, wgt);
+        if (hcSign > 0) hHCnum->fillH1D(hcRig, wgt);
         
         hMCtme->fillH1D(mom);
-        hCKtme  ->fillH1D(mom, ckTr.cpuTime);
-        hKFtme  ->fillH1D(mom, kfTr.cpuTime);
-        hHCtme  ->fillH1D(mom, hcTr.cpuTime);
-        hHCtmeTR->fillH1D(mom, hcTR.cpuTime);
-        hHCtmeMU->fillH1D(mom, hcMU.cpuTime);
+        hCKtme->fillH1D(mom, ckTr.cpuTime);
+        hKFtme->fillH1D(mom, kfTr.cpuTime);
+        hHCtme->fillH1D(mom, hcTr.cpuTime);
         
-        hCKRrso  ->fillH2D(mom, scl * (ckIRig   - imom));
-        hKFRrso  ->fillH2D(mom, scl * (kfIRig   - imom));
-        hHCRrso  ->fillH2D(mom, scl * (hcIRig   - imom));
-        hHCRrsoTR->fillH2D(mom, scl * (hcIRigTR - imom));
-        hHCRrsoMU->fillH2D(mom, scl * (hcIRigMU - imom));
+        hCKRrso->fillH2D(mom, scl * (ckIRig - imom));
+        hKFRrso->fillH2D(mom, scl * (kfIRig - imom));
+        hHCRrso->fillH2D(mom, scl * (hcIRig - imom));
         
-        hCKqltx  ->fillH2D(mom, ck_qltx);
-        hKFqltx  ->fillH2D(mom, kf_qltx);
-        hHCqltx  ->fillH2D(mom, hc_qltx);
-        hHCqltxTR->fillH2D(mom, hc_qltxTR);
-        hHCqltxMU->fillH2D(mom, hc_qltxMU);
+        hCKqltx->fillH2D(mom, ck_qltx);
+        hKFqltx->fillH2D(mom, kf_qltx);
+        hHCqltx->fillH2D(mom, hc_qltx);
         
-        hCKqlty  ->fillH2D(mom, ck_qlty);
-        hKFqlty  ->fillH2D(mom, kf_qlty);
-        hHCqlty  ->fillH2D(mom, hc_qlty);
-        hHCqltyTR->fillH2D(mom, hc_qltyTR);
-        hHCqltyMU->fillH2D(mom, hc_qltyMU);
+        hCKqlty->fillH2D(mom, ck_qlty);
+        hKFqlty->fillH2D(mom, kf_qlty);
+        hHCqlty->fillH2D(mom, hc_qlty);
         
         hCKcx->fillH2D(mom, scl * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
         hKFcx->fillH2D(mom, scl * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
@@ -289,27 +217,6 @@ int main(int argc, char * argv[]) {
         hCKuy->fillH2D(mom, scl * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
         hKFuy->fillH2D(mom, scl * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
         hHCuy->fillH2D(mom, scl * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        
-        hHCBrso->fillH2D(mom, (hcTR.stateTop[7] - bta));
-        hTFBrso->fillH2D(mom, (fTof->betaH - bta));
-        if (fRich->kind == 0 && fRich->status)
-            hRHBrso->fillH2D(mom, (fRich->beta - bta));
-        
-        hCKMrso->fillH2D(mom, ckMass);
-        hKFMrso->fillH2D(mom, kfMass);
-        hHCMrso->fillH2D(mom, hcMass);
- /* 
-        if (hcMU.mass > 1.6) hHCMrsoCO->fillH1D(mom);
-        hHCMrsoEO->fillH1D(mom);
-        hHCMrsoSO->fillH2D(mom, hcMass);
-        for (Int_t is = 0; is < 3; ++is) {
-            if (hcMU.quality[0] > 2.0) continue;
-            if (hcMU.quality[1] > cuts.at(is)) continue;
-            if (hcMU.mass > 1.6) hHCMrsoC[is]->fillH1D(mom);
-            hHCMrsoE[is]->fillH1D(mom);
-            hHCMrsoS[is]->fillH2D(mom, hcMass);
-        }
-*/
     }
     
     ofle->Write();
