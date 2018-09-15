@@ -61,7 +61,7 @@ int main(int argc, char * argv[]) {
     //PartInfo::SetDefault(PartType::Electron);
     PartInfo::SetDefault(PartType::Proton);
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = true;
+    Bool_t optL1 = false;
     Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
@@ -156,7 +156,7 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
       
-        //if (entry > 1000) break;
+        //if (entry > 100) break;
         //if (fG4mc->primPart.mom > 1.0) continue; // testcode
         //COUT("==== ENTRY %ld ====\n", entry);
         //COUT("MOM %14.8f\n", fG4mc->primPart.mom);
@@ -298,7 +298,9 @@ int main(int argc, char * argv[]) {
         
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFixed);
+        //SimpleTrFit tr(fitPar); // testcode
+        //SimpleTrFit tr(fitPar, true); // testcode
+        PhyTrFit tr(fitPar);
         //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
         Bool_t hc_succ = tr.status();
@@ -319,10 +321,13 @@ int main(int argc, char * argv[]) {
         //}
         //hc_irig = hc_lay_irig[topLay];
         //
+        //COUT("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1));
+        if (Numc::EqualToZero(tr.part().mom())) COUT("FAIL. ENTRY %ld\n", entry);
     
         PhySt&& sttTop = tr.interpolate_to_z(195.0);
         if (Numc::EqualToZero(sttTop.mom())) continue;
         hc_irig = sttTop.irig();
+        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f Z %14.8f\n", mc_mom, sttTop.rig(), sttTop.mass(), tr.quality(1), sttTop.cz());
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f  (Z %6.1f)\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1), sw.time(), tr.part().cz());
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
         //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f (%14.8f) MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, hcTr.state[6], tr.part().info().mass(), tr.quality(1));

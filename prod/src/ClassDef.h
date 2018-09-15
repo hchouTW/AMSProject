@@ -255,7 +255,6 @@ class HitTRKInfo : public TObject {
 			std::fill_n(coo, 3, 0);
 			std::fill_n(adc, 2, -1);
 			std::fill_n(loc, 2, -1);
-			std::fill_n(nsr, 2, 0);
 		}
 
 	public :
@@ -268,7 +267,6 @@ class HitTRKInfo : public TObject {
 		Float_t coo[3];   // coordinate
 		Float_t adc[2];   // (elc) signal
 		Float_t loc[2];   // (elc) cofg loc
-        Short_t nsr[2];   // (elc) n-stripe
 
 	ClassDef(HitTRKInfo, 8)
 };
@@ -459,8 +457,8 @@ class CKTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 6, 0);
             
-            std::fill_n(statusLJ, 6, false);
-            std::fill_n(stateLJ[0], 6*6, 0);
+            std::fill_n(statusLJ, 9, false);
+            std::fill_n(stateLJ[0], 9*6, 0);
 
             cpuTime = 0;
         }
@@ -479,8 +477,8 @@ class CKTrackInfo : public TObject {
         Bool_t  statusBtm;
         Float_t stateBtm[6]; // (cx cy cz ux uy uz)
 
-        Bool_t  statusLJ[6];
-        Float_t stateLJ[6][6]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+        Bool_t  statusLJ[9];
+        Float_t stateLJ[9][6]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 	
@@ -508,8 +506,8 @@ class KFTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
             
-            std::fill_n(statusLJ, 6, false);
-            std::fill_n(stateLJ[0], 6*8, 0);
+            std::fill_n(statusLJ, 9, false);
+            std::fill_n(stateLJ[0], 9*8, 0);
 
             cpuTime = 0;
         }
@@ -528,8 +526,8 @@ class KFTrackInfo : public TObject {
         Bool_t  statusBtm;
         Float_t stateBtm[8]; // (cx cy cz ux uy uz rig bta)
 
-        Bool_t  statusLJ[6];
-        Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+        Bool_t  statusLJ[9];
+        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 	
         Float_t cpuTime; // [ms]
 
@@ -562,8 +560,8 @@ class HCTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
 
-            std::fill_n(statusLJ, 6, false);
-            std::fill_n(stateLJ[0], 6*8, 0);
+            std::fill_n(statusLJ, 9, false);
+            std::fill_n(stateLJ[0], 9*8, 0);
            
             cpuTime = 0;
         }
@@ -587,8 +585,8 @@ class HCTrackInfo : public TObject {
         Bool_t  statusBtm; // track at bottom of detector (z = -195.)
         Float_t stateBtm[8];
 
-        Bool_t  statusLJ[6];
-        Float_t stateLJ[6][8]; // track state at layerJ (1 2 3-4 5-6 7-8 9)
+        Bool_t  statusLJ[9];
+        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 
@@ -871,10 +869,6 @@ class TRK : public TObject {
             hcTr = std::vector<HCTrackInfo>(4);
             
             hcTrTF = std::vector<HCTrackInfo>(4);
-            hcMuTF = std::vector<HCTrackInfo>(4);
-            
-            hcTrRH = std::vector<HCTrackInfo>(4);
-            hcMuRH = std::vector<HCTrackInfo>(4);
             
             //ftL34Dist = -1;
             //ftL56Dist = -1;
@@ -918,12 +912,7 @@ class TRK : public TObject {
         
         // HYChou [Inn InnL1 InnL9 FS]
         std::vector<HCTrackInfo> hcTr;
-        
         std::vector<HCTrackInfo> hcTrTF;
-        std::vector<HCTrackInfo> hcMuTF;
-        
-        std::vector<HCTrackInfo> hcTrRH;
-        std::vector<HCTrackInfo> hcMuRH;
         
         // Haino's tools
         //Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
@@ -940,7 +929,7 @@ class TRK : public TObject {
         //                       // [2] Tracker, TOF and/or TRD
         //Float_t massEstSH;     // mass estimator log-likelihood
 
-	ClassDef(TRK, 8)
+	ClassDef(TRK, 9)
 };
 
 

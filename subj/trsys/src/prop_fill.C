@@ -63,6 +63,8 @@ int main(int argc, char * argv[]) {
     Int_t decSel = 0;
     Int_t laySat = 0;
     Int_t layEnd = 1;
+    //Int_t laySat = 2;
+    //Int_t layEnd = 7;
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
