@@ -6,7 +6,7 @@ PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.mc.pr.pl1.l1.054000.B1200
 EVENTTYPE    =  MC
 FILEPEREXE   =  2
-JOBREGION    =  WHOLE
+JOBREGION    =  PART
 EXESATID     =  346
 EXEENDID     =  3345
 
