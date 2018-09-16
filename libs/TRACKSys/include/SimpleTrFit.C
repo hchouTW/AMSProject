@@ -430,7 +430,8 @@ Bool_t SimpleTrFit::advancedSimpleCooFit() {
     options.nonlinear_conjugate_gradient_type = ceres::FLETCHER_REEVES;
     //options.nonlinear_conjugate_gradient_type = ceres::POLAK_RIBIERE;
     //options.nonlinear_conjugate_gradient_type = ceres::HESTENES_STIEFEL;
-    options.max_solver_time_in_seconds = 1.0;
+    //options.max_num_iterations = 50;
+    //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
     ceres::GradientProblemSolver::Summary summary;
@@ -462,7 +463,8 @@ Bool_t SimpleTrFit::advancedSimpleFit() {
     options.nonlinear_conjugate_gradient_type = ceres::FLETCHER_REEVES;
     //options.nonlinear_conjugate_gradient_type = ceres::POLAK_RIBIERE;
     //options.nonlinear_conjugate_gradient_type = ceres::HESTENES_STIEFEL;
-    options.max_solver_time_in_seconds = 1.0;
+    //options.max_num_iterations = 50;
+    //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
     ceres::GradientProblemSolver::Summary summary;
@@ -496,7 +498,7 @@ Bool_t SimpleTrFit::localSimpleFit() {
     // CeresSolver: Options
     ceres::Solver::Options options;
     options.max_num_iterations = 20;
-    options.max_solver_time_in_seconds = 1.0;
+    //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
     ceres::Solver::Summary summary;

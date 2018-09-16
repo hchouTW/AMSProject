@@ -100,10 +100,10 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(2, 0.0, 5.0*mpv);
         func->SetParLimits(3, 0.0, 20.0*rms);
         func->SetParLimits(4, 0.0, 20.0*rms);
-        func->FixParameter(1, fkpa->Eval(eta));
+        //func->FixParameter(1, fkpa->Eval(eta));
         //func->FixParameter(4, 0.284416); // TKadcx
         //func->FixParameter(4, 0.175361); // TKadcy
-        func->FixParameter(4, 0.0772006); // TFadc
+        //func->FixParameter(4, 0.0772006); // TFadc
        
         (*vhAdc.at(it))()->Fit(func, "q0", "", mpv-5*rms, mpv+10*rms);
         CERR("FIT == KPA %14.8f MPV %14.8f SMG %14.8f FLUC %14.8f\n", func->GetParameter(1), func->GetParameter(2), func->GetParameter(3), func->GetParameter(4));

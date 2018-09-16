@@ -15,16 +15,17 @@ CurDir=${PWD}
 
 DataType=MC
 #Stream=/ams_home/hchou/tmp/flist.pr
-Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
+#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
+Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
 
 OutputDir=${CurDir}/dat
 
 #Hit
-#GroupSize=20
-#Nseq=150
+#GroupSize=30
+#Nseq=60
 #Fit
 GroupSize=6
-Nseq=500
+Nseq=400
 
 for id in `seq 0 ${Nseq}`
 do

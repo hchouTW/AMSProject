@@ -174,9 +174,13 @@ class HitStTRK : public VirtualHitSt {
     protected :
         static MultiGaus PDF_Q01_CX_;
         static MultiGaus PDF_Q01_CY_;
+        static MultiGaus PDF_Q02_CX_;
+        static MultiGaus PDF_Q02_CY_;
 
         static IonEloss PDF_Q01_QX_;
         static IonEloss PDF_Q01_QY_;
+        static IonEloss PDF_Q02_QX_;
+        static IonEloss PDF_Q02_QY_;
 };
 
 
@@ -260,6 +264,8 @@ class HitStTOF : public VirtualHitSt {
     protected :
         static MultiGaus PDF_Q01_T_;
         static IonEloss  PDF_Q01_Q_;
+        static MultiGaus PDF_Q02_T_;
+        static IonEloss  PDF_Q02_Q_;
 
     public :
         static constexpr Double_t TRANS_NS_TO_CM = 2.99792458e+01; // [ns] -> [cm]
@@ -334,6 +340,8 @@ class HitStRICH : public VirtualHitSt {
     protected :
         static MultiGaus PDF_AGL_Q01_IB_;
         static MultiGaus PDF_NAF_Q01_IB_;
+        static MultiGaus PDF_AGL_Q02_IB_;
+        static MultiGaus PDF_NAF_Q02_IB_;
 };
 
 
@@ -383,6 +391,7 @@ class HitStTRD : public VirtualHitSt {
     
     protected :
         static GmIonEloss PDF_Q01_EL_;
+        static GmIonEloss PDF_Q02_EL_;
 };
 
 

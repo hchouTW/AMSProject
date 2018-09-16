@@ -2,7 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -52,7 +53,7 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 150, 0.30, 4000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, 0.40, 3000., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
@@ -70,6 +71,8 @@ int main(int argc, char * argv[]) {
   
     // Coo
     Axis AXres("res [#mum]", 800, -200., 200.);
+    Axis AXtha("tha", 200, 0.0, 0.2*TMath::Pi());
+    
     Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
     
@@ -148,7 +151,7 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 8);
 
         // No Interaction
-        if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -100) continue;
+        if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
 
         // REC hit
         HitTRKInfo * rec[9]; std::fill_n(rec, 9, nullptr);
@@ -166,35 +169,24 @@ int main(int argc, char * argv[]) {
         
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it] || !mcs[it]) continue;
-            Double_t eta = (mass/mch[it]->mom);
-            if (eta < AXeta.min() || eta > AXeta.max()) continue;
-            eta = AXeta.center(AXeta.find(eta), AxisScale::kLog);
-            Double_t bta = 1.0/std::sqrt(1.0+eta*eta);
+            Double_t igb = (mass/mch[it]->mom);
+            if (igb < AXeta.min() || igb > AXeta.max()) continue;
+            igb = AXeta.center(AXeta.find(igb), AxisScale::kLog);
+            Double_t bta = 1.0/std::sqrt(1.0+igb*igb);
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
-            Short_t  ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
+            if (!(rec[it]->side[0] && rec[it]->side[1])) continue;
+            Double_t thax = std::atan2(std::fabs(ckTr.stateLJ[it][3]), std::fabs(ckTr.stateLJ[it][5]));
+            Double_t thay = std::atan2(std::fabs(ckTr.stateLJ[it][4]), std::fabs(ckTr.stateLJ[it][5]));
             
             constexpr Double_t CM2UM = 1.0e4;
-            if (ntp[0]!=0) hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
-            if (ntp[1]!=0) hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
+            hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
+            hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
             if (mch[it]->mom > 50.0) {
-                hMrxNN->fillH1D(CM2UM * res[0]);
-                hMryNN->fillH1D(CM2UM * res[1]);
+               hMrxNN->fillH1D(CM2UM * res[0]);
+               hMryNN->fillH1D(CM2UM * res[1]);
             }
-            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
-            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
-        }
-
-        HitTRKMCInfo * mchm[9]; std::fill_n(mchm, 9, nullptr);
-        for (auto&& hit : fG4mc->primPart.hits) { mchm[hit.layJ-1] = &hit; }
-        
-        for (Int_t it = 2; it < 8; ++it) {
-            if (!rec[it] || !mchm[it]) continue;
-            Double_t eta = (mass/mchm[it]->mom);
-            if (eta < AXeta.min() || eta > AXeta.max()) continue;
-            Short_t ntp[2] = { rec[it]->nsr[0], rec[it]->nsr[1] };
-            
-            if (ntp[0]!=0 && rec[it]->adc[0]>0) hTKadcx->fillH2D(eta, rec[it]->adc[0]*rec[it]->adc[0]);
-            if (ntp[1]!=0 && rec[it]->adc[1]>0) hTKadcy->fillH2D(eta, rec[it]->adc[1]*rec[it]->adc[1]);
+            if (rec[it]->adc[0]>0) hTKadcx->fillH2D(igb, rec[it]->adc[0]*rec[it]->adc[0]);
+            if (rec[it]->adc[1]>0) hTKadcy->fillH2D(igb, rec[it]->adc[1]*rec[it]->adc[1]);
         }
 
         //SegPARTMCInfo * mtf[4]; std::fill_n(mtf, 4, nullptr);
@@ -202,9 +194,9 @@ int main(int argc, char * argv[]) {
         
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
-            Double_t eta = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
-            if (eta < AXeta.min() || eta > AXeta.max()) continue;
-            hTFadc->fillH2D(eta, fTof->Q[it]*fTof->Q[it]);
+            Double_t igb = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
+            if (igb < AXeta.min() || igb > AXeta.max()) continue;
+            hTFadc->fillH2D(igb, fTof->Q[it]*fTof->Q[it]);
         }
         
         //SegPARTMCInfo * mtd[2]; std::fill_n(mtd, 2, nullptr);
@@ -235,7 +227,6 @@ int main(int argc, char * argv[]) {
             }
         }
         */
-
         
         SegPARTMCInfo* mcsTOF[4] = { nullptr };
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 1) mcsTOF[seg.lay] = &seg; }
@@ -261,7 +252,6 @@ int main(int argc, char * argv[]) {
             if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);
         }
-        
     }
 
     ofle->Write();

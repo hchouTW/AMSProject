@@ -195,8 +195,8 @@ int main(int argc, char * argv[]) {
         (*hHCCKRrso)()->SetBinError(it, 0);
     }
     
-    hKFCKRrso  ->style(Fill(), Line(kBlue), Marker(kBlue));
-    hHCCKRrso  ->style(Fill(), Line(kRed), Marker(kRed));
+    hKFCKRrso->style(Fill(), Line(kBlue), Marker(kBlue));
+    hHCCKRrso->style(Fill(), Line(kRed), Marker(kRed));
     THStack* chRrso = Hist::Collect("chRrso", HistList({ hKFCKRrso, hHCCKRrso }));
     chRrso->Write();
     

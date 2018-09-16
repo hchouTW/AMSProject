@@ -75,22 +75,22 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     if (event == nullptr || ipart >= event->NParticle()) return false;
     ParticleR* part = event->pParticle(ipart);
     if (part == nullptr) return false;
-	Short_t iTrTrack  = (part->iTrTrack()    < 0) ? -1 : part->iTrTrack();
-	Short_t iBetaH    = (part->iBetaH()      < 0) ? -1 : part->iBetaH();
-	Short_t iRichRing = (part->iRichRing()   < 0) ? -1 : part->iRichRing();
+	Short_t iTrTrack  = (part->iTrTrack()  < 0) ? -1 : part->iTrTrack();
+	Short_t iBetaH    = (part->iBetaH()    < 0) ? -1 : part->iBetaH();
+	Short_t iRichRing = (part->iRichRing() < 0) ? -1 : part->iRichRing();
     
     TrTrackR*  trtk = (iTrTrack  >= 0) ? event->pTrTrack(iTrTrack)   : nullptr;
     BetaHR*    btah = (iBetaH    >= 0) ? event->pBetaH(iBetaH)       : nullptr;
     RichRingR* rich = (iRichRing >= 0) ? event->pRichRing(iRichRing) : nullptr;
     if (trtk == nullptr) return false;
 
-    RunID  = event->Run();
-    EvID   = event->Event();
-    PtID   = ipart;
-    Ev     = event;
-    Trtk   = trtk;
-    Btah   = btah;
-    Rich   = rich;
+    RunID = event->Run();
+    EvID  = event->Event();
+    PtID  = ipart;
+    Ev    = event;
+    Trtk  = trtk;
+    Btah  = btah;
+    Rich  = rich;
 
     StatusTk = BulidHitStTRK();
     StatusTf = BulidHitStTOF();

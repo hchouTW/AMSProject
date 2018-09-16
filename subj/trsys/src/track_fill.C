@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -53,7 +53,7 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
-    //dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -66,13 +66,9 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.55, 2000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 20, 100., 2000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
+    Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 100, 0.55, 2000., AxisScale::kLog);
-    //Axis AXrig("Rigidity [GV]", 20, 100., 2000., AxisScale::kLog);
-    //Axis AXrig("Rigidity [GV]", 100, 3.0, 1000., AxisScale::kLog); // RICH AGL
+    Axis AXrig("Rigidity [GV]", 100, 0.55, 3000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Double_t mass = PartInfo(PartType::Proton).mass();
@@ -92,7 +88,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 6000, -4.0, 4.0);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 1000, -1.0, 1.0);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
@@ -102,10 +98,6 @@ int main(int argc, char * argv[]) {
     Hist* hCKBrso = Hist::New("hCKBrso", HistAxis(AXbta, AXBrso));
     Hist* hKFBrso = Hist::New("hKFBrso", HistAxis(AXbta, AXBrso));
     Hist* hHCBrso = Hist::New("hHCBrso", HistAxis(AXbta, AXBrso));
-   
-    // Fit M 
-    Axis AXMrso("Mass [GeV]", 400, 0, 4);
-    Hist* hHCMrso = Hist::New("hHCMrso", HistAxis(AXbta, AXMrso));
     
     Axis AXRchi("Log-Chi-square [1]", 800, -3.0, 8.0);
     Hist* hCKRchix = Hist::New("hCKRchix", HistAxis(AXmom, AXRchi));
@@ -115,39 +107,9 @@ int main(int argc, char * argv[]) {
     Hist* hCKRchiy = Hist::New("hCKRchiy", HistAxis(AXmom, AXRchi));
     Hist* hKFRchiy = Hist::New("hKFRchiy", HistAxis(AXmom, AXRchi));
     Hist* hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
-    
-    //Axis AXRres("Residual [#mum]", 4000, -800.0, 800.0);
-    //std::vector<Hist*> hCKresx(9, nullptr);
-    //std::vector<Hist*> hKFresx(9, nullptr);
-    //std::vector<Hist*> hHCresx(9, nullptr);
-    //for (UInt_t it = 0; it < hCKresx.size(); ++it) hCKresx[it] = Hist::New(STR("hCKresxL%d", it+1), HistAxis(AXmom, AXRres));
-    //for (UInt_t it = 0; it < hKFresx.size(); ++it) hKFresx[it] = Hist::New(STR("hKFresxL%d", it+1), HistAxis(AXmom, AXRres));
-    //for (UInt_t it = 0; it < hHCresx.size(); ++it) hHCresx[it] = Hist::New(STR("hHCresxL%d", it+1), HistAxis(AXmom, AXRres));
-    //
-    //std::vector<Hist*> hCKresy(9, nullptr);
-    //std::vector<Hist*> hKFresy(9, nullptr);
-    //std::vector<Hist*> hHCresy(9, nullptr);
-    //for (UInt_t it = 0; it < hCKresy.size(); ++it) hCKresy[it] = Hist::New(STR("hCKresyL%d", it+1), HistAxis(AXmom, AXRres));
-    //for (UInt_t it = 0; it < hKFresy.size(); ++it) hKFresy[it] = Hist::New(STR("hKFresyL%d", it+1), HistAxis(AXmom, AXRres));
-    //for (UInt_t it = 0; it < hHCresy.size(); ++it) hHCresy[it] = Hist::New(STR("hHCresyL%d", it+1), HistAxis(AXmom, AXRres));
-    //
-    //Axis AXRcos("Residual [10^{-4}]", 3000, -30, 30);
-    //std::vector<Hist*> hCKcosx(9, nullptr);
-    //std::vector<Hist*> hKFcosx(9, nullptr);
-    //std::vector<Hist*> hHCcosx(9, nullptr);
-    //for (UInt_t it = 0; it < hCKcosx.size(); ++it) hCKcosx[it] = Hist::New(STR("hCKcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    //for (UInt_t it = 0; it < hKFcosx.size(); ++it) hKFcosx[it] = Hist::New(STR("hKFcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    //for (UInt_t it = 0; it < hHCcosx.size(); ++it) hHCcosx[it] = Hist::New(STR("hHCcosxL%d", it+1), HistAxis(AXmom, AXRcos));
-    //
-    //std::vector<Hist*> hCKcosy(9, nullptr);
-    //std::vector<Hist*> hKFcosy(9, nullptr);
-    //std::vector<Hist*> hHCcosy(9, nullptr);
-    //for (UInt_t it = 0; it < hCKcosy.size(); ++it) hCKcosy[it] = Hist::New(STR("hCKcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    //for (UInt_t it = 0; it < hKFcosy.size(); ++it) hKFcosy[it] = Hist::New(STR("hKFcosyL%d", it+1), HistAxis(AXmom, AXRcos));
-    //for (UInt_t it = 0; it < hHCcosy.size(); ++it) hHCcosy[it] = Hist::New(STR("hHCcosyL%d", it+1), HistAxis(AXmom, AXRcos));
 
     MGClock::HrsStopwatch hrssw; hrssw.start();
-    Long64_t printRate = static_cast<Long64_t>(0.04 * dst->GetEntries());
+    Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
     for (Long64_t entry = 0; entry < dst->GetEntries(); ++entry) {
         if (entry%printRate==0) {
@@ -155,14 +117,13 @@ int main(int argc, char * argv[]) {
             COUT("Entry %lld/%lld Time %14.8f\n", entry, dst->GetEntries(), hrssw.time());
         }
         dst->GetEntry(entry);
-      
+     
+        // No Interaction
+        if (opt.mode() == MGConfig::JobOpt::MODE::MC)
+            if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
+        
         //if (entry > 100) break;
         //if (fG4mc->primPart.mom > 1.0) continue; // testcode
-        //COUT("==== ENTRY %ld ====\n", entry);
-        //COUT("MOM %14.8f\n", fG4mc->primPart.mom);
-        //if (mc_mom < 10.0 || mc_mom > 50.0) continue; // testcode
-        //if (fG4mc->primPart.mom > 0.8) continue; // testcode
-        //if (fG4mc->primPart.mom < 100.0) continue; // testcode
         
         Int_t trPatt = optL1 + optL9 * 2;
         CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
@@ -281,56 +242,24 @@ int main(int argc, char * argv[]) {
         for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == 0 && seg.lay == topLay) { topmc = &seg; break; } }
         if (topmc == nullptr) continue;
 
-        //Double_t tmom = 0;
-        //Double_t tbta = fTof->mcBeta[0];
-        //if (tbta > 0) {
-        //    tmom = mass / std::sqrt(1.0 / tbta / tbta - 1.0);
-        //    if (!Numc::Valid(tmom)) tmom = topmc->mom;
-        //}
-        //else tmom = topmc->mom;
-        //Double_t mc_mom  = tmom;
-
-        Double_t mc_mom = fG4mc->primPart.mom;
-        Double_t mc_eta  = mass/mc_mom;
-        Double_t mc_bta  = 1.0/std::sqrt(1.0+mc_eta*mc_eta);
+        Double_t mc_mom  = fG4mc->primPart.mom;
+        Double_t mc_igb  = mass/mc_mom;
+        Double_t mc_bta  = 1.0 / std::sqrt(1.0 + mc_igb * mc_igb);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
-        Double_t bincen  = AXmom.center(AXmom.find(mc_mom), AxisScale::kLog);
+        Double_t bincen  = std::sqrt(AXmom.center(AXmom.find(mc_mom), AxisScale::kLog));
         
         //-------------------------------------//
         MGClock::HrsStopwatch sw; sw.start();
-        //SimpleTrFit tr(fitPar); // testcode
-        //SimpleTrFit tr(fitPar, true); // testcode
+        //SimpleTrFit tr(fitPar);
         PhyTrFit tr(fitPar);
-        //PhyTrFit tr(fitPar, PhyTrFit::MuOpt::kFree);
         sw.stop();
-        Bool_t hc_succ = tr.status();
+        Bool_t   hc_succ = tr.status();
         Double_t hc_irig = tr.part().irig();
         Double_t hc_tme  = sw.time()*1.0e3;
-        //Double_t hc_coo[9][3]; std::fill_n(hc_coo[0], 9*3, 0.);
-        //Double_t hc_dir[9][2]; std::fill_n(hc_dir[0], 9*2, 0.);
-        //Double_t hc_lay_irig[9]; std::fill_n(hc_lay_irig, 9, 0.);
-        //for (Int_t it = 0; hc_succ && it < 9; ++it) {
-        //    PhySt&& stt = tr.interpolate_to_z(ckTr.stateLJ[it][2]);
-        //    hc_coo[it][0] = stt.cx();
-        //    hc_coo[it][1] = stt.cy();
-        //    hc_coo[it][2] = stt.cz();
-        //    hc_dir[it][0] = stt.ux();
-        //    hc_dir[it][1] = stt.uy();
-        //    hc_lay_irig[it] = stt.irig();
-        //    //CERR("Lay%d Z %6.2f RIG %14.8f\n", it, hc_coo[it][2], 1.0/hc_lay_irig[it]);
-        //}
-        //hc_irig = hc_lay_irig[topLay];
-        //
-        //COUT("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, tr.part().rig(), tr.part().info().mass(), tr.quality(1));
-        if (Numc::EqualToZero(tr.part().mom())) COUT("FAIL. ENTRY %ld\n", entry);
     
         PhySt&& sttTop = tr.interpolate_to_z(195.0);
         if (Numc::EqualToZero(sttTop.mom())) continue;
         hc_irig = sttTop.irig();
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f Z %14.8f\n", mc_mom, sttTop.rig(), sttTop.mass(), tr.quality(1), sttTop.cz());
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f TIME %14.8f  (Z %6.1f)\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1), sw.time(), tr.part().cz());
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, tr.part().info().mass(), tr.quality(1));
-        //CERR("FINAL FIT (MC MOM %14.8f) == RIG %14.8f (%14.8f) MASS %14.8f QLT %14.8f\n", mc_mom, 1.0/hc_irig, hcTr.state[6], tr.part().info().mass(), tr.quality(1));
         //-------------------------------------//
         
         Bool_t ck_succ = ckTr.status;
@@ -341,20 +270,17 @@ int main(int argc, char * argv[]) {
         if (kf_succ) hKFnum->fillH1D(mc_mom);
         if (hc_succ) hHCnum->fillH1D(mc_mom);
         
-        //if (hc_succ) hHCtme->fillH2D(mc_mom, hcTr.cpuTime);
         if (hc_succ) hHCtme->fillH2D(mc_mom, hc_tme);
+        //if (hc_succ) hHCtme->fillH2D(mc_mom, hcTr.cpuTime);
 
         Double_t ck_irig = (ck_succ ? MGMath::ONE/ckTr.rig : 0.);
         Double_t kf_irig = (kf_succ ? MGMath::ONE/kfTr.rig[0] : 0.);
-        //Double_t hc_irig = (hc_succ ? MGMath::ONE/hcTr.state[6] : 0.);
+        //Double_t hc_irig = (hc_succ ? MGMath::ONE/hcTr.stateTop[6] : 0.);
         
         Double_t ck_bta = (ck_succ ? 1.0/std::sqrt(1.0+mass*ck_irig*mass*ck_irig) : 0.);
         Double_t kf_bta = (kf_succ ? 1.0/std::sqrt(1.0+mass*kf_irig*mass*kf_irig) : 0.);
         Double_t hc_bta = (hc_succ ? 1.0/std::sqrt(1.0+mass*hc_irig*mass*hc_irig) : 0.);
       
-        if (hc_succ) hHCMrso->fillH2D(mc_bta, tr.part().mass());
-        //if (hc_succ) hHCMrso->fillH2D(mc_bta, 1.0/hcTr.mass);
-
         Double_t ck_chix = (ck_succ ? std::log(ckTr.nchi[0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(kfTr.nchi[0]) : 0.); 
         //Double_t hc_chix = (hc_succ ? std::log(hcTr.nchi[0]) : 0.); 
@@ -380,46 +306,6 @@ int main(int argc, char * argv[]) {
         if (ck_succ) hCKRchiy->fillH2D(mc_mom, ck_chiy);
         if (kf_succ) hKFRchiy->fillH2D(mc_mom, kf_chiy);
         if (hc_succ) hHCRchiy->fillH2D(mc_mom, hc_chiy);
-        
-        //for (Int_t it = 0; it < 9; ++it) {
-        //    if (!hasLay[it]) continue;
-        //    if (!(msh[it]->side[0] && msh[it]->adc[0]>0)) continue;
-        //    if (!(msh[it]->side[1] && msh[it]->adc[1]>0)) continue;
-        //    constexpr Double_t CM2UM = 1.0e4;
-        //    constexpr Double_t COS   = 1.0e4;
-        //    
-        //    Double_t ck_resx = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][0]-mch[it]->coo[0]) : 0.);
-        //    Double_t kf_resx = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][0]-mch[it]->coo[0]) : 0.);
-        //    Double_t hc_resx = (hc_succ ? CM2UM * (                hc_coo[it][0]-mch[it]->coo[0]) : 0.);
-
-        //    if (ck_succ) hCKresx.at(it)->fillH2D(mc_mom, ck_resx);
-        //    if (kf_succ) hKFresx.at(it)->fillH2D(mc_mom, kf_resx);
-        //    if (hc_succ) hHCresx.at(it)->fillH2D(mc_mom, hc_resx);
-        //    
-        //    Double_t ck_resy = (ck_succ ? CM2UM * (track.stateLJ[0][patt][it][1]-mch[it]->coo[1]) : 0.);
-        //    Double_t kf_resy = (kf_succ ? CM2UM * (track.stateLJ[1][patt][it][1]-mch[it]->coo[1]) : 0.);
-        //    Double_t hc_resy = (hc_succ ? CM2UM * (                hc_coo[it][1]-mch[it]->coo[1]) : 0.);
-        //    
-        //    if (ck_succ) hCKresy.at(it)->fillH2D(mc_mom, ck_resy);
-        //    if (kf_succ) hKFresy.at(it)->fillH2D(mc_mom, kf_resy);
-        //    if (hc_succ) hHCresy.at(it)->fillH2D(mc_mom, hc_resy);
-        //    
-        //    Double_t ck_cosx = (ck_succ ? COS * (track.stateLJ[0][patt][it][3]-mcs[it]->dir[0]) : 0.);
-        //    Double_t kf_cosx = (kf_succ ? COS * (track.stateLJ[1][patt][it][3]-mcs[it]->dir[0]) : 0.);
-        //    Double_t hc_cosx = (hc_succ ? COS * (                hc_dir[it][0]-mcs[it]->dir[0]) : 0.);
-        //    
-        //    if (ck_succ) hCKcosx.at(it)->fillH2D(mc_mom, ck_cosx);
-        //    if (kf_succ) hKFcosx.at(it)->fillH2D(mc_mom, kf_cosx);
-        //    if (hc_succ) hHCcosx.at(it)->fillH2D(mc_mom, hc_cosx);
-        //    
-        //    Double_t ck_cosy = (ck_succ ? COS * (track.stateLJ[0][patt][it][4]-mcs[it]->dir[1]) : 0.);
-        //    Double_t kf_cosy = (kf_succ ? COS * (track.stateLJ[1][patt][it][4]-mcs[it]->dir[1]) : 0.);
-        //    Double_t hc_cosy = (hc_succ ? COS * (                hc_dir[it][1]-mcs[it]->dir[1]) : 0.);
-        //    
-        //    if (ck_succ) hCKcosy.at(it)->fillH2D(mc_mom, ck_cosy);
-        //    if (kf_succ) hKFcosy.at(it)->fillH2D(mc_mom, kf_cosy);
-        //    if (hc_succ) hHCcosy.at(it)->fillH2D(mc_mom, hc_cosy);
-        //}
     }
     
     ofle->Write();

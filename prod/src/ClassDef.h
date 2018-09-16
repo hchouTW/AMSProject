@@ -160,12 +160,11 @@ class PartMCInfo : public TObject {
 		~PartMCInfo() {}
 
 		void init() {
-			partID = 0;
-			chrg   = 0;
-			mass   = 0;
-            bta    = 0;
-			mom    = 0;
-			ke     = 0;
+			chrg = 0;
+			mass = 0;
+            bta  = 0;
+			mom  = 0;
+			ke   = 0;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
             segs.clear();
@@ -173,7 +172,6 @@ class PartMCInfo : public TObject {
 		}
 
 	public :
-		Short_t partID;
 		Float_t chrg;
 		Float_t mass;
         Float_t bta;
@@ -193,12 +191,8 @@ struct PartMCInfo_sort {
 		if      (par1.coo[2] > par2.coo[2]) return true;
 		else if (par1.coo[2] < par2.coo[2]) return false;
 		else {
-			if      (par1.partID < par2.partID) return true;
-			else if (par1.partID > par2.partID) return false;
-			else {
-				if      (par1.mom > par2.mom) return true;
-				else if (par1.mom < par2.mom) return false;
-			}
+			if      (par1.mom > par2.mom) return true;
+			else if (par1.mom < par2.mom) return false;
 		}
 		return false;
 	}
@@ -643,18 +637,15 @@ class G4MC : public TObject {
 		~G4MC() {}
 
 		void init() {
-			beamID = -1;
-
 			primPart.init();
 			primVtx.init();
 		}
 
 	public :
-		Short_t      beamID; // only for MC Beam Test (400GeV proton)
 		PartMCInfo   primPart;
 		VertexMCInfo primVtx;
 
-	ClassDef(G4MC, 6)
+	ClassDef(G4MC, 7)
 };
 
 
@@ -859,17 +850,6 @@ class TRK : public TObject {
             hcTr = std::vector<HCTrackInfo>(4);
             
             hcTrTF = std::vector<HCTrackInfo>(4);
-            
-            //ftL34Dist = -1;
-            //ftL56Dist = -1;
-            //ftL78Dist = -1;
-            //survHeL56Prob = -1;
-            //ratN10Smin = -1;
-            //std::fill_n(ratN10S, 7, -1);
-            //
-            //noiseInTrSH = -1;
-            //std::fill_n(betaSH, 3, -1);
-            //massEstSH = -99;
 		}
 
 	public :
@@ -881,9 +861,9 @@ class TRK : public TObject {
 		// InnerL1  (XY) := ((bitPattXY&  5)==  5)
 		// InnerL9  (XY) := ((bitPattXY&  9)==  9)
 		// FullSpan (XY) := ((bitPattXY& 13)== 13)
-        Bool_t   status;
-		Short_t  bitPatt;
-		Short_t  bitPattXY;
+        Bool_t  status;
+		Short_t bitPatt;
+		Short_t bitPattXY;
 
 		// Track Charge
 		Float_t QIn;
@@ -903,21 +883,6 @@ class TRK : public TObject {
         // HYChou [Inn InnL1 InnL9 FS]
         std::vector<HCTrackInfo> hcTr;
         std::vector<HCTrackInfo> hcTrTF;
-        
-        // Haino's tools
-        //Float_t ftL34Dist;     // tracker feet (typical cut is ftL34Dist < 0.5~6)
-        //Float_t ftL56Dist;     // tracker feet (typical cut is ftL56Dist < 0.5~6)
-        //Float_t ftL78Dist;     // tracker feet (typical cut is ftL78Dist < 0.5~6)
-        //Float_t survHeL56Prob; // The variable you can play with on cuts (typical cut is hsv<0.26)
-        //Float_t ratN10Smin;    //
-        //Float_t ratN10S[7];    // a ratio of raw ADC used for the hit over the sum of n=10 strips around. (from L2 to L8)
-        //
-        //Short_t noiseInTrSH;   // keep (noiseInTrSH == 0) events
-        //Float_t betaSH[3];     // from dE/dx by 
-        //                       // [0] Tracker
-        //                       // [1] Tracker, TOF
-        //                       // [2] Tracker, TOF and/or TRD
-        //Float_t massEstSH;     // mass estimator log-likelihood
 
 	ClassDef(TRK, 9)
 };

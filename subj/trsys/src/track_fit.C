@@ -21,39 +21,6 @@ int main(int argc, char * argv[]) {
     Hist* hCKBrso = Hist::Head("hCKBrso");
     Hist* hKFBrso = Hist::Head("hKFBrso");
     Hist* hHCBrso = Hist::Head("hHCBrso");
-    
-    Hist* hHCMrso = Hist::Head("hHCMrso");
- 
-    //std::vector<Hist*> hCKresx(9, nullptr);
-    //std::vector<Hist*> hKFresx(9, nullptr);
-    //std::vector<Hist*> hHCresx(9, nullptr);
-    //std::vector<Hist*> hCKresy(9, nullptr);
-    //std::vector<Hist*> hKFresy(9, nullptr);
-    //std::vector<Hist*> hHCresy(9, nullptr);
-    //std::vector<Hist*> hCKcosx(9, nullptr);
-    //std::vector<Hist*> hKFcosx(9, nullptr);
-    //std::vector<Hist*> hHCcosx(9, nullptr);
-    //std::vector<Hist*> hCKcosy(9, nullptr);
-    //std::vector<Hist*> hKFcosy(9, nullptr);
-    //std::vector<Hist*> hHCcosy(9, nullptr);
-
-    //for (Int_t it = 0; it < 9; ++it) {
-    //    hCKresx.at(it) = Hist::Head(STR("hCKresxL%d", it+1));
-    //    hKFresx.at(it) = Hist::Head(STR("hKFresxL%d", it+1));
-    //    hHCresx.at(it) = Hist::Head(STR("hHCresxL%d", it+1));
-    //    
-    //    hCKresy.at(it) = Hist::Head(STR("hCKresyL%d", it+1));
-    //    hKFresy.at(it) = Hist::Head(STR("hKFresyL%d", it+1));
-    //    hHCresy.at(it) = Hist::Head(STR("hHCresyL%d", it+1));
-    //    
-    //    hCKcosx.at(it) = Hist::Head(STR("hCKcosxL%d", it+1));
-    //    hKFcosx.at(it) = Hist::Head(STR("hKFcosxL%d", it+1));
-    //    hHCcosx.at(it) = Hist::Head(STR("hHCcosxL%d", it+1));
-    //    
-    //    hCKcosy.at(it) = Hist::Head(STR("hCKcosyL%d", it+1));
-    //    hKFcosy.at(it) = Hist::Head(STR("hKFcosyL%d", it+1));
-    //    hHCcosy.at(it) = Hist::Head(STR("hHCcosyL%d", it+1));
-    //}
    
     const Axis& AXmom = hCKRrso->xaxis();
     const Axis& AXbta = hCKBrso->xaxis();
@@ -82,6 +49,8 @@ int main(int argc, char * argv[]) {
     std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrso);
 
     for (int it = 1; it <= AXmom.nbin(); ++it) {
+        Double_t bincen = std::sqrt(AXmom.center(it, AxisScale::kLog));
+
         // Choutko
         Double_t CKRmax = (*vhCKRrso.at(it))()->GetBinCenter((*vhCKRrso.at(it))()->GetMaximumBin());
         Double_t CKRrms = (*vhCKRrso.at(it))()->GetRMS();
@@ -93,10 +62,10 @@ int main(int argc, char * argv[]) {
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhCKRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hCKRrsoM)()->SetBinContent(it, gaus->GetParameter(1));
-        (*hCKRrsoM)()->SetBinError  (it, gaus->GetParError(1));
-        (*hCKRrsoS)()->SetBinContent(it, gaus->GetParameter(2));
-        (*hCKRrsoS)()->SetBinError  (it, gaus->GetParError(2));
+        (*hCKRrsoM)()->SetBinContent(it, bincen * gaus->GetParameter(1));
+        (*hCKRrsoM)()->SetBinError  (it, bincen * gaus->GetParError(1));
+        (*hCKRrsoS)()->SetBinContent(it, bincen * gaus->GetParameter(2));
+        (*hCKRrsoS)()->SetBinError  (it, bincen * gaus->GetParError(2));
         
         // Kalman Filter
         Double_t KFRmax = (*vhKFRrso.at(it))()->GetBinCenter((*vhKFRrso.at(it))()->GetMaximumBin());
@@ -109,10 +78,10 @@ int main(int argc, char * argv[]) {
         (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhKFRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hKFRrsoM)()->SetBinContent(it, gaus->GetParameter(1));
-        (*hKFRrsoM)()->SetBinError  (it, gaus->GetParError(1));
-        (*hKFRrsoS)()->SetBinContent(it, gaus->GetParameter(2));
-        (*hKFRrsoS)()->SetBinError  (it, gaus->GetParError(2));
+        (*hKFRrsoM)()->SetBinContent(it, bincen * gaus->GetParameter(1));
+        (*hKFRrsoM)()->SetBinError  (it, bincen * gaus->GetParError(1));
+        (*hKFRrsoS)()->SetBinContent(it, bincen * gaus->GetParameter(2));
+        (*hKFRrsoS)()->SetBinError  (it, bincen * gaus->GetParError(2));
         
         // Hsin-Yi Chou
         Double_t HCRmax = (*vhHCRrso.at(it))()->GetBinCenter((*vhHCRrso.at(it))()->GetMaximumBin());
@@ -126,14 +95,22 @@ int main(int argc, char * argv[]) {
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
         (*vhHCRrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
     
-        (*hHCRrsoM)()->SetBinContent(it, gaus->GetParameter(1));
-        (*hHCRrsoM)()->SetBinError  (it, gaus->GetParError(1));
-        (*hHCRrsoS)()->SetBinContent(it, gaus->GetParameter(2));
-        (*hHCRrsoS)()->SetBinError  (it, gaus->GetParError(2));
+        (*hHCRrsoM)()->SetBinContent(it, bincen * gaus->GetParameter(1));
+        (*hHCRrsoM)()->SetBinError  (it, bincen * gaus->GetParError(1));
+        (*hHCRrsoS)()->SetBinContent(it, bincen * gaus->GetParameter(2));
+        (*hHCRrsoS)()->SetBinError  (it, bincen * gaus->GetParError(2));
         
         (*hKFCKRrsoS)()->SetBinContent(it, (*hKFRrsoS)()->GetBinContent(it)/(*hCKRrsoS)()->GetBinContent(it));
         (*hHCCKRrsoS)()->SetBinContent(it, (*hHCRrsoS)()->GetBinContent(it)/(*hCKRrsoS)()->GetBinContent(it));
     } 
+    
+    for (int it = 1; it <= AXmom.nbin(); ++it) {
+        vhCKRrso.at(it)->style(Fill(), Line(kGreen), Marker(kGreen));
+        vhKFRrso.at(it)->style(Fill(), Line(kBlue), Marker(kBlue));
+        vhHCRrso.at(it)->style(Fill(), Line(kRed), Marker(kRed));
+        THStack* cvRrso = Hist::Collect(Form("cvRrso%03d", it), HistList({ vhCKRrso.at(it), vhKFRrso.at(it), vhHCRrso.at(it) }));
+        cvRrso->Write();
+    }
   
     hCKRrsoM->write();
     hKFRrsoM->write();
@@ -245,291 +222,6 @@ int main(int argc, char * argv[]) {
     THStack* chBrsoS = Hist::Collect("chBrsoS", HistList({ hKFCKBrsoS, hHCCKBrsoS }));
     chBrsoS->Write();
 
-
-    COUT("Mrso\n");
-    Hist* hHCMrsoM = Hist::New("hHCMrsoM", HistAxis(AXbta, "Mass Mean [GeV]"));
-    Hist* hHCMrsoS = Hist::New("hHCMrsoS", HistAxis(AXbta, "Mass Sigma [GeV]"));
-    
-    std::vector<Hist*> vhHCMrso = Hist::ProjectAll(HistProj::kY, hHCMrso);
-
-    for (int it = 1; it <= AXbta.nbin(); ++it) {
-        // Hsin-Yi Chou
-        Double_t HCMmax = (*vhHCMrso.at(it))()->GetBinCenter((*vhHCMrso.at(it))()->GetMaximumBin());
-        Double_t HCMrms = (*vhHCMrso.at(it))()->GetRMS();
-        gaus->SetParameters(1000, HCMmax, HCMrms);
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "");
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", HCMmax-stable*HCMrms, HCMmax+stable*HCMrms);
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        (*vhHCMrso.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-    
-        (*hHCMrsoM)()->SetBinContent(it, gaus->GetParameter(1));
-        (*hHCMrsoM)()->SetBinError  (it, gaus->GetParError(1));
-        (*hHCMrsoS)()->SetBinContent(it, gaus->GetParameter(2));
-        (*hHCMrsoS)()->SetBinError  (it, gaus->GetParError(2));
-    } 
-    
-    hHCMrsoM->write();
-    hHCMrsoS->write();
-
-
-/*
-    COUT("resx\n");
-    for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKresxS = Hist::New(CSTR("hCKresxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFresxS = Hist::New(CSTR("hKFresxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCresxS = Hist::New(CSTR("hHCresxL%dS", lay+1), HistAxis(AXmom));
-        
-        Hist* hKFCKresxS = Hist::New(CSTR("hKFCKresxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKresxS = Hist::New(CSTR("hHCCKresxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
-        
-        std::vector<Hist*> vhCKresx = Hist::ProjectAll(HistProj::kY, hCKresx.at(lay));
-        std::vector<Hist*> vhKFresx = Hist::ProjectAll(HistProj::kY, hKFresx.at(lay));
-        std::vector<Hist*> vhHCresx = Hist::ProjectAll(HistProj::kY, hHCresx.at(lay));
-
-        for (int it = 1; it <= AXmom.nbin(); ++it) {
-            // Choutko
-            Double_t CKRmax = (*vhCKresx.at(it))()->GetBinCenter((*vhCKresx.at(it))()->GetMaximumBin());
-            Double_t CKRrms = (*vhCKresx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, CKRmax, CKRrms);
-            (*vhCKresx.at(it))()->Fit(gaus, "q0", "");
-            (*vhCKresx.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
-            (*vhCKresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hCKresxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hCKresxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Kalman Filter
-            Double_t KFRmax = (*vhKFresx.at(it))()->GetBinCenter((*vhKFresx.at(it))()->GetMaximumBin());
-            Double_t KFRrms = (*vhKFresx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, KFRmax, KFRrms);
-            (*vhKFresx.at(it))()->Fit(gaus, "q0", "");
-            (*vhKFresx.at(it))()->Fit(gaus, "q0", "", KFRmax-stable*KFRrms, KFRmax+stable*KFRrms);
-            (*vhKFresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hKFresxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hKFresxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Hsin-Yi Chou
-            Double_t HCRmax = (*vhHCresx.at(it))()->GetBinCenter((*vhHCresx.at(it))()->GetMaximumBin());
-            Double_t HCRrms = (*vhHCresx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, HCRmax, HCRrms);
-            (*vhHCresx.at(it))()->Fit(gaus, "q0", "");
-            (*vhHCresx.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
-            (*vhHCresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCresx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hHCresxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hHCresxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            (*hKFCKresxS)()->SetBinContent(it, (*hKFresxS)()->GetBinContent(it)/(*hCKresxS)()->GetBinContent(it));
-            (*hHCCKresxS)()->SetBinContent(it, (*hHCresxS)()->GetBinContent(it)/(*hCKresxS)()->GetBinContent(it));
-        } 
-   
-        hKFCKresxS->style(Fill(), Line(kBlue), Marker(kBlue));
-        hHCCKresxS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chresxS = Hist::Collect(CSTR("chresxL%dS", lay+1), HistList({ hKFCKresxS, hHCCKresxS }));
-        chresxS->Write();
-    }
-
-
-    COUT("resy\n");
-    for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKresyS = Hist::New(CSTR("hCKresyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFresyS = Hist::New(CSTR("hKFresyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCresyS = Hist::New(CSTR("hHCresyL%dS", lay+1), HistAxis(AXmom));
-        
-        Hist* hKFCKresyS = Hist::New(CSTR("hKFCKresyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKresyS = Hist::New(CSTR("hHCCKresyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
-        
-        std::vector<Hist*> vhCKresy = Hist::ProjectAll(HistProj::kY, hCKresy.at(lay));
-        std::vector<Hist*> vhKFresy = Hist::ProjectAll(HistProj::kY, hKFresy.at(lay));
-        std::vector<Hist*> vhHCresy = Hist::ProjectAll(HistProj::kY, hHCresy.at(lay));
-
-        for (int it = 1; it <= AXmom.nbin(); ++it) {
-            // Choutko
-            Double_t CKRmax = (*vhCKresy.at(it))()->GetBinCenter((*vhCKresy.at(it))()->GetMaximumBin());
-            Double_t CKRrms = (*vhCKresy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, CKRmax, CKRrms);
-            (*vhCKresy.at(it))()->Fit(gaus, "q0", "");
-            (*vhCKresy.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
-            (*vhCKresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hCKresyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hCKresyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Kalman Filter
-            Double_t KFRmax = (*vhKFresy.at(it))()->GetBinCenter((*vhKFresy.at(it))()->GetMaximumBin());
-            Double_t KFRrms = (*vhKFresy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, KFRmax, KFRrms);
-            (*vhKFresy.at(it))()->Fit(gaus, "q0", "");
-            (*vhKFresy.at(it))()->Fit(gaus, "q0", "", KFRmax-stable*KFRrms, KFRmax+stable*KFRrms);
-            (*vhKFresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hKFresyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hKFresyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Hsin-Yi Chou
-            Double_t HCRmax = (*vhHCresy.at(it))()->GetBinCenter((*vhHCresy.at(it))()->GetMaximumBin());
-            Double_t HCRrms = (*vhHCresy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, HCRmax, HCRrms);
-            (*vhHCresy.at(it))()->Fit(gaus, "q0", "");
-            (*vhHCresy.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
-            (*vhHCresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCresy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hHCresyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hHCresyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            (*hKFCKresyS)()->SetBinContent(it, (*hKFresyS)()->GetBinContent(it)/(*hCKresyS)()->GetBinContent(it));
-            (*hHCCKresyS)()->SetBinContent(it, (*hHCresyS)()->GetBinContent(it)/(*hCKresyS)()->GetBinContent(it));
-        } 
-   
-        hKFCKresyS->style(Fill(), Line(kBlue), Marker(kBlue));
-        hHCCKresyS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chresyS = Hist::Collect(CSTR("chresyL%dS", lay+1), HistList({ hKFCKresyS, hHCCKresyS }));
-        chresyS->Write();
-    }
-
-
-    COUT("cosx\n");
-    for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKcosxS = Hist::New(CSTR("hCKcosxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFcosxS = Hist::New(CSTR("hKFcosxL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCcosxS = Hist::New(CSTR("hHCcosxL%dS", lay+1), HistAxis(AXmom));
-        
-        Hist* hKFCKcosxS = Hist::New(CSTR("hKFCKcosxL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKcosxS = Hist::New(CSTR("hHCCKcosxL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
-        
-        std::vector<Hist*> vhCKcosx = Hist::ProjectAll(HistProj::kY, hCKcosx.at(lay));
-        std::vector<Hist*> vhKFcosx = Hist::ProjectAll(HistProj::kY, hKFcosx.at(lay));
-        std::vector<Hist*> vhHCcosx = Hist::ProjectAll(HistProj::kY, hHCcosx.at(lay));
-
-        for (int it = 1; it <= AXmom.nbin(); ++it) {
-            // Choutko
-            Double_t CKRmax = (*vhCKcosx.at(it))()->GetBinCenter((*vhCKcosx.at(it))()->GetMaximumBin());
-            Double_t CKRrms = (*vhCKcosx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, CKRmax, CKRrms);
-            (*vhCKcosx.at(it))()->Fit(gaus, "q0", "");
-            (*vhCKcosx.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
-            (*vhCKcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hCKcosxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hCKcosxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Kalman Filter
-            Double_t KFRmax = (*vhKFcosx.at(it))()->GetBinCenter((*vhKFcosx.at(it))()->GetMaximumBin());
-            Double_t KFRrms = (*vhKFcosx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, KFRmax, KFRrms);
-            (*vhKFcosx.at(it))()->Fit(gaus, "q0", "");
-            (*vhKFcosx.at(it))()->Fit(gaus, "q0", "", KFRmax-stable*KFRrms, KFRmax+stable*KFRrms);
-            (*vhKFcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hKFcosxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hKFcosxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Hsin-Yi Chou
-            Double_t HCRmax = (*vhHCcosx.at(it))()->GetBinCenter((*vhHCcosx.at(it))()->GetMaximumBin());
-            Double_t HCRrms = (*vhHCcosx.at(it))()->GetRMS();
-            gaus->SetParameters(1000, HCRmax, HCRrms);
-            (*vhHCcosx.at(it))()->Fit(gaus, "q0", "");
-            (*vhHCcosx.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
-            (*vhHCcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCcosx.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hHCcosxS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hHCcosxS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            (*hKFCKcosxS)()->SetBinContent(it, (*hKFcosxS)()->GetBinContent(it)/(*hCKcosxS)()->GetBinContent(it));
-            (*hHCCKcosxS)()->SetBinContent(it, (*hHCcosxS)()->GetBinContent(it)/(*hCKcosxS)()->GetBinContent(it));
-        } 
-   
-        hKFCKcosxS->style(Fill(), Line(kBlue), Marker(kBlue));
-        hHCCKcosxS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chcosxS = Hist::Collect(CSTR("chcosxL%dS", lay+1), HistList({ hKFCKcosxS, hHCCKcosxS }));
-        chcosxS->Write();
-    }
-
-
-    COUT("cosy\n");
-    for (Int_t lay = 0; lay < 9; ++lay) {
-        Hist* hCKcosyS = Hist::New(CSTR("hCKcosyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hKFcosyS = Hist::New(CSTR("hKFcosyL%dS", lay+1), HistAxis(AXmom));
-        Hist* hHCcosyS = Hist::New(CSTR("hHCcosyL%dS", lay+1), HistAxis(AXmom));
-        
-        Hist* hKFCKcosyS = Hist::New(CSTR("hKFCKcosyL%dS", lay+1), HistAxis(AXmom, "KF/Choutko Sigma Ratio [1]"));
-        Hist* hHCCKcosyS = Hist::New(CSTR("hHCCKcosyL%dS", lay+1), HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
-        
-        std::vector<Hist*> vhCKcosy = Hist::ProjectAll(HistProj::kY, hCKcosy.at(lay));
-        std::vector<Hist*> vhKFcosy = Hist::ProjectAll(HistProj::kY, hKFcosy.at(lay));
-        std::vector<Hist*> vhHCcosy = Hist::ProjectAll(HistProj::kY, hHCcosy.at(lay));
-
-        for (int it = 1; it <= AXmom.nbin(); ++it) {
-            // Choutko
-            Double_t CKRmax = (*vhCKcosy.at(it))()->GetBinCenter((*vhCKcosy.at(it))()->GetMaximumBin());
-            Double_t CKRrms = (*vhCKcosy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, CKRmax, CKRrms);
-            (*vhCKcosy.at(it))()->Fit(gaus, "q0", "");
-            (*vhCKcosy.at(it))()->Fit(gaus, "q0", "", CKRmax-stable*CKRrms, CKRmax+stable*CKRrms);
-            (*vhCKcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhCKcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hCKcosyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hCKcosyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Kalman Filter
-            Double_t KFRmax = (*vhKFcosy.at(it))()->GetBinCenter((*vhKFcosy.at(it))()->GetMaximumBin());
-            Double_t KFRrms = (*vhKFcosy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, KFRmax, KFRrms);
-            (*vhKFcosy.at(it))()->Fit(gaus, "q0", "");
-            (*vhKFcosy.at(it))()->Fit(gaus, "q0", "", KFRmax-stable*KFRrms, KFRmax+stable*KFRrms);
-            (*vhKFcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhKFcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hKFcosyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hKFcosyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            // Hsin-Yi Chou
-            Double_t HCRmax = (*vhHCcosy.at(it))()->GetBinCenter((*vhHCcosy.at(it))()->GetMaximumBin());
-            Double_t HCRrms = (*vhHCcosy.at(it))()->GetRMS();
-            gaus->SetParameters(1000, HCRmax, HCRrms);
-            (*vhHCcosy.at(it))()->Fit(gaus, "q0", "");
-            (*vhHCcosy.at(it))()->Fit(gaus, "q0", "", HCRmax-stable*HCRrms, HCRmax+stable*HCRrms);
-            (*vhHCcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-            (*vhHCcosy.at(it))()->Fit(gaus, "q0", "", gaus->GetParameter(1)-stable*gaus->GetParameter(2), gaus->GetParameter(1)+stable*gaus->GetParameter(2));
-        
-            (*hHCcosyS)()->SetBinContent(it, gaus->GetParameter(2));
-            (*hHCcosyS)()->SetBinError  (it, gaus->GetParError(2));
-            
-            (*hKFCKcosyS)()->SetBinContent(it, (*hKFcosyS)()->GetBinContent(it)/(*hCKcosyS)()->GetBinContent(it));
-            (*hHCCKcosyS)()->SetBinContent(it, (*hHCcosyS)()->GetBinContent(it)/(*hCKcosyS)()->GetBinContent(it));
-        } 
-   
-        hKFCKcosyS->style(Fill(), Line(kBlue), Marker(kBlue));
-        hHCCKcosyS->style(Fill(), Line(kRed), Marker(kRed));
-        THStack* chcosyS = Hist::Collect(CSTR("chcosyL%dS", lay+1), HistList({ hKFCKcosyS, hHCCKcosyS }));
-        chcosyS->Write();
-    }
-*/
     ofle->Write();
     ofle->Close();
 
