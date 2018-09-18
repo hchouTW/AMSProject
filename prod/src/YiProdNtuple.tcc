@@ -2085,23 +2085,20 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-	if (event->NTrTrack() != 1) return -2001;
+    //if (event->NTrTrack() != 1) return -2001;
 
 	// ~3~ (Based on TrdTrack)
-	if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
+	//if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
 
 	// ~4~ (Based on Particle)
 	ParticleR  * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
 	TrTrackR   * trtkSIG = (partSIG != nullptr) ? partSIG->pTrTrack() : nullptr;
 	BetaHR     * btahSIG = (partSIG != nullptr) ? partSIG->pBetaH()   : nullptr;
-	TrdTrackR  * trdSIG  = (partSIG != nullptr) ? partSIG->pTrdTrack()  : nullptr;
-	TrdHTrackR * trdhSIG = (partSIG != nullptr) ? partSIG->pTrdHTrack() : nullptr;
 	if (partSIG == nullptr) return -4001;
 	if (trtkSIG == nullptr || btahSIG == nullptr) return -4002;
-	if ( trdSIG == nullptr && trdhSIG == nullptr) return -4003;
 
 	// ~5~ (Based on BetaH)
-	if (event->NBetaH() != 1) return -5001;
+	//if (event->NBetaH() != 1) return -5001;
 	if (btahSIG->GetBetaPattern() != 4444) return -5002;
 	
     double betah = btahSIG->GetBeta();
