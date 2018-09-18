@@ -7,6 +7,8 @@
 #include "Math.h"
 #include "Math.C"
 
+#include "TmeMeas.h"
+#include "TmeMeas.C"
 #include "IonEloss.h"
 #include "IonEloss.C"
 #include "GmIonEloss.h"

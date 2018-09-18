@@ -176,6 +176,8 @@ class HitStTRK : public VirtualHitSt {
         static MultiGaus PDF_Q01_CY_;
         static MultiGaus PDF_Q02_CX_;
         static MultiGaus PDF_Q02_CY_;
+        static MultiGaus PDF_Q06_CX_;
+        static MultiGaus PDF_Q06_CY_;
 
         static IonEloss PDF_Q01_QX_;
         static IonEloss PDF_Q01_QY_;
@@ -273,15 +275,10 @@ class HitStTOF : public VirtualHitSt {
         static void SetOffsetPath(Double_t offset_s = Numc::ZERO<>) { OFFSET_S_ = offset_s; }
         static const Double_t& OffsetTime() { return OFFSET_T_; }
         static const Double_t& OffsetPath() { return OFFSET_S_; }
-   
-        static void SetTimeShiftCorr(Bool_t corr = true) { TShiftCorr_ = corr; }
-        static const Bool_t& TimeShiftCorr() { return TShiftCorr_; }
 
     protected :
         static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
-
-        static Bool_t TShiftCorr_;
 };
 
 
@@ -391,7 +388,6 @@ class HitStTRD : public VirtualHitSt {
     
     protected :
         static GmIonEloss PDF_Q01_EL_;
-        static GmIonEloss PDF_Q02_EL_;
 };
 
 

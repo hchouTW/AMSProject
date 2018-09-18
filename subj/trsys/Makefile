@@ -6,7 +6,7 @@ LIBP += -lgflags -lglog -lceres
 TagetDir = $(AMSCoreSubj)/trsys/vdev
 TagetDir = $(AMSCoreSubj)/trsys/test
 
-Version=18Sep16
+Version=18Sep17
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -28,11 +28,11 @@ all :
 	@cp -fa $(PWD)/src/track_fit.C $(TagetDir)/src/track_fit.C 2> /dev/null
 	#make $(TagetDir)/time_fill
 	#make $(TagetDir)/time_fit
-	#make $(TagetDir)/hit_fill
+	make $(TagetDir)/hit_fill
 	#make $(TagetDir)/hit_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
-	make $(TagetDir)/track_fill
+	#make $(TagetDir)/track_fill
 	#make $(TagetDir)/track_fit
 
 $(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C

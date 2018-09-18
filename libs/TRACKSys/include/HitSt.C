@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "TmeMeas.h"
 #include "IonEloss.h"
 #include "GmIonEloss.h"
 #include "PartInfo.h"
@@ -115,7 +116,7 @@ void HitStTRK::cal(const PhySt& part) {
     nrmc_.fill(Numc::ZERO<>);
     divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
-    if (side_coo_(0)) {
+    if (side_coo_(0) && pdf_cx_ != nullptr) {
         std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0));
         chic_[0] = minix.at(0);
         nrmc_[0] = minix.at(1);
@@ -126,7 +127,7 @@ void HitStTRK::cal(const PhySt& part) {
             divc_[0] = Numc::ZERO<>;
         }
     }
-    if (side_coo_(1)) {
+    if (side_coo_(1) && pdf_cy_ != nullptr) {
         std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1));
         chic_[1] = miniy.at(0);
         nrmc_[1] = miniy.at(1);
@@ -141,7 +142,7 @@ void HitStTRK::cal(const PhySt& part) {
     chiq_.fill(Numc::ZERO<>);
     nrmq_.fill(Numc::ZERO<>);
     divq_.fill(Numc::ZERO<>);
-    if (side_q_[0]) {
+    if (side_q_[0] && pdf_qx_ != nullptr) {
         std::array<long double, 3>&& ionx = pdf_qx_->minimizer(q_[0]*q_[0], part.igmbta());
         chiq_[0] = ionx.at(0);
         nrmq_[0] = ionx.at(1);
@@ -155,7 +156,7 @@ void HitStTRK::cal(const PhySt& part) {
             divq_[1] = Numc::ZERO<>;
         }
     }
-    if (side_q_[1]) {
+    if (side_q_[1] && pdf_qy_ != nullptr) {
         std::array<long double, 3>&& iony = pdf_qy_->minimizer(q_[1]*q_[1], part.igmbta());
         chiq_[1] = iony.at(0);
         nrmq_[1] = iony.at(1);
@@ -193,6 +194,13 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
             pdf_cy_ = &PDF_Q02_CY_;
             pdf_qx_ = &PDF_Q02_QX_;
             pdf_qy_ = &PDF_Q02_QY_;
+            type_ = info.type();
+            break;
+        }
+        case 6 : case -6 :
+        {
+            pdf_cx_ = &PDF_Q06_CX_;
+            pdf_cy_ = &PDF_Q06_CY_;
             type_ = info.type();
             break;
         }
@@ -244,22 +252,23 @@ IonEloss HitStTRK::PDF_Q01_QY_(
 );
 
 MultiGaus HitStTRK::PDF_Q02_CX_(
-    Robust(Robust::Opt::ON, 3.5L),
-    7.41501407849083582e-01, 2.00206e-03,
-    2.44716738877455764e-01, 3.55350e-03,
-    1.37818532734607074e-02, 7.81871e-03
+    Robust(Robust::Opt::ON, 3.0L),
+    8.22819915794514078e-01, 1.58166e-03,
+    1.58040635379077365e-01, 4.38282e-04,
+    1.73994701031708332e-02, 3.41656e-03,
+    1.73997872323774366e-03, 8.34167e-03
 );
 
 MultiGaus HitStTRK::PDF_Q02_CY_(
-    Robust(Robust::Opt::ON, 3.5L),
-    6.95999248725403641e-01, 7.74321e-04,
-    2.65910693360992156e-01, 1.43279e-03,
-    3.67491744210614660e-02, 2.86097e-03,
-    1.34088349254265398e-03, 7.66690e-03
+    Robust(Robust::Opt::ON, 3.0L),
+    7.23281437547637074e-01, 3.04592e-04,
+    2.44942684365078739e-01, 7.18113e-04,
+    2.87918299651523865e-02, 1.42243e-03,
+    2.98404812213171663e-03, 3.56694e-03
 );
 
 IonEloss HitStTRK::PDF_Q02_QX_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     { 3.63156e+04, 7.49003e-07, 1.67437e+00, 1.99507e+00 }, // Kpa
     { 1.24004e-01, 5.08937e+00, 3.07125e+00, 1.96594e+00, 3.91458e-02, 6.07854e-01 }, // Mpv
     { 2.71789e-03, 5.70229e+01, 2.81955e+01, 1.72472e+00, 1.40243e-09, 2.17644e+00 }, // Sgm
@@ -268,7 +277,7 @@ IonEloss HitStTRK::PDF_Q02_QX_(
 );
 
 IonEloss HitStTRK::PDF_Q02_QY_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     { 1.81137e+04, 9.99578e-07, 1.92633e+00, 1.98827e+00 }, // Kpa
     { 9.91754e-02, 7.06198e+00, 1.79925e+00, 2.01905e+00, 1.11139e-02, 6.94616e-01 }, // Mpv
     { 3.72390e-03, 5.13365e+01, 3.66595e+01, 1.76450e+00, 1.83094e-08, 2.00564e+00 }, // Sgm
@@ -276,11 +285,26 @@ IonEloss HitStTRK::PDF_Q02_QY_(
     0.175361 // Fluc
 );
 
+MultiGaus HitStTRK::PDF_Q06_CX_(
+    Robust(Robust::Opt::ON, 3.0L),
+    8.22819915794514078e-01, 1.58166e-03,
+    1.58040635379077365e-01, 4.38282e-04,
+    1.73994701031708332e-02, 3.41656e-03,
+    1.73997872323774366e-03, 8.34167e-03
+);
+
+MultiGaus HitStTRK::PDF_Q06_CY_(
+    Robust(Robust::Opt::ON, 3.0L),
+    7.23281437547637074e-01, 3.04592e-04,
+    2.44942684365078739e-01, 7.18113e-04,
+    2.87918299651523865e-02, 1.42243e-03,
+    2.98404812213171663e-03, 3.56694e-03
+);
+
 
 // HitStTOF
 Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
 Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
-Bool_t HitStTOF::TShiftCorr_ = true;
 
 void HitStTOF::clear() {
     seqIDcx_ = -1;
@@ -337,10 +361,9 @@ void HitStTOF::cal(const PhySt& part) {
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
         Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
-            Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.igmbta()) - 5.78158e-02 ) ); // ONE Layer [cm]
-            if (!TShiftCorr_) sgm *= Numc::SQRT_TWO; // TWO Layer [cm]
-            MultiGaus pdf_t(pdf_t_->robust(), sgm);
-            std::array<long double, 3> minit = pdf_t.minimizer(dt);
+            //Double_t sgm = ( 3.40971e+00 - 1.32705e+00 * std::erf( std::log(part.igmbta()) - 5.78158e-02 ) ); // ONE Layer [cm] // testcode
+            //MultiGaus pdf_t(pdf_t_->robust(), sgm); // testcode
+            std::array<long double, 3> minit = pdf_t_->minimizer(dt);
             chit_    = minit.at(0);
             nrmt_    = minit.at(1);
             divtsft_ = minit.at(2);
@@ -404,12 +427,12 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStTOF::PDF_Q01_T_(
-    Robust(Robust::Opt::ON, 3.5L),
-    6.698790e+00 // TWO Time Fluc
+    Robust(Robust::Opt::ON, 3.0L),
+    4.73675983474463180e+00
 );
 
 IonEloss HitStTOF::PDF_Q01_Q_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     { 7.23786e-02, 8.94961e+01, 2.54620e+01, 2.42002e+00 }, // Kpa
     { 4.47107e-01, 2.23454e+00, 6.68218e-02, 1.37587e+00, 1.03677e+00, 6.22281e-01 }, // Mpv
     { 5.25754e-03, 1.90548e+01, 2.83244e-01, 1.00000e+00, 8.98326e+01, 6.23076e+00 }, // Sgm
@@ -418,12 +441,12 @@ IonEloss HitStTOF::PDF_Q01_Q_(
 );
 
 MultiGaus HitStTOF::PDF_Q02_T_(
-    Robust(Robust::Opt::ON, 3.5L),
-    6.698790e+00 // TWO Time Fluc
+    Robust(Robust::Opt::ON, 3.0L),
+    2.26894302626795774e+00
 );
 
 IonEloss HitStTOF::PDF_Q02_Q_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     { 7.23786e-02, 8.94961e+01, 2.54620e+01, 2.42002e+00 }, // Kpa
     { 4.47107e-01, 2.23454e+00, 6.68218e-02, 1.37587e+00, 1.03677e+00, 6.22281e-01 }, // Mpv
     { 5.25754e-03, 1.90548e+01, 2.83244e-01, 1.00000e+00, 8.98326e+01, 6.23076e+00 }, // Sgm
@@ -520,27 +543,27 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     8.84159092979881156e-01, 9.43386e-04,
     1.15840907020118802e-01, 1.94402e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Opt::ON, 3.0L),
     8.53098145164126631e-01, 3.26879e-03,
     1.46901854835873258e-01, 5.62675e-03
 );
 
 MultiGaus HitStRICH::PDF_AGL_Q02_IB_(
-    Robust(Robust::Opt::ON, 3.5L),
-    8.84159092979881156e-01, 9.43386e-04,
-    1.15840907020118802e-01, 1.94402e-03
+    Robust(Robust::Opt::ON, 3.0L),
+    8.00614903314544657e-01, 6.24044e-04,
+    1.99385096685455399e-01, 1.11872e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q02_IB_(
-    Robust(Robust::Opt::ON, 3.5L),
-    8.53098145164126631e-01, 3.26879e-03,
-    1.46901854835873258e-01, 5.62675e-03
+    Robust(Robust::Opt::ON, 3.0L),
+    8.37610079454359169e-01, 1.98967e-03,
+    1.62389920545640720e-01, 3.57482e-03
 );
 
 
@@ -602,12 +625,6 @@ Bool_t HitStTRD::set_type(const PartInfo& info) {
             type_ = info.type();
             break;
         }
-        case 2 : case -2 :
-        {
-            pdf_el_ = &PDF_Q02_EL_;
-            type_ = info.type();
-            break;
-        }
         default :
             CERR("HitStTRD::set_type() NO PartType Setting.\n");
             return false;
@@ -616,17 +633,6 @@ Bool_t HitStTRD::set_type(const PartInfo& info) {
 }
 
 GmIonEloss HitStTRD::PDF_Q01_EL_(
-    { 6.87250e-01, 8.49158e-01, -6.50955e+00 }, // Ratio
-    { 2.17486e-04, 4.27812e+00 }, // Kpa
-    { 9.62033e+00, 1.26248e+00, 8.36500e-03, 1.24422e+00, 2.22255e+00, 8.06270e-02 }, // Mpv
-    { 2.13993e-01, 2.78925e+00, 1.65428e+00, 6.55129e-01, 1.17441e-01, 3.61303e-01 }, // Sgm
-    { 2.11427 }, // Alpha
-    { 1.83481e-01, 5.07634e-01, -5.30224e+00 }, // Beta
-    { 6.52658434 }, // Erf Man
-    { 1.79160092 }  // Erf Sgm
-);
-
-GmIonEloss HitStTRD::PDF_Q02_EL_(
     { 6.87250e-01, 8.49158e-01, -6.50955e+00 }, // Ratio
     { 2.17486e-04, 4.27812e+00 }, // Kpa
     { 9.62033e+00, 1.26248e+00, 8.36500e-03, 1.24422e+00, 2.22255e+00, 8.06270e-02 }, // Mpv

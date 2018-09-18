@@ -3,7 +3,7 @@
 #include <TRACKSys.h>
 
 //#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -53,10 +53,12 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 150, 0.40, 3000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 150, 0.40, 3000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, 2.0, 3000., AxisScale::kLog);
     //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
     
-    Double_t mass = PartInfo(PartType::Proton).mass();
+    Double_t mass = PartInfo(PartType::Helium4).mass();
+    //Double_t mass = PartInfo(PartType::Proton).mass();
     //Double_t mass = PartInfo(PartType::Electron).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
@@ -79,11 +81,11 @@ int main(int argc, char * argv[]) {
     Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
     Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
 
-    Axis AXTKadc("TKadc", 3000, 0.2, 100.0);
+    Axis AXTKadc("TKadc", 3000, 0.2, 100.0 * 4.0);
     Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
     Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
     
-    Axis AXTFadc("TFadc", 800, 0.5, 10.0);
+    Axis AXTFadc("TFadc", 800, 0.5, 10.0 * 4.0);
     Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
 /*   
     Axis AXTDzz("TDzz", 350, 80, 150.);
@@ -244,7 +246,8 @@ int main(int argc, char * argv[]) {
         }
 
         if (mcsTOF[3] != nullptr && fRich->status && fRich->isGood) {
-            PhySt st(PartType::Proton);
+            //PhySt st(PartType::Proton);
+            PhySt st(PartType::Helium4);
             st.set_state_with_cos(mcsTOF[3]->coo[0], mcsTOF[3]->coo[1], mcsTOF[3]->coo[2], mcsTOF[3]->dir[0], mcsTOF[3]->dir[1], mcsTOF[3]->dir[2]);
             st.set_mom(mcsTOF[3]->mom);
             TrackSys::PropMgnt::PropToZ(fRich->refz, st);

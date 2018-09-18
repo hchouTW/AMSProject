@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "TmeMeas.h"
 #include "IonEloss.h"
 #include "GmIonEloss.h"
 #include "PartInfo.h"
@@ -202,7 +203,6 @@ Bool_t PhyTrFit::evolve() {
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
     HitStTOF::SetOffsetPath(Numc::ZERO<>);
-    HitStTOF::SetTimeShiftCorr(opt_tsft);
     
     // time shift
     Double_t tsft = (opt_tsft ? tsft_ : Numc::ZERO<>);
@@ -383,7 +383,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetTime(Numc::ZERO<>);
     HitStTOF::SetOffsetPath(Numc::ZERO<>);
-    HitStTOF::SetTimeShiftCorr(opt_tsft_);
 
     // time shift
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft_] : Numc::ZERO<>);

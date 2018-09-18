@@ -14,13 +14,11 @@ Bool_t PhyArg::opt_mscat_ = true;
 Bool_t PhyArg::opt_eloss_ = true;
 
 MultiGaus PhyArg::pdf_mscatu_(
-    //Robust(Robust::Opt::OFF), 1.0
-    Robust(Robust::Opt::ON, 3.0L), 1.0
+    Robust(Robust::Opt::OFF), 1.0
 );
 
 MultiGaus PhyArg::pdf_mscatl_(
-    //Robust(Robust::Opt::OFF), 1.0 
-    Robust(Robust::Opt::ON, 3.0L), 1.0 
+    Robust(Robust::Opt::OFF), 1.0 
 );
 
 MultiGaus PhyArg::pdf_elion_(

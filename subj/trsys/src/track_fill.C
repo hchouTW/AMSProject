@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -59,19 +59,23 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //PartInfo::SetDefault(PartType::Electron);
-    PartInfo::SetDefault(PartType::Proton);
+    //PartInfo::SetDefault(PartType::Proton);
+    PartInfo::SetDefault(PartType::Helium4);
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 2.1, 3000., AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 100, 0.55, 3000., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 100, 0.55, 3000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, 2.1, 3000., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
-    Double_t mass = PartInfo(PartType::Proton).mass();
+    //Double_t mass = PartInfo(PartType::Proton).mass();
+    Double_t mass = PartInfo(PartType::Helium4).mass();
     Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
 
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
@@ -108,6 +112,7 @@ int main(int argc, char * argv[]) {
     Hist* hKFRchiy = Hist::New("hKFRchiy", HistAxis(AXmom, AXRchi));
     Hist* hHCRchiy = Hist::New("hHCRchiy", HistAxis(AXmom, AXRchi));
 
+
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -119,8 +124,8 @@ int main(int argc, char * argv[]) {
         dst->GetEntry(entry);
      
         // No Interaction
-        if (opt.mode() == MGConfig::JobOpt::MODE::MC)
-            if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
+        //if (opt.mode() == MGConfig::JobOpt::MODE::MC)
+        //    if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
         
         //if (entry > 100) break;
         //if (fG4mc->primPart.mom > 1.0) continue; // testcode
@@ -147,8 +152,11 @@ int main(int argc, char * argv[]) {
         if (fTof->betaH < 0.) continue;
 
         // Charge
-        if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+        //if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        
+        if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+        if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
@@ -168,7 +176,8 @@ int main(int argc, char * argv[]) {
         Int_t topLay = 1000;
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        TrFitPar fitPar(PartType::Proton);
+        //TrFitPar fitPar(PartType::Proton);
+        TrFitPar fitPar(PartType::Helium4);
         //TrFitPar fitPar(PartType::Electron);
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);

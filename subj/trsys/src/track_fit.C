@@ -104,7 +104,7 @@ int main(int argc, char * argv[]) {
         (*hHCCKRrsoS)()->SetBinContent(it, (*hHCRrsoS)()->GetBinContent(it)/(*hCKRrsoS)()->GetBinContent(it));
     } 
     
-    for (int it = 1; it <= AXmom.nbin(); ++it) {
+    for (int it = 15; it <= AXmom.nbin(); ++it) {
         vhCKRrso.at(it)->style(Fill(), Line(kGreen), Marker(kGreen));
         vhKFRrso.at(it)->style(Fill(), Line(kBlue), Marker(kBlue));
         vhHCRrso.at(it)->style(Fill(), Line(kRed), Marker(kRed));

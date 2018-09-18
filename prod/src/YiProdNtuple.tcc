@@ -1065,8 +1065,12 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
             //    TrackSys::AmsTfOpt(withDedx));
             
+            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
+            //    TrackSys::PartType::Helium4,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
+            
             fTrk.hcTr.at(patt) = processHCTr( // Tracker
-                TrackSys::PartType::Helium4,
+                TrackSys::PartType::Carbon12,
                 TrackSys::AmsTkOpt(trPatt.at(patt))); 
         }
     }
