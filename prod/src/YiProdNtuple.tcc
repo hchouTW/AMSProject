@@ -74,7 +74,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		TkStPar = event->pTrTrack(iTrTrack);
 		TkStID  = TkStPar->iTrTrackPar(1, 3, 21);
         if (TkStID >= 0) {
-            double qin = TkStPar->GetInnerQH_all(2, beta, TkStID).Mean;
+            double qin = TkStPar->GetInnerQH(2, beta, TkStID);
             zin  = (qin < 1.0) ? 1 : std::lrint(qin);
             mass = (zin <   2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
         }
@@ -901,7 +901,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		fTrk.bitPatt   = bitPatt; 
 		fTrk.bitPattXY = bitPattXY; 
-        fTrk.QIn = trtk->GetInnerQH_all(2, recEv.beta, fitidInn).Mean;
+        fTrk.QIn = trtk->GetInnerQH(2, recEv.beta, fitidInn);
 		fTrk.QL2 = (isL2>0) ? trtk->GetLayerJQH(2, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL1 = (isL1>0) ? trtk->GetLayerJQH(1, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL9 = (isL9>0) ? trtk->GetLayerJQH(9, 2, recEv.beta, fitidInn) : -1;
@@ -2213,7 +2213,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 		if (hasY)  numOfTrInY++;
 		if (hasXY) numOfTrInX++;
 	}
-	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6003;
+	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
     
     int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
 	if (fitidMax < 0) return -6004;
@@ -2221,7 +2221,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6005;
 		
-    double trQin = trtkSIG->GetInnerQH_all(2, std::fabs(betah), fitidInn).Mean;
+    double trQin = trtkSIG->GetInnerQH(2, std::fabs(betah), fitidInn);
 	if (MGNumc::Compare(trQin) <= 0) return -6007;
 
     // ~7~ (Based on RTI)
