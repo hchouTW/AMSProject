@@ -99,8 +99,9 @@ class RecEvent {
 
 	public :
         static constexpr double TopZ =  195.;
-        static constexpr double BtmZ = -136.;
+        static constexpr double CenZ =    0.;
         static constexpr double RhZ  =  -70.;
+        static constexpr double BtmZ = -136.;
         static constexpr double AglZ = -74.35;
         static constexpr double NafZ = -75.45;
         static constexpr double RichZ[2] = { -72.8, -75.9 };

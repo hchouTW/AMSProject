@@ -21,15 +21,14 @@ void PartInfo::reset(const PartType& type) {
     
     // TODO: Check primary particle in cosmic rays
     switch (type) {
-        case PartType::Q0 : part_type = PartType::Photon    ; break;
         case PartType::Q1 : part_type = PartType::Proton    ; break;
         case PartType::Q2 : part_type = PartType::Helium4   ; break;
         case PartType::Q3 : part_type = PartType::Lithium7  ; break;
         case PartType::Q4 : part_type = PartType::Beryllium9; break;
-        case PartType::Q5 : part_type = PartType::Boron10   ; break;
-        case PartType::Q6 : part_type = PartType::Carbon14  ; break;
+        case PartType::Q5 : part_type = PartType::Boron11   ; break;
+        case PartType::Q6 : part_type = PartType::Carbon12  ; break;
         case PartType::Q7 : part_type = PartType::Nitrogen14; break;
-        case PartType::Q8 : part_type = PartType::Oxygen18  ; break;
+        case PartType::Q8 : part_type = PartType::Oxygen16  ; break;
     }
 
     switch (part_type) {

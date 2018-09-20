@@ -2,9 +2,9 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep18/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -52,19 +52,20 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
+    //PartInfo info(PartType::Proton);
+    //PartInfo info(PartType::Helium4);
+    PartInfo info(PartType::Carbon12);
     
-    //Axis AXmom("Momentum [GeV]", 150, 0.40, 3000., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 150, 2.0, 3000., AxisScale::kLog);
-    //Axis AXmom("Momentum [GeV]", 40, 200., 4000., AxisScale::kLog);
+    Double_t mombd[2] = { 1., 1000. };
+    if (info.type() == PartType::Proton)  { mombd[0] = 0.40; mombd[1] = 3000.0; }
+    if (info.type() == PartType::Helium4) { mombd[0] = 1.60; mombd[1] = 3000.0; }
+    if (info.type() == PartType::Carbon12) { mombd[0] = 5.00; mombd[1] = 10000.0; }
+    Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
     
-    Double_t mass = PartInfo(PartType::Helium4).mass();
-    //Double_t mass = PartInfo(PartType::Proton).mass();
-    //Double_t mass = PartInfo(PartType::Electron).mass();
-    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
-
-    Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
-    Double_t ubta = 1.0/std::sqrt(1.0+AXeta.min()*AXeta.min());
-    Axis AXbta("Beta [1]", AXmom.nbin(), lbta, ubta, AxisScale::kLog);
+    Axis AXigb("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);
+    Double_t lbta = std::sqrt(1.0+AXigb.min()*AXigb.min());
+    Double_t ubta = std::sqrt(1.0+AXigb.max()*AXigb.max());
+    Axis AXib("1/Beta [1]", AXigb.nbin(), lbta, ubta, AxisScale::kLog);
 
     // Cut
     Axis AXcut("Cut", 9, 0., 9.);
@@ -72,37 +73,29 @@ int main(int argc, char * argv[]) {
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
   
     // Coo
-    Axis AXres("res [#mum]", 800, -200., 200.);
-    Axis AXtha("tha", 200, 0.0, 0.2*TMath::Pi());
+    Axis AXres("res [#mum]", 1600, -200., 200.);
     
-    Hist* hMrx = Hist::New("hMrx", HistAxis(AXmom, AXres));
+    Hist* hMrx   = Hist::New("hMrx",   HistAxis(AXigb, AXres));
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
     
-    Hist* hMry = Hist::New("hMry", HistAxis(AXmom, AXres));
+    Hist* hMry   = Hist::New("hMry",   HistAxis(AXigb, AXres));
     Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
 
-    Axis AXTKadc("TKadc", 3000, 0.2, 100.0 * 4.0);
-    Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXeta, AXTKadc));
-    Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXeta, AXTKadc));
+    Axis AXTKadc("TKadc", 3000, 0.2, 100.0 * info.chrg() * info.chrg());
+    Hist* hTKadcx = Hist::New("hTKadcx", HistAxis(AXigb, AXTKadc));
+    Hist* hTKadcy = Hist::New("hTKadcy", HistAxis(AXigb, AXTKadc));
     
-    Axis AXTFadc("TFadc", 800, 0.5, 10.0 * 4.0);
-    Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXeta, AXTFadc));
-/*   
-    Axis AXTDzz("TDzz", 350, 80, 150.);
-    Hist* hTDzz = Hist::New("hTDzz", HistAxis(AXeta, AXTDzz));
+    Axis AXTFadc("TFadc", 1200, 0.5, 10.0 * info.chrg() * info.chrg());
+    Hist* hTFadc = Hist::New("hTFadc", HistAxis(AXigb, AXTFadc));
     
-    Axis AXTDex("TDex", 1600, 0.01, 40.);
-    Hist* hTDex = Hist::New("hTDex", HistAxis(AXeta, AXTDex));
-*/
-    
-    Axis AXTFtme("TFtme", 800, -20, 20);
-    Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXeta, AXTFtme));
+    Axis AXTFtme("TFtme", 1000, -25, 25);
+    Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXigb, AXTFtme));
     
     Axis AXAGLib("AGLib", 800, -0.005, 0.005);
-    Hist* hAGLib = Hist::New("hAGLib", HistAxis(AXeta, AXAGLib));
+    Hist* hAGLib = Hist::New("hAGLib", HistAxis(AXigb, AXAGLib));
     
     Axis AXNAFib("NAFib", 800, -0.015, 0.015);
-    Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXeta, AXNAFib));
+    Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXigb, AXNAFib));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -115,6 +108,9 @@ int main(int argc, char * argv[]) {
         for (Int_t ic = 0; ic < AXcut.nbin(); ++ic) hEvt->fillH2D(fG4mc->primPart.mom, ic);
         hCut->fillH2D(fG4mc->primPart.mom, 0);
        
+        // Geometry (TRK)
+        if (fTrk->numOfTrack != 1) continue;
+        
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
@@ -122,13 +118,13 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 1);
         
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
-        if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 8) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (!fTrd->statusKCls[0]) continue;
+        //if (fTrd->LLRnhit[0] < 8) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 2);
         
         // Geometry (ACC)
-        if (fAcc->clusters.size() != 0) continue;
+        //if (fAcc->clusters.size() != 0) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 3);
         
         // Down-going
@@ -145,8 +141,8 @@ int main(int argc, char * argv[]) {
         if (fTof->normChisqC > 10.) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 6);
         
-        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
+        //if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+        //    (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
         hCut->fillH2D(fG4mc->primPart.mom, 7);
         
         if (fTof->numOfInTimeCls > 4) continue;
@@ -171,19 +167,17 @@ int main(int argc, char * argv[]) {
         
         for (Int_t it = 2; it < 8; ++it) {
             if (!rec[it] || !mch[it] || !mcs[it]) continue;
-            Double_t igb = (mass/mch[it]->mom);
-            if (igb < AXeta.min() || igb > AXeta.max()) continue;
-            igb = AXeta.center(AXeta.find(igb), AxisScale::kLog);
+            Double_t igb = (fG4mc->primPart.mass / mch[it]->mom);
+            if (igb < AXigb.min() || igb > AXigb.max()) continue;
+            igb = AXigb.center(AXigb.find(igb), AxisScale::kLog);
             Double_t bta = 1.0/std::sqrt(1.0+igb*igb);
             Double_t res[2] = { rec[it]->coo[0] - mch[it]->coo[0], rec[it]->coo[1] - mch[it]->coo[1] };
             if (!(rec[it]->side[0] && rec[it]->side[1])) continue;
-            Double_t thax = std::atan2(std::fabs(ckTr.stateLJ[it][3]), std::fabs(ckTr.stateLJ[it][5]));
-            Double_t thay = std::atan2(std::fabs(ckTr.stateLJ[it][4]), std::fabs(ckTr.stateLJ[it][5]));
             
             constexpr Double_t CM2UM = 1.0e4;
-            hMrx->fillH2D(mch[it]->mom, CM2UM * res[0]);
-            hMry->fillH2D(mch[it]->mom, CM2UM * res[1]);
-            if (mch[it]->mom > 50.0) {
+            hMrx->fillH2D(igb, CM2UM * res[0]);
+            hMry->fillH2D(igb, CM2UM * res[1]);
+            if (mch[it]->mom/fG4mc->primPart.chrg > 30.0) {
                hMrxNN->fillH1D(CM2UM * res[0]);
                hMryNN->fillH1D(CM2UM * res[1]);
             }
@@ -197,7 +191,7 @@ int main(int argc, char * argv[]) {
         for (Int_t it = 0; it < 4; ++it) {
             if (!mtf[it] || fTof->Q[it]<=0) continue;
             Double_t igb = std::sqrt(1.0/fTof->mcBeta[it]/fTof->mcBeta[it]-1);
-            if (igb < AXeta.min() || igb > AXeta.max()) continue;
+            if (igb < AXigb.min() || igb > AXigb.max()) continue;
             hTFadc->fillH2D(igb, fTof->Q[it]*fTof->Q[it]);
         }
         
@@ -241,19 +235,18 @@ int main(int argc, char * argv[]) {
             Double_t tme = 0.5 * len * (1.0/fTof->mcBeta[sl*2+0] + 1.0/fTof->mcBeta[sl*2+1]);
             Double_t mes = 2.99792458e+01 * (fTof->T[sl*2+1] - fTof->T[sl*2+0]);
             Double_t dlt = mes - tme;
-            hTFtme->fillH2D(mass/(mcsTOF[sl*2+0]->mom + mcsTOF[sl*2+1]->mom), dlt);
-            //CERR("TME %14.8f MES %14.8f DLT %14.8f\n", tme, mes, dlt);
+            Double_t igb  = info.mass()/(mcsTOF[sl*2+0]->mom + mcsTOF[sl*2+1]->mom);
+            hTFtme->fillH2D(igb, dlt);
         }
 
         if (mcsTOF[3] != nullptr && fRich->status && fRich->isGood) {
-            //PhySt st(PartType::Proton);
-            PhySt st(PartType::Helium4);
+            PhySt st(info.type());
             st.set_state_with_cos(mcsTOF[3]->coo[0], mcsTOF[3]->coo[1], mcsTOF[3]->coo[2], mcsTOF[3]->dir[0], mcsTOF[3]->dir[1], mcsTOF[3]->dir[2]);
             st.set_mom(mcsTOF[3]->mom);
             TrackSys::PropMgnt::PropToZ(fRich->refz, st);
             Double_t dlt  = (1.0/fRich->beta - 1.0/st.bta());
-            if (fRich->kind == 0) hAGLib->fillH2D(mass/st.mom(), dlt);
-            if (fRich->kind == 1) hNAFib->fillH2D(mass/st.mom(), dlt);
+            if (fRich->kind == 0) hAGLib->fillH2D(st.mass()/st.mom(), dlt);
+            if (fRich->kind == 1) hNAFib->fillH2D(st.mass()/st.mom(), dlt);
         }
     }
 

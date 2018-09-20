@@ -17,6 +17,9 @@
 #pragma link C++ class HitTRKMCInfo;
 #pragma link C++ class std::vector<HitTRKMCInfo>+;
 
+#pragma link C++ class HitTOFMCInfo;
+#pragma link C++ class std::vector<HitTOFMCInfo>+;
+
 #pragma link C++ class HitTRDMCInfo;
 #pragma link C++ class std::vector<HitTRDMCInfo>+;
 

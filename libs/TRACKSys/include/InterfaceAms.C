@@ -167,6 +167,9 @@ void Event::Init() {
 
 Bool_t Event::BulidHitStTRK() {
     if (Trtk == nullptr) return false;
+    Int_t fitidInn = Trtk->iTrTrackPar(1, 3, 21);
+	if (fitidInn < 0) return false;
+
     Short_t cntX = 0;
     Short_t cntY = 0;
 
@@ -177,29 +180,39 @@ Bool_t Event::BulidHitStTRK() {
 	    if (!Trtk->TestHitLayerJ(layJ)) continue;
 		TrRecHitR* recHit = Trtk->GetHitLJ(layJ);
 		if (recHit == nullptr) continue;
+		int mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
+		                                              // > 0 requested multiplicty coordinates
         
-        //AMSPoint pnt = ((layJ == 1 || layJ == 9) ? (Trtk->GetHitCooLJ(layJ, 0) + Trtk->GetHitCooLJ(layJ, 1)) * Numc::HALF : Trtk->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
-        AMSPoint pnt = TrTrackR::FitCoo[layJ-1]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
+        //AMSPoint coo = ((layJ == 1 || layJ == 9) ? (Trtk->GetHitCooLJ(layJ, 0) + Trtk->GetHitCooLJ(layJ, 1)) * Numc::HALF : Trtk->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
+        AMSPoint coo = TrTrackR::FitCoo[layJ-1]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
         
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
 
-        Int_t    qopt = ((Ev->NMCEventg() > 0 && Ev->Version() >= 1107) ? InterfaceAms::TkOpt::QOptMC : InterfaceAms::TkOpt::QOptISS);
-		Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
-		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
+        //Int_t    qopt = ((Ev->NMCEventg() > 0 && Ev->Version() >= 1107) ? InterfaceAms::TkOpt::QOptMC : InterfaceAms::TkOpt::QOptISS);
+		//Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
+		//Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
+        
+        AMSPoint pntL; AMSDir dirL;
+        Trtk->Interpolate(coo[2], pntL, dirL, fitidInn);
+        float dxdz = std::fabs(dirL[0] / dirL[2]);
+        float dydz = std::fabs(dirL[1] / dirL[2]);
+			
+        Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetQH(0, 1.0, 0.0, mult, dxdz, dydz);
+		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetQH(1, 1.0, 0.0, mult, dxdz, dydz);
 			
         Bool_t scx = (xcls != nullptr && qx > 0);
         Bool_t scy = (ycls != nullptr && qy > 0);
 
         HitStTRK hit(scx, scy, layJ);
-        hit.set_coo(pnt.x(), pnt.y(), pnt.z());
+        hit.set_coo(coo.x(), coo.y(), coo.z());
         
         if      (layJ == 1) TkHitL1 = hit;
         else if (layJ == 9) TkHitL9 = hit;
         else                TkHitIn.push_back(hit);
         
         HitStTRK hitQ(scx, scy, layJ);
-        hitQ.set_coo(pnt.x(), pnt.y(), pnt.z());
+        hitQ.set_coo(coo.x(), coo.y(), coo.z());
         hitQ.set_q(qx, qy);
         
         if      (layJ == 1) TkHitL1Q = hitQ;
@@ -210,7 +223,7 @@ Bool_t Event::BulidHitStTRK() {
         if (isInn && scx) cntX++;
         if (isInn && scy) cntY++;
     }
-    if (cntX <= 3 || cntY <= 4) return false;
+    if (cntX <= 2 || cntY <= 3) return false;
     
     return true;
 }

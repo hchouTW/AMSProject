@@ -2,7 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep18/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -58,29 +59,31 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
-    //PartInfo::SetDefault(PartType::Electron);
-    //PartInfo::SetDefault(PartType::Proton);
-    PartInfo::SetDefault(PartType::Helium4);
+    TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
+    
+    //PartInfo info(PartType::Electron);
+    //PartInfo info(PartType::Proton);
+    //PartInfo info(PartType::Helium4);
+    PartInfo info(PartType::Carbon12);
+    PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
-    TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
+    Double_t mombd[2] = { 1., 1000. };
+    if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3000.0; }
+    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3000.0; }
+    if (info.type() == PartType::Carbon12) { mombd[0] = 6.60; mombd[1] = 10000.0; }
+    Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
     
-    //Axis AXmom("Momentum [GeV]", 100, 0.55, 3000., AxisScale::kLog);
-    Axis AXmom("Momentum [GeV]", 100, 2.1, 3000., AxisScale::kLog);
-    
-    //Axis AXrig("Rigidity [GV]", 100, 0.55, 3000., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 100, 2.1, 3000., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 100, mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
-    //Double_t mass = PartInfo(PartType::Proton).mass();
-    Double_t mass = PartInfo(PartType::Helium4).mass();
-    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
-
-    Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
-    Double_t ubta = 1.0/std::sqrt(1.0+AXeta.min()*AXeta.min());
-    Axis AXbta("Beta [1]", AXmom.nbin(), lbta, ubta, AxisScale::kLog);
+    Axis AXigb("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);
+    Double_t lbta = std::sqrt(1.0+AXigb.min()*AXigb.min());
+    Double_t ubta = std::sqrt(1.0+AXigb.max()*AXigb.max());
+    Axis AXib("1/Beta [1]", AXigb.nbin(), lbta, ubta, AxisScale::kLog);
+    Axis AXbta("Beta [1]", AXigb.nbin(), 1.0/ubta, 1.0/lbta, AxisScale::kLog);
 
     // Time
     Axis AXtme("Time [ms]", 1600, 0., 1000.);
@@ -135,18 +138,24 @@ int main(int argc, char * argv[]) {
         KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
         HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
+        // No Interaction
+        //if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
+        
+        // Geometry (TRK)
+        //if (fTrk->numOfTrack != 1) continue;
+        
         // Geometry (TOF)
-        if (fTof->numOfBetaH != 1) continue;
+        //if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
         if (fTof->betaHPatt != 15) continue;
         
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
-        if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 8) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (!fTrd->statusKCls[0]) continue;
+        //if (fTrd->LLRnhit[0] < 8) continue;
         
         // Geometry (ACC)
-        if (fAcc->clusters.size() != 0) continue;
+        //if (fAcc->clusters.size() != 0) continue;
         
         // Down-going
         if (fTof->betaH < 0.) continue;
@@ -155,16 +164,19 @@ int main(int argc, char * argv[]) {
         //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
         //if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
         
-        if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
-        if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        //if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+        //if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        
+        if (fTof->Qall < 5.6 || fTof->Qall > 6.4) continue;
+        if (fTrk->QIn < 5.6 || fTrk->QIn > 6.4) continue;
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
         if (fTof->normChisqC > 10.) continue;
         
-        if (fTof->numOfInTimeCls > 4) continue;
-        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
+        //if (fTof->numOfInTimeCls > 4) continue;
+        //if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+        //    (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
 
         Bool_t hasMCL1 = false;
         Bool_t hasMCL9 = false;
@@ -176,9 +188,7 @@ int main(int argc, char * argv[]) {
         Int_t topLay = 1000;
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
-        //TrFitPar fitPar(PartType::Proton);
-        TrFitPar fitPar(PartType::Helium4);
-        //TrFitPar fitPar(PartType::Electron);
+        TrFitPar fitPar(info.type());
         for (auto&& hit : fTrk->hits) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
@@ -252,7 +262,7 @@ int main(int argc, char * argv[]) {
         if (topmc == nullptr) continue;
 
         Double_t mc_mom  = fG4mc->primPart.mom;
-        Double_t mc_igb  = mass/mc_mom;
+        Double_t mc_igb  = fG4mc->primPart.mass / mc_mom;
         Double_t mc_bta  = 1.0 / std::sqrt(1.0 + mc_igb * mc_igb);
         Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
         Double_t bincen  = std::sqrt(AXmom.center(AXmom.find(mc_mom), AxisScale::kLog));
@@ -286,9 +296,9 @@ int main(int argc, char * argv[]) {
         Double_t kf_irig = (kf_succ ? MGMath::ONE/kfTr.rig[0] : 0.);
         //Double_t hc_irig = (hc_succ ? MGMath::ONE/hcTr.stateTop[6] : 0.);
         
-        Double_t ck_bta = (ck_succ ? 1.0/std::sqrt(1.0+mass*ck_irig*mass*ck_irig) : 0.);
-        Double_t kf_bta = (kf_succ ? 1.0/std::sqrt(1.0+mass*kf_irig*mass*kf_irig) : 0.);
-        Double_t hc_bta = (hc_succ ? 1.0/std::sqrt(1.0+mass*hc_irig*mass*hc_irig) : 0.);
+        Double_t ck_bta = (ck_succ ? 1.0/std::sqrt(1.0 + info.mass()*ck_irig * info.mass()*ck_irig) : 0.);
+        Double_t kf_bta = (kf_succ ? 1.0/std::sqrt(1.0 + info.mass()*kf_irig * info.mass()*kf_irig) : 0.);
+        Double_t hc_bta = (hc_succ ? 1.0/std::sqrt(1.0 + info.mass()*hc_irig * info.mass()*hc_irig) : 0.);
       
         Double_t ck_chix = (ck_succ ? std::log(ckTr.nchi[0]) : 0.); 
         Double_t kf_chix = (kf_succ ? std::log(kfTr.nchi[0]) : 0.); 

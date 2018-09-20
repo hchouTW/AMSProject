@@ -74,7 +74,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		TkStPar = event->pTrTrack(iTrTrack);
 		TkStID  = TkStPar->iTrTrackPar(1, 3, 21);
         if (TkStID >= 0) {
-            double qin = TkStPar->GetInnerQ_all(beta, TkStID).Mean;
+            double qin = TkStPar->GetInnerQH_all(2, beta, TkStID).Mean;
             zin  = (qin < 1.0) ? 1 : std::lrint(qin);
             mass = (zin <   2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
         }
@@ -241,7 +241,6 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 Float_t bta = (MGNumc::EqualToZero(fG4mc.primPart.mass) ? 1.0 : 1.0/(1.0+igb*igb));
 
                 SegPARTMCInfo seg;
-		        seg.dec = dec;
 		        seg.lay = lay;
                 seg.bta = bta;
 		        seg.mom = mcev->Momentum;
@@ -252,7 +251,11 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 		        seg.dir[1] = mcev->Dir[1];
 		        seg.dir[2] = mcev->Dir[2];
 
-		        fG4mc.primPart.segs.push_back(seg);
+                if (dec == 0) fG4mc.primPart.segsTk.push_back(seg);
+                if (dec == 1) fG4mc.primPart.segsTf.push_back(seg);
+                if (dec == 2) fG4mc.primPart.segsTd.push_back(seg);
+                if (dec == 3) fG4mc.primPart.segsEc.push_back(seg);
+                if (dec == 4) fG4mc.primPart.segsRh.push_back(seg);
             }
             else if (id == 2) {
                 Float_t keng = (std::hypot(mcev->Momentum, mcev->Mass) - mcev->Mass);
@@ -270,7 +273,11 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 fG4mc.primVtx.numOfPart++;
             }
         }
-		std::sort(fG4mc.primPart.segs.begin(), fG4mc.primPart.segs.end(), SegPARTMCInfo_sort());
+		std::sort(fG4mc.primPart.segsTk.begin(), fG4mc.primPart.segsTk.end(), SegPARTMCInfo_sort());
+		std::sort(fG4mc.primPart.segsTf.begin(), fG4mc.primPart.segsTf.end(), SegPARTMCInfo_sort());
+		std::sort(fG4mc.primPart.segsTd.begin(), fG4mc.primPart.segsTd.end(), SegPARTMCInfo_sort());
+		std::sort(fG4mc.primPart.segsEc.begin(), fG4mc.primPart.segsEc.end(), SegPARTMCInfo_sort());
+		std::sort(fG4mc.primPart.segsRh.begin(), fG4mc.primPart.segsRh.end(), SegPARTMCInfo_sort());
         if (fG4mc.primVtx.numOfPart < 2) fG4mc.primVtx.init();
 
 		for (UInt_t icls = 0; icls < event->NTrMCCluster(); icls++) {
@@ -296,8 +303,8 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.coo[1] = coo[1];
 			hit.coo[2] = coo[2];
 
-            for (auto&& seg : fG4mc.primPart.segs) {
-                if (seg.dec != 0 || (seg.lay+1) != hit.layJ) continue;
+            for (auto&& seg : fG4mc.primPart.segsTk) {
+                if ((seg.lay+1) != hit.layJ) continue;
                 float dz = (hit.coo[2] - seg.coo[2]);
                 float tx = (seg.dir[0] / seg.dir[2]);
                 float ty = (seg.dir[1] / seg.dir[2]);
@@ -316,10 +323,64 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 hit.loc[1] = yloc;
             }
 			
-            fG4mc.primPart.hits.push_back(hit);
+            fG4mc.primPart.hitsTk.push_back(hit);
 		}
-		std::sort(fG4mc.primPart.hits.begin(), fG4mc.primPart.hits.end(), HitTRKMCInfo_sort());
-	}
+		std::sort(fG4mc.primPart.hitsTk.begin(), fG4mc.primPart.hitsTk.end(), HitTRKMCInfo_sort());
+
+
+		BetaHR* betaH = event->pBetaH(recEv.iBetaH);
+        if (betaH != nullptr && betaH->iTrTrack() == recEv.iTrTrack) {
+            Bool_t  has[4]  = { false, false, false, false };
+            Float_t cooz[4] = { 0, 0, 0, 0 };
+            for (int il = 0; il < 4; ++il) {
+		    	if (!betaH->TestExistHL(il)) continue;
+		    	TofClusterHR* cls = betaH->GetClusterHL(il);
+		    	if (cls == nullptr) continue;
+		    	if (!cls->IsGoodTime()) continue;
+                has[il]  = true;
+                cooz[il] = cls->Coo[2];
+            }
+            
+            std::vector<Short_t> hitsTfI;
+            std::vector<Short_t> hitsTfL;
+            std::vector<Float_t> hitsTfD;
+            for (UInt_t it = 0; it < event->NTofMCCluster(); ++it) {
+                TofMCClusterR* cls = event->pTofMCCluster(it);
+                if (cls == nullptr) continue;
+		    	if (cls->GtrkID != primary->trkID) continue;
+                Short_t lay = cls->GetLayer();
+                if (!has[lay]) continue;
+                hitsTfI.push_back(it);
+                hitsTfL.push_back(lay);
+                hitsTfD.push_back(std::fabs(cls->Coo[2] - cooz[lay]));
+            }
+
+            Short_t hitid[4] = { -1, -1, -1, -1 };
+            Float_t distz[4] = { 99., 99., 99., 99. };
+            for (UInt_t ih = 0; ih < hitsTfI.size(); ++ih) {
+                Short_t lay = hitsTfL.at(ih);
+                if (hitsTfD.at(ih) > distz[lay]) continue;
+                hitid[lay] = hitsTfI.at(ih);
+                distz[lay] = hitsTfD.at(ih);
+            }
+            
+            for (int il = 0; il < 4; ++il) {
+                if (!has[il] || hitid[il] < 0) continue;
+                TofMCClusterR* cls = event->pTofMCCluster( hitid[il] );
+                if (cls == nullptr) continue;
+                
+                HitTOFMCInfo hit;
+                hit.lay    = cls->GetLayer();
+                hit.bta    = cls->Beta;
+                hit.mom    = fG4mc.primPart.mass / std::sqrt(1.0/cls->Beta/cls->Beta - 1.0);
+                hit.coo[0] = cls->Coo[0];
+                hit.coo[1] = cls->Coo[1];
+                hit.coo[2] = cls->Coo[2];
+                fG4mc.primPart.hitsTf.push_back(hit);
+            }
+		    std::sort(fG4mc.primPart.hitsTf.begin(), fG4mc.primPart.hitsTf.end(), HitTOFMCInfo_sort());
+        }
+    }
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -487,7 +548,7 @@ bool EventRti::selectEvent(AMSEventR * event) {
 	//if (fRti.liveTime < 0.5) return false;
 	//if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
 
-	//if (fRti.isInShadow == 1) return false;
+	if (fRti.isInShadow == 1) return false;
 
 	return true;
 }
@@ -675,27 +736,6 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTof.numOfExtCls[il] = nearHitNm[il];
 	}
 
-	if (checkEventMode(EventBase::MC) && event->GetPrimaryMC() != nullptr) {
-	    MCEventgR * prim = event->GetPrimaryMC();
-        int    mcnum[4] = {0};
-        double mcbta[4] = {0};
-        for (UInt_t it = 0; it < event->NTofMCCluster(); ++it) {
-            TofMCClusterR* cls = event->pTofMCCluster(it);
-            if (cls == nullptr) continue;
-            if (cls->GtrkID != prim->trkID) continue;
-            int lay = cls->GetLayer();
-            mcbta[lay] += cls->Beta;
-            mcnum[lay]++;
-        }
-        for (int il = 0; il < 4; ++il) {
-            if (mcnum[il] == 0) continue;
-            double bta = (mcbta[il] / static_cast<double>(mcnum[il]));
-            double mom = prim->Mass / std::sqrt(1.0/bta/bta - 1.0); 
-            fTof.mcBeta[il] = bta;
-            fTof.mcMom[il]  = mom;
-        }
-    }
-
 	fStopwatch.stop();
 	return selectEvent(event);
 }
@@ -861,10 +901,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		fTrk.bitPatt   = bitPatt; 
 		fTrk.bitPattXY = bitPattXY; 
-        fTrk.QIn = trtk->GetInnerQ_all(recEv.beta, fitidInn).Mean;
-		fTrk.QL2 = (isL2>0) ? trtk->GetLayerJQ(2, recEv.beta) : -1;
-		fTrk.QL1 = (isL1>0) ? trtk->GetLayerJQ(1, recEv.beta) : -1;
-		fTrk.QL9 = (isL9>0) ? trtk->GetLayerJQ(9, recEv.beta) : -1;
+        fTrk.QIn = trtk->GetInnerQH_all(2, recEv.beta, fitidInn).Mean;
+		fTrk.QL2 = (isL2>0) ? trtk->GetLayerJQH(2, 2, recEv.beta, fitidInn) : -1;
+		fTrk.QL1 = (isL1>0) ? trtk->GetLayerJQH(1, 2, recEv.beta, fitidInn) : -1;
+		fTrk.QL9 = (isL9>0) ? trtk->GetLayerJQH(9, 2, recEv.beta, fitidInn) : -1;
 
 		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
@@ -886,13 +926,18 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             double xloc = (xcls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointX()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointX();
             double yloc = (ycls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointY()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointY();
 
-	        int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
-	        if (checkEventMode(EventBase::MC) && event->Version() >= 1107)
-                qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
+	        //int qopt = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
+	        //if (checkEventMode(EventBase::MC) && event->Version() >= 1107)
+            //    qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
 
-			float xadc = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
-			float yadc = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
-          
+            AMSPoint pntL; AMSDir dirL;
+            trtk->Interpolate(coo[2], pntL, dirL, fitidInn);
+            double dxdz = std::fabs(dirL[0] / dirL[2]);
+            double dydz = std::fabs(dirL[1] / dirL[2]);
+
+			float xchrg = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetQH(0, 1.0, 0.0, mult, dxdz, dydz);
+			float ychrg = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetQH(1, 1.0, 0.0, mult, dxdz, dydz);
+				
 			HitTRKInfo hit;
 			hit.layJ    = ilay+1;
 			hit.tkid    = tkid;
@@ -903,10 +948,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.coo[0]  = coo[0];
 			hit.coo[1]  = coo[1];
 			hit.coo[2]  = coo[2];
-			hit.adc[0]  = xadc;
-			hit.adc[1]  = yadc;
 			hit.loc[0]  = xloc;
 			hit.loc[1]  = yloc;
+			hit.chrg[0]  = xchrg;
+			hit.chrg[1]  = ychrg;
 		
 			fTrk.hits.push_back(hit);
 		} // for loop - layer
@@ -1055,23 +1100,40 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::InnerL9, 
             TrackSys::AmsTkOpt::FullSpan });
 
+        TrackSys::PartType partType;
+        if (recEv.zin <= 1) partType = TrackSys::PartType::Q1;
+        if (recEv.zin == 2) partType = TrackSys::PartType::Q2;
+        if (recEv.zin == 3) partType = TrackSys::PartType::Q3;
+        if (recEv.zin == 4) partType = TrackSys::PartType::Q4;
+        if (recEv.zin == 5) partType = TrackSys::PartType::Q5;
+        if (recEv.zin == 6) partType = TrackSys::PartType::Q6;
+        if (recEv.zin == 7) partType = TrackSys::PartType::Q7;
+        if (recEv.zin >= 8) partType = TrackSys::PartType::Q8;
+
 	    for (int patt = 0; patt < _npatt; ++patt) {
+            if (recEv.zin != 1) continue;
+            if (recEv.zin != 2) continue;
+            if (recEv.zin != 6) continue;
+            
+            fTrk.hcTr.at(patt) = processHCTr( // Tracker
+                partType, TrackSys::AmsTkOpt(trPatt.at(patt))); 
+            
             //fTrk.hcTr.at(patt) = processHCTr( // Tracker
             //    TrackSys::PartType::Proton,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
+            
+            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
+            //    TrackSys::PartType::Helium4,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
+            
+            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
+            //    TrackSys::PartType::Carbon12,
             //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
             
             //fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
             //    TrackSys::PartType::Proton,
             //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
             //    TrackSys::AmsTfOpt(withDedx));
-            
-            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
-            //    TrackSys::PartType::Helium4,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
-            
-            fTrk.hcTr.at(patt) = processHCTr( // Tracker
-                TrackSys::PartType::Carbon12,
-                TrackSys::AmsTkOpt(trPatt.at(patt))); 
         }
     }
 
@@ -1147,18 +1209,18 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PartInfo info, const TrackSys::AmsTk
         track.stateTop[6] = phyStTop.rig();
         track.stateTop[7] = phyStTop.bta();
     }
-
-    TrackSys::PhySt&& phyStBtm = hctr.interpolate_to_z(RecEvent::BtmZ);
-    if (!TrackSys::Numc::EqualToZero(phyStBtm.mom())) {
-        track.statusBtm = true;
-        track.stateBtm[0] = phyStBtm.cx();
-        track.stateBtm[1] = phyStBtm.cy();
-        track.stateBtm[2] = phyStBtm.cz();
-        track.stateBtm[3] = phyStBtm.ux();
-        track.stateBtm[4] = phyStBtm.uy();
-        track.stateBtm[5] = phyStBtm.uz();
-        track.stateBtm[6] = phyStBtm.rig();
-        track.stateBtm[7] = phyStBtm.bta();
+    
+    TrackSys::PhySt&& phyStCen = hctr.interpolate_to_z(RecEvent::CenZ);
+    if (!TrackSys::Numc::EqualToZero(phyStCen.mom())) {
+        track.statusCen = true;
+        track.stateCen[0] = phyStCen.cx();
+        track.stateCen[1] = phyStCen.cy();
+        track.stateCen[2] = phyStCen.cz();
+        track.stateCen[3] = phyStCen.ux();
+        track.stateCen[4] = phyStCen.uy();
+        track.stateCen[5] = phyStCen.uz();
+        track.stateCen[6] = phyStCen.rig();
+        track.stateCen[7] = phyStCen.bta();
     }
     
     TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
@@ -1174,8 +1236,30 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PartInfo info, const TrackSys::AmsTk
         track.stateRh[7] = phyStRh.bta();
     }
     
-    track.cpuTime = hcSw.time() * 1.0e+3;
+    TrackSys::PhySt&& phyStBtm = hctr.interpolate_to_z(RecEvent::BtmZ);
+    if (!TrackSys::Numc::EqualToZero(phyStBtm.mom())) {
+        track.statusBtm = true;
+        track.stateBtm[0] = phyStBtm.cx();
+        track.stateBtm[1] = phyStBtm.cy();
+        track.stateBtm[2] = phyStBtm.cz();
+        track.stateBtm[3] = phyStBtm.ux();
+        track.stateBtm[4] = phyStBtm.uy();
+        track.stateBtm[5] = phyStBtm.uz();
+        track.stateBtm[6] = phyStBtm.rig();
+        track.stateBtm[7] = phyStBtm.bta();
+    }
+   
+    track.rig[0] = track.stateTop[6];
+    track.rig[1] = track.stateCen[6];
+    track.rig[2] = track.stateRh[6];
+    track.rig[3] = track.stateBtm[6];
+    
+    track.bta[0] = track.stateTop[7];
+    track.bta[1] = track.stateCen[7];
+    track.bta[2] = track.stateRh[7];
+    track.bta[3] = track.stateBtm[7];
 
+    track.cpuTime = hcSw.time() * 1.0e+3;
     return track;
 }
 
@@ -2129,7 +2213,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 		if (hasY)  numOfTrInY++;
 		if (hasXY) numOfTrInX++;
 	}
-	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
+	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6003;
     
     int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
 	if (fitidMax < 0) return -6004;
@@ -2137,11 +2221,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
 	if (fitidInn < 0) return -6005;
 		
-    double trRin = trtkSIG->GetRigidity(fitidInn, 1);
-    double trQin = trtkSIG->GetInnerQ_all(std::fabs(betah), fitidInn).Mean;
-	if (MGNumc::Compare(trRin) == 0) return -6006;
+    double trQin = trtkSIG->GetInnerQH_all(2, std::fabs(betah), fitidInn).Mean;
 	if (MGNumc::Compare(trQin) <= 0) return -6007;
-	
+
     // ~7~ (Based on RTI)
 	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
         if (!rti.processEvent(event)) return -7001;

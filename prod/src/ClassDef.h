@@ -53,7 +53,6 @@ class SegPARTMCInfo : public TObject {
 		~SegPARTMCInfo() {}
 
 		void init() {
-			dec = -1;
 			lay = -1;
 			bta = -1;
 			mom = -1;
@@ -62,24 +61,19 @@ class SegPARTMCInfo : public TObject {
 		}
 
 	public :
-        Short_t dec;    // [0] Silicon  [1] TOF  [2] TRD  [3] ECAL  [4] RICH
         Short_t lay;
 		Float_t bta;
 		Float_t mom;
 		Float_t coo[3];
 		Float_t dir[3];
 	
-    ClassDef(SegPARTMCInfo, 2)
+    ClassDef(SegPARTMCInfo, 3)
 };
 
 struct SegPARTMCInfo_sort {
 	bool operator() (const SegPARTMCInfo & hit1, const SegPARTMCInfo & hit2) {
-		if      (hit1.dec < hit2.dec) return true;
-		else if (hit1.dec > hit2.dec) return false;
-		else {
-			if      (hit1.lay < hit2.lay) return true;
-			else if (hit1.lay > hit2.lay) return false;
-		}
+		if      (hit1.lay < hit2.lay) return true;
+		else if (hit1.lay > hit2.lay) return false;
 		return false;
 	}
 };
@@ -119,6 +113,37 @@ struct HitTRKMCInfo_sort {
 			if      (hit1.mom < hit2.mom) return true;
 			else if (hit1.mom > hit2.mom) return false;
 		}
+		return false;
+	}
+};
+
+
+// HitTOFMCInfo
+class HitTOFMCInfo : public TObject {
+	public :
+		HitTOFMCInfo() { init(); }
+		~HitTOFMCInfo() {}
+
+		void init() {
+			lay = 0;
+			bta = 0.;
+            mom = 0.;
+			std::fill_n(coo, 3, 0);
+		}
+
+	public :
+		Short_t lay;    // layer
+		Float_t bta;    // beta
+        Float_t mom;    // momentum
+		Float_t coo[3]; // coordinate
+	
+    ClassDef(HitTOFMCInfo, 1)
+};
+
+struct HitTOFMCInfo_sort {
+	bool operator() (const HitTOFMCInfo & hit1, const HitTOFMCInfo & hit2) {
+		if      (hit1.lay < hit2.lay) return true;
+		else if (hit1.lay > hit2.lay) return false;
 		return false;
 	}
 };
@@ -167,8 +192,15 @@ class PartMCInfo : public TObject {
 			ke   = 0;
 			std::fill_n(coo, 3, 0);
 			std::fill_n(dir, 3, 0);
-            segs.clear();
-			hits.clear();
+            
+            segsTk.clear();
+            segsTf.clear();
+            segsTd.clear();
+            segsEc.clear();
+            segsRh.clear();
+			
+            hitsTk.clear();
+            hitsTf.clear();
 		}
 
 	public :
@@ -180,10 +212,16 @@ class PartMCInfo : public TObject {
 		Float_t coo[3];
 		Float_t dir[3];
 
-        std::vector<SegPARTMCInfo> segs;
-		std::vector<HitTRKMCInfo>  hits;
+        std::vector<SegPARTMCInfo> segsTk;
+        std::vector<SegPARTMCInfo> segsTf;
+        std::vector<SegPARTMCInfo> segsTd;
+        std::vector<SegPARTMCInfo> segsEc;
+        std::vector<SegPARTMCInfo> segsRh;
+		
+        std::vector<HitTRKMCInfo>  hitsTk;
+        std::vector<HitTOFMCInfo>  hitsTf;
 
-	ClassDef(PartMCInfo, 8)
+	ClassDef(PartMCInfo, 9)
 };
 
 struct PartMCInfo_sort {
@@ -233,14 +271,14 @@ class HitTRKInfo : public TObject {
 
 		void init() {
 			std::fill_n(clsId,  2, -1);
-			layJ =  0;
+			layJ = -1;
 			tkid =  0;
 			sens = -1;
 			mult = -1;
 			std::fill_n(side, 2, false);
 			std::fill_n(coo, 3, 0);
-			std::fill_n(adc, 2, -1);
 			std::fill_n(loc, 2, -1);
+			std::fill_n(chrg, 2, -1);
 		}
 
 	public :
@@ -251,10 +289,10 @@ class HitTRKInfo : public TObject {
 		Short_t mult;     // multiplicity
 		Bool_t  side[2];  // side, x, y
 		Float_t coo[3];   // coordinate
-		Float_t adc[2];   // (elc) signal
 		Float_t loc[2];   // (elc) cofg loc
+		Float_t chrg[2];  // (elc) chrg
 
-	ClassDef(HitTRKInfo, 8)
+	ClassDef(HitTRKInfo, 9)
 };
 
 struct HitTRKInfo_sort {
@@ -277,7 +315,7 @@ class HitTRDInfo : public TObject {
 		~HitTRDInfo() {}
 
 		void init() {
-			lay  = 0;
+			lay  = -1;
 			side = 0;
 			amp  = 0;
 			len  = 0;
@@ -532,16 +570,22 @@ class HCTrackInfo : public TObject {
             std::fill_n(quality, 2, 0);
             
             std::fill_n(state, 8, 0);
+            
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
             
-            statusBtm = false;
-            std::fill_n(stateBtm, 8, 0);
+            statusCen = false;
+            std::fill_n(stateCen, 8, 0);
             
             statusRh = false;
             std::fill_n(stateRh, 8, 0);
-
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 8, 0);
+            
             std::fill_n(statusLJ, 9, false);
             std::fill_n(stateLJ[0], 9*8, 0);
            
@@ -560,21 +604,27 @@ class HCTrackInfo : public TObject {
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
+        Float_t rig[4]; // z = 195, 0, -70, -136
+        Float_t bta[4]; // z = 195, 0, -70, -136
+        
         Bool_t  statusTop; // track at top of detector (z = 195.)
         Float_t stateTop[8];
         
-        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
-        Float_t stateBtm[8];
+        Bool_t  statusCen; // track at bottom of detector (z = 0.)
+        Float_t stateCen[8];
         
         Bool_t  statusRh; // track at bottom of detector (z = -70.)
         Float_t stateRh[8];
+        
+        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
+        Float_t stateBtm[8];
 
         Bool_t  statusLJ[9];
         Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 
-        ClassDef(HCTrackInfo, 5)
+        ClassDef(HCTrackInfo, 6)
 };
 
 
@@ -766,9 +816,6 @@ class TOF : public TObject {
             Zall = -1;
 
 			std::fill_n(numOfExtCls, 4, 0);
-			
-            std::fill_n(mcBeta, 4, -1);
-            std::fill_n(mcMom, 4, -1);
 		}
 
 	public :
@@ -796,10 +843,6 @@ class TOF : public TObject {
 
 		// extern clusters
 		Short_t numOfExtCls[4];
-
-        // MC Beta
-        Float_t mcBeta[4];
-        Float_t mcMom[4];
 
 	ClassDef(TOF, 10)
 };
@@ -849,7 +892,7 @@ class TRK : public TObject {
             kfTr = std::vector<KFTrackInfo>(4);
             hcTr = std::vector<HCTrackInfo>(4);
             
-            hcTrTF = std::vector<HCTrackInfo>(4);
+            //hcTrTF = std::vector<HCTrackInfo>(4);
 		}
 
 	public :
@@ -882,7 +925,8 @@ class TRK : public TObject {
         
         // HYChou [Inn InnL1 InnL9 FS]
         std::vector<HCTrackInfo> hcTr;
-        std::vector<HCTrackInfo> hcTrTF;
+        
+        //std::vector<HCTrackInfo> hcTrTF;
 
 	ClassDef(TRK, 9)
 };
