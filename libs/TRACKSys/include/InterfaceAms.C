@@ -193,16 +193,12 @@ Bool_t Event::BulidHitStTRK() {
 		//Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
 		//Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
         
-        AMSPoint pntL; AMSDir dirL;
-        Trtk->Interpolate(coo[2], pntL, dirL, fitidInn);
-        float dxdz = std::fabs(dirL[0] / dirL[2]);
-        float dydz = std::fabs(dirL[1] / dirL[2]);
+        TrTrackChargeH* trtkchrg = &Trtk->trkcharge;
+        Double_t qx = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 0);
+		Double_t qy = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 1);
 			
-        Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetQH(0, 1.0, 0.0, mult, dxdz, dydz);
-		Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetQH(1, 1.0, 0.0, mult, dxdz, dydz);
-			
-        Bool_t scx = (xcls != nullptr && qx > 0);
-        Bool_t scy = (ycls != nullptr && qy > 0);
+        Bool_t scx = (xcls != nullptr);
+        Bool_t scy = (ycls != nullptr);
 
         HitStTRK hit(scx, scy, layJ);
         hit.set_coo(coo.x(), coo.y(), coo.z());

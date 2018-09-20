@@ -127,14 +127,12 @@ class HitTOFMCInfo : public TObject {
 		void init() {
 			lay = 0;
 			bta = 0.;
-            mom = 0.;
 			std::fill_n(coo, 3, 0);
 		}
 
 	public :
 		Short_t lay;    // layer
 		Float_t bta;    // beta
-        Float_t mom;    // momentum
 		Float_t coo[3]; // coordinate
 	
     ClassDef(HitTOFMCInfo, 1)

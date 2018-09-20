@@ -74,9 +74,9 @@ int main(int argc, char * argv[]) {
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3000.0; }
     if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3000.0; }
     if (info.type() == PartType::Carbon12) { mombd[0] = 6.60; mombd[1] = 10000.0; }
-    Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 50, mombd[0], mombd[1], AxisScale::kLog);
     
-    Axis AXrig("Rigidity [GV]", 100, mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 50, mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     Axis AXigb("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);

@@ -231,11 +231,11 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
             if (id == 1) {
                 Short_t dec = -1, lay = -1;
                 if (mcev->Nskip > Range[0] || mcev->Nskip < Range[1]) continue;
-                for (Short_t il = 0; il < 9 && dec < 0; ++il) if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il; break; } // Silicon
-                for (Short_t il = 0; il < 4 && dec < 0; ++il) if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il; break; } // TOF
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il; break; } // TRD
-                for (Short_t il = 0; il < 2 && dec < 0; ++il) if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il; break; } // ECAL
-                if (dec < 0 && mcev->Nskip == RhLay) { dec = 4; lay = 0; break; } // RICH
+                for (Short_t il = 0; il < 9 && dec < 0; ++il) { if (mcev->Nskip == SiLay[il]) { dec = 0; lay = il; break; } } // Silicon
+                for (Short_t il = 0; il < 4 && dec < 0; ++il) { if (mcev->Nskip == TfLay[il]) { dec = 1; lay = il; break; } } // TOF
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) { if (mcev->Nskip == TdLay[il]) { dec = 2; lay = il; break; } } // TRD
+                for (Short_t il = 0; il < 2 && dec < 0; ++il) { if (mcev->Nskip == EcLay[il]) { dec = 3; lay = il; break; } } // ECAL
+                if (mcev->Nskip == RhLay) { dec = 4; lay = 0; } // RICH
                 if (dec < 0 || lay < 0) continue;
                 Float_t igb = (fG4mc.primPart.mass / mcev->Momentum);
                 Float_t bta = (MGNumc::EqualToZero(fG4mc.primPart.mass) ? 1.0 : 1.0/(1.0+igb*igb));
@@ -371,8 +371,7 @@ bool EventList::processEvent(AMSEventR * event, AMSChain * chain) {
                 
                 HitTOFMCInfo hit;
                 hit.lay    = cls->GetLayer();
-                hit.bta    = cls->Beta;
-                hit.mom    = fG4mc.primPart.mass / std::sqrt(1.0/cls->Beta/cls->Beta - 1.0);
+                hit.bta    = ((MGNumc::Compare(cls->Beta, 1.0f) < 0) ? cls->Beta : 1.0);
                 hit.coo[0] = cls->Coo[0];
                 hit.coo[1] = cls->Coo[1];
                 hit.coo[2] = cls->Coo[2];
@@ -891,9 +890,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		short isL9      = ((bitPattJ&_hasL9) > 0) ?  8 : 0;
 		short bitPatt   = isInner + isL2 + isL1 + isL9;
 
-        short isInnerXY = ((bitPattXYJ|_hasL34) > 0 &&
-		                   (bitPattXYJ|_hasL56) > 0 &&
-						   (bitPattXYJ|_hasL78) > 0) ? 1 : 0;
+        short isInnerXY = ((bitPattXYJ&_hasL34) > 0 &&
+		                   (bitPattXYJ&_hasL56) > 0 &&
+						   (bitPattXYJ&_hasL78) > 0) ? 1 : 0;
 		short isL2XY    = ((bitPattXYJ&_hasL2) > 0) ?  2 : 0;
 		short isL1XY    = ((bitPattXYJ&_hasL1) > 0) ?  4 : 0;
 		short isL9XY    = ((bitPattXYJ&_hasL9) > 0) ?  8 : 0;
@@ -930,14 +929,10 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 	        //if (checkEventMode(EventBase::MC) && event->Version() >= 1107)
             //    qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
 
-            AMSPoint pntL; AMSDir dirL;
-            trtk->Interpolate(coo[2], pntL, dirL, fitidInn);
-            double dxdz = std::fabs(dirL[0] / dirL[2]);
-            double dydz = std::fabs(dirL[1] / dirL[2]);
+            TrTrackChargeH* trtkchrg = &trtk->trkcharge;
+            float xchrg = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 0);
+			float ychrg = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 1);
 
-			float xchrg = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetQH(0, 1.0, 0.0, mult, dxdz, dydz);
-			float ychrg = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetQH(1, 1.0, 0.0, mult, dxdz, dydz);
-				
 			HitTRKInfo hit;
 			hit.layJ    = ilay+1;
 			hit.tkid    = tkid;
@@ -1093,7 +1088,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
 
         // HChou Fitting
-        const Bool_t withDedx = true;
         std::vector<TrackSys::AmsTkOpt::Patt> trPatt({ 
             TrackSys::AmsTkOpt::Inner, 
             TrackSys::AmsTkOpt::InnerL1, 
@@ -1101,39 +1095,17 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::FullSpan });
 
         TrackSys::PartType partType;
-        if (recEv.zin <= 1) partType = TrackSys::PartType::Q1;
-        if (recEv.zin == 2) partType = TrackSys::PartType::Q2;
-        if (recEv.zin == 3) partType = TrackSys::PartType::Q3;
-        if (recEv.zin == 4) partType = TrackSys::PartType::Q4;
-        if (recEv.zin == 5) partType = TrackSys::PartType::Q5;
-        if (recEv.zin == 6) partType = TrackSys::PartType::Q6;
-        if (recEv.zin == 7) partType = TrackSys::PartType::Q7;
-        if (recEv.zin >= 8) partType = TrackSys::PartType::Q8;
+        if (recEv.zin <= 1) partType = TrackSys::PartType::Proton;
+        if (recEv.zin >= 2) partType = TrackSys::PartType::Helium4;
 
 	    for (int patt = 0; patt < _npatt; ++patt) {
-            if (recEv.zin != 1) continue;
-            if (recEv.zin != 2) continue;
-            if (recEv.zin != 6) continue;
-            
             fTrk.hcTr.at(patt) = processHCTr( // Tracker
                 partType, TrackSys::AmsTkOpt(trPatt.at(patt))); 
             
-            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
-            //    TrackSys::PartType::Proton,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
-            
-            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
-            //    TrackSys::PartType::Helium4,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
-            
-            //fTrk.hcTr.at(patt) = processHCTr( // Tracker
-            //    TrackSys::PartType::Carbon12,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt))); 
-            
             //fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
             //    TrackSys::PartType::Proton,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt), withDedx),
-            //    TrackSys::AmsTfOpt(withDedx));
+            //    TrackSys::AmsTkOpt(trPatt.at(patt), true),
+            //    TrackSys::AmsTfOpt(true));
         }
     }
 
@@ -2199,9 +2171,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	bool isTrInner   = ((trBitPattJ&TrPtL34) > 0 && 
 	                    (trBitPattJ&TrPtL56) > 0 && 
 					    (trBitPattJ&TrPtL78) > 0);
-	bool isTrInnerXY = ((trBitPattXYJ|TrPtL34) > 0 && 
-	                    (trBitPattXYJ|TrPtL56) > 0 && 
-					    (trBitPattXYJ|TrPtL78) > 0);
+	bool isTrInnerXY = ((trBitPattXYJ&TrPtL34) > 0 && 
+	                    (trBitPattXYJ&TrPtL56) > 0 && 
+					    (trBitPattXYJ&TrPtL78) > 0);
 	if (!isTrInner) return -6001;
 	if (!isTrInnerXY) return -6002;
 	
@@ -2218,7 +2190,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
 	if (fitidMax < 0) return -6004;
     
-    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 21);
+    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 23);
 	if (fitidInn < 0) return -6005;
 		
     double trQin = trtkSIG->GetInnerQH(2, std::fabs(betah), fitidInn);
