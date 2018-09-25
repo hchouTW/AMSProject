@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Sep25
+PROJTITLE    =  EL_025500.B1200
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.mc.el.pl1.025500.B1200
+EVENTTYPE    =  MC
+FILEPEREXE   =  2
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  3345
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  3
+CONFIRM    =  NONE
