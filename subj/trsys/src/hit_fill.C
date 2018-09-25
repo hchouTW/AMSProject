@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Sep20/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
   
     // Coo
-    Axis AXres("res [#mum]", 1600, -200., 200.);
+    Axis AXres("res [#mum]", 1200, -200., 200.);
     
     Hist* hMrx   = Hist::New("hMrx",   HistAxis(AXigb, AXres));
     Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
@@ -78,11 +78,11 @@ int main(int argc, char * argv[]) {
     Hist* hMry   = Hist::New("hMry",   HistAxis(AXigb, AXres));
     Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
 
-    Axis AXTKq("TKq", 800, 0.1, 12.0 * info.chrg() * info.chrg());
+    Axis AXTKq("TKq", 800, 0.001, 10.0 * info.chrg() * info.chrg());
     Hist* hTKqx = Hist::New("hTKqx", HistAxis(AXigb, AXTKq));
     Hist* hTKqy = Hist::New("hTKqy", HistAxis(AXigb, AXTKq));
     
-    Axis AXTFq("TFq", 800, 0.1, 12.0 * info.chrg() * info.chrg());
+    Axis AXTFq("TFq", 800, 0.001, 8.0 * info.chrg() * info.chrg());
     Hist* hTFq = Hist::New("hTFq", HistAxis(AXigb, AXTFq));
     
     Axis AXTFtme("TFtme", 800, -25, 25);
@@ -128,8 +128,15 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // Charge
-        //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        //if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        //if (std::abs(info.chrg()) == 1) {
+        //    if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+        //    if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        //}
+        //else {
+        //    if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+        //    if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        //}
+        
         hCut->fillH2D(fG4mc->primPart.mom, 6);
 
         // TOF
@@ -137,11 +144,11 @@ int main(int argc, char * argv[]) {
         if (fTof->normChisqC > 10.) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 7);
         
-        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
+        if (fTof->numOfInTimeCls > 4) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 8);
         
-        if (fTof->numOfInTimeCls > 4) continue;
+        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 1 || 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
         hCut->fillH2D(fG4mc->primPart.mom, 9);
 
         // No Interaction
@@ -207,17 +214,17 @@ int main(int argc, char * argv[]) {
                 Double_t ibta = 0.5 * (1.0/mhTf[sl*2+0]->bta + 1.0/mhTf[sl*2+1]->bta);
                 Double_t igb = std::sqrt(ibta * ibta - 1.0);
 
-                Double_t tme = 0.5 * len * ibta;
+                Double_t tme = len * ibta;
                 Double_t mes = 2.99792458e+01 * (fTof->T[sl*2+1] - fTof->T[sl*2+0]);
                 Double_t dlt = mes - tme;
                 hTFtme->fillH2D(igb, dlt);
             }
         }
 
-        if (mpTf[3] && fRich->status && fRich->isGood) {
+        if (mpRh && fRich->status && fRich->isGood) {
             PhySt st(info.type());
-            st.set_state_with_cos(mpTf[3]->coo[0], mpTf[3]->coo[1], mpTf[3]->coo[2], mpTf[3]->dir[0], mpTf[3]->dir[1], mpTf[3]->dir[2]);
-            st.set_mom(mpTf[3]->mom);
+            st.set_state_with_cos(mpRh->coo[0], mpRh->coo[1], mpRh->coo[2], mpRh->dir[0], mpRh->dir[1], mpRh->dir[2]);
+            st.set_mom(mpRh->mom);
             TrackSys::PropMgnt::PropToZ(fRich->refz, st);
             Double_t dlt = (1.0/fRich->beta - 1.0/st.bta());
             Double_t igb = st.igmbta();

@@ -44,9 +44,9 @@ int main(int argc, char * argv[]) {
     Hist::Load("hit_fill.root", "/ams_home/hchou/AMSProject/subj/trsys/dat");
 
     // Fit
-    //Hist* hAdc = Hist::Head("hTKadcx");
-    //Hist* hAdc = Hist::Head("hTKadcy");
-    Hist* hAdc = Hist::Head("hTFadc");
+    //Hist* hAdc = Hist::Head("hTKqx");
+    Hist* hAdc = Hist::Head("hTKqy");
+    //Hist* hAdc = Hist::Head("hTFq");
     //Hist* hAdc = Hist::Head("hTDavg");
     //Hist* hAdc = Hist::Head("hTDex2");
     std::vector<Hist*>&& vhAdc = Hist::ProjectAll(HistProj::kY, hAdc);

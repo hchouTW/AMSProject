@@ -188,20 +188,32 @@ Bool_t Event::BulidHitStTRK() {
         
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
-
-        //Int_t    qopt = ((Ev->NMCEventg() > 0 && Ev->Version() >= 1107) ? InterfaceAms::TkOpt::QOptMC : InterfaceAms::TkOpt::QOptISS);
-		//Double_t qx = (xcls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 0)) ? -1.0 : recHit->GetSignalCombination(0, qopt, 1, 0, 0); 
-		//Double_t qy = (ycls == nullptr || !TrCharge::GoodChargeReconHit(recHit, 1)) ? -1.0 : recHit->GetSignalCombination(1, qopt, 1, 0, 0); 
         
         TrTrackChargeH* trtkchrg = &Trtk->trkcharge;
         Double_t qx = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 0);
 		Double_t qy = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 1);
+            
+        int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(layJ) : 0;
+        TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[layJ] : nullptr;
+
+        int cntqhx = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(0) : 0;
+        TrClusterChargeLightH* trclschrgx = (cntqhx > 0) ? &trhitchrg->qcluster[0] : nullptr;
+        
+        int cntqhy = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(1) : 0;
+        TrClusterChargeLightH* trclschrgy = (cntqhy > 0) ? &trhitchrg->qcluster[1] : nullptr;
+
+        Short_t nsrx = 0, nsry = 0;
+        Float_t sigadcx[5]; std::fill_n(sigadcx, 5, 0);
+        Float_t sigadcy[5]; std::fill_n(sigadcy, 5, 0);
+        for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; if (sigadcx[ii] > 0) nsrx++; }
+        for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; if (sigadcy[ii] > 0) nsry++; }
 			
         Bool_t scx = (xcls != nullptr);
         Bool_t scy = (ycls != nullptr);
 
         HitStTRK hit(scx, scy, layJ);
         hit.set_coo(coo.x(), coo.y(), coo.z());
+        hit.set_nsr(nsrx, nsry);
         
         if      (layJ == 1) TkHitL1 = hit;
         else if (layJ == 9) TkHitL9 = hit;

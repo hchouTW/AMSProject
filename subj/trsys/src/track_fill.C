@@ -2,9 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Sep18/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep17/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -63,17 +62,16 @@ int main(int argc, char * argv[]) {
     
     //PartInfo info(PartType::Electron);
     //PartInfo info(PartType::Proton);
-    //PartInfo info(PartType::Helium4);
-    PartInfo info(PartType::Carbon12);
+    PartInfo info(PartType::Helium4);
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
     Bool_t optL9 = false;
     
     Double_t mombd[2] = { 1., 1000. };
-    if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3000.0; }
-    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3000.0; }
-    if (info.type() == PartType::Carbon12) { mombd[0] = 6.60; mombd[1] = 10000.0; }
+    if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3500.0; }
+    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3500.0; }
+    if (info.type() == PartType::Carbon12) { mombd[0] = 6.60; mombd[1] = 11000.0; }
     Axis AXmom("Momentum [GeV]", 50, mombd[0], mombd[1], AxisScale::kLog);
     
     Axis AXrig("Rigidity [GV]", 50, mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
@@ -142,20 +140,20 @@ int main(int argc, char * argv[]) {
         //if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
         
         // Geometry (TRK)
-        //if (fTrk->numOfTrack != 1) continue;
+        if (fTrk->numOfTrack != 1) continue;
         
         // Geometry (TOF)
-        //if (fTof->numOfBetaH != 1) continue;
+        if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
         if (fTof->betaHPatt != 15) continue;
         
         // Geometry (TRD)
-        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
-        //if (!fTrd->statusKCls[0]) continue;
-        //if (fTrd->LLRnhit[0] < 8) continue;
+        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        if (!fTrd->statusKCls[0]) continue;
+        if (fTrd->LLRnhit[0] < 8) continue;
         
         // Geometry (ACC)
-        //if (fAcc->clusters.size() != 0) continue;
+        if (fAcc->clusters.size() != 0) continue;
         
         // Down-going
         if (fTof->betaH < 0.) continue;
@@ -164,19 +162,16 @@ int main(int argc, char * argv[]) {
         //if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
         //if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
         
-        //if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
-        //if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+        if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
         
-        if (fTof->Qall < 5.6 || fTof->Qall > 6.4) continue;
-        if (fTrk->QIn < 5.6 || fTrk->QIn > 6.4) continue;
-
         // TOF
         if (fTof->normChisqT > 10.) continue;
         if (fTof->normChisqC > 10.) continue;
         
-        //if (fTof->numOfInTimeCls > 4) continue;
-        //if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-        //    (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
+        if (fTof->numOfInTimeCls > 4) continue;
+        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
 
         Bool_t hasMCL1 = false;
         Bool_t hasMCL9 = false;

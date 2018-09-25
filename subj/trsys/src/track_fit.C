@@ -11,7 +11,6 @@ int main(int argc, char * argv[]) {
     //Hist::AddDirectory();
    
     Hist::Load("track_fill.root", "dat");
-    //Hist::Load("track_fill.root", "/afs/cern.ch/work/h/hchou/AMSData/test58");
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
@@ -48,7 +47,7 @@ int main(int argc, char * argv[]) {
     std::vector<Hist*> vhKFRrso = Hist::ProjectAll(HistProj::kY, hKFRrso);
     std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrso);
 
-    for (int it = 10; it <= AXmom.nbin(); ++it) {
+    for (int it = 1; it <= AXmom.nbin(); ++it) {
         Double_t bincen = std::sqrt(AXmom.center(it, AxisScale::kLog));
 
         // Choutko
@@ -104,7 +103,7 @@ int main(int argc, char * argv[]) {
         (*hHCCKRrsoS)()->SetBinContent(it, (*hHCRrsoS)()->GetBinContent(it)/(*hCKRrsoS)()->GetBinContent(it));
     } 
     
-    for (int it = 10; it <= AXmom.nbin(); ++it) {
+    for (int it = 1; it <= AXmom.nbin(); ++it) {
         vhCKRrso.at(it)->style(Fill(), Line(kGreen), Marker(kGreen));
         vhKFRrso.at(it)->style(Fill(), Line(kBlue), Marker(kBlue));
         vhHCRrso.at(it)->style(Fill(), Line(kRed), Marker(kRed));

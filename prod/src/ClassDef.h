@@ -277,6 +277,9 @@ class HitTRKInfo : public TObject {
 			std::fill_n(coo, 3, 0);
 			std::fill_n(loc, 2, -1);
 			std::fill_n(chrg, 2, -1);
+
+            std::fill_n(nsr, 2, 0);
+            std::fill_n(sig[0], 2*5, 0);
 		}
 
 	public :
@@ -290,7 +293,10 @@ class HitTRKInfo : public TObject {
 		Float_t loc[2];   // (elc) cofg loc
 		Float_t chrg[2];  // (elc) chrg
 
-	ClassDef(HitTRKInfo, 9)
+        Short_t nsr[2];    // num of strip
+        Float_t sig[2][5]; // index 2 -> seed
+
+	ClassDef(HitTRKInfo, 10)
 };
 
 struct HitTRKInfo_sort {

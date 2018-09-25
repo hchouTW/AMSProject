@@ -81,6 +81,8 @@ void HitStTRK::clear() {
     seqIDcy_ = -1;
     seqIDqx_ = -1;
     seqIDqy_ = -1;
+    
+    nsr_.fill(Numc::ZERO<Short_t>);
 
     side_q_.fill(false);
     q_.fill(Numc::ZERO<>);
@@ -116,7 +118,7 @@ void HitStTRK::cal(const PhySt& part) {
     nrmc_.fill(Numc::ZERO<>);
     divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
-    if (side_coo_(0) && pdf_cx_ != nullptr) {
+    if (side_coo_[0] && pdf_cx_ != nullptr) {
         std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0));
         chic_[0] = minix.at(0);
         nrmc_[0] = minix.at(1);
@@ -127,7 +129,7 @@ void HitStTRK::cal(const PhySt& part) {
             divc_[0] = Numc::ZERO<>;
         }
     }
-    if (side_coo_(1) && pdf_cy_ != nullptr) {
+    if (side_coo_[1] && pdf_cy_ != nullptr) {
         std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1));
         chic_[1] = miniy.at(0);
         nrmc_[1] = miniy.at(1);

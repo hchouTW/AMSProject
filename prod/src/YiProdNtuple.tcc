@@ -933,6 +933,21 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             float xchrg = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 0);
 			float ychrg = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 1);
 
+            int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(ilay+1) : 0;
+            TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[ilay+1] : nullptr;
+
+            int cntqhx = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(0) : 0;
+            TrClusterChargeLightH* trclschrgx = (cntqhx > 0) ? &trhitchrg->qcluster[0] : nullptr;
+            
+            int cntqhy = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(1) : 0;
+            TrClusterChargeLightH* trclschrgy = (cntqhy > 0) ? &trhitchrg->qcluster[1] : nullptr;
+
+            Short_t nsrx = 0, nsry = 0;
+            Float_t sigadcx[5]; std::fill_n(sigadcx, 5, 0);
+            Float_t sigadcy[5]; std::fill_n(sigadcy, 5, 0);
+            for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; if (sigadcx[ii] > 0) nsrx++; }
+            for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; if (sigadcy[ii] > 0) nsry++; }
+
 			HitTRKInfo hit;
 			hit.layJ    = ilay+1;
 			hit.tkid    = tkid;
@@ -945,9 +960,13 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.coo[2]  = coo[2];
 			hit.loc[0]  = xloc;
 			hit.loc[1]  = yloc;
-			hit.chrg[0]  = xchrg;
-			hit.chrg[1]  = ychrg;
-		
+			hit.chrg[0] = xchrg;
+			hit.chrg[1] = ychrg;
+            hit.nsr[0] = nsrx;
+            hit.nsr[1] = nsry;
+            for (int ii = 0; ii < 5; ++ii) hit.sig[0][ii] = sigadcx[ii];
+            for (int ii = 0; ii < 5; ++ii) hit.sig[1][ii] = sigadcy[ii];
+
 			fTrk.hits.push_back(hit);
 		} // for loop - layer
 		if (fTrk.hits.size() > 1) std::sort(fTrk.hits.begin(), fTrk.hits.end(), HitTRKInfo_sort());
@@ -2125,10 +2144,10 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         TRFITFFKEY.Zshift = 2; // Enable the dZ correction
     }
     else if (EventBase::checkEventMode(EventBase::MC)) {
-        TrExtAlignDB::SmearExtAlign(); // MC Smear Ext-Layer
-        TRCLFFKEY.UseSensorAlign = 0;
+        TRFITFFKEY.Zshift = -1; // Disable the dZ correction
         TRCLFFKEY.ClusterCofGOpt = 1;
-        TRFITFFKEY.Zshift = -1; // // Disable the dZ correction
+        event->SetDefaultMCTuningParameters();
+        TrExtAlignDB::SmearExtAlign(); // MC Smear Ext-Layer
 	}
     TRFITFFKEY.ErcHeY = 0;
 
@@ -2159,7 +2178,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	
     double betah = btahSIG->GetBeta();
     short  btahSign = MGNumc::Compare(betah);
-    if (betah < 0) return -5003; // keep down-going
+    if (betah <= 0.0) return -5003; // keep down-going
 
 	// ~6~ (Based on Track Hits)
 	const unsigned short TrPtL34 =  12; //  4 +   8
@@ -2187,18 +2206,19 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	}
 	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
     
+	// ~7~ (Based on TrTrack)
     int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
-	if (fitidMax < 0) return -6004;
+	if (fitidMax < 0) return -7001;
     
     int fitidInn = trtkSIG->iTrTrackPar(1, 3, 23);
-	if (fitidInn < 0) return -6005;
+	if (fitidInn < 0) return -7002;
 		
     double trQin = trtkSIG->GetInnerQH(2, std::fabs(betah), fitidInn);
-	if (MGNumc::Compare(trQin) <= 0) return -6007;
+	if (MGNumc::Compare(trQin) <= 0) return -7003;
 
-    // ~7~ (Based on RTI)
+    // ~8~ (Based on RTI)
 	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
-        if (!rti.processEvent(event)) return -7001;
+        if (!rti.processEvent(event)) return -8001;
         double minIGRF = 0.8 * (*std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4));
     }
 

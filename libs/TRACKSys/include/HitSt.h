@@ -124,9 +124,14 @@ class HitStTRK : public VirtualHitSt {
         void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
+        inline void set_nsr(Short_t nx, Short_t ny) {
+            nsr_.at(0) = (side_coo_(0) && nx > 0) ? nx : 0;
+            nsr_.at(1) = (side_coo_(1) && ny > 0) ? ny : 0;
+        }
+
         inline void set_q(Double_t qx, Double_t qy) {
-            side_q_[0] = (Numc::Compare(qx) > 0);
-            side_q_[1] = (Numc::Compare(qy) > 0);
+            side_q_[0] = (Numc::Compare(qx) > 0.80);
+            side_q_[1] = (Numc::Compare(qy) > 0.80);
             q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
             q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
             chiq_.fill(Numc::ZERO<>);
@@ -134,8 +139,11 @@ class HitStTRK : public VirtualHitSt {
             divq_.fill(Numc::ZERO<>);
         }
         
-        inline const Short_t&  seqIDqx() const { return seqIDqx_; }
-        inline const Short_t&  seqIDqy() const { return seqIDqy_; }
+        inline const Short_t& seqIDqx() const { return seqIDqx_; }
+        inline const Short_t& seqIDqy() const { return seqIDqy_; }
+        
+        inline const Short_t& nsrx() const { return nsr_[0]; }
+        inline const Short_t& nsry() const { return nsr_[1]; }
 
         inline const Bool_t& sqx() const { return side_q_[0]; }
         inline const Bool_t& sqy() const { return side_q_[1]; }
@@ -159,6 +167,8 @@ class HitStTRK : public VirtualHitSt {
         Short_t seqIDqx_;
         Short_t seqIDqy_;
         
+        std::array<Short_t, 2> nsr_; // num of strip (x, y)
+
         std::array<Bool_t, 2>   side_q_;
         std::array<Double_t, 2> q_; // ADC
 
@@ -210,7 +220,7 @@ class HitStTOF : public VirtualHitSt {
         }
         
         inline void set_q(Double_t q) {
-            side_q_ = (Numc::Compare(q) > 0);
+            side_q_ = (Numc::Compare(q) > 0.6);
             q_      = (side_q_ ? q : Numc::ZERO<>);
             chiq_   = Numc::ZERO<>;
             nrmq_   = Numc::ZERO<>;

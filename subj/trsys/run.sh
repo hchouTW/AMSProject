@@ -19,23 +19,25 @@ DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep17
 #Stream=${CurDir}/lst/flist.ncu.mc.C12_612000_B1200_18Sep18
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep20
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep20
+#Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
+Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 
 OutputDir=${CurDir}/dat
 
 #Hit
-GroupSize=20
-Nseq=40
+GroupSize=75
+Nseq=39
 #Fit
 #GroupSize=6
 #Nseq=500
 
 for id in `seq 0 ${Nseq}`
 do
-    echo "%!/bin/bash
-source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
-#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
+#    echo "%!/bin/bash
+#source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done
 
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fit
