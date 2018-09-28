@@ -10,13 +10,14 @@
 namespace TrackSys {
 
 
-std::array<long double, 3> TmeMeas::minimizer(long double x, long double igmbta) const {
+std::array<long double, 3> TmeMeas::minimizer(long double x, long double igmbta, bool is_single) const {
     if (Numc::Compare(x) <= 0 || Numc::Compare(igmbta) <= 0)
         return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
     long double ibsqr = (Numc::ONE<long double> + igmbta * igmbta);
     
     // PDF parameters
-    long double sgm = get_sgm(igmbta, ibsqr); 
+    long double sgm = get_sgm(ibsqr);
+    if (!is_single) sgm *= Numc::SQRT_TWO;
 
     // MultiGaus
     MultiGaus mgaus(robust_, sgm);
@@ -24,12 +25,8 @@ std::array<long double, 3> TmeMeas::minimizer(long double x, long double igmbta)
 }
         
 
-long double TmeMeas::get_sgm(long double igmbta, long double ibsqr) const {
-    long double sgm = sgm_[0] * std::pow(ibsqr, sgm_[3]) * 
-        (sgm_[1] + 
-         sgm_[2] * std::pow(ibsqr, -sgm_[3]) - 
-         std::log(sgm_[4] + std::pow(igmbta * igmbta, sgm_[5]))
-        );
+long double TmeMeas::get_sgm(long double ibsqr) const {
+    long double sgm = sgm_[0] + sgm_[1] * std::erfc(sgm_[2] * std::pow(ibsqr, sgm_[3]) - sgm_[4]);
     if (!Numc::Valid(sgm)) sgm = Numc::ZERO<long double>;
     return sgm;
 }

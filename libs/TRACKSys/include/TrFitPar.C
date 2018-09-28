@@ -36,30 +36,30 @@ Double_t TrFitPar::NormQuality(Double_t nchi, Short_t ndof) {
     
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
-        sw_mscat_     = rhs.sw_mscat_;
-        sw_eloss_     = rhs.sw_eloss_;
-        info_         = rhs.info_;
-        ortt_         = rhs.ortt_;
-        hits_TRK_     = rhs.hits_TRK_;
-        hits_TOF_     = rhs.hits_TOF_;
-        hits_RICH_    = rhs.hits_RICH_;
-        hits_TRD_     = rhs.hits_TRD_;
-        onlycx_nseq_  = rhs.onlycx_nseq_;
-        onlycy_nseq_  = rhs.onlycy_nseq_;
-        onlyc_nseq_   = rhs.onlyc_nseq_;
-        nseq_         = rhs.nseq_;
-        nseg_         = rhs.nseg_;
-        nmes_         = rhs.nmes_;
-        nmes_cx_      = rhs.nmes_cx_;
-        nmes_cy_      = rhs.nmes_cy_;
-        nmes_ib_      = rhs.nmes_ib_;
-        nmes_TRKqx_   = rhs.nmes_TRKqx_;
-        nmes_TRKqy_   = rhs.nmes_TRKqy_;
-        nmes_TOFt_    = rhs.nmes_TOFt_;
-        nmes_TOFq_    = rhs.nmes_TOFq_;
-        nmes_RICHib_  = rhs.nmes_RICHib_;
-        nmes_TRDel_   = rhs.nmes_TRDel_;
-        is_check_     = rhs.is_check_;
+        sw_mscat_    = rhs.sw_mscat_;
+        sw_eloss_    = rhs.sw_eloss_;
+        info_        = rhs.info_;
+        ortt_        = rhs.ortt_;
+        hits_TRK_    = rhs.hits_TRK_;
+        hits_TOF_    = rhs.hits_TOF_;
+        hits_RICH_   = rhs.hits_RICH_;
+        hits_TRD_    = rhs.hits_TRD_;
+        onlycx_nseq_ = rhs.onlycx_nseq_;
+        onlycy_nseq_ = rhs.onlycy_nseq_;
+        onlyc_nseq_  = rhs.onlyc_nseq_;
+        nseq_        = rhs.nseq_;
+        nseg_        = rhs.nseg_;
+        nmes_        = rhs.nmes_;
+        nmes_cx_     = rhs.nmes_cx_;
+        nmes_cy_     = rhs.nmes_cy_;
+        nmes_ib_     = rhs.nmes_ib_;
+        nmes_TRKqx_  = rhs.nmes_TRKqx_;
+        nmes_TRKqy_  = rhs.nmes_TRKqy_;
+        nmes_TOFt_   = rhs.nmes_TOFt_;
+        nmes_TOFq_   = rhs.nmes_TOFq_;
+        nmes_RICHib_ = rhs.nmes_RICHib_;
+        nmes_TRDel_  = rhs.nmes_TRDel_;
+        is_check_    = rhs.is_check_;
         
         hits_.clear();
         if (is_check_) {

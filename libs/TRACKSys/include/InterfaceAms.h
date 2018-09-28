@@ -98,7 +98,7 @@ class Event {
         static Bool_t   Status() { return (Ev != nullptr && StatusTk); }
 
         static void     Clear();
-        static Bool_t   Load(AMSEventR* event = nullptr, UInt_t ipart = 0);
+        static Bool_t   Load(AMSEventR* event = nullptr, UInt_t ipart = 0, Short_t chrg = 1);
         static TrFitPar Get(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
    
     protected :
@@ -106,6 +106,7 @@ class Event {
         static UInt_t     RunID;
         static UInt_t     EvID;
         static UInt_t     PtID;
+        static Short_t    ChrgZ;
         static AMSEventR* Ev;
         static TrTrackR*  Trtk;
         static BetaHR*    Btah;

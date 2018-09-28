@@ -31,27 +31,27 @@ class VirtualHitSt {
             divc_.fill(Numc::ZERO<>); 
         }
 
-        inline void set_dummy_x(Double_t cx) { if (!side_coo_(0)) coo_(0) = cx; }
-        inline void set_dummy_y(Double_t cy) { if (!side_coo_(1)) coo_(1) = cy; }
+        inline void set_dummy_x(Double_t cx) { if (!side_c_(0)) coo_(0) = cx; }
+        inline void set_dummy_y(Double_t cy) { if (!side_c_(1)) coo_(1) = cy; }
         
-        inline const Short_t&  seqID()   const { return seqID_; }
-        inline const Short_t&  seqIDcx() const { return seqIDcx_; }
-        inline const Short_t&  seqIDcy() const { return seqIDcy_; }
+        inline const Short_t& seqID()   const { return seqID_; }
+        inline const Short_t& seqIDcx() const { return seqIDcx_; }
+        inline const Short_t& seqIDcy() const { return seqIDcy_; }
         
-        inline const Short_t&  onlyc_seqID()   const { return onlyc_seqID_; }
-        inline const Short_t&  onlyc_seqIDcx() const { return onlyc_seqIDcx_; }
-        inline const Short_t&  onlyc_seqIDcy() const { return onlyc_seqIDcy_; }
+        inline const Short_t& onlyc_seqID()   const { return onlyc_seqID_; }
+        inline const Short_t& onlyc_seqIDcx() const { return onlyc_seqIDcx_; }
+        inline const Short_t& onlyc_seqIDcy() const { return onlyc_seqIDcy_; }
         
-        inline const Short_t&  onlycx_seqID() const { return onlycx_seqID_; }
-        inline const Short_t&  onlycy_seqID() const { return onlycy_seqID_; }
+        inline const Short_t& onlycx_seqID() const { return onlycx_seqID_; }
+        inline const Short_t& onlycy_seqID() const { return onlycy_seqID_; }
         
         inline const PartType& type() const { return type_; }
         inline const Detector& dec()  const { return dec_; }
         inline const Short_t&  lay()  const { return lay_; }
 
-        inline const Bool_t&   scx() const { return side_coo_(0); }
-        inline const Bool_t&   scy() const { return side_coo_(1); }
-        inline const Bool_t&   scz() const { return side_coo_(2); }
+        inline const Bool_t& scx() const { return side_c_(0); }
+        inline const Bool_t& scy() const { return side_c_(1); }
+        inline const Bool_t& scz() const { return side_c_(2); }
         
         inline const SVecD<3>& c()  const { return coo_; }
         inline const Double_t& cx() const { return coo_(0); }
@@ -90,9 +90,9 @@ class VirtualHitSt {
         Detector dec_; // TRK TOF TRD RICH ECAL
         Short_t  lay_; // start from 0
 
-        SVecO<3> side_coo_; // (x, y, z)
-        SVecD<3> coo_;      // [cm] coord
-        SVecD<2> erc_;      // [cm] error
+        SVecO<3> side_c_; // (x, y, z)
+        SVecD<3> coo_;    // [cm] coord
+        SVecD<2> erc_;    // [cm] error
         
         std::array<Double_t, 2> chic_; // coord chi
         std::array<Double_t, 2> nrmc_; // coord norm
@@ -116,7 +116,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy) { clear(); }
+        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0, Bool_t isInnTr = true) : VirtualHitSt(DEC, lay, scx, scy) { clear(); isInnTr_ = isInnTr; }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -125,13 +125,14 @@ class HitStTRK : public VirtualHitSt {
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_.at(0) = (side_coo_(0) && nx > 0) ? nx : 0;
-            nsr_.at(1) = (side_coo_(1) && ny > 0) ? ny : 0;
+            nsr_.at(0) = (side_c_(0) && nx > 0) ? nx : 0;
+            nsr_.at(1) = (side_c_(1) && ny > 0) ? ny : 0;
         }
 
-        inline void set_q(Double_t qx, Double_t qy) {
-            side_q_[0] = (Numc::Compare(qx) > 0.80);
-            side_q_[1] = (Numc::Compare(qy) > 0.80);
+        inline void set_q(Double_t qx, Double_t qy, Short_t chrg = 0) {
+            Short_t chrgz = std::abs(chrg);
+            side_q_[0] = (Numc::Compare(qx) > (chrgz * THRES_Q));
+            side_q_[1] = (Numc::Compare(qy) > (chrgz * THRES_Q));
             q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
             q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
             chiq_.fill(Numc::ZERO<>);
@@ -164,10 +165,12 @@ class HitStTRK : public VirtualHitSt {
         void clear();
 
     protected :
-        Short_t seqIDqx_;
-        Short_t seqIDqy_;
+        Bool_t isInnTr_; // is inner tracker
         
         std::array<Short_t, 2> nsr_; // num of strip (x, y)
+        
+        Short_t seqIDqx_;
+        Short_t seqIDqy_;
 
         std::array<Bool_t, 2>   side_q_;
         std::array<Double_t, 2> q_; // ADC
@@ -182,12 +185,40 @@ class HitStTRK : public VirtualHitSt {
         IonEloss*  pdf_qy_;
     
     protected :
-        static MultiGaus PDF_Q01_CX_;
-        static MultiGaus PDF_Q01_CY_;
-        static MultiGaus PDF_Q02_CX_;
-        static MultiGaus PDF_Q02_CY_;
-        static MultiGaus PDF_Q06_CX_;
-        static MultiGaus PDF_Q06_CY_;
+        static constexpr Double_t THRES_Q = 0.8;
+        static constexpr Double_t LMTL_CHI_Q = -3.0;
+
+        static MultiGaus PDF_Q01_CX_INN_;
+        static MultiGaus PDF_Q01_CY_INN_;
+        static MultiGaus PDF_Q01_CX_EXT_;
+        static MultiGaus PDF_Q01_CY_EXT_;
+        
+        static MultiGaus PDF_Q01_CX_INN_S1_;
+        static MultiGaus PDF_Q01_CY_INN_S1_;
+        static MultiGaus PDF_Q01_CX_INN_S2_;
+        static MultiGaus PDF_Q01_CY_INN_S2_;
+        static MultiGaus PDF_Q01_CX_INN_S3_;
+        static MultiGaus PDF_Q01_CY_INN_S3_;
+        static MultiGaus PDF_Q01_CX_INN_S4_;
+        static MultiGaus PDF_Q01_CY_INN_S4_;
+        static MultiGaus PDF_Q01_CX_INN_S5_;
+        static MultiGaus PDF_Q01_CY_INN_S5_;
+
+        static MultiGaus PDF_Q01_CX_EXT_S1_;
+        static MultiGaus PDF_Q01_CY_EXT_S1_;
+        static MultiGaus PDF_Q01_CX_EXT_S2_;
+        static MultiGaus PDF_Q01_CY_EXT_S2_;
+        static MultiGaus PDF_Q01_CX_EXT_S3_;
+        static MultiGaus PDF_Q01_CY_EXT_S3_;
+        static MultiGaus PDF_Q01_CX_EXT_S4_;
+        static MultiGaus PDF_Q01_CY_EXT_S4_;
+        static MultiGaus PDF_Q01_CX_EXT_S5_;
+        static MultiGaus PDF_Q01_CY_EXT_S5_;
+        
+        static MultiGaus PDF_Q02_CX_INN_;
+        static MultiGaus PDF_Q02_CY_INN_;
+        static MultiGaus PDF_Q02_CX_EXT_;
+        static MultiGaus PDF_Q02_CY_EXT_;
 
         static IonEloss PDF_Q01_QX_;
         static IonEloss PDF_Q01_QY_;
@@ -219,8 +250,9 @@ class HitStTOF : public VirtualHitSt {
             divt_.fill(Numc::ZERO<>);
         }
         
-        inline void set_q(Double_t q) {
-            side_q_ = (Numc::Compare(q) > 0.6);
+        inline void set_q(Double_t q, Short_t chrg = 0) {
+            Short_t chrgz = std::abs(chrg);
+            side_q_ = (Numc::Compare(q) > (chrgz * THRES_Q));
             q_      = (side_q_ ? q : Numc::ZERO<>);
             chiq_   = Numc::ZERO<>;
             nrmq_   = Numc::ZERO<>;
@@ -270,25 +302,31 @@ class HitStTOF : public VirtualHitSt {
         Double_t nrmq_; // Q nrom
         std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, igb]
 
-        MultiGaus* pdf_t_;
-        IonEloss*  pdf_q_;
+        TmeMeas*  pdf_t_;
+        IonEloss* pdf_q_;
     
     protected :
-        static MultiGaus PDF_Q01_T_;
-        static IonEloss  PDF_Q01_Q_;
-        static MultiGaus PDF_Q02_T_;
-        static IonEloss  PDF_Q02_Q_;
+        static constexpr Double_t THRES_Q = 0.6;
+        static constexpr Double_t LMTL_CHI_Q = -3.0;
+        
+        static TmeMeas  PDF_Q01_T_;
+        static IonEloss PDF_Q01_Q_;
+        static TmeMeas  PDF_Q02_T_;
+        static IonEloss PDF_Q02_Q_;
 
     public :
         static constexpr Double_t TRANS_NS_TO_CM = 2.99792458e+01; // [ns] -> [cm]
-        static void SetOffsetTime(Double_t offset_t = Numc::ZERO<>) { OFFSET_T_ = offset_t; }
-        static void SetOffsetPath(Double_t offset_s = Numc::ZERO<>) { OFFSET_S_ = offset_s; }
+        static void SetOffsetPathTime(Double_t offset_s = Numc::ZERO<>, Double_t offset_t = Numc::ZERO<>, Bool_t use_tshf = false) { 
+            OFFSET_S_ = offset_s; OFFSET_T_ = offset_t; USE_TSHF_ = use_tshf; 
+        }
+        static const Bool_t&   USED_TSHF()  { return USE_TSHF_; }
         static const Double_t& OffsetTime() { return OFFSET_T_; }
         static const Double_t& OffsetPath() { return OFFSET_S_; }
 
     protected :
-        static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
+        static Bool_t   USE_TSHF_;
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
+        static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
 };
 
 

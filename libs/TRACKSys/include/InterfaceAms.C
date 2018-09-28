@@ -31,6 +31,7 @@ Bool_t                        Event::ArgSwEloss = PhyArg::OptEloss();
 UInt_t     Event::RunID    = 0;
 UInt_t     Event::EvID     = 0;
 UInt_t     Event::PtID     = 0;
+Short_t    Event::ChrgZ    = 1;
 AMSEventR* Event::Ev       = nullptr;
 TrTrackR*  Event::Trtk     = nullptr;
 BetaHR*    Event::Btah     = nullptr;
@@ -58,6 +59,7 @@ void Event::Clear() {
     RunID    = 0;
     EvID     = 0;
     PtID     = 0;
+    ChrgZ    = 1;
     Ev       = nullptr;
     Trtk     = nullptr;
     Btah     = nullptr;
@@ -68,7 +70,7 @@ void Event::Clear() {
 }
 
         
-Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
+Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Short_t chrg) {
     MagMgnt::Load();
     MatMgnt::Load();
 
@@ -88,6 +90,7 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     RunID = event->Run();
     EvID  = event->Event();
     PtID  = ipart;
+    ChrgZ = std::abs(chrg);
     Ev    = event;
     Trtk  = trtk;
     Btah  = btah;
@@ -202,16 +205,25 @@ Bool_t Event::BulidHitStTRK() {
         int cntqhy = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(1) : 0;
         TrClusterChargeLightH* trclschrgy = (cntqhy > 0) ? &trhitchrg->qcluster[1] : nullptr;
 
-        Short_t nsrx = 0, nsry = 0;
+        Short_t nsrx = (cntqhx > 0), nsry = (cntqhy > 0);
         Float_t sigadcx[5]; std::fill_n(sigadcx, 5, 0);
         Float_t sigadcy[5]; std::fill_n(sigadcy, 5, 0);
         for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; if (sigadcx[ii] > 0) nsrx++; }
         for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; if (sigadcy[ii] > 0) nsry++; }
+        if (nsrx > 0) {
+            for (int ii = 3; ii <= 4; ++ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii-1]) nsrx++; else break; }
+            for (int ii = 1; ii >= 0; --ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii+1]) nsrx++; else break; }
+        }
+        if (nsry > 0) {
+            for (int ii = 3; ii <= 4; ++ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii-1]) nsry++; else break; }
+            for (int ii = 1; ii >= 0; --ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii+1]) nsry++; else break; }
+        }
 			
+        Bool_t isInnTr = (layJ >= 2 && layJ <= 8);
         Bool_t scx = (xcls != nullptr);
         Bool_t scy = (ycls != nullptr);
 
-        HitStTRK hit(scx, scy, layJ);
+        HitStTRK hit(scx, scy, layJ, isInnTr);
         hit.set_coo(coo.x(), coo.y(), coo.z());
         hit.set_nsr(nsrx, nsry);
         
@@ -219,9 +231,10 @@ Bool_t Event::BulidHitStTRK() {
         else if (layJ == 9) TkHitL9 = hit;
         else                TkHitIn.push_back(hit);
         
-        HitStTRK hitQ(scx, scy, layJ);
+        HitStTRK hitQ(scx, scy, layJ, isInnTr);
         hitQ.set_coo(coo.x(), coo.y(), coo.z());
-        hitQ.set_q(qx, qy);
+        hitQ.set_nsr(nsrx, nsry);
+        hitQ.set_q(qx, qy, ChrgZ);
         
         if      (layJ == 1) TkHitL1Q = hitQ;
         else if (layJ == 9) TkHitL9Q = hitQ;
@@ -266,13 +279,13 @@ Bool_t Event::BulidHitStTOF() {
         
         HitStTOF hitQ(lay.at(it));
         hitQ.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
-        hitQ.set_q(chg.at(it));
+        hitQ.set_q(chg.at(it), ChrgZ);
         TfHitQ.push_back(hitQ);
         
         HitStTOF hitTQ(lay.at(it));
         hitTQ.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
         hitTQ.set_t(tme.at(it));
-        hitTQ.set_q(chg.at(it));
+        hitTQ.set_q(chg.at(it), ChrgZ);
         TfHitTQ.push_back(hitTQ);
     }
     if (TfHitT.size()  <= 2) return false;

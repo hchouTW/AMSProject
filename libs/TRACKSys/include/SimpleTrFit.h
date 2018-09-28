@@ -41,8 +41,8 @@ class VirtualSimpleTrFit : public TrFitPar, public ceres::FirstOrderFunction {
     public :
         VirtualSimpleTrFit(const TrFitPar& fitPar, const PhySt& part) :
             TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
-            numOfRes_(0), numOfPar_(0), numOfDof_(0), parIDtsft_(-1) 
-            { if (check_hits()) setvar(nseq_, PhyJb::DIMG + opt_tsft_); } 
+            numOfRes_(0), numOfPar_(0), numOfDof_(0)
+            { if (check_hits()) setvar(nseq_, PhyJb::DIMG); } 
     
     public :
         virtual bool Evaluate(const double* parameters, double* cost, double* gradient) const;
@@ -54,8 +54,6 @@ class VirtualSimpleTrFit : public TrFitPar, public ceres::FirstOrderFunction {
             numOfRes_ = nres; 
             numOfPar_ = npar;
             numOfDof_ = (numOfRes_ - numOfPar_);
-            if (opt_tsft_) parIDtsft_ = npar - 1;
-            else           parIDtsft_ = -1;
         }
 
     protected :
@@ -66,8 +64,6 @@ class VirtualSimpleTrFit : public TrFitPar, public ceres::FirstOrderFunction {
         Short_t numOfRes_;
         Short_t numOfPar_;
         Short_t numOfDof_;
-        
-        Short_t parIDtsft_;
 };
 
 
@@ -113,7 +109,6 @@ class SimpleTrFit : public TrFitPar {
     public :
         inline const Bool_t&   status() const { return succ_; }
         inline const PhySt&    part() const { return part_; }
-        inline const Double_t& tsft() const { return tsft_; }
         
         inline const std::vector<PhyArg>& args() const { return args_; }
 
@@ -144,7 +139,6 @@ class SimpleTrFit : public TrFitPar {
     protected :
         Bool_t              succ_;
         PhySt               part_;
-        Double_t            tsft_; // time shift [cm]
         std::vector<PhyArg> args_; 
         
         std::array<Short_t,  2> ndof_;

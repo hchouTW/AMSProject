@@ -25,7 +25,6 @@ SimpleTrFit& SimpleTrFit::operator=(const SimpleTrFit& rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
         part_ = rhs.part_;
-        tsft_ = rhs.tsft_;
         
         args_ = rhs.args_;
         stts_ = rhs.stts_;
@@ -50,7 +49,6 @@ void SimpleTrFit::clear() {
     succ_ = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
-    tsft_ = 0;
  
     args_.clear();
     stts_.clear();
@@ -104,7 +102,14 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fi
 Bool_t SimpleTrFit::analyticalFit() {
     // Global
     Double_t prefit_ortt = ((ortt_ == Orientation::kDownward) ? Numc::NEG<> : Numc::ONE<>);
-    
+        
+    Int_t firstHitID = -1;
+    for (UInt_t ih = 0; ih < hits_.size(); ++ih) {
+    if (hits_.at(ih)->scy()) { 
+        firstHitID = ih; break; 
+    }}
+    if (firstHitID < 0) return false;
+
     // Linear Fit on X
     // Equation of Motion
     // X  = PX + TX * (Z - RefZ)
@@ -114,7 +119,7 @@ Bool_t SimpleTrFit::analyticalFit() {
     // | PX |   | Sum(1)     Sum(dZ)   |^-1   | Sum(Xm)    |
     // |    | = |                      |    * |            |
     // | TX |   | Sum(dZ)    Sum(dZ^2) |      | Sum(dZ*Xm) |
-    Double_t prefit_pz = hits_.at(0)->cz();
+    Double_t prefit_pz = hits_.at(firstHitID)->cz();
     Double_t prefit_px = Numc::ZERO<>;
     Double_t prefit_tx = Numc::ZERO<>;
     {
@@ -160,7 +165,7 @@ Bool_t SimpleTrFit::analyticalFit() {
         Double_t Lambda = PROP_FACT * part_.info().chrg_to_atomic_mass(); 
         
         std::vector<UInt_t> mapID;
-        for (UInt_t ih = 0; ih < hits_.size(); ++ih)
+        for (UInt_t ih = firstHitID; ih < hits_.size(); ++ih)
             if (hits_.at(ih)->scy()) mapID.push_back(ih);
 
         std::vector<Double_t> stp(mapID.size(), Numc::ZERO<>);
@@ -265,8 +270,19 @@ Bool_t SimpleTrFit::analyticalFit() {
     if (part_.eta_abs() > LMTU_ETA)
         part_.set_eta(part_.eta_sign() * LMTU_ETA);
     survival_test_and_modify(part_, false);
+        
+    // Set to first Hit
+    part_.arg().reset(false, false);
+    Bool_t succ = PropMgnt::PropToZ(hits_.at(0)->cz(), part_);
+    part_.arg().reset(sw_mscat_, sw_eloss_);
+    if (succ) {
+        part_.set_state_with_cos(
+            part_.cx(), part_.cy(), hits_.at(0)->cz(),
+            part_.ux(), part_.uy(), part_.uz()
+        );
+    } 
     
-    return true;
+    return succ;
 }
 
 
@@ -420,7 +436,6 @@ Bool_t SimpleTrFit::simpleFit() {
 Bool_t SimpleTrFit::advancedSimpleCooFit() {
     if (!survival_test_and_modify(part_, sw_eloss_)) return false;
 
-    tsft_ = Numc::ZERO<>; 
     std::vector<double> params({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
 
     // CeresSolver: Problem
@@ -449,12 +464,7 @@ Bool_t SimpleTrFit::advancedSimpleCooFit() {
 
 
 Bool_t SimpleTrFit::advancedSimpleFit() {
-    Bool_t opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
-
-    tsft_ = Numc::ZERO<>; 
     std::vector<double> params({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
-    if (opt_tsft) params.push_back(tsft_); // time shift 
-    Short_t parIDtsft = (opt_tsft ? (params.size() - 1) : -1);
 
     // CeresSolver: Problem
     ceres::GradientProblem problem(new VirtualSimpleTrFit(dynamic_cast<TrFitPar&>(*this), part_));
@@ -476,7 +486,6 @@ Bool_t SimpleTrFit::advancedSimpleFit() {
 
     part_.set_state_with_uxy(params.at(0), params.at(1), part_.cz(), params.at(2), params.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(params.at(4));
-    if (opt_tsft) tsft_ = params.at(parIDtsft);
 
     return true;
 }
@@ -498,7 +507,7 @@ Bool_t SimpleTrFit::localSimpleFit() {
     
     // CeresSolver: Options
     ceres::Solver::Options options;
-    options.max_num_iterations = 20;
+    options.max_num_iterations = 25;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -524,16 +533,11 @@ Bool_t SimpleTrFit::localSimpleFit() {
 Bool_t SimpleTrFit::evolve() {
     if (Numc::EqualToZero(part_.mom())) return false;
     Bool_t opt_loc   = sw_mscat_; 
-    Bool_t opt_tsft  = (nmes_TOFt_ >= LMTN_TOF_T);
-    Short_t numOfPar = PhyJb::DIMG + opt_tsft;
+    Short_t numOfPar = PhyJb::DIMG;
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
-    HitStTOF::SetOffsetTime(Numc::ZERO<>);
-    HitStTOF::SetOffsetPath(Numc::ZERO<>);
-    
-    // time shift
-    Double_t tsft = (opt_tsft ? tsft_ : Numc::ZERO<>);
+    HitStTOF::SetOffsetPathTime();
     
     // Particle Status
     PhySt ppst(part_);
@@ -580,8 +584,10 @@ Bool_t SimpleTrFit::evolve() {
             
         // Hit Status
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
-            HitStTOF::SetOffsetPath(ppst.path());
-            HitStTOF::SetOffsetTime((ppst.time() - Hit<HitStTOF>::Cast(hit)->orgt()) + tsft);
+            HitStTOF::SetOffsetPathTime(
+                ppst.path(),
+                (ppst.time() - Hit<HitStTOF>::Cast(hit)->orgt())
+            );
             resetTOF = false;
         }
         hit->cal(ppst);
@@ -850,11 +856,7 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
     
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
-    HitStTOF::SetOffsetTime(Numc::ZERO<>);
-    HitStTOF::SetOffsetPath(Numc::ZERO<>);
-
-    // time shift
-    Double_t tsft = (opt_tsft_ ? parameters[parIDtsft_] : Numc::ZERO<>);
+    HitStTOF::SetOffsetPathTime();
 
     // Particle Status
     PhySt ppst(part_);
@@ -900,8 +902,10 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             
         // Hit Status
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
-            HitStTOF::SetOffsetPath(ppst.path());
-            HitStTOF::SetOffsetTime((ppst.time() - Hit<HitStTOF>::Cast(hit)->orgt()) + tsft);
+            HitStTOF::SetOffsetPathTime(
+                ppst.path(),
+                (ppst.time() - Hit<HitStTOF>::Cast(hit)->orgt())
+            );
             resetTOF = false;
         }
         hit->cal(ppst);
@@ -966,11 +970,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
 
             if (hasGrd && hitTOF->st()) hesIb(4, 4) += (hitTOF->divt_eta() * jbGG(4, 4)) * (hitTOF->divt_eta() * jbGG(4, 4));
             if (hasGrd && hitTOF->sq()) hesIb(4, 4) += (hitTOF->divq_eta() * jbGG(4, 4)) * (hitTOF->divq_eta() * jbGG(4, 4));
-            
-            if (hasGrd && hitTOF->st() && opt_tsft_) grdIb(parIDtsft_) += hitTOF->divtsft() * hitTOF->nrmt(); // time shift
-            if (hasGrd && hitTOF->st() && opt_tsft_) hesIb(parIDtsft_, parIDtsft_) += hitTOF->divtsft() * hitTOF->divtsft(); // time shift
-            if (hasGrd && hitTOF->st() && opt_tsft_) hesIb(4, parIDtsft_) += (hitTOF->divt_eta() * jbGG(4, 4)) * hitTOF->divtsft(); // time shift
-            if (hasGrd && hitTOF->st() && opt_tsft_) hesIb(parIDtsft_, 4) += hitTOF->divtsft() * (hitTOF->divt_eta() * jbGG(4, 4)); // time shift
         }
         
         // RICH

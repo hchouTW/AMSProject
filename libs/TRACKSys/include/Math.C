@@ -146,12 +146,68 @@ MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long dou
     bound_.second = std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5);
     robust_ = robust;
     eftsgm_ = find_eftsgm();
-    
-    // find max sigma
-    //long double max_sgm = std::max_element(
-    //            multi_gaus_.begin(), multi_gaus_.end(), 
-    //            [](const std::pair<long double, long double>& gauss1, const std::pair<long double, long double>& gauss2) { return (gauss1.second < gauss2.second); }
-    //        )->second;
+}
+
+MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5, long double wgt6, long double sgm6) : MultiGaus()  {
+    long double norm = wgt1 + wgt2 + wgt3 + wgt4 + wgt5 + wgt6;
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt5/norm, sgm5));
+    multi_gaus_.push_back(std::make_pair(wgt6/norm, sgm6));
+    bound_.first  = std::min(std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6);
+    bound_.second = std::max(std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6);
+    robust_ = robust;
+    eftsgm_ = find_eftsgm();
+}
+
+MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5, long double wgt6, long double sgm6, long double wgt7, long double sgm7) : MultiGaus()  {
+    long double norm = wgt1 + wgt2 + wgt3 + wgt4 + wgt5 + wgt6 + wgt7;
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt5/norm, sgm5));
+    multi_gaus_.push_back(std::make_pair(wgt6/norm, sgm6));
+    multi_gaus_.push_back(std::make_pair(wgt7/norm, sgm7));
+    bound_.first  = std::min(std::min(std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7);
+    bound_.second = std::max(std::max(std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7);
+    robust_ = robust;
+    eftsgm_ = find_eftsgm();
+}
+        
+MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5, long double wgt6, long double sgm6, long double wgt7, long double sgm7, long double wgt8, long double sgm8) : MultiGaus()  {
+    long double norm = wgt1 + wgt2 + wgt3 + wgt4 + wgt5 + wgt6 + wgt7 + wgt8;
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt5/norm, sgm5));
+    multi_gaus_.push_back(std::make_pair(wgt6/norm, sgm6));
+    multi_gaus_.push_back(std::make_pair(wgt7/norm, sgm7));
+    multi_gaus_.push_back(std::make_pair(wgt8/norm, sgm8));
+    bound_.first  = std::min(std::min(std::min(std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7), sgm8);
+    bound_.second = std::max(std::max(std::max(std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7), sgm8);
+    robust_ = robust;
+    eftsgm_ = find_eftsgm();
+}
+        
+MultiGaus::MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3, long double wgt4, long double sgm4, long double wgt5, long double sgm5, long double wgt6, long double sgm6, long double wgt7, long double sgm7, long double wgt8, long double sgm8, long double wgt9, long double sgm9) : MultiGaus()  {
+    long double norm = wgt1 + wgt2 + wgt3 + wgt4 + wgt5 + wgt6 + wgt7 + wgt8 + wgt9;
+    multi_gaus_.push_back(std::make_pair(wgt1/norm, sgm1));
+    multi_gaus_.push_back(std::make_pair(wgt2/norm, sgm2));
+    multi_gaus_.push_back(std::make_pair(wgt3/norm, sgm3));
+    multi_gaus_.push_back(std::make_pair(wgt4/norm, sgm4));
+    multi_gaus_.push_back(std::make_pair(wgt5/norm, sgm5));
+    multi_gaus_.push_back(std::make_pair(wgt6/norm, sgm6));
+    multi_gaus_.push_back(std::make_pair(wgt7/norm, sgm7));
+    multi_gaus_.push_back(std::make_pair(wgt8/norm, sgm8));
+    multi_gaus_.push_back(std::make_pair(wgt9/norm, sgm9));
+    bound_.first  = std::min(std::min(std::min(std::min(std::min(std::min(std::min(std::min(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7), sgm8), sgm9);
+    bound_.second = std::max(std::max(std::max(std::max(std::max(std::max(std::max(std::max(sgm1, sgm2), sgm3), sgm4), sgm5), sgm6), sgm7), sgm8), sgm9);
+    robust_ = robust;
+    eftsgm_ = find_eftsgm();
 }
         
 

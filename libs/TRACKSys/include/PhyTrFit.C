@@ -99,13 +99,12 @@ Bool_t PhyTrFit::simpleFit() {
     SimpleTrFit simple(dynamic_cast<TrFitPar&>(*this), true);
     if (simple.status()) {
         part_ = simple.part();
-        tsft_ = simple.tsft();
         args_ = simple.args();
     }
     else {
-        tsft_ = Numc::ZERO<>;
         args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
     }
+    tsft_ = Numc::ZERO<>;
     return simple.status();
 }
 
@@ -149,6 +148,7 @@ Bool_t PhyTrFit::physicalFit() {
     ceres::Solver::Options options;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     //options.trust_region_strategy_type = ceres::DOGLEG;
+    options.max_num_iterations = 75;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -201,8 +201,7 @@ Bool_t PhyTrFit::evolve() {
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
-    HitStTOF::SetOffsetTime(Numc::ZERO<>);
-    HitStTOF::SetOffsetPath(Numc::ZERO<>);
+    HitStTOF::SetOffsetPathTime();
     
     // time shift
     Double_t tsft = (opt_tsft ? tsft_ : Numc::ZERO<>);
@@ -263,8 +262,11 @@ Bool_t PhyTrFit::evolve() {
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
-                HitStTOF::SetOffsetPath(ppst.path());
-                HitStTOF::SetOffsetTime((ppst.time() - firstHitTOF->orgt()) + tsft);
+                HitStTOF::SetOffsetPathTime(
+                    ppst.path(), 
+                    (ppst.time() - firstHitTOF->orgt()) + tsft, 
+                    true
+                );
                 resetTOF = false;
             }
         }
@@ -381,8 +383,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
-    HitStTOF::SetOffsetTime(Numc::ZERO<>);
-    HitStTOF::SetOffsetPath(Numc::ZERO<>);
+    HitStTOF::SetOffsetPathTime();
 
     // time shift
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft_] : Numc::ZERO<>);
@@ -460,8 +461,11 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
-                HitStTOF::SetOffsetPath(ppst.path());
-                HitStTOF::SetOffsetTime((ppst.time() - firstHitTOF->orgt()) + tsft);
+                HitStTOF::SetOffsetPathTime(
+                    ppst.path(),
+                    (ppst.time() - firstHitTOF->orgt()) + tsft,
+                    true
+                );
                 resetTOF = false;
             }
         }
