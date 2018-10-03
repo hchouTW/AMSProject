@@ -80,7 +80,13 @@ bool RecEvent::rebuild(AMSEventR * event) {
         }
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
-		
+
+    MCEventgR* primaryMC = event->GetPrimaryMC();
+    if (primaryMC != nullptr) {
+        zin  = static_cast<int>(std::abs(primaryMC->Charge));
+        mass = primaryMC->Mass;
+    }
+
 	// ECAL Information
 	// pre-selection (ECAL)
 	if (TkStID >= 0 && iEcalShower >= 0) {
@@ -850,13 +856,13 @@ void EventTrk::setEnvironment() {
 #if Debug == true
 	std::cerr << "Debug : Now, EventTrk::setEnvironment()\n";
 #endif
+	
+    // Enable latest alignment
+	TkDBc::UseFinal();
 
 	// Disable overwriting of datacards from file
 	TRMCFFKEY.ReadFromFile = 0;
 	TRFITFFKEY.ReadFromFile = 0;
-
-	// Enable latest alignment
-	TkDBc::UseFinal();
 }
 
 bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -942,11 +948,19 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             int cntqhy = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(1) : 0;
             TrClusterChargeLightH* trclschrgy = (cntqhy > 0) ? &trhitchrg->qcluster[1] : nullptr;
 
-            Short_t nsrx = 0, nsry = 0;
+            Short_t nsrx = (cntqhx > 0), nsry = (cntqhy > 0);
             Float_t sigadcx[5]; std::fill_n(sigadcx, 5, 0);
             Float_t sigadcy[5]; std::fill_n(sigadcy, 5, 0);
-            for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; if (sigadcx[ii] > 0) nsrx++; }
-            for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; if (sigadcy[ii] > 0) nsry++; }
+            for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; }
+            for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; }
+            if (nsrx > 0) {
+                for (int ii = 3; ii <= 4; ++ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii-1]) nsrx++; else break; }
+                for (int ii = 1; ii >= 0; --ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii+1]) nsrx++; else break; }
+            }
+            if (nsry > 0) {
+                for (int ii = 3; ii <= 4; ++ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii-1]) nsry++; else break; }
+                for (int ii = 1; ii >= 0; --ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii+1]) nsry++; else break; }
+            }
 
 			HitTRKInfo hit;
 			hit.layJ    = ilay+1;
@@ -1114,17 +1128,18 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::FullSpan });
 
         TrackSys::PartType partType;
-        if (recEv.zin <= 1) partType = TrackSys::PartType::Proton;
-        if (recEv.zin >= 2) partType = TrackSys::PartType::Helium4;
+        if (recEv.zin == 1 && recEv.mass < 0.01) partType = TrackSys::PartType::Electron;
+        else if (recEv.zin <= 1) partType = TrackSys::PartType::Proton;
+        else if (recEv.zin >= 2) partType = TrackSys::PartType::Helium4;
 
 	    for (int patt = 0; patt < _npatt; ++patt) {
             fTrk.hcTr.at(patt) = processHCTr( // Tracker
                 partType, TrackSys::AmsTkOpt(trPatt.at(patt))); 
             
-            //fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
-            //    TrackSys::PartType::Proton,
-            //    TrackSys::AmsTkOpt(trPatt.at(patt), true),
-            //    TrackSys::AmsTfOpt(true));
+            fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
+                TrackSys::PartType::Proton,
+                TrackSys::AmsTkOpt(trPatt.at(patt), true),
+                TrackSys::AmsTfOpt(true));
         }
     }
 
@@ -2144,10 +2159,11 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         TRFITFFKEY.Zshift = 2; // Enable the dZ correction
     }
     else if (EventBase::checkEventMode(EventBase::MC)) {
-        TRFITFFKEY.Zshift = -1; // Disable the dZ correction
-        TRCLFFKEY.ClusterCofGOpt = 1;
         event->SetDefaultMCTuningParameters();
         TrExtAlignDB::SmearExtAlign(); // MC Smear Ext-Layer
+        TRCLFFKEY.UseSensorAlign = 0;
+        TRCLFFKEY.ClusterCofGOpt = 1;
+        TRFITFFKEY.Zshift = -1; // Disable the dZ correction
 	}
     TRFITFFKEY.ErcHeY = 0;
 
@@ -2155,6 +2171,10 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Fast Preselection  ----//
 	//-----------------------------//
 	//COUT("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
+
+	// ~0~ (Based on MC)
+    MCEventgR* primaryMC = event->GetPrimaryMC();
+	if (primaryMC == nullptr) return -1;
 
 	// ~1~ (Based on BetaH(Beta))
 	TofRecH::BuildOpt = 0; // normal
@@ -2229,7 +2249,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     
     TrackSys::PhyArg::SetOpt(true, true);
     TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward);
-    if (!TrackSys::AmsEvent::Load(event)) return -10001;
+    if (!TrackSys::AmsEvent::Load(event, 0, recEv.zin)) return -10001;
 
 	return 0;
 }
@@ -2253,7 +2273,6 @@ int DataSelection::analysisEvent(AMSEventR * event) {
 
 //---- RunTagOperator ----//
 RunTagOperator::RunTagOperator() { init(); }
-
 RunTagOperator::~RunTagOperator() { init(); }
 
 void RunTagOperator::init() {

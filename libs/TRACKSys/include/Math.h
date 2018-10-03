@@ -225,19 +225,35 @@ namespace TrackSys {
 class Robust {
     public :
         enum class Opt { OFF = 0, ON = 1 };
-    
+
     public :
-        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rate = Numc::HALF) : opt_(opt), thres_(thres), rate_(rate) { if (Numc::Compare(thres_) <= 0 || Numc::Compare(rate_) < 0 || Numc::Compare(rate_, Numc::ONE<long double>) > 0) { opt_ = Opt::OFF; thres = Numc::FOUR<long double>; rate_ = Numc::HALF; } }
+        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rate = Numc::HALF, long double ghost_thres = Numc::ZERO<long double>) : 
+        opt_(opt), robust_opt_(Opt::OFF), thres_(Numc::FOUR<long double>), rate_(Numc::HALF), ghost_opt_(Opt::OFF), ghost_thres_(Numc::ZERO<long double>) {
+            if (Opt::OFF == opt_) return;
+            
+            robust_opt_ = (Numc::Compare(thres) > 0 && Numc::Compare(rate) > 0 && Numc::Compare(rate_, Numc::ONE<long double>) <= 0) ? Opt::ON : Opt::OFF;
+            if (Opt::ON == robust_opt_) { thres_ = thres; rate_ = rate; }
+            
+            ghost_opt_ = (Numc::Compare(ghost_thres) > 0) ? Opt::ON : Opt::OFF;
+            if (Opt::ON == ghost_opt_) ghost_thres_ = ghost_thres;
+
+            opt_ = (Opt::ON == robust_opt_ || Opt::ON == ghost_opt_) ? Opt::ON : Opt::OFF;
+        }
         ~Robust() {}
 
     public :
         const Opt& opt() const { return opt_; }
-        std::array<long double, 3> minimizer(long double nrm) const;
+        std::array<long double, 4> minimizer(long double chi) const;
         
     private :
         Opt         opt_;
+
+        Opt         robust_opt_;
         long double thres_;
         long double rate_;
+
+        Opt         ghost_opt_;
+        long double ghost_thres_;
 };
 
 } // namesapce TrackSys
@@ -270,7 +286,7 @@ class MultiGaus {
         inline const long double eftsgm() const { return eftsgm_; }
         long double chi(long double r) const;
 
-        std::array<long double, 3> minimizer(long double r = 0.) const; 
+        std::array<long double, 4> minimizer(long double r = 0.) const; 
         long double rndm();
 
     protected :
@@ -304,7 +320,7 @@ class LandauGaus {
         LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        std::array<long double, 3> minimizer(long double x) const;
+        std::array<long double, 4> minimizer(long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }
@@ -354,20 +370,6 @@ const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P
     { 0.0439, 0.0710, 0.1103, 0.1645, 0.2357, 0.3247, 0.4296, 0.5461, 0.6670, 0.7827,  
       0.8825, 0.9560, 0.9950, 0.9950, 0.9560, 0.8825, 0.7827, 0.6670, 0.5461, 0.4296,  
       0.3247, 0.2357, 0.1645, 0.1103, 0.0710, 0.0439 };
-
-//static constexpr int GAUS_CONV_N = 51;
-//const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
-//    { -2.5, -2.4, -2.3, -2.2, -2.1, -2.0, -1.9, -1.8, -1.7, -1.6, 
-//      -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, -0.6, 
-//      -0.5, -0.4, -0.3, -0.2, -0.1,  0.0,  0.1,  0.2,  0.3,  0.4, 
-//       0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4, 
-//       1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,  2.4,  2.5 };
-//const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P 
-//    { 0.0439, 0.0561, 0.0710, 0.0889, 0.1103, 0.1353, 0.1645, 0.1979, 0.2357, 0.2780, 
-//      0.3247, 0.3753, 0.4296, 0.4868, 0.5461, 0.6065, 0.6670, 0.7261, 0.7827, 0.8353, 
-//      0.8825, 0.9231, 0.9560, 0.9802, 0.9950, 1.0000, 0.9950, 0.9802, 0.9560, 0.9231, 
-//      0.8825, 0.8353, 0.7827, 0.7261, 0.6670, 0.6065, 0.5461, 0.4868, 0.4296, 0.3753, 
-//      0.3247, 0.2780, 0.2357, 0.1979, 0.1645, 0.1353, 0.1103, 0.0889, 0.0710, 0.0561, 0.0439 };
 
 } // namesapce TrackSys
 

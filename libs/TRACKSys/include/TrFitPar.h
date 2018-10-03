@@ -8,6 +8,7 @@ namespace TrackSys {
 class TrFitPar {
     public : 
         static Double_t NormQuality(Double_t nchi, Short_t ndof);
+        static Double_t NormQuality(Double_t nchi, Double_t ndof);
 
     public :
         enum class Orientation {

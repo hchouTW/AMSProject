@@ -32,6 +32,21 @@ Double_t TrFitPar::NormQuality(Double_t nchi, Short_t ndof) {
     if (Numc::Valid(xfunc)) return xfunc;
     return Numc::ZERO<>;
 }
+
+
+Double_t TrFitPar::NormQuality(Double_t nchi, Double_t ndof) {
+    if (Numc::Compare(nchi) < 0 || Numc::Compare(ndof) <= 0) return Numc::ZERO<>;
+    Double_t chi = nchi * ndof;
+    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+    if (Numc::Compare(ndof, Numc::TWO<>) <= 0) return std::sqrt(nchi);
+    Double_t qmin  = (ndof - Numc::TWO<>);
+    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
+    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
+    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
+    Double_t xfunc = sign * std::sqrt(qfunc / ndof);
+    if (Numc::Valid(xfunc)) return xfunc;
+    return Numc::ZERO<>;
+}
         
     
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {

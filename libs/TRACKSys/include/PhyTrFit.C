@@ -235,6 +235,9 @@ Bool_t PhyTrFit::evolve() {
     
     Short_t cnt_nhit =  0;
     Short_t cnt_nseg = -1;
+    Double_t cnt_ghost_cx = 0.0;
+    Double_t cnt_ghost_cy = 0.0;
+    Double_t cnt_ghost_ib = 0.0;
     PhySt nearPpst                       = ppst;
     PhyJb::SMtxDGG nearJbGG              = jbGG;
     std::vector<PhyJb::SMtxDGL> nearJbGL = jbGL;
@@ -299,6 +302,8 @@ Bool_t PhyTrFit::evolve() {
                     }
                 }
             } // Local
+            cnt_ghost_cx += hit->gstcx();
+            cnt_ghost_cy += hit->gstcy();
         } // hasCxy
          
         // TRK
@@ -308,6 +313,7 @@ Bool_t PhyTrFit::evolve() {
             if (hitTRK->sqy()) chi_ib += hitTRK->chiqy() * hitTRK->chiqy();
             if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDeta) += hitTRK->divqx_eta() * jbGG(4, 4);
             if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDeta) += hitTRK->divqy_eta() * jbGG(4, 4);
+            cnt_ghost_ib += (hitTRK->gstqx() + hitTRK->gstqy());
         }
 
         // TOF
@@ -318,6 +324,7 @@ Bool_t PhyTrFit::evolve() {
             if (hitTOF->st()) jb(hitTOF->seqIDt(), parIDeta) += hitTOF->divt_eta() * jbGG(4, 4);
             if (hitTOF->sq()) jb(hitTOF->seqIDq(), parIDeta) += hitTOF->divq_eta() * jbGG(4, 4);
             if (hitTOF->st() && opt_tsft) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
+            cnt_ghost_ib += (hitTOF->gstt() + hitTOF->gstq());
         }
         
         // RICH
@@ -325,6 +332,7 @@ Bool_t PhyTrFit::evolve() {
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) chi_ib += hitRICH->chiib() * hitRICH->chiib();
             if (hitRICH->sib()) jb(hitRICH->seqIDib(), parIDeta) += hitRICH->divib_eta() * jbGG(4, 4);
+            cnt_ghost_ib += hitRICH->gstib();
         }
         
         // TRD
@@ -346,19 +354,23 @@ Bool_t PhyTrFit::evolve() {
     if (cnt_nseg != nseg_) return false;
 
     Double_t chi       = (chi_cx + chi_cy + chi_ib);
-    Double_t nchi_tt   = (chi / static_cast<Double_t>(ndof_tt_));
-    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_.at(1))) : 0);
+    Double_t ndof_tt   = static_cast<Double_t>(ndof_tt_) - (cnt_ghost_cx + cnt_ghost_cy + cnt_ghost_ib);
+    Double_t nchi_tt   = (chi / ndof_tt);
 
+    Double_t ndof_cyib = static_cast<Double_t>(ndof_.at(1)) - (cnt_ghost_cy + cnt_ghost_ib);
+    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / ndof_cyib) : 0);
 
-    nchi_cx_ = ((ndof_cx_ > 0) ? (chi_cx / static_cast<Double_t>(ndof_cx_)) : 0);
-    nchi_cy_ = ((ndof_cy_ > 0) ? (chi_cy / static_cast<Double_t>(ndof_cy_)) : 0);
-    nchi_ib_ = ((ndof_ib_ > 0) ? (chi_ib / static_cast<Double_t>(ndof_ib_)) : 0);
+    Double_t ndof_cx = static_cast<Double_t>(ndof_cx_) - cnt_ghost_cx;
+
+    nchi_cx_ = ((ndof_cx_ > 0) ? (chi_cx / (static_cast<Double_t>(ndof_cx_) - cnt_ghost_cx)) : 0);
+    nchi_cy_ = ((ndof_cy_ > 0) ? (chi_cy / (static_cast<Double_t>(ndof_cy_) - cnt_ghost_cy)) : 0);
+    nchi_ib_ = ((ndof_ib_ > 0) ? (chi_ib / (static_cast<Double_t>(ndof_ib_) - cnt_ghost_ib)) : 0);
     nchi_tt_ = nchi_tt;
     
     nchi_.at(0) = nchi_cx_;
     nchi_.at(1) = nchi_cyib;
-    quality_.at(0) = TrFitPar::NormQuality(nchi_.at(0), ndof_.at(0));
-    quality_.at(1) = TrFitPar::NormQuality(nchi_.at(1), ndof_.at(1));
+    quality_.at(0) = TrFitPar::NormQuality(nchi_.at(0), ndof_cx);
+    quality_.at(1) = TrFitPar::NormQuality(nchi_.at(1), ndof_cyib);
    
     // Local States
     for (auto&& stt : stts) stt.arg().clear();

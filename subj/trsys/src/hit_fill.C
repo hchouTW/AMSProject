@@ -2,7 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Sep25/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -70,19 +71,41 @@ int main(int argc, char * argv[]) {
     Hist* hEvt = Hist::New("hEvt", HistAxis(AXmom, AXcut));
   
     // Coo
-    Axis AXres("res [#mum]", 1200, -200., 200.);
+    Axis AXres("res [#mum]", 1500, -300., 300.);
     
-    Hist* hMrx   = Hist::New("hMrx",   HistAxis(AXigb, AXres));
-    Hist* hMrxNN = Hist::New("hMrxNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxInn   = Hist::New("hMrxInn",   HistAxis(AXigb, AXres));
+    Hist* hMrxInnNN = Hist::New("hMrxInnNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxInnN1 = Hist::New("hMrxInnN1", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxInnN2 = Hist::New("hMrxInnN2", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxInnN3 = Hist::New("hMrxInnN3", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxInnN4 = Hist::New("hMrxInnN4", HistAxis(AXres, "Events/Bin"));
+  
+    Hist* hMryInn   = Hist::New("hMryInn",   HistAxis(AXigb, AXres));
+    Hist* hMryInnNN = Hist::New("hMryInnNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryInnN1 = Hist::New("hMryInnN1", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryInnN2 = Hist::New("hMryInnN2", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryInnN3 = Hist::New("hMryInnN3", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryInnN4 = Hist::New("hMryInnN4", HistAxis(AXres, "Events/Bin"));
     
-    Hist* hMry   = Hist::New("hMry",   HistAxis(AXigb, AXres));
-    Hist* hMryNN = Hist::New("hMryNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxExt   = Hist::New("hMrxExt",   HistAxis(AXigb, AXres));
+    Hist* hMrxExtNN = Hist::New("hMrxExtNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxExtN1 = Hist::New("hMrxExtN1", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxExtN2 = Hist::New("hMrxExtN2", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxExtN3 = Hist::New("hMrxExtN3", HistAxis(AXres, "Events/Bin"));
+    Hist* hMrxExtN4 = Hist::New("hMrxExtN4", HistAxis(AXres, "Events/Bin"));
+    
+    Hist* hMryExt   = Hist::New("hMryExt",   HistAxis(AXigb, AXres));
+    Hist* hMryExtNN = Hist::New("hMryExtNN", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryExtN1 = Hist::New("hMryExtN1", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryExtN2 = Hist::New("hMryExtN2", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryExtN3 = Hist::New("hMryExtN3", HistAxis(AXres, "Events/Bin"));
+    Hist* hMryExtN4 = Hist::New("hMryExtN4", HistAxis(AXres, "Events/Bin"));
 
-    Axis AXTKq("TKq", 800, 0.001, 10.0 * info.chrg() * info.chrg());
+    Axis AXTKq("TKq", 1200, 0.6 * info.chrg() * info.chrg(), 10.0 * info.chrg() * info.chrg());
     Hist* hTKqx = Hist::New("hTKqx", HistAxis(AXigb, AXTKq));
     Hist* hTKqy = Hist::New("hTKqy", HistAxis(AXigb, AXTKq));
     
-    Axis AXTFq("TFq", 800, 0.001, 8.0 * info.chrg() * info.chrg());
+    Axis AXTFq("TFq", 1200, 0.5 * info.chrg() * info.chrg(), 8.0 * info.chrg() * info.chrg());
     Hist* hTFq = Hist::New("hTFq", HistAxis(AXigb, AXTFq));
     
     Axis AXTFtme("TFtme", 800, -25, 25);
@@ -128,14 +151,14 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 5);
 
         // Charge
-        //if (std::abs(info.chrg()) == 1) {
-        //    if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        //    if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
-        //}
-        //else {
-        //    if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
-        //    if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
-        //}
+        if (std::abs(info.chrg()) == 1) {
+            if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+            if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        }
+        else {
+            if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+            if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        }
         
         hCut->fillH2D(fG4mc->primPart.mom, 6);
 
@@ -147,8 +170,8 @@ int main(int argc, char * argv[]) {
         if (fTof->numOfInTimeCls > 4) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 8);
         
-        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 1 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
+        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 0) continue; 
         hCut->fillH2D(fG4mc->primPart.mom, 9);
 
         // No Interaction
@@ -176,7 +199,7 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mpRh = nullptr;
         for (auto&& seg : fG4mc->primPart.segsRh) { mpRh = &seg; }
         
-        for (Int_t it = 2; it < 8; ++it) {
+        for (Int_t it = 0; it <= 8; ++it) {
             if (!rcTk[it] || !mhTk[it] || !mpTk[it]) continue;
             Double_t igb = (fG4mc->primPart.mass / mpTk[it]->mom);
             if (igb < AXigb.min() || igb > AXigb.max()) continue;
@@ -187,14 +210,40 @@ int main(int argc, char * argv[]) {
             if (rcTk[it]->chrg[1] < 0) continue;
 
             constexpr Double_t CM2UM = 1.0e4;
-            hMrx->fillH2D(igb, CM2UM * res[0]);
-            hMry->fillH2D(igb, CM2UM * res[1]);
-            if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
-               hMrxNN->fillH1D(CM2UM * res[0]);
-               hMryNN->fillH1D(CM2UM * res[1]);
+            if (it >= 2 && it <= 7) {
+                hMrxInn->fillH2D(igb, CM2UM * res[0]);
+                hMryInn->fillH2D(igb, CM2UM * res[1]);
+                if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
+                   hMrxInnNN->fillH1D(CM2UM * res[0]);
+                   hMryInnNN->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 1) hMrxInnN1->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 1) hMryInnN1->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 2) hMrxInnN2->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 2) hMryInnN2->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 3) hMrxInnN3->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 3) hMryInnN3->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] >= 4) hMrxInnN4->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] >= 4) hMryInnN4->fillH1D(CM2UM * res[1]);
+                }
+                hTKqx->fillH2D(igb, rcTk[it]->chrg[0] * rcTk[it]->chrg[0]);
+                hTKqy->fillH2D(igb, rcTk[it]->chrg[1] * rcTk[it]->chrg[1]);
             }
-            hTKqx->fillH2D(igb, rcTk[it]->chrg[0] * rcTk[it]->chrg[0]);
-            hTKqy->fillH2D(igb, rcTk[it]->chrg[1] * rcTk[it]->chrg[1]);
+            else if (it == 0 || it == 8) {
+                hMrxExt->fillH2D(igb, CM2UM * res[0]);
+                hMryExt->fillH2D(igb, CM2UM * res[1]);
+                if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
+                   hMrxExtNN->fillH1D(CM2UM * res[0]);
+                   hMryExtNN->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 1) hMrxExtN1->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 1) hMryExtN1->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 2) hMrxExtN2->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 2) hMryExtN2->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] == 3) hMrxExtN3->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] == 3) hMryExtN3->fillH1D(CM2UM * res[1]);
+                   if (rcTk[it]->nsr[0] >= 4) hMrxExtN4->fillH1D(CM2UM * res[0]);
+                   if (rcTk[it]->nsr[1] >= 4) hMryExtN4->fillH1D(CM2UM * res[1]);
+                }
+            }
         }
         
         for (Int_t it = 0; it < 4; ++it) {

@@ -896,7 +896,7 @@ class TRK : public TObject {
             kfTr = std::vector<KFTrackInfo>(4);
             hcTr = std::vector<HCTrackInfo>(4);
             
-            //hcTrTF = std::vector<HCTrackInfo>(4);
+            hcTrTF = std::vector<HCTrackInfo>(4);
 		}
 
 	public :
@@ -930,7 +930,7 @@ class TRK : public TObject {
         // HYChou [Inn InnL1 InnL9 FS]
         std::vector<HCTrackInfo> hcTr;
         
-        //std::vector<HCTrackInfo> hcTrTF;
+        std::vector<HCTrackInfo> hcTrTF;
 
 	ClassDef(TRK, 9)
 };

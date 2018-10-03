@@ -9,9 +9,9 @@
 
 namespace TrackSys {
 
-std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta) const {
+std::array<long double, 4> IonEloss::minimizer(long double x, long double igmbta) const {
     if (Numc::Compare(x) <= 0 || Numc::Compare(igmbta) <= 0)
-        return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
+        return std::array<long double, 4>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double>, Numc::ONE<long double> });
     long double ibsqr = (Numc::ONE<long double> + igmbta * igmbta);
     
     // PDF parameters
@@ -25,18 +25,20 @@ std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta
 
     // approximate Landau-Gaussian
     LandauGaus ldgaus(robust_, kpa, mpv, sgm, mode, fluc_);
-    std::array<long double, 3>&& lg_par = ldgaus.minimizer(x);
+    std::array<long double, 4>&& lg_par = ldgaus.minimizer(x);
     
     long double chi = lg_par.at(0);          // res chiz  (z)
     long double nrm = lg_par.at(1);          // res normz (z)
     long double div = lg_par.at(2) * divnrm; // div r/z * div z/igmbta
-    
+    long double wgt = lg_par.at(3);
+
     if (!Numc::Valid(chi) || !Numc::Valid(nrm) || !Numc::Valid(div)) { 
         chi = Numc::ZERO<long double>;
         nrm = Numc::ZERO<long double>;
         div = Numc::ONE<long double>;
+        wgt = Numc::ONE<long double>;
     }
-    return std::array<long double, 3>({ chi, nrm, div });
+    return std::array<long double, 4>({ chi, nrm, div, wgt });
 }
         
 long double IonEloss::get_kpa(long double igmbta, long double ibsqr) const {

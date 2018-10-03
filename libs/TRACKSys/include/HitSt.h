@@ -26,6 +26,7 @@ class VirtualHitSt {
         
         inline void set_coo(Double_t cx, Double_t cy, Double_t cz) { 
             coo_ = std::move(SVecD<3>(cx, cy, cz)); 
+            gstc_.fill(Numc::ZERO<>); 
             chic_.fill(Numc::ZERO<>); 
             nrmc_.fill(Numc::ZERO<>); 
             divc_.fill(Numc::ZERO<>); 
@@ -61,6 +62,9 @@ class VirtualHitSt {
         inline const Double_t& ecx() const { return erc_(0); }
         inline const Double_t& ecy() const { return erc_(1); }
         
+        inline const Double_t& gstcx() const { return gstc_[0]; }
+        inline const Double_t& gstcy() const { return gstc_[1]; }
+        
         inline const Double_t& chicx() const { return chic_[0]; }
         inline const Double_t& chicy() const { return chic_[1]; }
         
@@ -94,6 +98,7 @@ class VirtualHitSt {
         SVecD<3> coo_;    // [cm] coord
         SVecD<2> erc_;    // [cm] error
         
+        std::array<Double_t, 2> gstc_; // coord ghost
         std::array<Double_t, 2> chic_; // coord chi
         std::array<Double_t, 2> nrmc_; // coord norm
         std::array<Double_t, 2> divc_; // coord div
@@ -135,6 +140,7 @@ class HitStTRK : public VirtualHitSt {
             side_q_[1] = (Numc::Compare(qy) > (chrgz * THRES_Q));
             q_[0] = (side_q_[0] ? qx : Numc::ZERO<>);
             q_[1] = (side_q_[1] ? qy : Numc::ZERO<>);
+            gstq_.fill(Numc::ZERO<>);
             chiq_.fill(Numc::ZERO<>);
             nrmq_.fill(Numc::ZERO<>);
             divq_.fill(Numc::ZERO<>);
@@ -148,6 +154,9 @@ class HitStTRK : public VirtualHitSt {
 
         inline const Bool_t& sqx() const { return side_q_[0]; }
         inline const Bool_t& sqy() const { return side_q_[1]; }
+        
+        inline const Double_t& gstqx() const { return gstq_[0]; }
+        inline const Double_t& gstqy() const { return gstq_[1]; }
         
         inline const Double_t& chiqx() const { return chiq_[0]; }
         inline const Double_t& chiqy() const { return chiq_[1]; }
@@ -175,6 +184,7 @@ class HitStTRK : public VirtualHitSt {
         std::array<Bool_t, 2>   side_q_;
         std::array<Double_t, 2> q_; // ADC
 
+        std::array<Double_t, 2> gstq_; // q ghost (x, y)
         std::array<Double_t, 2> chiq_; // q chi (x, y)
         std::array<Double_t, 2> nrmq_; // q nrom (x, y)
         std::array<Double_t, 4> divq_; // q div (igmbta) (x, y) [eta, igb]
@@ -186,7 +196,6 @@ class HitStTRK : public VirtualHitSt {
     
     protected :
         static constexpr Double_t THRES_Q = 0.8;
-        static constexpr Double_t LMTL_CHI_Q = -3.0;
 
         static MultiGaus PDF_Q01_CX_INN_;
         static MultiGaus PDF_Q01_CY_INN_;
@@ -244,6 +253,7 @@ class HitStTOF : public VirtualHitSt {
             side_t_  = (Numc::Compare(t) >= 0);
             orgt_    = (side_t_ ? t : Numc::ZERO<>);
             tsft_    = (side_t_ ? (orgt_ + OFFSET_T_) : Numc::ZERO<>);
+            gstt_    = Numc::ZERO<>;
             chit_    = Numc::ZERO<>;
             nrmt_    = Numc::ZERO<>;
             divtsft_ = Numc::ZERO<>;
@@ -254,6 +264,7 @@ class HitStTOF : public VirtualHitSt {
             Short_t chrgz = std::abs(chrg);
             side_q_ = (Numc::Compare(q) > (chrgz * THRES_Q));
             q_      = (side_q_ ? q : Numc::ZERO<>);
+            gstq_   = Numc::ZERO<>;
             chiq_   = Numc::ZERO<>;
             nrmq_   = Numc::ZERO<>;
             divq_.fill(Numc::ZERO<>);
@@ -268,12 +279,14 @@ class HitStTOF : public VirtualHitSt {
         inline const Bool_t& st() const { return side_t_; }
         inline const Bool_t& sq() const { return side_q_; }
 
+        inline const Double_t& gstt() const { return gstt_; }
         inline const Double_t& chit() const { return chit_; }
         inline const Double_t& nrmt() const { return nrmt_; }
         inline const Double_t& divtsft() const { return divtsft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
         inline const Double_t& divt_igb() const { return divt_[1]; }
         
+        inline const Double_t& gstq() const { return gstq_; }
         inline const Double_t& chiq() const { return chiq_; }
         inline const Double_t& nrmq() const { return nrmq_; }
         inline const Double_t& divq_eta() const { return divq_[0]; }
@@ -288,16 +301,18 @@ class HitStTOF : public VirtualHitSt {
         
         Bool_t   side_t_;
         Double_t orgt_; // T [cm]
-        Double_t tsft_; // [cm]
+        Double_t tsft_; // T [cm]
 
         Bool_t   side_q_;
         Double_t q_; // Q
         
+        Double_t gstt_; // T ghost
         Double_t chit_; // T chi
         Double_t nrmt_; // T nrom
         Double_t divtsft_; // T(shift)
         std::array<Double_t, 2> divt_; // T div (igmbta) [eta, igb]
 
+        Double_t gstq_; // Q ghost
         Double_t chiq_; // Q chi
         Double_t nrmq_; // Q nrom
         std::array<Double_t, 2> divq_; // Q div (igmbta) [eta, igb]
@@ -307,7 +322,6 @@ class HitStTOF : public VirtualHitSt {
     
     protected :
         static constexpr Double_t THRES_Q = 0.6;
-        static constexpr Double_t LMTL_CHI_Q = -3.0;
         
         static TmeMeas  PDF_Q01_T_;
         static IonEloss PDF_Q01_Q_;
@@ -347,6 +361,7 @@ class HitStRICH : public VirtualHitSt {
         inline void set_ib(Double_t ib) {
             side_ib_ = (Numc::Compare(ib) > 0);
             ib_      = (side_ib_ ? ib : Numc::ZERO<>);
+            gstib_   = Numc::ZERO<>;
             chiib_   = Numc::ZERO<>;
             nrmib_   = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
@@ -360,6 +375,7 @@ class HitStRICH : public VirtualHitSt {
         
         inline const Bool_t& sib() const { return side_ib_; }
 
+        inline const Double_t& gstib() const { return gstib_; }
         inline const Double_t& chiib() const { return chiib_; }
         inline const Double_t& nrmib() const { return nrmib_; }
         inline const Double_t& divib_eta() const { return divib_[0]; }
@@ -376,6 +392,7 @@ class HitStRICH : public VirtualHitSt {
         Bool_t   side_ib_;
         Double_t ib_; // 1/Beta
 
+        Double_t gstib_; // 1/Beta ghost
         Double_t chiib_; // 1/Beta chi
         Double_t nrmib_; // 1/Beta nrom
         std::array<Double_t, 2> divib_; // 1/Beta div (igmbta) [eta, igb]

@@ -10,7 +10,7 @@ class TmeMeas {
         TmeMeas(Robust robust, const std::array<long double, 5>& sgm) : robust_(robust), sgm_(sgm) {}
         ~TmeMeas() {}
         
-        std::array<long double, 3> minimizer(long double x, long double igmbta, bool is_single = true) const;
+        std::array<long double, 4> minimizer(long double x, long double igmbta, bool is_single = true) const;
    
     protected :
         long double get_sgm(long double ibsqr) const;

@@ -1,47 +1,36 @@
 #!/bin/bash
-#RunFile=${AMSCore}/subj/trsys/vdev/hit_fit
-#RunFile=${AMSCore}/subj/trsys/vdev/hit_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/prop_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/track_fill
-#RunFile=${AMSCore}/subj/trsys/vdev/track_fill
-
 Version=vdev
 Version=test
-RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 
 CurDir=${PWD}
 
 DataType=MC
-#Stream=/ams_home/hchou/tmp/flist.pr
-#Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
-#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
-#Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep17
-#Stream=${CurDir}/lst/flist.ncu.mc.C12_612000_B1200_18Sep18
-#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep20
-#Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
 Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
+#Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep25
 
 OutputDir=${CurDir}/dat
 
 #Hit
-GroupSize=75
-Nseq=39
+#GroupSize=30
+#Nseq=100
 #Fit
-#GroupSize=6
-#Nseq=500
+GroupSize=6
+Nseq=500
 
 for id in `seq 0 ${Nseq}`
 do
-#    echo "%!/bin/bash
-#source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
+    echo "%!/bin/bash
+source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done
 
-#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fit
-#for id in `seq 15 150`
+#RunFile=${AMSCore}/subj/trsys/${Version}/hitq_fit
+#for id in `seq 1 100`
 #do
 #    echo "%!/bin/bash
 #source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh

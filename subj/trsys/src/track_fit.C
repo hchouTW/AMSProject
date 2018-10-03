@@ -108,6 +108,9 @@ int main(int argc, char * argv[]) {
         vhKFRrso.at(it)->style(Fill(), Line(kBlue), Marker(kBlue));
         vhHCRrso.at(it)->style(Fill(), Line(kRed), Marker(kRed));
         THStack* cvRrso = Hist::Collect(Form("cvRrso%03d", it), HistList({ vhCKRrso.at(it), vhKFRrso.at(it), vhHCRrso.at(it) }));
+        //vhCKRrso.at(it)->Write();
+        //vhKFRrso.at(it)->Write();
+        //vhHCRrso.at(it)->Write();
         cvRrso->Write();
     }
   
