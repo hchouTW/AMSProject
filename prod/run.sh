@@ -12,9 +12,10 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 DataType=MC
 Stream=lst/flist.cern.mc.pr.pl1.l1.054000.B1200
 #Stream=lst/flist.cern.mc.he4.pl1.l1.24000.B1200
-#Stream=lst/flist.cern.mc.c12.pl1.l1.612000.B1200
+#DataType=BT
+#Stream=lst/flist.cern.bt.pr.400.B1082
 
-GroupId=1005
+GroupId=10
 GroupSize=1
 OutputDir=.
 

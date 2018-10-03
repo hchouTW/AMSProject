@@ -39,6 +39,7 @@ source ${ICCLUX}/bin/compilervars.sh intel64
 #### AMS %% ROOT Environment
 AMSSW=root-v5-34-9-icc64-slc6
 export Offline=/cvmfs/ams.cern.ch/Offline
+#export Offline=/afs/cern.ch/ams/Offline
 export ROOTSYS=${Offline}/root/Linux/${AMSSW}
 export PATH=${ROOTSYS}/bin:${PATH}
 export LIBRARY_PATH=${ROOTSYS}/lib:${LIBRARY_PATH}

@@ -2154,7 +2154,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	EventList::Weight = 1.;
 
 	// Resolution tuning (by Qi Yan)
-	if (EventBase::checkEventMode(EventBase::ISS)) {
+	if (EventBase::checkEventMode(EventBase::ISS) || EventBase::checkEventMode(EventBase::BT)) {
         TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
         TRFITFFKEY.Zshift = 2; // Enable the dZ correction
     }
@@ -2173,8 +2173,10 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//COUT("============= <Run %u Event %u> =============\n", event->Run(), event->Event());
 
 	// ~0~ (Based on MC)
-    MCEventgR* primaryMC = event->GetPrimaryMC();
-	if (primaryMC == nullptr) return -1;
+    if (EventBase::checkEventMode(EventBase::MC)) {
+        MCEventgR* primaryMC = event->GetPrimaryMC();
+	    if (primaryMC == nullptr) return -1;
+    }
 
 	// ~1~ (Based on BetaH(Beta))
 	TofRecH::BuildOpt = 0; // normal

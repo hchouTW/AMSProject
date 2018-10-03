@@ -507,7 +507,7 @@ Bool_t SimpleTrFit::localSimpleFit() {
     
     // CeresSolver: Options
     ceres::Solver::Options options;
-    options.max_num_iterations = 25;
+    options.max_num_iterations = 30;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
