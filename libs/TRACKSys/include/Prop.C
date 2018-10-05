@@ -104,23 +104,21 @@ void PhyJb::set(PhySt& part, Double_t mspar_mscatu, Double_t mspar_mslen1, Doubl
     field_ = true;
 
     if (arg.mscat()) {
-        Double_t crrl = std::fabs(Numc::ONE<> / part.uz());
-
         jb_gl_(JUX, JTAUU) = arg.mscat_uu() * arg.orth_tau(X);
         jb_gl_(JUY, JTAUU) = arg.mscat_uu() * arg.orth_tau(Y);
-        jb_gl_(JCX, JTAUU) = arg.mscat_ul() * arg.orth_tau(X) * crrl;
-        jb_gl_(JCY, JTAUU) = arg.mscat_ul() * arg.orth_tau(Y) * crrl;
+        jb_gl_(JCX, JTAUU) = arg.mscat_ul() * arg.orth_tau(X);
+        jb_gl_(JCY, JTAUU) = arg.mscat_ul() * arg.orth_tau(Y);
         
         jb_gl_(JUX, JRHOU) = arg.mscat_uu() * arg.orth_rho(X);
         jb_gl_(JUY, JRHOU) = arg.mscat_uu() * arg.orth_rho(Y);
-        jb_gl_(JCX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X) * crrl;
-        jb_gl_(JCY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y) * crrl;
+        jb_gl_(JCX, JRHOU) = arg.mscat_ul() * arg.orth_rho(X);
+        jb_gl_(JCY, JRHOU) = arg.mscat_ul() * arg.orth_rho(Y);
        
-        jb_gl_(JCX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X) * crrl;
-        jb_gl_(JCY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y) * crrl;
+        jb_gl_(JCX, JTAUL) = arg.mscat_ll() * arg.orth_tau(X);
+        jb_gl_(JCY, JTAUL) = arg.mscat_ll() * arg.orth_tau(Y);
         
-        jb_gl_(JCX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X) * crrl;
-        jb_gl_(JCY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y) * crrl;
+        jb_gl_(JCX, JRHOL) = arg.mscat_ll() * arg.orth_rho(X);
+        jb_gl_(JCY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
 
         jb_ms_.reset(mspar_mscatu, mspar_mslen1, mspar_mslen2);
 

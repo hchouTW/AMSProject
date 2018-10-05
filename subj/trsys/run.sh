@@ -18,7 +18,7 @@ OutputDir=${CurDir}/dat
 #GroupSize=30
 #Nseq=100
 #Fit
-GroupSize=6
+GroupSize=3
 Nseq=500
 
 for id in `seq 0 ${Nseq}`

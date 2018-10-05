@@ -446,7 +446,7 @@ Bool_t SimpleTrFit::advancedSimpleCooFit() {
     options.nonlinear_conjugate_gradient_type = ceres::FLETCHER_REEVES;
     //options.nonlinear_conjugate_gradient_type = ceres::POLAK_RIBIERE;
     //options.nonlinear_conjugate_gradient_type = ceres::HESTENES_STIEFEL;
-    //options.max_num_iterations = 50;
+    options.max_num_iterations = 30;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -474,7 +474,7 @@ Bool_t SimpleTrFit::advancedSimpleFit() {
     options.nonlinear_conjugate_gradient_type = ceres::FLETCHER_REEVES;
     //options.nonlinear_conjugate_gradient_type = ceres::POLAK_RIBIERE;
     //options.nonlinear_conjugate_gradient_type = ceres::HESTENES_STIEFEL;
-    options.max_num_iterations = 75;
+    options.max_num_iterations = 50;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -507,7 +507,7 @@ Bool_t SimpleTrFit::localSimpleFit() {
     
     // CeresSolver: Options
     ceres::Solver::Options options;
-    options.max_num_iterations = 30;
+    options.max_num_iterations = 25;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -888,9 +888,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
     Double_t        costIb = Numc::ZERO<>;
     ceres::Vector&& grdIb  = ceres::Vector::Zero(numOfPar_);
     ceres::Matrix&& hesIb  = ceres::Matrix::Zero(numOfPar_, numOfPar_);
-   
-
-
 
     Short_t  cnt_nhit =  0;
     Short_t  cnt_nseg = -1;

@@ -98,7 +98,7 @@ int main(int argc, char * argv[]) {
     THStack* chTmeM = Hist::Collect("chTmeM", HistList({ hCKtmeM, hKFtmeM, hHCtmeM }));
     chTmeM->Write();
     
-    const Double_t stable = 2.0;
+    const Double_t stable = 1.7;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
 
     COUT("CKRrso\n");

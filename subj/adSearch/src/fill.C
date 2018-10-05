@@ -2,8 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Sep16/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Oct03/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -51,14 +50,18 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trk",  &fTrk);
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
-    //dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("ecal", &fEcal);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXrig("Rigidity [GV]", 80, 0.55, 2000., AxisScale::kLog);
+    //PartInfo info(PartType::Electron);
+    PartInfo info(PartType::Proton);
+    //PartInfo info(PartType::Helium4);
+    
+    Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff
@@ -113,13 +116,15 @@ int main(int argc, char * argv[]) {
         dst->GetEntry(entry);
 
         Int_t patt = 0;
-
         CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
         HCTrackInfo& hcTr = fTrk->hcTr.at(patt); // Tracker
     
         // Reweight (MC)
         Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXrig.min(), -1.7));
+        
+        // Geometry (TRK)
+        if (fTrk->numOfTrack != 1) continue;
 
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
@@ -127,7 +132,7 @@ int main(int argc, char * argv[]) {
         if (fTof->betaHPatt != 15) continue;
        
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
         if (fTrd->LLRnhit[0] < 8) continue;
         
@@ -138,8 +143,14 @@ int main(int argc, char * argv[]) {
         if (fTof->betaH < 0.) continue;
 
         // Charge
-        if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
-        if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        if (std::abs(info.chrg()) == 1) {
+            if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
+            if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+        }
+        if (std::abs(info.chrg()) == 2) {
+            if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
+            if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+        }
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
@@ -150,23 +161,23 @@ int main(int argc, char * argv[]) {
             (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
 
         // TRD
-        if (fTrd->LLRep[0] < 0.7) continue;
+        //if (fTrd->LLRep[0] < 0.7) continue;
 
         Bool_t status = (ckTr.status && kfTr.status && hcTr.status);
         if (!status) continue;
         
-        Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? std::fabs(hcTr.stateTop[7]) : fG4mc->primPart.bta);
-        Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.stateTop[6] : fG4mc->primPart.mom);
-        Double_t imom = Numc::ONE<> / mom;
+        Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.bta[0] : fG4mc->primPart.bta);
+        Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.rig[0] : fG4mc->primPart.mom);
+        Double_t irig = fG4mc->primPart.chrg / mom;
         Double_t scl  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
         
         Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
         Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
-        Short_t hcSign = (hcTr.stateTop[6] > 0) ? 1 : -1;
+        Short_t hcSign = (hcTr.rig[0] > 0) ? 1 : -1;
         
         Double_t ckRig = ckTr.rig;
         Double_t kfRig = kfTr.rig[0];
-        Double_t hcRig = hcTr.stateTop[6];
+        Double_t hcRig = hcTr.rig[0];
         
         Double_t ckIRig = Numc::ONE<> / ckRig;
         Double_t kfIRig = Numc::ONE<> / kfRig;
@@ -190,9 +201,9 @@ int main(int argc, char * argv[]) {
         hKFtme->fillH1D(mom, kfTr.cpuTime);
         hHCtme->fillH1D(mom, hcTr.cpuTime);
         
-        hCKRrso->fillH2D(mom, scl * (ckIRig - imom));
-        hKFRrso->fillH2D(mom, scl * (kfIRig - imom));
-        hHCRrso->fillH2D(mom, scl * (hcIRig - imom));
+        hCKRrso->fillH2D(mom, scl * (ckIRig - irig));
+        hKFRrso->fillH2D(mom, scl * (kfIRig - irig));
+        hHCRrso->fillH2D(mom, scl * (hcIRig - irig));
         
         hCKqltx->fillH2D(mom, ck_qltx);
         hKFqltx->fillH2D(mom, kf_qltx);

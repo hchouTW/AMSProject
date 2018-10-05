@@ -280,8 +280,7 @@ void PhySt::symbk(Bool_t is_rndm) {
     if (arg_.mscat()) {
         SVecD<3>&& mscatu = arg_.symbk_mscatu();
         SVecD<3>&& mscatl = arg_.symbk_mscatl();
-        mscatl /= std::fabs(dir_(2)); // proj to z-plane: corr rate
-        mscatl(2) = Numc::ZERO<>;     // proj to z-plane: set dz to zero
+        mscatl(2) = Numc::ZERO<>; // proj to z-plane: set dz to zero
         dir_ = std::move(LA::Unit(dir_ + mscatu));
         coo_ = std::move(coo_ + mscatl);
     }

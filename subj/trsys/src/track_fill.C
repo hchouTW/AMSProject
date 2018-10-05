@@ -66,8 +66,8 @@ int main(int argc, char * argv[]) {
     
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = true;
-    Bool_t optL9 = true;
+    Bool_t optL1 = false;
+    Bool_t optL9 = false;
     
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3800.0; }
@@ -209,7 +209,7 @@ int main(int argc, char * argv[]) {
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ, isInnTr);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
             //mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            mhit.set_q(hit.chrg[0], hit.chrg[1], info.chrg());
+            //mhit.set_q(hit.chrg[0], hit.chrg[1], info.chrg());
          
             if (isInnTr) { fitPar.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
@@ -223,15 +223,15 @@ int main(int argc, char * argv[]) {
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
             mhit.set_q(fTof->Q[il], info.chrg());
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
-            fitPar.add_hit(mhit);
+            //fitPar.add_hit(mhit);
         }
 
-        //if (!fRich->status) continue;
-        //if (fRich->kind != 0) continue;
-        //HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
-        //richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
-        //richHit.set_ib(Numc::ONE<> / fRich->beta);
-        //fitPar.add_hit(richHit);
+        if (!fRich->status) continue;
+        if (fRich->kind != 0) continue;
+        HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
+        richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
+        richHit.set_ib(Numc::ONE<> / fRich->beta);
+        fitPar.add_hit(richHit);
 
         //if (fTrd->hits[0].size() >= 1) {
         //    std::vector<std::pair<Double_t, std::pair<Int_t, Double_t>>> sigs;

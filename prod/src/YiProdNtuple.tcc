@@ -21,10 +21,15 @@ void RecEvent::init() {
 	iRichRing   = -1;
 
 	std::fill_n(trackerZJ, 9, 0);
-    zin  = 1;
+    zin = 1;
+    qin = 1;
     mass = 0.93827230;
     beta = 1.0;
     going = -1;
+
+    tkInID = -1;
+
+    ptype = TrackSys::PartType::Proton;
 }
 
 bool RecEvent::rebuild(AMSEventR * event) {
@@ -72,9 +77,10 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
-		TkStID  = TkStPar->iTrTrackPar(1, 3, 21);
+		TkStID = TkStPar->iTrTrackPar(1, 3, 23);
+		TkStID = TkStPar->iTrTrackPar(1, 3, 22);
         if (TkStID >= 0) {
-            double qin = TkStPar->GetInnerQH(2, beta, TkStID);
+            qin = TkStPar->GetInnerQH(2, beta, TkStID);
             zin  = (qin < 1.0) ? 1 : std::lrint(qin);
             mass = (zin <   2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
         }
@@ -84,16 +90,31 @@ bool RecEvent::rebuild(AMSEventR * event) {
     MCEventgR* primaryMC = event->GetPrimaryMC();
     if (primaryMC != nullptr) {
         zin  = static_cast<int>(std::abs(primaryMC->Charge));
+        qin  = static_cast<double>(zin);
         mass = primaryMC->Mass;
+    }
+    
+    tkInID = TkStPar->iTrTrackPar(1, 3, 22, recEv.mass, recEv.zin);
+	if (tkInID < 0) { init(); fStopwatch.stop(); return false; }
+    if (primaryMC == nullptr) {
+        qin = TkStPar->GetInnerQH(2, beta, tkInID);
+        zin = (qin < 1.0) ? 1 : std::lrint(qin);
+    }
+
+    // HC fitting
+    if (zin > 0) {
+        if (zin == 1 && mass < 0.01) ptype = TrackSys::PartType::Electron;
+        else if (zin <= 1) ptype = TrackSys::PartType::Proton;
+        else if (zin >= 2) ptype = TrackSys::PartType::Helium4;
     }
 
 	// ECAL Information
 	// pre-selection (ECAL)
-	if (TkStID >= 0 && iEcalShower >= 0) {
+	if (tkInID >= 0 && iEcalShower >= 0) {
 		EcalShowerR * ecal = event->pEcalShower(iEcalShower);
 		AMSPoint EcalPnt(ecal->CofG);
 		AMSPoint pnt; AMSDir dir;
-		TkStPar->Interpolate(EcalPnt.z(), pnt, dir, TkStID);
+		TkStPar->Interpolate(EcalPnt.z(), pnt, dir, tkInID);
 		float drPnt = std::hypot(pnt.x() - EcalPnt.x(), pnt.y() - EcalPnt.y());
 		float lmtr = 5; // 5 cm
 		if (drPnt > lmtr) { iEcalShower = -1; }
@@ -101,19 +122,19 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
 	// TRD Information
 	// pre-selection (TRD)
-	if (TkStID >= 0 && iTrdTrack >= 0) {
+	if (tkInID >= 0 && iTrdTrack >= 0) {
 		AMSPoint TrdPnt(event->pTrdTrack(iTrdTrack)->Coo);
 		AMSPoint pnt; AMSDir dir;
-		TkStPar->Interpolate(TrdPnt.z(), pnt, dir, TkStID);
+		TkStPar->Interpolate(TrdPnt.z(), pnt, dir, tkInID);
 		float drPnt = std::hypot(pnt.x() - TrdPnt.x(), pnt.y() - TrdPnt.y());
 		float lmtr = 5; // 5 cm
 		if (drPnt > lmtr) { iTrdTrack = -1; }
 	}
 
-	if (TkStID >= 0 && iTrdHTrack >= 0) {
+	if (tkInID >= 0 && iTrdHTrack >= 0) {
 		AMSPoint TrdHPnt(event->pTrdHTrack(iTrdHTrack)->Coo);
 		AMSPoint pnt; AMSDir dir;
-		TkStPar->Interpolate(TrdHPnt.z(), pnt, dir, TkStID);
+		TkStPar->Interpolate(TrdHPnt.z(), pnt, dir, tkInID);
 		float drPnt = std::hypot(pnt.x() - TrdHPnt.x(), pnt.y() - TrdHPnt.y());
 		float lmtr = 5; // 5 cm
 		if (drPnt > lmtr) { iTrdHTrack = -1; }
@@ -550,8 +571,8 @@ bool EventRti::selectEvent(AMSEventR * event) {
 	//if (!fRti.isGoodSecond) return false;
 	//if (fRti.zenith > 40) return false;
 	//if (fRti.isInSAA) return false;
-	//if (fRti.liveTime < 0.5) return false;
-	//if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
+	if (fRti.liveTime < 0.5) return false;
+	if (fRti.trackerAlign[0][1] > 35. || fRti.trackerAlign[1][1] > 45.) return false;
 
 	if (fRti.isInShadow == 1) return false;
 
@@ -589,7 +610,7 @@ void EventTrg::setEnvironment() {
 
 bool EventTrg::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == nullptr)	return false;
+	if (event == nullptr) return false;
 	fStopwatch.start();
 
 	Level1R * lvl1 = event->pLevel1(0);
@@ -652,7 +673,7 @@ void EventTof::setEnvironment() {
 
 bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == nullptr)	return false;
+	if (event == nullptr) return false;
 	fStopwatch.start();
 
 	fTof.numOfCls = event->NTofCluster();
@@ -780,7 +801,7 @@ void EventAcc::setEnvironment() {
 
 bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
-	if (event == nullptr)	return false;
+	if (event == nullptr) return false;
 	fStopwatch.start();
 	
 	//event->RebuildAntiClusters();
@@ -858,11 +879,14 @@ void EventTrk::setEnvironment() {
 #endif
 	
     // Enable latest alignment
-	TkDBc::UseFinal();
+    if (!EventBase::checkEventMode(EventBase::BT)) {
+        TkDBc::UseFinal();
+    }
 
 	// Disable overwriting of datacards from file
 	TRMCFFKEY.ReadFromFile = 0;
 	TRFITFFKEY.ReadFromFile = 0;
+    TRFITFFKEY.magtemp = 0;
 }
 
 bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -995,8 +1019,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             recEv.trackerZJ[6], recEv.trackerZJ[7], recEv.trackerZJ[8] };
 
         // Choutko
-        Int_t ckRefit = 23;
-		for (int patt = 0; patt < _npatt; ++patt) {
+        Bool_t ckSwOpt = true;
+        Int_t ckRefit = 22;
+		for (int patt = 0; patt < _npatt && ckSwOpt; ++patt) {
             if (ckRefit == -1) continue;
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
@@ -1049,8 +1074,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
         
         // Kalman
-        Int_t kfRefit = 23;
-		for (int patt = 0; patt < _npatt; ++patt) {
+        Bool_t kfSwOpt = true;
+        Int_t kfRefit = 22;
+		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             if (kfRefit == -1) continue;
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
@@ -1127,19 +1153,15 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::InnerL9, 
             TrackSys::AmsTkOpt::FullSpan });
 
-        TrackSys::PartType partType;
-        if (recEv.zin == 1 && recEv.mass < 0.01) partType = TrackSys::PartType::Electron;
-        else if (recEv.zin <= 1) partType = TrackSys::PartType::Proton;
-        else if (recEv.zin >= 2) partType = TrackSys::PartType::Helium4;
-
-	    for (int patt = 0; patt < _npatt; ++patt) {
+        Bool_t hcSwOpt = true;
+	    for (int patt = 0; patt < _npatt && hcSwOpt; ++patt) {
             fTrk.hcTr.at(patt) = processHCTr( // Tracker
-                partType, TrackSys::AmsTkOpt(trPatt.at(patt))); 
+                recEv.ptype, TrackSys::AmsTkOpt(trPatt.at(patt))); 
             
-            fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
-                TrackSys::PartType::Proton,
-                TrackSys::AmsTkOpt(trPatt.at(patt), true),
-                TrackSys::AmsTfOpt(true));
+            //fTrk.hcTrTF.at(patt) = processHCTr( // Tracker TOF
+            //    TrackSys::PartType::Proton,
+            //    TrackSys::AmsTkOpt(trPatt.at(patt), true),
+            //    TrackSys::AmsTfOpt(true));
         }
     }
 
@@ -1400,7 +1422,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				{
 				  if (recEv.iTrTrack < 0) break;
 				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-				  int fitid_max = trtk->iTrTrackPar(1, 0, 21, recEv.mass, recEv.zin);
+				  int fitid_max = trtk->iTrTrackPar(1, 0, 22, recEv.mass, recEv.zin);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
 				  isOK = true;
@@ -2182,30 +2204,35 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-    //if (event->NTrTrack() != 1) return -2001;
+    if (event->NTrTrack() != 1) return -2001;
 
 	// ~3~ (Based on TrdTrack)
-	//if (!(event->NTrdTrack() == 1 || event->NTrdHTrack() == 1)) return -3001;
+	if (!(event->NTrdTrack() >= 1 || event->NTrdHTrack() >= 1)) return -3001;
 
 	// ~4~ (Based on Particle)
 	ParticleR  * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
 	TrTrackR   * trtkSIG = (partSIG != nullptr) ? partSIG->pTrTrack() : nullptr;
-	BetaHR     * btahSIG = (partSIG != nullptr) ? partSIG->pBetaH()   : nullptr;
+	BetaHR     * btahSIG = (partSIG != nullptr) ? partSIG->pBetaH() : nullptr;
+	TrdTrackR  * tdtrSIG = (partSIG != nullptr) ? partSIG->pTrdTrack() : nullptr;
+	TrdHTrackR * trdhSIG = (partSIG != nullptr) ? partSIG->pTrdHTrack() : nullptr;
 	if (partSIG == nullptr) return -4001;
 	if (trtkSIG == nullptr || btahSIG == nullptr) return -4002;
+    if (tdtrSIG == nullptr && trdhSIG == nullptr) return -4003;
 
 	// ~5~ (Based on BetaH)
-	//if (event->NBetaH() != 1) return -5001;
+	if (event->NBetaH() != 1) return -5001;
 	if (btahSIG->GetBetaPattern() != 4444) return -5002;
 	
     double betah = btahSIG->GetBeta();
     short  btahSign = MGNumc::Compare(betah);
-    if (betah <= 0.0) return -5003; // keep down-going
+    if (btahSign <= 0 || betah < 0.3) return -5003; // keep down-going
 
 	// ~6~ (Based on Track Hits)
+	const unsigned short TrPtL2  =   2; //  2
 	const unsigned short TrPtL34 =  12; //  4 +   8
 	const unsigned short TrPtL56 =  48; // 16 +  32
 	const unsigned short TrPtL78 = 192; // 64 + 128
+	const unsigned short TrPtL19 = 257; //  1 + 256
 	unsigned short trBitPattJ   = trtkSIG->GetBitPatternJ();
 	unsigned short trBitPattXYJ = trtkSIG->GetBitPatternXYJ();
 	
@@ -2218,6 +2245,14 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (!isTrInner) return -6001;
 	if (!isTrInnerXY) return -6002;
 	
+    bool hasTrL2   = ((trBitPattJ  &TrPtL2) > 0); 
+    bool hasTrL2XY = ((trBitPattXYJ&TrPtL2) > 0); 
+    
+    bool hasTrL19   = ((trBitPattJ  &TrPtL19) > 0); 
+    bool hasTrL19XY = ((trBitPattXYJ&TrPtL19) > 0); 
+    
+    if (!hasTrL2 && !hasTrL19) return -6003;
+	
 	Int_t numOfTrInX = 0;
 	Int_t numOfTrInY = 0;
 	for (Int_t ilay = 2; ilay <= 7; ilay++) {
@@ -2226,32 +2261,31 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 		if (hasY)  numOfTrInY++;
 		if (hasXY) numOfTrInX++;
 	}
-	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6003;
+	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6004;
     
-	// ~7~ (Based on TrTrack)
-    int fitidMax = trtkSIG->iTrTrackPar(1, 0, 23);
-	if (fitidMax < 0) return -7001;
-    
-    int fitidInn = trtkSIG->iTrTrackPar(1, 3, 23);
-	if (fitidInn < 0) return -7002;
-		
-    double trQin = trtkSIG->GetInnerQH(2, std::fabs(betah), fitidInn);
-	if (MGNumc::Compare(trQin) <= 0) return -7003;
-
-    // ~8~ (Based on RTI)
-	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
-        if (!rti.processEvent(event)) return -8001;
-        double minIGRF = 0.8 * (*std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4));
-    }
-
     //--------------------------//
 	//----  Reconstruction  ----//
 	//--------------------------//
-	if (!recEv.rebuild(event)) return -9999;
+	if (!recEv.rebuild(event)) return -99999;
     
+    // ~7~ (Based on HC fitting)
     TrackSys::PhyArg::SetOpt(true, true);
     TrackSys::AmsEvent::SetArg(TrackSys::TrFitPar::Orientation::kDownward);
-    if (!TrackSys::AmsEvent::Load(event, 0, recEv.zin)) return -10001;
+    if (!TrackSys::AmsEvent::Load(event, 0, recEv.zin)) return -7001;
+
+    TrackSys::PhyTrFit&& hctr = TrackSys::AmsEvent::GetTrFit_Tk(recEv.ptype, TrackSys::AmsTkOpt::Inner);
+    if (!hctr.status()) return -7002;
+    
+    TrackSys::PhySt&& physt = hctr.interpolate_to_z(RecEvent::TopZ);
+    if (TrackSys::Numc::EqualToZero(physt.mom())) return -7003;
+        
+    // ~8~ (Based on RTI)
+	if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
+        if (!rti.processEvent(event)) return -8001;
+        double minIGRF = (*std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4));
+        double maxRIG  = std::max(std::fabs(physt.rig()), std::fabs(trtkSIG->GetRigidity(recEv.tkInID, 1)));
+        if (maxRIG < minIGRF) return -8002;
+    }
 
 	return 0;
 }

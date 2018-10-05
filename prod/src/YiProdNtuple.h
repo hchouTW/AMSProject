@@ -112,9 +112,14 @@ class RecEvent {
 	    // Algorithm     (CHOUTKO, KALMAN, HCHOU)
 	    // Track Pattern (Inn, InnL1, InnL9, FS)
         int    zin;
+        double qin;
         double mass;
         double beta;
         short  going; // (0, nothing   -1, down-going   1, up-going)
+        int    tkInID; // 
+
+        // HC fitting
+        TrackSys::PartType ptype;
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;
