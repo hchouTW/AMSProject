@@ -66,7 +66,7 @@ int main(int argc, char * argv[]) {
     
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = false;
+    Bool_t optL1 = true;
     Bool_t optL9 = false;
     
     Double_t mombd[2] = { 1., 1000. };
@@ -226,12 +226,12 @@ int main(int argc, char * argv[]) {
             //fitPar.add_hit(mhit);
         }
 
-        if (!fRich->status) continue;
-        if (fRich->kind != 0) continue;
-        HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
-        richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
-        richHit.set_ib(Numc::ONE<> / fRich->beta);
-        fitPar.add_hit(richHit);
+        //if (!fRich->status) continue;
+        //if (fRich->kind != 0) continue;
+        //HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
+        //richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
+        //richHit.set_ib(Numc::ONE<> / fRich->beta);
+        //fitPar.add_hit(richHit);
 
         //if (fTrd->hits[0].size() >= 1) {
         //    std::vector<std::pair<Double_t, std::pair<Int_t, Double_t>>> sigs;
