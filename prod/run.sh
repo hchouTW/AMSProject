@@ -34,7 +34,7 @@ OutputDir=.
 
 Nseq=81
 GroupSize=1
-OutputDir=${CurDir}/dat
+OutputDir=${CurDir}/dat2
 for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
