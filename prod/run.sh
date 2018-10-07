@@ -16,30 +16,30 @@ CurDir=${PWD}
 #Stream=${CurDir}/lst/flist.cern.mc.pr.pl1.l1.054000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l1.24000.B1200
 DataType=BT
-#Stream=${CurDir}/lst/flist.cern.bt.pr.400.B1082
-Stream=${CurDir}/lst/flist.ncu.bt.pr.400.B1082
+Stream=${CurDir}/lst/flist.cern.bt.pr.400.B1082
+#Stream=${CurDir}/lst/flist.ncu.bt.pr.400.B1082
 
 GroupId=10
 GroupSize=1
 OutputDir=.
 
-#if [[ -f ${RunFile} && -f ${Stream} ]]; then
-#  ${RunFile} ${DataType} ${Stream} ${GroupId} ${GroupSize} ${OutputDir}
-#else
-#  echo -e "Please Check File :"
-#  if [ ! -f ${RunFile} ]; then echo ${RunFile}; fi
-#  if [ ! -f ${Stream} ]; then echo ${Stream}; fi
-#fi
+if [[ -f ${RunFile} && -f ${Stream} ]]; then
+  ${RunFile} ${DataType} ${Stream} ${GroupId} ${GroupSize} ${OutputDir}
+else
+  echo -e "Please Check File :"
+  if [ ! -f ${RunFile} ]; then echo ${RunFile}; fi
+  if [ ! -f ${Stream} ]; then echo ${Stream}; fi
+fi
 
 
-Nseq=81
-GroupSize=1
-OutputDir=${CurDir}/dat2
-for id in `seq 0 ${Nseq}`
-do
-    echo "%!/bin/bash
-source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-export LD_LIBRARY_PATH=${ClassDef}:\${LD_LIBRARY_PATH}
-echo \"${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir}\" > ${CurDir}/log/JOB${id}.log
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} >> ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
-done
+#Nseq=81
+#GroupSize=1
+#OutputDir=${CurDir}/dat2
+#for id in `seq 0 ${Nseq}`
+#do
+#    echo "%!/bin/bash
+#source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
+#export LD_LIBRARY_PATH=${ClassDef}:\${LD_LIBRARY_PATH}
+#echo \"${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir}\" > ${CurDir}/log/JOB${id}.log
+#${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} >> ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+#done

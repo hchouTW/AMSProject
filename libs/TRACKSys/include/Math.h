@@ -208,7 +208,7 @@ namespace TrackSys {
 // Robust
 // S := nrm * nrm
 // H := thres * thres  (H>0)
-// R := rate           (0<=R<=1)
+// R := rate * 0.5 * (1 + erf(thres * log( abs(nrm/thres)) ) )     (0<=rate<=1)
 // X := (S/H)
 // A := log(1+X*X) / (X*X)
 // chisq(S)  := S * A^(R/4)
@@ -226,18 +226,21 @@ class Robust {
     public :
         enum class Opt { OFF = 0, ON = 1 };
 
-    public :
-        Robust(Opt opt = Opt::OFF, long double thres = Numc::FOUR<long double>, long double rate = Numc::HALF, long double ghost_thres = Numc::ZERO<long double>) : 
-        opt_(opt), robust_opt_(Opt::OFF), thres_(Numc::FOUR<long double>), rate_(Numc::HALF), ghost_opt_(Opt::OFF), ghost_thres_(Numc::ZERO<long double>) {
-            if (Opt::OFF == opt_) return;
-            
-            robust_opt_ = (Numc::Compare(thres) > 0 && Numc::Compare(rate) > 0 && Numc::Compare(rate_, Numc::ONE<long double>) <= 0) ? Opt::ON : Opt::OFF;
-            if (Opt::ON == robust_opt_) { thres_ = thres; rate_ = rate; }
-            
-            ghost_opt_ = (Numc::Compare(ghost_thres) > 0) ? Opt::ON : Opt::OFF;
-            if (Opt::ON == ghost_opt_) ghost_thres_ = ghost_thres;
+        struct Option { 
+            Option(Opt _opt = Opt::OFF, long double _thres = 0.0L, long double _rate = 0.0L) : opt(_opt), thres(_thres), rate(_rate) {}
+            Opt         opt;
+            long double thres; 
+            long double rate; 
+        };
 
-            opt_ = (Opt::ON == robust_opt_ || Opt::ON == ghost_opt_) ? Opt::ON : Opt::OFF;
+    public :
+        Robust(const Option& robust = Option(Opt::OFF), const Option& ghost = Option(Opt::OFF)) : opt_(Opt::OFF), robust_(robust), ghost_(ghost) {
+            if (Opt::OFF == robust_.opt && Opt::OFF == ghost_.opt) return;
+            Bool_t check_robust = (Numc::Compare(robust_.thres) > 0 && Numc::Compare(robust_.rate) > 0 && Numc::Compare(robust_.rate, Numc::ONE<long double>) <= 0);
+            Bool_t check_ghost  = (Numc::Compare(ghost_.thres) > 0 && Numc::Compare(ghost_.rate) > 0);
+            if (!check_robust) robust_ = Option(Opt::OFF);
+            if (!check_ghost)  ghost_  = Option(Opt::OFF);
+            opt_ = (Opt::ON == robust_.opt || Opt::ON == ghost_.opt) ? Opt::ON : Opt::OFF;
         }
         ~Robust() {}
 
@@ -246,14 +249,9 @@ class Robust {
         std::array<long double, 4> minimizer(long double chi) const;
         
     private :
-        Opt         opt_;
-
-        Opt         robust_opt_;
-        long double thres_;
-        long double rate_;
-
-        Opt         ghost_opt_;
-        long double ghost_thres_;
+        Opt    opt_;
+        Option robust_;
+        Option ghost_;
 };
 
 } // namesapce TrackSys
@@ -265,7 +263,7 @@ namespace TrackSys {
 // Gaussian Core f ~ [0]*exp(-0.5*x*x/[1]/[1])
 class MultiGaus {
     public :
-        MultiGaus() : robust_(Robust::Opt::OFF), rand_func_(nullptr), eftsgm_(Numc::ONE<long double>) {}
+        MultiGaus() : robust_(Robust()), rand_func_(nullptr), eftsgm_(Numc::ONE<long double>) {}
         MultiGaus(Robust robust, long double sgm);
         MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2);
         MultiGaus(Robust robust, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3);

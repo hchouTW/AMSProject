@@ -258,14 +258,14 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
 
 
 MultiGaus HitStTRK::PDF_Q01_CX_INN_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.61961330645686608e-01, 2.03263e-03,
     2.26788284954245273e-01, 3.67874e-03,
     1.12503844000680815e-02, 8.39460e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_INN_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     6.33751302183348963e-01, 7.52618e-04,
     3.04067161529244734e-01, 1.30097e-03,
     5.86416168641642407e-02, 2.46420e-03,
@@ -273,14 +273,14 @@ MultiGaus HitStTRK::PDF_Q01_CY_INN_(
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_EXT_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     5.36810408155873331e-01, 1.84480e-03,
     4.44451633843737703e-01, 3.22181e-03,
     1.87379580003889309e-02, 7.59401e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_EXT_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     5.95352696369181866e-01, 1.06724e-03,
     3.24409486956099280e-01, 1.55332e-03,
     7.34103231635499370e-02, 2.69880e-03,
@@ -288,55 +288,55 @@ MultiGaus HitStTRK::PDF_Q01_CY_EXT_(
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_INN_S1_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     9.76797404354876053e-01, 2.64251e-03,
     2.32025956451238566e-02, 6.95598e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_INN_S1_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.33529943942763829e-01, 1.12865e-03,
     2.48219756537832709e-01, 1.81506e-03,
     1.82502995194035143e-02, 3.63912e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_INN_S2_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     6.54967856835809936e-01, 1.79355e-03,
     3.39622662994680469e-01, 3.33380e-03,
     5.40948016950957081e-03, 6.99129e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_INN_S2_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.25079987394906200e-01, 8.79921e-04,
     2.50580069821453977e-01, 1.44768e-03,
     2.43399427836398438e-02, 2.85266e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_INN_S3_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.78944110488754338e-01, 1.88904e-03,
     2.06679046809400080e-01, 4.06013e-03,
     1.43768427018455668e-02, 8.54558e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_INN_S3_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.56069971935815599e-01, 9.09088e-04,
     2.08680431553891349e-01, 1.75711e-03,
     3.52495965102930103e-02, 3.88510e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_INN_S4_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.93036362622009605e-01, 1.87295e-03,
     1.87045606202200482e-01, 4.67200e-03,
     1.99180311757898333e-02, 1.07436e-02
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_INN_S4_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     5.79134848510354350e-01, 8.48334e-04,
     3.26263023537911367e-01, 1.51258e-03,
     8.20015606890014681e-02, 3.43712e-03,
@@ -345,55 +345,55 @@ MultiGaus HitStTRK::PDF_Q01_CY_INN_S4_(
 
 
 MultiGaus HitStTRK::PDF_Q01_CX_EXT_S1_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     9.83408942163766953e-01, 2.77597e-03,
     1.65910578362329572e-02, 7.03008e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_EXT_S1_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.01774331427257092e-01, 1.47035e-03,
     2.75795035425676571e-01, 2.20973e-03,
     2.24306331470663783e-02, 3.69646e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_EXT_S2_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     5.42316416038590265e-01, 1.70502e-03,
     4.52793442991823669e-01, 3.24588e-03,
     4.89014096958611307e-03, 7.66383e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_EXT_S2_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     8.02263996603330476e-01, 1.29785e-03,
     1.72678496642768659e-01, 1.99864e-03,
     2.50575067539009731e-02, 3.42195e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_EXT_S3_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     6.60095044685769738e-01, 1.81411e-03,
     3.23478449251639544e-01, 3.70079e-03,
     1.64265060625908600e-02, 8.47580e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_EXT_S3_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     8.27508524457650996e-01, 1.32903e-03,
     1.33528726995349289e-01, 2.44747e-03,
     3.89627485469997911e-02, 4.47588e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CX_EXT_S4_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.01805552229827101e-01, 1.84649e-03,
     2.71688854582317341e-01, 4.18918e-03,
     2.65055931878556555e-02, 9.88614e-03
 );
 
 MultiGaus HitStTRK::PDF_Q01_CY_EXT_S4_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     7.93966871796025653e-01, 1.35410e-03,
     1.40004403665006466e-01, 2.68690e-03,
     6.60287245389678812e-02, 5.22093e-03
@@ -401,7 +401,7 @@ MultiGaus HitStTRK::PDF_Q01_CY_EXT_S4_(
 
 
 MultiGaus HitStTRK::PDF_Q02_CX_INN_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     8.23483402633133132e-01, 1.58076e-03,
     1.56886848767209708e-01, 4.40970e-04,
     1.78728108648472869e-02, 3.43942e-03,
@@ -409,7 +409,7 @@ MultiGaus HitStTRK::PDF_Q02_CX_INN_(
 );
 
 MultiGaus HitStTRK::PDF_Q02_CY_INN_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     6.41741353237298306e-01, 2.89126e-04,
     2.13916925500147043e-01, 5.29917e-04,
     1.32054183043477047e-01, 8.97440e-04,
@@ -418,7 +418,7 @@ MultiGaus HitStTRK::PDF_Q02_CY_INN_(
 );
 
 MultiGaus HitStTRK::PDF_Q02_CX_EXT_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     8.46914506107380061e-01, 1.67402e-03,
     9.50578907857529132e-02, 2.56901e-03,
     5.45306637637586744e-02, 5.20314e-04,
@@ -426,7 +426,7 @@ MultiGaus HitStTRK::PDF_Q02_CX_EXT_(
 );
 
 MultiGaus HitStTRK::PDF_Q02_CY_EXT_(
-    Robust(Robust::Opt::ON, 3.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     5.57047413429423655e-01, 7.27972e-04,
     3.93570943518477712e-01, 9.99026e-04,
     4.19827792386289200e-02, 1.60732e-03,
@@ -435,7 +435,7 @@ MultiGaus HitStTRK::PDF_Q02_CY_EXT_(
 );
 
 IonEloss HitStTRK::PDF_Q01_QX_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 3.83633e+02, 1.22278e-03, 6.08278e-01, 2.28694e+00 }, // Kpa
     { 2.60420e-02, 2.03425e+01, 6.97964e+00, 1.14792e+00, 1.51381e-03, 1.00000e+00 }, // Mpv
     { 1.28682e-03, 4.30291e+01, 2.62414e+01, 1.33026e+00, 1.19680e-02, 6.87456e-01 }, // Sgm
@@ -444,7 +444,7 @@ IonEloss HitStTRK::PDF_Q01_QX_(
 );
 
 IonEloss HitStTRK::PDF_Q01_QY_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 9.94116e+00, 1.91792e+00, 1.20427e-01, 1.27033e+01 }, // Kpa
     { 3.57557e-02, 2.13704e+01,  1.49338e-01, 1.05680e+00, 1.86159e-03, 1.00000e+00 }, // Mpv
     { 2.36976e-02, 4.77391e+00, -1.02411e+00, 1.19441e+00, 5.82170e-01, 5.01835e-01 }, // Sgm
@@ -453,7 +453,7 @@ IonEloss HitStTRK::PDF_Q01_QY_(
 );
 
 IonEloss HitStTRK::PDF_Q02_QX_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 4.09744e+04, 2.01209e-03, 5.41564e-03, 8.34717e+01 }, // Kpa
     { 1.21035e-01, 2.44086e+01,  1.70501e+00, 1.09843e+00, 1.37206e-03, 1.00000e+00 }, // Mpv
     { 3.72130e+00, 3.47179e+00, -6.79454e-02, 8.93500e-01, 2.58386e+01, 3.74295e-01 }, // Sgm
@@ -462,7 +462,7 @@ IonEloss HitStTRK::PDF_Q02_QX_(
 );
 
 IonEloss HitStTRK::PDF_Q02_QY_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 3.80213e+00, 5.81308e+03, 4.34709e-01, 3.47169e+01 }, // Kpa
     { 1.49870e-01, 2.17453e+01, -6.95377e-01, 1.03360e+00, 2.69577e-03, 1.00000e+00 }, // Mpv
     { 5.43837e-01, 2.02673e+00, -1.29748e+00, 1.23882e+00, 1.18455e+00, 6.55918e-01 }, // Sgm
@@ -510,10 +510,8 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (side_c_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
-    if (side_c_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (side_t_   ) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
-    if (side_q_   ) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
+    if (side_t_) { seqIDt_  = seqID + iter; iter++; } else seqIDt_  = -1;
+    if (side_q_) { seqIDq_  = seqID + iter; iter++; } else seqIDq_  = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -604,12 +602,12 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 TmeMeas HitStTOF::PDF_Q01_T_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 2.38464e+00, 2.15741e+00, 7.72451e+01, 1.03508e-02, 7.73432e+01 } // Sgm
 );
 
 IonEloss HitStTOF::PDF_Q01_Q_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 2.94768e+01, 2.21358e+01, 6.06181e-02, 9.45926e+01 }, // Kpa
     { 3.81512e-01, 2.60771e+00, -2.27962e-01, 1.27420e+00, 7.54779e-01, 6.57663e-01 }, // Mpv
     { 5.53873e-01, 8.14537e+00, -8.41010e+00, 1.87171e-01, 6.68142e-01, 9.80451e-01 }, // Sgm
@@ -618,12 +616,12 @@ IonEloss HitStTOF::PDF_Q01_Q_(
 );
 
 TmeMeas HitStTOF::PDF_Q02_T_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 2.13989e+00, 2.36987e-01, 7.71676e+01, 1.72728e-02, 7.76650e+01 } // Sgm
 );
 
 IonEloss HitStTOF::PDF_Q02_Q_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L)),
     { 3.17895e+00, 1.64932e+04, 5.05553e-01, 3.19234e+01 }, // Kpa
     { 1.00385e-02, 2.71829e+02,  1.53998e+02, 9.24822e-01, 2.50440e-10, 3.01499e+00 }, // Mpv
     { 4.41616e+00, 6.46553e+01, -6.48173e+01, 1.84870e-02, 7.73260e-01, 9.88732e-01 }, // Sgm
@@ -657,9 +655,7 @@ Short_t HitStRICH::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (side_c_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
-    if (side_c_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
-    if (side_ib_  ) { seqIDib_ = seqID + iter; iter++; } else seqIDib_ = -1;
+    if (side_ib_) { seqIDib_ = seqID + iter; iter++; } else seqIDib_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -725,25 +721,25 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L), Robust::Option(Robust::Opt::ON, 5.0L, 1.0L)),
     6.84734464661977515e-01, 9.59147e-04,
     3.15265535338022374e-01, 1.64991e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L), Robust::Option(Robust::Opt::ON, 5.0L, 1.0L)),
     8.53153985032869877e-01, 3.16209e-03,
     1.46846014967130206e-01, 5.38069e-03
 );
 
 MultiGaus HitStRICH::PDF_AGL_Q02_IB_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L), Robust::Option(Robust::Opt::ON, 5.0L, 1.0L)),
     7.75514988289395357e-01, 6.15751e-04,
     2.24485011710604615e-01, 1.07079e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q02_IB_(
-    Robust(Robust::Opt::ON, 3.5L, 0.5L, 6.0L),
+    Robust(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L), Robust::Option(Robust::Opt::ON, 5.0L, 1.0L)),
     7.62865861184466976e-01, 1.90407e-03,
     2.37134138815532997e-01, 3.11423e-03
 );
@@ -769,8 +765,6 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (side_c_(0)) { seqIDcx_ = seqID + iter; iter++; } else seqIDcx_ = -1;
-    if (side_c_(1)) { seqIDcy_ = seqID + iter; iter++; } else seqIDcy_ = -1;
     if (side_el_  ) { seqIDel_ = seqID + iter; iter++; } else seqIDel_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;

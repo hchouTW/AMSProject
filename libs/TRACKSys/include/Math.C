@@ -50,27 +50,31 @@ std::array<long double, 4> Robust::minimizer(long double chi) const {
     const long double FOUR  = Numc::FOUR<long double>;
     const long double HALF  = Numc::ONE<long double> / Numc::TWO<long double>;
    
-    if (Opt::ON == robust_opt_) {
-        long double sh       = (chi / thres_) * (chi / thres_);
+    if (Opt::ON == robust_.opt) {
+        long double abschi = std::fabs(chi / robust_.thres);
+        long double rate   = robust_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(robust_.thres * std::log(abschi))));
+        if (!Numc::Valid(rate)) rate = ZERO;
+
+        long double sh       = abschi * abschi;
         long double sqrsh    = sh * sh;
         long double onesqrsh = (ONE + sqrsh);
         long double alpha    = std::log1p(sqrsh) / sqrsh;
         if (!Numc::Valid(alpha) || Numc::EqualToZero(sqrsh)) alpha = ONE;
         long double invalpha = (Numc::EqualToZero(alpha) ? ZERO : (ONE / alpha));
 
-        long double crchi = std::pow(alpha, (HALF / FOUR) * rate_);
+        long double crchi = std::pow(alpha, (HALF / FOUR) * rate);
         if (!Numc::Valid(crchi) || Numc::Compare(crchi) <= 0) crchi = ONE;
 
-        long double div1st = std::pow(alpha, rate_ / FOUR) * (
-                             (ONE - HALF * rate_) + 
-                             (HALF * rate_ * invalpha / onesqrsh)
+        long double div1st = std::pow(alpha, rate / FOUR) * (
+                             (ONE - HALF * rate) + 
+                             (HALF * rate * invalpha / onesqrsh)
                              );
         if (!Numc::Valid(div1st) || Numc::Compare(div1st) < 0) div1st = ONE;
 
-        long double div2ndS = (rate_ * sqrsh / FOUR) * std::pow(alpha, ONE + rate_ / FOUR) * (
-                              ((rate_ - FOUR) / (std::pow(alpha, THREE) * sqrsh * onesqrsh * onesqrsh)) +
-                              ((rate_ - TWO) * invalpha / sqrsh) -
-                              (TWO * ((rate_ - ONE) * sqrsh + (rate_ - THREE)) * (invalpha * invalpha) / (sqrsh * onesqrsh * onesqrsh))
+        long double div2ndS = (rate * sqrsh / FOUR) * std::pow(alpha, ONE + rate / FOUR) * (
+                              ((rate - FOUR) / (std::pow(alpha, THREE) * sqrsh * onesqrsh * onesqrsh)) +
+                              ((rate - TWO) * invalpha / sqrsh) -
+                              (TWO * ((rate - ONE) * sqrsh + (rate - THREE)) * (invalpha * invalpha) / (sqrsh * onesqrsh * onesqrsh))
                               );
         if (!Numc::Valid(div2ndS) || Numc::Compare(div2ndS) >= 0) div2ndS = ZERO;
 
@@ -88,19 +92,24 @@ std::array<long double, 4> Robust::minimizer(long double chi) const {
         mini.at(2) = crjacb;
     }
 
-    if (Opt::ON == ghost_opt_) {
-        long double sh    = (chi / ghost_thres_) * (chi / ghost_thres_);
-        long double sixsh = std::pow(sh, Numc::SIX<long double>);
-        long double alpha = std::log1p(sixsh) / sixsh;
-        if (!Numc::Valid(alpha) || Numc::EqualToZero(sixsh)) alpha = ONE;
-        alpha = std::pow(alpha, FOUR);
+    // testcode for remove ghost hit
+    if (Opt::ON == ghost_.opt) { // TODO
+        long double abschi = std::fabs(chi / ghost_.thres);
+        long double rate   = ghost_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(ghost_.thres * std::log(abschi))));
+        if (!Numc::Valid(rate)) rate = ZERO;
         
-        long double crwgt = alpha * alpha;
-        if (!Numc::Valid(crwgt)) crwgt = ONE;
+        long double sh       = abschi * abschi;
+        long double sqrsh    = sh * sh;
+        long double alpha    = std::log1p(sqrsh) / sqrsh;
+        if (!Numc::Valid(alpha) || Numc::EqualToZero(sqrsh)) alpha = ONE;
+        
+        long double crchi = std::pow(alpha, (HALF / FOUR) * rate);
+        if (!Numc::Valid(crchi) || Numc::Compare(crchi) <= 0) crchi = ONE;
+        long double crwgt = crchi * crchi;
 
-        mini.at(0) *= alpha;
-        mini.at(1) *= alpha;
-        mini.at(2) *= alpha;
+        mini.at(0) *= crchi;
+        mini.at(1) *= crchi;
+        mini.at(2) *= crchi;
         mini.at(3)  = crwgt;
     }
 

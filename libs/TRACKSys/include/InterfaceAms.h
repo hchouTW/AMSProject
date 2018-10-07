@@ -95,12 +95,18 @@ class Event {
         static Bool_t                ArgSwEloss;
 
     public :
-        static Bool_t   Status() { return (Ev != nullptr && StatusTk); }
-
-        static void     Clear();
-        static Bool_t   Load(AMSEventR* event = nullptr, UInt_t ipart = 0, Short_t chrg = 1);
-        static TrFitPar Get(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
+        static void   Clear();
         
+        static Bool_t Status() { return (Ev != nullptr && StatusTk); }
+        static Bool_t Load(AMSEventR* event = nullptr, UInt_t ipart = 0, Short_t chrg = 1);
+        static Bool_t HasTRK()  { return StatusTk; }
+        static Bool_t HasTOF()  { return StatusTf; }
+        static Bool_t HasRICH() { return StatusRh; }
+        static Bool_t HasRICH_AGL() { return (StatusRh && (HitStRICH::Radiator::AGL == RhHit.rad())); }
+        static Bool_t HasRICH_NAF() { return (StatusRh && (HitStRICH::Radiator::NAF == RhHit.rad())); }
+
+    public : 
+        static TrFitPar Get(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
         
         inline static PhyTrFit GetTrFit(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt()) { return PhyTrFit( Get(info, tkOpt, tfOpt, rhOpt) ); }
 

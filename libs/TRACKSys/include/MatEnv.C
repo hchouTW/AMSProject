@@ -677,9 +677,6 @@ Double_t MatPhy::GetMultipleScattering(const MatFld& mfld, PhySt& part) {
     //Double_t mscat_fat = RYDBERG_CONST * part.info().chrg_to_atomic_mass() * sqrt_nrl * ((Numc::Valid(mscat_crr) && Numc::Compare(mscat_crr)>0) ? mscat_crr : Numc::ZERO<>);
 
     Double_t mscat_sgm = mscat_fat * (eta * ibta);
-    
-    // Correction (Tune)
-    //mscat_sgm *= 1.01001619337256598e+00;
    
     if (!Numc::Valid(mscat_sgm) || Numc::Compare(mscat_sgm) <= 0) mscat_sgm = Numc::ZERO<>;
     return mscat_sgm;
@@ -713,31 +710,27 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     
     // Calculate Sigma
     // TODO: (GEANT3 manual W5013) (From GenFit package)
-    Double_t elion_sgm = (eta_trans * Bethe_Bloch); // [1]
+    const Double_t lmtLdVv = 0.01; // testcode
+    Double_t ldvavilov = ((Numc::Compare(Bethe_Bloch, lmtLdVv * max_trans_keng) < 0) ? (Bethe_Bloch * Bethe_Bloch / lmtLdVv) : (Bethe_Bloch * max_trans_keng));
+    Double_t elion_sgm = eta_trans * std::sqrt(Bethe_Bloch * max_trans_keng * (Numc::ONE<> - Numc::HALF * sqr_bta));
     
     // Calculate Global Material Quality
     // Calculate Ncl (Number of men eloss to maximum trans eng)
     Double_t global_ela = (corr_sw_eloss_ ? corr_mfld_.ela() : mfld.ela()); // Elcloud Abundance [mol cm^-2]
     Double_t global_BB  = (Numc::HALF * BETHE_BLOCH_K * global_ela * sqr_chrg / sqr_bta); // Bethe Bloch [MeV]
+    Double_t elion_zeta = (eta_trans * Bethe_Bloch); // [1]
 
     // Calculate Mean
     Double_t elke_part = (std::log(elpair_keng) - log_mean_exc_eng); // [1]
     Double_t mtke_part = (std::log(max_trans_keng) - log_mean_exc_eng); // [1]
-    Double_t elion_men = elion_sgm * (elke_part + mtke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
+    Double_t elion_men = elion_zeta * (elke_part + mtke_part - Numc::TWO<> * sqr_bta - density_corr); // [1]
     
     // Calculate Mpv
     Double_t bbke_part = (std::log(global_BB) - log_mean_exc_eng); // [1]
-    Double_t elion_mpv = elion_sgm * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
-   
-    // Correction (Tune)
-    //elion_men *= 9.72577696526508273e-01;
-    //elion_mpv *= 1.02514814814814826e+00;
+    Double_t elion_mpv = elion_zeta * (elke_part + bbke_part + LANDAU_ELOSS_CORR - sqr_bta - density_corr); //[1]
 
     // Els := min(Mean, Mpv)
     Double_t elion_els = std::min(elion_men, elion_mpv);
-
-    // Correction (Tune) 
-    //elion_els *= 1.0;
 
     if (!Numc::Valid(elion_mpv) || Numc::Compare(elion_mpv) <= 0) elion_mpv = Numc::ZERO<>;
     if (!Numc::Valid(elion_sgm) || Numc::Compare(elion_sgm) <= 0) elion_sgm = Numc::ZERO<>;
