@@ -743,9 +743,9 @@ bool VirtualSimpleTrCooFit::Evaluate(const double* parameters, double* cost, dou
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
     
-    ceres::Vector&& rsC  = ceres::Vector::Zero(onlyc_nseq_);                     // Residual
+    ceres::Vector&& rsC  = ceres::Vector::Zero(onlyc_nseq_);                    // Residual
     ceres::Matrix&& cvCC = ceres::Matrix::Zero(onlyc_nseq_, onlyc_nseq_);       // Convariance
-    ceres::Matrix&& jbCG = ceres::Matrix::Zero(onlyc_nseq_, numOfPar_);          // Jacb for coord
+    ceres::Matrix&& jbCG = ceres::Matrix::Zero(onlyc_nseq_, numOfPar_);         // Jacb for coord
     ceres::Matrix&& jbCL = ceres::Matrix::Zero(onlyc_nseq_, nseg_*PhyJb::DIML); // Jacb for interaction 
     
     Short_t cnt_nhit =  0;
