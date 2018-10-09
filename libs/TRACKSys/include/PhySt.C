@@ -286,7 +286,7 @@ void PhySt::symbk(Bool_t is_rndm) {
     }
     if (arg_.eloss()) {
         Short_t org_sign = eta_sign();
-        set_eta(eta_ * (Numc::ONE<> + arg_.symbk_eloss()));
+        set_eta(eta_ * (Numc::ONE<> + arg_.symbk_elion() + arg_.symbk_elbrm()));
         Short_t sym_sign = eta_sign();
         if (org_sign != sym_sign) set_eta(Numc::ZERO<>);
     }

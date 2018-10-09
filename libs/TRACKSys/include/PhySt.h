@@ -83,8 +83,8 @@ class PhyArg {
         void rndm_mscat() { rndm_mscatu(); rndm_mscatl(); }
 
         //void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::Landau(); } }
-        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::NormalGaussian(); } } // testcode
-        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { Double_t bremslen = nrl_ / Numc::LOG_TWO; elbrm_ = ((nrl_<=0.0)?0.0:Rndm::Gamma(bremslen,1.0/bremslen)()); } }
+        void rndm_elion() { elion_ = 0.; if (sw_eloss_) { elion_ = Rndm::NormalGaussian(); } }
+        void rndm_elbrm() { elbrm_ = 0.; if (sw_eloss_) { elbrm_ = ((Numc::Compare(elbrm_men_) <= 0) ? Numc::ZERO<> : Rndm::Gamma(elbrm_men_, Numc::ONE<>/elbrm_men_)()); } }
         void rndm_eloss() { rndm_elion(); rndm_elbrm(); }
 
         void rndm() { if (field_) { rndm_mscatu(); rndm_mscatl(); rndm_elion(); rndm_elbrm(); } }
@@ -100,7 +100,8 @@ class PhyArg {
         // Symbk
         SVecD<3> symbk_mscatu() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_uu_) * orth_tau_ + (rhou_*mscat_uu_) * orth_rho_) : SVecD<3>()); }
         SVecD<3> symbk_mscatl() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_ul_ + taul_*mscat_ll_) * orth_tau_ + (rhou_*mscat_ul_ + rhol_*mscat_ll_) * orth_rho_) : SVecD<3>()); }
-        Double_t symbk_eloss() const  { return ((sw_eloss_ && mat_) ? (sign_ * (elion_*elion_sgm_ + elbrm_*elbrm_men_)) : Numc::ZERO<>); }
+        Double_t symbk_elion() const  { return ((sw_eloss_ && mat_) ? (sign_ * elion_ * elion_sgm_) : Numc::ZERO<>); }
+        Double_t symbk_elbrm() const  { return ((sw_eloss_ && mat_ && Numc::Compare(elbrm_men_, Numc::ONE<>) < 0) ? (sign_ * elbrm_ * elbrm_men_) : Numc::ZERO<>); } // Note: only for men < 1.0
 
     private :
         Bool_t   sw_mscat_;

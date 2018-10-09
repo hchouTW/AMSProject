@@ -201,6 +201,21 @@ class LandauNumc {
         static std::vector<long double> data;
 };
 
+class ApproxLnX {
+    public :
+        ApproxLnX() {}
+        ~ApproxLnX() {}
+
+        static long double Eval(long double x);
+        
+        inline static long double X0() { return LnX0; }
+        inline static long double EvalWithX0(long double x) { return (Eval(x) - LnX0); }
+
+    private :
+        static constexpr long double HALF_WIDTH = 0.005;
+        static constexpr long double LnX0 = -6.29831736654805;
+};
+
 } // namesapce TrackSys
 
 
@@ -236,8 +251,8 @@ class Robust {
     public :
         Robust(const Option& robust = Option(Opt::OFF), const Option& ghost = Option(Opt::OFF)) : opt_(Opt::OFF), robust_(robust), ghost_(ghost) {
             if (Opt::OFF == robust_.opt && Opt::OFF == ghost_.opt) return;
-            Bool_t check_robust = (Numc::Compare(robust_.thres) > 0 && Numc::Compare(robust_.rate) > 0 && Numc::Compare(robust_.rate, Numc::ONE<long double>) <= 0);
-            Bool_t check_ghost  = (Numc::Compare(ghost_.thres) > 0 && Numc::Compare(ghost_.rate) > 0);
+            Bool_t check_robust = (Opt::ON == robust_.opt && Numc::Compare(robust_.thres) > 0 && Numc::Compare(robust_.rate) > 0 && Numc::Compare(robust_.rate, Numc::ONE<long double>) <= 0);
+            Bool_t check_ghost  = (Opt::ON ==  ghost_.opt && Numc::Compare(ghost_.thres) > 0 && Numc::Compare(ghost_.rate) > 0);
             if (!check_robust) robust_ = Option(Opt::OFF);
             if (!check_ghost)  ghost_  = Option(Opt::OFF);
             opt_ = (Opt::ON == robust_.opt || Opt::ON == ghost_.opt) ? Opt::ON : Opt::OFF;

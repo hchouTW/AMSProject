@@ -3,7 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Mar23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Oct03/src/ClassDef.h"
 
 using namespace std;
 
@@ -60,7 +61,6 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //PhyArg::SetOpt(true, false);
     PhyArg::SetOpt(true, true);
-    Int_t decSel = 0;
     Int_t laySat = 0;
     Int_t layEnd = 1;
     //Int_t laySat = 2;
@@ -68,10 +68,14 @@ int main(int argc, char * argv[]) {
     
     TFile * ofle = new TFile(Form("%s/prop_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    Axis AXmom("Momentum [GeV]", 100, 0.5, 4000., AxisScale::kLog);
+    PartInfo info(PartType::Electron);
+    //PartInfo info(PartType::Proton);
+    //PartInfo info(PartType::Helium4);
     
-    Double_t mass = 0.938272297;
-    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), mass/AXmom.max(), mass/AXmom.min(), AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 100, 0.3, 450., AxisScale::kLog);
+    //Axis AXmom("Momentum [GeV]", 100, 0.55, 3800., AxisScale::kLog);
+    
+    Axis AXeta("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);
     
     Double_t lbta = 1.0/std::sqrt(1.0+AXeta.max()*AXeta.max());
     Double_t ubta = 1.0/std::sqrt(1.0+AXeta.min()*AXeta.min());
@@ -84,6 +88,7 @@ int main(int argc, char * argv[]) {
     Axis AXcoo("Residual [cm * p#beta/Q * L^-1]", 800, -0.25, 0.25);
     Axis AXagl("Residual [p#beta/Q]", 800, -0.25, 0.25);
     Axis AXels("Eloss [MeV * #beta^{2}/Q^{2}]", 800, 0.2, 12);
+    Axis AXbrm("Eloss", 1000, 0.0, 1.0);
     
     Hist* hMcx = Hist::New("hMcx", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual x
     Hist* hMcy = Hist::New("hMcy", HistAxis(AXeta, AXcoo)); // (TH2D) MC: residual y
@@ -97,6 +102,9 @@ int main(int argc, char * argv[]) {
 
     Hist* hMee = Hist::New("hMee", HistAxis(AXeta, AXels)); // (TH2D) MC: kinetic energy difference
     Hist* hTee = Hist::New("hTee", HistAxis(AXeta, AXels)); // (TH2D) ToyMC: kinetic energy difference
+    
+    Hist* hMbr = Hist::New("hMbr", HistAxis(AXeta, AXbrm)); // (TH2D) MC: 
+    Hist* hTbr = Hist::New("hTbr", HistAxis(AXeta, AXbrm)); // (TH2D) ToyMC:
     
     Hist* hMcux = Hist::New("hMcux", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual x vs. cosine angle x
     Hist* hMcuy = Hist::New("hMcuy", HistAxis(AXcoo, AXagl)); // (TH2D) MC: residual y vs. cosine angle y
@@ -115,9 +123,9 @@ int main(int argc, char * argv[]) {
         if (fTof->betaHPatt != 15) continue;
         
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 10) continue;
+        if (fTrd->LLRnhit[0] < 8) continue;
         
         // Geometry (ACC)
         if (fAcc->clusters.size() != 0) continue;
@@ -142,7 +150,7 @@ int main(int argc, char * argv[]) {
 
         // MC hit
         SegPARTMCInfo* mcs[9]; std::fill_n(mcs, 9, nullptr);
-        for (auto&& seg : fG4mc->primPart.segs) { if (seg.dec == decSel) mcs[seg.lay] = &seg; }
+        for (auto&& seg : fG4mc->primPart.segsTk) { mcs[seg.lay] = &seg; }
 
         Bool_t hasSat = mcs[laySat];
         Bool_t hasEnd = mcs[layEnd];
@@ -151,14 +159,14 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mcsU = mcs[laySat];
         SegPARTMCInfo* mcsL = mcs[layEnd];
 
-        PhySt part(PartType::Proton);
+        PhySt part(info.type());
         part.set_state_with_cos(
             mcsU->coo[0], mcsU->coo[1], mcsU->coo[2],
             mcsU->dir[0], mcsU->dir[1], mcsU->dir[2]
         );
         part.set_mom(mcsU->mom);
         Double_t mc_mom = part.mom();
-        Double_t mc_eta = mass/part.mom();
+        Double_t mc_eta = part.mass()/part.mom();
         
         PhySt ppst(part);  // Particle Status
         PropMgnt::PropToZ(mcsL->coo[2], ppst); // Propagate to Z with magnetic field
@@ -178,20 +186,24 @@ int main(int argc, char * argv[]) {
         Double_t mc_resc[2] = { mcsL->coo[0] - refc(0), mcsL->coo[1] - refc(1) }; // MC: residual xy [cm]
         Double_t mc_resu[2] = { mcsL->dir[0] - refu(0), mcsL->dir[1] - refu(1) }; // MC: cosine angle xy [1]
         Double_t mc_elsm    = GeV2MeV * (std::sqrt(mcsU->mom*mcsU->mom+msqr) - std::sqrt(mcsL->mom*mcsL->mom+msqr)); // MC: kinetic energy difference [GeV]
+        Double_t mc_elsb    = (mcsL->mom / mcsU->mom);
         Double_t tm_resc[2] = { ppst.cx() - refc(0), ppst.cy() - refc(1) };       // ToyMC: residual xy [cm]
         Double_t tm_resu[2] = { ppst.ux() - refu(0), ppst.uy() - refu(1) };       // ToyMC: cosine angle xy [1]
-        Double_t tm_elsm    = GeV2MeV * (std::sqrt(part.mom()*part.mom()+msqr) - std::sqrt(ppst.mom()*ppst.mom()+msqr));  // ToyMC: kinetic energy difference [GeV]
+        Double_t tm_elsm    = GeV2MeV * (std::sqrt(mcsU->mom*mcsU->mom+msqr) - std::sqrt(ppst.mom()*ppst.mom()+msqr)); // ToyMC: kinetic energy difference [GeV]
+        Double_t tm_elsb    = (ppst.mom() / mcsU->mom);
 
         hMcx->fillH2D(mc_eta, scl_mscat * mc_resc[0] / len);
         hMcy->fillH2D(mc_eta, scl_mscat * mc_resc[1] / len);
         hMux->fillH2D(mc_eta, scl_mscat * mc_resu[0]);
         hMuy->fillH2D(mc_eta, scl_mscat * mc_resu[1]);
         hMee->fillH2D(mc_eta, scl_eloss * mc_elsm);
+        hMbr->fillH2D(mc_eta, mc_elsb);
         hTcx->fillH2D(mc_eta, scl_mscat * tm_resc[0] / len);
         hTcy->fillH2D(mc_eta, scl_mscat * tm_resc[1] / len);
         hTux->fillH2D(mc_eta, scl_mscat * tm_resu[0]);
         hTuy->fillH2D(mc_eta, scl_mscat * tm_resu[1]);
         hTee->fillH2D(mc_eta, scl_eloss * tm_elsm);
+        hTbr->fillH2D(mc_eta, tm_elsb);
         
         if (mc_mom > 5.0) hMcux->fillH2D(scl_mscat * mc_resc[0] / len, scl_mscat * mc_resu[0]);
         if (mc_mom > 5.0) hMcuy->fillH2D(scl_mscat * mc_resc[1] / len, scl_mscat * mc_resu[1]);

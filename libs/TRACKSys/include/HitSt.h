@@ -130,8 +130,8 @@ class HitStTRK : public VirtualHitSt {
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_.at(0) = (side_c_(0) && nx > 0) ? nx : 0;
-            nsr_.at(1) = (side_c_(1) && ny > 0) ? ny : 0;
+            nsr_.at(0) = (side_c_[0] && nx > 0) ? nx : 0;
+            nsr_.at(1) = (side_c_[1] && ny > 0) ? ny : 0;
         }
 
         inline void set_q(Double_t qx, Double_t qy, Short_t chrg = 0) {

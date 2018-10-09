@@ -2,15 +2,16 @@
 Version=vdev
 Version=test
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
-RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 
 CurDir=${PWD}
 
 DataType=MC
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
-#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep25
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct03
+Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
 
@@ -18,8 +19,8 @@ OutputDir=${CurDir}/dat
 #GroupSize=30
 #Nseq=100
 #Fit
-GroupSize=2
-Nseq=500
+GroupSize=10
+Nseq=300
 
 for id in `seq 0 ${Nseq}`
 do

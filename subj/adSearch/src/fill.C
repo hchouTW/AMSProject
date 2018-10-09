@@ -57,11 +57,12 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //PartInfo info(PartType::Electron);
-    PartInfo info(PartType::Proton);
+    PartInfo info(PartType::Electron);
+    //PartInfo info(PartType::Proton);
     //PartInfo info(PartType::Helium4);
     
-    Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 70, 0.3, 450., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff

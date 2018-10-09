@@ -630,9 +630,9 @@ MatPhyFld MatPhy::Get(const Double_t stp_len, PhySt& part) {
 
     Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
-    Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
+    Double_t eloss_brm = GetBremsstrahlungEnergyLoss(mfld, part);
 
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm);
 }
 
 
@@ -644,9 +644,9 @@ MatPhyFld MatPhy::Get(const MatFld& mfld, PhySt& part) {
     
     Double_t&& mscat_sgm = GetMultipleScattering(mfld, part);
     std::tuple<Double_t, Double_t, Double_t, Double_t>&& ion_eloss = GetIonizationEnergyLoss(mfld, part);
-    Double_t eloss_brm_men = GetBremsstrahlungEnergyLoss(mfld, part);
+    Double_t eloss_brm = GetBremsstrahlungEnergyLoss(mfld, part);
     
-    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm_men);
+    return MatPhyFld(mfld(), mscat_sgm, std::get<0>(ion_eloss), std::get<1>(ion_eloss), std::get<2>(ion_eloss), std::get<3>(ion_eloss), eloss_brm);
 }
         
 
@@ -710,9 +710,7 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     
     // Calculate Sigma
     // TODO: (GEANT3 manual W5013) (From GenFit package)
-    const Double_t lmtLdVv = 0.01; // testcode
-    Double_t ldvavilov = ((Numc::Compare(Bethe_Bloch, lmtLdVv * max_trans_keng) < 0) ? (Bethe_Bloch * Bethe_Bloch / lmtLdVv) : (Bethe_Bloch * max_trans_keng));
-    Double_t elion_sgm = eta_trans * std::sqrt(Bethe_Bloch * max_trans_keng * (Numc::ONE<> - Numc::HALF * sqr_bta));
+    Double_t elion_sgm = (eta_trans * Bethe_Bloch);
     
     // Calculate Global Material Quality
     // Calculate Ncl (Number of men eloss to maximum trans eng)
@@ -741,18 +739,10 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
 }
 
 
-// TODO : need to modify to new struction
 Double_t MatPhy::GetBremsstrahlungEnergyLoss(const MatFld& mfld, PhySt& part) {
     if (!part.arg().eloss()) return Numc::ZERO<>;
     Double_t chrgmass_sqr = (MASS_EL_IN_GEV * part.info().chrg_to_mass()) * (MASS_EL_IN_GEV * part.info().chrg_to_mass());
-
-    Bool_t   is_over_lmt = (Numc::Compare(part.bta(), LMT_BTA) > 0);
-    Double_t sqr_gmbta   = ((is_over_lmt) ? (part.gmbta() * part.gmbta()) : LMT_SQR_GMBTA);
-    Double_t eng         = std::sqrt(sqr_gmbta + Numc::ONE<>);
-    Double_t ke_part     = (eng - Numc::ONE<>);
-    Double_t eta_trans   = (eng / sqr_gmbta);
-
-    Double_t elbrm_men = chrgmass_sqr * (ke_part * eta_trans) * (mfld.nrl() / Numc::LOG_TWO);
+    Double_t elbrm_men    = (chrgmass_sqr * (mfld.nrl() / Numc::LOG_TWO));
     
     if (!Numc::Valid(elbrm_men) || Numc::Compare(elbrm_men) <= 0) elbrm_men = Numc::ZERO<>;
     return elbrm_men;

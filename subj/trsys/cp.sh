@@ -1,7 +1,7 @@
 #!/bin/bash
 
 for id in `seq 0 33`
-#for id in `seq 0 43`
+#for id in `seq 0 41`
 do
     ii=`printf "%05d" $id`
     #sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Oct03/EL_025500.B1200 /ams02/user/hchou/EL_025500.B1200_18Oct03 YiNtuple_MC.${ii} &

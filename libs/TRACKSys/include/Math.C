@@ -37,6 +37,17 @@ long double TrackSys::LandauNumc::EvalLn(long double x) {
 }
 
 
+long double TrackSys::ApproxLnX::Eval(long double x) {
+    long double xl = x - HALF_WIDTH;
+    long double xu = x + HALF_WIDTH;
+    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
+    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
+    long double lnx = (intxu - intxl) / (Numc::TWO<long double> * HALF_WIDTH);
+    if (!Numc::Valid(lnx)) lnx = Numc::ZERO<long double>;
+    return lnx;
+}
+
+
 namespace TrackSys {
         
 std::array<long double, 4> Robust::minimizer(long double chi) const {
@@ -92,8 +103,7 @@ std::array<long double, 4> Robust::minimizer(long double chi) const {
         mini.at(2) = crjacb;
     }
 
-    // testcode for remove ghost hit
-    if (Opt::ON == ghost_.opt) { // TODO
+    if (Opt::ON == ghost_.opt) {
         long double abschi = std::fabs(chi / ghost_.thres);
         long double rate   = ghost_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(ghost_.thres * std::log(abschi))));
         if (!Numc::Valid(rate)) rate = ZERO;

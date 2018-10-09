@@ -2,8 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
-//#include "/ams_home/hchou/AMSCore/prod/18Sep25/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Oct03/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -66,8 +66,8 @@ int main(int argc, char * argv[]) {
     
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
-    Bool_t optL1 = true;
-    Bool_t optL9 = false;
+    Bool_t optL1 = false;
+    Bool_t optL9 = true;
     
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3800.0; }
@@ -165,7 +165,7 @@ int main(int argc, char * argv[]) {
         if (fTof->betaHPatt != 15) continue;
         
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
         if (fTrd->LLRnhit[0] < 8) continue;
         
@@ -221,8 +221,8 @@ int main(int argc, char * argv[]) {
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            mhit.set_q(fTof->Q[il], info.chrg());
-            mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
+            //mhit.set_q(fTof->Q[il], info.chrg());
+            //mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             //fitPar.add_hit(mhit);
         }
 

@@ -16,7 +16,8 @@ CurDir=${PWD}
 DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct03
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct03
+Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
 
@@ -24,8 +25,8 @@ OutputDir=${CurDir}/dat
 #GroupSize=5
 #Nseq=110
 #Fit
-GroupSize=30
-Nseq=50
+GroupSize=10
+Nseq=300
 
 for id in `seq 0 ${Nseq}`
 do
