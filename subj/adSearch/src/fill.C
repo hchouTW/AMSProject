@@ -57,12 +57,13 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    PartInfo info(PartType::Electron);
-    //PartInfo info(PartType::Proton);
+    //PartInfo info(PartType::Electron);
+    PartInfo info(PartType::Proton);
     //PartInfo info(PartType::Helium4);
     
-    Axis AXrig("Rigidity [GV]", 70, 0.3, 450., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 70, 0.3, 450., AxisScale::kLog);
     //Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 1, 399., 401., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff
@@ -116,7 +117,7 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        Int_t patt = 0;
+        Int_t patt = 1;
         CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
         HCTrackInfo& hcTr = fTrk->hcTr.at(patt); // Tracker
@@ -164,13 +165,18 @@ int main(int argc, char * argv[]) {
         // TRD
         //if (fTrd->LLRep[0] < 0.7) continue;
 
-        Bool_t status = (ckTr.status && kfTr.status && hcTr.status);
-        if (!status) continue;
+        //Bool_t status = (ckTr.status && kfTr.status && hcTr.status);
+        //if (!status) continue;
         
         Double_t bta  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.bta[0] : fG4mc->primPart.bta);
         Double_t mom  = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? hcTr.rig[0] : fG4mc->primPart.mom);
-        Double_t irig = fG4mc->primPart.chrg / mom;
+        Double_t irig = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 / mom   : fG4mc->primPart.chrg / mom);
         Double_t scl  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
+
+        bta  = 1.0;
+        mom  = 400.;
+        irig = 1.0/400.;
+        scl  = std::sqrt(AXrig.center(AXrig.find(400.), AxisScale::kLog));
         
         Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
         Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
@@ -198,37 +204,37 @@ int main(int argc, char * argv[]) {
         if (hcSign > 0) hHCnum->fillH1D(hcRig, wgt);
         
         hMCtme->fillH1D(mom);
-        hCKtme->fillH1D(mom, ckTr.cpuTime);
-        hKFtme->fillH1D(mom, kfTr.cpuTime);
-        hHCtme->fillH1D(mom, hcTr.cpuTime);
+        if (ckTr.status) hCKtme->fillH1D(mom, ckTr.cpuTime);
+        if (kfTr.status) hKFtme->fillH1D(mom, kfTr.cpuTime);
+        if (hcTr.status) hHCtme->fillH1D(mom, hcTr.cpuTime);
         
-        hCKRrso->fillH2D(mom, scl * (ckIRig - irig));
-        hKFRrso->fillH2D(mom, scl * (kfIRig - irig));
-        hHCRrso->fillH2D(mom, scl * (hcIRig - irig));
+        if (ckTr.status) hCKRrso->fillH2D(mom, scl * (ckIRig - irig));
+        if (kfTr.status) hKFRrso->fillH2D(mom, scl * (kfIRig - irig));
+        if (hcTr.status) hHCRrso->fillH2D(mom, scl * (hcIRig - irig));
         
-        hCKqltx->fillH2D(mom, ck_qltx);
-        hKFqltx->fillH2D(mom, kf_qltx);
-        hHCqltx->fillH2D(mom, hc_qltx);
+        if (ckTr.status) hCKqltx->fillH2D(mom, ck_qltx);
+        if (kfTr.status) hKFqltx->fillH2D(mom, kf_qltx);
+        if (hcTr.status) hHCqltx->fillH2D(mom, hc_qltx);
         
-        hCKqlty->fillH2D(mom, ck_qlty);
-        hKFqlty->fillH2D(mom, kf_qlty);
-        hHCqlty->fillH2D(mom, hc_qlty);
+        if (ckTr.status) hCKqlty->fillH2D(mom, ck_qlty);
+        if (kfTr.status) hKFqlty->fillH2D(mom, kf_qlty);
+        if (hcTr.status) hHCqlty->fillH2D(mom, hc_qlty);
         
-        hCKcx->fillH2D(mom, scl * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
-        hKFcx->fillH2D(mom, scl * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
-        hHCcx->fillH2D(mom, scl * (hcTr.stateTop[0] - fG4mc->primPart.coo[0]));
-        
-        hCKcy->fillH2D(mom, scl * (ckTr.stateTop[1] - fG4mc->primPart.coo[1]));
-        hKFcy->fillH2D(mom, scl * (kfTr.stateTop[1] - fG4mc->primPart.coo[1]));
-        hHCcy->fillH2D(mom, scl * (hcTr.stateTop[1] - fG4mc->primPart.coo[1]));
-        
-        hCKux->fillH2D(mom, scl * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hKFux->fillH2D(mom, scl * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        hHCux->fillH2D(mom, scl * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
-        
-        hCKuy->fillH2D(mom, scl * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hKFuy->fillH2D(mom, scl * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
-        hHCuy->fillH2D(mom, scl * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hCKcx->fillH2D(mom, scl * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        //hKFcx->fillH2D(mom, scl * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        //hHCcx->fillH2D(mom, scl * (hcTr.stateTop[0] - fG4mc->primPart.coo[0]));
+        //
+        //hCKcy->fillH2D(mom, scl * (ckTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        //hKFcy->fillH2D(mom, scl * (kfTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        //hHCcy->fillH2D(mom, scl * (hcTr.stateTop[1] - fG4mc->primPart.coo[1]));
+        //
+        //hCKux->fillH2D(mom, scl * (ckTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //hKFux->fillH2D(mom, scl * (kfTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //hHCux->fillH2D(mom, scl * (hcTr.stateTop[3] - fG4mc->primPart.dir[0]));
+        //
+        //hCKuy->fillH2D(mom, scl * (ckTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hKFuy->fillH2D(mom, scl * (kfTr.stateTop[4] - fG4mc->primPart.dir[1]));
+        //hHCuy->fillH2D(mom, scl * (hcTr.stateTop[4] - fG4mc->primPart.dir[1]));
     }
     
     ofle->Write();

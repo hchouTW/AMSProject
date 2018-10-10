@@ -24,9 +24,9 @@ namespace TrackSys {
 namespace InterfaceAms {
 
  
-TrFitPar::Orientation         Event::ArgOrtt    = TrFitPar::Orientation::kDownward;
-Bool_t                        Event::ArgSwMscat = PhyArg::OptMscat();
-Bool_t                        Event::ArgSwEloss = PhyArg::OptEloss();
+TrFitPar::Orientation Event::ArgOrtt    = TrFitPar::Orientation::kDownward;
+Bool_t                Event::ArgSwMscat = PhyArg::OptMscat();
+Bool_t                Event::ArgSwEloss = PhyArg::OptEloss();
 
 UInt_t     Event::RunID    = 0;
 UInt_t     Event::EvID     = 0;
@@ -170,12 +170,11 @@ void Event::Init() {
 
 Bool_t Event::BulidHitStTRK() {
     if (Trtk == nullptr) return false;
-    Int_t fitidInn = Trtk->iTrTrackPar(1, 3, 21);
-	if (fitidInn < 0) return false;
+	Int_t fitid = Trtk->iTrTrackPar(1, 3, 21);
+    if (fitid < 0) return false;
 
     Short_t cntX = 0;
     Short_t cntY = 0;
-
     Bool_t hasL1 = Trtk->TestHitLayerJ(1);
     Bool_t hasL9 = Trtk->TestHitLayerJ(9);
 

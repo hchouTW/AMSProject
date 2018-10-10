@@ -77,7 +77,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
-		TkStID = TkStPar->iTrTrackPar(1, 3, 23);
+		TkStID = TkStPar->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
 		TkStID = TkStPar->iTrTrackPar(1, 3, 22);
         if (TkStID >= 0) {
             qin = TkStPar->GetInnerQH(2, beta, TkStID);
@@ -103,7 +103,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
     // HC fitting
     if (zin > 0) {
-        if (zin == 1 && mass < 0.01) ptype = TrackSys::PartType::Electron;
+        if (zin == 1 && mass < 0.001) ptype = TrackSys::PartType::Electron;
         else if (zin <= 1) ptype = TrackSys::PartType::Proton;
         else if (zin >= 2) ptype = TrackSys::PartType::Helium4;
     }
@@ -884,9 +884,10 @@ void EventTrk::setEnvironment() {
     }
 
 	// Disable overwriting of datacards from file
-	TRMCFFKEY.ReadFromFile = 0;
-	TRFITFFKEY.ReadFromFile = 0;
-    TRFITFFKEY.magtemp = 0;
+    TRMCFFKEY_DEF::ReadFromFile = 0;
+    TRFITFFKEY_DEF::ReadFromFile = 0;
+    TRMCFFKEY.ReadFromFile = 0;
+    TRFITFFKEY.ReadFromFile = 0;
 }
 
 bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -1074,7 +1075,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
         
         // Kalman
-        Bool_t kfSwOpt = false;
+        Bool_t kfSwOpt = true;
         Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             if (kfRefit == -1) continue;
