@@ -66,16 +66,16 @@ class PhyArg {
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
 
-        void cal_chi(SVecD<5>& chi) const;
-        void cal_nrm(SVecD<5>& nrm) const;
-        void cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const;
-        void cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const;
-        void cal_chi_and_nrm_and_div(SVecD<5>& chi, SVecD<5>& nrm, SVecD<5>& div) const;
+        void cal_chi(SVecD<6>& chi) const;
+        void cal_nrm(SVecD<6>& nrm) const;
+        void cal_chi_and_div(SVecD<6>& chi, SVecD<6>& div) const;
+        void cal_nrm_and_div(SVecD<6>& nrm, SVecD<6>& div) const;
+        void cal_chi_and_nrm_and_div(SVecD<6>& chi, SVecD<6>& nrm, SVecD<6>& div) const;
 
     public :
         // Set Parameters
         void set_mscat(Double_t tauu = 0, Double_t rhou = 0, Double_t taul = 0, Double_t rhol = 0) { if (sw_mscat_) { tauu_ = tauu; rhou_ = rhou; taul_ = taul; rhol_ = rhol; } }
-        void set_eloss(Double_t elion = 0, Double_t elbrm = 0) { if (sw_eloss_) { elion_ = elion; elbrm_ = ((elbrm<0.0)?0.0:elbrm); } }
+        void set_eloss(Double_t elion = 0, Double_t elbrm = 0) { if (sw_eloss_) { elion_ = elion; elbrm_ = ((Numc::Compare(elbrm) < 0) ? Numc::ZERO<> : elbrm); } }
 
         // Rndm Parameters
         void rndm_mscatu() { tauu_ = 0.; rhou_ = 0.; if (sw_mscat_) { tauu_ = pdf_mscatu_.rndm(); rhou_ = pdf_mscatu_.rndm(); } }
@@ -101,7 +101,7 @@ class PhyArg {
         SVecD<3> symbk_mscatu() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_uu_) * orth_tau_ + (rhou_*mscat_uu_) * orth_rho_) : SVecD<3>()); }
         SVecD<3> symbk_mscatl() const { return ((sw_mscat_ && mat_) ? ((tauu_*mscat_ul_ + taul_*mscat_ll_) * orth_tau_ + (rhou_*mscat_ul_ + rhol_*mscat_ll_) * orth_rho_) : SVecD<3>()); }
         Double_t symbk_elion() const  { return ((sw_eloss_ && mat_) ? (sign_ * elion_ * elion_sgm_) : Numc::ZERO<>); }
-        Double_t symbk_elbrm() const  { return ((sw_eloss_ && mat_ && Numc::Compare(elbrm_men_, Numc::ONE<>) < 0) ? (sign_ * elbrm_ * elbrm_men_) : Numc::ZERO<>); } // Note: only for men < 1.0
+        Double_t symbk_elbrm() const  { return ((sw_eloss_ && mat_) ? (sign_ * elbrm_ * elbrm_men_) : Numc::ZERO<>); } // TODO: Note: only for men < 1.0
 
     private :
         Bool_t   sw_mscat_;
@@ -171,6 +171,7 @@ void PhyArg::reset(Bool_t sw_mscat, Bool_t sw_eloss) {
     rhol_ = 0.;
     elion_ = 0.;
     elbrm_ = 0.;
+    //elbrm_ = 0.6; // testcode =============
 
     zero();
 }

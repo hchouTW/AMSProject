@@ -180,10 +180,12 @@ class PhyJb {
     public :
         static constexpr Int_t DIMG = 5;
         static constexpr Int_t DIML = 4;
+        static constexpr Int_t DIME = 2;
 
     public :
         using SMtxDGG = SMtxD<DIMG, DIMG>;
         using SMtxDGL = SMtxD<DIMG, DIML>;
+        using SMtxDGE = SMtxD<DIMG, DIME>;
 
     public :
         PhyJb() { init(); }
@@ -200,9 +202,11 @@ class PhyJb {
 
         inline SMtxDGG& gg() { return jb_gg_; }
         inline SMtxDGL& gl() { return jb_gl_; }
+        inline SMtxDGL& ge() { return jb_ge_; }
         
         inline Double_t& gg(Int_t i, Int_t j) { return jb_gg_(i, j); }
         inline Double_t& gl(Int_t i, Int_t j) { return jb_gl_(i, j); }
+        inline Double_t& ge(Int_t i, Int_t j) { return jb_ge_(i, j); }
         
         inline PhyJbMS& ms() { return jb_ms_; }
 
@@ -212,6 +216,8 @@ class PhyJb {
 
         SMtxDGG jb_gg_;
         SMtxDGL jb_gl_;
+        SMtxDGL jb_ge_;
+
         PhyJbMS jb_ms_;
 
     private :
@@ -227,7 +233,8 @@ class PhyJb {
         static constexpr Short_t JRHOU = 1;
         static constexpr Short_t JTAUL = 2;
         static constexpr Short_t JRHOL = 3;
-        static constexpr Short_t JION  = 4;
+        static constexpr Short_t JION  = 0;
+        static constexpr Short_t JBRM  = 1;
 };
 
 
@@ -236,6 +243,7 @@ void PhyJb::init() {
     len_   = Numc::ZERO<>;
     jb_gg_ = std::move(SMtxId()); 
     jb_gl_ = std::move(SMtxDGL());
+    jb_ge_ = std::move(SMtxDGE());
     jb_ms_.init();
 }
  
@@ -244,6 +252,7 @@ void PhyJb::multiplied(PhyJb& phyJb) {
     len_ += phyJb.len();
     jb_gg_ = std::move(phyJb.gg() * jb_gg_);
     if (field_) jb_gl_ = std::move(phyJb.gg() * jb_gl_);
+    if (field_) jb_ge_ = std::move(phyJb.gg() * jb_ge_);
 }
 
 

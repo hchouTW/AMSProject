@@ -95,7 +95,7 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fi
     if (succ_) succ_ = evolve();
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); }
 
-    //if (!succ_) CERR("FAILURE === SimpleTrFit\n"); // testcode
+    //if (!succ_) CERR("FAILURE === SimpleTrFit\n");
 }
 
 
@@ -1088,7 +1088,7 @@ bool VirtualSimpleTrLocFit::Evaluate(double const *const *parameters, double *re
     
     // Interaction Local Parameters
     for (Short_t is = 0; is < nseg_; ++is) {
-        SVecD<5> inrm, idiv;
+        SVecD<6> inrm, idiv;
         if (hasJacb) args.at(is).cal_nrm_and_div(inrm, idiv);
         else         args.at(is).cal_nrm(inrm);
             

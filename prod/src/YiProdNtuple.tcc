@@ -1321,10 +1321,13 @@ void EventTrd::setEnvironment() {
 
 	if (checkEventMode(EventBase::BT)) {
 		TrdKCluster::IsReadGlobalAlignment = false;
-	}
+    }
 	if (checkEventMode(EventBase::MC)) {
-		TrdKCluster::ForceReadAlignment = false;
-		TrdKCluster::ForceReadCalibration = false;
+		TrdKCluster::IsReadGlobalAlignment = false;
+		TrdKCluster::ForceReadAlignment    = false;
+		TrdKCluster::ForceReadCalibration  = false;
+		TrdKCluster::ForceReadXePressure   = false;
+        TrdKCluster::SetDefaultMCXePressure(900);
 	}
 }
 

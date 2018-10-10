@@ -4,8 +4,8 @@ CXX += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
 
-Version = vdev
-#Version = 18Oct03
+#Version = vdev
+Version = 18Oct10
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :

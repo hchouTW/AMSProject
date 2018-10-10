@@ -2,8 +2,8 @@
 Version=vdev
 Version=test
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
-RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 
 CurDir=${PWD}
 

@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  18Oct03
+PROJVERSION  =  18Oct10
 PROJTITLE    =  PR_400.B1082
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.bt.pr.400.B1082 
@@ -8,7 +8,7 @@ EVENTTYPE    =  BT
 FILEPEREXE   =  1
 JOBREGION    =  WHOLE
 EXESATID     =  0
-EXEENDID     =  3345
+EXEENDID     =  80
 
 [QUEUE]
 QUEUE      =  ams1nd

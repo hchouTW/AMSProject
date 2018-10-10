@@ -26,8 +26,8 @@ MultiGaus PhyArg::pdf_elion_(
 );
 
 
-void PhyArg::cal_chi(SVecD<5>& chi) const {
-    chi = std::move(SVecD<5>());
+void PhyArg::cal_chi(SVecD<6>& chi) const {
+    chi = std::move(SVecD<6>());
     if (!field_) return;
     if (sw_mscat_) {
         chi(0) = (pdf_mscatu_.minimizer(Numc::NEG<> * tauu_).at(0)); 
@@ -41,8 +41,8 @@ void PhyArg::cal_chi(SVecD<5>& chi) const {
 }
 
 
-void PhyArg::cal_nrm(SVecD<5>& nrm) const {
-    nrm = std::move(SVecD<5>());
+void PhyArg::cal_nrm(SVecD<6>& nrm) const {
+    nrm = std::move(SVecD<6>());
     if (!field_) return;
     if (sw_mscat_) {
         nrm(0) = (pdf_mscatu_.minimizer(Numc::NEG<> * tauu_).at(1)); 
@@ -56,9 +56,9 @@ void PhyArg::cal_nrm(SVecD<5>& nrm) const {
 }
 
 
-void PhyArg::cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const {
-    chi = std::move(SVecD<5>());
-    div = std::move(SVecD<5>());
+void PhyArg::cal_chi_and_div(SVecD<6>& chi, SVecD<6>& div) const {
+    chi = std::move(SVecD<6>());
+    div = std::move(SVecD<6>());
     if (!field_) return;
     if (sw_mscat_) {
         std::array<long double, 4>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
@@ -82,9 +82,9 @@ void PhyArg::cal_chi_and_div(SVecD<5>& chi, SVecD<5>& div) const {
 }
 
 
-void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
-    nrm = std::move(SVecD<5>());
-    div = std::move(SVecD<5>());
+void PhyArg::cal_nrm_and_div(SVecD<6>& nrm, SVecD<6>& div) const {
+    nrm = std::move(SVecD<6>());
+    div = std::move(SVecD<6>());
     if (!field_) return;
     if (sw_mscat_) {
         std::array<long double, 4>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);
@@ -108,10 +108,10 @@ void PhyArg::cal_nrm_and_div(SVecD<5>& nrm, SVecD<5>& div) const {
 }
 
 
-void PhyArg::cal_chi_and_nrm_and_div(SVecD<5>& chi, SVecD<5>& nrm, SVecD<5>& div) const {
-    chi = std::move(SVecD<5>());
-    nrm = std::move(SVecD<5>());
-    div = std::move(SVecD<5>());
+void PhyArg::cal_chi_and_nrm_and_div(SVecD<6>& chi, SVecD<6>& nrm, SVecD<6>& div) const {
+    chi = std::move(SVecD<6>());
+    nrm = std::move(SVecD<6>());
+    div = std::move(SVecD<6>());
     if (!field_) return;
     if (sw_mscat_) {
         std::array<long double, 4>&& minitauu = pdf_mscatu_.minimizer(Numc::NEG<> * tauu_);

@@ -91,7 +91,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     succ_ = (simpleFit() ? physicalFit() : false);
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
     
-    //if (!succ_) CERR("FAILURE === PhyTrFit\n"); // testcode
+    //if (!succ_) CERR("FAILURE === PhyTrFit\n");
 }
 
 
@@ -221,7 +221,7 @@ Bool_t PhyTrFit::evolve() {
     // Interaction Local Parameters
     if (opt_loc) {
     for (Short_t is = 0; is < nseg_; ++is) { // Interaction
-        SVecD<5> ichi, idiv;
+        SVecD<6> ichi, idiv;
         args_.at(is).cal_chi_and_div(ichi, idiv);
         
         chi_cx += ichi(0) * ichi(0); // tauu
@@ -426,7 +426,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     // Interaction Local Parameters
     if (opt_loc_) {
     for (Short_t is = 0; is < nseg_; ++is) {
-        SVecD<5> inrm, idiv;
+        SVecD<6> inrm, idiv;
         args.at(is).cal_nrm_and_div(inrm, idiv);
 
         for (Short_t it = 0; it < DIML_; ++it)

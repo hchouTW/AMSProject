@@ -60,16 +60,17 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //PartInfo info(PartType::Electron);
-    PartInfo info(PartType::Proton);
+    PartInfo info(PartType::Electron);
+    //PartInfo info(PartType::Proton);
     //PartInfo info(PartType::Helium4);
     
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = false;
-    Bool_t optL9 = true;
+    Bool_t optL9 = false;
     
     Double_t mombd[2] = { 1., 1000. };
+    if (info.type() == PartType::Electron) { mombd[0] = 0.30; mombd[1] = 450.0; }
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3800.0; }
     if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3800.0; }
     Axis AXmom("Momentum [GeV]", 75, mombd[0], mombd[1], AxisScale::kLog);

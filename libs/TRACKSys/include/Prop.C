@@ -121,18 +121,10 @@ void PhyJb::set(PhySt& part, Double_t mspar_mscatu, Double_t mspar_mslen1, Doubl
         jb_gl_(JCY, JRHOL) = arg.mscat_ll() * arg.orth_rho(Y);
 
         jb_ms_.reset(mspar_mscatu, mspar_mslen1, mspar_mslen2);
-
-        // testcode (This can improve mom < 1GeV for proton) TODO more detail
-        //Double_t dltcx = arg.tauu() * jb_gl_(JCX, JTAUU) + arg.taul() * jb_gl_(JCX, JTAUL) + arg.rhou() * jb_gl_(JCX, JRHOU) + arg.rhol() * jb_gl_(JCX, JRHOL);
-        //Double_t dltcy = arg.tauu() * jb_gl_(JCY, JTAUU) + arg.taul() * jb_gl_(JCY, JTAUL) + arg.rhou() * jb_gl_(JCY, JRHOU) + arg.rhol() * jb_gl_(JCY, JRHOL);
-        //Double_t dltux = arg.tauu() * jb_gl_(JUX, JTAUU) + arg.rhou() * jb_gl_(JUX, JRHOU);
-        //Double_t dltuy = arg.tauu() * jb_gl_(JUY, JTAUU) + arg.rhou() * jb_gl_(JUY, JRHOU);
-        //jb_gg_(JCX, JEA) += dltcx * (part.eta_sign() / eta_abs);
-        //jb_gg_(JCY, JEA) += dltcy * (part.eta_sign() / eta_abs);
-        //jb_gg_(JUX, JEA) += dltux * (part.eta_sign() / eta_abs);
-        //jb_gg_(JUY, JEA) += dltuy * (part.eta_sign() / eta_abs);
     }
     if (arg.eloss()) {
+        jb_ge_(JEA, JION) = arg.sign() * arg.elion_sgm() * part.eta();
+        jb_ge_(JEA, JBRM) = arg.sign() * arg.elbrm_men() * part.eta();
     }
 }
 
