@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Oct10
+PROJTITLE    =  EL_180.B1082
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.bt.el.180.B1082 
+EVENTTYPE    =  BT
+FILEPEREXE   =  1
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  26
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE
