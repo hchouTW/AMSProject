@@ -115,7 +115,7 @@ Bool_t PhyTrFit::physicalFit() {
     Bool_t opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
     
     Short_t DIMG = PhyJb::DIMG + opt_tsft;
-    Short_t DIML = PhyJb::DIML;
+    Short_t DIMI = PhyJb::DIML;
 
     // Gobal Parameters
     Short_t parIDtsft = -1;
@@ -123,13 +123,13 @@ Bool_t PhyTrFit::physicalFit() {
     if (opt_tsft) { parIDtsft = DIMG - 1; params_glb.push_back(tsft_); } // time shift
 
     // Local Parameters
-    std::vector<double> params_loc(nseg_*DIML, Numc::ZERO<>);
+    std::vector<double> params_loc(nseg_*DIMI, Numc::ZERO<>);
     if (opt_loc && args_.size() == nseg_) {
     for (Short_t is = 0; is < nseg_; ++is) {
-        params_loc.at(is*DIML+0) = args_.at(is).tauu();
-        params_loc.at(is*DIML+1) = args_.at(is).rhou();
-        params_loc.at(is*DIML+2) = args_.at(is).taul();
-        params_loc.at(is*DIML+3) = args_.at(is).rhol();
+        params_loc.at(is*DIMI+0) = args_.at(is).tauu();
+        params_loc.at(is*DIMI+1) = args_.at(is).rhou();
+        params_loc.at(is*DIMI+2) = args_.at(is).taul();
+        params_loc.at(is*DIMI+3) = args_.at(is).rhol();
     }}
 
     // CeresSolver: Cost Function
@@ -170,10 +170,10 @@ Bool_t PhyTrFit::physicalFit() {
     if (opt_loc) {
     for (Short_t is = 0; is < nseg_; ++is) {
         args_.at(is).set_mscat(
-            params_loc.at(is*DIML+0), 
-            params_loc.at(is*DIML+1), 
-            params_loc.at(is*DIML+2), 
-            params_loc.at(is*DIML+3));
+            params_loc.at(is*DIMI+0), 
+            params_loc.at(is*DIMI+1), 
+            params_loc.at(is*DIMI+2), 
+            params_loc.at(is*DIMI+3));
     }}
 
     Bool_t succ = evolve();

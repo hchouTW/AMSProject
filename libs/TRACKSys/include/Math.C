@@ -48,6 +48,36 @@ long double TrackSys::ApproxLnX::Eval(long double x) {
 }
 
 
+long double TrackSys::ApproxLnX::Dev(long double x) {
+    long double xl = x - HALF_WIDTH;
+    long double xc = x;
+    long double xu = x + HALF_WIDTH;
+    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
+    long double intxc = (Numc::EqualToZero(xc) ? 0.0L : (xc * (std::log(std::fabs(xc)) - 1.0L)));
+    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
+    long double devlnx = (intxu + intxl - Numc::TWO<long double> * intxc) / (HALF_WIDTH * HALF_WIDTH);
+    if (!Numc::Valid(devlnx) || xc < HALF_WIDTH) devlnx = DevX0;
+    return devlnx;
+}
+        
+
+std::array<long double, 2> TrackSys::ApproxLnX::EvalAndDevWithX0(long double x) {
+    long double xl = x - HALF_WIDTH;
+    long double xc = x;
+    long double xu = x + HALF_WIDTH;
+    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
+    long double intxc = (Numc::EqualToZero(xc) ? 0.0L : (xc * (std::log(std::fabs(xc)) - 1.0L)));
+    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
+    
+    long double lnx    = -LnX0 + (intxu - intxl) / (Numc::TWO<long double> * HALF_WIDTH);
+    long double devlnx = (intxu + intxl - Numc::TWO<long double> * intxc) / (HALF_WIDTH * HALF_WIDTH);
+    if (!Numc::Valid(lnx) || lnx <= 0.0L) lnx = Numc::ZERO<long double>;
+    if (!Numc::Valid(devlnx) || xc < HALF_WIDTH) devlnx = DevX0;
+
+    return std::array<long double, 2>({ lnx, devlnx });
+}
+
+
 namespace TrackSys {
         
 std::array<long double, 4> Robust::minimizer(long double chi) const {

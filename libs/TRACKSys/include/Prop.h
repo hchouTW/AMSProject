@@ -181,6 +181,7 @@ class PhyJb {
         static constexpr Int_t DIMG = 5;
         static constexpr Int_t DIML = 4;
         static constexpr Int_t DIME = 2;
+        static constexpr Int_t DIMI = DIML + DIME;
 
     public :
         using SMtxDGG = SMtxD<DIMG, DIMG>;

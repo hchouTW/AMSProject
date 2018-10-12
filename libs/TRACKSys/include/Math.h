@@ -207,13 +207,16 @@ class ApproxLnX {
         ~ApproxLnX() {}
 
         static long double Eval(long double x);
+        static long double Dev(long double x);
         
         inline static long double X0() { return LnX0; }
         inline static long double EvalWithX0(long double x) { return (Eval(x) - LnX0); }
+        static std::array<long double, 2> EvalAndDevWithX0(long double x);
 
     private :
-        static constexpr long double HALF_WIDTH = 0.005;
-        static constexpr long double LnX0 = -6.29831736654805;
+        static constexpr long double HALF_WIDTH = 0.025;
+        static constexpr long double LnX0  = -4.68887945411395;
+        static constexpr long double DevX0 = 55.45177444479562;
 };
 
 } // namesapce TrackSys
