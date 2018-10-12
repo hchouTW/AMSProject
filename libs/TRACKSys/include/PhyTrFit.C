@@ -111,11 +111,9 @@ Bool_t PhyTrFit::simpleFit() {
 
 Bool_t PhyTrFit::physicalFit() {
     if (Numc::EqualToZero(part_.mom())) return false;
-    Bool_t opt_loc  = sw_mscat_;
-    Bool_t opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
-    
-    Short_t DIMG = PhyJb::DIMG + opt_tsft;
-    Short_t DIMI = PhyJb::DIML;
+    Bool_t  opt_loc  = sw_mscat_;
+    Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
+    Short_t DIMG     = PhyJb::DIMG + opt_tsft;
 
     // Gobal Parameters
     Short_t parIDtsft = -1;
@@ -123,13 +121,13 @@ Bool_t PhyTrFit::physicalFit() {
     if (opt_tsft) { parIDtsft = DIMG - 1; params_glb.push_back(tsft_); } // time shift
 
     // Local Parameters
-    std::vector<double> params_loc(nseg_*DIMI, Numc::ZERO<>);
+    std::vector<double> params_loc(nseg_*PhyJb::DIML, Numc::ZERO<>);
     if (opt_loc && args_.size() == nseg_) {
     for (Short_t is = 0; is < nseg_; ++is) {
-        params_loc.at(is*DIMI+0) = args_.at(is).tauu();
-        params_loc.at(is*DIMI+1) = args_.at(is).rhou();
-        params_loc.at(is*DIMI+2) = args_.at(is).taul();
-        params_loc.at(is*DIMI+3) = args_.at(is).rhol();
+        params_loc.at(is*PhyJb::DIML+0) = args_.at(is).tauu();
+        params_loc.at(is*PhyJb::DIML+1) = args_.at(is).rhou();
+        params_loc.at(is*PhyJb::DIML+2) = args_.at(is).taul();
+        params_loc.at(is*PhyJb::DIML+3) = args_.at(is).rhol();
     }}
 
     // CeresSolver: Cost Function
@@ -170,10 +168,10 @@ Bool_t PhyTrFit::physicalFit() {
     if (opt_loc) {
     for (Short_t is = 0; is < nseg_; ++is) {
         args_.at(is).set_mscat(
-            params_loc.at(is*DIMI+0), 
-            params_loc.at(is*DIMI+1), 
-            params_loc.at(is*DIMI+2), 
-            params_loc.at(is*DIMI+3));
+            params_loc.at(is*PhyJb::DIML+0), 
+            params_loc.at(is*PhyJb::DIML+1), 
+            params_loc.at(is*PhyJb::DIML+2), 
+            params_loc.at(is*PhyJb::DIML+3));
     }}
 
     Bool_t succ = evolve();
@@ -182,15 +180,13 @@ Bool_t PhyTrFit::physicalFit() {
 
 
 Bool_t PhyTrFit::evolve() {
-    Bool_t opt_loc  = (sw_mscat_);
-    Bool_t opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
-    
-    Short_t DIMG = PhyJb::DIMG + opt_tsft;
-    Short_t DIML = PhyJb::DIML;
+    Bool_t  opt_loc  = (sw_mscat_);
+    Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
+    Short_t DIMG     = PhyJb::DIMG + opt_tsft;
    
     // Number of Res and Par
-    Short_t numOfRes = (nseq_ + opt_loc*nseg_*DIML);
-    Short_t numOfPar = (DIMG  + opt_loc*nseg_*DIML);
+    Short_t numOfRes = (nseq_ + opt_loc*nseg_*PhyJb::DIML);
+    Short_t numOfPar = (DIMG  + opt_loc*nseg_*PhyJb::DIML);
 
     Short_t parIDeta  =  4;
     Short_t parIDtsft = -1;
@@ -229,8 +225,8 @@ Bool_t PhyTrFit::evolve() {
         chi_cy += ichi(1) * ichi(1); // rhou
         chi_cy += ichi(3) * ichi(3); // rhol
 
-        for (Short_t it = 0; it < DIML; ++it)
-            jb(nseq_ + is*DIML+it, DIMG + is*DIML+it) += idiv(it);
+        for (Short_t it = 0; it < PhyJb::DIML; ++it)
+            jb(nseq_ + is*PhyJb::DIML+it, DIMG + is*PhyJb::DIML+it) += idiv(it);
     }} // Interaction
     
     Short_t cnt_nhit =  0;
@@ -297,8 +293,8 @@ Bool_t PhyTrFit::evolve() {
             if (opt_loc) {
                 for (Short_t is = 0; is <= itnseg; ++is) {
                     for (Short_t it = 0; it < PhyJb::DIML; ++it) {
-                        if (hit->scx()) jb(hit->seqIDcx(), DIMG + is*DIML+it) += hit->divcx() * jbGL.at(is)(0, it);
-                        if (hit->scy()) jb(hit->seqIDcy(), DIMG + is*DIML+it) += hit->divcy() * jbGL.at(is)(1, it);
+                        if (hit->scx()) jb(hit->seqIDcx(), DIMG + is*PhyJb::DIML+it) += hit->divcx() * jbGL.at(is)(0, it);
+                        if (hit->scy()) jb(hit->seqIDcy(), DIMG + is*PhyJb::DIML+it) += hit->divcy() * jbGL.at(is)(1, it);
                     }
                 }
             } // Local
@@ -411,10 +407,10 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     if (opt_loc_) {
     for (Short_t is = 0; is < nseg_; ++is) {
         args.at(is).set_mscat(
-            parameters[1][is*DIML_+0], 
-            parameters[1][is*DIML_+1], 
-            parameters[1][is*DIML_+2], 
-            parameters[1][is*DIML_+3]);
+            parameters[1][is*PhyJb::DIML+0], 
+            parameters[1][is*PhyJb::DIML+1], 
+            parameters[1][is*PhyJb::DIML+2], 
+            parameters[1][is*PhyJb::DIML+3]);
     }}
 
     // Matrix (Rs, Jb)
@@ -429,12 +425,12 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         SVecD<6> inrm, idiv;
         args.at(is).cal_nrm_and_div(inrm, idiv);
 
-        for (Short_t it = 0; it < DIML_; ++it)
-            rs(nseq_ + is*DIML_+it) += inrm(it);
+        for (Short_t it = 0; it < PhyJb::DIML; ++it)
+            rs(nseq_ + is*PhyJb::DIML+it) += inrm(it);
 
         if (hasJacbLoc) {
-        for (Short_t it = 0; it < DIML_; ++it) {
-            jb(nseq_ + is*DIML_+it, DIMG_ + is*DIML_+it) += idiv(it);
+        for (Short_t it = 0; it < PhyJb::DIML; ++it) {
+            jb(nseq_ + is*PhyJb::DIML+it, DIMG_ + is*PhyJb::DIML+it) += idiv(it);
         }}
     }} // Interaction
     
@@ -504,8 +500,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hasJacbLoc && hasLoc) {
                 for (Short_t is = 0; is <= itnseg; ++is) {
                     for (Short_t it = 0; it < PhyJb::DIML; ++it) {
-                        if (hit->scx()) jb(hit->seqIDcx(), DIMG_ + is*DIML_+it) += hit->divcx() * jbGL.at(is)(0, it);
-                        if (hit->scy()) jb(hit->seqIDcy(), DIMG_ + is*DIML_+it) += hit->divcy() * jbGL.at(is)(1, it);
+                        if (hit->scx()) jb(hit->seqIDcx(), DIMG_ + is*PhyJb::DIML+it) += hit->divcx() * jbGL.at(is)(0, it);
+                        if (hit->scy()) jb(hit->seqIDcy(), DIMG_ + is*PhyJb::DIML+it) += hit->divcy() * jbGL.at(is)(1, it);
                     }
                 }
             } // hasJacbInt

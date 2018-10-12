@@ -159,9 +159,6 @@ class SimpleTrFit : public TrFitPar {
         std::vector<PhySt> stts_;
 
     protected :
-        static constexpr Short_t DIMG = PhyJb::DIMG;
-        static constexpr Short_t DIML = PhyJb::DIML;
-        
         // Minimization (Analytical Method)
         static constexpr Double_t LMTU_ETA = 3.0;
         

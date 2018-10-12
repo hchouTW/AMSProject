@@ -12,7 +12,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : 
             TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
-            DIMG_(PhyJb::DIMG + opt_tsft_), DIML_(PhyJb::DIML), 
+            DIMG_(PhyJb::DIMG + opt_tsft_), 
             numOfRes_(0), numOfParGlb_(0), numOfParLoc_(0),
             parIDeta_(4), parIDtsft_(-1)
             { if (check_hits()) setvar(nseq_, nseg_); }
@@ -23,7 +23,7 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     protected :
         inline void setvar(const Short_t nseq = 0, const Short_t nseg = 0) {
             if (nseq <= 0 || nseg < 0) return;
-            Short_t nloc = (opt_loc_ ? nseg * DIML_ : 0);
+            Short_t nloc = (opt_loc_ ? nseg * PhyJb::DIML : 0);
             numOfRes_    = nseq + nloc;
             numOfParGlb_ = DIMG_;
             numOfParLoc_ = nloc;
@@ -37,12 +37,10 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         }
     
     protected :
-        const Bool_t opt_loc_;
-        const Bool_t opt_tsft_;
-        const PhySt  part_;
-        
         const Short_t DIMG_;
-        const Short_t DIML_;
+        const Bool_t  opt_loc_;
+        const Bool_t  opt_tsft_;
+        const PhySt   part_;
         
         Short_t numOfRes_;
         Short_t numOfParGlb_;

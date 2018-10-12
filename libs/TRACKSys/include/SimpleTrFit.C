@@ -294,11 +294,11 @@ Bool_t SimpleTrFit::simpleFit() {
     Bool_t preSucc = false;
     Bool_t curSucc = false;
 
-    Double_t       curLmRhoDen = Numc::ONE<>;
-    Double_t       lambda = LAMBDA0;
-    PhySt          rltSt(part_);
-    SVecD<DIMG>    curGrdG;
-    SMtxSymD<DIMG> curCvGG;
+    Double_t              curLmRhoDen = Numc::ONE<>;
+    Double_t              lambda = LAMBDA0;
+    PhySt                 rltSt(part_);
+    SVecD<PhyJb::DIMG>    curGrdG;
+    SMtxSymD<PhyJb::DIMG> curCvGG;
 
     Short_t updIter = 0;
     Short_t curIter = 0;
@@ -306,12 +306,12 @@ Bool_t SimpleTrFit::simpleFit() {
         Double_t chi_cx = 0;
         Double_t chi_cy = 0;
         
-        SVecD<DIMG>    grdG;
-        SMtxSymD<DIMG> cvGG;
+        SVecD<PhyJb::DIMG>    grdG;
+        SMtxSymD<PhyJb::DIMG> cvGG;
 
         Int_t cnt_nhit = 0;
         PhySt ppst(rltSt);
-        SMtxD<DIMG>&& ppjb = SMtxId();
+        SMtxD<PhyJb::DIMG>&& ppjb = SMtxId();
         for (auto&& hit : hits_) {
             if (!(hit->scx() || hit->scy())) { cnt_nhit++; continue; }
 
@@ -327,17 +327,17 @@ Bool_t SimpleTrFit::simpleFit() {
             ppjb = curjb.gg() * ppjb;
 
             // Coord
-            SVecD<2>       rsC;
-            SMtxD<2, DIMG> jbC;
+            SVecD<2>              rsC;
+            SMtxD<2, PhyJb::DIMG> jbC;
             if (hit->scx()) {
                 rsC(0) = (hit->cx() - ppst.cx()) / hit->ecx();
-                for (Short_t it = 0; it < DIMG; ++it)
+                for (Short_t it = 0; it < PhyJb::DIMG; ++it)
                     jbC(0, it) += (Numc::NEG<> / hit->ecx()) * ppjb(0, it);
                 chi_cx += rsC(0) * rsC(0);
             }
             if (hit->scy()) {
                 rsC(1) = (hit->cy() - ppst.cy()) / hit->ecy();
-                for (Short_t it = 0; it < DIMG; ++it)
+                for (Short_t it = 0; it < PhyJb::DIMG; ++it)
                     jbC(1, it) += (Numc::NEG<> / hit->ecy()) * ppjb(1, it);
                 chi_cy += rsC(1) * rsC(1);
             }
@@ -376,16 +376,16 @@ Bool_t SimpleTrFit::simpleFit() {
         }
         else { nchi_tt_ = nchi_tt; }
 
-        SMtxSymD<DIMG> lmCvGG(cvGG);
-        SVecD<DIMG>&&  diagCvGG = (lambda * cvGG.Diagonal());
-        lmCvGG.SetDiagonal(SVecD<DIMG>(lmCvGG.Diagonal() + diagCvGG));
+        SMtxSymD<PhyJb::DIMG> lmCvGG(cvGG);
+        SVecD<PhyJb::DIMG>&&  diagCvGG = (lambda * cvGG.Diagonal());
+        lmCvGG.SetDiagonal(SVecD<PhyJb::DIMG>(lmCvGG.Diagonal() + diagCvGG));
 
         Bool_t isNomag = (Numc::EqualToZero(lmCvGG(4, 4)) && Numc::EqualToZero(grdG(4))); // Fast Check
         if (isNomag) {
             grdG(4) = Numc::ZERO<>;
             SMtxSymD<4>&& lmCvGG_nomag = lmCvGG.Sub<SMtxSymD<4>>(0, 0);
             if (!lmCvGG_nomag.Invert()) break;
-            lmCvGG = std::move(SMtxSymD<DIMG>());
+            lmCvGG = std::move(SMtxSymD<PhyJb::DIMG>());
             for (Short_t ielem = 0; ielem < 4; ++ielem)
                 for (Short_t jelem = ielem; jelem < 4; ++jelem)
                     lmCvGG(ielem, jelem) = lmCvGG_nomag(ielem, jelem);
@@ -394,10 +394,10 @@ Bool_t SimpleTrFit::simpleFit() {
             if (!lmCvGG.Invert()) break;
         }
 
-        SVecD<DIMG>&& rslG = (lmCvGG * grdG);
+        SVecD<PhyJb::DIMG>&& rslG = (lmCvGG * grdG);
        
         curLmRhoDen = Numc::ZERO<>;
-        for (Short_t it = 0; it < DIMG; ++it)
+        for (Short_t it = 0; it < PhyJb::DIMG; ++it)
             curLmRhoDen += (rslG(it) * (diagCvGG(it)*rslG(it) + grdG(it)));
         
         if (curIter == 0 || isUpdate) {
