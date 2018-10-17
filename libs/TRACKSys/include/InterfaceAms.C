@@ -17,6 +17,7 @@
 #include "TrFitPar.h"
 #include "SimpleTrFit.h"
 #include "PhyTrFit.h"
+#include "PhyMuFit.h"
 #include "InterfaceAms.h"
 
 
@@ -47,6 +48,10 @@ HitStTRK              Event::TkHitL9 = HitStTRK();
 std::vector<HitStTRK> Event::TkHitInQ = std::vector<HitStTRK>();
 HitStTRK              Event::TkHitL1Q = HitStTRK();
 HitStTRK              Event::TkHitL9Q = HitStTRK();
+
+std::vector<HitStTRK> Event::TkHitInQ_NOxy = std::vector<HitStTRK>();
+HitStTRK              Event::TkHitL1Q_NOxy = HitStTRK();
+HitStTRK              Event::TkHitL9Q_NOxy = HitStTRK();
 
 std::vector<HitStTOF> Event::TfHitT  = std::vector<HitStTOF>();
 std::vector<HitStTOF> Event::TfHitQ  = std::vector<HitStTOF>();
@@ -105,7 +110,7 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Short_t chrg) {
 } 
 
 
-TrFitPar Event::Get(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
+TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
     if (Ev == nullptr) return TrFitPar();
     if (Trtk == nullptr || !StatusTk) return TrFitPar();
     Bool_t hasL1 = (tkOpt.dedx() ? (TkHitL1Q.scx() || TkHitL1Q.scy()) : (TkHitL1.scx() || TkHitL1.scy()));
@@ -159,6 +164,10 @@ void Event::Init() {
     TkHitInQ.clear();
     TkHitL1Q = HitStTRK();
     TkHitL9Q = HitStTRK();
+    
+    TkHitInQ_NOxy.clear();
+    TkHitL1Q_NOxy = HitStTRK();
+    TkHitL9Q_NOxy = HitStTRK();
     
     TfHitT.clear();
     TfHitQ.clear();
@@ -238,6 +247,15 @@ Bool_t Event::BulidHitStTRK() {
         if      (layJ == 1) TkHitL1Q = hitQ;
         else if (layJ == 9) TkHitL9Q = hitQ;
         else                TkHitInQ.push_back(hitQ);
+        
+        HitStTRK hitQ_NOxy(false, false, layJ, isInnTr);
+        hitQ_NOxy.set_coo(coo.x(), coo.y(), coo.z());
+        hitQ_NOxy.set_nsr(nsrx, nsry);
+        hitQ_NOxy.set_q(qx, qy, ChrgZ);
+        
+        if      (layJ == 1) TkHitL1Q_NOxy = hitQ_NOxy;
+        else if (layJ == 9) TkHitL9Q_NOxy = hitQ_NOxy;
+        else                TkHitInQ_NOxy.push_back(hitQ_NOxy);
 
         Bool_t isInn = (layJ != 1 && layJ != 9);
         if (isInn && scx) cntX++;

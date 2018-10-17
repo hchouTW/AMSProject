@@ -6,10 +6,6 @@ namespace TrackSys {
 
 
 class TrFitPar {
-    public : 
-        static Double_t NormQuality(Double_t nchi, Short_t ndof);
-        static Double_t NormQuality(Double_t nchi, Double_t ndof);
-
     public :
         enum class Orientation {
             kDownward = 0, kUpward = 1
@@ -25,14 +21,18 @@ class TrFitPar {
     public :
         inline Bool_t check() { return check_hits(); }
 
-        inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit); zero(); }
-        inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit);  zero(); }
+        inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit);  zero(); }
         inline void add_hit(const HitStRICH& hit) { hits_RICH_.push_back(hit); zero(); }
-        inline void add_hit(const HitStTRD&  hit) { hits_TRD_.push_back(hit); zero(); }
+        inline void add_hit(const HitStTRD&  hit) { hits_TRD_.push_back(hit);  zero(); }
         
-        inline void add_hit(const std::vector<HitStTRK>& hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
-        inline void add_hit(const std::vector<HitStTOF>& hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
-       
+        inline void add_hit(const std::vector<HitStTRK>&  hits) { hits_TRK_.insert(hits_TRK_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTOF>&  hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStRICH>& hits) { hits_RICH_.insert(hits_RICH_.end(), hits.begin(), hits.end()); zero(); }
+        inline void add_hit(const std::vector<HitStTRD>&  hits) { hits_TRD_.insert(hits_TRD_.end(), hits.begin(), hits.end()); zero(); }
+      
+        inline const Bool_t& sw_mscat() const { return sw_mscat_; }
+        inline const Bool_t& sw_eloss() const { return sw_eloss_; }
         inline const PartInfo&    info() const { return info_; }
         inline const Orientation& ortt() const { return ortt_; }
 

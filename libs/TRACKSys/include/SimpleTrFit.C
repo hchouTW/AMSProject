@@ -75,6 +75,8 @@ void SimpleTrFit::clear() {
 SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
     if (!check_hits()) return;
+    if (nmes_cx_ <= LMTN_CX) return;
+    if (nmes_cy_ <= LMTN_CY) return;
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
@@ -688,8 +690,8 @@ Bool_t SimpleTrFit::evolve() {
     
     nchi_.at(0)    = nchi_cx;
     nchi_.at(1)    = nchi_cyib;
-    quality_.at(0) = TrFitPar::NormQuality(nchi_.at(0), ndof_cx);
-    quality_.at(1) = TrFitPar::NormQuality(nchi_.at(1), ndof_cyib);
+    quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_cx);
+    quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_cyib);
     
     // Local States
     stts_.clear();

@@ -123,8 +123,19 @@ void PhyJb::set(PhySt& part, Double_t mspar_mscatu, Double_t mspar_mslen1, Doubl
         jb_ms_.reset(mspar_mscatu, mspar_mslen1, mspar_mslen2);
     }
     if (arg.eloss()) {
-        jb_ge_(JEA, JION) = arg.sign() * arg.elion_sgm() * part.eta();
-        jb_ge_(JEA, JBRM) = arg.sign() * arg.elbrm_men() * part.eta();
+        Double_t elion = arg.sign() * arg.elion_sgm();
+        jb_ge_(JCX, JION) = elion * arg.eldlt_c(0);
+        jb_ge_(JCY, JION) = elion * arg.eldlt_c(1);
+        jb_ge_(JUX, JION) = elion * arg.eldlt_u(0);
+        jb_ge_(JUY, JION) = elion * arg.eldlt_u(1);
+        jb_ge_(JEA, JION) = elion * part.eta();
+       
+        Double_t elbrm = arg.sign() * arg.elbrm_men();
+        jb_ge_(JCX, JBRM) = elbrm * arg.eldlt_c(0);
+        jb_ge_(JCY, JBRM) = elbrm * arg.eldlt_c(1);
+        jb_ge_(JUX, JBRM) = elbrm * arg.eldlt_u(0);
+        jb_ge_(JUY, JBRM) = elbrm * arg.eldlt_u(1);
+        jb_ge_(JEA, JBRM) = elbrm * part.eta();
     }
 }
 
@@ -147,9 +158,10 @@ void PropPhyCal::init() {
     sw_mscat_ = false;
     sw_eloss_ = false;
 
-    eta_abs_sat_ = 0.;
-    eta_abs_end_ = 0.;
-    
+    ini_state_ = SVecD<7>();
+    fin_state_ = SVecD<7>();
+    dlt_state_ = SVecD<7>();
+
     mat_ = false;
     tme_ = 0.; 
     len_ = 0.; 
@@ -178,7 +190,8 @@ void PropPhyCal::init() {
 
 
 void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm, Double_t tme) {
-    eta_abs_end_ = part.eta_abs();
+    fin_state_ = part.state();
+    
     tme_ += tme;
     len_ += mfld.rlen();
     if (mfld()) {
@@ -206,7 +219,7 @@ void PropPhyCal::push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm, Doubl
 }
 
 
-void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
+void PropPhyCal::normalized(const MatFld& mfld, PhySt& part, Double_t step) {
     if (!mfld()) return;
     if (sw_mscat_) {
         mscat_uu_ = 0.;
@@ -263,10 +276,19 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part) {
         orth_rho_ = orth.rho();
     }
     if (sw_eloss_) {
+        dlt_state_ = SVecD<7>();
+        dlt_state_(0) = fin_state_(0) - (ini_state_(0) + step * ini_state_(3));
+        dlt_state_(1) = fin_state_(1) - (ini_state_(1) + step * ini_state_(4));
+        dlt_state_(2) = fin_state_(2) - (ini_state_(2) + step * ini_state_(5));
+        dlt_state_(3) = fin_state_(3) - ini_state_(3);
+        dlt_state_(4) = fin_state_(4) - ini_state_(4);
+        dlt_state_(5) = fin_state_(5) - ini_state_(5);
+        dlt_state_(6) = fin_state_(6) / ini_state_(6);
+
         MatPhyFld&& mphy = MatPhy::Get(mfld, part);
         elion_sgm_ = mphy.elion_sgm();
         elbrm_men_ = mphy.elbrm_men();
-
+        
         if (!Numc::Valid(elion_sgm_) || Numc::Compare(elion_sgm_) <= 0) elion_sgm_ = Numc::ZERO<>;
         if (!Numc::Valid(elbrm_men_) || Numc::Compare(elbrm_men_) <= 0) elbrm_men_ = Numc::ZERO<>;
     }
@@ -280,6 +302,7 @@ void PropPhyCal::set_PhyArg(PhySt& part) const {
     part.arg().setvar_mat(mat_, nrl_, ela_);
     part.arg().setvar_orth(sign_, orth_tau_, orth_rho_);
     part.arg().setvar_mscat(mscat_uu_, mscat_ul_, mscat_ll_);
+    part.arg().setvar_eldlt(SVecD<3>(dlt_state_(0), dlt_state_(1), dlt_state_(2)), SVecD<3>(dlt_state_(3), dlt_state_(4), dlt_state_(5)), dlt_state_(6));
     part.arg().setvar_eloss(elion_sgm_, elbrm_men_);
 
     part.set_time(part.time() + part.arg().tme());
@@ -430,14 +453,13 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
         if (PropMgnt::FastProp(step, part, &fastscan) && fastscan())
             MatPhy::SetCorrFactor(&fastscan, &part);
     }
-
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = Numc::ZERO<>;
     
     std::list<MatFld> mflds;
     PropPhyCal ppcal(part, step);
-    while (iter <= LMTU_ITER && !is_succ) {
+    
+    Long64_t iter     = 0;
+    Double_t int_step = Numc::ZERO<>;
+    while (iter < LMTU_ITER && (Numc::Compare(std::fabs(step - int_step), CONV_STEP) > 0)) {
         Double_t res_step = step - int_step;
         Double_t cur_step = GetStep(part, res_step);
 
@@ -465,12 +487,14 @@ Bool_t PropMgnt::Prop(const Double_t step, PhySt& part, MatFld* mfld, PhyJb* phy
 
         iter++;
         int_step += cur_step;
-        is_succ = (Numc::Compare(std::fabs(step - int_step), CONV_STEP) < 0);
+
     }
+    Bool_t is_succ = (iter <= LMTU_ITER && Numc::Compare(std::fabs(step - int_step), CONV_STEP) <= 0);
+    
     MatFld&& mgfld = MatFld::Merge(mflds);
     if (withMf) *mfld = mgfld;
         
-    ppcal.normalized(mgfld, part);
+    ppcal.normalized(mgfld, part, step);
     ppcal.set_PhyArg(part);
     if (withJb) phyJb->set(part, ppcal.mspar_mscatu(), ppcal.mspar_mslen1(), ppcal.mspar_mslen2());
 
@@ -491,13 +515,12 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
             MatPhy::SetCorrFactor(&fastscan, &part);
     }
     
-    Long64_t iter     = 1;
-    Bool_t   is_succ  = false;
-    Double_t int_step = Numc::ZERO<>;
-    
     std::list<MatFld> mflds;
     PropPhyCal ppcal(part, part.uz()*(zcoo-part.cz()));
-    while (iter <= LMTU_ITER && !is_succ) {
+    
+    Long64_t iter     = 0;
+    Double_t int_step = Numc::ZERO<>;
+    while (iter < LMTU_ITER && (Numc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) > 0)) {
         Double_t res_stepz = zcoo - part.cz();
         Double_t cur_step  = GetStepToZ(part, res_stepz);
 
@@ -525,12 +548,13 @@ Bool_t PropMgnt::PropToZ(const Double_t zcoo, PhySt& part, MatFld* mfld, PhyJb* 
 
         iter++;
         int_step += cur_step;
-        is_succ = (Numc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) < 0);
     }
+    Bool_t is_succ = (iter <= LMTU_ITER && Numc::Compare(std::fabs(zcoo - part.cz()), CONV_STEP) <= 0);
+
     MatFld&& mgfld = MatFld::Merge(mflds);
     if (withMf) *mfld = mgfld;
     
-    ppcal.normalized(mgfld, part);
+    ppcal.normalized(mgfld, part, int_step);
     ppcal.set_PhyArg(part);
     if (withJb) phyJb->set(part, ppcal.mspar_mscatu(), ppcal.mspar_mslen1(), ppcal.mspar_mslen2());
    
@@ -641,7 +665,7 @@ Bool_t PropMgnt::PropWithEuler(const Double_t step, PhySt& part, const MatFld& m
         st0.uz() + step * mn0.uz()
     );
     if (withEloss) {
-        Double_t eta    = st0.eta() * (Numc::ONE<> + step_ps * mn0.e());
+        Double_t eta    = st0.eta() + step_ps * mn0.e();
         Bool_t   is_mch = (Numc::Compare(eta) == eta_sign);
         if (is_mch) part.set_eta(eta);
         else        return false;

@@ -19,36 +19,6 @@
 namespace TrackSys {
 
 
-Double_t TrFitPar::NormQuality(Double_t nchi, Short_t ndof) {
-    if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
-    Double_t chi = nchi * static_cast<Double_t>(ndof);
-    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
-    if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
-    Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
-    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
-    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
-    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
-    Double_t xfunc = sign * std::sqrt(qfunc / static_cast<Double_t>(ndof));
-    if (Numc::Valid(xfunc)) return xfunc;
-    return Numc::ZERO<>;
-}
-
-
-Double_t TrFitPar::NormQuality(Double_t nchi, Double_t ndof) {
-    if (Numc::Compare(nchi) < 0 || Numc::Compare(ndof) <= 0) return Numc::ZERO<>;
-    Double_t chi = nchi * ndof;
-    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
-    if (Numc::Compare(ndof, Numc::TWO<>) <= 0) return std::sqrt(nchi);
-    Double_t qmin  = (ndof - Numc::TWO<>);
-    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
-    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
-    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
-    Double_t xfunc = sign * std::sqrt(qfunc / ndof);
-    if (Numc::Valid(xfunc)) return xfunc;
-    return Numc::ZERO<>;
-}
-        
-    
 TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
     if (this != &rhs) {
         sw_mscat_    = rhs.sw_mscat_;
@@ -95,7 +65,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
 
 TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
     clear();
-
+   
     sw_mscat_ = sw_mscat;
     sw_eloss_ = sw_eloss;
     info_ = info;
@@ -211,11 +181,7 @@ Bool_t TrFitPar::sort_hits() {
 
 Bool_t TrFitPar::check_hits() {
     if (is_check_) return is_check_;
-    sort_hits();
-   
-    Bool_t passed = (nmes_cx_ > LMTN_CX && nmes_cy_ > LMTN_CY);
-    if (passed) is_check_ = true;
-   
+    is_check_ = sort_hits();
     return is_check_;
 }
 

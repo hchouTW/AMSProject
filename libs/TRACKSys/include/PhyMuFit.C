@@ -1,5 +1,5 @@
-#ifndef __TRACKLibs_PhyTrFit_C__
-#define __TRACKLibs_PhyTrFit_C__
+#ifndef __TRACKLibs_PhyMuFit_C__
+#define __TRACKLibs_PhyMuFit_C__
 
 
 #include "Sys.h"
@@ -16,12 +16,13 @@
 #include "TrFitPar.h"
 #include "SimpleTrFit.h"
 #include "PhyTrFit.h"
+#include "PhyMuFit.h"
 
 
 namespace TrackSys {
         
 
-PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
+PhyMuFit& PhyMuFit::operator=(const PhyMuFit& rhs) {
     if (this != &rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
@@ -48,8 +49,8 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
 }
 
 
-void PhyTrFit::clear() {
-    succ_ = false;
+void PhyMuFit::clear() {
+    succ_   = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     tsft_ = 0;
@@ -76,49 +77,78 @@ void PhyTrFit::clear() {
 }
 
 
-PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
-    PhyTrFit::clear();
+PhyMuFit::PhyMuFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
+    PhyMuFit::clear();
     if (!check_hits()) return;
     if (nmes_cx_ <= LMTN_CX) return;
     if (nmes_cy_ <= LMTN_CY) return;
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
-    ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
+    ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T) - Numc::ONE<Short_t>;
     ndof_tt_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
     ndof_.at(0) = ndof_cx_;
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
-    if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
-    if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
+    if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyMuFit::clear(); return; }
+    if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyMuFit::clear(); return; }
+    if (ndof_ib_    <= Numc::ONE<Short_t>) { PhyMuFit::clear(); return; }
 
-    succ_ = (simpleFit() ? physicalFit() : false);
-    if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
+    succ_ = (scanFit() ? physicalFit() : false);
+    if (!succ_) { PhyMuFit::clear(); TrFitPar::clear(); }
+
+    // testcode
+    //COUT("PHY MASS %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.rig(), quality_.at(0), quality_.at(1));
     
-    //if (!succ_) CERR("FAILURE === PhyTrFit\n");
+    //if (!succ_) CERR("FAILURE === PhyMuFit\n");
 }
 
 
-Bool_t PhyTrFit::simpleFit() {
-    SimpleTrFit simple(dynamic_cast<TrFitPar&>(*this), true);
-    if (simple.status()) {
-        part_ = simple.part();
-        args_ = simple.args();
+Bool_t PhyMuFit::scanFit() {
+    Short_t chrg = std::abs(info_.chrg());
+    if (chrg >= PartListMassQ.size()) return false;
+    if (chrg < 1 || chrg > 2) return false;
+    
+    class PartElem {
+        public :
+            PartElem() : tsft(0), qlt0(0), qlt1(0) {}
+            PartElem(const PhySt& _part, const std::vector<PhyArg>& _args, Double_t _tsft, Double_t _qlt0, Double_t _qlt1) : part(_part), args(_args), tsft(_tsft), qlt0(_qlt0), qlt1(_qlt1) {}
+            PhySt               part;
+            std::vector<PhyArg> args;
+            Double_t            tsft;
+            Double_t            qlt0;
+            Double_t            qlt1;
+    };
+    
+    PartElem* cond = nullptr;
+    std::vector<PartElem> conds;
+    for (auto&& mass : PartListMassQ.at(chrg)) {
+        info_.reset(chrg, mass);
+        PhyTrFit trfit((TrFitPar&)(*this));
+        if (!trfit.status()) continue;
+        conds.push_back( PartElem(trfit.part(), trfit.args(), trfit.tsft(), trfit.quality(0), trfit.quality(1)) );
     }
-    else {
-        args_ = std::move(std::vector<PhyArg>(nseg_, PhyArg(sw_mscat_, sw_eloss_)));
-    }
-    tsft_ = Numc::ZERO<>;
-    return simple.status();
+    if (conds.size() == 0) return false;
+    for (auto&& elem : conds) { if (cond == nullptr || elem.qlt1 < cond->qlt1) cond = &elem; }
+
+    info_.reset(chrg, cond->part.mass());
+    part_ = cond->part;
+    args_ = cond->args;
+    tsft_ = cond->tsft;
+
+    return true;
 }
 
 
-Bool_t PhyTrFit::physicalFit() {
+Bool_t PhyMuFit::physicalFit() {
     if (Numc::EqualToZero(part_.mom())) return false;
     Bool_t  opt_loc  = sw_mscat_;
     Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
-    Short_t DIMG     = PhyJb::DIMG + opt_tsft;
+    Short_t DIMG     = (PhyJb::DIMG+1) + opt_tsft;
+    
+    Double_t rndm_eta = 1.0 + 0.05 * (Rndm::NormalGaussian() + Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF));
+    Double_t rndm_igm = 1.0 + 0.02 * (Rndm::NormalGaussian() + Numc::TWO<> * (Rndm::DecimalUniform() - Numc::HALF));
 
     // Gobal Parameters
-    std::vector<double> params_glb({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() });
+    std::vector<double> params_glb({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta() * rndm_eta, part_.igmbta() * rndm_igm });
     if (opt_tsft) { params_glb.push_back(tsft_); } // time shift
 
     // Local Parameters
@@ -134,7 +164,7 @@ Bool_t PhyTrFit::physicalFit() {
     }}
     
     // CeresSolver: Cost Function
-    ceres::CostFunction* cost_function = new VirtualPhyTrFit(dynamic_cast<TrFitPar&>(*this), part_);
+    ceres::CostFunction* cost_function = new VirtualPhyMuFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     // CeresSolver: Problem
     ceres::Problem problem;
@@ -144,6 +174,7 @@ Bool_t PhyTrFit::physicalFit() {
     problem.SetParameterUpperBound(params_glb.data(), 2,  1.0);
     problem.SetParameterLowerBound(params_glb.data(), 3, -1.0);
     problem.SetParameterUpperBound(params_glb.data(), 3,  1.0);
+    problem.SetParameterLowerBound(params_glb.data(), parIDigb, 1.0e-12);
 
     // CeresSolver: Options
     ceres::Solver::Options options;
@@ -162,8 +193,12 @@ Bool_t PhyTrFit::physicalFit() {
     // Result (Global)
     Double_t partcz = part_.cz();
     Short_t  signuz = Numc::Compare(part_.uz());
+    Double_t partmu = std::fabs(params_glb.at(parIDigb) / params_glb.at(parIDeta));
+   
+    info_.reset(partmu);
+    part_.reset(partmu);
     part_.set_state_with_uxy(params_glb.at(0), params_glb.at(1), partcz, params_glb.at(2), params_glb.at(3), signuz);
-    part_.set_eta(params_glb.at(4));
+    part_.set_eta(params_glb.at(parIDeta));
     
     if (opt_tsft) { tsft_ = params_glb.at(parIDtsft); } // TOF Shift Time
 
@@ -185,10 +220,10 @@ Bool_t PhyTrFit::physicalFit() {
 }
 
 
-Bool_t PhyTrFit::evolve() {
+Bool_t PhyMuFit::evolve() {
     Bool_t  opt_loc  = (sw_mscat_);
     Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
-    Short_t DIMG     = PhyJb::DIMG + opt_tsft;
+    Short_t DIMG     = (PhyJb::DIMG+1) + opt_tsft;
    
     // Number of Res and Par
     Short_t numOfRes = (nseq_ + opt_loc*nseg_*PhyJb::DIML);
@@ -392,7 +427,7 @@ Bool_t PhyTrFit::evolve() {
 }
 
 
-bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
     if (numOfRes_ <= 0 || numOfParGlb_ <= 0) return false;
     std::fill_n(residuals, numOfRes_, Numc::ZERO<>);
     Bool_t hasJacbGlb = (            jacobians != nullptr && jacobians[0] != nullptr);
@@ -408,9 +443,14 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft] : Numc::ZERO<>);
 
     // Particle Status
+    Double_t partcz = part_.cz();
+    Short_t  signuz = Numc::Compare(part_.uz());
+    Double_t partmu = std::fabs(parameters[0][parIDigb] / parameters[0][parIDeta]);
+    
     PhySt ppst(part_);
     ppst.arg().clear();
-    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
+    ppst.reset(partmu);
+    ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], partcz, parameters[0][2], parameters[0][3], signuz);
     ppst.set_eta(parameters[0][parIDeta]);
 
     // Interaction Local Parameters
@@ -538,6 +578,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
             if (hasJacbGlb && hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDeta) += hitTRK->divqx_eta() * jbGG(4, 4);
             if (hasJacbGlb && hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDeta) += hitTRK->divqy_eta() * jbGG(4, 4);
+            if (hasJacbGlb && hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDigb) += hitTRK->divqx_igb() * jbGG(4, 4);
+            if (hasJacbGlb && hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDigb) += hitTRK->divqy_igb() * jbGG(4, 4);
         }
         
         // TOF
@@ -547,6 +589,9 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacbGlb && hitTOF->st()) jb(hitTOF->seqIDt(), parIDeta) += hitTOF->divt_eta() * jbGG(4, 4);
             if (hasJacbGlb && hitTOF->sq()) jb(hitTOF->seqIDq(), parIDeta) += hitTOF->divq_eta() * jbGG(4, 4);
+            //if (hasJacbGlb && hitTOF->st() && opt_tsft_) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
+            if (hasJacbGlb && hitTOF->st()) jb(hitTOF->seqIDt(), parIDigb) += hitTOF->divt_igb() * jbGG(4, 4);
+            if (hasJacbGlb && hitTOF->sq()) jb(hitTOF->seqIDq(), parIDigb) += hitTOF->divq_igb() * jbGG(4, 4);
             if (hasJacbGlb && hitTOF->st() && opt_tsft_) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
         }
         
@@ -555,6 +600,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
             if (hasJacbGlb && hitRICH->sib()) jb(hitRICH->seqIDib(), parIDeta) += hitRICH->divib_eta() * jbGG(4, 4);
+            if (hasJacbGlb && hitRICH->sib()) jb(hitRICH->seqIDib(), parIDigb) += hitRICH->divib_igb() * jbGG(4, 4);
         }
         
         // TRD
@@ -562,6 +608,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
             if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
+            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDigb) += hitTRD->divel_igb() * jbGG(4, 4);
         }
 
         if (hasCxy) {
@@ -600,7 +647,7 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
 }
     
 
-PhySt PhyTrFit::interpolate_to_z(Double_t zcoo) const {
+PhySt PhyMuFit::interpolate_to_z(Double_t zcoo) const {
     PhySt nullst = part_; nullst.reset(part_.info());
     if (!succ_ || stts_.size() == 0) return nullst;
 
@@ -629,7 +676,7 @@ PhySt PhyTrFit::interpolate_to_z(Double_t zcoo) const {
 }
 
 
-MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) const {
+MatFld PhyMuFit::get_mat(Double_t zbd1, Double_t zbd2) const {
     if (!succ_ || stts_.size() == 0) return MatFld();
     
     // Set Boundary
@@ -678,4 +725,4 @@ MatFld PhyTrFit::get_mat(Double_t zbd1, Double_t zbd2) const {
 } // namespace TrackSys
 
 
-#endif // __TRACKLibs_PhyTrFit_C__
+#endif // __TRACKLibs_PhyMuFit_C__

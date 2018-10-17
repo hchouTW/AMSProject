@@ -7,7 +7,7 @@ namespace TrackSys {
 
 enum class PartType {
     Fixed,
-    Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8,
+    Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8,
     Photon, 
     Electron, Positron, 
     Muon, 
@@ -99,8 +99,6 @@ const std::vector<std::vector<Double_t>> PartListMassQ({
     { PartInfo(PartType::Nitrogen13).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen15).mass() }, // Q7
     { PartInfo(PartType::Oxygen16).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen18).mass() } // Q8
 });
-
-const Short_t PartListMaxQ = PartListMassQ.size()-1;
 
 
 } // namespace TrackSys

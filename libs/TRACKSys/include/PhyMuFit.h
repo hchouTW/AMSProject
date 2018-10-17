@@ -1,5 +1,5 @@
-#ifndef __TRACKLibs_PhyTrFit_H__
-#define __TRACKLibs_PhyTrFit_H__
+#ifndef __TRACKLibs_PhyMuFit_H__
+#define __TRACKLibs_PhyMuFit_H__
 
 
 #include "ceres/ceres.h" // Ceres-Solver
@@ -8,11 +8,11 @@
 namespace TrackSys {
 
 
-class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
+class VirtualPhyMuFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : 
+        VirtualPhyMuFit(const TrFitPar& fitPar, const PhySt& part) : 
             TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
-            DIMG_(PhyJb::DIMG + (opt_tsft_?1:0)), 
+            DIMG_((PhyJb::DIMG+1) + (opt_tsft_?1:0)), 
             numOfRes_(0), numOfParGlb_(0), numOfParLoc_(0)
             { if (check_hits()) setvar(nseq_, nseg_); }
     
@@ -42,20 +42,21 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
         Short_t numOfRes_;
         Short_t numOfParGlb_;
         Short_t numOfParLoc_;
-    
+        
     private :
         static constexpr Short_t parIDeta  = 4;
-        static constexpr Short_t parIDtsft = 5;
+        static constexpr Short_t parIDigb  = 5;
+        static constexpr Short_t parIDtsft = 6;
 };
 
 
-class PhyTrFit : public TrFitPar {
+class PhyMuFit : public TrFitPar {
     public :
-        PhyTrFit& operator=(const PhyTrFit& rhs);
-        PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
+        PhyMuFit& operator=(const PhyMuFit& rhs);
+        PhyMuFit(const PhyMuFit& trFit) { *this = trFit; }
         
-        PhyTrFit(const TrFitPar& fitPar);
-        ~PhyTrFit() { PhyTrFit::clear(); }
+        PhyMuFit(const TrFitPar& fitPar);
+        ~PhyMuFit() { PhyMuFit::clear(); }
         
     public :
         inline const Bool_t&   status() const { return succ_; }
@@ -82,7 +83,7 @@ class PhyTrFit : public TrFitPar {
     protected :
         void clear();
 
-        Bool_t simpleFit();
+        Bool_t scanFit();
         Bool_t physicalFit();
         Bool_t evolve();
 
@@ -111,11 +112,12 @@ class PhyTrFit : public TrFitPar {
     
     private :
         static constexpr Short_t parIDeta  = 4;
-        static constexpr Short_t parIDtsft = 5;
+        static constexpr Short_t parIDigb  = 5;
+        static constexpr Short_t parIDtsft = 6;
 };
 
 
 } // namespace TrackSys
 
 
-#endif // __TRACKLibs_PhyTrFit_H__
+#endif // __TRACKLibs_PhyMuFit_H__

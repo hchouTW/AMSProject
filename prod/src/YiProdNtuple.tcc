@@ -80,6 +80,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		TkStID = TkStPar->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
 		TkStID = TkStPar->iTrTrackPar(1, 3, 22);
         if (TkStID >= 0) {
+            TkStPar->GetQH_all(); // confirm rec-chrg work
             qin = TkStPar->GetInnerQH(2, beta, TkStID);
             zin  = (qin < 1.0) ? 1 : std::lrint(qin);
             mass = (zin <   2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
@@ -961,8 +962,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             //    qopt = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
 
             TrTrackChargeH* trtkchrg = &trtk->trkcharge;
-            float xchrg = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 0);
-			float ychrg = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 1);
+            float xchrg  = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 0);
+			float ychrg  = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 1);
+			float xychrg = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, ilay+1, 0, 2);
 
             int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(ilay+1) : 0;
             TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[ilay+1] : nullptr;
@@ -1001,8 +1003,9 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			hit.loc[1]  = yloc;
 			hit.chrg[0] = xchrg;
 			hit.chrg[1] = ychrg;
-            hit.nsr[0] = nsrx;
-            hit.nsr[1] = nsry;
+			hit.chrg[2] = xychrg;
+            hit.nsr[0]  = nsrx;
+            hit.nsr[1]  = nsry;
             for (int ii = 0; ii < 5; ++ii) hit.sig[0][ii] = sigadcx[ii];
             for (int ii = 0; ii < 5; ++ii) hit.sig[1][ii] = sigadcy[ii];
 
@@ -1075,7 +1078,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
         
         // Kalman
-        Bool_t kfSwOpt = true;
+        Bool_t kfSwOpt = false;
         Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             if (kfRefit == -1) continue;
@@ -1154,7 +1157,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             TrackSys::AmsTkOpt::InnerL9, 
             TrackSys::AmsTkOpt::FullSpan });
 
-        Bool_t hcSwOpt = true;
+        Bool_t hcSwOpt = false;
 	    for (int patt = 0; patt < _npatt && hcSwOpt; ++patt) {
             fTrk.hcTr.at(patt) = processHCTr( // Tracker
                 recEv.ptype, TrackSys::AmsTkOpt(trPatt.at(patt))); 
@@ -1182,7 +1185,7 @@ HCTrackInfo EventTrk::processHCTr(TrackSys::PartInfo info, const TrackSys::AmsTk
         recEv.trackerZJ[3], recEv.trackerZJ[4], recEv.trackerZJ[5], 
         recEv.trackerZJ[6], recEv.trackerZJ[7], recEv.trackerZJ[8] };
 
-    TrackSys::TrFitPar&& fitPar = TrackSys::AmsEvent::Get(info, tkOpt, tfOpt, rhOpt);
+    TrackSys::TrFitPar&& fitPar = TrackSys::AmsEvent::GetTrFitPar(info, tkOpt, tfOpt, rhOpt);
     if (!fitPar.check()) return HCTrackInfo();
 
     MGClock::HrsStopwatch hcSw; hcSw.start();
@@ -1466,45 +1469,60 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             trdKDir = AMSDir(fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5]);
         }
 
-		for (int ih = 0; ih < nhits; ih++) {
-			TrdKHit* hit = trdkcls->GetHit(ih);
-			if (hit == nullptr) continue;
-			if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
-				if (!hit->IsCalibrated) continue;
-			if (checkEventMode(EventBase::ISS))
-				if (!hit->IsAligned) continue;
-            
-            HitTRDInfo hitInfo;
-            hitInfo.lay  = hit->TRDHit_Layer;
-            hitInfo.side = hit->TRDHit_Direction;
-            hitInfo.amp  = hit->TRDHit_Amp;
-            hitInfo.len  = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
-            hitInfo.coo[0] = hit->TRDHit_x;
-            hitInfo.coo[1] = hit->TRDHit_y;
-            hitInfo.coo[2] = hit->TRDHit_z;
+        int nhit = 0;
+        if (kindOfFit == 0) {
+		    for (int ih = 0; ih < nhits; ih++) {
+		    	TrdKHit* hit = trdkcls->GetHit(ih);
+		    	if (hit == nullptr) continue;
+		    	if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
+		    		if (!hit->IsCalibrated) continue;
+		    	if (checkEventMode(EventBase::ISS))
+		    		if (!hit->IsAligned) continue;
+                
+                HitTRDInfo hitInfo;
+                hitInfo.lay  = hit->TRDHit_Layer;
+                hitInfo.side = hit->TRDHit_Direction;
+                hitInfo.amp  = hit->TRDHit_Amp;
+                hitInfo.len  = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
+                hitInfo.coo[0] = hit->TRDHit_x;
+                hitInfo.coo[1] = hit->TRDHit_y;
+                hitInfo.coo[2] = hit->TRDHit_z;
 
-            hitInfo.dEdx = ((hitInfo.len > 0) ? (0.01 * (hitInfo.amp / hitInfo.len)) : -1.0);
-            
-            Float_t mcMom = -1.0;
-	        if (checkEventMode(EventBase::MC)) {
-                for (auto&& mchit : mcHits) {
-                    if (mchit.lay != hitInfo.lay) continue;
-                    mcMom = mchit.mom;
-                    break;
+                hitInfo.dEdx = ((hitInfo.len > 0) ? (0.01 * (hitInfo.amp / hitInfo.len)) : -1.0);
+                
+                Float_t mcMom = -1.0;
+	            if (checkEventMode(EventBase::MC)) {
+                    for (auto&& mchit : mcHits) {
+                        if (mchit.lay != hitInfo.lay) continue;
+                        mcMom = mchit.mom;
+                        break;
+                    }
                 }
+                hitInfo.mcMom = mcMom;
+                
+                fTrd.hits.push_back(hitInfo);
+		    }
+		    if (fTrd.hits.size() == 0) continue;
+            std::sort(fTrd.hits.begin(), fTrd.hits.end(), HitTRDInfo_sort());
+            nhit = fTrd.hits.size();
+        }
+        else {
+		    for (int ih = 0; ih < nhits; ih++) {
+		    	TrdKHit* hit = trdkcls->GetHit(ih);
+		    	if (hit == nullptr) continue;
+		    	if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
+		    		if (!hit->IsCalibrated) continue;
+		    	if (checkEventMode(EventBase::ISS))
+		    		if (!hit->IsAligned) continue;
+                nhit++;
             }
-            hitInfo.mcMom = mcMom;
-            
-            fTrd.hits[kindOfFit].push_back(hitInfo);
-		}
-		if (fTrd.hits[kindOfFit].size() == 0) continue;
-        std::sort(fTrd.hits[kindOfFit].begin(), fTrd.hits[kindOfFit].end(), HitTRDInfo_sort());
+        }
 
 		fTrd.statusKCls[kindOfFit] = true;
 		fTrd.LLRep[kindOfFit]      = llr[0];
 		fTrd.LLReh[kindOfFit]      = llr[1];
 		fTrd.LLRph[kindOfFit]      = llr[2];
-		fTrd.LLRnhit[kindOfFit]    = fTrd.hits[kindOfFit].size();
+		fTrd.LLRnhit[kindOfFit]    = nhit;
 		fTrd.Q[kindOfFit]          = Q;
 	}
 
@@ -1611,11 +1629,40 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         fRich.numOfExpPE = rich->getExpectedPhotoelectrons();
         fRich.eftOfColPE = rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons();
 
+        /*
+        //============================================================ testcode
+        if (recEv.zin == 1) {
+            MGClock::HrsStopwatch sw; sw.start();
+            int nclus = rich->ClusterizeZ1();
+            sw.stop();
+            int size;
+            float mean, rms;
+            if (nclus>0) {
+                for (int iclu = 0; iclu < nclus; ++iclu) {
+                    rich->GetClusters(iclu, size, mean, rms);
+                    COUT("RICH %d | %d %14.8f %14.8f  TIME %14.8f\n", iclu, size, mean, rms, sw.time());
+
+                }
+                COUT("\n");
+            }
+
+            int nhit = rich->RawBetas();
+            for (int it = 0; it < nhit; ++it) {
+                int ihit = rich->HitBeta(it);
+                RichHitR* rhhit = event->pRichHit(ihit);
+                if (!rhhit) continue;
+                COUT("RICH HIT %d | BTA %14.8f %14.8f NPE %14.8f\n", ihit, rich->RawBeta(it, 0), rich->RawBeta(it, 1), rhhit->Npe);
+            }
+            COUT("\n");
+        }
+        //============================================================ testcode
+        */
+
 		break;
 	}
 	// official RichRingR - end
 
-    
+    /*
     // RichVeto - start
 	const float richPMTZ = -121.89;                         // pmt z-axis
 	const float richRadZ[2] = { -74.35, -75.45 };           // aerogel / NaF
@@ -1683,7 +1730,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 
 		trRigAbs = std::fabs(trtk->GetRigidity(fitid, 2));
 
-        /*
         const int    npart = 3;
 		const double masschrg[npart] = 
 		  { 0.000510999,   // electron
@@ -1699,10 +1745,10 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             trTheta[it] = (MGNumc::Valid(theta) ? theta : -1.0);
 		}
 		std::copy(numOfExpPE, numOfExpPE+npart, fRich.vetoNumOfExpPE);
-        */
 
         break;
     }
+    */
 
     /*
     //---- RICH HIT ----//

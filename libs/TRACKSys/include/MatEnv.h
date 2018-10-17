@@ -298,7 +298,7 @@ class MatMgnt {
 
     protected :
         static Bool_t is_load_;
-        static std::list<MatGeoBoxReader*> * reader_;
+        static std::list<MatGeoBoxReader*>* reader_;
 };
 
 

@@ -3,51 +3,43 @@
 
 
 #include "Sys.h"
-#include "Sys.C"
 #include "Math.h"
-#include "Math.C"
-
 #include "TmeMeas.h"
-#include "TmeMeas.C"
 #include "IonEloss.h"
-#include "IonEloss.C"
 #include "GmIonEloss.h"
-#include "GmIonEloss.C"
-
 #include "PartInfo.h"
-#include "PartInfo.C"
 #include "PhySt.h"
-#include "PhySt.C"
-
 #include "MagEnv.h"
-#include "MagEnv.C"
 #include "MagEnvAms.h"
-#include "MagEnvAms.C"
-
 #include "MatEnv.h"
-#include "MatEnv.C"
 #include "MatEnvAms.h"
-#include "MatEnvAms.C"
-
 #include "Prop.h"
-#include "Prop.C"
-
 #include "HitSt.h"
-#include "HitSt.C"
-
-//#include "PhyFit.h"
-//#include "PhyFit.C"
-
 #include "TrFitPar.h"
-#include "TrFitPar.C"
-
 #include "SimpleTrFit.h"
-#include "SimpleTrFit.C"
-
 #include "PhyTrFit.h"
-#include "PhyTrFit.C"
-
+#include "PhyBtaFit.h"
+//#include "PhyMuFit.h"
 #include "InterfaceAms.h"
+
+#include "Sys.C"
+#include "Math.C"
+#include "TmeMeas.C"
+#include "IonEloss.C"
+#include "GmIonEloss.C"
+#include "PartInfo.C"
+#include "PhySt.C"
+#include "MagEnv.C"
+#include "MagEnvAms.C"
+#include "MatEnv.C"
+#include "MatEnvAms.C"
+#include "Prop.C"
+#include "HitSt.C"
+#include "TrFitPar.C"
+#include "SimpleTrFit.C"
+#include "PhyTrFit.C"
+#include "PhyBtaFit.C"
+//#include "PhyMuFit.C"
 #include "InterfaceAms.C"
 
 

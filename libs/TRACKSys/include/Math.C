@@ -8,6 +8,38 @@
 
 namespace TrackSys {
 namespace Numc { 
+
+
+Double_t NormQuality(Double_t nchi, Short_t ndof) {
+    if (Numc::Compare(nchi) < 0 || ndof <= Numc::ZERO<Short_t>) return Numc::ZERO<>;
+    Double_t chi = nchi * static_cast<Double_t>(ndof);
+    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+    if (ndof <= Numc::TWO<Short_t>) return std::sqrt(nchi);
+    Double_t qmin  = static_cast<Double_t>(ndof - Numc::TWO<Short_t>);
+    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
+    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
+    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
+    Double_t xfunc = sign * std::sqrt(qfunc / static_cast<Double_t>(ndof));
+    if (Numc::Valid(xfunc)) return xfunc;
+    return Numc::ZERO<>;
+}
+
+
+Double_t NormQuality(Double_t nchi, Double_t ndof) {
+    if (Numc::Compare(nchi) < 0 || Numc::Compare(ndof) <= 0) return Numc::ZERO<>;
+    Double_t chi = nchi * ndof;
+    if (Numc::EqualToZero(chi)) return Numc::ZERO<>;
+    if (Numc::Compare(ndof, Numc::TWO<>) <= 0) return std::sqrt(nchi);
+    Double_t qmin  = (ndof - Numc::TWO<>);
+    Double_t sign  = static_cast<Double_t>(Numc::Compare(chi - qmin));
+    Double_t qfunc = (chi - qmin) - qmin * std::log(chi / qmin);
+    if (!Numc::Valid(qfunc)) return Numc::ZERO<>;
+    Double_t xfunc = sign * std::sqrt(qfunc / ndof);
+    if (Numc::Valid(xfunc)) return xfunc;
+    return Numc::ZERO<>;
+}
+        
+
 } // namesapce Numc
 } // namesapce TrackSys
 
@@ -134,7 +166,7 @@ std::array<long double, 4> Robust::minimizer(long double chi) const {
     }
 
     if (Opt::ON == ghost_.opt) {
-        long double abschi = std::fabs(chi / ghost_.thres);
+        long double abschi = std::fabs(mini.at(0) * chi / ghost_.thres);
         long double rate   = ghost_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(ghost_.thres * std::log(abschi))));
         if (!Numc::Valid(rate)) rate = ZERO;
         
@@ -509,6 +541,10 @@ std::array<long double, 2> LandauGaus::eval_conv(long double norm) const { // (n
         long double invc = eval_icov(newx);
         icov += invc * (prob[it] / sumprob);
     }
+    //icov = eval_icov(norm - shft_); // testcode v1
+    //icov = eval_icov(0.0); // testcode v2
+    //if (norm < shft_) icov = eval_icov(norm - shft_); else icov = eval_icov(0.0); // testcode v3
+    
     if (!Numc::Valid(icov) || Numc::Compare(icov) < 0) icov = Numc::ONE<long double>;
 
     mini.at(0) = nrmx;

@@ -53,7 +53,8 @@ class PhyArg {
         
         inline Double_t eelion() const { return pdf_elion_.sgm(); }
   
-        inline const Short_t&  sign() const { return sign_; }
+        inline const Short_t& sign() const { return sign_; }
+
         inline const SVecD<3>& orth_tau() const { return orth_tau_; }
         inline const SVecD<3>& orth_rho() const { return orth_rho_; }
         inline const Double_t& orth_tau(Int_t i) const { return orth_tau_(i); }
@@ -62,6 +63,12 @@ class PhyArg {
         inline const Double_t& mscat_uu() const { return mscat_uu_; }
         inline const Double_t& mscat_ul() const { return mscat_ul_; }
         inline const Double_t& mscat_ll() const { return mscat_ll_; }
+        
+        inline const SVecD<3>& eldlt_c() const { return eldlt_c_; }
+        inline const SVecD<3>& eldlt_u() const { return eldlt_u_; }
+        inline const Double_t& eldlt_e() const { return eldlt_e_; }
+        inline const Double_t& eldlt_c(Int_t i) const { return eldlt_c_(i); }
+        inline const Double_t& eldlt_u(Int_t i) const { return eldlt_u_(i); }
 
         inline const Double_t& elion_sgm() const { return elion_sgm_; }
         inline const Double_t& elbrm_men() const { return elbrm_men_; }
@@ -95,6 +102,7 @@ class PhyArg {
         void setvar_mat(Bool_t mat = false, Double_t nrl = 0, Double_t ela = 0) { if (mat) { mat_ = mat; nrl_ = nrl; ela_ = ela; } }
         void setvar_orth(Short_t sign = 1, const SVecD<3>& tau = SVecD<3>(1, 0, 0), const SVecD<3>& rho = SVecD<3>(0, 1, 0)) { sign_=((sign>=0)?1:-1); orth_tau_ = tau; orth_rho_ = rho; }
         void setvar_mscat(Double_t mscat_uu = 0, Double_t mscat_ul = 0, Double_t mscat_ll = 0) { if (sw_mscat_) { mscat_uu_ = mscat_uu; mscat_ul_ = mscat_ul; mscat_ll_ = mscat_ll; } }
+        void setvar_eldlt(const SVecD<3>& eldlt_c = SVecD<3>(), const SVecD<3>& eldlt_u = SVecD<3>(), Double_t eldlt_e = Numc::ONE<>) { eldlt_c_ = eldlt_c; eldlt_u_ = eldlt_u; eldlt_e_ = eldlt_e; }
         void setvar_eloss(Double_t elion_sgm = 0, Double_t elbrm_men = 0) { if (sw_eloss_) { elion_sgm_ = elion_sgm; elbrm_men_ = elbrm_men; } }
         
         // Symbk
@@ -122,12 +130,17 @@ class PhyArg {
         Double_t elbrm_;
         
         Short_t  sign_;      // sign(step)
+
         SVecD<3> orth_tau_;  // default (1, 0, 0)
         SVecD<3> orth_rho_;  // default (0, 1, 0)
 
         Double_t mscat_uu_;
         Double_t mscat_ul_;
         Double_t mscat_ll_;
+        
+        SVecD<3> eldlt_c_;
+        SVecD<3> eldlt_u_;
+        Double_t eldlt_e_;
 
         Double_t elion_sgm_;
         Double_t elbrm_men_;
@@ -154,6 +167,10 @@ void PhyArg::zero() {
     mscat_ul_ = 0.;
     mscat_ll_ = 0.;
 
+    eldlt_c_ = SVecD<3>();
+    eldlt_u_ = SVecD<3>();
+    eldlt_e_ = Numc::ONE<>;
+
     elion_sgm_ = 0.;
     elbrm_men_ = 0.;
 }
@@ -171,7 +188,6 @@ void PhyArg::reset(Bool_t sw_mscat, Bool_t sw_eloss) {
     rhol_ = 0.;
     elion_ = 0.;
     elbrm_ = 0.;
-    //elbrm_ = 0.6; // testcode =============
 
     zero();
 }
@@ -225,12 +241,12 @@ class PhySt {
         inline const Double_t& eng()   const { return eng_; } 
         inline const Double_t& ke()    const { return ke_; }
         inline const Double_t& bta()   const { return bta_; }
+        inline const Double_t& ibta()  const { return ibta_; }
         inline const Double_t& gmbta() const { return gmbta_; }
+        inline const Double_t& igb()   const { return igb_; }
         inline const Double_t& eta()   const { return eta_; }
       
-        inline Double_t igmbta() const { return ((Numc::EqualToZero(gmbta_)) ? Numc::ZERO<> : (Numc::ONE<> / gmbta_)); }
-        inline Double_t ibta()   const { return ((Numc::EqualToZero(bta_))   ? Numc::ZERO<> : (Numc::ONE<> / bta_)); }
-        inline Double_t gm()     const { return ((Numc::EqualToZero(bta_))   ? Numc::ONE<>  : (gmbta_ / bta_)); }
+        inline Double_t gm() const { return (gmbta_ * ibta_); }
 
         inline Short_t  eta_sign() const { return (Numc::Compare(eta_)); }
         inline Double_t eta_abs()  const { return std::fabs(eta_); }
@@ -260,7 +276,9 @@ class PhySt {
             eng_   = info_.mass();
             ke_    = Numc::ZERO<>;
             bta_   = Numc::ZERO<>;
+            ibta_  = Numc::ZERO<>;
             gmbta_ = Numc::ZERO<>;
+            igb_   = Numc::ZERO<>;
             eta_   = Numc::ZERO<>;
             irig_  = Numc::ZERO<>;
         }
@@ -273,7 +291,9 @@ class PhySt {
         Double_t eng_;
         Double_t ke_;
         Double_t bta_;
+        Double_t ibta_;
         Double_t gmbta_;
+        Double_t igb_;
         Double_t eta_;
         
         Double_t irig_;

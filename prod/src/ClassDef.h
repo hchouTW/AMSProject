@@ -276,7 +276,7 @@ class HitTRKInfo : public TObject {
 			std::fill_n(side, 2, false);
 			std::fill_n(coo, 3, 0);
 			std::fill_n(loc, 2, -1);
-			std::fill_n(chrg, 2, -1);
+			std::fill_n(chrg, 3, -1);
 
             std::fill_n(nsr, 2, 0);
             std::fill_n(sig[0], 2*5, 0);
@@ -291,7 +291,7 @@ class HitTRKInfo : public TObject {
 		Bool_t  side[2];  // side, x, y
 		Float_t coo[3];   // coordinate
 		Float_t loc[2];   // (elc) cofg loc
-		Float_t chrg[2];  // (elc) chrg
+		Float_t chrg[3];  // (elc) chrg (x y xy)
 
         Short_t nsr[2];    // num of strip
         Float_t sig[2][5]; // index 2 -> seed
@@ -958,8 +958,7 @@ class TRD : public TObject {
 			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
             
-            hits[0].clear();
-            hits[1].clear();
+            hits.clear();
 
             //std::fill_n(vtxNum, 3, 0);
             //vtxNTrk = 0;
@@ -986,7 +985,7 @@ class TRD : public TObject {
 		Short_t LLRnhit[2];
 		Float_t Q[2];
         
-        std::vector<HitTRDInfo> hits[2];
+        std::vector<HitTRDInfo> hits;
 
         // TRDVertex
         //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
@@ -1018,11 +1017,11 @@ class RICH : public TObject {
             numOfExpPE = -1;
             eftOfColPE = -1;
 			
-            vetoKind = -1;
-			vetoTile = -1;
-			vetoRfrIndex = -1;
-			vetoDistToBorder = -1;
-			vetoIsInFiducialVolume = false;
+            //vetoKind = -1;
+			//vetoTile = -1;
+			//vetoRfrIndex = -1;
+			//vetoDistToBorder = -1;
+			//vetoIsInFiducialVolume = false;
 
             //std::fill_n(vetoNumOfExpPE, 3, 0);
             //
@@ -1047,11 +1046,11 @@ class RICH : public TObject {
         Float_t eftOfColPE;
 
 		// Rich Veto
-		Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
-		Short_t vetoTile;          // tile id
-		Float_t vetoRfrIndex;      // refractive index
-		Float_t vetoDistToBorder;  // dist To Border Edge
-		Bool_t  vetoIsInFiducialVolume;
+		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
+		//Short_t vetoTile;          // tile id
+		//Float_t vetoRfrIndex;      // refractive index
+		//Float_t vetoDistToBorder;  // dist To Border Edge
+		//Bool_t  vetoIsInFiducialVolume;
        
         // [0] electron [1] proton [2] deuterium
 		//Float_t vetoNumOfExpPE[3];     // number of photoelectrons expected for a given track, beta and charge.
@@ -1064,7 +1063,7 @@ class RICH : public TObject {
         // Rich Hits
         //std::vector<HitRICHInfo> hits;
 	
-    ClassDef(RICH, 9)
+    ClassDef(RICH, 10)
 };
 
 

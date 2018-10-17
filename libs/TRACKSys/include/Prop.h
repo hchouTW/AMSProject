@@ -179,9 +179,9 @@ void PhyJbMS::calculate() {
 class PhyJb {
     public :
         static constexpr Int_t DIMG = 5;
+        static constexpr Int_t DIMI = 6;
         static constexpr Int_t DIML = 4;
         static constexpr Int_t DIME = 2;
-        static constexpr Int_t DIMI = DIML + DIME;
 
     public :
         using SMtxDGG = SMtxD<DIMG, DIMG>;
@@ -289,17 +289,15 @@ class TransferPhyJb {
 
 class PropPhyCal {
     public :
-        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); eta_abs_sat_ = part.eta_abs(); eta_abs_end_ = part.eta_abs(); sign_ = ((Numc::Compare(sign)>=0)?1:-1); }
+        PropPhyCal(PhySt& part, Double_t sign = 1.) { init(); sw_mscat_ = part.arg().mscat(); sw_eloss_ = part.arg().eloss(); ini_state_ = part.state(); fin_state_ = part.state(); dlt_state_ = SVecD<7>(); sign_ = ((Numc::Compare(sign)>=0)?1:-1); }
         ~PropPhyCal() {}
 
         void init(); 
         
         void push(PhySt& part, const MatFld& mfld, Double_t mscat_sgm = 0, Double_t tme = 0);
-        void normalized(const MatFld& mfld, PhySt& part);
+        void normalized(const MatFld& mfld, PhySt& part, Double_t step);
         
         void set_PhyArg(PhySt& part) const;
-
-        inline Double_t eft_eta() const { return (Numc::HALF * (eta_abs_sat_ + eta_abs_end_)); }
 
         inline const Double_t& mspar_mscatu() const { return mspar_mscatu_; }
         inline const Double_t& mspar_mslen1() const { return mspar_mslen1_; }
@@ -309,8 +307,9 @@ class PropPhyCal {
         Bool_t   sw_mscat_;
         Bool_t   sw_eloss_;
 
-        Double_t eta_abs_sat_;
-        Double_t eta_abs_end_;
+        SVecD<7> ini_state_;
+        SVecD<7> fin_state_;
+        SVecD<7> dlt_state_;
        
         Bool_t   mat_;
         Double_t tme_;

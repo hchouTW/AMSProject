@@ -77,6 +77,12 @@ inline bool EqualToZero(IntType a) { return (Compare(a) == 0); }
 
 template <class RealType = double, typename std::enable_if<std::is_floating_point<RealType>::value, int>::type = 0>
 inline bool EqualToZero(RealType a) { return (Compare(a) == 0); }
+        
+
+// Norm quality from chi-square
+Double_t NormQuality(Double_t nchi, Short_t ndof);
+Double_t NormQuality(Double_t nchi, Double_t ndof);
+
 
 } // namesapce Numc
 } // namesapce TrackSys
