@@ -52,14 +52,17 @@ class PhyBtaFit : public TrFitPar {
         PhyBtaFit& operator=(const PhyBtaFit& rhs);
         PhyBtaFit(const PhyBtaFit& trFit) { *this = trFit; }
         
-        PhyBtaFit(const TrFitPar& fitPar);
-        PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt);
+        PhyBtaFit(const TrFitPar& fitPar, Double_t factor = DEFAULT_FACTOR);
+        PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor = DEFAULT_FACTOR);
         ~PhyBtaFit() { PhyBtaFit::clear(); }
         
     public :
         inline const Bool_t&   status() const { return succ_; }
         inline const PhySt&    part() const { return part_; }
         inline const Double_t& tsft() const { return tsft_; }
+
+        inline const Double_t& igb() const { return igb_; }
+        inline const Double_t& err() const { return err_; }
 
         inline const Short_t&  ndof() const { return ndof_; }
         inline const Double_t& nchi() const { return nchi_; }
@@ -75,16 +78,22 @@ class PhyBtaFit : public TrFitPar {
 
     protected :
         Bool_t   succ_;
+        Double_t fact_; // stable factor for beta < 1
         PhySt    part_;
         Double_t tsft_; // time shift [cm]
 
+        Double_t igb_; // igb
+        Double_t err_; // igb error
+        
         Short_t  ndof_;
         Double_t nchi_;
         Double_t quality_;
-    
+
     private :
-        static constexpr Double_t LMT_IGB   = 1.0e-10;
-        static constexpr Double_t CONV_IGB  = 1.0e-08;
+        static constexpr Double_t DEFAULT_FACTOR = 1.4;
+        static constexpr Double_t LMT_IGB        = 1.0e-08;
+        static constexpr Double_t CONV_IGB       = 1.0e-06;
+
         static constexpr Short_t  parIDigb  = 0;
         static constexpr Short_t  parIDtsft = 1;
 };

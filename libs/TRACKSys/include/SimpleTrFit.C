@@ -630,9 +630,8 @@ Bool_t SimpleTrFit::evolve() {
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) chi_ib += hitTRK->chiqx() * hitTRK->chiqx();
-            if (hitTRK->sqy()) chi_ib += hitTRK->chiqy() * hitTRK->chiqy();
-            cnt_ghost_ib += (hitTRK->gstqx() + hitTRK->gstqy());
+            if (hitTRK->sq()) chi_ib += hitTRK->chiq() * hitTRK->chiq();
+            cnt_ghost_ib += (hitTRK->gstq());
         }
         
         // TOF
@@ -966,16 +965,10 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) costIb += hitTRK->chiqx() * hitTRK->chiqx();
-            if (hitTRK->sqy()) costIb += hitTRK->chiqy() * hitTRK->chiqy();
-                
-            if (hasGrd && hitTRK->sqx()) grdIb(4) += (hitTRK->divqx_eta() * jbGG(4, 4)) * hitTRK->nrmqx();
-            if (hasGrd && hitTRK->sqy()) grdIb(4) += (hitTRK->divqy_eta() * jbGG(4, 4)) * hitTRK->nrmqy();
-
-            if (hasGrd && hitTRK->sqx()) hesIb(4, 4) += (hitTRK->divqx_eta() * jbGG(4, 4)) * (hitTRK->divqx_eta() * jbGG(4, 4));
-            if (hasGrd && hitTRK->sqy()) hesIb(4, 4) += (hitTRK->divqy_eta() * jbGG(4, 4)) * (hitTRK->divqy_eta() * jbGG(4, 4));
-    
-            cnt_ghost += (hitTRK->gstqx() + hitTRK->gstqy());
+            if (hitTRK->sq()) costIb += hitTRK->chiq() * hitTRK->chiq();
+            if (hasGrd && hitTRK->sq()) grdIb(4) += (hitTRK->divq_eta() * jbGG(4, 4)) * hitTRK->nrmq();
+            if (hasGrd && hitTRK->sq()) hesIb(4, 4) += (hitTRK->divq_eta() * jbGG(4, 4)) * (hitTRK->divq_eta() * jbGG(4, 4));
+            cnt_ghost += (hitTRK->gstq());
         }
         
         // TOF

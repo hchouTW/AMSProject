@@ -27,9 +27,9 @@ TrFitPar PhyBtaFit::BulidFitPar(const TrFitPar& fitPar) {
     if (fitPar.hitsRICH().size() != 0) btapar.add_hit( fitPar.hitsRICH() );
     if (fitPar.hitsTRD().size()  != 0) btapar.add_hit( fitPar.hitsTRD()  );
     for (auto&& hitTRK : fitPar.hitsTRK()) {
-        if (!(hitTRK.sqx() || hitTRK.sqy())) continue;
+        if (!hitTRK.sq()) continue;
         HitStTRK hit(false, false, hitTRK.lay(), hitTRK.isInnTr());
-        hit.set_q(hitTRK.qx(), hitTRK.qy());
+        hit.set_q(hitTRK.q(), hitTRK.qx(), hitTRK.qy(), fitPar.info().chrg());
         btapar.add_hit(hit);
     }
     btapar.check();
@@ -72,8 +72,12 @@ PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
     if (this != &rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
+        fact_ = rhs.fact_;
         part_ = rhs.part_;
         tsft_ = rhs.tsft_;
+        
+        igb_ = rhs.igb_;
+        err_ = rhs.err_;
       
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
@@ -85,9 +89,13 @@ PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
 
 void PhyBtaFit::clear() {
     succ_ = false;
+    fact_ = 0;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     tsft_ = 0;
+    
+    igb_ = 0;
+    err_ = 0;
 
     ndof_    = 0;
     nchi_    = 0;
@@ -95,12 +103,16 @@ void PhyBtaFit::clear() {
 }
 
 
-PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
+PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, Double_t factor) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
     PhyBtaFit::clear();
     if (!check_hits()) return;
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
     if (ndof_ <= Numc::ONE<Short_t>) { PhyBtaFit::clear(); return; }
     
+    // stable factor
+    fact_ = ((Numc::Compare(factor) <= 0) ? Numc::ZERO<> : factor);
+    
+    // init state
     part_ = std::move(PhyBtaFit::BulidRefSt(fitPar, hits_.at(0)->cz()));
     if (Numc::EqualToZero(part_.mom())) { PhyBtaFit::clear(); return; }
     if (!survival_test_and_modify(part_, sw_eloss_)) { PhyBtaFit::clear(); return; }
@@ -111,18 +123,27 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar) : TrFitPar(PhyBtaFit::BulidFitPar(f
     //if (!succ_) CERR("FAILURE === PhyBtaFit\n");
 }
 
-PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
+
+PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
     PhyBtaFit::clear();
     if (!check_hits()) return;
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
     if (ndof_ <= Numc::ONE<Short_t>) { PhyBtaFit::clear(); return; }
     
+    // stable factor
+    fact_ = ((Numc::Compare(factor) <= 0) ? Numc::ZERO<> : factor);
+  
+    // check particle type
+    if (refSt.info().type() != PartType::Fixed && refSt.info().type() != info_.type()) return;
+    else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) return;
+
+    // init state
     part_ = std::move(PhyBtaFit::BulidRefSt(refSt, hits_.at(0)->cz()));
     part_.arg().reset(sw_mscat_, sw_eloss_);
     if (Numc::EqualToZero(part_.mom())) { PhyBtaFit::clear(); return; }
     if (Numc::Compare(part_.uz() * refSt.uz()) < 0) { PhyBtaFit::clear(); return; }
     if (!survival_test_and_modify(part_, sw_eloss_)) { PhyBtaFit::clear(); return; }
-
+    
     succ_ = physicalFit();
     if (!succ_) { PhyBtaFit::clear(); TrFitPar::clear(); }
     
@@ -229,11 +250,9 @@ Bool_t PhyBtaFit::evolve() {
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) chi += hitTRK->chiqx() * hitTRK->chiqx();
-            if (hitTRK->sqy()) chi += hitTRK->chiqy() * hitTRK->chiqy();
-            if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDigb) += hitTRK->divqx_igb() * jbEE;
-            if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDigb) += hitTRK->divqy_igb() * jbEE;
-            cnt_ghost += (hitTRK->gstqx() + hitTRK->gstqy());
+            if (hitTRK->sq()) chi += hitTRK->chiq() * hitTRK->chiq();
+            if (hitTRK->sq()) jb(hitTRK->seqIDq(), parIDigb) += hitTRK->divq_igb() * jbEE;
+            cnt_ghost += (hitTRK->gstq());
         }
 
         // TOF
@@ -269,7 +288,20 @@ Bool_t PhyBtaFit::evolve() {
     Double_t ndof = static_cast<Double_t>(ndof_) - (cnt_ghost);
     nchi_    = (chi / ndof);
     quality_ = Numc::NormQuality(nchi_, ndof);
- 
+
+    ceres::Matrix cov  = (jb.transpose() * jb);
+    ceres::Vector diag = cov.inverse().diagonal();
+    Double_t errIgb  = std::sqrt(diag(parIDigb));
+    Double_t errTsft = (opt_tsft ? std::sqrt(diag(parIDtsft)) : Numc::ZERO<>);
+    if (!Numc::Valid(errIgb )) errIgb  = Numc::ZERO<>;
+    if (!Numc::Valid(errTsft)) errTsft = Numc::ZERO<>;
+
+    igb_ = part_.igb();
+    err_ = errIgb;
+
+    Double_t thres = CONV_IGB + fact_ * err_;
+    if (Numc::Compare(igb_, thres) < 0) return false;
+    
     return true;
 }
 
@@ -292,8 +324,6 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
     PhySt ppst(part_);
     ppst.arg().clear();
     ppst.set_eta(parteta);
-
-    PhySt bkst = ppst; // testcode
 
     // Matrix (Rs, Jb)
     Double_t jbEE = Numc::ONE<>;
@@ -328,10 +358,8 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
-            if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
-            if (hasJacb && hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDigb) += hitTRK->divqx_igb() * jbEE;
-            if (hasJacb && hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDigb) += hitTRK->divqy_igb() * jbEE;
+            if (hitTRK->sq()) rs(hitTRK->seqIDq()) += hitTRK->nrmq();
+            if (hasJacb && hitTRK->sq()) jb(hitTRK->seqIDq(), parIDigb) += hitTRK->divq_igb() * jbEE;
         }
         
         // TOF

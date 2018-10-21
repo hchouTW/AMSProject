@@ -134,52 +134,38 @@ class HitStTRK : public VirtualHitSt {
             nsr_[1] = (side_c_[1] && ny > 0) ? ny : 0;
         }
 
-        inline void set_q(Double_t qx, Double_t qy, Short_t chrg = 0) {
+        inline void set_q(Double_t qxy, Double_t qx, Double_t qy, Short_t chrg = 0) {
             Short_t chrgz = std::abs(chrg);
-            side_qx_ = (Numc::Compare(qx) > (chrgz * THRES_Q));
-            side_qy_ = (Numc::Compare(qy) > (chrgz * THRES_Q));
-            qx_ = (side_qx_ ? qx : Numc::ZERO<>);
-            qy_ = (side_qy_ ? qy : Numc::ZERO<>);
-            
-            gstqx_ = Numc::ZERO<>;
-            chiqx_ = Numc::ZERO<>;
-            nrmqx_ = Numc::ZERO<>;
-            divqx_.fill(Numc::ZERO<>);
-            
-            gstqy_ = Numc::ZERO<>;
-            chiqy_ = Numc::ZERO<>;
-            nrmqy_ = Numc::ZERO<>;
-            divqy_.fill(Numc::ZERO<>);
+            Bool_t side_qxy = (qxy > (chrgz * THRES_Q));
+            Bool_t side_qx  = (qx  > (chrgz * THRES_Q));
+            Bool_t side_qy  = (qy  > (chrgz * THRES_Q));
+            side_q_ = (side_qxy && side_qx && side_qy);
+            q_  = (side_q_ ? qxy : Numc::ZERO<>);
+            qx_ = (side_q_ ? qx  : Numc::ZERO<>);
+            qy_ = (side_q_ ? qy  : Numc::ZERO<>);
+
+            gstq_ = Numc::ZERO<>;
+            chiq_ = Numc::ZERO<>;
+            nrmq_ = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
         }
-        
-        inline const Short_t& seqIDqx() const { return seqIDqx_; }
-        inline const Short_t& seqIDqy() const { return seqIDqy_; }
         
         inline const Bool_t& isInnTr() const { return isInnTr_; }
         
         inline const Short_t& nsrx() const { return nsr_[0]; }
         inline const Short_t& nsry() const { return nsr_[1]; }
 
-        inline const Bool_t& sqx() const { return side_qx_; }
-        inline const Bool_t& sqy() const { return side_qy_; }
+        inline const Short_t&  seqIDq()   const { return seqIDq_; }
         
-        inline const Double_t& qx() const { return qx_; }
-        inline const Double_t& qy() const { return qy_; }
-        
-        inline const Double_t& gstqx() const { return gstqx_; }
-        inline const Double_t& gstqy() const { return gstqy_; }
-        
-        inline const Double_t& chiqx() const { return chiqx_; }
-        inline const Double_t& chiqy() const { return chiqy_; }
-
-        inline const Double_t& nrmqx() const { return nrmqx_; }
-        inline const Double_t& nrmqy() const { return nrmqy_; }
-
-        inline const Double_t& divqx_eta() const { return divqx_[0]; }
-        inline const Double_t& divqx_igb() const { return divqx_[1]; }
-
-        inline const Double_t& divqy_eta() const { return divqy_[0]; }
-        inline const Double_t& divqy_igb() const { return divqy_[1]; }
+        inline const Bool_t&   sq()       const { return side_q_; }
+        inline const Double_t& q()        const { return q_; }
+        inline const Double_t& qx()       const { return qx_; }
+        inline const Double_t& qy()       const { return qy_; }
+        inline const Double_t& gstq()     const { return gstq_; }
+        inline const Double_t& chiq()     const { return chiq_; }
+        inline const Double_t& nrmq()     const { return nrmq_; }
+        inline const Double_t& divq_eta() const { return divq_[0]; }
+        inline const Double_t& divq_igb() const { return divq_[1]; }
 
     protected :
         void clear();
@@ -189,30 +175,23 @@ class HitStTRK : public VirtualHitSt {
         
         std::array<Short_t, 2> nsr_; // num of strip (x, y)
         
-        Short_t seqIDqx_;
-        Short_t seqIDqy_;
+        Short_t seqIDq_;
 
-        Bool_t                  side_qx_;
+        Bool_t                  side_q_;
+        Double_t                q_;
         Double_t                qx_;
-        Double_t                gstqx_; // q ghost
-        Double_t                chiqx_; // q chi
-        Double_t                nrmqx_; // q nrom
-        std::array<Double_t, 2> divqx_; // q div (igmbta) [eta, igb]
-        
-        Bool_t                  side_qy_;
         Double_t                qy_;
-        Double_t                gstqy_; // q ghost
-        Double_t                chiqy_; // q chi
-        Double_t                nrmqy_; // q nrom
-        std::array<Double_t, 2> divqy_; // q div (igmbta) [eta, igb]
-
+        Double_t                gstq_; // q ghost
+        Double_t                chiq_; // q chi
+        Double_t                nrmq_; // q nrom
+        std::array<Double_t, 2> divq_; // q div (igmbta) [eta, igb]
+        
         MultiGaus* pdf_cx_;
         MultiGaus* pdf_cy_;
-        IonEloss*  pdf_qx_;
-        IonEloss*  pdf_qy_;
+        IonEloss*  pdf_q_;
     
     protected :
-        static constexpr Double_t THRES_Q = 0.8;
+        static constexpr Double_t THRES_Q = 0.775;
 
         static MultiGaus PDF_Q01_CX_INN_;
         static MultiGaus PDF_Q01_CY_INN_;
@@ -245,11 +224,9 @@ class HitStTRK : public VirtualHitSt {
         static MultiGaus PDF_Q02_CY_INN_;
         static MultiGaus PDF_Q02_CX_EXT_;
         static MultiGaus PDF_Q02_CY_EXT_;
-
-        static IonEloss PDF_Q01_QX_;
-        static IonEloss PDF_Q01_QY_;
-        static IonEloss PDF_Q02_QX_;
-        static IonEloss PDF_Q02_QY_;
+        
+        static IonEloss PDF_Q01_QXY_;
+        static IonEloss PDF_Q02_QXY_;
 };
 
 
@@ -279,7 +256,7 @@ class HitStTOF : public VirtualHitSt {
         
         inline void set_q(Double_t q, Short_t chrg = 0) {
             Short_t chrgz = std::abs(chrg);
-            side_q_ = (Numc::Compare(q) > (chrgz * THRES_Q));
+            side_q_ = (q > (chrgz * THRES_Q));
             q_      = (side_q_ ? q : Numc::ZERO<>);
             gstq_   = Numc::ZERO<>;
             chiq_   = Numc::ZERO<>;
@@ -292,20 +269,19 @@ class HitStTOF : public VirtualHitSt {
 
         inline const Short_t&  seqIDt() const { return seqIDt_; }
         inline const Short_t&  seqIDq() const { return seqIDq_; }
-        
-        inline const Bool_t& st() const { return side_t_; }
-        inline const Bool_t& sq() const { return side_q_; }
 
-        inline const Double_t& gstt() const { return gstt_; }
-        inline const Double_t& chit() const { return chit_; }
-        inline const Double_t& nrmt() const { return nrmt_; }
-        inline const Double_t& divtsft() const { return divtsft_; }
+        inline const Bool_t&   st()       const { return side_t_; }
+        inline const Double_t& gstt()     const { return gstt_; }
+        inline const Double_t& chit()     const { return chit_; }
+        inline const Double_t& nrmt()     const { return nrmt_; }
+        inline const Double_t& divtsft()  const { return divtsft_; }
         inline const Double_t& divt_eta() const { return divt_[0]; }
         inline const Double_t& divt_igb() const { return divt_[1]; }
         
-        inline const Double_t& gstq() const { return gstq_; }
-        inline const Double_t& chiq() const { return chiq_; }
-        inline const Double_t& nrmq() const { return nrmq_; }
+        inline const Bool_t&   sq()       const { return side_q_; }
+        inline const Double_t& gstq()     const { return gstq_; }
+        inline const Double_t& chiq()     const { return chiq_; }
+        inline const Double_t& nrmq()     const { return nrmq_; }
         inline const Double_t& divq_eta() const { return divq_[0]; }
         inline const Double_t& divq_igb() const { return divq_[1]; }
 
@@ -319,15 +295,15 @@ class HitStTOF : public VirtualHitSt {
         Bool_t   side_t_;
         Double_t orgt_; // T [cm]
         Double_t tsft_; // T [cm]
-
-        Bool_t   side_q_;
-        Double_t q_; // Q
         
         Double_t gstt_; // T ghost
         Double_t chit_; // T chi
         Double_t nrmt_; // T nrom
         Double_t divtsft_; // T(shift)
         std::array<Double_t, 2> divt_; // T div (igmbta) [eta, igb]
+        
+        Bool_t   side_q_;
+        Double_t q_; // Q
 
         Double_t gstq_; // Q ghost
         Double_t chiq_; // Q chi

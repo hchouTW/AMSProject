@@ -38,8 +38,7 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
         nmes_cx_     = rhs.nmes_cx_;
         nmes_cy_     = rhs.nmes_cy_;
         nmes_ib_     = rhs.nmes_ib_;
-        nmes_TRKqx_  = rhs.nmes_TRKqx_;
-        nmes_TRKqy_  = rhs.nmes_TRKqy_;
+        nmes_TRKq_   = rhs.nmes_TRKq_;
         nmes_TOFt_   = rhs.nmes_TOFt_;
         nmes_TOFq_   = rhs.nmes_TOFq_;
         nmes_RICHib_ = rhs.nmes_RICHib_;
@@ -85,8 +84,7 @@ void TrFitPar::zero() {
     nmes_cx_     = 0;
     nmes_cy_     = 0;
     nmes_ib_     = 0;
-    nmes_TRKqx_  = 0;
-    nmes_TRKqy_  = 0;
+    nmes_TRKq_   = 0;
     nmes_TOFt_   = 0;
     nmes_TOFq_   = 0;
     nmes_RICHib_ = 0;
@@ -150,8 +148,7 @@ Bool_t TrFitPar::sort_hits() {
     }
 
     for (auto&& hit : hits_TRK_) {
-        if (hit.sqx()) nmes_TRKqx_++;
-        if (hit.sqy()) nmes_TRKqy_++;
+        if (hit.sq()) nmes_TRKq_++;
     }
         
     for (auto&& hit : hits_TOF_) {
@@ -167,7 +164,7 @@ Bool_t TrFitPar::sort_hits() {
         if (hit.sel()) nmes_TRDel_++;
     }
     
-    nmes_ib_ = nmes_TRKqx_ + nmes_TRKqy_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_ + nmes_TRDel_;
+    nmes_ib_ = nmes_TRKq_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_ + nmes_TRDel_;
     
     onlycx_nseq_ = onlycx_nseq;
     onlycy_nseq_ = onlycy_nseq;

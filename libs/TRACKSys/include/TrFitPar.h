@@ -82,8 +82,7 @@ class TrFitPar {
         Short_t nmes_cx_;
         Short_t nmes_cy_;
         Short_t nmes_ib_;
-        Short_t nmes_TRKqx_;
-        Short_t nmes_TRKqy_;
+        Short_t nmes_TRKq_;
         Short_t nmes_TOFq_;
         Short_t nmes_TOFt_;
         Short_t nmes_RICHib_;

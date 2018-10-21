@@ -20,6 +20,7 @@ class IonEloss {
         long double get_mode(long double igmbta, long double ibsqr) const;
 
         long double get_divmpv(long double igmbta, long double ibsqr) const;
+        long double get_divmode(long double igmbta, long double ibsqr) const;
 
     private :
         Robust robust_;

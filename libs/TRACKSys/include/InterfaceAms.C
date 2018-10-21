@@ -201,9 +201,10 @@ Bool_t Event::BulidHitStTRK() {
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
         
         TrTrackChargeH* trtkchrg = &Trtk->trkcharge;
-        Double_t qx = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 0);
-		Double_t qy = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 1);
-            
+        Double_t qx  = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 0);
+		Double_t qy  = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 1);
+        Double_t qxy = (xcls == nullptr || ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 2);
+
         int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(layJ) : 0;
         TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[layJ] : nullptr;
 
@@ -242,7 +243,7 @@ Bool_t Event::BulidHitStTRK() {
         HitStTRK hitQ(scx, scy, layJ, isInnTr);
         hitQ.set_coo(coo.x(), coo.y(), coo.z());
         hitQ.set_nsr(nsrx, nsry);
-        hitQ.set_q(qx, qy, ChrgZ);
+        hitQ.set_q(qxy, qx, qy, ChrgZ);
         
         if      (layJ == 1) TkHitL1Q = hitQ;
         else if (layJ == 9) TkHitL9Q = hitQ;
@@ -251,7 +252,7 @@ Bool_t Event::BulidHitStTRK() {
         HitStTRK hitQ_NOxy(false, false, layJ, isInnTr);
         hitQ_NOxy.set_coo(coo.x(), coo.y(), coo.z());
         hitQ_NOxy.set_nsr(nsrx, nsry);
-        hitQ_NOxy.set_q(qx, qy, ChrgZ);
+        hitQ_NOxy.set_q(qxy, qx, qy, ChrgZ);
         
         if      (layJ == 1) TkHitL1Q_NOxy = hitQ_NOxy;
         else if (layJ == 9) TkHitL9Q_NOxy = hitQ_NOxy;

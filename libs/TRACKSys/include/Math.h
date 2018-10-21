@@ -193,6 +193,8 @@ class LandauNumc {
         ~LandauNumc() {}
 
         static long double EvalLn(long double x);
+        static long double DevLn(long double x);
+        static long double IcovLn(long double x);
 
     private :
         static constexpr long double LANDAU0   =  1.80655634e-01;
@@ -205,7 +207,17 @@ class LandauNumc {
         static constexpr long double STEP = 0.0025;
 
         static std::vector<long double> data;
+        
+        static const std::array<long double, 5> LAND_DEV;
+        static const std::array<long double, 8> LAND_ICOV;
 };
+
+const std::array<long double, 5> LandauNumc::LAND_DEV 
+    { 6.19538e-02, 4.98613e-01, 1.26216e-01, -5.59660e-01, 1.17070e+00 };
+
+const std::array<long double, 8> LandauNumc::LAND_ICOV 
+    { 1.71213e-01, 1.05335e+00, 1.22843e-01, 2.44705e-01, 2.95471e-01, 5.75783e-01, 1.61325e-02, 6.61252e-02 };
+
 
 class ApproxLnX {
     public :
@@ -353,8 +365,6 @@ class LandauGaus {
         
     protected :
         long double eval_norm(long double norm) const;
-        long double eval_icov(long double norm) const;
-
         std::array<long double, 2> eval_conv(long double norm) const; // (nrm, icov)
 
     protected :
@@ -365,23 +375,20 @@ class LandauGaus {
         long double mode_;
         long double fluc_;
         long double shft_;
+        
+        long double nrmfluc_;
 
     private :
         Robust robust_;
 
     private :
-        static const std::array<long double, 8> LAND_CONV;
-
         static constexpr int GAUS_CONV_N = 26;
         static const std::array<long double, GAUS_CONV_N> GAUS_CONV_X;
         static const std::array<long double, GAUS_CONV_N> GAUS_CONV_P;
 
     private :
-        std::array<long double, GAUS_CONV_N> convprob(long double norm) const;
+        std::array<long double, GAUS_CONV_N+1> convprob(long double norm) const;
 };
-
-const std::array<long double, 8> LandauGaus::LAND_CONV 
-    { 1.71213e-01, 1.05335e+00, 1.22843e-01, 2.44705e-01, 2.95471e-01, 5.75783e-01, 1.61325e-02, 6.61252e-02 };
 
 const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
     { -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, 

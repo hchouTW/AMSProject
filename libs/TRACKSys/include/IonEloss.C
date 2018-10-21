@@ -18,9 +18,9 @@ std::array<long double, 4> IonEloss::minimizer(long double x, long double igmbta
     long double kpa  = get_kpa(igmbta, ibsqr); 
     long double mpv  = get_mpv(igmbta, ibsqr); 
     long double sgm  = get_sgm(igmbta, ibsqr); 
-    long double mode = get_mode(igmbta, ibsqr); 
+    long double mode = (isfluc_ ? get_mode(igmbta, ibsqr) : mpv); 
     
-    long double divmpv = get_divmpv(igmbta, ibsqr);
+    long double divmpv = (isfluc_ ? get_divmode(igmbta, ibsqr) : get_divmpv(igmbta, ibsqr));
     long double divnrm = (Numc::NEG<long double> / sgm) * divmpv;
 
     // approximate Landau-Gaussian
@@ -38,6 +38,15 @@ std::array<long double, 4> IonEloss::minimizer(long double x, long double igmbta
         div = Numc::ONE<long double>;
         wgt = Numc::ONE<long double>;
     }
+
+    // testcode =======================
+    //Double_t sigma = std::hypot(sgm, fluc_);
+    //chi = (x - mode) / sigma;
+    //nrm = chi;
+    //div = (-1.0 / sigma) * divmpv;
+    //wgt = Numc::ONE<long double>;
+    // ================================
+
     return std::array<long double, 4>({ chi, nrm, div, wgt });
 }
         
@@ -93,6 +102,20 @@ long double IonEloss::get_divmpv(long double igmbta, long double ibsqr) const {
 
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
     return divmpv;
+}
+
+long double IonEloss::get_divmode(long double igmbta, long double ibsqr) const {
+    long double igmbtasqr = igmbta * igmbta;
+    long double divbta = mode_[3] * std::pow(ibsqr, mode_[3] - Numc::ONE<long double>) * (Numc::TWO<long double> * igmbta);
+    long double divlog = (Numc::TWO<long double> * mode_[5]) * std::pow(igmbtasqr, mode_[5] - Numc::HALF) / (mode_[4] + std::pow(igmbtasqr, mode_[5]));
+
+    long double termA  = mode_[1] * divbta;
+    long double termB  = divbta * std::log(mode_[4] + std::pow(igmbtasqr, mode_[5]));
+    long double termC  = std::pow(ibsqr, mode_[3]) * divlog;
+    long double divmode = mode_[0] * (termA - termB - termC);
+
+    if (!Numc::Valid(divmode)) divmode = Numc::ZERO<long double>;
+    return divmode;
 }
 
 } // namesapce TrackSys

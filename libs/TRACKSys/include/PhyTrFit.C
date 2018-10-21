@@ -314,11 +314,9 @@ Bool_t PhyTrFit::evolve() {
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) chi_ib += hitTRK->chiqx() * hitTRK->chiqx();
-            if (hitTRK->sqy()) chi_ib += hitTRK->chiqy() * hitTRK->chiqy();
-            if (hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDeta) += hitTRK->divqx_eta() * jbGG(4, 4);
-            if (hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDeta) += hitTRK->divqy_eta() * jbGG(4, 4);
-            cnt_ghost_ib += (hitTRK->gstqx() + hitTRK->gstqy());
+            if (hitTRK->sq()) chi_ib += hitTRK->chiq() * hitTRK->chiq();
+            if (hitTRK->sq()) jb(hitTRK->seqIDq(), parIDeta) += hitTRK->divq_eta() * jbGG(4, 4);
+            cnt_ghost_ib += hitTRK->gstq();
         }
 
         // TOF
@@ -534,10 +532,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
-            if (hitTRK->sqx()) rs(hitTRK->seqIDqx()) += hitTRK->nrmqx();
-            if (hitTRK->sqy()) rs(hitTRK->seqIDqy()) += hitTRK->nrmqy();
-            if (hasJacbGlb && hitTRK->sqx()) jb(hitTRK->seqIDqx(), parIDeta) += hitTRK->divqx_eta() * jbGG(4, 4);
-            if (hasJacbGlb && hitTRK->sqy()) jb(hitTRK->seqIDqy(), parIDeta) += hitTRK->divqy_eta() * jbGG(4, 4);
+            if (hitTRK->sq()) rs(hitTRK->seqIDq()) += hitTRK->nrmq();
+            if (hasJacbGlb && hitTRK->sq()) jb(hitTRK->seqIDq(), parIDeta) += hitTRK->divq_eta() * jbGG(4, 4);
         }
         
         // TOF
