@@ -90,7 +90,7 @@ class PhyBtaFit : public TrFitPar {
         Double_t quality_;
 
     private :
-        static constexpr Double_t DEFAULT_FACTOR = 1.4;
+        static constexpr Double_t DEFAULT_FACTOR = 1.3;
         static constexpr Double_t LMT_IGB        = 1.0e-08;
         static constexpr Double_t CONV_IGB       = 1.0e-06;
 
