@@ -189,26 +189,26 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
                 // FS ?
                 pdf_cx_ = &PDF_Q01_CX_INN_;
                 pdf_cy_ = &PDF_Q01_CY_INN_;
-                //if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_INN_S1_;
-                //else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_INN_S2_;
-                //else if (nsr_[0] == 3) pdf_cx_ = &PDF_Q01_CX_INN_S3_;
-                //else if (nsr_[0] >= 4) pdf_cx_ = &PDF_Q01_CX_INN_S4_;
-                //if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_INN_S1_;
-                //else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_INN_S2_;
-                //else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_INN_S3_;
-                //else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_INN_S4_;
+                if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_INN_S1_;
+                else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_INN_S2_;
+                else if (nsr_[0] == 3) pdf_cx_ = &PDF_Q01_CX_INN_S3_;
+                else if (nsr_[0] >= 4) pdf_cx_ = &PDF_Q01_CX_INN_S4_;
+                if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_INN_S1_;
+                else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_INN_S2_;
+                else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_INN_S3_;
+                else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_INN_S4_;
             }
             else {
                 pdf_cx_ = &PDF_Q01_CX_EXT_;
                 pdf_cy_ = &PDF_Q01_CY_EXT_;
-                //if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_EXT_S1_;
-                //else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_EXT_S2_;
-                //else if (nsr_[0] == 3) pdf_cx_ = &PDF_Q01_CX_EXT_S3_;
-                //else if (nsr_[0] >= 4) pdf_cx_ = &PDF_Q01_CX_EXT_S4_;
-                //if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_EXT_S1_;
-                //else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_EXT_S2_;
-                //else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_EXT_S3_;
-                //else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_EXT_S4_;
+                if      (nsr_[0] == 1) pdf_cx_ = &PDF_Q01_CX_EXT_S1_;
+                else if (nsr_[0] == 2) pdf_cx_ = &PDF_Q01_CX_EXT_S2_;
+                else if (nsr_[0] == 3) pdf_cx_ = &PDF_Q01_CX_EXT_S3_;
+                else if (nsr_[0] >= 4) pdf_cx_ = &PDF_Q01_CX_EXT_S4_;
+                if      (nsr_[1] == 1) pdf_cy_ = &PDF_Q01_CY_EXT_S1_;
+                else if (nsr_[1] == 2) pdf_cy_ = &PDF_Q01_CY_EXT_S2_;
+                else if (nsr_[1] == 3) pdf_cy_ = &PDF_Q01_CY_EXT_S3_;
+                else if (nsr_[1] >= 4) pdf_cy_ = &PDF_Q01_CY_EXT_S4_;
             }
             pdf_q_ = &PDF_Q01_QXY_;
             type_ = info.type();
