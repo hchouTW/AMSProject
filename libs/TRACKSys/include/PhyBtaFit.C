@@ -21,7 +21,7 @@
 namespace TrackSys {
         
         
-TrFitPar PhyBtaFit::BulidFitPar(const TrFitPar& fitPar) {
+TrFitPar PhyBtaFit::bulidFitPar(const TrFitPar& fitPar) {
     TrFitPar btapar(fitPar.info(), fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
     if (fitPar.hitsTOF().size()  != 0) btapar.add_hit( fitPar.hitsTOF()  );
     if (fitPar.hitsRICH().size() != 0) btapar.add_hit( fitPar.hitsRICH() );
@@ -37,7 +37,7 @@ TrFitPar PhyBtaFit::BulidFitPar(const TrFitPar& fitPar) {
 }
 
     
-PhySt PhyBtaFit::BulidRefSt(const TrFitPar& fitPar, Double_t refz) {
+PhySt PhyBtaFit::bulidRefSt(const TrFitPar& fitPar, Double_t refz) {
     TrFitPar trpar(fitPar.info(), fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
     for (auto&& hitTRK : fitPar.hitsTRK()) {
         if (!(hitTRK.scx() || hitTRK.scy())) continue;
@@ -59,7 +59,7 @@ PhySt PhyBtaFit::BulidRefSt(const TrFitPar& fitPar, Double_t refz) {
 }
         
 
-PhySt PhyBtaFit::BulidRefSt(const PhySt& refSt, Double_t refz) {
+PhySt PhyBtaFit::bulidRefSt(const PhySt& refSt, Double_t refz) {
     PhySt physt(refSt);
     Bool_t is_prop = PropMgnt::PropToZ(refz, physt);
     if (!is_prop) return PhySt(refSt.info());
@@ -103,7 +103,7 @@ void PhyBtaFit::clear() {
 }
 
 
-PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, Double_t factor) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
+PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, Double_t factor) : TrFitPar(bulidFitPar(fitPar)) {
     PhyBtaFit::clear();
     if (!check_hits()) return;
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
@@ -113,7 +113,7 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, Double_t factor) : TrFitPar(PhyBtaF
     fact_ = ((Numc::Compare(factor) <= 0) ? Numc::ZERO<> : factor);
     
     // init state
-    part_ = std::move(PhyBtaFit::BulidRefSt(fitPar, hits_.at(0)->cz()));
+    part_ = std::move(bulidRefSt(fitPar, hits_.at(0)->cz()));
     if (Numc::EqualToZero(part_.mom())) { PhyBtaFit::clear(); return; }
     if (!survival_test_and_modify(part_, sw_eloss_)) { PhyBtaFit::clear(); return; }
 
@@ -124,7 +124,7 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, Double_t factor) : TrFitPar(PhyBtaF
 }
 
 
-PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor) : TrFitPar(PhyBtaFit::BulidFitPar(fitPar)) {
+PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor) : TrFitPar(bulidFitPar(fitPar)) {
     PhyBtaFit::clear();
     if (!check_hits()) return;
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
@@ -138,7 +138,7 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor
     else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) return;
 
     // init state
-    part_ = std::move(PhyBtaFit::BulidRefSt(refSt, hits_.at(0)->cz()));
+    part_ = std::move(bulidRefSt(refSt, hits_.at(0)->cz()));
     part_.arg().reset(sw_mscat_, sw_eloss_);
     if (Numc::EqualToZero(part_.mom())) { PhyBtaFit::clear(); return; }
     if (Numc::Compare(part_.uz() * refSt.uz()) < 0) { PhyBtaFit::clear(); return; }
@@ -222,7 +222,6 @@ Bool_t PhyBtaFit::evolve() {
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes, numOfPar);
     
     Short_t cnt_nhit = 0;
-    Double_t cnt_ghost = 0.0;
     for (auto&& hit : hits_) {
         // Propagate
         Double_t preEta = ppst.eta();
@@ -252,7 +251,6 @@ Bool_t PhyBtaFit::evolve() {
         if (hitTRK != nullptr) {
             if (hitTRK->sq()) chi += hitTRK->chiq() * hitTRK->chiq();
             if (hitTRK->sq()) jb(hitTRK->seqIDq(), parIDigb) += hitTRK->divq_igb() * jbEE;
-            cnt_ghost += (hitTRK->gstq());
         }
 
         // TOF
@@ -263,7 +261,6 @@ Bool_t PhyBtaFit::evolve() {
             if (hitTOF->st()) jb(hitTOF->seqIDt(), parIDigb) += hitTOF->divt_igb() * jbEE;
             if (hitTOF->sq()) jb(hitTOF->seqIDq(), parIDigb) += hitTOF->divq_igb() * jbEE;
             if (hitTOF->st() && opt_tsft) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
-            cnt_ghost += (hitTOF->gstt() + hitTOF->gstq());
         }
         
         // RICH
@@ -271,7 +268,6 @@ Bool_t PhyBtaFit::evolve() {
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) chi += hitRICH->chiib() * hitRICH->chiib();
             if (hitRICH->sib()) jb(hitRICH->seqIDib(), parIDigb) += hitRICH->divib_igb() * jbEE;
-            cnt_ghost += hitRICH->gstib();
         }
         
         // TRD
@@ -285,7 +281,7 @@ Bool_t PhyBtaFit::evolve() {
     }
     if (cnt_nhit != hits_.size()) return false;
 
-    Double_t ndof = static_cast<Double_t>(ndof_) - (cnt_ghost);
+    Double_t ndof = static_cast<Double_t>(ndof_);
     nchi_    = (chi / ndof);
     quality_ = Numc::NormQuality(nchi_, ndof);
 

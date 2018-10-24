@@ -130,8 +130,8 @@ std::array<long double, 2> TrackSys::ApproxLnX::EvalAndDevWithX0(long double x) 
 
 namespace TrackSys {
         
-std::array<long double, 4> Robust::minimizer(long double chi) const {
-    std::array<long double, 4> mini { Numc::ONE<long double>, Numc::ONE<long double>, Numc::ONE<long double>, Numc::ONE<long double> };
+std::array<long double, 3> Robust::minimizer(long double chi) const {
+    std::array<long double, 3> mini { Numc::ONE<long double>, Numc::ONE<long double>, Numc::ONE<long double> };
     if (Opt::OFF == opt_) return mini;
      
     const long double ZERO  = Numc::ZERO<long double>;
@@ -182,27 +182,6 @@ std::array<long double, 4> Robust::minimizer(long double chi) const {
         mini.at(1) = crnorm;
         mini.at(2) = crjacb;
     }
-
-    if (Opt::ON == ghost_.opt) {
-        long double abschi = std::fabs(chi / ghost_.thres);
-        long double rate   = ghost_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(ghost_.thres * std::log(abschi))));
-        if (!Numc::Valid(rate)) rate = ZERO;
-        
-        long double sh       = abschi * abschi;
-        long double sqrsh    = sh * sh;
-        long double alpha    = std::log1p(sqrsh) / sqrsh;
-        if (!Numc::Valid(alpha) || Numc::EqualToZero(sqrsh)) alpha = ONE;
-        
-        long double crchi = std::pow(alpha, (HALF / FOUR) * rate);
-        if (!Numc::Valid(crchi) || Numc::Compare(crchi) <= 0) crchi = ONE;
-        long double crwgt = crchi * crchi;
-
-        mini.at(0) *= crchi;
-        mini.at(1) *= crchi;
-        mini.at(2) *= crchi;
-        mini.at(3)  = crwgt;
-    }
-
     return mini;
 }
 
@@ -349,13 +328,13 @@ long double MultiGaus::chi(long double r) const {
 }
 
 
-std::array<long double, 4> MultiGaus::minimizer(long double r) const {
-    std::array<long double, 4> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double>, Numc::ONE<long double> };
+std::array<long double, 3> MultiGaus::minimizer(long double r) const {
+    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> };
     if      (multi_gaus_.size() == 0) return obj;
     else if (multi_gaus_.size() == 1) {
         long double nrm = (r / multi_gaus_.at(0).second);
         long double div = (Numc::ONE<long double> / multi_gaus_.at(0).second);
-        obj = std::array<long double, 4>({ nrm, nrm, div, Numc::ONE<long double> }); 
+        obj = std::array<long double, 3>({ nrm, nrm, div }); 
     }
     else {
         // Note: inv_sgm_sqr = sum(prb * inv_sgm_sqr) / sum(prb)
@@ -373,18 +352,17 @@ std::array<long double, 4> MultiGaus::minimizer(long double r) const {
         long double eftsgm = bound_.second * ((Numc::Compare(sum_prb, LMTL_PROB) <= 0 || Numc::Compare(inv_sgm) < 0) ? Numc::ONE<long double> : std::sqrt(sum_prb / inv_sgm));
         long double nrm    = ((Numc::Compare(sum_prb, LMTL_PROB) <= 0) ? (r / eftsgm) : sign * std::sqrt(Numc::NEG<long double> * Numc::TWO<long double> * std::log(sum_prb)));
         long double div    = Numc::ONE<long double> / eftsgm; 
-        obj = std::array<long double, 4>({ nrm, nrm, div, Numc::ONE<long double> });
+        obj = std::array<long double, 3>({ nrm, nrm, div });
     }
 
     if (!Numc::Valid(obj.at(0)) || !Numc::Valid(obj.at(1)) || !Numc::Valid(obj.at(2))) 
-        obj = std::array<long double, 4>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double>, Numc::ONE<long double> });
+        obj = std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
 
     if (Robust::Opt::ON == robust_.opt()) {
-        std::array<long double, 4>&& rbmini = robust_.minimizer(obj.at(0));
+        std::array<long double, 3>&& rbmini = robust_.minimizer(obj.at(0));
         obj.at(0) *= rbmini.at(0);
         obj.at(1) *= rbmini.at(1);
         obj.at(2) *= rbmini.at(2);
-        obj.at(3)  = rbmini.at(3);
     }
     return obj;
 }
@@ -488,8 +466,8 @@ LandauGaus::LandauGaus(Robust robust, long double kpa, long double mpv, long dou
     else mode_ = mpv_;
 }
 
-std::array<long double, 4> LandauGaus::minimizer(long double x) const {
-    std::array<long double, 4> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double>, Numc::ONE<long double> };
+std::array<long double, 3> LandauGaus::minimizer(long double x) const {
+    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> };
     long double norm = ((x - mpv_) / sgm_);
     if (!Numc::Valid(norm)) return obj;
    
@@ -507,14 +485,13 @@ std::array<long double, 4> LandauGaus::minimizer(long double x) const {
     }
     if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
     if (!Numc::Valid(divx)) divx = Numc::ONE<long double>;
-    obj = std::array<long double, 4>({ nrmx, nrmx, divx, Numc::ONE<long double> });
+    obj = std::array<long double, 3>({ nrmx, nrmx, divx });
 
     if (Robust::Opt::ON == robust_.opt()) {
-        std::array<long double, 4>&& rbmini = robust_.minimizer(obj.at(0));
+        std::array<long double, 3>&& rbmini = robust_.minimizer(obj.at(0));
         obj.at(0) *= rbmini.at(0);
         obj.at(1) *= rbmini.at(1);
         obj.at(2) *= rbmini.at(2);
-        obj.at(3)  = rbmini.at(3);
     }
     return obj; 
 }

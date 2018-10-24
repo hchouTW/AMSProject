@@ -243,7 +243,7 @@ class ApproxLnX {
 namespace TrackSys {
 // Robust
 // S := nrm * nrm
-// H := thres * thres  (H>0)
+// H := thres * thres  (H>=1)
 // R := rate * 0.5 * (1 + erf(thres * log( abs(nrm/thres)) ) )     (0<=rate<=1)
 // X := (S/H)
 // A := log(1+X*X) / (X*X)
@@ -263,31 +263,28 @@ class Robust {
         enum class Opt { OFF = 0, ON = 1 };
 
         struct Option { 
-            Option(Opt _opt = Opt::OFF, long double _thres = 0.0L, long double _rate = 0.0L) : opt(_opt), thres(_thres), rate(_rate) {}
+            Option(Opt _opt = Opt::OFF, long double _thres = 1.0L, long double _rate = 1.0L) : opt(_opt), thres(_thres), rate(_rate) {}
             Opt         opt;
             long double thres; 
             long double rate; 
         };
 
     public :
-        Robust(const Option& robust = Option(Opt::OFF), const Option& ghost = Option(Opt::OFF)) : opt_(Opt::OFF), robust_(robust), ghost_(ghost) {
-            if (Opt::OFF == robust_.opt && Opt::OFF == ghost_.opt) return;
-            Bool_t check_robust = (Opt::ON == robust_.opt && Numc::Compare(robust_.thres) > 0 && Numc::Compare(robust_.rate) > 0 && Numc::Compare(robust_.rate, Numc::ONE<long double>) <= 0);
-            Bool_t check_ghost  = (Opt::ON ==  ghost_.opt && Numc::Compare(ghost_.thres) > 0 && Numc::Compare(ghost_.rate) > 0);
+        Robust(const Option& robust = Option(Opt::OFF)) : opt_(Opt::OFF), robust_(robust) {
+            if (Opt::OFF == robust_.opt) return;
+            Bool_t check_robust = (Opt::ON == robust_.opt && Numc::Compare(robust_.thres, Numc::ONE<long double>) >= 0 && Numc::Compare(robust_.rate) > 0 && Numc::Compare(robust_.rate, Numc::ONE<long double>) <= 0);
             if (!check_robust) robust_ = Option(Opt::OFF);
-            if (!check_ghost)  ghost_  = Option(Opt::OFF);
-            opt_ = (Opt::ON == robust_.opt || Opt::ON == ghost_.opt) ? Opt::ON : Opt::OFF;
+            opt_ = (Opt::ON == robust_.opt) ? Opt::ON : Opt::OFF;
         }
         ~Robust() {}
 
     public :
         const Opt& opt() const { return opt_; }
-        std::array<long double, 4> minimizer(long double chi) const;
+        std::array<long double, 3> minimizer(long double chi) const;
         
     private :
         Opt    opt_;
         Option robust_;
-        Option ghost_;
 };
 
 } // namesapce TrackSys
@@ -320,7 +317,7 @@ class MultiGaus {
         inline const long double eftsgm() const { return eftsgm_; }
         long double chi(long double r) const;
 
-        std::array<long double, 4> minimizer(long double r = 0.) const; 
+        std::array<long double, 3> minimizer(long double r = 0.) const; 
         long double rndm();
 
     protected :
@@ -354,7 +351,7 @@ class LandauGaus {
         LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
-        std::array<long double, 4> minimizer(long double x) const;
+        std::array<long double, 3> minimizer(long double x) const;
 
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }

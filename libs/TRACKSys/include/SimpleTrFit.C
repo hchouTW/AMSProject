@@ -563,9 +563,6 @@ Bool_t SimpleTrFit::evolve() {
    
     Short_t cnt_nhit =  0;
     Short_t cnt_nseg = -1;
-    Double_t cnt_ghost_cx = 0.0;
-    Double_t cnt_ghost_cy = 0.0;
-    Double_t cnt_ghost_ib = 0.0;
     PhySt                nearPpst = ppst;
     PhyJb::SMtxDGG       nearJbGG = jbGG;
     std::vector<PhyJbMS> nearJbMS = jbMS;
@@ -614,7 +611,6 @@ Bool_t SimpleTrFit::evolve() {
             for (Short_t it = 0; it < PhyJbMS::DIM; ++it) {
                 jbCWx(hit->onlycx_seqID(), is*PhyJbMS::DIM+it) += Numc::NEG<> * jbMS.at(is)(0, it);
             }}}
-            cnt_ghost_cx += hit->gstcx();
         }
         if (hit->scy()) {
             rsCy(hit->onlycy_seqID()) += (hit->cy() - ppst.cy());
@@ -624,14 +620,12 @@ Bool_t SimpleTrFit::evolve() {
             for (Short_t it = 0; it < PhyJbMS::DIM; ++it) {
                 jbCWy(hit->onlycy_seqID(), is*PhyJbMS::DIM+it) += Numc::NEG<> * jbMS.at(is)(0, it);
             }}}
-            cnt_ghost_cy += hit->gstcy();
         }
 
         // TRK
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
             if (hitTRK->sq()) chi_ib += hitTRK->chiq() * hitTRK->chiq();
-            cnt_ghost_ib += (hitTRK->gstq());
         }
         
         // TOF
@@ -639,14 +633,12 @@ Bool_t SimpleTrFit::evolve() {
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi_ib += hitTOF->chit() * hitTOF->chit();
             if (hitTOF->sq()) chi_ib += hitTOF->chiq() * hitTOF->chiq();
-            cnt_ghost_ib += (hitTOF->gstt() + hitTOF->gstq());
         }
         
         // RICH
         HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) chi_ib += hitRICH->chiib() * hitRICH->chiib();
-            cnt_ghost_ib += hitRICH->gstib();
         }
         
         if (hasCxy) {
@@ -668,17 +660,17 @@ Bool_t SimpleTrFit::evolve() {
     ceres::Matrix&& wtCCy = cvCCy.inverse();
     chi_cy += (rsCy.transpose() * wtCCy * rsCy);
 
-    Double_t nchi_cx = ((ndof_cx_ > 0) ? (chi_cx / (static_cast<Double_t>(ndof_cx_) - cnt_ghost_cx)) : 0);
-    Double_t nchi_cy = ((ndof_cy_ > 0) ? (chi_cy / (static_cast<Double_t>(ndof_cy_) - cnt_ghost_cy)) : 0);
-    Double_t nchi_ib = ((ndof_ib_ > 0) ? (chi_ib / (static_cast<Double_t>(ndof_ib_) - cnt_ghost_ib)) : 0);
+    Double_t nchi_cx = ((ndof_cx_ > 0) ? (chi_cx / static_cast<Double_t>(ndof_cx_)) : 0);
+    Double_t nchi_cy = ((ndof_cy_ > 0) ? (chi_cy / static_cast<Double_t>(ndof_cy_)) : 0);
+    Double_t nchi_ib = ((ndof_ib_ > 0) ? (chi_ib / static_cast<Double_t>(ndof_ib_)) : 0);
    
-    Double_t ndof_cx = static_cast<Double_t>(ndof_cx_) - cnt_ghost_cx;
+    Double_t ndof_cx = static_cast<Double_t>(ndof_cx_);
 
-    Double_t ndof_cyib = static_cast<Double_t>(ndof_.at(1)) - (cnt_ghost_cy + cnt_ghost_ib);
+    Double_t ndof_cyib = static_cast<Double_t>(ndof_.at(1));
     Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / ndof_cyib) : 0);
     if (!Numc::Valid(nchi_cyib) || Numc::Compare(nchi_cyib) <= 0) nchi_cyib = Numc::ZERO<>;
    
-    Double_t ndof_tt = static_cast<Double_t>(ndof_tt_) - (cnt_ghost_cx + cnt_ghost_cy + cnt_ghost_ib);
+    Double_t ndof_tt = static_cast<Double_t>(ndof_tt_);
     Double_t nchi_tt = ((chi_cx + chi_cy + chi_ib) / ndof_tt);
     if (!Numc::Valid(nchi_tt) || Numc::Compare(nchi_tt) <= 0) nchi_tt = Numc::ZERO<>;
 
@@ -892,7 +884,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
 
     Short_t  cnt_nhit =  0;
     Short_t  cnt_nseg = -1;
-    Double_t cnt_ghost = 0.0;
     PhySt                       nearPpst = ppst;
     PhyJb::SMtxDGG              nearJbGG = jbGG;
     std::vector<PhyJb::SMtxDGL> nearJbGL = jbGL;
@@ -945,7 +936,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             for (Short_t it = 0; it < PhyJb::DIML; ++it) {
                 jbCL(hit->onlyc_seqIDcx(), is*PhyJb::DIML+it) += Numc::NEG<> * jbGL.at(is)(0, it);
             }}}
-            cnt_ghost += hit->gstcx();
         }
         if (hit->scy()) {
             rsC(hit->onlyc_seqIDcy()) += (hit->cy() - ppst.cy());
@@ -959,7 +949,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             for (Short_t it = 0; it < PhyJb::DIML; ++it) {
                 jbCL(hit->onlyc_seqIDcy(), is*PhyJb::DIML+it) += Numc::NEG<> * jbGL.at(is)(1, it);
             }}}
-            cnt_ghost += hit->gstcy();
         }
         
         // TRK
@@ -968,7 +957,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             if (hitTRK->sq()) costIb += hitTRK->chiq() * hitTRK->chiq();
             if (hasGrd && hitTRK->sq()) grdIb(4) += (hitTRK->divq_eta() * jbGG(4, 4)) * hitTRK->nrmq();
             if (hasGrd && hitTRK->sq()) hesIb(4, 4) += (hitTRK->divq_eta() * jbGG(4, 4)) * (hitTRK->divq_eta() * jbGG(4, 4));
-            cnt_ghost += (hitTRK->gstq());
         }
         
         // TOF
@@ -982,8 +970,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
 
             if (hasGrd && hitTOF->st()) hesIb(4, 4) += (hitTOF->divt_eta() * jbGG(4, 4)) * (hitTOF->divt_eta() * jbGG(4, 4));
             if (hasGrd && hitTOF->sq()) hesIb(4, 4) += (hitTOF->divq_eta() * jbGG(4, 4)) * (hitTOF->divq_eta() * jbGG(4, 4));
-
-            cnt_ghost += (hitTOF->gstt() + hitTOF->gstq());
         }
         
         // RICH
@@ -992,8 +978,6 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             if (hitRICH->sib()) costIb += hitRICH->chiib() * hitRICH->chiib();
             if (hasGrd && hitRICH->sib()) grdIb(4) += (hitRICH->divib_eta() * jbGG(4, 4)) * hitRICH->nrmib();
             if (hasGrd && hitRICH->sib()) hesIb(4, 4) += (hitRICH->divib_eta() * jbGG(4, 4)) * (hitRICH->divib_eta() * jbGG(4, 4));
-
-            cnt_ghost += hitRICH->gstib();
         }
         
         if (hasCxy) {
@@ -1020,7 +1004,7 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
     Double_t        costG = Numc::ZERO<>;
     ceres::Vector&& grdG  = ceres::Vector::Zero(numOfPar_);
     ceres::Matrix&& hesG  = ceres::Matrix::Zero(numOfPar_, numOfPar_);
-    costG = (costC + costIb) / (static_cast<Double_t>(numOfDof_) - cnt_ghost);
+    costG = (costC + costIb) / static_cast<Double_t>(numOfDof_);
     if (hasGrd) grdG = (grdC + grdIb);
     if (hasGrd) hesG = (hesC + hesIb);
     if (!Numc::Valid(costG) || Numc::Compare(costG) <= 0) costG = Numc::ZERO<>;

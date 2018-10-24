@@ -42,7 +42,6 @@ void VirtualHitSt::clear() {
     coo_      = std::move(SVecD<3>());
     erc_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
     
-    gstc_.fill(Numc::ZERO<>);
     chic_.fill(Numc::ZERO<>);
     nrmc_.fill(Numc::ZERO<>);
     divc_.fill(Numc::ZERO<>);
@@ -90,7 +89,6 @@ void HitStTRK::clear() {
     q_      = Numc::ZERO<>;
     qx_     = Numc::ZERO<>;
     qy_     = Numc::ZERO<>;
-    gstq_   = Numc::ZERO<>;
     chiq_   = Numc::ZERO<>;
     nrmq_   = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
@@ -116,15 +114,12 @@ Short_t HitStTRK::set_seqID(Short_t seqID) {
 void HitStTRK::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
-    gstc_.fill(Numc::ZERO<>);
     chic_.fill(Numc::ZERO<>);
     nrmc_.fill(Numc::ZERO<>);
     divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_c_[0] && pdf_cx_ != nullptr) {
-        std::array<long double, 4> minix = pdf_cx_->minimizer(crs(0));
-        gstc_[0] = (Numc::ONE<long double> - minix.at(3));
-
+        std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0));
         chic_[0] = minix.at(0);
         nrmc_[0] = minix.at(1);
         divc_[0] = Numc::NEG<> * minix.at(2);
@@ -135,9 +130,7 @@ void HitStTRK::cal(const PhySt& part) {
         }
     }
     if (side_c_[1] && pdf_cy_ != nullptr) {
-        std::array<long double, 4> miniy = pdf_cy_->minimizer(crs(1));
-        gstc_[1] = (Numc::ONE<long double> - miniy.at(3));
-
+        std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1));
         chic_[1] = miniy.at(0);
         nrmc_[1] = miniy.at(1);
         divc_[1] = Numc::NEG<> * miniy.at(2);
@@ -148,14 +141,11 @@ void HitStTRK::cal(const PhySt& part) {
         }
     }
     
-    gstq_ = Numc::ZERO<>;
     chiq_ = Numc::ZERO<>;
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
     if (side_q_ && pdf_q_ != nullptr) {
-        std::array<long double, 4>&& iony = pdf_q_->minimizer(q_*q_, part.igb());
-        gstq_ = (Numc::ONE<long double> - iony.at(3));
-        
+        std::array<long double, 3>&& iony = pdf_q_->minimizer(q_*q_, part.igb());
         chiq_    = iony.at(0);
         nrmq_    = iony.at(1);
         divq_[0] = iony.at(2) * (part.mu() * part.eta_sign());
@@ -421,7 +411,7 @@ MultiGaus HitStTRK::PDF_Q02_CY_EXT_(
 );
 
 IonEloss HitStTRK::PDF_Q01_QXY_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     { 2.16299e+00, 4.12329e+03, 2.57464e-01, 1.96535e+01 }, // Kpa
     { 3.41461e-01, 1.62724e+00, 6.49499e-01, 1.68503e+00, 5.90089e-01, 5.00000e-01 }, // Mpv
     { 2.63089e-03, 4.70380e+01, -1.66266e+01, 9.60228e-01, 5.97911e-04, 1.00707e+00 }, // Sgm
@@ -430,7 +420,7 @@ IonEloss HitStTRK::PDF_Q01_QXY_(
 );
 
 IonEloss HitStTRK::PDF_Q02_QXY_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     { 1.18528e-01, 1.43470e+04, 1.37285e+01, 2.95944e+00 }, // Kpa
     { 2.12408e+00, 1.38483e+00, 3.07698e-01, 1.82028e+00, 8.28775e-01, 5.00000e-01 }, // Mpv
     { 2.33811e+00, 7.52322e+00, -8.02966e+00, 2.40862e-01, 5.30780e-01, 1.00230e+00 }, // Sgm
@@ -454,7 +444,6 @@ void HitStTOF::clear() {
     orgt_   = Numc::ZERO<>;
     tsft_   = Numc::ZERO<>;
 
-    gstt_    = Numc::ZERO<>;
     chit_    = Numc::ZERO<>;
     nrmt_    = Numc::ZERO<>;
     divtsft_ = Numc::ZERO<>;
@@ -463,7 +452,6 @@ void HitStTOF::clear() {
     side_q_ = false;
     q_      = Numc::ZERO<>;
 
-    gstq_ = Numc::ZERO<>;
     chiq_ = Numc::ZERO<>;
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
@@ -487,7 +475,6 @@ Short_t HitStTOF::set_seqID(Short_t seqID) {
 void HitStTOF::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
-    gstt_    = Numc::ZERO<>;
     chit_    = Numc::ZERO<>;
     nrmt_    = Numc::ZERO<>;
     divtsft_ = Numc::ZERO<>;
@@ -500,9 +487,7 @@ void HitStTOF::cal(const PhySt& part) {
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
         Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
-            std::array<long double, 4> minit = pdf_t_->minimizer(dt, part.igb(), USE_TSHF_);
-            gstt_ = (Numc::ONE<long double> - minit.at(3));
-            
+            std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.igb(), USE_TSHF_);
             chit_    = minit.at(0);
             nrmt_    = minit.at(1);
             divtsft_ = minit.at(2);
@@ -519,14 +504,11 @@ void HitStTOF::cal(const PhySt& part) {
         }
     }
     
-    gstq_ = Numc::ZERO<>;
     chiq_ = Numc::ZERO<>;
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
     if (side_q_ && pdf_q_ != nullptr) {
-        std::array<long double, 4>&& ion = pdf_q_->minimizer(q_*q_, part.igb());
-        gstq_ = (Numc::ONE<long double> - ion.at(3));
-        
+        std::array<long double, 3>&& ion = pdf_q_->minimizer(q_*q_, part.igb());
         chiq_    = ion.at(0);
         nrmq_    = ion.at(1);
         divq_[0] = ion.at(2) * (part.mu() * part.eta_sign());
@@ -570,12 +552,12 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
 }
 
 TmeMeas HitStTOF::PDF_Q01_T_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
     { 2.38464e+00, 2.15741e+00, 7.72451e+01, 1.03508e-02, 7.73432e+01 } // Sgm
 );
 
 IonEloss HitStTOF::PDF_Q01_Q_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     { 2.94768e+01, 2.21358e+01, 6.06181e-02, 9.45926e+01 }, // Kpa
     { 3.81512e-01, 2.60771e+00, -2.27962e-01, 1.27420e+00, 7.54779e-01, 6.57663e-01 }, // Mpv
     { 5.53873e-01, 8.14537e+00, -8.41010e+00, 1.87171e-01, 6.68142e-01, 9.80451e-01 }, // Sgm
@@ -584,12 +566,12 @@ IonEloss HitStTOF::PDF_Q01_Q_(
 );
 
 TmeMeas HitStTOF::PDF_Q02_T_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
     { 2.13989e+00, 2.36987e-01, 7.71676e+01, 1.72728e-02, 7.76650e+01 } // Sgm
 );
 
 IonEloss HitStTOF::PDF_Q02_Q_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     { 3.17895e+00, 1.64932e+04, 5.05553e-01, 3.19234e+01 }, // Kpa
     { 1.00385e-02, 2.71829e+02,  1.53998e+02, 9.24822e-01, 2.50440e-10, 3.01499e+00 }, // Mpv
     { 4.41616e+00, 6.46553e+01, -6.48173e+01, 1.84870e-02, 7.73260e-01, 9.88732e-01 }, // Sgm
@@ -609,7 +591,6 @@ void HitStRICH::clear() {
     side_ib_ = false;
     ib_      = Numc::ZERO<>;
 
-    gstib_ = Numc::ZERO<>;
     chiib_ = Numc::ZERO<>;
     nrmib_ = Numc::ZERO<>;
     divib_.fill(Numc::ZERO<>);
@@ -631,16 +612,13 @@ Short_t HitStRICH::set_seqID(Short_t seqID) {
 void HitStRICH::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
 
-    gstib_ = Numc::ZERO<>;
     chiib_ = Numc::ZERO<>;
     nrmib_ = Numc::ZERO<>;
     divib_.fill(Numc::ZERO<>);
     if (side_ib_ && pdf_ib_ != nullptr) {
         // 1/bta := (1+igb*igb)^(1/2)
         Double_t dib = ib_ - part.ibta();
-        std::array<long double, 4> miniib = pdf_ib_->minimizer(dib);
-        gstib_ = (Numc::ONE<long double> - miniib.at(3));
-
+        std::array<long double, 3> miniib = pdf_ib_->minimizer(dib);
         chiib_ = miniib.at(0);
         nrmib_ = miniib.at(1);
         Double_t divib = (Numc::NEG<> * miniib.at(2));
@@ -689,25 +667,25 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     6.84734464661977515e-01, 9.59147e-04,
     3.15265535338022374e-01, 1.64991e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     8.53153985032869877e-01, 3.16209e-03,
     1.46846014967130206e-01, 5.38069e-03
 );
 
 MultiGaus HitStRICH::PDF_AGL_Q02_IB_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     7.75514988289395357e-01, 6.15751e-04,
     2.24485011710604615e-01, 1.07079e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q02_IB_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     7.62865861184466976e-01, 1.90407e-03,
     2.37134138815532997e-01, 3.11423e-03
 );

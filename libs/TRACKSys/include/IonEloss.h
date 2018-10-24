@@ -11,7 +11,7 @@ class IonEloss {
         IonEloss(Robust robust, const std::array<long double, 4>& kpa, const std::array<long double, 6>& mpv, const std::array<long double, 6>& sgm, const std::array<long double, 6>& mode, long double fluc = Numc::ZERO<long double>) : robust_(robust), isfluc_(false), kpa_(kpa), mpv_(mpv), sgm_(sgm), mode_(mode), fluc_(fluc) { isfluc_ = (Numc::Compare(fluc_) > 0); if (!isfluc_) fluc_ = Numc::ZERO<long double>; }
         ~IonEloss() {}
         
-        std::array<long double, 4> minimizer(long double x, long double igmbta) const;
+        std::array<long double, 3> minimizer(long double x, long double igmbta) const;
    
     protected :
         long double get_kpa(long double igmbta, long double ibsqr) const;

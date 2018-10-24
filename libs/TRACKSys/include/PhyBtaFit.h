@@ -44,11 +44,6 @@ class VirtualPhyBtaFit : protected TrFitPar, public ceres::CostFunction {
 
 class PhyBtaFit : public TrFitPar {
     public :
-        TrFitPar BulidFitPar(const TrFitPar& fitPar); // only for bta fit
-        PhySt BulidRefSt(const TrFitPar& fitPar, Double_t refz = 0.0); // only coord info
-        PhySt BulidRefSt(const PhySt& refSt, Double_t refz = 0.0);
-
-    public :
         PhyBtaFit& operator=(const PhyBtaFit& rhs);
         PhyBtaFit(const PhyBtaFit& trFit) { *this = trFit; }
         
@@ -75,6 +70,10 @@ class PhyBtaFit : public TrFitPar {
         void   clear();
         Bool_t physicalFit();
         Bool_t evolve();
+        
+        TrFitPar bulidFitPar(const TrFitPar& fitPar); // only for bta fit
+        PhySt    bulidRefSt(const TrFitPar& fitPar, Double_t refz = 0.0); // only coord info
+        PhySt    bulidRefSt(const PhySt& refSt, Double_t refz = 0.0);
 
     protected :
         Bool_t   succ_;
@@ -90,7 +89,7 @@ class PhyBtaFit : public TrFitPar {
         Double_t quality_;
 
     private :
-        static constexpr Double_t DEFAULT_FACTOR = 1.3;
+        static constexpr Double_t DEFAULT_FACTOR = 1.2;
         static constexpr Double_t LMT_IGB        = 1.0e-08;
         static constexpr Double_t CONV_IGB       = 1.0e-06;
 
