@@ -33,3 +33,15 @@ read vim/README.md
 
 ## Coding Style
 read guides/READE.md
+
+## CentOS7
+```bash
+yum install epel-release.noarch
+
+yum install root.x86_64
+yum install root-tmva.x86_64
+yum install root-unfold.x86_64
+yum install root-unuran.x86_64
+
+yum install xrootd-x86_64
+```
