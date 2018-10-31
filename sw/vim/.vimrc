@@ -30,9 +30,8 @@ if has ('gui_running')
 else
     set background=light
 endif
+let g:solarized_termcolors=256
 colorscheme solarized
-
-set t_Co=256
 syntax on " enable syntas processing
 
 
