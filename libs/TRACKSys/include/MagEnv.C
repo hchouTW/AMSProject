@@ -187,9 +187,9 @@ MagFld MagGeoBoxReader::get(const SVecD<3>& coo) {
     Float_t xu = xloc - static_cast<Float_t>(xi);
     Float_t yu = yloc - static_cast<Float_t>(yi);
     Float_t zu = zloc - static_cast<Float_t>(zi);
-    Float_t xl = (Numc::ONE<> - xu);
-    Float_t yl = (Numc::ONE<> - yu);
-    Float_t zl = (Numc::ONE<> - zu);
+    Float_t xl = (Numc::ONE<Float_t> - xu);
+    Float_t yl = (Numc::ONE<Float_t> - yu);
+    Float_t zl = (Numc::ONE<Float_t> - zu);
     
     Float_t* clll = mag_[idx                                  ].data();
     Float_t* cllu = mag_[idx + (                          + 1)].data();

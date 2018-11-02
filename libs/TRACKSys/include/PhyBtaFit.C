@@ -146,7 +146,7 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor
     
     succ_ = physicalFit();
     if (!succ_) { PhyBtaFit::clear(); TrFitPar::clear(); }
-    
+   
     //if (!succ_) CERR("FAILURE === PhyBtaFit\n");
 }
 
@@ -154,6 +154,17 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt, Double_t factor
 Bool_t PhyBtaFit::physicalFit() {
     if (Numc::EqualToZero(part_.mom())) return false;
     Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
+    
+    ////////////////////// testcode
+    if (evolve()) {
+        double igb = igb_ + 0.5 * err_ * (Rndm::NormalGaussian() + 0.5 * Rndm::DecimalUniform());
+        igb = 0.5;
+        double eta = part_.eta_sign() * (((igb<CONV_IGB)?CONV_IGB:igb) / part_.mu());
+        part_.set_eta(eta);
+        if (!survival_test_and_modify(part_, sw_eloss_)) return false;
+    }
+    else return false;
+    ///////////////////////////
 
     // Gobal Parameters
     std::vector<double> params_glb({ part_.igb() });
@@ -179,7 +190,6 @@ Bool_t PhyBtaFit::physicalFit() {
     ceres::Solve(options, &problem, &summary);
     if (!summary.IsSolutionUsable()) return false;
     //if (ceres::NO_CONVERGENCE == summary.termination_type) return false;
-    //std::cerr << summary.FullReport() << std::endl;
  
     // Reach to beta ~ 1, so we reject this
     if (Numc::Compare(std::fabs(params_glb.at(parIDigb) - LMT_IGB), CONV_IGB) < 0) return false;
@@ -191,6 +201,18 @@ Bool_t PhyBtaFit::physicalFit() {
     if (opt_tsft) { tsft_ = params_glb.at(parIDtsft); } // TOF Shift Time
 
     Bool_t succ = evolve();
+    if (succ) {
+        Double_t thres = CONV_IGB + fact_ * err_;
+        succ = (Numc::Compare(igb_, thres) > 0);
+    }
+   
+    // testcode
+    //double dchi (summary.initial_cost - summary.final_cost);
+    //if (std::fabs(params_glb.at(parIDigb)-part_.igb()) < 0.0001 && std::fabs(dchi) < 0.001 && succ) {
+    //    CERR("IS GOOD %d %d QLT %14.8f IGB %14.8f %14.8f ERR %14.8f\n", (ceres::NO_CONVERGENCE != summary.termination_type), succ, quality_, part_.igb(), params_glb.at(parIDigb), err_);
+    //    std::cerr << summary.FullReport() << std::endl; // testcode
+    //    return false;
+    //}
     return succ;
 }
 
@@ -219,6 +241,7 @@ Bool_t PhyBtaFit::evolve() {
     
     // Matrix (Jb)
     Double_t jbEE = Numc::ONE<>;
+    ceres::Vector rs = ceres::Vector::Zero(numOfRes);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes, numOfPar);
     
     Short_t cnt_nhit = 0;
@@ -250,6 +273,7 @@ Bool_t PhyBtaFit::evolve() {
         HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
         if (hitTRK != nullptr) {
             if (hitTRK->sq()) chi += hitTRK->chiq() * hitTRK->chiq();
+            if (hitTRK->sq()) rs(hitTRK->seqIDq()) += hitTRK->nrmq();
             if (hitTRK->sq()) jb(hitTRK->seqIDq(), parIDigb) += hitTRK->divq_igb() * jbEE;
         }
 
@@ -258,6 +282,8 @@ Bool_t PhyBtaFit::evolve() {
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi += hitTOF->chit() * hitTOF->chit();
             if (hitTOF->sq()) chi += hitTOF->chiq() * hitTOF->chiq();
+            if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
+            if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) jb(hitTOF->seqIDt(), parIDigb) += hitTOF->divt_igb() * jbEE;
             if (hitTOF->sq()) jb(hitTOF->seqIDq(), parIDigb) += hitTOF->divq_igb() * jbEE;
             if (hitTOF->st() && opt_tsft) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
@@ -267,6 +293,7 @@ Bool_t PhyBtaFit::evolve() {
         HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
         if (hitRICH != nullptr) {
             if (hitRICH->sib()) chi += hitRICH->chiib() * hitRICH->chiib();
+            if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
             if (hitRICH->sib()) jb(hitRICH->seqIDib(), parIDigb) += hitRICH->divib_igb() * jbEE;
         }
         
@@ -274,6 +301,7 @@ Bool_t PhyBtaFit::evolve() {
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) chi+= hitTRD->nrmel() * hitTRD->nrmel();
+            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
             if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDigb) += hitTRD->divel_igb() * jbEE;
         }
         
@@ -285,8 +313,11 @@ Bool_t PhyBtaFit::evolve() {
     nchi_    = (chi / ndof);
     quality_ = Numc::NormQuality(nchi_, ndof);
 
-    ceres::Matrix cov  = (jb.transpose() * jb);
-    ceres::Vector diag = cov.inverse().diagonal();
+    ceres::Vector grd = (jb.transpose() * rs);
+    ceres::Matrix hes = (jb.transpose() * jb);
+    ceres::Matrix cov = hes.inverse();
+    ceres::Vector diag = cov.diagonal();
+    ceres::Vector step = cov * grd;
     Double_t errIgb  = std::sqrt(diag(parIDigb));
     Double_t errTsft = (opt_tsft ? std::sqrt(diag(parIDtsft)) : Numc::ZERO<>);
     if (!Numc::Valid(errIgb )) errIgb  = Numc::ZERO<>;
@@ -295,9 +326,6 @@ Bool_t PhyBtaFit::evolve() {
     igb_ = part_.igb();
     err_ = errIgb;
 
-    Double_t thres = CONV_IGB + fact_ * err_;
-    if (Numc::Compare(igb_, thres) < 0) return false;
-    
     return true;
 }
 
@@ -321,7 +349,6 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
     ppst.arg().clear();
     ppst.set_eta(parteta);
 
-    // Matrix (Rs, Jb)
     Double_t jbEE = Numc::ONE<>;
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
     ceres::Matrix jb = ceres::Matrix::Zero(numOfRes_, numOfPar_);

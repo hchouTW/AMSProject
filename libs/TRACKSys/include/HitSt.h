@@ -383,6 +383,9 @@ class HitStRICH : public VirtualHitSt {
 };
 
 
+// ALG: kappa fixed to 0.005, mpv and sigma free and no fluc
+// GM:
+
 class HitStTRD : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;

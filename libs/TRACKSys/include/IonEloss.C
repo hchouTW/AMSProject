@@ -38,11 +38,18 @@ std::array<long double, 3> IonEloss::minimizer(long double x, long double igmbta
     }
 
     // testcode =======================
-    //Double_t sigma = std::hypot(sgm, fluc_);
-    //chi = (x - mode) / sigma;
-    //nrm = chi;
-    //div = (-1.0 / sigma) * divmpv;
-    //wgt = Numc::ONE<long double>;
+    Double_t sigma = std::hypot(sgm, fluc_);
+    chi = (x - mode) / sigma;
+    nrm = chi;
+    div = (-1.0 / sigma) * divmpv;
+    
+    if (Robust::Opt::ON == robust_.opt()) {
+        std::array<long double, 3>&& rbmini = robust_.minimizer(chi);
+        chi *= rbmini.at(0);
+        nrm *= rbmini.at(1);
+        div *= rbmini.at(2);
+    }
+    if (divmpv  < 0) COUT("IGB %14.8f MPV %14.8f DIV %14.8f\n", static_cast<double>(igmbta), static_cast<double>(mpv), static_cast<double>(divmpv));
     // ================================
 
     return std::array<long double, 3>({ chi, nrm, div });

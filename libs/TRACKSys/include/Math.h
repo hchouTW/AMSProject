@@ -401,6 +401,70 @@ const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P
 
 
 namespace TrackSys {
+// TF1* flg = new TF1("flg", "[0] * TMath::Exp([1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-[1]) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/[3]-2.22782980e-01)/1.80655634e-01))");
+// parameter(x) = igb
+// kpa  := 0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(1+x*x)^[2]) - [3]))
+// mpv  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
+// sgm  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
+// fluc := [0] * 0.5 * (1.0 + TMath::Erf([1] * TMath::Log(x) - [2]))
+// mode := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
+class LGGE_LG {
+    public :
+        LGGE_LG(long double kpa, long double mpv, long double sgm, long double mode, long double fluc) : kpa_(kpa), mpv_(mpv), sgm_(sgm), mode_(mode), fluc_(fluc) {}
+        ~LGGE_LG() {}
+
+    public :
+        long double kpa_;
+        long double mpv_;
+        long double sgm_;
+        long double mode_;
+        long double fluc_;
+};
+
+
+// TF1* fge = new TF1("fge", "[0] * TMath::Power(x, [1]-1) * TMath::Exp(-[2]*x) * (1.0 + TMath::Erf([3]*x-[4]))");
+// alp := [0]
+// bta := [0]
+// mid := [0]
+// wid := [0]
+class LGGE_GE {
+    public :
+        LGGE_GE(long double alp, long double bta, long double mid, long double wid) : alp_(alp), bta_(bta), mid_(mid), wid_(wid) {}
+        ~LGGE_GE() {}
+
+    public :
+        long double alp_;
+        long double bta_;
+        long double mid_;
+        long double wid_;
+};
+
+
+class LGGE {
+    public :
+        LGGE(std::array<long double, 2> lg_kpa, std::array<long double, 2> lg_mpv, std::array<long double, 2> lg_sgm, std::array<long double, 2> lg_mode, std::array<long double, 2> lg_fluc, 
+             long double ge_alp, long double ge_bta, long double ge_mid, long double ge_wid) :
+             lg_kpa_(lg_kpa), lg_mpv_(lg_mpv), lg_sgm_(lg_sgm), lg_mode_(lg_mode), lg_fluc_(lg_fluc), ge_alp_(ge_alp), ge_bta_(ge_bta), ge_mid_(ge_mid), ge_wid_(ge_wid)  {}
+        ~LGGE() {}
+
+    public :
+        std::array<long double, 2> lg_kpa_;
+        std::array<long double, 2> lg_mpv_;
+        std::array<long double, 2> lg_sgm_;
+        std::array<long double, 2> lg_mode_;
+        std::array<long double, 2> lg_fluc_;
+        
+        long double ge_alp_;
+        long double ge_bta_;
+        long double ge_mid_;
+        long double ge_wid_;
+};
+
+
+} // namesapce TrackSys
+    
+    
+namespace TrackSys {
 //TF1* flggm = new TF1("flggm", "[0] *  (1.0/sqrt(2.0*TMath::Pi())/[3]) * TMath::Exp((1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3])) + [4] * (pow([6], [5]) / TMath::Gamma([5])) * TMath::Power(x,[5]-1) * TMath::Exp(-[6]*x) * (0.5 * (TMath::Erf((x-[7])/[8])+1))", 0.1, 100);
 class LgGeFunc {
     public :
