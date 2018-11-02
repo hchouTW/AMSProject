@@ -43,15 +43,17 @@
     TF1* fkpa = new TF1("fkpa", "0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(1+x*x)^[2]) - [3]))");
     fkpa->SetParameters(1.0, 2.0, 2.0, 2.0);
     
-    TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))");
-    fmpv->SetParameters(10, 6.5, 1.0, 1.0, 1.0, 1.0);
+    //TF1* fmpv = new TF1("fmpv", "[0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))");
+    //fmpv->SetParameters(10, 6.5, 1.0, 1.0, 1.0, 1.0);
+    
+    TF1* fmpv = new TF1("fmpv", "[0] + [1] * (1+x*x)^[2]  - [3] * TMath::Log([4]+(x*x)^[5])");
+    fmpv->SetParameters(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 
     TF1* ftme = new TF1("ftme", "[0] + [1] * TMath::Erfc([2] * (1+x*x)^[3] - [4])");
     ftme->SetParameters(2.13914e+00, 2.40467e-01, 7.71764e+01, 1.70279e-02, 7.76559e+01);
     
     TF1* flggm = new TF1("flggm", "TMath::Abs([0]) * TMath::Exp(TMath::Abs([1]) * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-TMath::Abs([1])) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/TMath::Abs([3])-2.22782980e-01)/1.80655634e-01)) + TMath::Abs([4]) * (TMath::Power(x,TMath::Abs([5])-1) * TMath::Exp(-TMath::Abs([6])*x)) * (1.0+TMath::Erf([7]*x+[8]))");
     flggm->SetParameters(1.0, 1.63462e-01, 1.81139e+00, 1.22516e+00, 1.42611e+04, 1.41143e+00, 1.56670e-01, 0.5, -2.0);
-
 
  /*   
     TF1 * feloss = new TF1("feloss", "[0] * TMath::Power( ([2]/x)/[1]/[1], ([2]/x)/[1]/[1] ) / TMath::Gamma( ([2]/x)/[1]/[1] ) * TMath::Exp(-(([2]/x)/[1]/[1]) * ((x-[2])/[3] + TMath::Exp(-(x-[2])/[3])) )");
