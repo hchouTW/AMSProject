@@ -74,17 +74,19 @@ void SimpleTrFit::clear() {
 
 SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fitPar) {
     SimpleTrFit::clear();
-    if (!check_hits()) return;
-    if (nmes_cx_ <= LMTN_CX) return;
-    if (nmes_cy_ <= LMTN_CY) return;
+    if (!check_hits()) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
+    if (nmes_cx_ <= LMTN_CX) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
+    if (nmes_cy_ <= LMTN_CY) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
+
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
     ndof_tt_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
+    
     ndof_.at(0) = ndof_cx_;
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
-    if (ndof_.at(0) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); return; }
-    if (ndof_.at(1) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); return; }
+    if (ndof_.at(0) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
+    if (ndof_.at(1) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
 
     // Initial Status
     succ_ = (analyticalFit() ? simpleFit() : false);
@@ -664,10 +666,7 @@ Bool_t SimpleTrFit::evolve() {
     Double_t nchi_cy = ((ndof_cy_ > 0) ? (chi_cy / static_cast<Double_t>(ndof_cy_)) : 0);
     Double_t nchi_ib = ((ndof_ib_ > 0) ? (chi_ib / static_cast<Double_t>(ndof_ib_)) : 0);
    
-    Double_t ndof_cx = static_cast<Double_t>(ndof_cx_);
-
-    Double_t ndof_cyib = static_cast<Double_t>(ndof_.at(1));
-    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / ndof_cyib) : 0);
+    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_.at(1))) : 0);
     if (!Numc::Valid(nchi_cyib) || Numc::Compare(nchi_cyib) <= 0) nchi_cyib = Numc::ZERO<>;
    
     Double_t ndof_tt = static_cast<Double_t>(ndof_tt_);
@@ -681,8 +680,8 @@ Bool_t SimpleTrFit::evolve() {
     
     nchi_.at(0)    = nchi_cx;
     nchi_.at(1)    = nchi_cyib;
-    quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_cx);
-    quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_cyib);
+    quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_.at(0));
+    quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_.at(1));
     
     // Local States
     stts_.clear();

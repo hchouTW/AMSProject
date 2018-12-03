@@ -11,7 +11,7 @@ namespace TrackSys {
 
 
 std::array<long double, 3> TmeMeas::minimizer(long double x, long double igmbta, bool is_single) const {
-    if (Numc::Compare(igmbta) <= 0) return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
+    if (Numc::Compare(igmbta) <= 0) return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ZERO<long double> });
     long double ibsqr = (Numc::ONE<long double> + igmbta * igmbta);
     
     // PDF parameters

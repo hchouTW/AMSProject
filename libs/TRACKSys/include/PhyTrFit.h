@@ -11,7 +11,7 @@ namespace TrackSys {
 class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyTrFit(const TrFitPar& fitPar, const PhySt& part) : 
-            TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
+            TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>LMTN_TOF_T),
             DIMG_(PhyJb::DIMG + (opt_tsft_?1:0)), 
             numOfRes_(0), numOfParGlb_(0), numOfParLoc_(0)
             { if (check_hits()) setvar(nseq_, nseg_); }

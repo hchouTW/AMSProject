@@ -15,8 +15,11 @@
 #include "Prop.h"
 #include "HitSt.h"
 #include "TrFitPar.h"
+#include "SimpleBtaFit.h"
+#include "PhyBtaFit.h"
 #include "SimpleTrFit.h"
 #include "PhyTrFit.h"
+#include "SimpleMuScan.h"
 #include "PhyMuFit.h"
 #include "InterfaceAms.h"
 
@@ -201,9 +204,9 @@ Bool_t Event::BulidHitStTRK() {
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
         
         TrTrackChargeH* trtkchrg = &Trtk->trkcharge;
-        Double_t qx  = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 0);
-		Double_t qy  = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 1);
-        Double_t qxy = (xcls == nullptr || ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(TrTrackChargeH::DefaultOpt, layJ, 0, 2);
+        Double_t qx  = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 0);
+		Double_t qy  = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 1);
+        Double_t qxy = (xcls == nullptr || ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 2);
 
         int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(layJ) : 0;
         TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[layJ] : nullptr;

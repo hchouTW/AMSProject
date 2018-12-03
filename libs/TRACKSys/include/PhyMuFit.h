@@ -53,7 +53,7 @@ class VirtualPhyMuFit : protected TrFitPar, public ceres::CostFunction {
 class PhyMuFit : public TrFitPar {
     public :
         PhyMuFit& operator=(const PhyMuFit& rhs);
-        PhyMuFit(const PhyMuFit& trFit) { *this = trFit; }
+        PhyMuFit(const PhyMuFit& muFit) { *this = muFit; }
         
         PhyMuFit(const TrFitPar& fitPar);
         ~PhyMuFit() { PhyMuFit::clear(); }

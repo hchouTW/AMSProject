@@ -50,43 +50,6 @@ namespace Rndm {
 } // namesapce TrackSys
 
 
-std::vector<long double> TrackSys::LandauNumc::data;
-long double TrackSys::LandauNumc::EvalLn(long double x) {
-    // Build data set
-    long double newx = (LANDAU0_X + x * WIDTH_SCL);
-    if (data.size() == 0) {
-        for (long it = 0; it <= NSET; ++it)
-            data.push_back( std::log(TMath::Landau(LANDAU0_X + (BOUNDL+it*STEP) * WIDTH_SCL) / LANDAU0) );
-    }
-    
-    long double landln = Numc::ZERO<long double>;
-    if (x <= BOUNDL || x >= BOUNDU) landln = std::log(TMath::Landau(newx) / LANDAU0);
-    else {
-        long iset = std::lrint( ((x - BOUNDL) / STEP) );
-        landln = data.at(iset);
-    }
-    return landln;
-}
-
-
-long double TrackSys::LandauNumc::DevLn(long double x) {
-    long double lddev = LAND_DEV[0] +
-        (LAND_DEV[1] * std::exp(-LAND_DEV[2] * x) +
-         LAND_DEV[3] * std::exp(-LAND_DEV[4] * x));
-    return lddev;
-}
-
-
-long double TrackSys::LandauNumc::IcovLn(long double x) {
-    long double ldicov =
-        (LAND_ICOV[0] * std::exp(-LAND_ICOV[1] * x) +
-         LAND_ICOV[2] * std::exp(-LAND_ICOV[3] * x) + 
-         LAND_ICOV[4] * std::exp(-LAND_ICOV[5] * x) + 
-         LAND_ICOV[6] * std::exp(-LAND_ICOV[7] * x));
-    return ldicov;
-}
-
-
 long double TrackSys::ApproxLnX::Eval(long double x) {
     long double xl = x - HALF_WIDTH;
     long double xu = x + HALF_WIDTH;
@@ -181,6 +144,8 @@ std::array<long double, 3> Robust::minimizer(long double chi) const {
         mini.at(0) = crchi;
         mini.at(1) = crnorm;
         mini.at(2) = crjacb;
+
+        mini.at(0) = 1.0; // testcode
     }
     return mini;
 }
@@ -329,7 +294,7 @@ long double MultiGaus::chi(long double r) const {
 
 
 std::array<long double, 3> MultiGaus::minimizer(long double r) const {
-    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> };
+    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ZERO<long double> };
     if      (multi_gaus_.size() == 0) return obj;
     else if (multi_gaus_.size() == 1) {
         long double nrm = (r / multi_gaus_.at(0).second);
@@ -338,25 +303,28 @@ std::array<long double, 3> MultiGaus::minimizer(long double r) const {
     }
     else {
         // Note: inv_sgm_sqr = sum(prb * inv_sgm_sqr) / sum(prb)
-        long double sum_prb = Numc::ZERO<long double>;
-        long double inv_sgm = Numc::ZERO<long double>;
+        long double sum_prb  = Numc::ZERO<long double>;
+        long double sum_isqr = Numc::ZERO<long double>;
         for (auto&& gaus : multi_gaus_) {
             long double res = (r / gaus.second);
             long double sgm = (gaus.second / bound_.second);
             long double prb = gaus.first * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
-            sum_prb += prb;
-            inv_sgm += prb / (sgm * sgm);
+            sum_prb  += prb;
+            sum_isqr += prb / (sgm * sgm);
         }
-        
-        short sign         = Numc::Compare(r);
-        long double eftsgm = bound_.second * ((Numc::Compare(sum_prb, LMTL_PROB) <= 0 || Numc::Compare(inv_sgm) < 0) ? Numc::ONE<long double> : std::sqrt(sum_prb / inv_sgm));
-        long double nrm    = ((Numc::Compare(sum_prb, LMTL_PROB) <= 0) ? (r / eftsgm) : sign * std::sqrt(Numc::NEG<long double> * Numc::TWO<long double> * std::log(sum_prb)));
-        long double div    = Numc::ONE<long double> / eftsgm; 
+        short       sign    = Numc::Compare(r);
+        long double sgmisqr = ((Numc::Compare(sum_prb, LMTL_PROB) <= 0 || Numc::Compare(sum_isqr) < 0) ? Numc::ONE<long double> : (sum_isqr / sum_prb));
+        long double hessian = (sgmisqr / (bound_.second * bound_.second));
+
+        long double nrm = ((Numc::Compare(sum_prb, LMTL_PROB) <= 0) ? (r * std::sqrt(hessian)) : sign * std::sqrt(Numc::NEG<long double> * Numc::TWO<long double> * std::log(sum_prb)));
+        long double crr = ((sign == 0 || Numc::EqualToZero(nrm)) ? (Numc::ONE<long double> / std::sqrt(hessian)) : std::fabs(r / nrm));
+        long double div = crr * hessian;
+
         obj = std::array<long double, 3>({ nrm, nrm, div });
     }
 
     if (!Numc::Valid(obj.at(0)) || !Numc::Valid(obj.at(1)) || !Numc::Valid(obj.at(2))) 
-        obj = std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> });
+        obj = std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ZERO<long double> });
 
     if (Robust::Opt::ON == robust_.opt()) {
         std::array<long double, 3>&& rbmini = robust_.minimizer(obj.at(0));
@@ -448,7 +416,36 @@ long double MultiGaus::find_eftsgm() const {
 
 namespace TrackSys {
 
-LandauGaus::LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode, long double fluc) : robust_(robust), isfluc_(false), kpa_(Numc::ZERO<long double>), mpv_(Numc::ZERO<long double>), sgm_(Numc::ONE<long double>), mode_(Numc::ZERO<long double>), fluc_(Numc::ZERO<long double>), shft_(Numc::ZERO<long double>), nrmfluc_(Numc::ZERO<long double>) {
+long double LandauGaus::Func(long double x, long double kpa, long double mpv, long double sgm, long double fluc) {
+    if (kpa < 0 || kpa > 1 || sgm < 0) return Numc::ZERO<long double>;
+    bool is_fluc = (Numc::Compare(fluc) > 0);
+    
+    long double norm = (x - mpv) / sgm;
+    if (!Numc::Valid(norm)) return Numc::ZERO<long double>;
+    
+    long double value = Numc::ZERO<long double>;
+    if (!is_fluc) {
+        long double gs = -Numc::HALF * norm * norm;
+        long double ld = -LandauNumc::NegLn(norm);
+        long double ldgs = kpa * gs + (Numc::ONE<long double> - kpa) * ld;
+        value = std::exp(ldgs);
+    }
+    else {
+        for (Int_t it = 0; it <= CONV_N; ++it) {
+            long double ix = norm + (fluc / sgm) * CONV_X[it];
+            long double gs = -Numc::HALF * ix * ix;
+            long double ld = -LandauNumc::NegLn(ix);
+            long double ldgs = kpa * gs + (Numc::ONE<long double> - kpa) * ld;
+            long double gsfc = -Numc::HALF * CONV_X[it] * CONV_X[it];
+            value += std::exp(ldgs + gsfc);
+        }
+    }
+
+    if (!Numc::Valid(value)) value = Numc::ZERO<long double>;
+    return value;
+}
+
+LandauGaus::LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mod, long double fluc) : robust_(robust), isfluc_(false), kpa_(Numc::ZERO<long double>), mpv_(Numc::ZERO<long double>), sgm_(Numc::ONE<long double>), mod_(Numc::ZERO<long double>), fluc_(Numc::ZERO<long double>), shft_(Numc::ZERO<long double>), nrmfluc_(Numc::ZERO<long double>) {
     if (Numc::Compare(sgm) <= 0) return;
     if      (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa_ = Numc::ZERO<long double>;
     else if (Numc::Compare(kpa, Numc::ONE<long double>)  >= 0) kpa_ = Numc::ONE<long double>;
@@ -458,33 +455,34 @@ LandauGaus::LandauGaus(Robust robust, long double kpa, long double mpv, long dou
 
     isfluc_ = (Numc::Compare(fluc) > 0);
     if (isfluc_) {
-        mode_ = mode;
+        mod_ = mod;
         fluc_ = fluc;
-        shft_ = ((mode_ - mpv_) / sgm_);
+        shft_ = ((mod_ - mpv_) / sgm_);
         nrmfluc_ = (fluc_ / sgm_);
     }
-    else mode_ = mpv_;
+    else mod_ = mpv_;
 }
 
 std::array<long double, 3> LandauGaus::minimizer(long double x) const {
-    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ONE<long double> };
+    std::array<long double, 3> obj { Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ZERO<long double> };
     long double norm = ((x - mpv_) / sgm_);
     if (!Numc::Valid(norm)) return obj;
    
     // Norm and Div
     long double nrmx = Numc::ZERO<long double>; // norm x
-    long double divx = Numc::ONE<long double>;  // div x
+    long double divx = Numc::ZERO<long double>;  // div x
     if (!isfluc_) {
-        nrmx = eval_norm(norm);           
-        divx = std::sqrt( (kpa_ + (Numc::ONE<long double> - kpa_) * LandauNumc::IcovLn(norm)) );
+        std::array<long double, 5>&& val = eval(norm);
+        nrmx = val.at(0); 
+        divx = val.at(1);
     }
     else {
         std::array<long double, 2>&& conv = eval_conv(norm);
         nrmx = conv.at(0);
-        divx = std::sqrt(conv.at(1));
+        divx = conv.at(1);
     }
     if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
-    if (!Numc::Valid(divx)) divx = Numc::ONE<long double>;
+    if (!Numc::Valid(divx)) divx = Numc::ZERO<long double>;
     obj = std::array<long double, 3>({ nrmx, nrmx, divx });
 
     if (Robust::Opt::ON == robust_.opt()) {
@@ -496,50 +494,84 @@ std::array<long double, 3> LandauGaus::minimizer(long double x) const {
     return obj; 
 }
 
-long double LandauGaus::eval_norm(long double norm) const {
+std::array<long double, 5> LandauGaus::eval(long double norm) const { // (nrm, jacb, prb, dev, hes)
     short       sign   = Numc::Compare(norm);
-    long double landau = (-Numc::TWO<long double>) * LandauNumc::EvalLn(norm);
-    long double ldgaus = (kpa_ * norm * norm) + (Numc::ONE<long double> - kpa_) * landau;
+    long double ldgaus = (kpa_ * norm * norm) + Numc::TWO<long double> * (Numc::ONE<long double> - kpa_) * LandauNumc::NegLn(norm);
     long double nrmx   = sign * std::sqrt(ldgaus);
     if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
-    return nrmx;
+
+    long double dev = (kpa_ * norm + (Numc::ONE<long double> - kpa_) * LandauNumc::NegLnDev(norm));
+    long double hes = (kpa_ + (Numc::ONE<long double> - kpa_) * LandauNumc::NegLnHes(norm));
+    if (!Numc::Valid(dev) || !Numc::Valid(hes)) {
+        dev = Numc::ZERO<long double>;
+        hes = Numc::ZERO<long double>;
+    }
+
+    long double jacb = (Numc::ONE<long double> / nrmx) * dev;
+    if (Numc::EqualToZero(norm) || Numc::EqualToZero(nrmx) || !Numc::Valid(jacb))
+        jacb = std::sqrt(hes);
+
+    long double prb = std::exp(-Numc::HALF * ldgaus);
+    if (!Numc::Valid(nrmx) || !Numc::Valid(jacb) || !Numc::Valid(prb)) {
+        nrmx = Numc::ZERO<long double>;
+        jacb = Numc::ZERO<long double>;
+        prb  = Numc::ZERO<long double>;
+        dev  = Numc::ZERO<long double>;
+        hes  = Numc::ZERO<long double>;
+    }
+    return std::array<long double, 5>({ nrmx, jacb, prb, dev, hes });
 }
 
-std::array<long double, 2> LandauGaus::eval_conv(long double norm) const { // (nrm, icov)
-    std::array<long double, 2> mini { Numc::ZERO<long double>, Numc::ONE<long double> };
-    
-    std::array<long double, GAUS_CONV_N+1>&& prob = convprob(norm);
-    std::array<long double, GAUS_CONV_N+1>&& modeprob = convprob(shft_);
-    long double rate = (prob[GAUS_CONV_N] / modeprob[GAUS_CONV_N]);
-    if (Numc::Compare(rate, Numc::ONE<long double>) >= 0) rate = Numc::ONE<long double>;
-    
-    long double nrmx = Numc::Compare(norm, shft_) * std::sqrt(-Numc::TWO<long double> * std::log(rate));
-    if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
-   
-    long double icov = (kpa_ + (Numc::ONE<long double> - kpa_) * LandauNumc::IcovLn(norm)) * (Numc::ONE<long double> + (nrmfluc_ * nrmfluc_));
-    if (!Numc::Valid(icov) || Numc::Compare(icov) <= 0) icov = Numc::ZERO<long double>;
+std::array<long double, 2> LandauGaus::eval_conv(long double norm) const { // (nrm, jacb)
+    std::array<long double, 2> mini { Numc::ZERO<long double>, Numc::ZERO<long double> };
 
-    mini.at(0) = nrmx;
-    mini.at(1) = icov;
+    std::array<long double, 2>&& mod = conv(shft_);
+    std::array<long double, 2>&& val = conv(norm);
 
+    short       sign = Numc::Compare(norm, shft_);
+    long double nrm  = sign * std::sqrt(-Numc::TWO<long double> * std::log(val.at(0) / mod.at(0)));
+    if (!Numc::Valid(nrm)) nrm = Numc::ZERO<long double>;
+    
+    long double jacb = (Numc::EqualToZero(nrm) ? mod.at(1) : (val.at(1) / nrm));
+    if (!Numc::Valid(jacb) || Numc::Compare(jacb) <= 0) jacb = Numc::ZERO<long double>;
+
+    mini.at(0) = nrm;
+    mini.at(1) = jacb;
     return mini;
 }
 
-std::array<long double, LandauGaus::GAUS_CONV_N+1> LandauGaus::convprob(long double norm) const {
-    std::array<long double, GAUS_CONV_N+1> prob;
-    prob.fill(Numc::ZERO<long double>);
-    prob[GAUS_CONV_N] = Numc::ONE<long double>;
-    for (int it = 0; it < GAUS_CONV_N; ++it) {
-        long double newx = norm - GAUS_CONV_X[it] * nrmfluc_;
-        long double land = (-Numc::TWO<long double>) * LandauNumc::EvalLn(newx);
-        long double ldgs = kpa_ * (newx * newx) + (Numc::ONE<long double> - kpa_) * land;
-        long double elem = std::exp(-Numc::HALF * ldgs) * GAUS_CONV_P[it];
-        prob[it] = elem;
+std::array<long double, 2> LandauGaus::conv(long double norm) const { // (nrm, jacb)
+    long double sum_prb = Numc::ZERO<long double>;
+    long double sum_dev = Numc::ZERO<long double>;
+    long double sum_hes = Numc::ZERO<long double>;
+    long double sum_jb  = Numc::ZERO<long double>;
+    for (int it = 0; it < CONV_N; ++it) {
+        long double ix = norm - CONV_X[it] * nrmfluc_;
+        std::array<long double, 5>&& val = eval(ix);
+        long double prb = val.at(2) * std::exp(-Numc::HALF * CONV_X[it] * CONV_X[it]);
+        sum_prb += prb;
+        sum_dev += prb * val.at(3) * val.at(3);
+        sum_hes += prb * val.at(4);
+        sum_jb  += prb * val.at(3);
     }
-    long double sumprob = std::accumulate(prob.begin(), prob.end(), Numc::ZERO<long double>);
-    for (int it = 0; it < GAUS_CONV_N; ++it) prob[it] /= sumprob;
-    prob[GAUS_CONV_N] = sumprob;
-    return prob;
+    long double dev = sum_dev / sum_prb;
+    long double hes = sum_hes / sum_prb;
+    long double jb  = sum_jb  / sum_prb;
+    
+    if (!Numc::Valid(sum_prb) || !Numc::Valid(dev) || !Numc::Valid(hes) || !Numc::Valid(jb)) {
+        sum_prb = Numc::ZERO<long double>;
+        dev     = Numc::ZERO<long double>;
+        hes     = Numc::ZERO<long double>;
+        jb      = Numc::ZERO<long double>;
+    }
+    long double var_dev = (dev - jb * jb);
+    if (Numc::Compare(var_dev) <= 0) var_dev = Numc::ZERO<long double>;
+    if (Numc::Compare(hes)     <= 0) hes     = Numc::ZERO<long double>;
+
+    long double jacb = (Numc::EqualToZero(norm - shft_) ? std::sqrt(hes + var_dev) : jb);
+    if (!Numc::Valid(jacb)) jacb = Numc::ZERO<long double>;
+
+    return std::array<long double, 2>({ sum_prb, jacb });
 }
 
 

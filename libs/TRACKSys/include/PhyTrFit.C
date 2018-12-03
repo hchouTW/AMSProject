@@ -78,17 +78,19 @@ void PhyTrFit::clear() {
 
 PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     PhyTrFit::clear();
-    if (!check_hits()) return;
-    if (nmes_cx_ <= LMTN_CX) return;
-    if (nmes_cy_ <= LMTN_CY) return;
+    if (!check_hits()) { PhyTrFit::clear(); TrFitPar::clear(); return; }
+    if (nmes_cx_ <= LMTN_CX) { PhyTrFit::clear(); TrFitPar::clear(); return; }
+    if (nmes_cy_ <= LMTN_CY) { PhyTrFit::clear(); TrFitPar::clear(); return; }
+
     ndof_cx_ = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
     ndof_cy_ = (nmes_cy_ > LMTN_CY) ? (nmes_cy_ - LMTN_CY) : 0;
     ndof_ib_ = nmes_ib_ - (nmes_TOFt_ >= LMTN_TOF_T);
     ndof_tt_ = (ndof_cx_ + ndof_cy_ + ndof_ib_);
+    
     ndof_.at(0) = ndof_cx_;
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
-    if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
-    if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); return; }
+    if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
+    if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
 
     succ_ = (simpleFit() ? physicalFit() : false);
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
@@ -114,7 +116,7 @@ Bool_t PhyTrFit::simpleFit() {
 Bool_t PhyTrFit::physicalFit() {
     if (Numc::EqualToZero(part_.mom())) return false;
     Bool_t  opt_loc  = sw_mscat_;
-    Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
+    Bool_t  opt_tsft = (nmes_TOFt_ > LMTN_TOF_T);
     Short_t DIMG     = PhyJb::DIMG + opt_tsft;
 
     // Gobal Parameters
@@ -187,7 +189,7 @@ Bool_t PhyTrFit::physicalFit() {
 
 Bool_t PhyTrFit::evolve() {
     Bool_t  opt_loc  = (sw_mscat_);
-    Bool_t  opt_tsft = (nmes_TOFt_ >= LMTN_TOF_T);
+    Bool_t  opt_tsft = (nmes_TOFt_ > LMTN_TOF_T);
     Short_t DIMG     = PhyJb::DIMG + opt_tsft;
    
     // Number of Res and Par
@@ -352,11 +354,9 @@ Bool_t PhyTrFit::evolve() {
     Double_t chi       = (chi_cx + chi_cy + chi_ib);
     Double_t ndof_tt   = static_cast<Double_t>(ndof_tt_);
     Double_t nchi_tt   = (chi / ndof_tt);
-
-    Double_t ndof_cyib = static_cast<Double_t>(ndof_.at(1));
-    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / ndof_cyib) : 0);
-
-    Double_t ndof_cx = static_cast<Double_t>(ndof_cx_);
+    
+    Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_.at(1))) : 0);
+    if (!Numc::Valid(nchi_cyib) || Numc::Compare(nchi_cyib) <= 0) nchi_cyib = Numc::ZERO<>;
 
     nchi_cx_ = ((ndof_cx_ > 0) ? (chi_cx / static_cast<Double_t>(ndof_cx_)) : 0);
     nchi_cy_ = ((ndof_cy_ > 0) ? (chi_cy / static_cast<Double_t>(ndof_cy_)) : 0);
@@ -365,8 +365,8 @@ Bool_t PhyTrFit::evolve() {
     
     nchi_.at(0) = nchi_cx_;
     nchi_.at(1) = nchi_cyib;
-    quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_cx);
-    quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_cyib);
+    quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_.at(0));
+    quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_.at(1));
    
     // Local States
     for (auto&& stt : stts) stt.arg().clear();

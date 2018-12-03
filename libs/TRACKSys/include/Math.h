@@ -192,31 +192,32 @@ class LandauNumc {
         LandauNumc() {}
         ~LandauNumc() {}
 
-        static long double EvalLn(long double x);
-        static long double DevLn(long double x);
-        static long double IcovLn(long double x);
+        inline static long double Landau(long double nrm) { return static_cast<long double>(TMath::Landau(LANDAU0_X + nrm * WIDTH_SCL) / LANDAU0); }
+
+        inline static long double NegLn(long double nrm) {
+            long double value = LAND[0] * (LAND[1] * nrm + std::exp(-LAND[1] * nrm) - Numc::ONE<long double>)
+                              + LAND[2] * (LAND[3] * nrm + std::exp(-LAND[3] * nrm) - Numc::ONE<long double>);
+            return (Numc::Valid(value) ? value : Numc::ZERO<long double>); }
+        
+        inline static long double NegLnDev(long double nrm) {
+            long double value = (LAND[0] * LAND[1]) * (Numc::ONE<long double> - std::exp(-LAND[1] * nrm))
+                              + (LAND[2] * LAND[3]) * (Numc::ONE<long double> - std::exp(-LAND[3] * nrm));
+            return (Numc::Valid(value) ? value : Numc::ZERO<long double>); }
+        
+        inline static long double NegLnHes(long double nrm) {
+            long double value = (LAND[0] * LAND[1] * LAND[1]) * std::exp(-LAND[1] * nrm)
+                              + (LAND[2] * LAND[3] * LAND[3]) * std::exp(-LAND[3] * nrm);
+            return (Numc::Valid(value) ? value : Numc::ZERO<long double>); }
 
     private :
         static constexpr long double LANDAU0   =  1.80655634e-01;
         static constexpr long double LANDAU0_X = -2.22782980e-01;
         static constexpr long double WIDTH_SCL =  1.17741002e+00; // sqrt( 2*log(2) )
 
-        static constexpr long double BOUNDL = -3.0;
-        static constexpr long double BOUNDU = 22.0;
-        static constexpr long        NSET = 10000;
-        static constexpr long double STEP = 0.0025;
-
-        static std::vector<long double> data;
-        
-        static const std::array<long double, 5> LAND_DEV;
-        static const std::array<long double, 8> LAND_ICOV;
+        static const std::array<long double, 4> LAND;
 };
 
-const std::array<long double, 5> LandauNumc::LAND_DEV 
-    { 6.19538e-02, 4.98613e-01, 1.26216e-01, -5.59660e-01, 1.17070e+00 };
-
-const std::array<long double, 8> LandauNumc::LAND_ICOV 
-    { 1.71213e-01, 1.05335e+00, 1.22843e-01, 2.44705e-01, 2.95471e-01, 5.75783e-01, 1.61325e-02, 6.61252e-02 };
+const std::array<long double, 4> LandauNumc::LAND { 4.90120e-01, 1.16366e+00, -3.99384e+00, 1.27500e-01 }; // Fit landau with "nrm" from -3 to 37
 
 
 class ApproxLnX {
@@ -348,7 +349,10 @@ namespace TrackSys {
 //flg->SetParLimits(1, 0.0, 1.0);
 class LandauGaus {
     public :
-        LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mode = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
+        static long double Func(long double x, long double kpa, long double mpv, long double sgm, long double fluc = Numc::ZERO<long double>);
+
+    public :
+        LandauGaus(Robust robust, long double kpa, long double mpv, long double sgm, long double mod = Numc::ZERO<long double>, long double fluc = Numc::ZERO<long double>);
         ~LandauGaus() {}
 
         std::array<long double, 3> minimizer(long double x) const;
@@ -356,20 +360,21 @@ class LandauGaus {
         inline const long double& kpa() const { return kpa_; }
         inline const long double& mpv() const { return mpv_; }
         inline const long double& sgm() const { return sgm_; }
-        inline const long double& mode() const { return mode_; }
+        inline const long double& mod() const { return mod_; }
         inline const long double& fluc() const { return fluc_; }
         inline const long double& shft() const { return shft_; }
         
     protected :
-        long double eval_norm(long double norm) const;
-        std::array<long double, 2> eval_conv(long double norm) const; // (nrm, icov)
+        std::array<long double, 5> eval(long double norm) const;
+        std::array<long double, 2> eval_conv(long double norm) const;
+        std::array<long double, 2> conv(long double norm) const;
 
     protected :
         bool isfluc_;
         long double kpa_;
         long double mpv_;
         long double sgm_;
-        long double mode_;
+        long double mod_;
         long double fluc_;
         long double shft_;
         
@@ -379,23 +384,23 @@ class LandauGaus {
         Robust robust_;
 
     private :
-        static constexpr int GAUS_CONV_N = 26;
-        static const std::array<long double, GAUS_CONV_N> GAUS_CONV_X;
-        static const std::array<long double, GAUS_CONV_N> GAUS_CONV_P;
-
-    private :
-        std::array<long double, GAUS_CONV_N+1> convprob(long double norm) const;
+        static constexpr long CONV_N = 41;
+        static const std::array<long double, CONV_N> CONV_X;
+        static const std::array<long double, CONV_N> CONV_P;
 };
 
-const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_X 
-    { -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, 
-      -0.5, -0.3, -0.1,  0.1,  0.3,  0.5,  0.7,  0.9,  1.1,  1.3, 
-       1.5,  1.7,  1.9,  2.1,  2.3,  2.5 };
+const std::array<long double, LandauGaus::CONV_N> LandauGaus::CONV_X = {
+-3.00, -2.85, -2.70, -2.55, -2.40, -2.25, -2.10, -1.95, -1.80, -1.65, 
+-1.50, -1.35, -1.20, -1.05, -0.90, -0.75, -0.60, -0.45, -0.30, -0.15, 
+ 0.00,  0.15,  0.30,  0.45,  0.60,  0.75,  0.90,  1.05,  1.20,  1.35, 
+ 1.50,  1.65,  1.80,  1.95,  2.10,  2.25,  2.40,  2.55,  2.70,  2.85, 3.00 };
 
-const std::array<long double, LandauGaus::GAUS_CONV_N> LandauGaus::GAUS_CONV_P 
-    { 0.0439, 0.0710, 0.1103, 0.1645, 0.2357, 0.3247, 0.4296, 0.5461, 0.6670, 0.7827,  
-      0.8825, 0.9560, 0.9950, 0.9950, 0.9560, 0.8825, 0.7827, 0.6670, 0.5461, 0.4296,  
-      0.3247, 0.2357, 0.1645, 0.1103, 0.0710, 0.0439 };
+const std::array<long double, LandauGaus::CONV_N> LandauGaus::CONV_P = {
+0.000666, 0.001033, 0.001566, 0.002322, 0.003366, 0.004771, 0.006611, 0.008958, 0.011867, 0.015372, 
+0.019468, 0.024108, 0.029189, 0.034554, 0.039996, 0.045265, 0.050088, 0.054192, 0.057328, 0.059296, 
+0.059966, 0.059296, 0.057328, 0.054192, 0.050088, 0.045265, 0.039996, 0.034554, 0.029189, 0.024108, 
+0.019468, 0.015372, 0.011867, 0.008958, 0.006611, 0.004771, 0.003366, 0.002322, 0.001566, 0.001033, 0.000666 };
+    
 
 } // namesapce TrackSys
 
@@ -406,18 +411,18 @@ namespace TrackSys {
 // kpa  := 0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(1+x*x)^[2]) - [3]))
 // mpv  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
 // sgm  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
+// mod  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
 // fluc := [0] * 0.5 * (1.0 + TMath::Erf([1] * TMath::Log(x) - [2]))
-// mode := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
 class LGGE_LG {
     public :
-        LGGE_LG(long double kpa, long double mpv, long double sgm, long double mode, long double fluc) : kpa_(kpa), mpv_(mpv), sgm_(sgm), mode_(mode), fluc_(fluc) {}
+        LGGE_LG(long double kpa, long double mpv, long double sgm, long double mod, long double fluc) : kpa_(kpa), mpv_(mpv), sgm_(sgm), mod_(mod), fluc_(fluc) {}
         ~LGGE_LG() {}
 
     public :
         long double kpa_;
         long double mpv_;
         long double sgm_;
-        long double mode_;
+        long double mod_;
         long double fluc_;
 };
 
@@ -442,16 +447,16 @@ class LGGE_GE {
 
 class LGGE {
     public :
-        LGGE(std::array<long double, 2> lg_kpa, std::array<long double, 2> lg_mpv, std::array<long double, 2> lg_sgm, std::array<long double, 2> lg_mode, std::array<long double, 2> lg_fluc, 
+        LGGE(std::array<long double, 2> lg_kpa, std::array<long double, 2> lg_mpv, std::array<long double, 2> lg_sgm, std::array<long double, 2> lg_mod, std::array<long double, 2> lg_fluc, 
              long double ge_alp, long double ge_bta, long double ge_mid, long double ge_wid) :
-             lg_kpa_(lg_kpa), lg_mpv_(lg_mpv), lg_sgm_(lg_sgm), lg_mode_(lg_mode), lg_fluc_(lg_fluc), ge_alp_(ge_alp), ge_bta_(ge_bta), ge_mid_(ge_mid), ge_wid_(ge_wid)  {}
+             lg_kpa_(lg_kpa), lg_mpv_(lg_mpv), lg_sgm_(lg_sgm), lg_mod_(lg_mod), lg_fluc_(lg_fluc), ge_alp_(ge_alp), ge_bta_(ge_bta), ge_mid_(ge_mid), ge_wid_(ge_wid)  {}
         ~LGGE() {}
 
     public :
         std::array<long double, 2> lg_kpa_;
         std::array<long double, 2> lg_mpv_;
         std::array<long double, 2> lg_sgm_;
-        std::array<long double, 2> lg_mode_;
+        std::array<long double, 2> lg_mod_;
         std::array<long double, 2> lg_fluc_;
         
         long double ge_alp_;

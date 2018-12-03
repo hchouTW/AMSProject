@@ -318,7 +318,7 @@ class PhySt {
 void PhySt::reset(const PartInfo& info) {
     info_ = info;
     arg_.clear();
-    zero();
+    PhySt::zero();
     
     coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
     dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
@@ -331,7 +331,7 @@ void PhySt::reset(const PartInfo& info) {
 void PhySt::reset(const PartType& type) {
     info_.reset(type);
     arg_.clear();
-    zero();
+    PhySt::zero();
     
     coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
     dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
@@ -344,7 +344,7 @@ void PhySt::reset(const PartType& type) {
 void PhySt::reset(Short_t chrg, Double_t mass) {
     info_.reset(chrg, mass);
     arg_.clear();
-    zero();
+    PhySt::zero();
     
     coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
     dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));
@@ -357,7 +357,7 @@ void PhySt::reset(Short_t chrg, Double_t mass) {
 void PhySt::reset(Double_t mu) {
     info_.reset(mu);
     arg_.clear();
-    zero();
+    PhySt::zero();
     
     coo_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::ZERO<>));
     dir_ = std::move(SVecD<3>(Numc::ZERO<>, Numc::ZERO<>, Numc::NEG<>));

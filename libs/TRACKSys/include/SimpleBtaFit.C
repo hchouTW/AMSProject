@@ -1,5 +1,5 @@
-#ifndef __TRACKLibs_PhyBtaFit_C__
-#define __TRACKLibs_PhyBtaFit_C__
+#ifndef __TRACKLibs_SimpleBtaFit_C__
+#define __TRACKLibs_SimpleBtaFit_C__
 
 
 #include "Sys.h"
@@ -15,22 +15,18 @@
 #include "HitSt.h"
 #include "TrFitPar.h"
 #include "SimpleBtaFit.h"
-#include "PhyBtaFit.h"
 
 
 namespace TrackSys {
         
         
-TrFitPar PhyBtaFit::bulidFitPar(const TrFitPar& fitPar) {
+TrFitPar SimpleBtaFit::bulidFitPar(const TrFitPar& fitPar) {
     TrFitPar btapar(fitPar.info(), fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
-    if (fitPar.hitsTOF().size()  != 0) btapar.add_hit( fitPar.hitsTOF()  );
-    if (fitPar.hitsRICH().size() != 0) btapar.add_hit( fitPar.hitsRICH() );
-    if (fitPar.hitsTRD().size()  != 0) btapar.add_hit( fitPar.hitsTRD()  );
-    for (auto&& hitTRK : fitPar.hitsTRK()) {
-        if (!hitTRK.sq()) continue;
-        HitStTRK hit(false, false, hitTRK.lay(), hitTRK.isInnTr());
-        hit.set_coo(hitTRK.cx(), hitTRK.cy(), hitTRK.cz());
-        hit.set_q(hitTRK.q(), hitTRK.qx(), hitTRK.qy(), fitPar.info().chrg());
+    for (auto&& hitTOF : fitPar.hitsTOF()) {
+        if (!hitTOF.st()) continue;
+        HitStTOF hit(hitTOF.lay());
+        hit.set_coo(hitTOF.cx(), hitTOF.cy(), hitTOF.cz());
+        hit.set_t(hitTOF.orgt());
         btapar.add_hit(hit);
     }
     btapar.check();
@@ -38,7 +34,16 @@ TrFitPar PhyBtaFit::bulidFitPar(const TrFitPar& fitPar) {
 }
 
     
-PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
+PhySt SimpleBtaFit::bulidRefSt(const PhySt& refSt, Double_t refz) {
+    PhySt physt(refSt);
+    Bool_t is_prop = PropMgnt::PropToZ(refz, physt);
+    if (!is_prop) return PhySt(refSt.info());
+    physt.arg().clear();
+    return physt;
+}
+
+
+SimpleBtaFit& SimpleBtaFit::operator=(const SimpleBtaFit& rhs) {
     if (this != &rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
@@ -56,7 +61,7 @@ PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
 }
 
 
-void PhyBtaFit::clear() {
+void SimpleBtaFit::clear() {
     succ_ = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
@@ -71,41 +76,33 @@ void PhyBtaFit::clear() {
 }
 
 
-PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPar(bulidFitPar(fitPar)) {
-    PhyBtaFit::clear();
-    if (!check_hits()) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
-    if (nmes_TOFt_ <= LMTN_TOF_T) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
+SimpleBtaFit::SimpleBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPar(bulidFitPar(fitPar)) {
+    SimpleBtaFit::clear();
+    if (!check_hits()) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
+    if (nmes_TOFt_ <= LMTN_TOF_T) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
-    if (ndof_ <= Numc::ONE<Short_t>) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
+    if (ndof_ <= Numc::ONE<Short_t>) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     
     // check particle type
-    if (refSt.info().type() != PartType::Fixed && refSt.info().type() != info_.type()) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
-    else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
+    if (refSt.info().type() != PartType::Fixed && refSt.info().type() != info_.type()) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
+    else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     
-    succ_ = (simpleFit(refSt) ? physicalFit() : false);
-    if (!succ_) { PhyBtaFit::clear(); TrFitPar::clear(); }
-   
-    //if (!succ_) CERR("FAILURE === PhyBtaFit\n");
-}
-
-
-Bool_t PhyBtaFit::simpleFit(const PhySt& refSt) {
-    SimpleBtaFit btafit(dynamic_cast<TrFitPar&>(*this), refSt);
-    if (!btafit.status()) return false;
-
     // init state
-    part_ = btafit.interpolate_to_z(hits_.at(0)->cz());
-    if (Numc::EqualToZero(part_.mom())) return false;
-    if (Numc::Compare(part_.uz() * refSt.uz()) < 0) return false;
-    if (!survival_test_and_modify(part_, sw_eloss_)) return false;
-    tsft_ = btafit.tsft();
-
-    return true;
+    part_ = std::move(bulidRefSt(refSt, hits_.at(0)->cz()));
+    part_.arg().reset(sw_mscat_, sw_eloss_);
+    if (Numc::EqualToZero(part_.mom())) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
+    if (Numc::Compare(part_.uz() * refSt.uz()) < 0) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
+    if (!survival_test_and_modify(part_, sw_eloss_)) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
+    
+    succ_ = simpleFit();
+    if (!succ_) { SimpleBtaFit::clear(); TrFitPar::clear(); }
+   
+    //if (!succ_) CERR("FAILURE === SimpleBtaFit\n");
 }
 
 
-Bool_t PhyBtaFit::physicalFit() {
+Bool_t SimpleBtaFit::simpleFit() {
     if (Numc::EqualToZero(part_.mom())) return false;
     Bool_t opt_tsft = (nmes_TOFt_ > LMTN_TOF_T);
  
@@ -114,7 +111,7 @@ Bool_t PhyBtaFit::physicalFit() {
     if (opt_tsft) { params_glb.push_back(tsft_); } // time shift
 
     // CeresSolver: Cost Function
-    ceres::CostFunction* cost_function = new VirtualPhyBtaFit(dynamic_cast<TrFitPar&>(*this), part_);
+    ceres::CostFunction* cost_function = new VirtualSimpleBtaFit(dynamic_cast<TrFitPar&>(*this), part_);
 
     // CeresSolver: Problem
     ceres::Problem problem;
@@ -134,7 +131,7 @@ Bool_t PhyBtaFit::physicalFit() {
     ceres::Solve(options, &problem, &summary);
     if (!summary.IsSolutionUsable()) return false;
     //if (ceres::NO_CONVERGENCE == summary.termination_type) return false;
- 
+
     // Result (Global)
     Double_t igmbta  = std::sqrt(params_glb.at(parIDibta) * params_glb.at(parIDibta) - Numc::ONE<>);
     Double_t parteta = part_.eta_sign() * (igmbta / part_.mu());
@@ -147,7 +144,7 @@ Bool_t PhyBtaFit::physicalFit() {
 }
 
 
-Bool_t PhyBtaFit::evolve() {
+Bool_t SimpleBtaFit::evolve() {
     Bool_t opt_tsft = (nmes_TOFt_ > LMTN_TOF_T);
    
     // Number of Res and Par
@@ -196,43 +193,16 @@ Bool_t PhyBtaFit::evolve() {
         hit->cal(ppst);
         
         // Update Jacb
-        Double_t curJbBB = ppst.ibta() / preIbta;
+        Double_t curJbBB = (ppst.ibta() / preIbta);
         jbBB = curJbBB * jbBB;
          
-        // TRK
-        HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
-        if (hitTRK != nullptr) {
-            if (hitTRK->sq()) chi += hitTRK->chiq() * hitTRK->chiq();
-            if (hitTRK->sq()) rs(hitTRK->seqIDq()) += hitTRK->nrmq();
-            if (hitTRK->sq()) jb(hitTRK->seqIDq(), parIDibta) += hitTRK->divq_ibta() * jbBB;
-        }
-
         // TOF
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
             if (hitTOF->st()) chi += hitTOF->chit() * hitTOF->chit();
-            if (hitTOF->sq()) chi += hitTOF->chiq() * hitTOF->chiq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
-            if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) jb(hitTOF->seqIDt(), parIDibta) += hitTOF->divt_ibta() * jbBB;
-            if (hitTOF->sq()) jb(hitTOF->seqIDq(), parIDibta) += hitTOF->divq_ibta() * jbBB;
             if (hitTOF->st() && opt_tsft) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
-        }
-        
-        // RICH
-        HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
-        if (hitRICH != nullptr) {
-            if (hitRICH->sib()) chi += hitRICH->chiib() * hitRICH->chiib();
-            if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
-            if (hitRICH->sib()) jb(hitRICH->seqIDib(), parIDibta) += hitRICH->divib_ibta() * jbBB;
-        }
-        
-        // TRD
-        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
-        if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi+= hitTRD->nrmel() * hitTRD->nrmel();
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_igb() * jbBB;
         }
         
         cnt_nhit++;
@@ -260,7 +230,7 @@ Bool_t PhyBtaFit::evolve() {
 }
 
 
-bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
+bool VirtualSimpleBtaFit::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
     if (numOfRes_ <= 0 || numOfPar_ <= 0) return false;
     std::fill_n(residuals, numOfRes_, Numc::ZERO<>);
     Bool_t hasJacb = (jacobians != nullptr && jacobians[0] != nullptr);
@@ -306,38 +276,15 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         hit->cal(ppst);
 
         // Update Jacb
-        Double_t curJbBB = ppst.ibta() / preIbta;
+        Double_t curJbBB = (ppst.ibta() / preIbta);
         if (hasJacb) jbBB = curJbBB * jbBB;
 
-        // TRK
-        HitStTRK* hitTRK = Hit<HitStTRK>::Cast(hit);
-        if (hitTRK != nullptr) {
-            if (hitTRK->sq()) rs(hitTRK->seqIDq()) += hitTRK->nrmq();
-            if (hasJacb && hitTRK->sq()) jb(hitTRK->seqIDq(), parIDibta) += hitTRK->divq_ibta() * jbBB;
-        }
-        
         // TOF
         HitStTOF* hitTOF = Hit<HitStTOF>::Cast(hit);
         if (hitTOF != nullptr) {
-            if (hitTOF->sq()) rs(hitTOF->seqIDq()) += hitTOF->nrmq();
             if (hitTOF->st()) rs(hitTOF->seqIDt()) += hitTOF->nrmt();
             if (hasJacb && hitTOF->st()) jb(hitTOF->seqIDt(), parIDibta) += hitTOF->divt_ibta() * jbBB;
-            if (hasJacb && hitTOF->sq()) jb(hitTOF->seqIDq(), parIDibta) += hitTOF->divq_ibta() * jbBB;
             if (hasJacb && hitTOF->st() && opt_tsft_) jb(hitTOF->seqIDt(), parIDtsft) += hitTOF->divtsft(); // TOF time shift
-        }
-        
-        // RICH
-        HitStRICH* hitRICH = Hit<HitStRICH>::Cast(hit);
-        if (hitRICH != nullptr) {
-            if (hitRICH->sib()) rs(hitRICH->seqIDib()) += hitRICH->nrmib();
-            if (hasJacb && hitRICH->sib()) jb(hitRICH->seqIDib(), parIDibta) += hitRICH->divib_ibta() * jbBB;
-        }
-        
-        // TRD
-        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
-        if (hitTRD != nullptr) {
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_igb() * jbBB;
         }
 
         cnt_nhit++;
@@ -361,7 +308,7 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
 }
 
 
-PhySt PhyBtaFit::interpolate_to_z(Double_t zcoo) const {
+PhySt SimpleBtaFit::interpolate_to_z(Double_t zcoo) const {
     PhySt nullst = part_; nullst.reset(part_.info());
     if (!succ_) return nullst;
    
@@ -372,7 +319,7 @@ PhySt PhyBtaFit::interpolate_to_z(Double_t zcoo) const {
 };
 
 
-MatFld PhyBtaFit::get_mat(Double_t zbd1, Double_t zbd2) const {
+MatFld SimpleBtaFit::get_mat(Double_t zbd1, Double_t zbd2) const {
     if (!succ_) return MatFld();
     
     // Set Boundary
@@ -398,4 +345,4 @@ MatFld PhyBtaFit::get_mat(Double_t zbd1, Double_t zbd2) const {
 } // namespace TrackSys
 
 
-#endif // __TRACKLibs_PhyBtaFit_C__
+#endif // __TRACKLibs_SimpleBtaFit_C__

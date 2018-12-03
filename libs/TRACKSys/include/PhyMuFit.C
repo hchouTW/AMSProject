@@ -14,8 +14,11 @@
 #include "Prop.h"
 #include "HitSt.h"
 #include "TrFitPar.h"
+#include "SimpleBtaFit.h"
+#include "PhyBtaFit.h"
 #include "SimpleTrFit.h"
 #include "PhyTrFit.h"
+#include "SimpleMuScan.h"
 #include "PhyMuFit.h"
 
 

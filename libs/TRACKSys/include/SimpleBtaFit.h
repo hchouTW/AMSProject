@@ -1,5 +1,5 @@
-#ifndef __TRACKLibs_PhyBtaFit_H__
-#define __TRACKLibs_PhyBtaFit_H__
+#ifndef __TRACKLibs_SimpleBtaFit_H__
+#define __TRACKLibs_SimpleBtaFit_H__
 
 
 #include "ceres/ceres.h" // Ceres-Solver
@@ -8,9 +8,9 @@
 namespace TrackSys {
 
 
-class VirtualPhyBtaFit : protected TrFitPar, public ceres::CostFunction {
+class VirtualSimpleBtaFit : protected TrFitPar, public ceres::CostFunction {
     public :
-        VirtualPhyBtaFit(const TrFitPar& fitPar, const PhySt& part) : 
+        VirtualSimpleBtaFit(const TrFitPar& fitPar, const PhySt& part) : 
             TrFitPar(fitPar), part_(part), opt_tsft_(nmes_TOFt_>LMTN_TOF_T),
             numOfRes_(0), numOfPar_(0)
             { if (check_hits()) setvar(nseq_); }
@@ -42,13 +42,13 @@ class VirtualPhyBtaFit : protected TrFitPar, public ceres::CostFunction {
 };
 
 
-class PhyBtaFit : public TrFitPar {
+class SimpleBtaFit : public TrFitPar {
     public :
-        PhyBtaFit& operator=(const PhyBtaFit& rhs);
-        PhyBtaFit(const PhyBtaFit& btaFit) { *this = btaFit; }
+        SimpleBtaFit& operator=(const SimpleBtaFit& rhs);
+        SimpleBtaFit(const SimpleBtaFit& btaFit) { *this = btaFit; }
         
-        PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt);
-        ~PhyBtaFit() { PhyBtaFit::clear(); }
+        SimpleBtaFit(const TrFitPar& fitPar, const PhySt& refSt);
+        ~SimpleBtaFit() { SimpleBtaFit::clear(); }
         
     public :
         inline const Bool_t&   status() const { return succ_; }
@@ -67,11 +67,11 @@ class PhyBtaFit : public TrFitPar {
 
     protected :
         void   clear();
-        Bool_t simpleFit(const PhySt& refSt);
-        Bool_t physicalFit();
+        Bool_t simpleFit();
         Bool_t evolve();
         
         TrFitPar bulidFitPar(const TrFitPar& fitPar); // only for bta fit
+        PhySt    bulidRefSt(const PhySt& refSt, Double_t refz = 0.0);
 
     protected :
         Bool_t   succ_;
@@ -97,4 +97,4 @@ class PhyBtaFit : public TrFitPar {
 } // namespace TrackSys
 
 
-#endif // __TRACKLibs_PhyBtaFit_H__
+#endif // __TRACKLibs_SimpleBtaFit_H__
