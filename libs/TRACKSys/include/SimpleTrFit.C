@@ -53,12 +53,9 @@ void SimpleTrFit::clear() {
     args_.clear();
     stts_.clear();
 
-    ndof_.at(0) = 0;
-    ndof_.at(1) = 0;
-    nchi_.at(0) = 0;
-    nchi_.at(1) = 0;
-    quality_.at(0) = 0;
-    quality_.at(1) = 0;
+    ndof_.fill(0);
+    nchi_.fill(0);
+    quality_.fill(0);
     
     ndof_tt_ = 0;
     ndof_cx_ = 0;

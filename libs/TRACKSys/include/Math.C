@@ -141,11 +141,8 @@ std::array<long double, 3> Robust::minimizer(long double chi) const {
         if (!Numc::Valid(crnorm)) crnorm = ONE;
         if (!Numc::Valid(crjacb)) crjacb = ONE;
 
-        mini.at(0) = crchi;
         mini.at(1) = crnorm;
         mini.at(2) = crjacb;
-
-        mini.at(0) = 1.0; // testcode
     }
     return mini;
 }

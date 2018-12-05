@@ -51,6 +51,9 @@ class VirtualPhyTrFit : protected TrFitPar, public ceres::CostFunction {
 
 class PhyTrFit : public TrFitPar {
     public :
+        class LocScat;
+
+    public :
         PhyTrFit& operator=(const PhyTrFit& rhs);
         PhyTrFit(const PhyTrFit& trFit) { *this = trFit; }
         
@@ -62,7 +65,9 @@ class PhyTrFit : public TrFitPar {
         inline const PhySt&    part() const { return part_; }
         inline const Double_t& tsft() const { return tsft_; }
         
-        inline const std::vector<PhyArg>& args() const { return args_; }
+        inline const std::vector<PhyArg>&  args()  const { return args_; }
+        inline const std::vector<PhySt>&   stts()  const { return stts_; }
+        inline const std::vector<LocScat>& lscat() const { return lscat_; }
         
         inline const Short_t&  ndof(Int_t it)    const { return ndof_.at(it); }
         inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
@@ -107,11 +112,38 @@ class PhyTrFit : public TrFitPar {
         Double_t nchi_ib_;
         
     protected :
-        std::vector<PhySt> stts_;
-    
+        std::vector<PhySt>   stts_;
+        std::vector<LocScat> lscat_;
+
     private :
         static constexpr Short_t parIDeta  = 4;
         static constexpr Short_t parIDtsft = 5;
+};
+        
+
+class PhyTrFit::LocScat {
+    public :
+        LocScat(Double_t cx = 0, Double_t cy = 0, Double_t cz = 0, Bool_t scx = false, Bool_t scy = false, Double_t chix = 0, Double_t chiy = 0, Double_t chit = 0, Double_t chir = 0) : coo_({cx, cy, cz}), side_({scx, scy}) {
+            chic_ = std::array<Double_t, 2>({ (scx?chix:Numc::ZERO<>), (scy?chiy:Numc::ZERO<>) });
+            chis_ = std::array<Double_t, 2>({ (scx?chit:Numc::ZERO<>), (scy?chir:Numc::ZERO<>) });
+        }
+        ~LocScat() {}
+
+        inline const Bool_t&  scx() const { return side_[0]; }
+        inline const Bool_t&  scy() const { return side_[1]; }
+
+        inline const Double_t& cx() const { return coo_[0]; }
+        inline const Double_t& cy() const { return coo_[1]; }
+        inline const Double_t& cz() const { return coo_[2]; }
+
+        inline const Double_t& chic(Int_t it) const { return chic_.at(it); }
+        inline const Double_t& chis(Int_t it) const { return chis_.at(it); }
+
+    private :
+        std::array<Double_t, 3> coo_;
+        std::array<Bool_t, 2>   side_;
+        std::array<Double_t, 2> chic_;
+        std::array<Double_t, 2> chis_;
 };
 
 

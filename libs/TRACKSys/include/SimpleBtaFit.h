@@ -54,9 +54,7 @@ class SimpleBtaFit : public TrFitPar {
         inline const Bool_t&   status() const { return succ_; }
         inline const PhySt&    part() const { return part_; }
         inline const Double_t& tsft() const { return tsft_; }
-
-        inline const Double_t& ibta() const { return ibta_; }
-        inline const Double_t& err()  const { return err_; }
+        inline const Double_t& rerr() const { return rerr_; }
 
         inline const Short_t&  ndof() const { return ndof_; }
         inline const Double_t& nchi() const { return nchi_; }
@@ -77,18 +75,13 @@ class SimpleBtaFit : public TrFitPar {
         Bool_t   succ_;
         PhySt    part_;
         Double_t tsft_; // time shift [cm]
-
-        Double_t ibta_; // ibta
-        Double_t err_;  // ibta rel-error
+        Double_t rerr_; // ibta rel-error
         
         Short_t  ndof_;
         Double_t nchi_;
         Double_t quality_;
 
     private :
-        static constexpr Double_t LMTL_IBTA = 1.00000001;
-        static constexpr Double_t LMTU_IBTA = 100.;
-
         static constexpr Short_t  parIDibta = 0;
         static constexpr Short_t  parIDtsft = 1;
 };

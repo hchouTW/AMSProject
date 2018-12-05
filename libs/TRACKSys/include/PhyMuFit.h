@@ -11,7 +11,7 @@ namespace TrackSys {
 class VirtualPhyMuFit : protected TrFitPar, public ceres::CostFunction {
     public :
         VirtualPhyMuFit(const TrFitPar& fitPar, const PhySt& part) : 
-            TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>=LMTN_TOF_T),
+            TrFitPar(fitPar), part_(part), opt_loc_(sw_mscat_), opt_tsft_(nmes_TOFt_>LMTN_TOF_T),
             DIMG_((PhyJb::DIMG+1) + (opt_tsft_?1:0)), 
             numOfRes_(0), numOfParGlb_(0), numOfParLoc_(0)
             { if (check_hits()) setvar(nseq_, nseg_); }
@@ -45,7 +45,7 @@ class VirtualPhyMuFit : protected TrFitPar, public ceres::CostFunction {
         
     private :
         static constexpr Short_t parIDeta  = 4;
-        static constexpr Short_t parIDigb  = 5;
+        static constexpr Short_t parIDibta = 5;
         static constexpr Short_t parIDtsft = 6;
 };
 
@@ -69,21 +69,20 @@ class PhyMuFit : public TrFitPar {
         inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
         inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
 
-        inline const Short_t& ndof_cx() const { return ndof_cx_; }
-        inline const Short_t& ndof_cy() const { return ndof_cy_; }
-        inline const Short_t& ndof_ib() const { return ndof_ib_; }
-        
-        inline const Double_t& nchi_cx() const { return nchi_cx_; }
-        inline const Double_t& nchi_cy() const { return nchi_cy_; }
-        inline const Double_t& nchi_ib() const { return nchi_ib_; }
-        
         PhySt interpolate_to_z(Double_t zcoo = 0) const;
         MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0) const;
+
+        // Check mass with electron-like or high beta events
+        inline Bool_t is_like_el(Double_t fact = Numc::FIVE<>) const { return (succ_ ? false : (Numc::Compare(part_.mass(), fact * MASS_EL) <= 0)); }
+
+        // Expert : do this after check status
+        inline const TrFitPar& get() const { return dynamic_cast<const TrFitPar&>(*this); }           // fitPar for track fitting
+        inline       PhyTrFit  fit() const { return PhyTrFit(dynamic_cast<const TrFitPar&>(*this)); } // physics track fitting
 
     protected :
         void clear();
 
-        Bool_t scanFit();
+        Bool_t simpleScan(const TrFitPar& fitPar);
         Bool_t physicalFit();
         Bool_t evolve();
 
@@ -93,26 +92,24 @@ class PhyMuFit : public TrFitPar {
         Double_t            tsft_; // time shift [cm]
         std::vector<PhyArg> args_; 
 
-        std::array<Short_t,  2> ndof_;
-        std::array<Double_t, 2> nchi_;
-        std::array<Double_t, 2> quality_;
+        // [0] (cx + mstau)
+        // [1] (cy + msrho)
+        // [2] (TRKq + TOFt + TOFq + RICHib + TRDel)
+        std::array<Short_t,  3> ndof_;
+        std::array<Double_t, 3> nchi_;
+        std::array<Double_t, 3> quality_;
 
-        Short_t ndof_tt_; // (total)
-        Short_t ndof_cx_; // (cx + mstau)
-        Short_t ndof_cy_; // (cy + msrho)
-        Short_t ndof_ib_; // (TRKq + TOFt + TOFq + RICHib + TRDel)
-
-        Double_t nchi_tt_;
-        Double_t nchi_cx_;
-        Double_t nchi_cy_;
-        Double_t nchi_ib_;
+        Short_t  ndof_tt_; // (total)
+        Double_t nchi_tt_; // (total)
         
     protected :
         std::vector<PhySt> stts_;
     
     private :
+        static constexpr Double_t MASS_EL = 0.000510999; // electron mass
+        
         static constexpr Short_t parIDeta  = 4;
-        static constexpr Short_t parIDigb  = 5;
+        static constexpr Short_t parIDibta = 5;
         static constexpr Short_t parIDtsft = 6;
 };
 

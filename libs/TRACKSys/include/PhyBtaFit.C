@@ -44,9 +44,7 @@ PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
         succ_ = rhs.succ_;
         part_ = rhs.part_;
         tsft_ = rhs.tsft_;
-        
-        ibta_ = rhs.ibta_;
-        err_  = rhs.err_;
+        rerr_ = rhs.rerr_;
       
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
@@ -61,9 +59,7 @@ void PhyBtaFit::clear() {
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
     tsft_ = 0;
-    
-    ibta_ = 0;
-    err_  = 0;
+    rerr_ = 0;
 
     ndof_    = 0;
     nchi_    = 0;
@@ -136,7 +132,7 @@ Bool_t PhyBtaFit::physicalFit() {
     //if (ceres::NO_CONVERGENCE == summary.termination_type) return false;
  
     // Result (Global)
-    Double_t igmbta  = std::sqrt(params_glb.at(parIDibta) * params_glb.at(parIDibta) - Numc::ONE<>);
+    Double_t igmbta  = std::sqrt((params_glb.at(parIDibta) + Numc::ONE<>) * (params_glb.at(parIDibta) - Numc::ONE<>));
     Double_t parteta = part_.eta_sign() * (igmbta / part_.mu());
     part_.set_eta(parteta);
     
@@ -196,7 +192,7 @@ Bool_t PhyBtaFit::evolve() {
         hit->cal(ppst);
         
         // Update Jacb
-        Double_t curJbBB = ppst.ibta() / preIbta;
+        Double_t curJbBB = (ppst.ibta() / preIbta);
         jbBB = curJbBB * jbBB;
          
         // TRK
@@ -253,8 +249,7 @@ Bool_t PhyBtaFit::evolve() {
     if (!Numc::Valid(errIbta)) errIbta = Numc::ZERO<>;
     if (!Numc::Valid(errTsft)) errTsft = Numc::ZERO<>;
 
-    ibta_ = part_.ibta();
-    err_  = (errIbta / ibta_);
+    rerr_ = (errIbta / part_.ibta());
 
     return true;
 }
@@ -274,7 +269,7 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft] : Numc::ZERO<>);
 
     // Particle Status
-    Double_t igmbta  = std::sqrt(parameters[0][parIDibta] * parameters[0][parIDibta] - Numc::ONE<>);
+    Double_t igmbta  = std::sqrt((parameters[0][parIDibta] + Numc::ONE<>) * (parameters[0][parIDibta] - Numc::ONE<>));
     Double_t parteta = part_.eta_sign() * (igmbta / part_.mu());
     PhySt ppst(part_);
     ppst.arg().clear();
@@ -306,7 +301,7 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         hit->cal(ppst);
 
         // Update Jacb
-        Double_t curJbBB = ppst.ibta() / preIbta;
+        Double_t curJbBB = (ppst.ibta() / preIbta);
         if (hasJacb) jbBB = curJbBB * jbBB;
 
         // TRK

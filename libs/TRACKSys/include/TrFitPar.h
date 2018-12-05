@@ -101,6 +101,10 @@ class TrFitPar {
         static constexpr Short_t  SURVIVAL_LMTN = 15;
         static constexpr Double_t SURVIVAL_FACT = 0.85;
         static constexpr Double_t SURVIVAL_BETA = 0.30;
+        
+        // Limit of 1/beta
+        static constexpr Double_t LMTL_IBTA = 1.000000001;
+        static constexpr Double_t LMTU_IBTA = 100.;
 };
 
 

@@ -110,11 +110,9 @@ class Event {
         
         inline static PhyTrFit GetTrFit(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt()) { return PhyTrFit( GetTrFitPar(info, tkOpt, tfOpt, rhOpt) ); }
 
-        inline static PhyTrFit GetTrFit_Tk(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt::Patt& patt = TkOpt::Patt::Inner) { return PhyTrFit( GetTrFitPar(info, TkOpt(patt)) ); }
+        inline static PhyTrFit GetTrFit_Tracker(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt::Patt& patt = TkOpt::Patt::Inner) { return PhyTrFit( GetTrFitPar(info, TkOpt(patt)) ); }
         
-        inline static PhyTrFit GetTrFit_TkTf(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt::Patt& patt = TkOpt::Patt::Inner) { return PhyTrFit( GetTrFitPar(info, TkOpt(patt, true), TfOpt(true)) ); }
-        
-        inline static PhyTrFit GetTrFit_TkTfRh(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt::Patt& patt = TkOpt::Patt::Inner, const RhOpt::Rad rad = RhOpt::AGL) { return PhyTrFit( GetTrFitPar(info, TkOpt(patt, true), TfOpt(true), RhOpt(rad)) ); }
+        inline static PhyMuFit GetMuFit(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt()) { return PhyMuFit( GetTrFitPar(info, tkOpt, tfOpt, rhOpt) ); }
 
     protected :
         // AMS Event

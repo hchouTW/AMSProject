@@ -28,9 +28,10 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         part_ = rhs.part_;
         tsft_ = rhs.tsft_;
         
-        args_ = rhs.args_;
-        stts_ = rhs.stts_;
-      
+        args_  = rhs.args_;
+        stts_  = rhs.stts_;
+        lscat_ = rhs.lscat_;
+
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
         quality_ = rhs.quality_;
@@ -56,13 +57,11 @@ void PhyTrFit::clear() {
     
     args_.clear();
     stts_.clear();
+    lscat_.clear();
 
-    ndof_.at(0) = 0;
-    ndof_.at(1) = 0;
-    nchi_.at(0) = 0;
-    nchi_.at(1) = 0;
-    quality_.at(0) = 0;
-    quality_.at(1) = 0;
+    ndof_.fill(0);
+    nchi_.fill(0);
+    quality_.fill(0);
 
     ndof_tt_ = 0;
     ndof_cx_ = 0;
@@ -351,9 +350,9 @@ Bool_t PhyTrFit::evolve() {
     if (cnt_nhit != hits_.size()) return false;
     if (cnt_nseg != nseg_) return false;
 
-    Double_t chi       = (chi_cx + chi_cy + chi_ib);
-    Double_t ndof_tt   = static_cast<Double_t>(ndof_tt_);
-    Double_t nchi_tt   = (chi / ndof_tt);
+    Double_t chi     = (chi_cx + chi_cy + chi_ib);
+    Double_t ndof_tt = static_cast<Double_t>(ndof_tt_);
+    Double_t nchi_tt = (chi / ndof_tt);
     
     Double_t nchi_cyib = ((ndof_.at(1) > 0) ? ((chi_cy + chi_ib) / static_cast<Double_t>(ndof_.at(1))) : 0);
     if (!Numc::Valid(nchi_cyib) || Numc::Compare(nchi_cyib) <= 0) nchi_cyib = Numc::ZERO<>;
@@ -377,7 +376,49 @@ Bool_t PhyTrFit::evolve() {
     }
     if (!(hits_.at(0)->scx() || hits_.at(0)->scy())) stts.insert(stts.begin(), part_);
     stts_ = stts;
- 
+   
+    // quality of local scattering
+    if (nseg_ >= 2 && args_.size() == nseg_ && stts_.size() == (nseg_ + 1)) {
+        // find index of first and last hit in x, y
+        Short_t fCx = nseg_ + 1;
+        Short_t fCy = nseg_ + 1;
+        Short_t lCx = -1;
+        Short_t lCy = -1;
+        Short_t idxScat = 0; 
+        for (auto&& hit : hits_) {
+            if (!(hit->scx() || hit->scy())) continue;
+            if (hit->scx() && fCx > nseg_) fCx = idxScat;
+            if (hit->scy() && fCy > nseg_) fCy = idxScat;
+            if (hit->scx()) lCx = idxScat;
+            if (hit->scy()) lCy = idxScat;
+            idxScat++;
+        }
+
+        Short_t cntScat = 0;
+        std::vector<LocScat> vecLocs;
+        for (auto&& hit : hits_) {
+            if (!(hit->scx() || hit->scy())) continue;
+            Bool_t fxScat = (cntScat <= fCx);
+            Bool_t lxScat = (cntScat >= lCx);
+            Bool_t mxScat = (!fxScat && !lxScat);
+            Bool_t fyScat = (cntScat <= fCy);
+            Bool_t lyScat = (cntScat >= lCy);
+            Bool_t myScat = (!fyScat && !lyScat);
+            Double_t tau2u = (fxScat ? Numc::ZERO<> : (args_.at(cntScat-1).tauu() * args_.at(cntScat-1).tauu() + args_.at(cntScat-1).taul() * args_.at(cntScat-1).taul()));
+            Double_t rho2u = (fyScat ? Numc::ZERO<> : (args_.at(cntScat-1).rhou() * args_.at(cntScat-1).rhou() + args_.at(cntScat-1).rhol() * args_.at(cntScat-1).rhol()));
+            Double_t tau2l = (lxScat ? Numc::ZERO<> : (args_.at(cntScat).tauu() * args_.at(cntScat).tauu() + args_.at(cntScat).taul() * args_.at(cntScat).taul()));
+            Double_t rho2l = (lyScat ? Numc::ZERO<> : (args_.at(cntScat).rhou() * args_.at(cntScat).rhou() + args_.at(cntScat).rhol() * args_.at(cntScat).rhol()));
+            LocScat locs(stts.at(cntScat).cx(), stts.at(cntScat).cy(), stts.at(cntScat).cz(), hit->scx(), hit->scy(),
+                (hit->scx() ? std::fabs(hit->chicx()) : Numc::ZERO<>),
+                (hit->scy() ? std::fabs(hit->chicy()) : Numc::ZERO<>),
+                (hit->scx() ? (std::sqrt(tau2u + tau2l) * (mxScat ? Numc::ONE_TO_TWO : Numc::INV_SQRT_TWO)) : Numc::ZERO<>),
+                (hit->scy() ? (std::sqrt(rho2u + rho2l) * (myScat ? Numc::ONE_TO_TWO : Numc::INV_SQRT_TWO)) : Numc::ZERO<>));
+            vecLocs.push_back(locs);
+            cntScat++;
+        }
+        lscat_ = vecLocs;
+    }
+
     return true;
 }
 
@@ -412,9 +453,6 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
             parameters[1][is*PhyJb::DIML+1], 
             parameters[1][is*PhyJb::DIML+2], 
             parameters[1][is*PhyJb::DIML+3]);
-        //args.at(is).set_eloss(
-        //    parameters[1][is*PhyJb::DIMI+4],
-        //    parameters[1][is*PhyJb::DIMI+5]);
     }}
 
     // Matrix (Rs, Jb)

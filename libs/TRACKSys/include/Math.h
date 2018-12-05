@@ -41,8 +41,8 @@ constexpr Double_t INV_SQRT_PI = 5.64189583547756279e-01;
 constexpr Double_t SQRT_TWO    = 1.41421356237309515e+00;
 constexpr Double_t SQRT_THREE  = 1.73205080756887719e+00;
 
-constexpr Double_t INV_SQRT_TWO    = 7.07106781186547462e-01;
-constexpr Double_t INV_SQRT_THREE  = 5.77350269189625842e-01;
+constexpr Double_t INV_SQRT_TWO   = 7.07106781186547462e-01;
+constexpr Double_t INV_SQRT_THREE = 5.77350269189625842e-01;
 
 constexpr Double_t LOG_TWO = 6.93147180559945286e-01;
 constexpr Double_t LOG_TEN = 2.30258509299404590e+00;
