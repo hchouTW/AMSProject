@@ -108,7 +108,7 @@ class Hist {
 
 		void scale(Double_t scl = 1., Option_t * option = "");
 		void normalized(const HistNorm& norm = HistNorm::kEntries);
-		void style(const TAttFill& fill = Fill(), const TAttLine& line = Line(), const TAttMarker& marker = Marker());
+		void style(const TAttLine& line = Line(), const TAttMarker& marker = Marker(), const TAttFill& fill = Fill());
 
 		void fill(Double_t a, Double_t b = 1.0, Double_t c = 1.0, Double_t d = 1.0, Double_t e = 1.0);
         

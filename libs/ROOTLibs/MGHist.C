@@ -219,16 +219,16 @@ void Hist::normalized(const HistNorm& norm) {
 }
 
 
-void Hist::style(const TAttFill& fill, const TAttLine& line, const TAttMarker& marker) {
+void Hist::style(const TAttLine& line, const TAttMarker& marker, const TAttFill& fill) {
 	if (!exist()) return;
-	hist_->SetFillColor(fill.GetFillColor());
-	hist_->SetFillStyle(fill.GetFillStyle());
 	hist_->SetLineColor(line.GetLineColor());
 	hist_->SetLineStyle(line.GetLineStyle());
 	hist_->SetLineWidth(line.GetLineWidth());
 	hist_->SetMarkerColor(marker.GetMarkerColor());
 	hist_->SetMarkerStyle(marker.GetMarkerStyle());
 	hist_->SetMarkerSize (marker.GetMarkerSize());
+	hist_->SetFillColor(fill.GetFillColor());
+	hist_->SetFillStyle(fill.GetFillStyle());
 }
 		
 

@@ -1,51 +1,48 @@
-#ifndef __TRACKLibs_GmIonEloss_H__
-#define __TRACKLibs_GmIonEloss_H__
+#ifndef __TRACKLibs_IonEloss_H__
+#define __TRACKLibs_IonEloss_H__
 
 
 namespace TrackSys {
-
-class GmIonEloss {
+//x := igmbta
+//y := ibta = 1 + x^2
+//TF1* fkpa = new TF1("fkpa", "0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(1+x*x)^[2]) - [3]))");
+//TF1* fmpv = new TF1("fmpv", "[0] + [1] * (1+x*x)^[2]  - [3] * TMath::Log([4]+(x*x)^[5])");
+//TF1* fkpa = new TF1("fkpa", "0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(y*y)^[2]) - [3]))");
+//TF1* fmpv = new TF1("fmpv", "[0] + [1] * (y*y)^[2]  - [3] * TMath::Log([4]+(y*y-1)^[5])");
+class IonEloss {
     public :
-        GmIonEloss(
-            const std::array<long double, 3>& ratio,
-            const std::array<long double, 2>& lg_k, const std::array<long double, 6>& lg_m, const std::array<long double, 6>& lg_s,
-            const std::array<long double, 1>& ge_a, const std::array<long double, 3>& ge_b, const std::array<long double, 1>& ge_m, const std::array<long double, 1>& ge_s
-        ) : ratio_(ratio), lg_k_(lg_k), lg_m_(lg_m), lg_s_(lg_s), ge_a_(ge_a), ge_b_(ge_b), ge_m_(ge_m), ge_s_(ge_s) {}
-        ~GmIonEloss() {}
+        static long double FuncKpa(long double ibta, const std::array<long double, 4>& par);
+        static long double FuncMpv(long double ibta, const std::array<long double, 6>& par);
+        static long double FuncSgm(long double ibta, const std::array<long double, 6>& par);
 
-        inline SVecD<3> operator()(long double x, long double igmbta) const { std::array<long double, 3>&& lgge = eval(x, igmbta); return SVecD<3>(lgge.at(0), lgge.at(1), lgge.at(2)); }
+    public :
+        IonEloss(Robust robust, const std::array<long double, 4>& kpa, const std::array<long double, 6>& mpv, const std::array<long double, 6>& sgm, const std::array<long double, 6>& mod, long double fluc = Numc::ZERO<long double>) : robust_(robust), isfluc_(false), kpa_(kpa), mpv_(mpv), sgm_(sgm), mod_(mod), fluc_(fluc) { isfluc_ = (Numc::Compare(fluc_) > 0); if (!isfluc_) fluc_ = Numc::ZERO<long double>; }
+        ~IonEloss() {}
         
+        std::array<long double, 3> minimizer(long double x, long double ibta, long double igb) const;
+   
     protected :
-        std::array<long double, 3> eval(long double x, long double igmbta) const;
-        
-        long double get_ratio(long double igmbta) const;
-        
-        long double get_lg_k(long double igmbta) const;
-        long double get_lg_m(long double igmbta, long double ibsqr) const;
-        long double get_lg_s(long double igmbta, long double ibsqr) const;
+        long double get_kpa(long double ibsqr) const;
+        long double get_mpv(long double ibsqr, long double igbsqr) const;
+        long double get_sgm(long double ibsqr, long double igbsqr) const;
+        long double get_mod(long double ibsqr, long double igbsqr) const;
 
-        long double get_ge_a() const { return ge_a_.at(0); }
-        long double get_ge_b(long double igmbta) const; 
-        long double get_ge_m() const { return ge_m_.at(0); }
-        long double get_ge_s() const { return ge_s_.at(0); }
-        
-        long double get_lg_divm(long double igmbta, long double ibsqr) const;
+        // derivative ibta
+        long double get_divmpv(long double ibta, long double ibsqr, long double igbsqr) const;
+        long double get_divmod(long double ibta, long double ibsqr, long double igbsqr) const;
 
     private :
-        std::array<long double, 3> ratio_; // ratio := TR / (ION + TR)
-                                                                      
-        std::array<long double, 2> lg_k_;  // kpa
-        std::array<long double, 6> lg_m_;  // mpv
-        std::array<long double, 6> lg_s_;  // sgm
-                                                                      
-        std::array<long double, 1> ge_a_;  // alpha
-        std::array<long double, 3> ge_b_;  // beta
-        std::array<long double, 1> ge_m_;  // men
-        std::array<long double, 1> ge_s_;  // sgm
-};
+        Robust robust_;
 
+        bool isfluc_;
+        std::array<long double, 4> kpa_;
+        std::array<long double, 6> mpv_;
+        std::array<long double, 6> sgm_;
+        std::array<long double, 6> mod_;
+        long double                fluc_;
+};
 
 } // namesapce TrackSys
 
 
-#endif // __TRACKLibs_GmIonEloss_H__
+#endif // __TRACKLibs_IonEloss_H__

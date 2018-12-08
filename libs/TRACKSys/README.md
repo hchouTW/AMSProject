@@ -177,7 +177,16 @@ part.print();
 ```c++
 HitSt hit;
 ```
+
 ## Track Fitting
 ```c++
 PhyFit trFit;
+```
+
+## AMS Interface
+```c++
+TrFitPar fitPar;
+PhyTrFit trFit;
+PhyBtaFit btaFit;
+PhyMuFit muFit;
 ```
