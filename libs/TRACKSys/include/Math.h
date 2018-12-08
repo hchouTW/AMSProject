@@ -24,6 +24,15 @@ template<typename T = Double_t> constexpr T EIGHT  = static_cast<T>(8);
 template<typename T = Double_t> constexpr T NINE   = static_cast<T>(9);
 template<typename T = Double_t> constexpr T TEN    = static_cast<T>(10);
 
+template<typename T = Double_t> constexpr T TWENTY  = static_cast<T>(20);
+template<typename T = Double_t> constexpr T THIRTY  = static_cast<T>(30);
+template<typename T = Double_t> constexpr T FORTY   = static_cast<T>(40);
+template<typename T = Double_t> constexpr T FIFTY   = static_cast<T>(50);
+template<typename T = Double_t> constexpr T SIXTY   = static_cast<T>(60);
+template<typename T = Double_t> constexpr T SEVENTY = static_cast<T>(70);
+template<typename T = Double_t> constexpr T EIGHTY  = static_cast<T>(80);
+template<typename T = Double_t> constexpr T NINETY  = static_cast<T>(90);
+
 template<typename T = Double_t> constexpr T HUNDRED  = static_cast<T>(100);
 template<typename T = Double_t> constexpr T THOUSAND = static_cast<T>(1000);
 
@@ -220,24 +229,6 @@ class LandauNumc {
 const std::array<long double, 4> LandauNumc::LAND { 4.90120e-01, 1.16366e+00, -3.99384e+00, 1.27500e-01 }; // Fit landau with "nrm" from -3 to 37
 
 
-class ApproxLnX {
-    public :
-        ApproxLnX() {}
-        ~ApproxLnX() {}
-
-        static long double Eval(long double x);
-        static long double Dev(long double x);
-        
-        inline static long double X0() { return LnX0; }
-        inline static long double EvalWithX0(long double x) { return (Eval(x) - LnX0); }
-        static std::array<long double, 2> EvalAndDevWithX0(long double x);
-
-    private :
-        static constexpr long double HALF_WIDTH = 0.025;
-        static constexpr long double LnX0  = -4.68887945411395;
-        static constexpr long double DevX0 = 55.45177444479562;
-};
-
 } // namesapce TrackSys
 
 
@@ -296,6 +287,9 @@ namespace TrackSys {
 // MultiGaus
 // Gaussian Core f ~ [0]*exp(-0.5*x*x/[1]/[1])
 class MultiGaus {
+    public :
+        static long double Func(long double x, long double men, const std::vector<std::array<long double, 2>>& group);
+    
     public :
         MultiGaus() : robust_(Robust()), rand_func_(nullptr), eftsgm_(Numc::ONE<long double>) {}
         MultiGaus(Robust robust, long double sgm);
@@ -401,118 +395,6 @@ const std::array<long double, LandauGaus::CONV_N> LandauGaus::CONV_P = {
 0.059966, 0.059296, 0.057328, 0.054192, 0.050088, 0.045265, 0.039996, 0.034554, 0.029189, 0.024108, 
 0.019468, 0.015372, 0.011867, 0.008958, 0.006611, 0.004771, 0.003366, 0.002322, 0.001566, 0.001033, 0.000666 };
     
-
-} // namesapce TrackSys
-
-
-namespace TrackSys {
-// TF1* flg = new TF1("flg", "[0] * TMath::Exp([1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-[1]) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/[3]-2.22782980e-01)/1.80655634e-01))");
-// parameter(x) = igb
-// kpa  := 0.5 * (1.0 + TMath::Erf([0] * TMath::Log(1+[1]*(1+x*x)^[2]) - [3]))
-// mpv  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
-// sgm  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
-// mod  := [0] * (1+x*x)^[3] * ([1] + [2]*(1+x*x)^(-[3]) - TMath::Log([4]+(x*x)^[5]))
-// fluc := [0] * 0.5 * (1.0 + TMath::Erf([1] * TMath::Log(x) - [2]))
-class LGGE_LG {
-    public :
-        LGGE_LG(long double kpa, long double mpv, long double sgm, long double mod, long double fluc) : kpa_(kpa), mpv_(mpv), sgm_(sgm), mod_(mod), fluc_(fluc) {}
-        ~LGGE_LG() {}
-
-    public :
-        long double kpa_;
-        long double mpv_;
-        long double sgm_;
-        long double mod_;
-        long double fluc_;
-};
-
-
-// TF1* fge = new TF1("fge", "[0] * TMath::Power(x, [1]-1) * TMath::Exp(-[2]*x) * (1.0 + TMath::Erf([3]*x-[4]))");
-// alp := [0]
-// bta := [0]
-// mid := [0]
-// wid := [0]
-class LGGE_GE {
-    public :
-        LGGE_GE(long double alp, long double bta, long double mid, long double wid) : alp_(alp), bta_(bta), mid_(mid), wid_(wid) {}
-        ~LGGE_GE() {}
-
-    public :
-        long double alp_;
-        long double bta_;
-        long double mid_;
-        long double wid_;
-};
-
-
-class LGGE {
-    public :
-        LGGE(std::array<long double, 2> lg_kpa, std::array<long double, 2> lg_mpv, std::array<long double, 2> lg_sgm, std::array<long double, 2> lg_mod, std::array<long double, 2> lg_fluc, 
-             long double ge_alp, long double ge_bta, long double ge_mid, long double ge_wid) :
-             lg_kpa_(lg_kpa), lg_mpv_(lg_mpv), lg_sgm_(lg_sgm), lg_mod_(lg_mod), lg_fluc_(lg_fluc), ge_alp_(ge_alp), ge_bta_(ge_bta), ge_mid_(ge_mid), ge_wid_(ge_wid)  {}
-        ~LGGE() {}
-
-    public :
-        std::array<long double, 2> lg_kpa_;
-        std::array<long double, 2> lg_mpv_;
-        std::array<long double, 2> lg_sgm_;
-        std::array<long double, 2> lg_mod_;
-        std::array<long double, 2> lg_fluc_;
-        
-        long double ge_alp_;
-        long double ge_bta_;
-        long double ge_mid_;
-        long double ge_wid_;
-};
-
-
-} // namesapce TrackSys
-    
-    
-namespace TrackSys {
-//TF1* flggm = new TF1("flggm", "[0] *  (1.0/sqrt(2.0*TMath::Pi())/[3]) * TMath::Exp((1-[1]) * TMath::Log(TMath::Landau((x-[2])/[3])/TMath::Landau(0)) + [1] * (-0.5)*((x-[2])*(x-[2])/[3]/[3])) + [4] * (pow([6], [5]) / TMath::Gamma([5])) * TMath::Power(x,[5]-1) * TMath::Exp(-[6]*x) * (0.5 * (TMath::Erf((x-[7])/[8])+1))", 0.1, 100);
-class LgGeFunc {
-    public :
-        enum class Opt { NOROBUST = 0, ROBUST = 1 };
-    
-    public :
-        LgGeFunc(Opt opt, long double ratio, long double lg_k, long double lg_m, long double lg_s, long double ge_a, long double ge_b, long double ge_m, long double ge_s) : robust_(opt), ratio_(ratio), lg_k_(lg_k), lg_m_(lg_m), lg_s_(lg_s), ge_a_(ge_a), ge_b_(ge_b), ge_m_(ge_m), ge_s_(ge_s) {}
-        ~LgGeFunc() {}
-
-        std::array<long double, 3> minimizer(long double x) const;
-
-    protected :
-        // transition
-        long double get_ratio(long double x) const;
-        long double get_lg(long double x) const;
-        long double get_ge(long double x) const;
-
-        // ionization
-        std::array<long double, 2> lg_minimizer(long double x, long double wgt = Numc::ONE<long double>) const;
-        long double lg_eval(long double norm) const;
-        long double lg_div(long double norm) const;
-
-    private :
-        long double ratio_; // ratio := TR / (ION + TR)
-
-        long double lg_k_;  // kpa
-        long double lg_m_;  // mpv
-        long double lg_s_;  // sgm
-
-        long double ge_a_;  // alpha
-        long double ge_b_;  // beta
-        long double ge_m_;  // men
-        long double ge_s_;  // sgm
-    
-    private :
-        Opt robust_;
-    
-    private :
-        static constexpr long double LANDAU0    =  1.80655634e-01;
-        static constexpr long double LANDAU0_X  = -2.22782980e-01;
-        static constexpr long double DELTA      = 0.01;
-        static constexpr long double ROBUST_SGM = 2.0;
-};
 
 } // namesapce TrackSys
 

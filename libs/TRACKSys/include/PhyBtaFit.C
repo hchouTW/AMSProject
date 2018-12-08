@@ -150,9 +150,6 @@ Bool_t PhyBtaFit::evolve() {
     Short_t numOfRes = (nseq_);
     Short_t numOfPar = (Numc::ONE<Short_t> + opt_tsft);
 
-    // Final State
-    std::vector<PhySt> stts;
-
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
     HitStTOF::SetOffsetPathTime();

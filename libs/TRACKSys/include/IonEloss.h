@@ -11,6 +11,11 @@ namespace TrackSys {
 //TF1* fmpv = new TF1("fmpv", "[0] + [1] * (y*y)^[2]  - [3] * TMath::Log([4]+(y*y-1)^[5])");
 class IonEloss {
     public :
+        static long double FuncKpa(long double ibta, const std::array<long double, 4>& par);
+        static long double FuncMpv(long double ibta, const std::array<long double, 6>& par);
+        static long double FuncSgm(long double ibta, const std::array<long double, 6>& par);
+
+    public :
         IonEloss(Robust robust, const std::array<long double, 4>& kpa, const std::array<long double, 6>& mpv, const std::array<long double, 6>& sgm, const std::array<long double, 6>& mod, long double fluc = Numc::ZERO<long double>) : robust_(robust), isfluc_(false), kpa_(kpa), mpv_(mpv), sgm_(sgm), mod_(mod), fluc_(fluc) { isfluc_ = (Numc::Compare(fluc_) > 0); if (!isfluc_) fluc_ = Numc::ZERO<long double>; }
         ~IonEloss() {}
         
@@ -22,6 +27,7 @@ class IonEloss {
         long double get_sgm(long double ibsqr, long double igbsqr) const;
         long double get_mod(long double ibsqr, long double igbsqr) const;
 
+        // derivative ibta
         long double get_divmpv(long double ibta, long double ibsqr, long double igbsqr) const;
         long double get_divmod(long double ibta, long double ibsqr, long double igbsqr) const;
 

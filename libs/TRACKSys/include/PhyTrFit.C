@@ -374,50 +374,51 @@ Bool_t PhyTrFit::evolve() {
         stts.at(it).arg().set_mscat(arg.tauu(), arg.rhou(), arg.taul(), arg.rhol());
         stts.at(it).arg().set_eloss(arg.elion(), arg.elbrm());
     }
-    if (!(hits_.at(0)->scx() || hits_.at(0)->scy())) stts.insert(stts.begin(), part_);
+    Bool_t headHitWithC = (hits_.at(0)->scx() || hits_.at(0)->scy());
+    if (!headHitWithC) stts.insert(stts.begin(), part_);
     stts_ = stts;
    
     // quality of local scattering
-    if (nseg_ >= 2 && args_.size() == nseg_ && stts_.size() == (nseg_ + 1)) {
+    lscat_.clear();
+    std::vector<LocScat> vecLocs;
+    if (nseg_ >= 2 && (args_.size() == nseg_) && (stts_.size() == (nseg_ + 1 + (headHitWithC?0:1)))) {
         // find index of first and last hit in x, y
-        Short_t fCx = nseg_ + 1;
-        Short_t fCy = nseg_ + 1;
-        Short_t lCx = -1;
-        Short_t lCy = -1;
+        Short_t fCxIdx = nseg_ + 1, lCxIdx = -1;
+        Short_t fCyIdx = nseg_ + 1, lCyIdx = -1;
         Short_t idxScat = 0; 
         for (auto&& hit : hits_) {
             if (!(hit->scx() || hit->scy())) continue;
-            if (hit->scx() && fCx > nseg_) fCx = idxScat;
-            if (hit->scy() && fCy > nseg_) fCy = idxScat;
-            if (hit->scx()) lCx = idxScat;
-            if (hit->scy()) lCy = idxScat;
+            if (hit->scx() && fCxIdx > nseg_) fCxIdx = idxScat;
+            if (hit->scy() && fCyIdx > nseg_) fCyIdx = idxScat;
+            if (hit->scx()) lCxIdx = idxScat;
+            if (hit->scy()) lCyIdx = idxScat;
             idxScat++;
         }
 
-        Short_t cntScat = 0;
-        std::vector<LocScat> vecLocs;
+        // calculate
+        idxScat = 0; 
         for (auto&& hit : hits_) {
             if (!(hit->scx() || hit->scy())) continue;
-            Bool_t fxScat = (cntScat <= fCx);
-            Bool_t lxScat = (cntScat >= lCx);
+            Bool_t fxScat = (idxScat <= fCxIdx);
+            Bool_t lxScat = (idxScat >= lCxIdx);
             Bool_t mxScat = (!fxScat && !lxScat);
-            Bool_t fyScat = (cntScat <= fCy);
-            Bool_t lyScat = (cntScat >= lCy);
+            Bool_t fyScat = (idxScat <= fCyIdx);
+            Bool_t lyScat = (idxScat >= lCyIdx);
             Bool_t myScat = (!fyScat && !lyScat);
-            Double_t tau2u = (fxScat ? Numc::ZERO<> : (args_.at(cntScat-1).tauu() * args_.at(cntScat-1).tauu() + args_.at(cntScat-1).taul() * args_.at(cntScat-1).taul()));
-            Double_t rho2u = (fyScat ? Numc::ZERO<> : (args_.at(cntScat-1).rhou() * args_.at(cntScat-1).rhou() + args_.at(cntScat-1).rhol() * args_.at(cntScat-1).rhol()));
-            Double_t tau2l = (lxScat ? Numc::ZERO<> : (args_.at(cntScat).tauu() * args_.at(cntScat).tauu() + args_.at(cntScat).taul() * args_.at(cntScat).taul()));
-            Double_t rho2l = (lyScat ? Numc::ZERO<> : (args_.at(cntScat).rhou() * args_.at(cntScat).rhou() + args_.at(cntScat).rhol() * args_.at(cntScat).rhol()));
-            LocScat locs(stts.at(cntScat).cx(), stts.at(cntScat).cy(), stts.at(cntScat).cz(), hit->scx(), hit->scy(),
+            Double_t tau2u = (fxScat ? Numc::ZERO<> : (args_.at(idxScat-1).tauu() * args_.at(idxScat-1).tauu() + args_.at(idxScat-1).taul() * args_.at(idxScat-1).taul()));
+            Double_t rho2u = (fyScat ? Numc::ZERO<> : (args_.at(idxScat-1).rhou() * args_.at(idxScat-1).rhou() + args_.at(idxScat-1).rhol() * args_.at(idxScat-1).rhol()));
+            Double_t tau2l = (lxScat ? Numc::ZERO<> : (args_.at(idxScat).tauu() * args_.at(idxScat).tauu() + args_.at(idxScat).taul() * args_.at(idxScat).taul()));
+            Double_t rho2l = (lyScat ? Numc::ZERO<> : (args_.at(idxScat).rhou() * args_.at(idxScat).rhou() + args_.at(idxScat).rhol() * args_.at(idxScat).rhol()));
+            LocScat locs(stts.at(idxScat).cx(), stts.at(idxScat).cy(), stts.at(idxScat).cz(), hit->scx(), hit->scy(),
                 (hit->scx() ? std::fabs(hit->chicx()) : Numc::ZERO<>),
                 (hit->scy() ? std::fabs(hit->chicy()) : Numc::ZERO<>),
                 (hit->scx() ? (std::sqrt(tau2u + tau2l) * (mxScat ? Numc::ONE_TO_TWO : Numc::INV_SQRT_TWO)) : Numc::ZERO<>),
                 (hit->scy() ? (std::sqrt(rho2u + rho2l) * (myScat ? Numc::ONE_TO_TWO : Numc::INV_SQRT_TWO)) : Numc::ZERO<>));
             vecLocs.push_back(locs);
-            cntScat++;
+            idxScat++;
         }
-        lscat_ = vecLocs;
     }
+    if (vecLocs.size() == (nseg_ + 1)) lscat_ = vecLocs;
 
     return true;
 }

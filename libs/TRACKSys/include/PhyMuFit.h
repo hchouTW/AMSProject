@@ -73,7 +73,7 @@ class PhyMuFit : public TrFitPar {
         MatFld get_mat(Double_t zbd1 = 0, Double_t zbd2 = 0) const;
 
         // Check mass with electron-like or high beta events
-        inline Bool_t is_like_el(Double_t fact = Numc::FIVE<>) const { return (succ_ ? false : (Numc::Compare(part_.mass(), fact * MASS_EL) <= 0)); }
+        inline Bool_t is_like_el(Double_t fact = Numc::FIFTY<>) const { return (succ_ ? false : (Numc::Compare(part_.mass(), fact * MASS_EL) <= 0)); }
 
         // Expert : do this after check status
         inline const TrFitPar& get() const { return dynamic_cast<const TrFitPar&>(*this); }           // fitPar for track fitting
@@ -101,7 +101,7 @@ class PhyMuFit : public TrFitPar {
 
         Short_t  ndof_tt_; // (total)
         Double_t nchi_tt_; // (total)
-        
+    
     protected :
         std::vector<PhySt> stts_;
     

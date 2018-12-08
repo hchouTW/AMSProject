@@ -9,6 +9,33 @@
 
 namespace TrackSys {
 
+long double IonEloss::FuncKpa(long double ibta, const std::array<long double, 4>& par) {
+    if (Numc::Compare(ibta, Numc::ONE<long double>) <= 0) return Numc::ZERO<long double>;
+    long double ibsqr = ibta * ibta;
+    
+    long double kpa = Numc::ONE_TO_TWO * (Numc::ONE<long double> + std::erf(par[0] * std::log1p(par[1] * std::pow(ibsqr, par[2])) - par[3]));
+    if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
+    return kpa;
+}
+
+long double IonEloss::FuncMpv(long double ibta, const std::array<long double, 6>& par) {
+    if (Numc::Compare(ibta, Numc::ONE<long double>) <= 0) return Numc::ZERO<long double>;
+    long double ibsqr = ibta * ibta;
+ 
+    long double mpv = par[0] + par[1] * std::pow(ibsqr, par[2]) - par[3] * std::log(par[4] + std::pow(ibsqr - Numc::ONE<long double>, par[5]));
+    if (!Numc::Valid(mpv) || Numc::Compare(mpv) <= 0) mpv = Numc::ZERO<long double>;
+    return mpv;
+}
+
+long double IonEloss::FuncSgm(long double ibta, const std::array<long double, 6>& par) {
+    if (Numc::Compare(ibta, Numc::ONE<long double>) <= 0) return Numc::ZERO<long double>;
+    long double ibsqr = ibta * ibta;
+ 
+    long double sgm = par[0] + par[1] * std::pow(ibsqr, par[2]) - par[3] * std::log(par[4] + std::pow(ibsqr - Numc::ONE<long double>, par[5]));
+    if (!Numc::Valid(sgm) || Numc::Compare(sgm) <= 0) sgm = Numc::ZERO<long double>;
+    return sgm;
+}
+
 std::array<long double, 3> IonEloss::minimizer(long double x, long double ibta, long double igb) const {
     if (Numc::Compare(x) <= 0 || Numc::Compare(ibta) <= 0 || Numc::Compare(igb) <= 0)
         return std::array<long double, 3>({ Numc::ZERO<long double>, Numc::ZERO<long double>, Numc::ZERO<long double> });

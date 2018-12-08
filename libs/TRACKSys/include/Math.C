@@ -50,47 +50,6 @@ namespace Rndm {
 } // namesapce TrackSys
 
 
-long double TrackSys::ApproxLnX::Eval(long double x) {
-    long double xl = x - HALF_WIDTH;
-    long double xu = x + HALF_WIDTH;
-    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
-    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
-    long double lnx = (intxu - intxl) / (Numc::TWO<long double> * HALF_WIDTH);
-    if (!Numc::Valid(lnx)) lnx = Numc::ZERO<long double>;
-    return lnx;
-}
-
-
-long double TrackSys::ApproxLnX::Dev(long double x) {
-    long double xl = x - HALF_WIDTH;
-    long double xc = x;
-    long double xu = x + HALF_WIDTH;
-    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
-    long double intxc = (Numc::EqualToZero(xc) ? 0.0L : (xc * (std::log(std::fabs(xc)) - 1.0L)));
-    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
-    long double devlnx = (intxu + intxl - Numc::TWO<long double> * intxc) / (HALF_WIDTH * HALF_WIDTH);
-    if (!Numc::Valid(devlnx) || xc < HALF_WIDTH) devlnx = DevX0;
-    return devlnx;
-}
-        
-
-std::array<long double, 2> TrackSys::ApproxLnX::EvalAndDevWithX0(long double x) {
-    long double xl = x - HALF_WIDTH;
-    long double xc = x;
-    long double xu = x + HALF_WIDTH;
-    long double intxl = (Numc::EqualToZero(xl) ? 0.0L : (xl * (std::log(std::fabs(xl)) - 1.0L)));
-    long double intxc = (Numc::EqualToZero(xc) ? 0.0L : (xc * (std::log(std::fabs(xc)) - 1.0L)));
-    long double intxu = (Numc::EqualToZero(xu) ? 0.0L : (xu * (std::log(std::fabs(xu)) - 1.0L)));
-    
-    long double lnx    = -LnX0 + (intxu - intxl) / (Numc::TWO<long double> * HALF_WIDTH);
-    long double devlnx = (intxu + intxl - Numc::TWO<long double> * intxc) / (HALF_WIDTH * HALF_WIDTH);
-    if (!Numc::Valid(lnx) || lnx <= 0.0L) lnx = Numc::ZERO<long double>;
-    if (!Numc::Valid(devlnx) || xc < HALF_WIDTH) devlnx = DevX0;
-
-    return std::array<long double, 2>({ lnx, devlnx });
-}
-
-
 namespace TrackSys {
         
 std::array<long double, 3> Robust::minimizer(long double chi) const {
@@ -153,6 +112,29 @@ std::array<long double, 3> Robust::minimizer(long double chi) const {
 namespace TrackSys {
 
 TRandom* MultiGaus::rndm_gen_ = nullptr;
+        
+long double MultiGaus::Func(long double x, long double men, const std::vector<std::array<long double, 2>>& group) {
+    if (group.size() == 0) return Numc::ZERO<long double>;
+
+    long double sumw = Numc::ZERO<long double>;
+    std::vector<std::array<long double, 2>> regroup;
+    for (auto&& elem : group) {
+        if (!Numc::Valid(elem[0]) || Numc::Compare(elem[0]) <= 0) continue;
+        if (!Numc::Valid(elem[1]) || Numc::Compare(elem[1]) <= 0) continue;
+        long double wgt = elem[0];
+        long double res = (x - men) / elem[1];
+        regroup.push_back(std::array<long double, 2>({ wgt, res }));
+        sumw += wgt;
+    }
+    if (regroup.size() == 0) return Numc::ZERO<long double>;
+    if (!Numc::Valid(sumw)) return Numc::ZERO<long double>;
+    for (auto&& elem : regroup) elem[0] /= sumw;
+
+    long double value = Numc::ZERO<long double>;
+    for (auto&& elem : regroup) value += elem[0] * std::exp(-Numc::ONE_TO_TWO * elem[1] * elem[1]);
+    if (!Numc::Valid(value)) value = Numc::ZERO<long double>;
+    return value;
+}
 
 MultiGaus::MultiGaus(Robust robust, long double sgm) : MultiGaus()  {
     multi_gaus_.push_back(std::make_pair(Numc::ONE<long double>, sgm));
@@ -571,96 +553,6 @@ std::array<long double, 2> LandauGaus::conv(long double norm) const { // (nrm, j
     return std::array<long double, 2>({ sum_prb, jacb });
 }
 
-
-} // namesapce TrackSys
-
-
-namespace TrackSys {
-
-std::array<long double, 3> LgGeFunc::minimizer(long double x) const {
-    long double rat    = get_ratio(x);
-    long double wgt_lg = std::sqrt(Numc::ONE<long double> - rat);
-    std::array<long double, 2> lg = lg_minimizer(x, wgt_lg);
-    return std::array<long double, 3>({ lg.at(0), lg.at(1), rat }); 
-}
-
-long double LgGeFunc::get_ratio(long double x) const {
-    long double lg  = get_lg(x) * (Numc::ONE<long double> - ratio_);
-    long double ge  = get_ge(x) * (ratio_);
-    long double sum = lg + ge;
-    long double rat = (ge / sum);
-    if (!Numc::Valid(rat) || Numc::Compare(rat) <= 0) rat = Numc::ZERO<long double>;
-    return rat;
-}
-
-long double LgGeFunc::get_lg(long double x) const {
-    long double norm   = ((x - lg_m_) / lg_s_);
-    long double landau = (Numc::ONE<long double> - lg_k_) * std::log(TMath::Landau(norm) / LANDAU0);
-    long double gaus   = lg_k_ * Numc::NEG<long double> * Numc::HALF * (norm * norm);
-    long double lg     = (Numc::INV_SQRT_TWO * Numc::INV_SQRT_PI / lg_s_) * std::exp(landau + gaus);
-    if (!Numc::Valid(lg) || Numc::Compare(lg) <= 0) lg = Numc::ZERO<long double>;
-    return lg;
-}
-
-long double LgGeFunc::get_ge(long double x) const {
-    long double gamma = (std::pow(ge_b_, ge_a_) / std::tgamma(ge_a_)) * std::pow(x, ge_a_ - Numc::ONE<long double>) * std::exp(Numc::NEG<long double> * ge_b_ * x);
-    long double erf   = Numc::HALF * (Numc::ONE<long double> + std::erf((x - ge_m_) / ge_s_));
-    long double ge    = gamma * erf;
-    if (!Numc::Valid(ge) || Numc::Compare(ge) <= 0) ge = Numc::ZERO<long double>;
-    return ge;
-}
-
-std::array<long double, 2> LgGeFunc::lg_minimizer(long double x, long double wgt) const {
-    // Norm and Div
-    long double norm = ((x - lg_m_) / lg_s_);
-    long double nrmx = lg_eval(norm); // norm x
-    long double divx = lg_div(norm) * (Numc::NEG<long double> / lg_s_);  // div x with sgm scale
-    
-    // Robust Method (Modify-Cauchy)
-    if (robust_ == Opt::ROBUST) {
-        long double absnrmx = std::fabs(nrmx);
-        long double sftnrmr = absnrmx - ROBUST_SGM;
-        if (Numc::Compare(sftnrmr) > 0) {
-            long double cauchy = (sftnrmr / std::sqrt(std::log1p(sftnrmr * sftnrmr)));
-            long double modify_cauchy = ((!Numc::Valid(cauchy) || Numc::Compare(cauchy, Numc::ONE<long double>) < 0) ? Numc::ONE<long double> : std::sqrt(cauchy));
-            if (Numc::Valid(modify_cauchy)) {
-                nrmx /= modify_cauchy;
-                divx /= modify_cauchy;
-            }
-        }
-    }
-
-    // testcode
-    // Weight of (ION / (ION + TR));
-    //if (Numc::Compare(wgt) >= 0) {
-    //    nrmx *= wgt;
-    //    divx *= wgt;
-    //}
-    
-    if (!Numc::Valid(nrmx) || !Numc::Valid(divx)) {
-        nrmx = Numc::ZERO<long double>;
-        divx = Numc::ZERO<long double>;
-    }
-    return std::array<long double, 2>({ nrmx, divx }); 
-}
-
-long double LgGeFunc::lg_eval(long double norm) const {
-    short       sign   = Numc::Compare(norm);
-    long double landau = (Numc::NEG<long double> * Numc::TWO<long double>) * std::log(TMath::Landau(norm) / LANDAU0);
-    long double gaus   = norm * norm;
-    long double ldgaus = (Numc::ONE<long double> - lg_k_) * landau + lg_k_ * gaus;
-    long double nrmx   = sign * std::sqrt(ldgaus);
-    if (!Numc::Valid(nrmx)) nrmx = Numc::ZERO<long double>;
-    return nrmx;
-}
-
-long double LgGeFunc::lg_div(long double norm) const {
-    long double normxlw = norm - DELTA;
-    long double normxup = norm + DELTA;
-    long double div = Numc::HALF * ((lg_eval(normxup) - lg_eval(normxlw)) / DELTA);
-    if (!Numc::Valid(div)) div = Numc::ZERO<long double>;
-    return div;
-}
 
 } // namesapce TrackSys
 
