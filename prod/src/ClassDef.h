@@ -752,12 +752,13 @@ class TOF : public TObject {
 
 			std::fill_n(numOfExtCls, 4, 0);
         
-            JFbta_TOFt = -1;
-            JFerr_TOFt = -1;
-            JFtme_TOFt = 0;
-            JFbta_all  = -1;
-            JFerr_all  = -1;
-            JFtme_all  = 0;
+            JFbtaT      = -1;
+            JFerrT      = -1;
+            JFT_cpuTime = 0;
+
+            JFbtaAll      = -1;
+            JFerrAll      = -1;
+            JFAll_cpuTime = 0;
 
 		}
 
@@ -788,12 +789,13 @@ class TOF : public TObject {
 		Short_t numOfExtCls[4];
 
         // JFeng
-        Float_t JFbta_TOFt; // at Tracker L1
-        Float_t JFerr_TOFt;
-        Float_t JFtme_TOFt;
-        Float_t JFbta_all; // at Tracker L1
-        Float_t JFerr_all;
-        Float_t JFtme_all;
+        Float_t JFbtaT; // at Tracker L1
+        Float_t JFerrT;
+        Float_t JFT_cpuTime;
+
+        Float_t JFbtaAll; // at Tracker L1
+        Float_t JFerrAll;
+        Float_t JFAll_cpuTime;
 
 	ClassDef(TOF, 10)
 };

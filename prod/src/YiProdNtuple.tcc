@@ -751,32 +751,32 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 
     // JFeng : beta reconstruction (1 sec per event)
-
     if (fTof.statusBetaH) {
         LxBetalhd::InitialBetaLikelihood(event);
         
-        MGClock::HrsStopwatch sw_TOFt;
-        float JFbta_TOFt = fTof.betaH, JFerr_TOFt = 0;
-        double JFlhd_TOFt = LxBetalhd::GetBetaLikelihood_TOF(JFbta_TOFt, JFerr_TOFt);
-        if (!TrackSys::Numc::Valid(JFbta_TOFt)) JFbta_TOFt = -1.0;
-        if (!TrackSys::Numc::Valid(JFerr_TOFt)) JFerr_TOFt = -1.0;
-        if (!TrackSys::Numc::Valid(JFlhd_TOFt)) JFlhd_TOFt = -1.0;
-        sw_TOFt.stop();
+        MGClock::HrsStopwatch swT;
+        float JFbtaT = fTof.betaH, JFerrT = 0;
+        double JFlhdT = LxBetalhd::GetBetaLikelihood_TOF(JFbtaT, JFerrT);
+        if (!TrackSys::Numc::Valid(JFbtaT)) JFbtaT = -1.0;
+        if (!TrackSys::Numc::Valid(JFerrT)) JFerrT = -1.0;
+        if (!TrackSys::Numc::Valid(JFlhdT)) JFlhdT = -1.0;
+        swT.stop();
+        
+        fTof.JFbtaT = JFbtaT;
+        fTof.JFerrT = JFerrT;
+        fTof.JFT_cpuTime = swT.time() * 1.0e+03;
 
-        //MGClock::HrsStopwatch sw_all;
-        //float JFbta_all = fTof.betaH, JFerr_all = 0;
-        //double JFlhd_all = LxBetalhd::GetBetaLikelihood(JFbta_all, JFerr_all, recEv.zin, recEv.mass);
-        //if (!TrackSys::Numc::Valid(JFbta_all)) JFbta_all = -1.0;
-        //if (!TrackSys::Numc::Valid(JFerr_all)) JFerr_all = -1.0;
-        //if (!TrackSys::Numc::Valid(JFlhd_all)) JFlhd_all = -1.0;
-        //sw_all.stop();
+        //MGClock::HrsStopwatch swAll;
+        //float JFbtaAll = fTof.betaH, JFerrAll = 0;
+        //double JFlhdAll = LxBetalhd::GetBetaLikelihood(JFbtaAll, JFerrAll, recEv.zin, recEv.mass);
+        //if (!TrackSys::Numc::Valid(JFbtaAll)) JFbtaAll = -1.0;
+        //if (!TrackSys::Numc::Valid(JFerrAll)) JFerrAll = -1.0;
+        //if (!TrackSys::Numc::Valid(JFlhdAll)) JFlhdAll = -1.0;
+        //swAll.stop();
 
-        fTof.JFbta_TOFt = JFbta_TOFt;
-        fTof.JFerr_TOFt = JFerr_TOFt;
-        fTof.JFtme_TOFt = sw_TOFt.time() * 1.0e+03;
-        //fTof.JFbta_all  = JFbta_all;
-        //fTof.JFerr_all  = JFerr_all;
-        //fTof.JFtme_all  = sw_all.time() * 1.0e+03;
+        //fTof.JFbtaAll = JFbtaAll;
+        //fTof.JFerrAll = JFerrAll;
+        //fTof.JFAll_cpuTime = swAll.time() * 1.0e+03;
     }
 
 	fStopwatch.stop();
@@ -2072,38 +2072,36 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     //if (trM2TkFsAll.status()) fHyc.trM2All.at(3) = std::move(processHCTr(trM2TkFsAll));
 
     // Beta Fitting with the TOF time measurements
+    // Beta Fitting with the all measurements
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaT = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, false, false), TrackSys::AmsTfOpt(true, false), TrackSys::AmsRhOpt(false));
+    
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaAll = 
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
    
     TrackSys::PhyBtaFit btaM1T(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM1TkIn.part());
-    TrackSys::PhyBtaFit btaM2T(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM2TkIn.part());
-    
-    if (btaM1T.status()) fHyc.btaM1T = std::move(processHCBta(btaM1T));
-    if (btaM2T.status()) fHyc.btaM2T = std::move(processHCBta(btaM2T));
-    
-    // Beta Fitting with the all measurements
-    //std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaAll = 
-    //    std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
-    //
     //TrackSys::PhyBtaFit btaM1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM1TkIn.part());
+    
+    if (btaM1T.status())   fHyc.btaM1T = std::move(processHCBta(btaM1T));
+    //if (btaM1All.status()) fHyc.btaM1All = std::move(processHCBta(btaM1All));
+
+    //TrackSys::PhyBtaFit btaM2T(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM2TkIn.part());
     //TrackSys::PhyBtaFit btaM2All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM2TkIn.part());
     //
-    //if (btaM1All.status()) fHyc.btaM1All = std::move(processHCBta(btaM1All));
+    //if (btaM2T.status())   fHyc.btaM2T = std::move(processHCBta(btaM2T));
     //if (btaM2All.status()) fHyc.btaM2All = std::move(processHCBta(btaM2All));
 
     // Mass Fitting
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muT = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, false), TrackSys::AmsTfOpt(true, false), TrackSys::AmsRhOpt(false));
     
-    TrackSys::PhyMuFit&& mutrT(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muT),   std::get<1>(opt_muT),   std::get<2>(opt_muT)));
-    
-    if (mutrT.status()) fHyc.mutrT = std::move(processHCMu(mutrT));
-    
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muAll = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
     
+    TrackSys::PhyMuFit&& mutrT(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muT),   std::get<1>(opt_muT),   std::get<2>(opt_muT)));
     //TrackSys::PhyMuFit&& mutrAll(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muAll), std::get<1>(opt_muAll), std::get<2>(opt_muAll)));
-
+    
+    if (mutrT.status()) fHyc.mutrT = std::move(processHCMu(mutrT));
     //if (mutrAll.status()) fHyc.mutrAll = std::move(processHCMu(mutrAll));
 
     fStopwatch.stop();
