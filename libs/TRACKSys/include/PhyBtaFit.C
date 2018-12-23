@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -30,7 +30,7 @@ TrFitPar PhyBtaFit::bulidFitPar(const TrFitPar& fitPar) {
         if (!hitTRK.sq()) continue;
         HitStTRK hit(false, false, hitTRK.lay(), hitTRK.isInnTr());
         hit.set_coo(hitTRK.cx(), hitTRK.cy(), hitTRK.cz());
-        hit.set_q(hitTRK.q(), hitTRK.qx(), hitTRK.qy(), fitPar.info().chrg());
+        hit.set_q(hitTRK.q(), hitTRK.qx(), hitTRK.qy());
         btapar.add_hit(hit);
     }
     btapar.check();
@@ -75,12 +75,17 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPar(buli
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
     if (ndof_ <= Numc::ONE<Short_t>) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
     
+    timer_.start();
+    
     // check particle type
+    if (Numc::EqualToZero(refSt.mom())) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
     if (refSt.info().type() != PartType::Fixed && refSt.info().type() != info_.type()) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
     else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) { PhyBtaFit::clear(); TrFitPar::clear(); return; }
     
     succ_ = (simpleFit(refSt) ? physicalFit() : false);
     if (!succ_) { PhyBtaFit::clear(); TrFitPar::clear(); }
+    
+    timer_.stop();
    
     //if (!succ_) CERR("FAILURE === PhyBtaFit\n");
 }
@@ -223,9 +228,9 @@ Bool_t PhyBtaFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi+= hitTRD->nrmel() * hitTRD->nrmel();
+            if (hitTRD->sel()) chi += hitTRD->chiel() * hitTRD->chiel();
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_igb() * jbBB;
+            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
         }
         
         cnt_nhit++;
@@ -329,7 +334,7 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_igb() * jbBB;
+            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
         }
 
         cnt_nhit++;

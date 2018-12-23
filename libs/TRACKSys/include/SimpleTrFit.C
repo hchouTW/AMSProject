@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -85,6 +85,8 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fi
     if (ndof_.at(0) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
     if (ndof_.at(1) <= Numc::ONE<Short_t>) { SimpleTrFit::clear(); TrFitPar::clear(); return; }
 
+    timer_.start();
+    
     // Initial Status
     succ_ = (analyticalFit() ? simpleFit() : false);
     if (succ_) succ_ = advancedSimpleCooFit();
@@ -95,6 +97,8 @@ SimpleTrFit::SimpleTrFit(const TrFitPar& fitPar, Bool_t withLocal) : TrFitPar(fi
     
     if (succ_) succ_ = evolve();
     if (!succ_) { SimpleTrFit::clear(); TrFitPar::clear(); }
+
+    timer_.stop();
 
     //if (!succ_) CERR("FAILURE === SimpleTrFit\n");
 }
@@ -640,6 +644,12 @@ Bool_t SimpleTrFit::evolve() {
             if (hitRICH->sib()) chi_ib += hitRICH->chiib() * hitRICH->chiib();
         }
         
+        // TRD
+        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
+        if (hitTRD != nullptr) {
+            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
+        }
+        
         if (hasCxy) {
             nearPpst = ppst;
             nearJbGG = jbGG;
@@ -974,6 +984,14 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
             if (hitRICH->sib()) costIb += hitRICH->chiib() * hitRICH->chiib();
             if (hasGrd && hitRICH->sib()) grdIb(4) += (hitRICH->divib_eta() * jbGG(4, 4)) * hitRICH->nrmib();
             if (hasGrd && hitRICH->sib()) hesIb(4, 4) += (hitRICH->divib_eta() * jbGG(4, 4)) * (hitRICH->divib_eta() * jbGG(4, 4));
+        }
+        
+        // TRD
+        HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
+        if (hitTRD != nullptr) {
+            if (hitTRD->sel()) costIb += hitTRD->chiel() * hitTRD->chiel();
+            if (hasGrd && hitTRD->sel()) grdIb(4) += (hitTRD->divel_eta() * jbGG(4, 4)) * hitTRD->nrmel();
+            if (hasGrd && hitTRD->sel()) hesIb(4, 4) += (hitTRD->divel_eta() * jbGG(4, 4)) * (hitTRD->divel_eta() * jbGG(4, 4));
         }
         
         if (hasCxy) {

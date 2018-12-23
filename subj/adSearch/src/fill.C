@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Oct03/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -62,8 +62,8 @@ int main(int argc, char * argv[]) {
     //PartInfo info(PartType::Helium4);
     
     //Axis AXrig("Rigidity [GV]", 70, 0.3, 450., AxisScale::kLog);
-    //Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", 1, 399., 401., AxisScale::kLog);
+    Axis AXrig("Rigidity [GV]", 70, 0.55, 3800., AxisScale::kLog);
+    //Axis AXrig("Rigidity [GV]", 1, 399., 401., AxisScale::kLog);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
     // Fit Eff
@@ -81,6 +81,11 @@ int main(int argc, char * argv[]) {
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXrig, AXRrso));
     Hist* hKFRrso = Hist::New("hKFRrso", HistAxis(AXrig, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXrig, AXRrso));
+    
+    Axis AXRDrso("(1/R_L9 - 1/R_L1) [1/GV]", 1600, -1.0, 1.0);
+    Hist* hCKRDrso = Hist::New("hCKRDrso", HistAxis(AXrig, AXRDrso));
+    Hist* hKFRDrso = Hist::New("hKFRDrso", HistAxis(AXrig, AXRDrso));
+    Hist* hHCRDrso = Hist::New("hHCRDrso", HistAxis(AXrig, AXRDrso));
     
     Axis AXqlt("Quality [1]", 400, -2.5, 8.0);
     Hist* hCKqltx = Hist::New("hCKqltx", HistAxis(AXrig, AXqlt));
@@ -117,7 +122,7 @@ int main(int argc, char * argv[]) {
         }
         dst->GetEntry(entry);
 
-        Int_t patt = 1;
+        Int_t patt = 3;
         CKTrackInfo& ckTr = fTrk->ckTr.at(patt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(patt);
         HCTrackInfo& hcTr = fTrk->hcTr.at(patt); // Tracker
@@ -163,7 +168,7 @@ int main(int argc, char * argv[]) {
             (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
 
         // TRD
-        //if (fTrd->LLRep[0] < 0.7) continue;
+        if (fTrd->LLRep[0] < 0.7) continue;
 
         //Bool_t status = (ckTr.status && kfTr.status && hcTr.status);
         //if (!status) continue;
@@ -173,16 +178,16 @@ int main(int argc, char * argv[]) {
         Double_t irig = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 / mom   : fG4mc->primPart.chrg / mom);
         Double_t scl  = std::sqrt(AXrig.center(AXrig.find(mom), AxisScale::kLog));
 
-        bta  = 1.0;
-        mom  = 400.;
-        irig = 1.0/400.;
-        scl  = std::sqrt(AXrig.center(AXrig.find(400.), AxisScale::kLog));
+        //bta  = 1.0;
+        //mom  = 400.;
+        //irig = 1.0/400.;
+        //scl  = std::sqrt(AXrig.center(AXrig.find(400.), AxisScale::kLog));
         
-        Short_t ckSign = (ckTr.rig > 0) ? 1 : -1;
+        Short_t ckSign = (ckTr.rig[0] > 0) ? 1 : -1;
         Short_t kfSign = (kfTr.rig[0] > 0) ? 1 : -1;
         Short_t hcSign = (hcTr.rig[0] > 0) ? 1 : -1;
         
-        Double_t ckRig = ckTr.rig;
+        Double_t ckRig = ckTr.rig[0];
         Double_t kfRig = kfTr.rig[0];
         Double_t hcRig = hcTr.rig[0];
         
@@ -220,6 +225,27 @@ int main(int argc, char * argv[]) {
         if (kfTr.status) hKFqlty->fillH2D(mom, kf_qlty);
         if (hcTr.status) hHCqlty->fillH2D(mom, hc_qlty);
         
+        // Track L1
+        CKTrackInfo& ckTrL1 = fTrk->ckTr.at(1);
+        KFTrackInfo& kfTrL1 = fTrk->kfTr.at(1);
+        HCTrackInfo& hcTrL1 = fTrk->hcTr.at(1);
+        
+        // Track L9
+        CKTrackInfo& ckTrL9 = fTrk->ckTr.at(2);
+        KFTrackInfo& kfTrL9 = fTrk->kfTr.at(2);
+        HCTrackInfo& hcTrL9 = fTrk->hcTr.at(2);
+       
+        if (ckTrL1.status & ckTrL9.status && ckTr.status) {
+            double ckrd = (1.0/ckTrL9.rig[0] - 1.0/ckTrL1.rig[0]);
+            hCKRDrso->fillH2D(mom, scl * ckrd);
+        }
+        
+        if (hcTrL1.status & hcTrL9.status && hcTr.status) {
+            double hcrd = (1.0/hcTrL9.rig[0] - 1.0/hcTrL1.rig[0]);
+            hHCRDrso->fillH2D(mom, scl * hcrd);
+        }
+
+
         //hCKcx->fillH2D(mom, scl * (ckTr.stateTop[0] - fG4mc->primPart.coo[0]));
         //hKFcx->fillH2D(mom, scl * (kfTr.stateTop[0] - fG4mc->primPart.coo[0]));
         //hHCcx->fillH2D(mom, scl * (hcTr.stateTop[0] - fG4mc->primPart.coo[0]));

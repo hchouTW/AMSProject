@@ -90,7 +90,7 @@ class PhyTrFit : public TrFitPar {
         Bool_t simpleFit();
         Bool_t physicalFit();
         Bool_t evolve();
-
+    
     protected :
         Bool_t              succ_;
         PhySt               part_;

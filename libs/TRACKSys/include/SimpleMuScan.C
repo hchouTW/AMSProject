@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -34,6 +34,8 @@ SimpleMuScan& SimpleMuScan::operator=(const SimpleMuScan& rhs) {
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
         quality_ = rhs.quality_;
+
+        timer_   = rhs.timer_;
     }
     return *this;
 }
@@ -49,6 +51,8 @@ void SimpleMuScan::clear() {
     ndof_.fill(0);
     nchi_.fill(0);
     quality_.fill(0);
+
+    timer_.clear();
 }
 
 
@@ -60,6 +64,8 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     part_.arg().reset(fitPar.sw_mscat(), fitPar.sw_eloss());
     if (part_.chrg() == 0 || part_.chrg() >= LIST_MASS_Q.size()) { clear(); return; }
     if (part_.chrg() > 2) { clear(); return; } // testcode
+    
+    timer_.start();
 
     // scan
     MuScanObj condMuObj;
@@ -111,6 +117,8 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     nchi_.at(1) = trfit.nchi(1);
     quality_.at(0) = trfit.quality(0);
     quality_.at(1) = trfit.quality(1);
+    
+    timer_.stop();
 
     //if (!succ_) CERR("FAILURE === SimpleMuScan\n");
 }
@@ -125,7 +133,6 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass
         if (!(hitTRK.scx() || hitTRK.scy())) continue;
         HitStTRK hit(hitTRK.scx(), hitTRK.scy(), hitTRK.lay(), hitTRK.isInnTr());
         hit.set_coo(hitTRK.cx(), hitTRK.cy(), hitTRK.cz());
-        hit.set_nsr(hitTRK.nsrx(), hitTRK.nsry());
         trPar.add_hit(hit);
     }
     PhyTrFit trfit(trPar);

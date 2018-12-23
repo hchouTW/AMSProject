@@ -6,7 +6,7 @@ LIBP += -lgflags -lglog -lceres
 TagetDir = $(AMSCoreSubj)/adSearch/vdev
 #TagetDir = $(AMSCoreSubj)/adSearch/test
 
-Version=18Oct03
+Version=18Oct17
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -21,7 +21,7 @@ all :
 	@cp -fa $(PWD)/src/fill.C $(TagetDir)/src/fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
 	make $(TagetDir)/fill
-	make $(TagetDir)/fit
+	#make $(TagetDir)/fit
 
 $(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD

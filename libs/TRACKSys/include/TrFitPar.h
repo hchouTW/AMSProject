@@ -15,11 +15,13 @@ class TrFitPar {
         TrFitPar& operator=(const TrFitPar& rhs);
         TrFitPar(const TrFitPar& fitPar) { *this = fitPar; }
         
-        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
+        TrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss()) { clear(); set_info(info, ortt, sw_mscat, sw_eloss); }
         ~TrFitPar() { TrFitPar::clear(); }
 
     public :
         inline Bool_t check() { return check_hits(); }
+        
+        inline void set_info(const PartInfo& info = PartInfo(PartType::Proton), const Orientation& ortt = Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss());
 
         inline void add_hit(const HitStTRK&  hit) { hits_TRK_.push_back(hit);  zero(); }
         inline void add_hit(const HitStTOF&  hit) { hits_TOF_.push_back(hit);  zero(); }
@@ -30,7 +32,7 @@ class TrFitPar {
         inline void add_hit(const std::vector<HitStTOF>&  hits) { hits_TOF_.insert(hits_TOF_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStRICH>& hits) { hits_RICH_.insert(hits_RICH_.end(), hits.begin(), hits.end()); zero(); }
         inline void add_hit(const std::vector<HitStTRD>&  hits) { hits_TRD_.insert(hits_TRD_.end(), hits.begin(), hits.end()); zero(); }
-      
+
         inline const Bool_t& sw_mscat() const { return sw_mscat_; }
         inline const Bool_t& sw_eloss() const { return sw_eloss_; }
         inline const PartInfo&    info() const { return info_; }
@@ -50,6 +52,8 @@ class TrFitPar {
         inline const std::vector<HitStTOF>&  hitsTOF()  const { return hits_TOF_; }
         inline const std::vector<HitStRICH>& hitsRICH() const { return hits_RICH_; }
         inline const std::vector<HitStTRD>&  hitsTRD()  const { return hits_TRD_; }
+
+        inline const Sys::HrsStopwatch& timer() const { return timer_; }
 
     protected :
         void zero();
@@ -89,7 +93,7 @@ class TrFitPar {
         Short_t nmes_TRDel_;
 
     private :
-        Bool_t  is_check_;
+        Bool_t is_check_;
 
     protected :
         // Number of Hit Requirement
@@ -105,6 +109,9 @@ class TrFitPar {
         // Limit of 1/beta
         static constexpr Double_t LMTL_IBTA = 1.000000001;
         static constexpr Double_t LMTU_IBTA = 100.;
+    
+    protected :
+        Sys::HrsStopwatch timer_;
 };
 
 

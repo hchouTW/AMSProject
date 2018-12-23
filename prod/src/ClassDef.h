@@ -277,9 +277,6 @@ class HitTRKInfo : public TObject {
 			std::fill_n(coo, 3, 0);
 			std::fill_n(loc, 2, -1);
 			std::fill_n(chrg, 3, -1);
-
-            std::fill_n(nsr, 2, 0);
-            std::fill_n(sig[0], 2*5, 0);
 		}
 
 	public :
@@ -293,10 +290,7 @@ class HitTRKInfo : public TObject {
 		Float_t loc[2];   // (elc) cofg loc
 		Float_t chrg[3];  // (elc) chrg (x y xy)
 
-        Short_t nsr[2];    // num of strip
-        Float_t sig[2][5]; // index 2 -> seed
-
-	ClassDef(HitTRKInfo, 10)
+	ClassDef(HitTRKInfo, 11)
 };
 
 struct HitTRKInfo_sort {
@@ -325,7 +319,7 @@ class HitTRDInfo : public TObject {
 			len  = 0;
 			std::fill_n(coo, 3, 0);
 
-            dEdx  = -1;
+            dEdX  = -1;
             mcMom = -1;
 		}
 
@@ -336,7 +330,7 @@ class HitTRDInfo : public TObject {
 		Float_t len;    // (elc) len
 		Float_t coo[3];
 
-        Float_t dEdx;   // dEdx = 0.01 * (amp/len)
+        Float_t dEdX;   // dEdX = 0.01 * (amp/len)
         Float_t mcMom;  // (MC Info) mom
 
 	ClassDef(HitTRDInfo, 7)
@@ -476,6 +470,9 @@ class CKTrackInfo : public TObject {
             statusTop = false;
             std::fill_n(stateTop, 6, 0);
             
+            statusCen = false;
+            std::fill_n(stateCen, 6, 0);
+
             statusBtm = false;
             std::fill_n(stateBtm, 6, 0);
             
@@ -496,6 +493,9 @@ class CKTrackInfo : public TObject {
         Bool_t  statusTop;
         Float_t stateTop[6]; // (cx cy cz ux uy uz)
         
+        Bool_t  statusCen;
+        Float_t stateCen[6]; // (cx cy cz ux uy uz)
+
         Bool_t  statusBtm;
         Float_t stateBtm[6]; // (cx cy cz ux uy uz)
 
@@ -519,11 +519,14 @@ class KFTrackInfo : public TObject {
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
             
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
+            std::fill_n(rig, 3, 0);
+            std::fill_n(bta, 3, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
+            
+            statusCen = false;
+            std::fill_n(stateCen, 8, 0);
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
@@ -539,11 +542,14 @@ class KFTrackInfo : public TObject {
         Short_t ndof[2];
 		Float_t nchi[2];
        
-        Float_t rig[4]; // z = 195, 0, -70, -136
-        Float_t bta[4]; // z = 195, 0, -70, -136
+        Float_t rig[3]; // z = 195, 0, -136
+        Float_t bta[3]; // z = 195, 0, -136
 
         Bool_t  statusTop;
         Float_t stateTop[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Bool_t  statusCen;
+        Float_t stateCen[8]; // (cx cy cz ux uy uz rig bta)
         
         Bool_t  statusBtm;
         Float_t stateBtm[8]; // (cx cy cz ux uy uz rig bta)
@@ -554,81 +560,6 @@ class KFTrackInfo : public TObject {
         Float_t cpuTime; // [ms]
 
     ClassDef(KFTrackInfo, 1)
-};
-
-
-// HCTrackInfo
-class HCTrackInfo : public TObject {
-	public :
-		HCTrackInfo() { init(); }
-		~HCTrackInfo() {}
-
-		void init() {
-            status = false;
-            going = 0;
-            chrg = 0;
-            mass = 0;
-            
-            std::fill_n(ndof, 2, 0);
-            std::fill_n(nchi, 2, 0);
-            std::fill_n(quality, 2, 0);
-            
-            std::fill_n(state, 8, 0);
-            
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
-
-            statusTop = false;
-            std::fill_n(stateTop, 8, 0);
-            
-            statusCen = false;
-            std::fill_n(stateCen, 8, 0);
-            
-            statusRh = false;
-            std::fill_n(stateRh, 8, 0);
-            
-            statusBtm = false;
-            std::fill_n(stateBtm, 8, 0);
-            
-            std::fill_n(statusLJ, 9, false);
-            std::fill_n(stateLJ[0], 9*8, 0);
-           
-            cpuTime = 0;
-        }
-	
-    public :
-        Bool_t  status;
-        Short_t going; // 0, no  1, up-going  -1, down-going
-        Short_t chrg;
-        Float_t mass;
-        
-        Short_t ndof[2];
-        Float_t nchi[2];
-        Float_t quality[2];
-        
-        Float_t state[8]; // (cx cy cz ux uy uz rig bta)
-        
-        Float_t rig[4]; // z = 195, 0, -70, -136
-        Float_t bta[4]; // z = 195, 0, -70, -136
-        
-        Bool_t  statusTop; // track at top of detector (z = 195.)
-        Float_t stateTop[8];
-        
-        Bool_t  statusCen; // track at bottom of detector (z = 0.)
-        Float_t stateCen[8];
-        
-        Bool_t  statusRh; // track at bottom of detector (z = -70.)
-        Float_t stateRh[8];
-        
-        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
-        Float_t stateBtm[8];
-
-        Bool_t  statusLJ[9];
-        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
-
-        Float_t cpuTime; // [ms]
-
-        ClassDef(HCTrackInfo, 6)
 };
 
 
@@ -820,6 +751,14 @@ class TOF : public TObject {
             Zall = -1;
 
 			std::fill_n(numOfExtCls, 4, 0);
+        
+            JFbta_TOFt = -1;
+            JFerr_TOFt = -1;
+            JFtme_TOFt = 0;
+            JFbta_all  = -1;
+            JFerr_all  = -1;
+            JFtme_all  = 0;
+
 		}
 
 	public :
@@ -847,6 +786,14 @@ class TOF : public TObject {
 
 		// extern clusters
 		Short_t numOfExtCls[4];
+
+        // JFeng
+        Float_t JFbta_TOFt; // at Tracker L1
+        Float_t JFerr_TOFt;
+        Float_t JFtme_TOFt;
+        Float_t JFbta_all; // at Tracker L1
+        Float_t JFerr_all;
+        Float_t JFtme_all;
 
 	ClassDef(TOF, 10)
 };
@@ -894,9 +841,6 @@ class TRK : public TObject {
 
             ckTr = std::vector<CKTrackInfo>(4);
             kfTr = std::vector<KFTrackInfo>(4);
-            hcTr = std::vector<HCTrackInfo>(4);
-            
-            hcTrTF = std::vector<HCTrackInfo>(4);
 		}
 
 	public :
@@ -924,15 +868,10 @@ class TRK : public TObject {
         // Choutko [Inn InnL1 InnL9 FS]
         std::vector<CKTrackInfo> ckTr;
 
-        // Choutko [Inn InnL1 InnL9 FS]
+        // Kalman Fitter [Inn InnL1 InnL9 FS]
         std::vector<KFTrackInfo> kfTr;
-        
-        // HYChou [Inn InnL1 InnL9 FS]
-        std::vector<HCTrackInfo> hcTr;
-        
-        std::vector<HCTrackInfo> hcTrTF;
 
-	ClassDef(TRK, 9)
+	ClassDef(TRK, 10)
 };
 
 
@@ -960,11 +899,18 @@ class TRD : public TObject {
             
             hits.clear();
 
-            //std::fill_n(vtxNum, 3, 0);
-            //vtxNTrk = 0;
-            //vtxNHit = 0;
-            //vtxChi2 = 0;
-            //std::fill_n(vtxCoo, 3, 0);
+            recNh    = 0;
+            recCz    = 0;
+            recMen   = -1.0;
+            recSgm   = -1.0;
+            recMcMom = -1.0;
+            recHits.clear();
+
+            std::fill_n(vtxNum, 3, 0);
+            vtxNTrk = 0;
+            vtxNHit = 0;
+            vtxChi2 = 0;
+            std::fill_n(vtxCoo, 3, 0);
 		}
 
 	public :
@@ -987,12 +933,20 @@ class TRD : public TObject {
         
         std::vector<HitTRDInfo> hits;
 
+        // TRDRec
+        Short_t              recNh;
+        Float_t              recCz;
+        Float_t              recMen;
+        Float_t              recSgm;
+        Float_t              recMcMom;
+        std::vector<Float_t> recHits;
+
         // TRDVertex
-        //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
-        //Short_t vtxNTrk;
-        //Short_t vtxNHit;
-        //Float_t vtxChi2;
-        //Float_t vtxCoo[3];
+        Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
+        Short_t vtxNTrk;
+        Short_t vtxNHit;
+        Float_t vtxChi2;
+        Float_t vtxCoo[3];
 
 	ClassDef(TRD, 8)
 };
@@ -1008,15 +962,30 @@ class RICH : public TObject {
             numOfHit = 0;
             
             status = false;
-			isGood = false;
             kind = -1;
             tile = -1;
             refz =  0;
 			beta = -1;
 			Q = -1;
+
+			isGood = false;
+            npmt = -1;
+            prob = -1.0;
+            cstcb = -1.0;
+            cstcq = -1.0;
             numOfExpPE = -1;
             eftOfColPE = -1;
-			
+
+            ncls = 0;
+            clsNhit.clear();
+            clsBta.clear();
+            clsRms.clear();
+
+            nhit = 0;
+            dbta.clear();
+            rbta.clear();
+            npe.clear();
+
             //vetoKind = -1;
 			//vetoTile = -1;
 			//vetoRfrIndex = -1;
@@ -1036,14 +1005,31 @@ class RICH : public TObject {
         
         // Official RichRingR
 		Bool_t  status;
-		Bool_t  isGood;
         Short_t kind;
         Short_t tile;
         Float_t refz;
 		Float_t beta;
 		Float_t Q;
+        
+		Bool_t  isGood;
+        Short_t npmt;
+        Float_t prob;
+        Float_t cstcb; // consistency beta
+        Float_t cstcq; // consistency charge
         Float_t numOfExpPE;
         Float_t eftOfColPE;
+
+        // Clusters
+        Short_t ncls;
+        std::vector<Float_t> clsNhit;
+        std::vector<Float_t> clsBta;
+        std::vector<Float_t> clsRms;
+
+        // Hits
+        Short_t nhit;
+        std::vector<Float_t> dbta;
+        std::vector<Float_t> rbta;
+        std::vector<Float_t> npe;
 
 		// Rich Veto
 		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
@@ -1084,5 +1070,243 @@ class ECAL : public TObject {
 
 	ClassDef(ECAL, 5)
 };
+
+
+// HCTrInfo
+class HCTrInfo : public TObject {
+	public :
+		HCTrInfo() { init(); }
+		~HCTrInfo() {}
+
+		void init() {
+            status = false;
+            going = 0;
+            chrg = 0;
+            mass = 0;
+            
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
+            std::fill_n(quality, 2, 0);
+            
+            std::fill_n(state, 8, 0);
+            
+            std::fill_n(rig, 3, 0);
+            std::fill_n(bta, 3, 0);
+
+            statusTop = false;
+            std::fill_n(stateTop, 8, 0);
+            
+            statusCen = false;
+            std::fill_n(stateCen, 8, 0);
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 8, 0);
+            
+            std::fill_n(statusLJ, 9, false);
+            std::fill_n(stateLJ[0], 9*8, 0);
+           
+            cpuTime = 0;
+        }
+	
+    public :
+        Bool_t  status;
+        Short_t going; // 0, no  1, up-going  -1, down-going
+        Short_t chrg;
+        Float_t mass;
+        
+        Short_t ndof[2];
+        Float_t nchi[2];
+        Float_t quality[2];
+        
+        Float_t state[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Float_t rig[3]; // z = 195, 0, -136
+        Float_t bta[3]; // z = 195, 0, -136
+        
+        Bool_t  statusTop; // track at top of detector (z = 195.)
+        Float_t stateTop[8];
+        
+        Bool_t  statusCen; // track at bottom of detector (z = 0.)
+        Float_t stateCen[8];
+        
+        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
+        Float_t stateBtm[8];
+
+        Bool_t  statusLJ[9];
+        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
+
+        Float_t cpuTime; // [ms]
+
+        ClassDef(HCTrInfo, 6)
+};
+
+
+// HCBtaInfo
+class HCBtaInfo : public TObject {
+	public :
+		HCBtaInfo() { init(); }
+		~HCBtaInfo() {}
+
+		void init() {
+            status = false;
+            going = 0;
+            chrg = 0;
+            mass = 0;
+            
+            ndof = 0;
+            nchi = 0;
+            quality = 0;
+            
+            std::fill_n(rig, 3, 0);
+            std::fill_n(bta, 3, 0);
+            
+            cpuTime = 0;
+        }
+    
+    public :
+        Bool_t  status;
+        Short_t going; // 0, no  1, up-going  -1, down-going
+        Short_t chrg;
+        Float_t mass;
+        
+        Short_t ndof;
+        Float_t nchi;
+        Float_t quality;
+        
+        Float_t rig[3]; // z = 195, 0, -136
+        Float_t bta[3]; // z = 195, 0, -136
+        
+        Float_t cpuTime; // [ms]
+
+        ClassDef(HCBtaInfo, 1)
+};
+
+
+// HCMuInfo
+class HCMuInfo : public TObject {
+	public :
+		HCMuInfo() { init(); }
+		~HCMuInfo() {}
+
+		void init() {
+            status = false;
+            going = 0;
+            chrg = 0;
+            mass = 0;
+            
+            std::fill_n(muNdof, 3, 0);
+            std::fill_n(muNchi, 3, 0);
+            std::fill_n(muQuality, 3, 0);
+            
+            std::fill_n(ndof, 2, 0);
+            std::fill_n(nchi, 2, 0);
+            std::fill_n(quality, 2, 0);
+            
+            std::fill_n(state, 8, 0);
+            
+            std::fill_n(rig, 3, 0);
+            std::fill_n(bta, 3, 0);
+
+            statusTop = false;
+            std::fill_n(stateTop, 8, 0);
+            
+            statusCen = false;
+            std::fill_n(stateCen, 8, 0);
+            
+            statusBtm = false;
+            std::fill_n(stateBtm, 8, 0);
+           
+            cpuTime = 0;
+        }
+	
+    public :
+        Bool_t  status;
+        Short_t going; // 0, no  1, up-going  -1, down-going
+        Short_t chrg;
+        Float_t mass;
+        
+        Short_t muNdof[3];
+        Float_t muNchi[3];
+        Float_t muQuality[3];
+        
+        Short_t ndof[2];
+        Float_t nchi[2];
+        Float_t quality[2];
+        
+        Float_t state[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Float_t rig[3]; // z = 195, 0, -136
+        Float_t bta[3]; // z = 195, 0, -136
+        
+        Bool_t  statusTop; // track at top of detector (z = 195.)
+        Float_t stateTop[8];
+        
+        Bool_t  statusCen; // track at bottom of detector (z = 0.)
+        Float_t stateCen[8];
+        
+        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
+        Float_t stateBtm[8];
+
+        Float_t cpuTime; // [ms]
+
+        ClassDef(HCMuInfo, 1)
+};
+
+
+// HYC
+class HYC : public TObject {
+	public :
+		HYC() { init(); }
+		~HYC() {}
+
+		void init() {
+            trM1 = std::vector<HCTrInfo>(4);
+            trM2 = std::vector<HCTrInfo>(4);
+            
+            trM1All = std::vector<HCTrInfo>(4);
+            trM2All = std::vector<HCTrInfo>(4);
+         
+            btaM1T.init();
+            btaM2T.init();
+            
+            btaM1All.init();
+            btaM2All.init();
+
+            mutrT.init();
+            mutrAll.init();
+		}
+	
+    public :
+        // Two main particles (P/D or He4/He3)
+        // M1: P or He4
+        // M2: D or He3
+
+        // Track Fit [Inn InnL1 InnL9 FS]
+        std::vector<HCTrInfo> trM1;
+        std::vector<HCTrInfo> trM2;
+
+        std::vector<HCTrInfo> trM1All;
+        std::vector<HCTrInfo> trM2All;
+        
+        // Beta Fit [Inn]
+        // 1) time
+        // 2) time dEdX
+        // 3) rich time dEdX
+        HCBtaInfo btaM1T;
+        HCBtaInfo btaM2T;
+        
+        HCBtaInfo btaM1All;
+        HCBtaInfo btaM2All;
+        
+        // Mass Fit [Inn]
+        // 1) time
+        // 2) time dEdX
+        // 3) rich time dEdX
+        HCMuInfo mutrT;
+        HCMuInfo mutrAll;
+
+	ClassDef(HYC, 1)
+};
+
 
 #endif // __ClassDef_H__

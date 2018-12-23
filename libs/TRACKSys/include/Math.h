@@ -394,7 +394,36 @@ const std::array<long double, LandauGaus::CONV_N> LandauGaus::CONV_P = {
 0.019468, 0.024108, 0.029189, 0.034554, 0.039996, 0.045265, 0.050088, 0.054192, 0.057328, 0.059296, 
 0.059966, 0.059296, 0.057328, 0.054192, 0.050088, 0.045265, 0.039996, 0.034554, 0.029189, 0.024108, 
 0.019468, 0.015372, 0.011867, 0.008958, 0.006611, 0.004771, 0.003366, 0.002322, 0.001566, 0.001033, 0.000666 };
-    
+
+} // namesapce TrackSys
+
+
+namespace TrackSys {
+class SftLandauGaus {
+    public :
+        static long double Func(long double x, long double kpa, long double mpv, long double sgm, long double sft = Numc::ZERO<long double>);
+
+    public :
+        SftLandauGaus() {}
+        ~SftLandauGaus() {}
+
+    private :
+        static constexpr short       LMT_ITER = 10;
+        static constexpr long double LMT_CONV = 1.0e-06;
+};
+
+} // namesapce TrackSys
+
+
+namespace TrackSys {
+class GammaErf {
+    public :
+        static long double Func(long double x, long double alp, long double bta, long double scl, long double tune);
+
+    public :
+        GammaErf() {}
+        ~GammaErf() {}
+};
 
 } // namesapce TrackSys
 

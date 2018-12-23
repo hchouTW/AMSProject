@@ -50,11 +50,17 @@
 #pragma link C++ class KFTrackInfo;
 #pragma link C++ class std::vector<KFTrackInfo>+;
 
-#pragma link C++ class HCTrackInfo;
-#pragma link C++ class std::vector<HCTrackInfo>+;
-
 #pragma link C++ class ShowerInfo;
 #pragma link C++ class std::vector<ShowerInfo>+;
+
+#pragma link C++ class HCTrInfo;
+#pragma link C++ class std::vector<HCTrInfo>+;
+
+#pragma link C++ class HCBtaInfo;
+#pragma link C++ class std::vector<HCBtaInfo>+;
+
+#pragma link C++ class HCMuInfo;
+#pragma link C++ class std::vector<HCMuInfo>+;
 
 #pragma link C++ class LIST;
 #pragma link C++ class G4MC;
@@ -66,3 +72,4 @@
 #pragma link C++ class TRD;
 #pragma link C++ class RICH;
 #pragma link C++ class ECAL;
+#pragma link C++ class HYC;

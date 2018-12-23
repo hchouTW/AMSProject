@@ -124,16 +124,10 @@ class HitStTRK : public VirtualHitSt {
         void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
-        inline void set_nsr(Short_t nx, Short_t ny) {
-            nsr_[0] = (side_c_[0] && nx > 0) ? nx : 0;
-            nsr_[1] = (side_c_[1] && ny > 0) ? ny : 0;
-        }
-
-        inline void set_q(Double_t qxy, Double_t qx, Double_t qy, Short_t chrg = 0) {
-            Short_t chrgz = std::abs(chrg);
-            Bool_t side_qxy = (qxy > (chrgz * THRES_Q));
-            Bool_t side_qx  = (qx  > (chrgz * THRES_Q));
-            Bool_t side_qy  = (qy  > (chrgz * THRES_Q));
+        inline void set_q(Double_t qxy, Double_t qx, Double_t qy) {
+            Bool_t side_qxy = (qxy > THRES_Q);
+            Bool_t side_qx  = (qx  > THRES_Q);
+            Bool_t side_qy  = (qy  > THRES_Q);
             side_q_ = (side_qxy && side_qx && side_qy);
             q_  = (side_q_ ? qxy : Numc::ZERO<>);
             qx_ = (side_q_ ? qx  : Numc::ZERO<>);
@@ -145,9 +139,6 @@ class HitStTRK : public VirtualHitSt {
         }
         
         inline const Bool_t& isInnTr() const { return isInnTr_; }
-        
-        inline const Short_t& nsrx() const { return nsr_[0]; }
-        inline const Short_t& nsry() const { return nsr_[1]; }
 
         inline const Short_t& seqIDq() const { return seqIDq_; }
         
@@ -165,8 +156,6 @@ class HitStTRK : public VirtualHitSt {
 
     protected :
         Bool_t isInnTr_; // is inner tracker
-        
-        std::array<Short_t, 2> nsr_; // num of strip (x, y)
         
         Short_t seqIDq_;
 
@@ -223,9 +212,8 @@ class HitStTOF : public VirtualHitSt {
             divt_.fill(Numc::ZERO<>);
         }
         
-        inline void set_q(Double_t q, Short_t chrg = 0) {
-            Short_t chrgz = std::abs(chrg);
-            side_q_ = (q > (chrgz * THRES_Q));
+        inline void set_q(Double_t q) {
+            side_q_ = (q > THRES_Q);
             q_      = (side_q_ ? q : Numc::ZERO<>);
             chiq_   = Numc::ZERO<>;
             nrmq_   = Numc::ZERO<>;
@@ -361,9 +349,6 @@ class HitStRICH : public VirtualHitSt {
 };
 
 
-// ALG: kappa fixed to 0.005, mpv and sigma free and no fluc
-// GM:
-
 class HitStTRD : public VirtualHitSt {
     public :
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRD;
@@ -390,9 +375,10 @@ class HitStTRD : public VirtualHitSt {
         
         inline const Bool_t& sel() const { return side_el_; }
 
+        inline const Double_t& chiel() const { return chiel_; }
         inline const Double_t& nrmel() const { return nrmel_; }
-        inline const Double_t& divel_eta() const { return divel_[0]; }
-        inline const Double_t& divel_igb() const { return divel_[1]; }
+        inline const Double_t& divel_ibta() const { return divel_[0]; }
+        inline const Double_t& divel_eta()  const { return divel_[1]; }
         
     protected :
         void clear();
@@ -403,13 +389,15 @@ class HitStTRD : public VirtualHitSt {
         Bool_t   side_el_;
         Double_t el_; // energy loss dE/dx
 
+        Double_t chiel_; // dE/dx chi
         Double_t nrmel_; // dE/dx nrom
-        std::array<Double_t, 2> divel_; // dE/dx div (igmbta) [eta, igb]
+        std::array<Double_t, 2> divel_; // dE/dx div (ibta) [ibta, eta]
 
-        GmIonEloss* pdf_el_;
+        IonTrEloss* pdf_el_;
     
     protected :
-        static GmIonEloss PDF_Q01_EL_;
+        static IonTrEloss PDF_Q01_EL_;
+        static IonTrEloss PDF_Q02_EL_;
 };
 
 

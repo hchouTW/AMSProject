@@ -29,6 +29,8 @@ class SimpleMuScan {
         inline const Short_t&  ndof(Int_t it)    const { return ndof_.at(it); }
         inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
         inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
+        
+        inline const Sys::HrsStopwatch& timer() const { return timer_; }
 
     protected :
         void clear();
@@ -55,6 +57,9 @@ class SimpleMuScan {
         static constexpr Double_t LMT_QLT  = 3.3;
 
         static const std::vector<std::vector<Double_t>> LIST_MASS_Q;
+    
+    protected :
+        Sys::HrsStopwatch timer_;
 };
 
 

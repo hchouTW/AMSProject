@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -41,6 +41,8 @@ PhyMuFit& PhyMuFit::operator=(const PhyMuFit& rhs) {
 
         ndof_tt_ = rhs.ndof_tt_;
         nchi_tt_ = rhs.nchi_tt_;
+
+        timer_   = rhs.timer_;
     }
     return *this;
 }
@@ -61,6 +63,8 @@ void PhyMuFit::clear() {
 
     ndof_tt_ = 0;
     nchi_tt_ = 0;
+
+    timer_.clear();
 }
 
 
@@ -70,7 +74,9 @@ PhyMuFit::PhyMuFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (nmes_cx_ <= LMTN_CX) { PhyMuFit::clear(); TrFitPar::clear(); return; }
     if (nmes_cy_ <= LMTN_CY) { PhyMuFit::clear(); TrFitPar::clear(); return; }
     if (nmes_TOFt_ <= LMTN_TOF_T) { PhyMuFit::clear(); TrFitPar::clear(); return; }
-    
+
+    timer_.start();
+
     if (!(simpleScan(fitPar) && check_hits())) { PhyMuFit::clear(); TrFitPar::clear(); return; }
    
     Short_t ndof_cx = (nmes_cx_ > LMTN_CX) ? (nmes_cx_ - LMTN_CX) : 0;
@@ -88,6 +94,8 @@ PhyMuFit::PhyMuFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     succ_ = physicalFit();
     if (!succ_) { PhyMuFit::clear(); TrFitPar::clear(); return; }
     
+    timer_.stop();
+
     // testcode
     //COUT("PHY MASS %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.rig(), quality_.at(0), quality_.at(1));
     
@@ -342,8 +350,8 @@ Bool_t PhyMuFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi_ib += hitTRD->nrmel() * hitTRD->nrmel();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
+            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
+            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
         }
         
         if (hasCxy) {
@@ -563,7 +571,7 @@ bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residual
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
             if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
+            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
         }
 
         if (hasCxy) {

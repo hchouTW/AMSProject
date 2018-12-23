@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -80,7 +80,10 @@ SimpleBtaFit::SimpleBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPa
     ndof_ = nmes_ib_ - (Numc::ONE<Short_t> + (nmes_TOFt_ >= LMTN_TOF_T));
     if (ndof_ <= Numc::ONE<Short_t>) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     
+    timer_.start();
+    
     // check particle type
+    if (Numc::EqualToZero(refSt.mom())) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     if (refSt.info().type() != PartType::Fixed && refSt.info().type() != info_.type()) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     else if (!Numc::EqualToZero(refSt.mass()-info_.mass()) || !Numc::EqualToZero(refSt.chrg()-info_.chrg())) { SimpleBtaFit::clear(); TrFitPar::clear(); return; }
     
@@ -93,6 +96,8 @@ SimpleBtaFit::SimpleBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPa
     
     succ_ = simpleFit();
     if (!succ_) { SimpleBtaFit::clear(); TrFitPar::clear(); }
+    
+    timer_.stop();
    
     //if (!succ_) CERR("FAILURE === SimpleBtaFit\n");
 }

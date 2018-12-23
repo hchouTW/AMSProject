@@ -13,22 +13,22 @@ CurDir=${PWD}
 
 #DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Jun18
-#DataType=MC
+DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
-#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct03
+Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
-DataType=BT
-Stream=${CurDir}/lst/flist.ncu.bt.PR_400_B1082_18Oct10
+#DataType=BT
+#Stream=${CurDir}/lst/flist.ncu.bt.PR_400_B1082_18Oct10
 
 OutputDir=${CurDir}/dat
 
 #Fit
-#GroupSize=5
-#Nseq=110
+GroupSize=50
+Nseq=60
 #Fit
-GroupSize=1
-Nseq=52
+#GroupSize=1
+#Nseq=52
 
 for id in `seq 0 ${Nseq}`
 do

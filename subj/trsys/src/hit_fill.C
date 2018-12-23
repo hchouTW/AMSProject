@@ -2,8 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Sep25/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -55,15 +54,15 @@ int main(int argc, char * argv[]) {
     //PartInfo info(PartType::Helium4);
     
     Double_t mombd[2] = { 1., 1000. };
-    if (info.type() == PartType::Proton)  { mombd[0] = 0.40; mombd[1] = 3000.0; }
-    if (info.type() == PartType::Helium4) { mombd[0] = 1.60; mombd[1] = 3000.0; }
+    if (info.type() == PartType::Proton)  { mombd[0] = 0.55; mombd[1] = 3800.0; }
+    if (info.type() == PartType::Helium4) { mombd[0] = 2.20; mombd[1] = 3800.0; }
     if (info.type() == PartType::Carbon12) { mombd[0] = 5.00; mombd[1] = 10000.0; }
     Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
     
     Axis AXigb("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);
     Double_t lbta = std::sqrt(1.0+AXigb.min()*AXigb.min());
     Double_t ubta = std::sqrt(1.0+AXigb.max()*AXigb.max());
-    Axis AXib("1/Beta [1]", AXigb.nbin(), lbta, ubta, AxisScale::kLog);
+    Axis AXib("1/Beta [1]", AXigb.nbin(), lbta, ubta, AxisScale::kLinear);
 
     // Cut
     Axis AXcut("Cut", 11, 0., 11.);
@@ -75,38 +74,38 @@ int main(int argc, char * argv[]) {
     
     Hist* hMrxInn   = Hist::New("hMrxInn",   HistAxis(AXigb, AXres));
     Hist* hMrxInnNN = Hist::New("hMrxInnNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxInnN1 = Hist::New("hMrxInnN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxInnN2 = Hist::New("hMrxInnN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxInnN3 = Hist::New("hMrxInnN3", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxInnN4 = Hist::New("hMrxInnN4", HistAxis(AXres, "Events/Bin"));
   
     Hist* hMryInn   = Hist::New("hMryInn",   HistAxis(AXigb, AXres));
     Hist* hMryInnNN = Hist::New("hMryInnNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryInnN1 = Hist::New("hMryInnN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryInnN2 = Hist::New("hMryInnN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryInnN3 = Hist::New("hMryInnN3", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryInnN4 = Hist::New("hMryInnN4", HistAxis(AXres, "Events/Bin"));
     
     Hist* hMrxExt   = Hist::New("hMrxExt",   HistAxis(AXigb, AXres));
     Hist* hMrxExtNN = Hist::New("hMrxExtNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxExtN1 = Hist::New("hMrxExtN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxExtN2 = Hist::New("hMrxExtN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxExtN3 = Hist::New("hMrxExtN3", HistAxis(AXres, "Events/Bin"));
-    Hist* hMrxExtN4 = Hist::New("hMrxExtN4", HistAxis(AXres, "Events/Bin"));
     
     Hist* hMryExt   = Hist::New("hMryExt",   HistAxis(AXigb, AXres));
     Hist* hMryExtNN = Hist::New("hMryExtNN", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryExtN1 = Hist::New("hMryExtN1", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryExtN2 = Hist::New("hMryExtN2", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryExtN3 = Hist::New("hMryExtN3", HistAxis(AXres, "Events/Bin"));
-    Hist* hMryExtN4 = Hist::New("hMryExtN4", HistAxis(AXres, "Events/Bin"));
 
     Axis AXTKq("TKq", 1200, 0.6 * info.chrg() * info.chrg(), 10.0 * info.chrg() * info.chrg());
-    Hist* hTKqx = Hist::New("hTKqx", HistAxis(AXigb, AXTKq));
-    Hist* hTKqy = Hist::New("hTKqy", HistAxis(AXigb, AXTKq));
+    Hist* hTKqxy = Hist::New("hTKqxy", HistAxis(AXigb, AXTKq));
     
     Axis AXTFq("TFq", 1200, 0.5 * info.chrg() * info.chrg(), 8.0 * info.chrg() * info.chrg());
     Hist* hTFq = Hist::New("hTFq", HistAxis(AXigb, AXTFq));
+    
+    Axis AXTDn("TDn", 30, 0., 30.);
+    Axis AXTDc("TDc", 60, 85., 145.);
+    Axis AXTDq("TDq", 1200, 0.3 * info.chrg() * info.chrg(), 30.0 * info.chrg() * info.chrg());
+    Hist* hTDn  = Hist::New("hTDn", HistAxis(AXigb, AXTDn));
+    Hist* hTDq  = Hist::New("hTDq", HistAxis(AXigb, AXTDq));
+    Hist* hTDs  = Hist::New("hTDs", HistAxis(AXigb, AXTDq));
+    Hist* hTDc  = Hist::New("hTDc", HistAxis(AXigb, AXTDc));
+    Hist* hTDqc = Hist::New("hTDqc", HistAxis(AXigb, AXTDc));
+    Hist* hTDqb = Hist::New("hTDqb", HistAxis(AXigb, AXTDq));
+    
+    Hist* hTDqs = Hist::New("hTDqs", HistAxis(AXTDq, AXTDq));
+    
+    Hist* hTDq1 = Hist::New("hTDq1", HistAxis(AXigb, AXTDq));
+    Hist* hTDs1 = Hist::New("hTDs1", HistAxis(AXigb, AXTDq));
+    Hist* hTDq2 = Hist::New("hTDq2", HistAxis(AXigb, AXTDq));
+    Hist* hTDs2 = Hist::New("hTDs2", HistAxis(AXigb, AXTDq));
     
     Axis AXTFtme("TFtme", 800, -25, 25);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXigb, AXTFtme));
@@ -137,7 +136,7 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 2);
         
         // Geometry (TRD)
-        if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
+        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
         if (fTrd->LLRnhit[0] < 8) continue;
         hCut->fillH2D(fG4mc->primPart.mom, 3);
@@ -171,7 +170,7 @@ int main(int argc, char * argv[]) {
         hCut->fillH2D(fG4mc->primPart.mom, 8);
         
         if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 0) continue; 
+            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
         hCut->fillH2D(fG4mc->primPart.mom, 9);
 
         // No Interaction
@@ -208,6 +207,7 @@ int main(int argc, char * argv[]) {
             if (!(rcTk[it]->side[0] && rcTk[it]->side[1])) continue;
             if (rcTk[it]->chrg[0] < 0) continue;
             if (rcTk[it]->chrg[1] < 0) continue;
+            if (rcTk[it]->chrg[2] < 0) continue;
 
             constexpr Double_t CM2UM = 1.0e4;
             if (it >= 2 && it <= 7) {
@@ -216,17 +216,8 @@ int main(int argc, char * argv[]) {
                 if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
                    hMrxInnNN->fillH1D(CM2UM * res[0]);
                    hMryInnNN->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 1) hMrxInnN1->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 1) hMryInnN1->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 2) hMrxInnN2->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 2) hMryInnN2->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 3) hMrxInnN3->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 3) hMryInnN3->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] >= 4) hMrxInnN4->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] >= 4) hMryInnN4->fillH1D(CM2UM * res[1]);
                 }
-                hTKqx->fillH2D(igb, rcTk[it]->chrg[0] * rcTk[it]->chrg[0]);
-                hTKqy->fillH2D(igb, rcTk[it]->chrg[1] * rcTk[it]->chrg[1]);
+                if (rcTk[it]->chrg[0] > info.chrg() * 0.775 && rcTk[it]->chrg[1] > info.chrg() * 0.775) hTKqxy->fillH2D(igb, rcTk[it]->chrg[2] * rcTk[it]->chrg[2]);
             }
             else if (it == 0 || it == 8) {
                 hMrxExt->fillH2D(igb, CM2UM * res[0]);
@@ -234,14 +225,6 @@ int main(int argc, char * argv[]) {
                 if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
                    hMrxExtNN->fillH1D(CM2UM * res[0]);
                    hMryExtNN->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 1) hMrxExtN1->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 1) hMryExtN1->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 2) hMrxExtN2->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 2) hMryExtN2->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] == 3) hMrxExtN3->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] == 3) hMryExtN3->fillH1D(CM2UM * res[1]);
-                   if (rcTk[it]->nsr[0] >= 4) hMrxExtN4->fillH1D(CM2UM * res[0]);
-                   if (rcTk[it]->nsr[1] >= 4) hMryExtN4->fillH1D(CM2UM * res[1]);
                 }
             }
         }
@@ -276,9 +259,59 @@ int main(int argc, char * argv[]) {
             st.set_mom(mpRh->mom);
             TrackSys::PropMgnt::PropToZ(fRich->refz, st);
             Double_t dlt = (1.0/fRich->beta - 1.0/st.bta());
-            Double_t igb = st.igmbta();
+            Double_t igb = st.igb();
             if (fRich->kind == 0) hAGLib->fillH2D(igb, dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(igb, dlt);
+        }
+        
+        // TRD
+        if (fTrd->statusKCls[0] && fTrd->LLRnhit[0] >= 8) {
+            std::vector<std::tuple<Double_t, Double_t, Double_t>> dEdX;
+            for (auto&& hit : fTrd->hits) {
+                if (hit.mcMom < 0.1 || hit.len < 0.01) continue;
+                if (hit.len < 0.40 || hit.len > 0.65) continue;
+                dEdX.push_back(std::make_tuple(hit.dEdx, hit.mcMom, hit.coo[2]));
+            }
+            std::sort(dEdX.begin(), dEdX.end());
+            
+            //COUT("NUM %d\n", dEdX.size());
+            if (dEdX.size() >= 8) {
+                Double_t ionv = 0, ionm = 0, ionc = 0;
+                for (int it = 2; it < dEdX.size()-1; ++it) { 
+                    ionv += std::get<0>(dEdX.at(it)); 
+                    ionm += std::get<1>(dEdX.at(it)); 
+                    ionc += std::get<2>(dEdX.at(it)); 
+                }
+                
+                int nhit = dEdX.size() - 3;
+                ionv /= static_cast<double>(nhit);
+                ionm /= static_cast<double>(nhit);
+                ionc /= static_cast<double>(nhit);
+                
+                Double_t ions = 0;
+                for (int it = 2; it < dEdX.size()-1; ++it) {
+                    ions += (std::get<0>(dEdX.at(it)) - ionv) * (std::get<0>(dEdX.at(it)) - ionv);
+                }
+                ions = std::sqrt(ions / static_cast<double>(nhit));
+
+                hTDn->fill(info.mass()/ionm, nhit);
+                hTDq->fill(info.mass()/ionm, ionv);
+                hTDs->fill(info.mass()/ionm, ions);
+                hTDc->fill(info.mass()/ionm, ionc);
+                
+                if (nhit <= 13) hTDq1->fill(info.mass()/ionm, ionv);
+                if (nhit <= 13) hTDs1->fill(info.mass()/ionm, ions);
+                if (nhit > 13)  hTDq2->fill(info.mass()/ionm, ionv);
+                if (nhit > 13)  hTDs2->fill(info.mass()/ionm, ions);
+               
+                if (info.mass()/ionm < 2.0e-03) hTDqs->fill(ionv, ions);
+
+                for (int it = 2; it < dEdX.size()-1; ++it) {
+                    hTDqc->fill(info.mass()/ionm, std::get<2>(dEdX.at(it)));
+                    hTDqb->fill(info.mass()/ionm, std::get<0>(dEdX.at(it)));
+                }
+                //COUT("ION %14.8f CZ %14.8f\n", ionv, ionc);
+            }
         }
     }
 

@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -56,21 +56,13 @@ TrFitPar& TrFitPar::operator=(const TrFitPar& rhs) {
             else                                 VirtualHitSt::Sort(hits_, VirtualHitSt::Orientation::kUpward);
         }
         else zero();
+
+        timer_ = rhs.timer_;
     }
    
     return *this;
 }
    
-
-TrFitPar::TrFitPar(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
-    clear();
-   
-    sw_mscat_ = sw_mscat;
-    sw_eloss_ = sw_eloss;
-    info_ = info;
-    ortt_ = ortt;
-}
-
 
 void TrFitPar::zero() {
     hits_.clear();
@@ -91,6 +83,8 @@ void TrFitPar::zero() {
     nmes_TRDel_  = 0;
     
     is_check_ = false;
+
+    timer_.clear();
 }
 
 
@@ -105,6 +99,15 @@ void TrFitPar::clear() {
     hits_TOF_.clear();
     hits_RICH_.clear();
     hits_TRD_.clear();
+
+    zero();
+}
+        
+void TrFitPar::set_info(const PartInfo& info, const Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss) {
+    sw_mscat_ = sw_mscat;
+    sw_eloss_ = sw_eloss;
+    info_ = info;
+    ortt_ = ortt;
 
     zero();
 }

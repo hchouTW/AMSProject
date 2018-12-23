@@ -59,6 +59,36 @@ inline void ShowErrorExit(const Msg& info = Msg(), const Msg& msg = Msg()) { Sho
 inline void ShowError(const Msg& info, const Msgs& msgs) { ShowMsg(info, msgs, "ERROR", std::cerr); }
 inline void ShowErrorExit(const Msg& info, const Msgs& msgs) { ShowMsgExit(info, msgs, "ERROR", std::cerr); }
 
+
+typedef std::chrono::high_resolution_clock             HrsClock;
+typedef std::chrono::high_resolution_clock::time_point HrsTime;
+typedef std::chrono::high_resolution_clock::duration   HrsDuration;
+class HrsStopwatch;
+
+} // namespace Sys
+} // namespace TrackSys
+
+
+namespace TrackSys {
+namespace Sys {
+
+class HrsStopwatch {
+    public :
+        HrsStopwatch() { clear(); }
+        ~HrsStopwatch() {}
+        
+        inline void clear() { times_.first = HrsClock::now(); times_.second = HrsClock::now(); }
+
+        inline HrsTime& start() { times_.first  = HrsClock::now(); return times_.first;  } 
+        inline HrsTime& stop()  { times_.second = HrsClock::now(); return times_.second; }
+
+        inline HrsDuration duration() const { return (times_.second - times_.first); }
+        inline double      time()     const { return std::chrono::duration<double>( (times_.second - times_.first) ).count(); }
+
+    private :
+        std::pair<HrsTime, HrsTime> times_;
+};
+
 } // namespace Sys
 } // namespace TrackSys
 

@@ -78,6 +78,8 @@ class PhyMuFit : public TrFitPar {
         // Expert : do this after check status
         inline const TrFitPar& get() const { return dynamic_cast<const TrFitPar&>(*this); }           // fitPar for track fitting
         inline       PhyTrFit  fit() const { return PhyTrFit(dynamic_cast<const TrFitPar&>(*this)); } // physics track fitting
+        
+        inline const Sys::HrsStopwatch& timer() const { return timer_; }
 
     protected :
         void clear();
@@ -111,6 +113,9 @@ class PhyMuFit : public TrFitPar {
         static constexpr Short_t parIDeta  = 4;
         static constexpr Short_t parIDibta = 5;
         static constexpr Short_t parIDtsft = 6;
+    
+    protected :
+        Sys::HrsStopwatch timer_;
 };
 
 

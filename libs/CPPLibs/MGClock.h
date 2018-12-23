@@ -68,8 +68,8 @@ class Stopwatch {
 		Stopwatch() { start(); stop(); }
 		~Stopwatch() {}
 
-		Time & start() { times_.first  = Clock::now(); return times_.first;  }
-		Time & stop()  { times_.second = Clock::now(); return times_.second; }
+		Time& start() { times_.first  = Clock::now(); return times_.first;  }
+		Time& stop()  { times_.second = Clock::now(); return times_.second; }
 		
 		Duration duration() const { return (times_.second - times_.first); }
 		double   time()     const { return std::chrono::duration<double>( (times_.second - times_.first) ).count(); }

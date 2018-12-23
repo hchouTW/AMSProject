@@ -14,18 +14,15 @@ namespace InterfaceAms {
 
 class TkOpt {
     public :
-        static constexpr Int_t QOptISS = TrClusterR::kAsym | TrClusterR::kGain | TrClusterR::kLoss | TrClusterR::kMIP | TrClusterR::kAngle;
-        static constexpr Int_t QOptMC  = TrClusterR::kTotSign2017 | TrClusterR::kSimAsym | TrClusterR::kSimSignal | TrClusterR::kLoss | TrClusterR::kAngle;
-    
-    public :
         enum Patt { MaxSpan, Inner, InnerL1, InnerL9, FullSpan };
 
     public :
-        TkOpt(Patt patt = Patt::Inner, Bool_t dedx = false) : used_(true), patt_(patt), dedx_(dedx) {}
+        TkOpt(Patt patt = Patt::Inner, Bool_t mesc = false, Bool_t dedx = false) : patt_(patt), mesc_(mesc), dedx_(dedx) { used_ = (mesc_ || dedx_); }
         ~TkOpt() {}
 
         inline const Bool_t& used() const { return used_; }
         inline const Patt&   patt() const { return patt_; }
+        inline const Bool_t& mesc() const { return mesc_; }
         inline const Bool_t& dedx() const { return dedx_; }
 
         inline Bool_t reqL1() const { return (Patt::InnerL1 == patt_ || Patt::FullSpan == patt_); }
@@ -37,6 +34,7 @@ class TkOpt {
     private :
         Bool_t used_;
         Patt   patt_;
+        Bool_t mesc_;
         Bool_t dedx_;
 };
 
@@ -46,35 +44,27 @@ class TfOpt {
         static constexpr Int_t QOpt = TofRecH::kThetaCor | TofRecH::kBirkCor | TofRecH::kReAttCor | TofRecH::kDAWeight | TofRecH::kQ2Q;
 
     public :
-        TfOpt() : used_(false), time_(false), dedx_(false) {}
-        TfOpt(Bool_t dedx) : time_(true), dedx_(dedx) { used_ = (time_ || dedx_); }
+        TfOpt(Bool_t used = false, Bool_t dedx = false) : used_(used) { dedx_ = (used_ && dedx); }
         ~TfOpt() {}
 
         inline const Bool_t& used() const { return used_; }
-        inline const Bool_t& time() const { return time_; }
         inline const Bool_t& dedx() const { return dedx_; }
 
     private :
         Bool_t used_;
-        Bool_t time_;
         Bool_t dedx_;
 };
 
 
 class RhOpt {
     public :
-        enum Rad { NO, AGL, NAF };
-
-    public :
-        RhOpt(Rad rad = Rad::NO) : rad_(rad) { used_ = (rad_ != Rad::NO); }
+        RhOpt(Bool_t used = false) : used_(used) {}
         ~RhOpt() {}
 
         inline const Bool_t& used() const { return used_; }
-        inline const Rad&    rad()  const { return rad_; }
 
     private :
         Bool_t used_;
-        Rad    rad_;
 };
 
 
@@ -83,22 +73,11 @@ class Event {
         Event() {}
         ~Event() {}
 
-    public : 
-        inline static void SetArg(
-            const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward,
-            const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss())
-        { ArgOrtt = ortt; ArgSwMscat = sw_mscat; ArgSwEloss = sw_eloss; }
-
-    protected :
-        static TrFitPar::Orientation ArgOrtt;
-        static Bool_t                ArgSwMscat;
-        static Bool_t                ArgSwEloss;
-
     public :
         static void   Clear();
         
         static Bool_t Status() { return (Ev != nullptr && StatusTk); }
-        static Bool_t Load(AMSEventR* event = nullptr, UInt_t ipart = 0, Short_t chrg = 1);
+        static Bool_t Load(AMSEventR* event = nullptr, UInt_t ipart = 0);
         static Bool_t HasTRK()  { return StatusTk; }
         static Bool_t HasTOF()  { return StatusTf; }
         static Bool_t HasRICH() { return StatusRh; }
@@ -106,20 +85,13 @@ class Event {
         static Bool_t HasRICH_NAF() { return (StatusRh && (HitStRICH::Radiator::NAF == RhHit.rad())); }
 
     public : 
-        static TrFitPar GetTrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
-        
-        inline static PhyTrFit GetTrFit(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt()) { return PhyTrFit( GetTrFitPar(info, tkOpt, tfOpt, rhOpt) ); }
-
-        inline static PhyTrFit GetTrFit_Tracker(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt::Patt& patt = TkOpt::Patt::Inner) { return PhyTrFit( GetTrFitPar(info, TkOpt(patt)) ); }
-        
-        inline static PhyMuFit GetMuFit(const PartInfo& info = PartInfo(PartType::Proton), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt()) { return PhyMuFit( GetTrFitPar(info, tkOpt, tfOpt, rhOpt) ); }
+        static TrFitPar GetTrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss(), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
 
     protected :
         // AMS Event
         static UInt_t     RunID;
         static UInt_t     EvID;
         static UInt_t     PtID;
-        static Short_t    ChrgZ;
         static AMSEventR* Ev;
         static TrTrackR*  Trtk;
         static BetaHR*    Btah;
@@ -150,7 +122,6 @@ class Event {
 
         // TOF
         static std::vector<HitStTOF> TfHitT;
-        static std::vector<HitStTOF> TfHitQ;
         static std::vector<HitStTOF> TfHitTQ;
 
         // RICH

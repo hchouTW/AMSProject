@@ -71,6 +71,9 @@
 #include <EcalHadron.C>
 #include <TRDVertex.h>
 
+#include <LxBetalhd.h>
+#include <LxBetalhd.C>
+
 #include "ClassDef.h"
 
 // User defination macro
@@ -100,7 +103,6 @@ class RecEvent {
 	public :
         static constexpr double TopZ =  195.;
         static constexpr double CenZ =    0.;
-        static constexpr double RhZ  =  -70.;
         static constexpr double BtmZ = -136.;
         static constexpr double AglZ = -74.35;
         static constexpr double NafZ = -75.45;
@@ -116,10 +118,13 @@ class RecEvent {
         double mass;
         double beta;
         short  going; // (0, nothing   -1, down-going   1, up-going)
-        int    tkInID; // 
 
-        // HC fitting
-        TrackSys::PartType ptype;
+        double distECAL;
+        double distTRD;
+        double distTRDH;
+        
+        // Official
+        int    tkInID;
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;
@@ -277,8 +282,6 @@ class EventTrk : virtual public EventBase {
 		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
 		bool selectEvent(AMSEventR * event = nullptr);
 
-        HCTrackInfo processHCTr(TrackSys::PartInfo info, const TrackSys::AmsTkOpt& tkOpt = TrackSys::AmsTkOpt(), const TrackSys::AmsTfOpt& tfOpt = TrackSys::AmsTfOpt(), const TrackSys::AmsRhOpt& rhOpt = TrackSys::AmsRhOpt());
-
 	public :
 		TRK fTrk;
 };
@@ -317,6 +320,7 @@ class EventRich : virtual public EventBase {
 		RICH fRich;
 };
 
+
 //---- EventEcal ----//
 class EventEcal : virtual public EventBase {
 	public :
@@ -334,6 +338,27 @@ class EventEcal : virtual public EventBase {
 };
 
 
+//---- EventHyc ----//
+class EventHyc : virtual public EventBase {
+	public :
+		EventHyc();
+		~EventHyc();
+
+		void initEvent();
+		void setEventTree(TTree * evTree = nullptr);
+		void setEnvironment();
+		bool processEvent(AMSEventR * event = nullptr, AMSChain * chain = nullptr);
+		bool selectEvent(AMSEventR * event = nullptr);
+        
+        HCTrInfo  processHCTr (TrackSys::PhyTrFit&  hctr);
+        HCBtaInfo processHCBta(TrackSys::PhyBtaFit& hcbta);
+        HCMuInfo  processHCMu (TrackSys::PhyMuFit&  hcmu);
+
+	public :
+		HYC fHyc;
+};
+
+
 //---- DataSelection ----//
 class DataSelection {
 	public :
@@ -341,7 +366,7 @@ class DataSelection {
 			ON, OFF
 		};
 		enum OPTION {
-			LIST, RTI, TRG, TOF, ACC, TRK, TRD, RICH, ECAL, NUMBER
+			LIST, RTI, TRG, TOF, ACC, TRK, TRD, RICH, ECAL, HYC, NUMBER
 		};
 		static enum SWITCH option[DataSelection::NUMBER];
 		static void setOption(DataSelection::OPTION opt, DataSelection::SWITCH sw) {option[opt] = sw;}
@@ -373,6 +398,7 @@ class DataSelection {
 		EventTrd trd;
 		EventRich rich;
 		EventEcal ecal;
+		EventHyc  hyc;
 
 	public :
 		static Float_t gScaleFact;

@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "HitSt.h"
@@ -39,8 +39,8 @@ void VirtualHitSt::clear() {
     lay_  = 0;
     
     side_c_ = std::move(SVecO<3>());
-    coo_      = std::move(SVecD<3>());
-    erc_      = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
+    coo_    = std::move(SVecD<3>());
+    erc_    = std::move(SVecD<2>(Numc::ONE<>, Numc::ONE<>));
     
     chic_.fill(Numc::ZERO<>);
     nrmc_.fill(Numc::ZERO<>);
@@ -79,8 +79,6 @@ Short_t VirtualHitSt::set_onlyc_seqID(Short_t onlyc_seqID) {
 void HitStTRK::clear() {
     isInnTr_ = true;
     
-    nsr_.fill(Numc::ZERO<Short_t>);
-
     seqIDcx_ = -1;
     seqIDcy_ = -1;
     seqIDq_  = -1;
@@ -120,9 +118,9 @@ void HitStTRK::cal(const PhySt& part) {
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_c_[0] && pdf_cx_ != nullptr) {
         std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0));
-        chic_[0] = minix.at(0);
-        nrmc_[0] = minix.at(1);
-        divc_[0] = Numc::NEG<> * minix.at(2);
+        chic_[0] = minix[0];
+        nrmc_[0] = minix[1];
+        divc_[0] = Numc::NEG<> * minix[2];
         if (!Numc::Valid(chic_[0]) || !Numc::Valid(nrmc_[0]) || !Numc::Valid(divc_[0])) {
             chic_[0] = Numc::ZERO<>;
             nrmc_[0] = Numc::ZERO<>;
@@ -131,9 +129,9 @@ void HitStTRK::cal(const PhySt& part) {
     }
     if (side_c_[1] && pdf_cy_ != nullptr) {
         std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1));
-        chic_[1] = miniy.at(0);
-        nrmc_[1] = miniy.at(1);
-        divc_[1] = Numc::NEG<> * miniy.at(2);
+        chic_[1] = miniy[0];
+        nrmc_[1] = miniy[1];
+        divc_[1] = Numc::NEG<> * miniy[2];
         if (!Numc::Valid(chic_[1]) || !Numc::Valid(nrmc_[1]) || !Numc::Valid(divc_[1])) {
             chic_[1] = Numc::ZERO<>;
             nrmc_[1] = Numc::ZERO<>;
@@ -145,11 +143,11 @@ void HitStTRK::cal(const PhySt& part) {
     nrmq_ = Numc::ZERO<>;
     divq_.fill(Numc::ZERO<>);
     if (side_q_ && pdf_q_ != nullptr) {
-        std::array<long double, 3>&& iony = pdf_q_->minimizer(q_*q_, part.ibta(), part.igb());
-        chiq_    = iony.at(0);
-        nrmq_    = iony.at(1);
-        divq_[0] = iony.at(2);
-        divq_[1] = iony.at(2) * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        std::array<long double, 3>&& ion = pdf_q_->minimizer(q_*q_, part.ibta(), part.igb());
+        chiq_    = ion[0];
+        nrmq_    = ion[1];
+        divq_[0] = ion[2];
+        divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
         
         if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
             chiq_    = Numc::ZERO<>;
@@ -167,38 +165,31 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_cx_ && pdf_cy_ && pdf_q_)) return true;
 
     Short_t absq = std::abs(info.chrg());
-    switch (absq) {
-        case 1 :
-        {
-            if (isInnTr_) { 
-                pdf_cx_ = &PDF_Q01_CX_INN_;
-                pdf_cy_ = &PDF_Q01_CY_INN_;
-            }
-            else {
-                pdf_cx_ = &PDF_Q01_CX_EXT_;
-                pdf_cy_ = &PDF_Q01_CY_EXT_;
-            }
-            pdf_q_ = &PDF_Q01_QXY_;
-            type_ = info.type();
-            break;
+    if (absq == 1) {
+        if (isInnTr_) { 
+            pdf_cx_ = &PDF_Q01_CX_INN_;
+            pdf_cy_ = &PDF_Q01_CY_INN_;
         }
-        case 2 :
-        {
-            if (isInnTr_) { 
-                pdf_cx_ = &PDF_Q02_CX_INN_;
-                pdf_cy_ = &PDF_Q02_CY_INN_;
-            }
-            else {
-                pdf_cx_ = &PDF_Q02_CX_EXT_;
-                pdf_cy_ = &PDF_Q02_CY_EXT_;
-            }
-            pdf_q_ = &PDF_Q02_QXY_;
-            type_ = info.type();
-            break;
+        else {
+            pdf_cx_ = &PDF_Q01_CX_EXT_;
+            pdf_cy_ = &PDF_Q01_CY_EXT_;
         }
-        default :
-            CERR("HitStTRK::set_type() NO PartType Setting.\n");
-            return false;
+        pdf_q_ = &PDF_Q01_QXY_;
+        type_ = info.type();
+    } else if (absq >= 2) {
+        if (isInnTr_) { 
+            pdf_cx_ = &PDF_Q02_CX_INN_;
+            pdf_cy_ = &PDF_Q02_CY_INN_;
+        }
+        else {
+            pdf_cx_ = &PDF_Q02_CX_EXT_;
+            pdf_cy_ = &PDF_Q02_CY_EXT_;
+        }
+        pdf_q_ = &PDF_Q02_QXY_;
+        type_ = info.type();
+    } else {
+        CERR("HitStTRK::set_type() NO PartType Setting.\n");
+        return false;
     }
     if (pdf_cx_ != nullptr && pdf_cy_ != nullptr) {
         erc_ = std::move(SVecD<2>(
@@ -363,10 +354,10 @@ void HitStTOF::cal(const PhySt& part) {
         Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
             std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.igb(), USE_TSHF_);
-            chit_    = minit.at(0);
-            nrmt_    = minit.at(1);
-            divtsft_ = minit.at(2);
-            Double_t divt = (Numc::NEG<> * minit.at(2) * ds); // d(t) / d(ibta)
+            chit_    = minit[0];
+            nrmt_    = minit[1];
+            divtsft_ = minit[2];
+            Double_t divt = (Numc::NEG<> * minit[2] * ds); // d(t) / d(ibta)
             divt_[0] = divt;
             divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
 
@@ -385,10 +376,10 @@ void HitStTOF::cal(const PhySt& part) {
     divq_.fill(Numc::ZERO<>);
     if (side_q_ && pdf_q_ != nullptr) {
         std::array<long double, 3>&& ion = pdf_q_->minimizer(q_*q_, part.ibta(), part.igb());
-        chiq_    = ion.at(0);
-        nrmq_    = ion.at(1);
-        divq_[0] = ion.at(2);
-        divq_[1] = ion.at(2) * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        chiq_    = ion[0];
+        nrmq_    = ion[1];
+        divq_[0] = ion[2];
+        divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
     
         if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
             chiq_ = Numc::ZERO<>;
@@ -405,24 +396,17 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_t_ && pdf_q_)) return true;
     
     Short_t absq = std::abs(info.chrg());
-    switch (absq) {
-        case 1 :
-        {
-            pdf_t_ = &PDF_Q01_T_;
-            pdf_q_ = &PDF_Q01_Q_;
-            type_ = info.type();
-            break;
-        }
-        case 2 :
-        {
-            pdf_t_ = &PDF_Q02_T_;
-            pdf_q_ = &PDF_Q02_Q_;
-            type_ = info.type();
-            break;
-        }
-        default :
-            CERR("HitStTOF::set_type() NO PartType Setting.\n");
-            return false;
+    if (absq == 1) {
+        pdf_t_ = &PDF_Q01_T_;
+        pdf_q_ = &PDF_Q01_Q_;
+        type_ = info.type();
+    } else if (absq >= 2) {
+        pdf_t_ = &PDF_Q02_T_;
+        pdf_q_ = &PDF_Q02_Q_;
+        type_ = info.type();
+    } else {
+        CERR("HitStTOF::set_type() NO PartType Setting.\n");
+        return false;
     }
     return true;
 }
@@ -505,9 +489,9 @@ void HitStRICH::cal(const PhySt& part) {
         // 1/bta := (1+igb*igb)^(1/2)
         Double_t dib = ib_ - part.ibta();
         std::array<long double, 3> miniib = pdf_ib_->minimizer(dib);
-        chiib_ = miniib.at(0);
-        nrmib_ = miniib.at(1);
-        Double_t divib = (Numc::NEG<> * miniib.at(2));
+        chiib_ = miniib[0];
+        nrmib_ = miniib[1];
+        Double_t divib = (Numc::NEG<> * miniib[2]);
         divib_[0] = divib;
         divib_[1] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
         
@@ -526,28 +510,21 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_ib_)) return true;
     
     Short_t absq = std::abs(info.chrg());
-    switch (absq) {
-        case 1 :
-        {
-            switch (rad_) {
-                case Radiator::AGL : pdf_ib_ = &PDF_AGL_Q01_IB_; break;
-                case Radiator::NAF : pdf_ib_ = &PDF_NAF_Q01_IB_; break;
-            }
-            type_ = info.type();
-            break;
+    if (absq == 1) {
+        switch (rad_) {
+            case Radiator::AGL : pdf_ib_ = &PDF_AGL_Q01_IB_; break;
+            case Radiator::NAF : pdf_ib_ = &PDF_NAF_Q01_IB_; break;
         }
-        case 2 :
-        {
-            switch (rad_) {
-                case Radiator::AGL : pdf_ib_ = &PDF_AGL_Q02_IB_; break;
-                case Radiator::NAF : pdf_ib_ = &PDF_NAF_Q02_IB_; break;
-            }
-            type_ = info.type();
-            break;
+        type_ = info.type();
+    } else if (absq >= 2) {
+        switch (rad_) {
+            case Radiator::AGL : pdf_ib_ = &PDF_AGL_Q02_IB_; break;
+            case Radiator::NAF : pdf_ib_ = &PDF_NAF_Q02_IB_; break;
         }
-        default :
-            CERR("HitStRICH::set_type() NO PartType Setting.\n");
-            return false;
+        type_ = info.type();
+    } else {
+        CERR("HitStRICH::set_type() NO PartType Setting.\n");
+        return false;
     }
     return true;
 }
@@ -585,6 +562,7 @@ void HitStTRD::clear() {
     side_el_ = false;
     el_      = Numc::ZERO<>;
 
+    chiel_ = Numc::ZERO<>;
     nrmel_ = Numc::ZERO<>;
     divel_.fill(Numc::ZERO<>);
 
@@ -597,7 +575,7 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
     if (seqID < 0) { seqID_ = -1; return 0; }
 
     Short_t iter = 0;
-    if (side_el_  ) { seqIDel_ = seqID + iter; iter++; } else seqIDel_ = -1;
+    if (side_el_) { seqIDel_ = seqID + iter; iter++; } else seqIDel_ = -1;
     if (iter != 0) seqID_ = seqID; else seqID_ = -1;
     return iter;
 }
@@ -605,15 +583,18 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
 void HitStTRD::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
     
+    chiel_ = Numc::ZERO<>;
     nrmel_ = Numc::ZERO<>;
     divel_.fill(Numc::ZERO<>);
     if (side_el_) {
-        SVecD<3>&& lgge = (*pdf_el_)(el_, part.igb());
-        nrmel_ = lgge(0);
-        divel_[0] = lgge(1) * part.mu() * part.eta_sign();
-        divel_[1] = lgge(1);
-        
-        if (!Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
+        std::array<long double, 3>&& iontr = pdf_el_->minimizer(el_, part.ibta(), part.igb());
+        chiel_    = iontr[0];
+        nrmel_    = iontr[1];
+        divel_[0] = iontr[2];
+        divel_[1] = iontr[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+
+        if (!Numc::Valid(chiel_) || !Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
+            chiel_ = Numc::ZERO<>;
             nrmel_ = Numc::ZERO<>;
             divel_.fill(Numc::ZERO<>);
         }
@@ -627,29 +608,35 @@ Bool_t HitStTRD::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_el_)) return true;
     
     Short_t absq = std::abs(info.chrg());
-    switch (absq) {
-        case 1 :
-        {
-            pdf_el_ = &PDF_Q01_EL_;
-            type_ = info.type();
-            break;
-        }
-        default :
-            CERR("HitStTRD::set_type() NO PartType Setting.\n");
-            return false;
+    if (absq == 1) {
+        pdf_el_ = &PDF_Q01_EL_;
+        type_ = info.type();
+    } else if (absq >= 2) {
+        pdf_el_ = &PDF_Q02_EL_;
+        type_ = info.type();
+    } else {
+        CERR("HitStTRD::set_type() NO PartType Setting.\n");
+        return false;
     }
     return true;
 }
 
-GmIonEloss HitStTRD::PDF_Q01_EL_(
-    { 6.87250e-01, 8.49158e-01, -6.50955e+00 }, // Ratio
-    { 2.17486e-04, 4.27812e+00 }, // Kpa
-    { 9.62033e+00, 1.26248e+00, 8.36500e-03, 1.24422e+00, 2.22255e+00, 8.06270e-02 }, // Mpv
-    { 2.13993e-01, 2.78925e+00, 1.65428e+00, 6.55129e-01, 1.17441e-01, 3.61303e-01 }, // Sgm
-    { 2.11427 }, // Alpha
-    { 1.83481e-01, 5.07634e-01, -5.30224e+00 }, // Beta
-    { 6.52658434 }, // Erf Man
-    { 1.79160092 }  // Erf Sgm
+IonTrEloss HitStTRD::PDF_Q01_EL_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+    { 3.06370e-01, 9.06750e-01, 1.81582e-01, 1.59218e-01, 9.37406e-01, 2.35234e-01, 7.21478e-01, 1.01295e+01 }, // Kpa
+    { 1.28002e+00, 1.06775e+00, 1.61320e+00, 1.56163e-01, 9.77850e-01, 4.03639e+00, 4.67177e-01, 6.82263e+00 }, // Mpv
+    { 2.11615e-01, 1.07995e+00, 2.05175e-01, 2.14309e-01, 1.35230e+00, 1.32878e+00, 4.83727e-01, 6.87510e+00 }, // Sgm
+    { 1.29759e+00, 1.05389e+00, 1.69891e+00, 1.42697e-01, 8.84571e-01, 3.94133e+00, 4.72998e-01, 6.91419e+00 }, // Mode
+    0.20 // Fluc
+);
+
+IonTrEloss HitStTRD::PDF_Q02_EL_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+    { 3.03451e-01, 1.14913e+00, 1.19150e-01, 1.38026e-01, 7.91603e-01, 4.31403e-01, 8.23065e-01, 1.15371e+01 }, // Kpa
+    { 1.70001e+00, 1.03690e+00, 2.12635e+00, 1.44258e-01, 9.07120e-01, 6.70935e+00, 5.02516e-01, 7.28139e+00 }, // Mpv
+    { 3.19837e-01, 1.03861e+00, 3.19251e-01, 1.60424e-01, 1.05863e+00, 2.10530e+00, 5.57265e-01, 7.77524e+00 }, // Sgm
+    { 1.70201e+00, 1.03187e+00, 2.22619e+00, 1.33940e-01, 8.35504e-01, 6.61389e+00, 5.06896e-01, 7.34784e+00 }, // Mode
+    0.25 // Fluc
 );
 
 

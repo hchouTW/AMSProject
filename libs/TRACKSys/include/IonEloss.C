@@ -15,6 +15,8 @@ long double IonEloss::FuncKpa(long double ibta, const std::array<long double, 4>
     
     long double kpa = Numc::ONE_TO_TWO * (Numc::ONE<long double> + std::erf(par[0] * std::log1p(par[1] * std::pow(ibsqr, par[2])) - par[3]));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
+    if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;
+    if (Numc::Compare(kpa, Numc::ONE<long double> ) >= 0) kpa = Numc::ONE<long double>;
     return kpa;
 }
 
@@ -69,7 +71,7 @@ std::array<long double, 3> IonEloss::minimizer(long double x, long double ibta, 
 }
         
 long double IonEloss::get_kpa(long double ibsqr) const {
-    long double kpa = Numc::HALF * (Numc::ONE<long double> + std::erf(kpa_[0] * std::log1p(kpa_[1] * std::pow(ibsqr, kpa_[2])) - kpa_[3]));
+    long double kpa = Numc::ONE_TO_TWO * (Numc::ONE<long double> + std::erf(kpa_[0] * std::log1p(kpa_[1] * std::pow(ibsqr, kpa_[2])) - kpa_[3]));
     if (!Numc::Valid(kpa)) kpa = Numc::ZERO<long double>;
     else {
         if (Numc::Compare(kpa, Numc::ZERO<long double>) <= 0) kpa = Numc::ZERO<long double>;

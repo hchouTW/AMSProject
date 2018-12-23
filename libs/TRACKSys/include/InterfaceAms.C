@@ -7,7 +7,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -27,15 +27,9 @@
 namespace TrackSys {
 namespace InterfaceAms {
 
- 
-TrFitPar::Orientation Event::ArgOrtt    = TrFitPar::Orientation::kDownward;
-Bool_t                Event::ArgSwMscat = PhyArg::OptMscat();
-Bool_t                Event::ArgSwEloss = PhyArg::OptEloss();
-
 UInt_t     Event::RunID    = 0;
 UInt_t     Event::EvID     = 0;
 UInt_t     Event::PtID     = 0;
-Short_t    Event::ChrgZ    = 1;
 AMSEventR* Event::Ev       = nullptr;
 TrTrackR*  Event::Trtk     = nullptr;
 BetaHR*    Event::Btah     = nullptr;
@@ -57,7 +51,6 @@ HitStTRK              Event::TkHitL1Q_NOxy = HitStTRK();
 HitStTRK              Event::TkHitL9Q_NOxy = HitStTRK();
 
 std::vector<HitStTOF> Event::TfHitT  = std::vector<HitStTOF>();
-std::vector<HitStTOF> Event::TfHitQ  = std::vector<HitStTOF>();
 std::vector<HitStTOF> Event::TfHitTQ = std::vector<HitStTOF>();
 
 HitStRICH             Event::RhHit = HitStRICH();
@@ -67,7 +60,6 @@ void Event::Clear() {
     RunID    = 0;
     EvID     = 0;
     PtID     = 0;
-    ChrgZ    = 1;
     Ev       = nullptr;
     Trtk     = nullptr;
     Btah     = nullptr;
@@ -78,7 +70,7 @@ void Event::Clear() {
 }
 
         
-Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Short_t chrg) {
+Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     MagMgnt::Load();
     MatMgnt::Load();
 
@@ -98,7 +90,6 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Short_t chrg) {
     RunID = event->Run();
     EvID  = event->Event();
     PtID  = ipart;
-    ChrgZ = std::abs(chrg);
     Ev    = event;
     Trtk  = trtk;
     Btah  = btah;
@@ -113,6 +104,44 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart, Short_t chrg) {
 } 
 
 
+TrFitPar Event::GetTrFitPar(const PartInfo& info, const TrFitPar::Orientation& ortt, const Bool_t& sw_mscat, const Bool_t& sw_eloss, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
+    if (!(StatusTk || StatusTf || StatusRh)) return TrFitPar();
+    if (info.chrg() == 0) return TrFitPar();
+
+    TrFitPar fitPar(info, ortt, sw_mscat, sw_eloss);
+    
+    if (tkOpt.mesc() && !StatusTk) return TrFitPar();
+    if (tkOpt.used() && StatusTk) {
+        Bool_t hasL1 = (tkOpt.mesc() ? (tkOpt.dedx() ? TkHitL1Q.scy() : TkHitL1.scy()) : TkHitL1Q_NOxy.sq());
+        Bool_t hasL9 = (tkOpt.mesc() ? (tkOpt.dedx() ? TkHitL9Q.scy() : TkHitL9.scy()) : TkHitL9Q_NOxy.sq());
+        if (tkOpt.reqL1() && !hasL1) return TrFitPar();
+        if (tkOpt.reqL9() && !hasL9) return TrFitPar();
+   
+        std::vector<HitStTRK>& tkIn = (tkOpt.mesc() ? (tkOpt.dedx() ? TkHitInQ : TkHitIn) : TkHitInQ_NOxy);
+        HitStTRK& tkL1 = (tkOpt.mesc() ? (tkOpt.dedx() ? TkHitL1Q : TkHitL1) : TkHitL1Q_NOxy);
+        HitStTRK& tkL9 = (tkOpt.mesc() ? (tkOpt.dedx() ? TkHitL9Q : TkHitL9) : TkHitL9Q_NOxy);
+
+        fitPar.add_hit(tkIn);
+        if (tkOpt.useL1() && hasL1) fitPar.add_hit(tkL1);
+        if (tkOpt.useL9() && hasL9) fitPar.add_hit(tkL9);
+    }
+   
+    if (tfOpt.used() && !StatusTf) return TrFitPar();
+    if (tfOpt.used() && StatusTf) {
+        if   (tfOpt.dedx()) fitPar.add_hit(TfHitTQ);
+        else                fitPar.add_hit(TfHitT);
+    }
+    
+    if (rhOpt.used() && StatusRh) {
+        fitPar.add_hit(RhHit);
+    }
+
+    if (fitPar.check()) return fitPar;
+    else                return TrFitPar();
+}
+
+
+/*
 TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
     if (Ev == nullptr) return TrFitPar();
     if (Trtk == nullptr || !StatusTk) return TrFitPar();
@@ -124,9 +153,8 @@ TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOp
     if (tfOpt.used() && !StatusTf) return TrFitPar();
     if (tfOpt.used()) {
         if (Btah == nullptr) return TrFitPar();
-        if (( tfOpt.time() && !tfOpt.dedx()) && TfHitT.size()  == 0) return TrFitPar(); 
-        if ((!tfOpt.time() &&  tfOpt.dedx()) && TfHitQ.size()  == 0) return TrFitPar(); 
-        if (( tfOpt.time() &&  tfOpt.dedx()) && TfHitTQ.size() == 0) return TrFitPar(); 
+        if ((!tfOpt.dedx()) && TfHitT.size()  == 0) return TrFitPar(); 
+        if (( tfOpt.dedx()) && TfHitTQ.size() == 0) return TrFitPar(); 
     }
 
     if (rhOpt.used() && !StatusRh) return TrFitPar();
@@ -146,9 +174,8 @@ TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOp
     if (tkOpt.useL9()) fitPar.add_hit(tkOpt.dedx() ? TkHitL9Q : TkHitL9);
 
     if (tfOpt.used()) {
-        if      ( tfOpt.time() && !tfOpt.dedx()) fitPar.add_hit(TfHitT);
-        else if (!tfOpt.time() &&  tfOpt.dedx()) fitPar.add_hit(TfHitQ);
-        else if ( tfOpt.time() &&  tfOpt.dedx()) fitPar.add_hit(TfHitTQ);
+        if      (!tfOpt.dedx()) fitPar.add_hit(TfHitT);
+        else if ( tfOpt.dedx()) fitPar.add_hit(TfHitTQ);
         else return TrFitPar();
     }
     
@@ -157,6 +184,7 @@ TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOp
     if (fitPar.check()) return fitPar;
     else                return TrFitPar();
 }
+*/
 
 
 void Event::Init() {
@@ -173,7 +201,6 @@ void Event::Init() {
     TkHitL9Q_NOxy = HitStTRK();
     
     TfHitT.clear();
-    TfHitQ.clear();
     TfHitTQ.clear();
     
     RhHit = HitStRICH();
@@ -182,7 +209,7 @@ void Event::Init() {
 
 Bool_t Event::BulidHitStTRK() {
     if (Trtk == nullptr) return false;
-	Int_t fitid = Trtk->iTrTrackPar(1, 3, 21);
+	Short_t fitid = Trtk->iTrTrackPar(1, 3, 21);
     if (fitid < 0) return false;
 
     Short_t cntX = 0;
@@ -202,42 +229,20 @@ Bool_t Event::BulidHitStTRK() {
         
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
-        
-        TrTrackChargeH* trtkchrg = &Trtk->trkcharge;
-        Double_t qx  = (xcls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 0);
-		Double_t qy  = (ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 1);
-        Double_t qxy = (xcls == nullptr || ycls == nullptr || trtkchrg == nullptr) ? -1.0 : trtkchrg->GetSqrtdEdX(layJ, 0, 2);
+            
+        Double_t qx  = (xcls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 0, 1, fitid);
+		Double_t qy  = (ycls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 1, 1, fitid);
+		Double_t qxy = (xcls == nullptr || ycls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 2, 1, fitid);
+        if (qx  == 0) qx  = -1.0;
+        if (qy  == 0) qy  = -1.0;
+        if (qxy == 0) qxy = -1.0;
 
-        int cntqh = (trtkchrg != nullptr) ? trtkchrg->qhit.count(layJ) : 0;
-        TrRecHitChargeLightH* trhitchrg = (cntqh > 0) ? &trtkchrg->qhit[layJ] : nullptr;
-
-        int cntqhx = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(0) : 0;
-        TrClusterChargeLightH* trclschrgx = (cntqhx > 0) ? &trhitchrg->qcluster[0] : nullptr;
-        
-        int cntqhy = (trhitchrg != nullptr) ? trhitchrg->qcluster.count(1) : 0;
-        TrClusterChargeLightH* trclschrgy = (cntqhy > 0) ? &trhitchrg->qcluster[1] : nullptr;
-
-        Short_t nsrx = (cntqhx > 0), nsry = (cntqhy > 0);
-        Float_t sigadcx[5]; std::fill_n(sigadcx, 5, 0);
-        Float_t sigadcy[5]; std::fill_n(sigadcy, 5, 0);
-        for (int ii = 0; ii < 5 && trclschrgx; ++ii) { sigadcx[ii] = trclschrgx->sigadc[ii]; if (sigadcx[ii] > 0) nsrx++; }
-        for (int ii = 0; ii < 5 && trclschrgy; ++ii) { sigadcy[ii] = trclschrgy->sigadc[ii]; if (sigadcy[ii] > 0) nsry++; }
-        if (nsrx > 0) {
-            for (int ii = 3; ii <= 4; ++ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii-1]) nsrx++; else break; }
-            for (int ii = 1; ii >= 0; --ii) { if (sigadcx[ii] > 0.0 && sigadcx[ii] < sigadcx[ii+1]) nsrx++; else break; }
-        }
-        if (nsry > 0) {
-            for (int ii = 3; ii <= 4; ++ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii-1]) nsry++; else break; }
-            for (int ii = 1; ii >= 0; --ii) { if (sigadcy[ii] > 0.0 && sigadcy[ii] < sigadcy[ii+1]) nsry++; else break; }
-        }
-			
         Bool_t isInnTr = (layJ >= 2 && layJ <= 8);
         Bool_t scx = (xcls != nullptr);
         Bool_t scy = (ycls != nullptr);
 
         HitStTRK hit(scx, scy, layJ, isInnTr);
         hit.set_coo(coo.x(), coo.y(), coo.z());
-        hit.set_nsr(nsrx, nsry);
         
         if      (layJ == 1) TkHitL1 = hit;
         else if (layJ == 9) TkHitL9 = hit;
@@ -245,8 +250,7 @@ Bool_t Event::BulidHitStTRK() {
         
         HitStTRK hitQ(scx, scy, layJ, isInnTr);
         hitQ.set_coo(coo.x(), coo.y(), coo.z());
-        hitQ.set_nsr(nsrx, nsry);
-        hitQ.set_q(qxy, qx, qy, ChrgZ);
+        hitQ.set_q(qxy, qx, qy);
         
         if      (layJ == 1) TkHitL1Q = hitQ;
         else if (layJ == 9) TkHitL9Q = hitQ;
@@ -254,12 +258,13 @@ Bool_t Event::BulidHitStTRK() {
         
         HitStTRK hitQ_NOxy(false, false, layJ, isInnTr);
         hitQ_NOxy.set_coo(coo.x(), coo.y(), coo.z());
-        hitQ_NOxy.set_nsr(nsrx, nsry);
-        hitQ_NOxy.set_q(qxy, qx, qy, ChrgZ);
-        
-        if      (layJ == 1) TkHitL1Q_NOxy = hitQ_NOxy;
-        else if (layJ == 9) TkHitL9Q_NOxy = hitQ_NOxy;
-        else                TkHitInQ_NOxy.push_back(hitQ_NOxy);
+        hitQ_NOxy.set_q(qxy, qx, qy);
+
+        if (hitQ_NOxy.sq()) {
+            if      (layJ == 1) TkHitL1Q_NOxy = hitQ_NOxy;
+            else if (layJ == 9) TkHitL9Q_NOxy = hitQ_NOxy;
+            else                TkHitInQ_NOxy.push_back(hitQ_NOxy);
+        }
 
         Bool_t isInn = (layJ != 1 && layJ != 9);
         if (isInn && scx) cntX++;
@@ -298,19 +303,13 @@ Bool_t Event::BulidHitStTOF() {
         hitT.set_t(tme.at(it));
         TfHitT.push_back(hitT);
         
-        HitStTOF hitQ(lay.at(it));
-        hitQ.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
-        hitQ.set_q(chg.at(it), ChrgZ);
-        TfHitQ.push_back(hitQ);
-        
         HitStTOF hitTQ(lay.at(it));
         hitTQ.set_coo(coo.at(it)(0), coo.at(it)(1), coo.at(it)(2));
         hitTQ.set_t(tme.at(it));
-        hitTQ.set_q(chg.at(it), ChrgZ);
+        hitTQ.set_q(chg.at(it));
         TfHitTQ.push_back(hitTQ);
     }
     if (TfHitT.size()  <= 2) return false;
-    if (TfHitQ.size()  <= 2) return false;
     if (TfHitTQ.size() <= 2) return false;
 
     return true;

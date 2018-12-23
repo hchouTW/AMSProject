@@ -6,7 +6,7 @@
 #include "Math.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
-#include "GmIonEloss.h"
+#include "IonTrEloss.h"
 #include "PartInfo.h"
 #include "PhySt.h"
 #include "MagEnv.h"
@@ -91,9 +91,13 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
     if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
 
+    timer_.start();
+    
     succ_ = (simpleFit() ? physicalFit() : false);
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
     
+    timer_.stop();
+
     //if (!succ_) CERR("FAILURE === PhyTrFit\n");
 }
 
@@ -334,7 +338,7 @@ Bool_t PhyTrFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi_ib += hitTRD->nrmel() * hitTRD->nrmel();
+            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
             if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
         }
         

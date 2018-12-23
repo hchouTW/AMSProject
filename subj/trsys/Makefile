@@ -7,7 +7,7 @@ TagetDir = $(AMSCoreSubj)/trsys/vdev
 TagetDir = $(AMSCoreSubj)/trsys/test
 
 #Version=18Sep21
-Version=18Oct03
+Version=18Oct17
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -22,21 +22,29 @@ all :
 	@cp -fa $(PWD)/src/time_fill.C $(TagetDir)/src/time_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/time_fit.C $(TagetDir)/src/time_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/hit_fill.C $(TagetDir)/src/hit_fill.C 2> /dev/null
-	@cp -fa $(PWD)/src/hitq_fit.C $(TagetDir)/src/hitq_fit.C 2> /dev/null
+	@cp -fa $(PWD)/src/hitTDq_fit.C $(TagetDir)/src/hitTDq_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/hitt_fit.C $(TagetDir)/src/hitt_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fill.C $(TagetDir)/src/prop_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fit.C $(TagetDir)/src/prop_fit.C 2> /dev/null
+	@cp -fa $(PWD)/src/bta_fill.C $(TagetDir)/src/bta_fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/bta_fit.C $(TagetDir)/src/bta_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/track_fill.C $(TagetDir)/src/track_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/track_fit.C $(TagetDir)/src/track_fit.C 2> /dev/null
+	@cp -fa $(PWD)/src/mu_fill.C $(TagetDir)/src/mu_fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/mu_fit.C $(TagetDir)/src/mu_fit.C 2> /dev/null
 	#make $(TagetDir)/time_fill
 	#make $(TagetDir)/time_fit
 	#make $(TagetDir)/hit_fill
-	#make $(TagetDir)/hitq_fit
+	make $(TagetDir)/hitTDq_fit
 	#make $(TagetDir)/hitt_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
-	make $(TagetDir)/track_fill
+	#make $(TagetDir)/bta_fill
+	#make $(TagetDir)/bta_fit
+	#make $(TagetDir)/track_fill
 	#make $(TagetDir)/track_fit
+	#make $(TagetDir)/mu_fill
+	#make $(TagetDir)/mu_fit
 
 $(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
@@ -59,11 +67,11 @@ $(TagetDir)/obj/hit_fill.o : $(TagetDir)/src/hit_fill.C
 $(TagetDir)/hit_fill : $(TagetDir)/obj/hit_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
-$(TagetDir)/obj/hitq_fit.o : $(TagetDir)/src/hitq_fit.C
+$(TagetDir)/obj/hitTDq_fit.o : $(TagetDir)/src/hitTDq_fit.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
--include $(TagetDir)/obj/hitq_fit.d
+-include $(TagetDir)/obj/hitTDq_fit.d
 
-$(TagetDir)/hitq_fit : $(TagetDir)/obj/hitq_fit.o
+$(TagetDir)/hitTDq_fit : $(TagetDir)/obj/hitTDq_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/obj/hitt_fit.o : $(TagetDir)/src/hitt_fit.C
@@ -87,6 +95,20 @@ $(TagetDir)/obj/prop_fit.o : $(TagetDir)/src/prop_fit.C
 $(TagetDir)/prop_fit : $(TagetDir)/obj/prop_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
+$(TagetDir)/obj/bta_fill.o : $(TagetDir)/src/bta_fill.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/bta_fill.d
+
+$(TagetDir)/bta_fill : $(TagetDir)/obj/bta_fill.o
+	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+
+$(TagetDir)/obj/bta_fit.o : $(TagetDir)/src/bta_fit.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/bta_fit.d
+
+$(TagetDir)/bta_fit : $(TagetDir)/obj/bta_fit.o
+	$(LD) -o $@ $+ $(LIBP)
+
 $(TagetDir)/obj/track_fill.o : $(TagetDir)/src/track_fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
 -include $(TagetDir)/obj/track_fill.d
@@ -99,8 +121,21 @@ $(TagetDir)/obj/track_fit.o : $(TagetDir)/src/track_fit.C
 -include $(TagetDir)/obj/track_fit.d
 
 $(TagetDir)/track_fit : $(TagetDir)/obj/track_fit.o
+	$(LD) -o $@ $+ $(LIBP)
+
+$(TagetDir)/obj/mu_fill.o : $(TagetDir)/src/mu_fill.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/mu_fill.d
+
+$(TagetDir)/mu_fill : $(TagetDir)/obj/mu_fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
+$(TagetDir)/obj/mu_fit.o : $(TagetDir)/src/mu_fit.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/mu_fit.d
+
+$(TagetDir)/mu_fit : $(TagetDir)/obj/mu_fit.o
+	$(LD) -o $@ $+ $(LIBP)
 
 clean :
 	@rm -fv $(TagetDir)/env/*
@@ -114,6 +149,10 @@ clean :
 	@rm -fv $(TagetDir)/hitt_fit
 	@rm -fv $(TagetDir)/prop_fill
 	@rm -fv $(TagetDir)/prop_fit
+	@rm -fv $(TagetDir)/bta_fill
+	@rm -fv $(TagetDir)/bta_fit
 	@rm -fv $(TagetDir)/track_fill
 	@rm -fv $(TagetDir)/track_fit
+	@rm -fv $(TagetDir)/mu_fill
+	@rm -fv $(TagetDir)/mu_fit
 	@rm -fv $(TagetDir)/fit_fit
