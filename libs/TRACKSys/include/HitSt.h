@@ -354,23 +354,36 @@ class HitStTRD : public VirtualHitSt {
         void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
-        inline void set_el(Double_t el) {
-            side_el_ = (Numc::Compare(el) > 0);
-            el_      = (side_el_ ? el : Numc::ZERO<>);
-            nrmel_   = Numc::ZERO<>;
-            divel_.fill(Numc::ZERO<>);
+        inline void set_el(Double_t elm, Double_t els) {
+            side_el_ = (Numc::Compare(elm) > 0 && Numc::Compare(els) > 0);
+            elm_     = (side_el_ ? elm : Numc::ZERO<>);
+            els_     = (side_el_ ? els : Numc::ZERO<>);
+            
+            chielm_ = Numc::ZERO<>;
+            nrmelm_ = Numc::ZERO<>;
+            divelm_.fill(Numc::ZERO<>);
+            
+            chiels_ = Numc::ZERO<>;
+            nrmels_ = Numc::ZERO<>;
+            divels_.fill(Numc::ZERO<>);
         }
         
-        inline const Double_t& el() const { return el_; }
+        inline const Double_t& elm() const { return elm_; }
+        inline const Double_t& els() const { return els_; }
 
         inline const Short_t& seqIDel() const { return seqIDel_; }
         
         inline const Bool_t& sel() const { return side_el_; }
 
-        inline const Double_t& chiel() const { return chiel_; }
-        inline const Double_t& nrmel() const { return nrmel_; }
-        inline const Double_t& divel_ibta() const { return divel_[0]; }
-        inline const Double_t& divel_eta()  const { return divel_[1]; }
+        inline const Double_t& chielm() const { return chielm_; }
+        inline const Double_t& nrmelm() const { return nrmelm_; }
+        inline const Double_t& divelm_ibta() const { return divelm_[0]; }
+        inline const Double_t& divelm_eta()  const { return divelm_[1]; }
+        
+        inline const Double_t& chiels() const { return chiels_; }
+        inline const Double_t& nrmels() const { return nrmels_; }
+        inline const Double_t& divels_ibta() const { return divels_[0]; }
+        inline const Double_t& divels_eta()  const { return divels_[1]; }
         
     protected :
         void clear();
@@ -379,14 +392,19 @@ class HitStTRD : public VirtualHitSt {
         Short_t seqIDel_;
         
         Bool_t   side_el_;
-        Double_t el_; // energy loss dE/dx
+        Double_t elm_; // energy loss dE/dx mean
+        Double_t els_; // energy loss dE/dx sigma
 
-        Double_t chiel_; // dE/dx chi
-        Double_t nrmel_; // dE/dx nrom
-        std::array<Double_t, 2> divel_; // dE/dx div (ibta) [ibta, eta]
+        Double_t chielm_; // dE/dx chi
+        Double_t nrmelm_; // dE/dx nrom
+        std::array<Double_t, 2> divelm_; // dE/dx div (ibta) [ibta, eta]
+        
+        Double_t chiels_; // dE/dx chi
+        Double_t nrmels_; // dE/dx nrom
+        std::array<Double_t, 2> divels_; // dE/dx div (ibta) [ibta, eta]
 
-        IonTrEloss* pdf_el_men_;
-        IonTrEloss* pdf_el_sgm_;
+        IonTrEloss* pdf_elm_;
+        IonTrEloss* pdf_els_;
     
     protected :
         static IonTrEloss PDF_Q01_EL_MEN_;

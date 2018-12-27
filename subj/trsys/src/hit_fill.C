@@ -288,6 +288,7 @@ int main(int argc, char * argv[]) {
     if (fTrd ) { delete fTrd ; fTrd  = nullptr; }
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
+    if (fHyc)  { delete fHyc ; fHyc  = nullptr; }
 
     return 0;
 }

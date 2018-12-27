@@ -229,9 +229,9 @@ Bool_t PhyBtaFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi += hitTRD->chiel() * hitTRD->chiel();
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
+            if (hitTRD->sel()) chi += hitTRD->chielm() * hitTRD->chielm();
+            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
+            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
         }
         
         cnt_nhit++;
@@ -334,8 +334,8 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divel_ibta() * jbBB;
+            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
+            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
         }
 
         cnt_nhit++;

@@ -2039,27 +2039,27 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (trM2TkFs.status()) fHyc.trM2.at(3) = std::move(processHCTr(trM2TkFs));
 
     // Track Fitting with the all measurements
-    //std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkInAll = 
-    //    std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkInAll = 
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
 
-    //std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL1All = 
-    //    std::make_tuple(TrackSys::AmsTkOpt(tkl1, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
-    //
-    //std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL9All = 
-    //    std::make_tuple(TrackSys::AmsTkOpt(tkl9, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
-    //
-    //std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkFsAll = 
-    //    std::make_tuple(TrackSys::AmsTkOpt(tkfs, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL1All = 
+        std::make_tuple(TrackSys::AmsTkOpt(tkl1, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+    
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL9All = 
+        std::make_tuple(TrackSys::AmsTkOpt(tkl9, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+    
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkFsAll = 
+        std::make_tuple(TrackSys::AmsTkOpt(tkfs, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
 
-    //TrackSys::PhyTrFit&& trM1TkInAll(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
-    //TrackSys::PhyTrFit&& trM1TkL1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
-    //TrackSys::PhyTrFit&& trM1TkL9All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL9All), std::get<1>(opt_tkL9All), std::get<2>(opt_tkL9All)));
-    //TrackSys::PhyTrFit&& trM1TkFsAll(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkFsAll), std::get<1>(opt_tkFsAll), std::get<2>(opt_tkFsAll)));
+    TrackSys::PhyTrFit&& trM1TkInAll(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
+    TrackSys::PhyTrFit&& trM1TkL1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
+    TrackSys::PhyTrFit&& trM1TkL9All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL9All), std::get<1>(opt_tkL9All), std::get<2>(opt_tkL9All)));
+    TrackSys::PhyTrFit&& trM1TkFsAll(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkFsAll), std::get<1>(opt_tkFsAll), std::get<2>(opt_tkFsAll)));
 
-    //if (trM1TkInAll.status()) fHyc.trM1All.at(0) = std::move(processHCTr(trM1TkInAll));
-    //if (trM1TkL1All.status()) fHyc.trM1All.at(1) = std::move(processHCTr(trM1TkL1All));
-    //if (trM1TkL9All.status()) fHyc.trM1All.at(2) = std::move(processHCTr(trM1TkL9All));
-    //if (trM1TkFsAll.status()) fHyc.trM1All.at(3) = std::move(processHCTr(trM1TkFsAll));
+    if (trM1TkInAll.status()) fHyc.trM1All.at(0) = std::move(processHCTr(trM1TkInAll));
+    if (trM1TkL1All.status()) fHyc.trM1All.at(1) = std::move(processHCTr(trM1TkL1All));
+    if (trM1TkL9All.status()) fHyc.trM1All.at(2) = std::move(processHCTr(trM1TkL9All));
+    if (trM1TkFsAll.status()) fHyc.trM1All.at(3) = std::move(processHCTr(trM1TkFsAll));
 
     //TrackSys::PhyTrFit&& trM2TkInAll(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
     //TrackSys::PhyTrFit&& trM2TkL1All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
@@ -2080,10 +2080,10 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
         std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
    
     TrackSys::PhyBtaFit btaM1T(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM1TkIn.part());
-    //TrackSys::PhyBtaFit btaM1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM1TkIn.part());
+    TrackSys::PhyBtaFit btaM1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM1TkIn.part());
     
     if (btaM1T.status())   fHyc.btaM1T = std::move(processHCBta(btaM1T));
-    //if (btaM1All.status()) fHyc.btaM1All = std::move(processHCBta(btaM1All));
+    if (btaM1All.status()) fHyc.btaM1All = std::move(processHCBta(btaM1All));
 
     //TrackSys::PhyBtaFit btaM2T(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM2TkIn.part());
     //TrackSys::PhyBtaFit btaM2All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM2TkIn.part());
@@ -2099,10 +2099,10 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
     
     TrackSys::PhyMuFit&& mutrT(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muT),   std::get<1>(opt_muT),   std::get<2>(opt_muT)));
-    //TrackSys::PhyMuFit&& mutrAll(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muAll), std::get<1>(opt_muAll), std::get<2>(opt_muAll)));
+    TrackSys::PhyMuFit&& mutrAll(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muAll), std::get<1>(opt_muAll), std::get<2>(opt_muAll)));
     
     if (mutrT.status()) fHyc.mutrT = std::move(processHCMu(mutrT));
-    //if (mutrAll.status()) fHyc.mutrAll = std::move(processHCMu(mutrAll));
+    if (mutrAll.status()) fHyc.mutrAll = std::move(processHCMu(mutrAll));
 
     fStopwatch.stop();
 	return selectEvent(event);
@@ -2522,11 +2522,11 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-    if (event->NTrTrack() != 1) return -2001;
+    if (event->NTrTrack() <= 0) return -2001;
 
 	// ~3~ (Based on TrdTrack)
 	//if (event->NTrdTrack() == 0 && event->NTrdHTrack() == 0) return -3001;
-
+    
 	// ~4~ (Based on Particle)
 	ParticleR   * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
 	TrTrackR    * trtkSIG = (partSIG != nullptr) ? partSIG->pTrTrack() : nullptr;

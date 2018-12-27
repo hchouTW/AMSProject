@@ -213,7 +213,7 @@ int main(int argc, char * argv[]) {
         if (fTrd->statusKCls[0] && fTrd->recHits.size() >= 5) {
             HitStTRD mhit;
             mhit.set_coo(0, 0, fTrd->recCz);
-            mhit.set_el(fTrd->recMen);
+            mhit.set_el(fTrd->recMen, fTrd->recSgm);
             fitPar.add_hit(mhit);
         }
         else continue;
@@ -334,6 +334,7 @@ int main(int argc, char * argv[]) {
     if (fTrd ) { delete fTrd ; fTrd  = nullptr; }
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
+    if (fHyc)  { delete fHyc ; fHyc  = nullptr; }
 
     google::ShutdownGoogleLogging();
     return 0;

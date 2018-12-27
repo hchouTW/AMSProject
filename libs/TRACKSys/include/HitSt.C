@@ -507,14 +507,19 @@ void HitStTRD::clear() {
     seqIDel_ = -1;
     
     side_el_ = false;
-    el_      = Numc::ZERO<>;
+    elm_     = Numc::ZERO<>;
+    els_     = Numc::ZERO<>;
 
-    chiel_ = Numc::ZERO<>;
-    nrmel_ = Numc::ZERO<>;
-    divel_.fill(Numc::ZERO<>);
+    chielm_ = Numc::ZERO<>;
+    nrmelm_ = Numc::ZERO<>;
+    divelm_.fill(Numc::ZERO<>);
+    
+    chiels_ = Numc::ZERO<>;
+    nrmels_ = Numc::ZERO<>;
+    divels_.fill(Numc::ZERO<>);
 
-    pdf_el_men_ = nullptr;
-    pdf_el_sgm_ = nullptr;
+    pdf_elm_ = nullptr;
+    pdf_els_ = nullptr;
 
     set_type();
 }
@@ -531,20 +536,37 @@ Short_t HitStTRD::set_seqID(Short_t seqID) {
 void HitStTRD::cal(const PhySt& part) {
     if (!set_type(part.info())) return;
     
-    chiel_ = Numc::ZERO<>;
-    nrmel_ = Numc::ZERO<>;
-    divel_.fill(Numc::ZERO<>);
+    chielm_ = Numc::ZERO<>;
+    nrmelm_ = Numc::ZERO<>;
+    divelm_.fill(Numc::ZERO<>);
     if (side_el_) {
-        std::array<long double, 3>&& iontr = pdf_el_men_->minimizer(el_, part.ibta(), part.igb());
-        chiel_    = iontr[0];
-        nrmel_    = iontr[1];
-        divel_[0] = iontr[2];
-        divel_[1] = iontr[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        std::array<long double, 3>&& iontr = pdf_elm_->minimizer(elm_, part.ibta(), part.igb());
+        chielm_    = iontr[0];
+        nrmelm_    = iontr[1];
+        divelm_[0] = iontr[2];
+        divelm_[1] = iontr[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
 
-        if (!Numc::Valid(chiel_) || !Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
-            chiel_ = Numc::ZERO<>;
-            nrmel_ = Numc::ZERO<>;
-            divel_.fill(Numc::ZERO<>);
+        if (!Numc::Valid(chielm_) || !Numc::Valid(nrmelm_) || !Numc::Valid(divelm_[0]) || !Numc::Valid(divelm_[1])) {
+            chielm_ = Numc::ZERO<>;
+            nrmelm_ = Numc::ZERO<>;
+            divelm_.fill(Numc::ZERO<>);
+        }
+    }
+
+    chiels_ = Numc::ZERO<>;
+    nrmels_ = Numc::ZERO<>;
+    divels_.fill(Numc::ZERO<>);
+    if (side_el_) {
+        std::array<long double, 3>&& iontr = pdf_els_->minimizer(els_, part.ibta(), part.igb());
+        chiels_    = iontr[0];
+        nrmels_    = iontr[1];
+        divels_[0] = iontr[2];
+        divels_[1] = iontr[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+
+        if (!Numc::Valid(chiels_) || !Numc::Valid(nrmels_) || !Numc::Valid(divels_[0]) || !Numc::Valid(divels_[1])) {
+            chiels_ = Numc::ZERO<>;
+            nrmels_ = Numc::ZERO<>;
+            divels_.fill(Numc::ZERO<>);
         }
     }
 
@@ -553,16 +575,16 @@ void HitStTRD::cal(const PhySt& part) {
 }
 
 Bool_t HitStTRD::set_type(const PartInfo& info) {
-    if ((info.is_std() && type_ == info.type()) && (pdf_el_men_ && pdf_el_sgm_)) return true;
+    if ((info.is_std() && type_ == info.type()) && (pdf_elm_ && pdf_els_)) return true;
     
     Short_t absq = std::abs(info.chrg());
     if (absq == 1) {
-        pdf_el_men_ = &PDF_Q01_EL_MEN_;
-        pdf_el_sgm_ = &PDF_Q01_EL_SGM_;
+        pdf_elm_ = &PDF_Q01_EL_MEN_;
+        pdf_els_ = &PDF_Q01_EL_SGM_;
         type_ = info.type();
     } else if (absq >= 2) {
-        pdf_el_men_ = &PDF_Q02_EL_MEN_;
-        pdf_el_sgm_ = &PDF_Q02_EL_SGM_;
+        pdf_elm_ = &PDF_Q02_EL_MEN_;
+        pdf_els_ = &PDF_Q02_EL_SGM_;
         type_ = info.type();
     } else {
         CERR("HitStTRD::set_type() NO PartType Setting.\n");

@@ -648,7 +648,7 @@ Bool_t SimpleTrFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
+            if (hitTRD->sel()) chi_ib += hitTRD->chielm() * hitTRD->chielm();
         }
         
         if (hasCxy) {
@@ -990,9 +990,9 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) costIb += hitTRD->chiel() * hitTRD->chiel();
-            if (hasGrd && hitTRD->sel()) grdIb(4) += (hitTRD->divel_eta() * jbGG(4, 4)) * hitTRD->nrmel();
-            if (hasGrd && hitTRD->sel()) hesIb(4, 4) += (hitTRD->divel_eta() * jbGG(4, 4)) * (hitTRD->divel_eta() * jbGG(4, 4));
+            if (hitTRD->sel()) costIb += hitTRD->chielm() * hitTRD->chielm();
+            if (hasGrd && hitTRD->sel()) grdIb(4) += (hitTRD->divelm_eta() * jbGG(4, 4)) * hitTRD->nrmelm();
+            if (hasGrd && hitTRD->sel()) hesIb(4, 4) += (hitTRD->divelm_eta() * jbGG(4, 4)) * (hitTRD->divelm_eta() * jbGG(4, 4));
         }
         
         if (hasCxy) {

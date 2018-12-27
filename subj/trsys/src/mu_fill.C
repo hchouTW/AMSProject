@@ -43,6 +43,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
+    ECAL * fHyc  = new HYC;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -56,6 +57,7 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
     dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("hyc",  &fHyc);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -160,7 +162,7 @@ int main(int argc, char * argv[]) {
         Int_t trPatt = optL1 + optL9 * 2;
         CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
-        HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
+        //HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
         // Geometry (TRK)
         if (fTrk->numOfTrack != 1) continue;
@@ -212,10 +214,9 @@ int main(int argc, char * argv[]) {
         TrFitPar fitParD(PartType::Deuterium);
         for (auto&& hit : fTrk->hits) {
             Bool_t isInnTr = (hit.layJ >= 2 && hit.layJ <= 8);
-            HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ, isInnTr);
+            HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1], info.chrg());
+            //mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1]);
          
             if (isInnTr) { fitPar.add_hit(mhit); fitParD.add_hit(mhit); }
             else {
@@ -382,6 +383,7 @@ int main(int argc, char * argv[]) {
     if (fTrd ) { delete fTrd ; fTrd  = nullptr; }
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
+    if (fHyc)  { delete fHyc ; fHyc  = nullptr; }
 
     google::ShutdownGoogleLogging();
     return 0;

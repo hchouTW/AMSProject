@@ -339,8 +339,8 @@ Bool_t PhyTrFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
+            if (hitTRD->sel()) chi_ib += hitTRD->chielm() * hitTRD->chielm();
+            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divelm_eta() * jbGG(4, 4);
         }
         
         if (hasCxy) {
@@ -592,8 +592,8 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmel();
-            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divel_eta() * jbGG(4, 4);
+            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
+            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDeta) += hitTRD->divelm_eta() * jbGG(4, 4);
         }
 
         if (hasCxy) {
