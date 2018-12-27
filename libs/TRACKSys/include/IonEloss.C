@@ -78,8 +78,8 @@ long double IonEloss::get_kpa(long double igbsqr) const {
 long double IonEloss::get_mpv(long double ibsqr, long double igbsqr) const {
     long double mpv = 
         mpv_[0] + 
-        (Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> :  mpv_[1] * ibsqr) +
-        (Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : -mpv_[2] * std::log(mpv_[3] + igbsqr));
+        (Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> : mpv_[1] * ibsqr) +
+        (Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mpv_[2] * std::log(mpv_[3] + igbsqr));
     if (!Numc::Valid(mpv)) mpv = Numc::ZERO<long double>;
     return mpv;
 }
@@ -87,8 +87,8 @@ long double IonEloss::get_mpv(long double ibsqr, long double igbsqr) const {
 long double IonEloss::get_sgm(long double ibsqr, long double igbsqr) const {
     long double sgm = 
         sgm_[0] + 
-        (Numc::EqualToZero(sgm_[1]) ? Numc::ZERO<long double> :  sgm_[1] * ibsqr) +
-        (Numc::EqualToZero(sgm_[2]) ? Numc::ZERO<long double> : -sgm_[2] * std::log(sgm_[3] + igbsqr));
+        (Numc::EqualToZero(sgm_[1]) ? Numc::ZERO<long double> : sgm_[1] * ibsqr) +
+        (Numc::EqualToZero(sgm_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * sgm_[2] * std::log(sgm_[3] + igbsqr));
     if (!Numc::Valid(sgm)) sgm = Numc::ZERO<long double>;
     return sgm;
 }
@@ -96,23 +96,29 @@ long double IonEloss::get_sgm(long double ibsqr, long double igbsqr) const {
 long double IonEloss::get_mod(long double ibsqr, long double igbsqr) const {
     long double mod = 
         mod_[0] + 
-        (Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> :  mod_[1] * ibsqr) +
-        (Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : -mod_[2] * std::log(mod_[3] + igbsqr));
+        (Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> : mod_[1] * ibsqr) +
+        (Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mod_[2] * std::log(mod_[3] + igbsqr));
     if (!Numc::Valid(mod)) mod = Numc::ZERO<long double>;
     return mod;
 }
 
 long double IonEloss::get_divmpv(long double ibta, long double igbsqr) const {
-    long double divbta = Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> :  mpv_[1];
-    long double divlog = Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : -mpv_[2] / (mpv_[3] + igbsqr);
+    long double divbta = Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> : mpv_[1];
+    long double divlog = Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mpv_[2] / (mpv_[3] + igbsqr);
+    if (!Numc::Valid(divbta)) divbta = Numc::ZERO<long double>;
+    if (!Numc::Valid(divlog)) divlog = Numc::ZERO<long double>;
+    
     long double divmpv = (divbta + divlog) * (Numc::TWO<long double> * ibta);
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
     return divmpv;
 }
 
 long double IonEloss::get_divmod(long double ibta, long double igbsqr) const {
-    long double divbta = Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> :  mod_[1];
-    long double divlog = Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : -mod_[2] / (mod_[3] + igbsqr);
+    long double divbta = Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> : mod_[1];
+    long double divlog = Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mod_[2] / (mod_[3] + igbsqr);
+    if (!Numc::Valid(divbta)) divbta = Numc::ZERO<long double>;
+    if (!Numc::Valid(divlog)) divlog = Numc::ZERO<long double>;
+    
     long double divmod = (divbta + divlog) * (Numc::TWO<long double> * ibta);
     if (!Numc::Valid(divmod)) divmod = Numc::ZERO<long double>;
     return divmod;

@@ -514,7 +514,7 @@ void HitStTRD::clear() {
     divel_.fill(Numc::ZERO<>);
 
     pdf_el_men_ = nullptr;
-    pdf_el_cov_ = nullptr;
+    pdf_el_sgm_ = nullptr;
 
     set_type();
 }
@@ -553,16 +553,16 @@ void HitStTRD::cal(const PhySt& part) {
 }
 
 Bool_t HitStTRD::set_type(const PartInfo& info) {
-    if ((info.is_std() && type_ == info.type()) && (pdf_el_men_ && pdf_el_cov_)) return true;
+    if ((info.is_std() && type_ == info.type()) && (pdf_el_men_ && pdf_el_sgm_)) return true;
     
     Short_t absq = std::abs(info.chrg());
     if (absq == 1) {
         pdf_el_men_ = &PDF_Q01_EL_MEN_;
-        pdf_el_cov_ = &PDF_Q01_EL_COV_;
+        pdf_el_sgm_ = &PDF_Q01_EL_SGM_;
         type_ = info.type();
     } else if (absq >= 2) {
         pdf_el_men_ = &PDF_Q02_EL_MEN_;
-        pdf_el_cov_ = &PDF_Q02_EL_COV_;
+        pdf_el_sgm_ = &PDF_Q02_EL_SGM_;
         type_ = info.type();
     } else {
         CERR("HitStTRD::set_type() NO PartType Setting.\n");
@@ -580,7 +580,7 @@ IonTrEloss HitStTRD::PDF_Q01_EL_MEN_(
     0.20 // Fluc
 );
 
-IonTrEloss HitStTRD::PDF_Q01_EL_COV_(
+IonTrEloss HitStTRD::PDF_Q01_EL_SGM_(
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
     { 0.0, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0 }, // Kpa
     { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mpv
@@ -598,7 +598,7 @@ IonTrEloss HitStTRD::PDF_Q02_EL_MEN_(
     0.20 // Fluc
 );
 
-IonTrEloss HitStTRD::PDF_Q02_EL_COV_(
+IonTrEloss HitStTRD::PDF_Q02_EL_SGM_(
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
     { 0.0, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0 }, // Kpa
     { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mpv

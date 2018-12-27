@@ -386,13 +386,13 @@ class HitStTRD : public VirtualHitSt {
         std::array<Double_t, 2> divel_; // dE/dx div (ibta) [ibta, eta]
 
         IonTrEloss* pdf_el_men_;
-        IonTrEloss* pdf_el_cov_;
+        IonTrEloss* pdf_el_sgm_;
     
     protected :
         static IonTrEloss PDF_Q01_EL_MEN_;
-        static IonTrEloss PDF_Q01_EL_COV_;
+        static IonTrEloss PDF_Q01_EL_SGM_;
         static IonTrEloss PDF_Q02_EL_MEN_;
-        static IonTrEloss PDF_Q02_EL_COV_;
+        static IonTrEloss PDF_Q02_EL_SGM_;
 };
 
 

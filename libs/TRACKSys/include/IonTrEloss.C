@@ -49,6 +49,8 @@ std::array<long double, 3> IonTrEloss::minimizer(long double x, long double ibta
     long double mod = (isfluc_ ? get_mod(ibsqr, loggb) : mpv);
     
     long double divIbta = Numc::NEG<long double> * (isfluc_ ? (get_divmod(ibta, igbsqr, loggb) / sgm) : (get_divmpv(ibta, igbsqr, loggb) / sgm));
+
+    COUT("IGB %14.8f DIV %14.8f\n", igb, divIbta);
     if (!Numc::Valid(divIbta)) divIbta = Numc::ZERO<long double>;
 
     // approximate Landau-Gaussian
@@ -84,9 +86,9 @@ long double IonTrEloss::get_kpa(long double loggb) const {
 long double IonTrEloss::get_mpv(long double ibsqr, long double loggb) const {
     long double mpv = 
         mpv_[0] + 
-        (Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> :  mpv_[1] * ibsqr) +
-        (Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : -mpv_[2] * loggb) +
-        (Numc::EqualToZero(mpv_[3]) ? Numc::ZERO<long double> :  mpv_[3] * Numc::HALF * std::erfc(mpv_[4] * loggb + mpv_[5]));
+        (Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> : mpv_[1] * ibsqr) +
+        (Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mpv_[2] * loggb) +
+        (Numc::EqualToZero(mpv_[3]) ? Numc::ZERO<long double> : mpv_[3] * Numc::HALF * std::erfc(mpv_[4] * loggb + mpv_[5]));
     if (!Numc::Valid(mpv)) mpv = Numc::ZERO<long double>;
     return mpv;
 }
@@ -94,9 +96,9 @@ long double IonTrEloss::get_mpv(long double ibsqr, long double loggb) const {
 long double IonTrEloss::get_sgm(long double ibsqr, long double loggb) const {
     long double sgm = 
         sgm_[0] + 
-        (Numc::EqualToZero(sgm_[1]) ? Numc::ZERO<long double> :  sgm_[1] * ibsqr) +
-        (Numc::EqualToZero(sgm_[2]) ? Numc::ZERO<long double> : -sgm_[2] * loggb) +
-        (Numc::EqualToZero(sgm_[3]) ? Numc::ZERO<long double> :  sgm_[3] * Numc::HALF * std::erfc(sgm_[4] * loggb + sgm_[5]));
+        (Numc::EqualToZero(sgm_[1]) ? Numc::ZERO<long double> : sgm_[1] * ibsqr) +
+        (Numc::EqualToZero(sgm_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * sgm_[2] * loggb) +
+        (Numc::EqualToZero(sgm_[3]) ? Numc::ZERO<long double> : sgm_[3] * Numc::HALF * std::erfc(sgm_[4] * loggb + sgm_[5]));
     if (!Numc::Valid(sgm)) sgm = Numc::ZERO<long double>;
     return sgm;
 }
@@ -104,17 +106,21 @@ long double IonTrEloss::get_sgm(long double ibsqr, long double loggb) const {
 long double IonTrEloss::get_mod(long double ibsqr, long double loggb) const {
     long double mod = 
         mod_[0] + 
-        (Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> :  mod_[1] * ibsqr) +
-        (Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : -mod_[2] * loggb) +
-        (Numc::EqualToZero(mod_[3]) ? Numc::ZERO<long double> :  mod_[3] * Numc::HALF * std::erfc(mod_[4] * loggb + mod_[5]));
+        (Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> : mod_[1] * ibsqr) +
+        (Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mod_[2] * loggb) +
+        (Numc::EqualToZero(mod_[3]) ? Numc::ZERO<long double> : mod_[3] * Numc::HALF * std::erfc(mod_[4] * loggb + mod_[5]));
     if (!Numc::Valid(mod)) mod = Numc::ZERO<long double>;
     return mod;
 }
 
 long double IonTrEloss::get_divmpv(long double ibta, long double igbsqr, long double loggb) const {
-    long double divbta = Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> :  mpv_[1];
-    long double divlog = Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : -mpv_[2] / igbsqr;
-    long double diverf = Numc::EqualToZero(mpv_[3]) ? Numc::ZERO<long double> :  mpv_[3] * mpv_[4] * Numc::INV_SQRT_PI * std::exp(-(mpv_[4] * loggb + mpv_[5]) * (mpv_[4] * loggb + mpv_[5])) / igbsqr;
+    long double divbta = Numc::EqualToZero(mpv_[1]) ? Numc::ZERO<long double> : mpv_[1];
+    long double divlog = Numc::EqualToZero(mpv_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mpv_[2] / igbsqr;
+    long double diverf = Numc::EqualToZero(mpv_[3]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mpv_[3] * mpv_[4] * Numc::INV_SQRT_PI * std::exp(-(mpv_[4] * loggb + mpv_[5]) * (mpv_[4] * loggb + mpv_[5])) / igbsqr;
+    if (!Numc::Valid(divbta)) divbta = Numc::ZERO<long double>;
+    if (!Numc::Valid(divlog)) divlog = Numc::ZERO<long double>;
+    if (!Numc::Valid(diverf)) diverf = Numc::ZERO<long double>;
+    
     long double divmpv = (divbta + divlog + diverf) * (Numc::TWO<long double> * ibta);
     if (!Numc::Valid(divmpv)) divmpv = Numc::ZERO<long double>;
     return divmpv;
@@ -122,8 +128,12 @@ long double IonTrEloss::get_divmpv(long double ibta, long double igbsqr, long do
 
 long double IonTrEloss::get_divmod(long double ibta, long double igbsqr, long double loggb) const {
     long double divbta = Numc::EqualToZero(mod_[1]) ? Numc::ZERO<long double> :  mod_[1];
-    long double divlog = Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : -mod_[2] / igbsqr;
-    long double diverf = Numc::EqualToZero(mod_[3]) ? Numc::ZERO<long double> :  mod_[3] * mod_[4] * Numc::INV_SQRT_PI * std::exp(-(mod_[4] * loggb + mod_[5]) * (mod_[4] * loggb + mod_[5])) / igbsqr;
+    long double divlog = Numc::EqualToZero(mod_[2]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mod_[2] / igbsqr;
+    long double diverf = Numc::EqualToZero(mod_[3]) ? Numc::ZERO<long double> : Numc::NEG<long double> * mod_[3] * mod_[4] * Numc::INV_SQRT_PI * std::exp(-(mod_[4] * loggb + mod_[5]) * (mod_[4] * loggb + mod_[5])) / igbsqr;
+    if (!Numc::Valid(divbta)) divbta = Numc::ZERO<long double>;
+    if (!Numc::Valid(divlog)) divlog = Numc::ZERO<long double>;
+    if (!Numc::Valid(diverf)) diverf = Numc::ZERO<long double>;
+    
     long double divmod = (divbta + divlog + diverf) * (Numc::TWO<long double> * ibta);
     if (!Numc::Valid(divmod)) divmod = Numc::ZERO<long double>;
     return divmod;
