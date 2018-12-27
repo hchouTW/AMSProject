@@ -5,25 +5,21 @@
     Printf("Current Version    = %s", gROOT->GetVersion());
 	Printf("Build Architecture = %s", gSystem->GetBuildArch());
     
-    TF1 * f1gs = new TF1("f1gs", "TMath::Abs([0])*TMath::Exp(-0.5*x*x/[1]/[1])");
-    f1gs->SetParameters(10., 10.);
+    TF1 * f1gs = new TF1("f1gs", "TMath::Abs([0])*TMath::Exp(-0.5*(x-[2])*(x-[2])/[1]/[1])");
+    f1gs->SetParameters(10., 10., 0.);
     f1gs->SetNpx(100000);
 
-    TF1 * f2gs = new TF1("f2gs", "TMath::Abs([0])*TMath::Exp(-0.5*x*x/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*x*x/[3]/[3])");
-    f2gs->SetParameters(10., 10., 10., 30.);
+    TF1 * f2gs = new TF1("f2gs", "TMath::Abs([0])*TMath::Exp(-0.5*(x-[4])*(x-[4])/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*(x-[4])*(x-[4])/[3]/[3])");
+    f2gs->SetParameters(10., 10., 10., 30., 0.);
     f2gs->SetNpx(100000);
 
-    TF1 * f3gs = new TF1("f3gs", "TMath::Abs([0])*TMath::Exp(-0.5*x*x/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*x*x/[3]/[3]) + TMath::Abs([4])*TMath::Exp(-0.5*x*x/[5]/[5])");
-    f3gs->SetParameters(10., 10., 10., 30., 10., 50.);
+    TF1 * f3gs = new TF1("f3gs", "TMath::Abs([0])*TMath::Exp(-0.5*(x-[6])*(x-[6])/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*(x-[6])*(x-[6])/[3]/[3]) + TMath::Abs([4])*TMath::Exp(-0.5*(x-[6])*(x-[6])/[5]/[5])");
+    f3gs->SetParameters(10., 10., 10., 30., 10., 50., 0.);
     f3gs->SetNpx(100000);
     
-    TF1 * f4gs = new TF1("f4gs", "TMath::Abs([0])*TMath::Exp(-0.5*x*x/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*x*x/[3]/[3]) + TMath::Abs([4])*TMath::Exp(-0.5*x*x/[5]/[5]) + TMath::Abs([6])*TMath::Exp(-0.5*x*x/[7]/[7])");
-    f4gs->SetParameters(10., 10., 10., 30., 10., 50., 10., 70.);
+    TF1 * f4gs = new TF1("f4gs", "TMath::Abs([0])*TMath::Exp(-0.5*(x-[8])*(x-[8])/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*(x-[8])*(x-[8])/[3]/[3]) + TMath::Abs([4])*TMath::Exp(-0.5*(x-[8])*(x-[8])/[5]/[5]) + TMath::Abs([6])*TMath::Exp(-0.5*(x-[8])*(x-[8])/[7]/[7])");
+    f4gs->SetParameters(10., 10., 10., 30., 10., 50., 10., 70., 0.);
     f4gs->SetNpx(100000);
-    
-    TF1 * f5gs = new TF1("f5gs", "TMath::Abs([0])*TMath::Exp(-0.5*x*x/[1]/[1]) + TMath::Abs([2])*TMath::Exp(-0.5*x*x/[3]/[3]) + TMath::Abs([4])*TMath::Exp(-0.5*x*x/[5]/[5]) + TMath::Abs([6])*TMath::Exp(-0.5*x*x/[7]/[7]) + TMath::Abs([8])*TMath::Exp(-0.5*x*x/[9]/[9])");
-    f5gs->SetParameters(10., 10., 10., 30., 10., 50., 10., 70., 10., 100.);
-    f5gs->SetNpx(100000);
     
     TF1* flg = new TF1("flg", "[0] * TMath::Exp(TMath::Abs([1]) * (-0.5)*((x-[2])*(x-[2])/[3]/[3]) + (1-TMath::Abs([1])) * TMath::Log(TMath::Landau(1.17741002*(x-[2])/TMath::Abs([3])-2.22782980e-01)/1.80655634e-01))");
     flg->SetParameters(1.0, 0.1, 0.0, 1.0);
@@ -41,9 +37,12 @@
     
     TF1* fmpv2 = new TF1("fmpv2", "[0] + [1] * (1+x*x)  - [2] * TMath::Log([3]+(x*x))");
     fmpv2->SetParameters(1.0, 1.0, 1.0, 1.0);
-
-    //TF1* ftme = new TF1("ftme", "[0] + [1] * TMath::Erfc([2] * (1+x*x)^[3] - [4])");
-    //ftme->SetParameters(2.13914e+00, 2.40467e-01, 7.71764e+01, 1.70279e-02, 7.76559e+01);
+    
+    TF1* fmpv3 = new TF1("fmpv3", "[0] + [1] * (1+x*x) - [2] * TMath::Log([3]+(x*x)) + [4] * 0.5 * TMath::Erfc([5] * log(x*x) + [6])");
+    fmpv3->SetParameters(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    
+    TF1* ftme = new TF1("ftme", "[0] + [1] * TMath::Erfc([2] * (1+x*x)^[3] - [4])");
+    ftme->SetParameters(2.13914e+00, 2.40467e-01, 7.71764e+01, 1.70279e-02, 7.76559e+01);
     
     TF1* fIkpa = new TF1("fIkpa", "0.5*(1+TMath::Erf([0]*log(x*x)-[1])) + [2]*0.5*TMath::Erfc([3]*log(x*x)+[4])");
     fIkpa->SetParameters(3.03451e-01, 1.14913e+00, 1.19150e-01, 1.38026e-01, 7.91603e-01);
