@@ -3,7 +3,8 @@
 #include <TRACKSys.h>
 
 //#include "/ams_home/hchou/AMSCore/prod/18Sep21/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -90,7 +91,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
 
     // Fit R Res
-    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 1500, -1.3, 1.3);
+    Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -1.3, 1.3);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
@@ -108,7 +109,7 @@ int main(int argc, char * argv[]) {
     Hist* hCKRqlty = Hist::New("hCKRqlty", HistAxis(AXmom, AXRqlt));
     Hist* hHCRqlty = Hist::New("hHCRqlty", HistAxis(AXmom, AXRqlt));
    
-    MGClock::HrsStopwatch hrssw; hrssw.start();
+    MGClock::HrsStopwatch hrssw;
     Long64_t passEntry = 0;
     Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -128,7 +129,7 @@ int main(int argc, char * argv[]) {
         Int_t trPatt = optL1 + optL9 * 2;
         CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
         KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
-        HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
+        //HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
         // Geometry (TRK)
         if (fTrk->numOfTrack != 1) continue;
@@ -182,34 +183,23 @@ int main(int argc, char * argv[]) {
         TrFitPar fitParL9(info.type());
         for (auto&& hit : fTrk->hits) {
             Bool_t isInnTr = (hit.layJ >= 2 && hit.layJ <= 8);
-            HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ, isInnTr);
+            HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            //mhit.set_nsr(hit.nsr[0], hit.nsr[1]);
-            //mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1], info.chrg());
+            //mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1]);
          
             if (isInnTr) { fitPar.add_hit(mhit); fitParL1.add_hit(mhit); fitParL9.add_hit(mhit); topLay = std::min(topLay, hit.layJ-1); }
             else {
                 if (optL1 && hit.layJ == 1) { hasL1 = true; fitPar.add_hit(mhit); fitParL1.add_hit(mhit); topLay = 0; }
                 if (optL9 && hit.layJ == 9) { hasL9 = true; fitPar.add_hit(mhit); fitParL9.add_hit(mhit); }
             }
-           
-            //if (hit.chrg[0] > 0 && hit.chrg[1] > 0 && hit.chrg[2] > 0) {
-            //    HitStTRK mhit_q(false, false, hit.layJ, isInnTr);
-            //    mhit_q.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            //    mhit_q.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1], info.chrg());
-            //    if (isInnTr) { btaPar.add_hit(mhit_q); }
-            //    else {
-            //        if (optL1 && hit.layJ == 1) { btaPar.add_hit(mhit_q); }
-            //        if (optL9 && hit.layJ == 9) { btaPar.add_hit(mhit_q); }
-            //    }
-            //}
         }
 
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            //mhit.set_q(fTof->Q[il], info.chrg());
+            mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
+            //fitPar.add_hit(mhit);
         }
 
         //if (!fRich->status) continue;
@@ -220,29 +210,11 @@ int main(int argc, char * argv[]) {
         //btaPar.add_hit(richHit);
 
         // TRD
-        if (fTrd->statusKCls[0] && fTrd->LLRnhit[0] >= 8) {
-            std::vector<std::pair<Double_t, Double_t>> dEdX;
-            for (auto&& hit : fTrd->hits) {
-                if (hit.mcMom < 0.1 || hit.len < 0.01) continue;
-                if (hit.len < 0.40 || hit.len > 0.65) continue;
-                dEdX.push_back(std::make_pair(hit.dEdx, hit.mcMom));
-            }
-            std::sort(dEdX.begin(), dEdX.end());
-            
-            //COUT("NUM %d\n", dEdX.size());
-            if (dEdX.size() >= 8) {
-                Double_t ion = 0, ionm = 0;
-                for (int it = 2; it < dEdX.size()-1; ++it) { ion += dEdX.at(it).first; ionm += dEdX.at(it).second; }
-                ion  /= static_cast<double>(dEdX.size()-3);
-                ionm /= static_cast<double>(dEdX.size()-3);
-               
-                HitStTRD hit;
-                hit.set_coo(0, 0, 115.);
-                hit.set_el(ion);
-
-                fitPar.add_hit(hit);
-            }
-            else continue;
+        if (fTrd->statusKCls[0] && fTrd->recHits.size() >= 5) {
+            HitStTRD mhit;
+            mhit.set_coo(0, 0, fTrd->recCz);
+            mhit.set_el(fTrd->recMen);
+            fitPar.add_hit(mhit);
         }
         else continue;
 

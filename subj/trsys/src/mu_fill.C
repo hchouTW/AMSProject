@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;

@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Oct17/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -32,6 +32,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
+    HYC  * fHyc  = new HYC ;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -45,6 +46,7 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
     dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("hyc",  &fHyc);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
@@ -77,12 +79,6 @@ int main(int argc, char * argv[]) {
   
     Hist* hMryInn   = Hist::New("hMryInn",   HistAxis(AXigb, AXres));
     Hist* hMryInnNN = Hist::New("hMryInnNN", HistAxis(AXres, "Events/Bin"));
-    
-    Hist* hMrxExt   = Hist::New("hMrxExt",   HistAxis(AXigb, AXres));
-    Hist* hMrxExtNN = Hist::New("hMrxExtNN", HistAxis(AXres, "Events/Bin"));
-    
-    Hist* hMryExt   = Hist::New("hMryExt",   HistAxis(AXigb, AXres));
-    Hist* hMryExtNN = Hist::New("hMryExtNN", HistAxis(AXres, "Events/Bin"));
 
     Axis AXTKq("TKq", 1200, 0.6 * info.chrg() * info.chrg(), 10.0 * info.chrg() * info.chrg());
     Hist* hTKqxy = Hist::New("hTKqxy", HistAxis(AXigb, AXTKq));
@@ -97,15 +93,7 @@ int main(int argc, char * argv[]) {
     Hist* hTDq  = Hist::New("hTDq", HistAxis(AXigb, AXTDq));
     Hist* hTDs  = Hist::New("hTDs", HistAxis(AXigb, AXTDq));
     Hist* hTDc  = Hist::New("hTDc", HistAxis(AXigb, AXTDc));
-    Hist* hTDqc = Hist::New("hTDqc", HistAxis(AXigb, AXTDc));
     Hist* hTDqb = Hist::New("hTDqb", HistAxis(AXigb, AXTDq));
-    
-    Hist* hTDqs = Hist::New("hTDqs", HistAxis(AXTDq, AXTDq));
-    
-    Hist* hTDq1 = Hist::New("hTDq1", HistAxis(AXigb, AXTDq));
-    Hist* hTDs1 = Hist::New("hTDs1", HistAxis(AXigb, AXTDq));
-    Hist* hTDq2 = Hist::New("hTDq2", HistAxis(AXigb, AXTDq));
-    Hist* hTDs2 = Hist::New("hTDs2", HistAxis(AXigb, AXTDq));
     
     Axis AXTFtme("TFtme", 800, -25, 25);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXigb, AXTFtme));
@@ -115,6 +103,15 @@ int main(int argc, char * argv[]) {
     
     Axis AXNAFib("NAFib", 800, -0.015, 0.015);
     Hist* hNAFib = Hist::New("hNAFib", HistAxis(AXigb, AXNAFib));
+    
+    Axis AXAGLibElem("AGLib", 800*5, -0.005*10, 0.005*10);
+    Axis AXNAFibElem("NAFib", 800*5, -0.015*10, 0.015*10);
+    Hist* hAGLibElem = Hist::New("hAGLibElem", HistAxis(AXigb, AXAGLibElem));
+    Hist* hNAFibElem = Hist::New("hNAFibElem", HistAxis(AXigb, AXNAFibElem));
+    
+    Axis AXnpe("npe", 100, 0.0, 20.0);
+    Hist* hAGLibnpe = Hist::New("hAGLibnpe", HistAxis(AXAGLibElem, AXnpe));
+    Hist* hNAFibnpe = Hist::New("hNAFibnpe", HistAxis(AXNAFibElem, AXnpe));
 
     Long64_t printRate = static_cast<Long64_t>(0.05*dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -198,35 +195,25 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mpRh = nullptr;
         for (auto&& seg : fG4mc->primPart.segsRh) { mpRh = &seg; }
         
-        for (Int_t it = 0; it <= 8; ++it) {
+        for (Int_t it = 2; it <= 7; ++it) {
             if (!rcTk[it] || !mhTk[it] || !mpTk[it]) continue;
             Double_t igb = (fG4mc->primPart.mass / mpTk[it]->mom);
             if (igb < AXigb.min() || igb > AXigb.max()) continue;
             igb = AXigb.center(AXigb.find(igb), AxisScale::kLog);
             Double_t res[2] = { rcTk[it]->coo[0] - mhTk[it]->coo[0], rcTk[it]->coo[1] - mhTk[it]->coo[1] };
             if (!(rcTk[it]->side[0] && rcTk[it]->side[1])) continue;
-            if (rcTk[it]->chrg[0] < 0) continue;
-            if (rcTk[it]->chrg[1] < 0) continue;
-            if (rcTk[it]->chrg[2] < 0) continue;
+            if (rcTk[it]->chrg[0] < 0.775) continue;
+            if (rcTk[it]->chrg[1] < 0.775) continue;
+            if (rcTk[it]->chrg[2] < 0.0) continue;
 
             constexpr Double_t CM2UM = 1.0e4;
-            if (it >= 2 && it <= 7) {
-                hMrxInn->fillH2D(igb, CM2UM * res[0]);
-                hMryInn->fillH2D(igb, CM2UM * res[1]);
-                if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
-                   hMrxInnNN->fillH1D(CM2UM * res[0]);
-                   hMryInnNN->fillH1D(CM2UM * res[1]);
-                }
-                if (rcTk[it]->chrg[0] > info.chrg() * 0.775 && rcTk[it]->chrg[1] > info.chrg() * 0.775) hTKqxy->fillH2D(igb, rcTk[it]->chrg[2] * rcTk[it]->chrg[2]);
+            hMrxInn->fillH2D(igb, CM2UM * res[0]);
+            hMryInn->fillH2D(igb, CM2UM * res[1]);
+            if (mpTk[it]->mom/fG4mc->primPart.chrg > 40.0) {
+               hMrxInnNN->fillH1D(CM2UM * res[0]);
+               hMryInnNN->fillH1D(CM2UM * res[1]);
             }
-            else if (it == 0 || it == 8) {
-                hMrxExt->fillH2D(igb, CM2UM * res[0]);
-                hMryExt->fillH2D(igb, CM2UM * res[1]);
-                if (mpTk[it]->mom/fG4mc->primPart.chrg > 30.0) {
-                   hMrxExtNN->fillH1D(CM2UM * res[0]);
-                   hMryExtNN->fillH1D(CM2UM * res[1]);
-                }
-            }
+            hTKqxy->fillH2D(igb, rcTk[it]->chrg[2] * rcTk[it]->chrg[2]);
         }
         
         for (Int_t it = 0; it < 4; ++it) {
@@ -248,7 +235,7 @@ int main(int argc, char * argv[]) {
 
                 Double_t tme = len * ibta;
                 Double_t mes = 2.99792458e+01 * (fTof->T[sl*2+1] - fTof->T[sl*2+0]);
-                Double_t dlt = mes - tme;
+                Double_t dlt = (mes - tme) * Numc::INV_SQRT_TWO;
                 hTFtme->fillH2D(igb, dlt);
             }
         }
@@ -262,56 +249,26 @@ int main(int argc, char * argv[]) {
             Double_t igb = st.igb();
             if (fRich->kind == 0) hAGLib->fillH2D(igb, dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(igb, dlt);
+
+            for (Int_t ih = 0; ih < fRich->nhit; ++ih) {
+                Double_t ddlt = (1.0/fRich->dbta.at(ih) - 1.0/st.bta());
+                Double_t rdlt = (1.0/fRich->rbta.at(ih) - 1.0/st.bta());
+                Double_t dlt  = (std::fabs(ddlt) < std::fabs(rdlt)) ? ddlt : rdlt;
+                if (fRich->kind == 0) hAGLibElem->fillH2D(igb, dlt);
+                if (fRich->kind == 1) hNAFibElem->fillH2D(igb, dlt);
+                if (fRich->kind == 0 && igb < 0.1) hAGLibnpe->fillH2D(dlt, fRich->npe.at(ih));
+                if (fRich->kind == 1 && igb < 0.1) hNAFibnpe->fillH2D(dlt, fRich->npe.at(ih));
+            }
         }
         
         // TRD
-        if (fTrd->statusKCls[0] && fTrd->LLRnhit[0] >= 8) {
-            std::vector<std::tuple<Double_t, Double_t, Double_t>> dEdX;
-            for (auto&& hit : fTrd->hits) {
-                if (hit.mcMom < 0.1 || hit.len < 0.01) continue;
-                if (hit.len < 0.40 || hit.len > 0.65) continue;
-                dEdX.push_back(std::make_tuple(hit.dEdx, hit.mcMom, hit.coo[2]));
-            }
-            std::sort(dEdX.begin(), dEdX.end());
+        if (fTrd->statusKCls[0] && fTrd->recHits.size() >= 5) {
+            hTDn->fill(info.mass()/fTrd->recMcMom, fTrd->recNh);
+            hTDq->fill(info.mass()/fTrd->recMcMom, fTrd->recMen);
+            hTDs->fill(info.mass()/fTrd->recMcMom, fTrd->recSgm);
+            hTDc->fill(info.mass()/fTrd->recMcMom, fTrd->recCz);
             
-            //COUT("NUM %d\n", dEdX.size());
-            if (dEdX.size() >= 8) {
-                Double_t ionv = 0, ionm = 0, ionc = 0;
-                for (int it = 2; it < dEdX.size()-1; ++it) { 
-                    ionv += std::get<0>(dEdX.at(it)); 
-                    ionm += std::get<1>(dEdX.at(it)); 
-                    ionc += std::get<2>(dEdX.at(it)); 
-                }
-                
-                int nhit = dEdX.size() - 3;
-                ionv /= static_cast<double>(nhit);
-                ionm /= static_cast<double>(nhit);
-                ionc /= static_cast<double>(nhit);
-                
-                Double_t ions = 0;
-                for (int it = 2; it < dEdX.size()-1; ++it) {
-                    ions += (std::get<0>(dEdX.at(it)) - ionv) * (std::get<0>(dEdX.at(it)) - ionv);
-                }
-                ions = std::sqrt(ions / static_cast<double>(nhit));
-
-                hTDn->fill(info.mass()/ionm, nhit);
-                hTDq->fill(info.mass()/ionm, ionv);
-                hTDs->fill(info.mass()/ionm, ions);
-                hTDc->fill(info.mass()/ionm, ionc);
-                
-                if (nhit <= 13) hTDq1->fill(info.mass()/ionm, ionv);
-                if (nhit <= 13) hTDs1->fill(info.mass()/ionm, ions);
-                if (nhit > 13)  hTDq2->fill(info.mass()/ionm, ionv);
-                if (nhit > 13)  hTDs2->fill(info.mass()/ionm, ions);
-               
-                if (info.mass()/ionm < 2.0e-03) hTDqs->fill(ionv, ions);
-
-                for (int it = 2; it < dEdX.size()-1; ++it) {
-                    hTDqc->fill(info.mass()/ionm, std::get<2>(dEdX.at(it)));
-                    hTDqb->fill(info.mass()/ionm, std::get<0>(dEdX.at(it)));
-                }
-                //COUT("ION %14.8f CZ %14.8f\n", ionv, ionc);
-            }
+            for (auto&& elem : fTrd->recHits) hTDqb->fill(info.mass()/fTrd->recMcMom, elem);
         }
     }
 
