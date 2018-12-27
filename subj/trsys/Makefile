@@ -4,10 +4,10 @@
 LIBP += -lgflags -lglog -lceres
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
-TagetDir = $(AMSCoreSubj)/trsys/test
+#TagetDir = $(AMSCoreSubj)/trsys/test
 
-#Version=18Sep21
-Version=18Oct17
+#Version=18Oct17
+Version=18Dec23
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -24,6 +24,7 @@ all :
 	@cp -fa $(PWD)/src/hit_fill.C $(TagetDir)/src/hit_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/hitTDq_fit.C $(TagetDir)/src/hitTDq_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/hitt_fit.C $(TagetDir)/src/hitt_fit.C 2> /dev/null
+	@cp -fa $(PWD)/src/hitc_fit.C $(TagetDir)/src/hitc_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fill.C $(TagetDir)/src/prop_fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/prop_fit.C $(TagetDir)/src/prop_fit.C 2> /dev/null
 	@cp -fa $(PWD)/src/bta_fill.C $(TagetDir)/src/bta_fill.C 2> /dev/null
@@ -35,13 +36,14 @@ all :
 	#make $(TagetDir)/time_fill
 	#make $(TagetDir)/time_fit
 	#make $(TagetDir)/hit_fill
-	make $(TagetDir)/hitTDq_fit
+	#make $(TagetDir)/hitTDq_fit
 	#make $(TagetDir)/hitt_fit
+	#make $(TagetDir)/hitc_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	#make $(TagetDir)/bta_fill
 	#make $(TagetDir)/bta_fit
-	#make $(TagetDir)/track_fill
+	make $(TagetDir)/track_fill
 	#make $(TagetDir)/track_fit
 	#make $(TagetDir)/mu_fill
 	#make $(TagetDir)/mu_fit
@@ -79,6 +81,13 @@ $(TagetDir)/obj/hitt_fit.o : $(TagetDir)/src/hitt_fit.C
 -include $(TagetDir)/obj/hitt_fit.d
 
 $(TagetDir)/hitt_fit : $(TagetDir)/obj/hitt_fit.o
+	$(LD) -o $@ $+ $(LIBP)
+
+$(TagetDir)/obj/hitc_fit.o : $(TagetDir)/src/hitc_fit.C
+	$(CXX) -c -o $@ $(FLGS) $< -MMD
+-include $(TagetDir)/obj/hitc_fit.d
+
+$(TagetDir)/hitc_fit : $(TagetDir)/obj/hitc_fit.o
 	$(LD) -o $@ $+ $(LIBP)
 
 $(TagetDir)/obj/prop_fill.o : $(TagetDir)/src/prop_fill.C

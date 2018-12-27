@@ -1,10 +1,10 @@
 #!/bin/bash
 Version=vdev
 Version=test
-RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/bta_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
 
 CurDir=${PWD}
@@ -12,18 +12,20 @@ CurDir=${PWD}
 DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
+Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Oct17
+#Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
 
 #Hit
-GroupSize=30
-Nseq=100
+#GroupSize=30
+#Nseq=100
 #Fit
-#GroupSize=10
-#Nseq=300
+GroupSize=10
+Nseq=300
 
 for id in `seq 0 ${Nseq}`
 do
