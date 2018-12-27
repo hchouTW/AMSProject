@@ -436,7 +436,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
     Long64_t   nstp  = static_cast<Long64_t>(std::floor((vwlen / stp_) / STD_STEP_LEN)) + 2;
     SVecD<3>&& unit  = (vwvec / static_cast<Double_t>(nstp));
 
-    SVecD<3> itloc((vxloc + Numc::HALF * unit(0)), (vyloc + Numc::HALF * unit(1)), (vzloc + Numc::HALF * unit(2)));
+    SVecD<3> itloc((vxloc + Numc::ONE_TO_TWO * unit(0)), (vyloc + Numc::ONE_TO_TWO * unit(1)), (vzloc + Numc::ONE_TO_TWO * unit(2)));
     Long64_t itsat = 0;
     Long64_t itend = nstp;
 
@@ -482,7 +482,7 @@ MatFld MatGeoBoxReader::get(const SVecD<3>& vcoo, const SVecD<3>& wcoo, Double_t
         Long64_t idx = (xi * fact_.at(0) + yi * fact_.at(1) + zi);
         Bool_t   mat = mat_[idx];
         if (mat) {
-            Double_t itrat = ((Numc::HALF + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
+            Double_t itrat = ((Numc::ONE_TO_TWO + static_cast<Double_t>(it)) / static_cast<Double_t>(nstp));
             Double_t irl = var_[idx][MATVAR_IRL];
             Double_t eld = var_[idx][MATVAR_ELD];
             Double_t lme = var_[idx][MATVAR_LME];
@@ -700,7 +700,7 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     Double_t log_mean_exc_eng  = mfld.lme(); // log[MeV]
     Double_t elcloud_abundance = mfld.ela(); // [mol cm^-2]
     Double_t density_corr      = mfld.dec(); // [1]
-    Double_t Bethe_Bloch       = (Numc::HALF * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
+    Double_t Bethe_Bloch       = (Numc::ONE_TO_TWO * BETHE_BLOCH_K * elcloud_abundance * sqr_chrg / sqr_bta); // [MeV]
     
     // Calculate Maximum Trans KE
     Double_t mass_rat       = (MASS_EL_IN_GEV / part.mass()); // [1]
@@ -715,7 +715,7 @@ std::tuple<Double_t, Double_t, Double_t, Double_t> MatPhy::GetIonizationEnergyLo
     // Calculate Global Material Quality
     // Calculate Ncl (Number of men eloss to maximum trans eng)
     Double_t global_ela = (corr_sw_eloss_ ? corr_mfld_.ela() : mfld.ela()); // Elcloud Abundance [mol cm^-2]
-    Double_t global_BB  = (Numc::HALF * BETHE_BLOCH_K * global_ela * sqr_chrg / sqr_bta); // Bethe Bloch [MeV]
+    Double_t global_BB  = (Numc::ONE_TO_TWO * BETHE_BLOCH_K * global_ela * sqr_chrg / sqr_bta); // Bethe Bloch [MeV]
     Double_t elion_zeta = (eta_trans * Bethe_Bloch); // [1]
 
     // Calculate Mean

@@ -61,11 +61,10 @@ std::array<long double, 3> Robust::minimizer(long double chi) const {
     const long double TWO   = Numc::TWO<long double>;
     const long double THREE = Numc::THREE<long double>;
     const long double FOUR  = Numc::FOUR<long double>;
-    const long double HALF  = Numc::ONE<long double> / Numc::TWO<long double>;
 
     if (Opt::ON == robust_.opt) {
         long double abschi = std::fabs(chi / robust_.thres);
-        long double rate   = robust_.rate * (Numc::EqualToZero(abschi) ? ZERO : HALF * (ONE + std::erf(robust_.thres * std::log(abschi))));
+        long double rate   = robust_.rate * (Numc::EqualToZero(abschi) ? ZERO : Numc::HALF * (ONE + std::erf(robust_.thres * std::log(abschi))));
         if (!Numc::Valid(rate)) rate = ZERO;
 
         long double sh       = abschi * abschi;
@@ -75,12 +74,12 @@ std::array<long double, 3> Robust::minimizer(long double chi) const {
         if (!Numc::Valid(alpha) || Numc::EqualToZero(sqrsh)) alpha = ONE;
         long double invalpha = (Numc::EqualToZero(alpha) ? ZERO : (ONE / alpha));
 
-        long double crchi = std::pow(alpha, (HALF / FOUR) * rate);
+        long double crchi = std::pow(alpha, (Numc::HALF / FOUR) * rate);
         if (!Numc::Valid(crchi) || Numc::Compare(crchi) <= 0) crchi = ONE;
 
         long double div1st = std::pow(alpha, rate / FOUR) * (
-                             (ONE - HALF * rate) + 
-                             (HALF * rate * invalpha / onesqrsh)
+                             (ONE - Numc::HALF * rate) + 
+                             (Numc::HALF * rate * invalpha / onesqrsh)
                              );
         if (!Numc::Valid(div1st) || Numc::Compare(div1st) < 0) div1st = ONE;
 
@@ -131,7 +130,7 @@ long double MultiGaus::Func(long double x, long double men, const std::vector<st
     for (auto&& elem : regroup) elem[0] /= sumw;
 
     long double value = Numc::ZERO<long double>;
-    for (auto&& elem : regroup) value += elem[0] * std::exp(-Numc::ONE_TO_TWO * elem[1] * elem[1]);
+    for (auto&& elem : regroup) value += elem[0] * std::exp(-Numc::HALF * elem[1] * elem[1]);
     if (!Numc::Valid(value)) value = Numc::ZERO<long double>;
     return value;
 }
@@ -261,7 +260,7 @@ long double MultiGaus::chi(long double r) const {
         long double sum_prb = Numc::ZERO<long double>;
         for (auto&& gaus : multi_gaus_) {
             long double res = (r / gaus.second);
-            long double prb = gaus.first * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
+            long double prb = gaus.first * std::exp(-Numc::HALF * res * res);
             sum_prb += prb;
         }
         long double nrm = Numc::Compare(r) * std::sqrt(Numc::NEG<long double> * Numc::TWO<long double> * std::log(sum_prb));
@@ -287,7 +286,7 @@ std::array<long double, 3> MultiGaus::minimizer(long double r) const {
         for (auto&& gaus : multi_gaus_) {
             long double res = (r / gaus.second);
             long double sgm = (gaus.second / bound_.second);
-            long double prb = gaus.first * std::exp(-static_cast<long double>(Numc::HALF) * res * res);
+            long double prb = gaus.first * std::exp(-Numc::HALF * res * res);
             sum_prb  += prb;
             sum_isqr += prb / (sgm * sgm);
         }
@@ -373,8 +372,8 @@ long double MultiGaus::find_eftsgm() const {
         else {
             for (int iter = 1; iter <= max_iter; ++iter) {
                 if (std::fabs(chiu - chil) < lmt) { sgm = 0.5L * (sgml + sgmu); break; }
-                long double wgtl = std::exp(-static_cast<long double>(Numc::HALF) * (chil * chil - Numc::ONE<long double>));
-                long double wgtu = std::exp(-static_cast<long double>(Numc::HALF) * (chiu * chiu - Numc::ONE<long double>));
+                long double wgtl = std::exp(-Numc::HALF * (chil * chil - Numc::ONE<long double>));
+                long double wgtu = std::exp(-Numc::HALF * (chiu * chiu - Numc::ONE<long double>));
                 long double sgmm = (wgtl * sgmu + wgtu * sgml) / (wgtl + wgtu);
                 long double chim = chi(sgmm);
 
@@ -404,7 +403,7 @@ long double LandauGaus::Func(long double x, long double kpa, long double mpv, lo
     
     long double value = Numc::ZERO<long double>;
     if (!is_fluc) {
-        long double gs = -static_cast<long double>(Numc::HALF) * norm * norm;
+        long double gs = -Numc::HALF * norm * norm;
         long double ld = -LandauNumc::NegLn(norm);
         long double ldgs = kpa * gs + (Numc::ONE<long double> - kpa) * ld;
         value = std::exp(ldgs);
@@ -412,7 +411,7 @@ long double LandauGaus::Func(long double x, long double kpa, long double mpv, lo
     else {
         for (Int_t it = 0; it <= CONV_N; ++it) {
             long double ix = norm + (fluc / sgm) * CONV_X[it];
-            long double gs = -static_cast<long double>(Numc::HALF) * ix * ix;
+            long double gs = -Numc::HALF * ix * ix;
             long double ld = -LandauNumc::NegLn(ix);
             long double ldgs = kpa * gs + (Numc::ONE<long double> - kpa) * ld;
             value += std::exp(ldgs) * CONV_P[it];
@@ -489,7 +488,7 @@ std::array<long double, 5> LandauGaus::eval(long double norm) const { // (nrm, j
     if (Numc::EqualToZero(norm) || Numc::EqualToZero(nrmx) || !Numc::Valid(jacb))
         jacb = std::sqrt(hes);
 
-    long double prb = std::exp(-static_cast<long double>(Numc::HALF) * ldgaus);
+    long double prb = std::exp(-Numc::HALF * ldgaus);
     if (!Numc::Valid(nrmx) || !Numc::Valid(jacb) || !Numc::Valid(prb)) {
         nrmx = Numc::ZERO<long double>;
         jacb = Numc::ZERO<long double>;
@@ -560,7 +559,7 @@ long double SftLandauGaus::Func(long double x, long double kpa, long double mpv,
     long double norm = (x - mpv) / sgm;
     if (!Numc::Valid(norm)) return Numc::ZERO<long double>;
 
-    long double gs    = -static_cast<long double>(Numc::HALF) * (norm - sft) * (norm - sft);
+    long double gs    = -Numc::HALF * (norm - sft) * (norm - sft);
     long double ld    = -LandauNumc::NegLn(norm);
     long double ldgs  = kpa * gs + (Numc::ONE<long double> - kpa) * ld;
     long double value = std::exp(ldgs);
@@ -580,7 +579,7 @@ long double SftLandauGaus::Func(long double x, long double kpa, long double mpv,
         }
         if (iter > LMT_ITER) return Numc::ZERO<long double>;
         
-        long double newgs   = -static_cast<long double>(Numc::HALF) * (newx - sft) * (newx - sft);
+        long double newgs   = -Numc::HALF * (newx - sft) * (newx - sft);
         long double newld   = -LandauNumc::NegLn(newx);
         long double newldgs = kpa * newgs + (Numc::ONE<long double> - kpa) * newld;
         long double newval  = std::exp(newldgs);
@@ -606,7 +605,7 @@ long double GammaErf::Func(long double x, long double alp, long double bta, long
     if (!Numc::Valid(mpv) || !Numc::Valid(fact)) return Numc::ZERO<long double>;
 
     long double gmmv = fact * std::pow(x, alpm1) * std::exp(-bta * x);
-    long double erfv = Numc::ONE_TO_TWO * (Numc::ONE<long double> + std::erf(scl * (x - tune * mpv)));
+    long double erfv = Numc::HALF * (Numc::ONE<long double> + std::erf(scl * (x - tune * mpv)));
     long double value = gmmv * erfv;
 
     if (!Numc::Valid(value)) value = Numc::ZERO<long double>;

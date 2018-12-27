@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -186,7 +187,7 @@ Bool_t SimpleTrFit::analyticalFit() {
             
             SVecD<3> mfldv;
             for (UInt_t it = 0; it < nstp; ++it) {
-                Double_t stp = ((static_cast<Double_t>(it) + Numc::HALF) / static_cast<Double_t>(nstp));
+                Double_t stp = ((static_cast<Double_t>(it) + Numc::ONE_TO_TWO) / static_cast<Double_t>(nstp));
                 SVecD<3>&& refm = ((Numc::ONE<> - stp) * hits_.at(ih)->c() + stp * hits_.at(jh)->c());
                 MagFld&&   mfld = MagMgnt::Get(refm);
                 mfldv += mfld();
@@ -208,7 +209,7 @@ Bool_t SimpleTrFit::analyticalFit() {
             Double_t err = (Numc::ONE<> / ey / ey);
             
             cur_Au += stp.at(id);
-            cur_Ae += Numc::HALF * crs.at(id) * stp.at(id) * stp.at(id);
+            cur_Ae += Numc::ONE_TO_TWO * crs.at(id) * stp.at(id) * stp.at(id);
             for (UInt_t jd = 0; jd < id; ++jd)
                 cur_Ae += crs.at(jd) * stp.at(jd) * stp.at(id);
 

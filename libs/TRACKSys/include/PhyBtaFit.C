@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -28,7 +29,7 @@ TrFitPar PhyBtaFit::bulidFitPar(const TrFitPar& fitPar) {
     if (fitPar.hitsTRD().size()  != 0) btapar.add_hit( fitPar.hitsTRD()  );
     for (auto&& hitTRK : fitPar.hitsTRK()) {
         if (!hitTRK.sq()) continue;
-        HitStTRK hit(false, false, hitTRK.lay(), hitTRK.isInnTr());
+        HitStTRK hit(false, false, hitTRK.lay());
         hit.set_coo(hitTRK.cx(), hitTRK.cy(), hitTRK.cz());
         hit.set_q(hitTRK.q(), hitTRK.qx(), hitTRK.qy());
         btapar.add_hit(hit);

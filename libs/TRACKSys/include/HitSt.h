@@ -116,7 +116,7 @@ class HitStTRK : public VirtualHitSt {
         static constexpr VirtualHitSt::Detector DEC = VirtualHitSt::Detector::TRK;
 
     public :
-        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0, Bool_t isInnTr = true) : VirtualHitSt(DEC, lay, scx, scy) { clear(); isInnTr_ = isInnTr; }
+        HitStTRK(Bool_t scx = false, Bool_t scy = false, Short_t lay = 0) : VirtualHitSt(DEC, lay, scx, scy) { clear(); }
         ~HitStTRK() { clear(); }
         
         Short_t set_seqID(Short_t seqID); 
@@ -138,8 +138,6 @@ class HitStTRK : public VirtualHitSt {
             divq_.fill(Numc::ZERO<>);
         }
         
-        inline const Bool_t& isInnTr() const { return isInnTr_; }
-
         inline const Short_t& seqIDq() const { return seqIDq_; }
         
         inline const Bool_t&   sq()        const { return side_q_; }
@@ -155,8 +153,6 @@ class HitStTRK : public VirtualHitSt {
         void clear();
 
     protected :
-        Bool_t isInnTr_; // is inner tracker
-        
         Short_t seqIDq_;
 
         Bool_t                  side_q_;
@@ -167,22 +163,18 @@ class HitStTRK : public VirtualHitSt {
         Double_t                nrmq_; // q nrom
         std::array<Double_t, 2> divq_; // q div (ibta) [ibta, eta]
         
-        MultiGaus* pdf_cx_;
-        MultiGaus* pdf_cy_;
-        IonEloss*  pdf_q_;
+        CooMeas*  pdf_cx_;
+        CooMeas*  pdf_cy_;
+        IonEloss* pdf_q_;
     
     protected :
         static constexpr Double_t THRES_Q = 0.775;
 
-        static MultiGaus PDF_Q01_CX_INN_;
-        static MultiGaus PDF_Q01_CY_INN_;
-        static MultiGaus PDF_Q01_CX_EXT_;
-        static MultiGaus PDF_Q01_CY_EXT_;
+        static CooMeas PDF_Q01_CX_;
+        static CooMeas PDF_Q01_CY_;
         
-        static MultiGaus PDF_Q02_CX_INN_;
-        static MultiGaus PDF_Q02_CY_INN_;
-        static MultiGaus PDF_Q02_CX_EXT_;
-        static MultiGaus PDF_Q02_CY_EXT_;
+        static CooMeas PDF_Q02_CX_;
+        static CooMeas PDF_Q02_CY_;
         
         static IonEloss PDF_Q01_QXY_;
         static IonEloss PDF_Q02_QXY_;
@@ -393,11 +385,14 @@ class HitStTRD : public VirtualHitSt {
         Double_t nrmel_; // dE/dx nrom
         std::array<Double_t, 2> divel_; // dE/dx div (ibta) [ibta, eta]
 
-        IonTrEloss* pdf_el_;
+        IonTrEloss* pdf_el_men_;
+        IonTrEloss* pdf_el_cov_;
     
     protected :
-        static IonTrEloss PDF_Q01_EL_;
-        static IonTrEloss PDF_Q02_EL_;
+        static IonTrEloss PDF_Q01_EL_MEN_;
+        static IonTrEloss PDF_Q01_EL_COV_;
+        static IonTrEloss PDF_Q02_EL_MEN_;
+        static IonTrEloss PDF_Q02_EL_COV_;
 };
 
 

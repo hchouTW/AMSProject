@@ -5,6 +5,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -224,7 +225,7 @@ Bool_t Event::BulidHitStTRK() {
 		int mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
 		                                              // > 0 requested multiplicty coordinates
         
-        //AMSPoint coo = ((layJ == 1 || layJ == 9) ? (Trtk->GetHitCooLJ(layJ, 0) + Trtk->GetHitCooLJ(layJ, 1)) * Numc::HALF : Trtk->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
+        //AMSPoint coo = ((layJ == 1 || layJ == 9) ? (Trtk->GetHitCooLJ(layJ, 0) + Trtk->GetHitCooLJ(layJ, 1)) * Numc::ONE_TO_TWO : Trtk->GetHitCooLJ(layJ)); // (CIEMAT+PG)/2
         AMSPoint coo = TrTrackR::FitCoo[layJ-1]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
         
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
@@ -237,18 +238,17 @@ Bool_t Event::BulidHitStTRK() {
         if (qy  == 0) qy  = -1.0;
         if (qxy == 0) qxy = -1.0;
 
-        Bool_t isInnTr = (layJ >= 2 && layJ <= 8);
         Bool_t scx = (xcls != nullptr);
         Bool_t scy = (ycls != nullptr);
 
-        HitStTRK hit(scx, scy, layJ, isInnTr);
+        HitStTRK hit(scx, scy, layJ);
         hit.set_coo(coo.x(), coo.y(), coo.z());
         
         if      (layJ == 1) TkHitL1 = hit;
         else if (layJ == 9) TkHitL9 = hit;
         else                TkHitIn.push_back(hit);
         
-        HitStTRK hitQ(scx, scy, layJ, isInnTr);
+        HitStTRK hitQ(scx, scy, layJ);
         hitQ.set_coo(coo.x(), coo.y(), coo.z());
         hitQ.set_q(qxy, qx, qy);
         
@@ -256,7 +256,7 @@ Bool_t Event::BulidHitStTRK() {
         else if (layJ == 9) TkHitL9Q = hitQ;
         else                TkHitInQ.push_back(hitQ);
         
-        HitStTRK hitQ_NOxy(false, false, layJ, isInnTr);
+        HitStTRK hitQ_NOxy(false, false, layJ);
         hitQ_NOxy.set_coo(coo.x(), coo.y(), coo.z());
         hitQ_NOxy.set_q(qxy, qx, qy);
 

@@ -3,21 +3,24 @@
 
 
 namespace TrackSys {
-//x := igmbta
-//TF1* ftme = new TF1("ftme", "[0] + [1] * TMath::Erfc([2] * (1+x*x)^[3] - [4])");
+
 class TmeMeas {
     public :
-        TmeMeas(Robust robust, const std::array<long double, 5>& sgm) : robust_(robust), sgm_(sgm) {}
+        TmeMeas(const MultiGaus& mgs) : mgs_(mgs), is_const_(true), isgm_(std::array<long double, 2>({0.0, 0.0})) {}
+        TmeMeas(const MultiGaus& mgs, const std::array<long double, 2>& isgm) : mgs_(mgs), is_const_(false), isgm_(isgm) {}
         ~TmeMeas() {}
         
-        std::array<long double, 3> minimizer(long double x, long double igmbta, bool is_single = true) const;
-   
+        std::array<long double, 3> minimizer(long double x, long double ibta = Numc::ONE<long double>, bool is_single = true) const;
+        inline long double eftsgm(long double ibta = Numc::ONE<long double>) const { return (is_const_ ? mgs_.eftsgm() : (mgs_.eftsgm() / get_isgm(ibta))); }
+
     protected :
-        long double get_sgm(long double ibsqr) const;
+        long double get_isgm(long double ibta) const;
 
     private :
-        Robust robust_;
-        std::array<long double, 5> sgm_;
+        MultiGaus mgs_;
+        
+        Bool_t is_const_;
+        std::array<long double, 2> isgm_;
 };
 
 } // namesapce TrackSys

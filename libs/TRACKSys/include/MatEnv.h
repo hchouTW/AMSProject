@@ -152,7 +152,7 @@ struct MatGeoBoxVar {
 
 class MatGeoBoxCreator {
     public :
-        MatGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::array<Double_t, 3>& min, const std::array<Double_t, 3>& max, Double_t stp = Numc::HALF, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
+        MatGeoBoxCreator(const std::array<Long64_t, 3>& n, const std::array<Double_t, 3>& min, const std::array<Double_t, 3>& max, Double_t stp = Numc::ONE_TO_TWO, const std::string& file_path = "MatGeoBox", const std::string& dir_path = ".");
         ~MatGeoBoxCreator() { save_and_close(); }
 
         void fill(const G4MatStep& g4mat);

@@ -36,7 +36,7 @@ template<typename T = Double_t> constexpr T NINETY  = static_cast<T>(90);
 template<typename T = Double_t> constexpr T HUNDRED  = static_cast<T>(100);
 template<typename T = Double_t> constexpr T THOUSAND = static_cast<T>(1000);
 
-constexpr Double_t HALF = 5.00000000000000000e-01;
+constexpr long double HALF = 5.00000000000000000e-01;
 
 constexpr Double_t ONE_TO_TWO   = 5.00000000000000000e-01;
 constexpr Double_t ONE_TO_SIX   = 1.66666666666666657e-01;
@@ -309,7 +309,7 @@ class MultiGaus {
         inline const long double& wgt(Int_t i = 0) const { return multi_gaus_.at(i).first; }
         inline const long double& sgm(Int_t i = 0) const { return multi_gaus_.at(i).second; }
         
-        inline const long double eftsgm() const { return eftsgm_; }
+        inline const long double& eftsgm() const { return eftsgm_; }
         long double chi(long double r) const;
 
         std::array<long double, 3> minimizer(long double r = 0.) const; 

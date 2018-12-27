@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -77,8 +78,6 @@ Short_t VirtualHitSt::set_onlyc_seqID(Short_t onlyc_seqID) {
 
 // HitStTRK
 void HitStTRK::clear() {
-    isInnTr_ = true;
-    
     seqIDcx_ = -1;
     seqIDcy_ = -1;
     seqIDq_  = -1;
@@ -117,7 +116,7 @@ void HitStTRK::cal(const PhySt& part) {
     divc_.fill(Numc::ZERO<>);
     SVecD<3>&& crs = (coo_ - part.c());
     if (side_c_[0] && pdf_cx_ != nullptr) {
-        std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0));
+        std::array<long double, 3> minix = pdf_cx_->minimizer(crs(0), part.ibta(), part.igb());
         chic_[0] = minix[0];
         nrmc_[0] = minix[1];
         divc_[0] = Numc::NEG<> * minix[2];
@@ -128,7 +127,7 @@ void HitStTRK::cal(const PhySt& part) {
         }
     }
     if (side_c_[1] && pdf_cy_ != nullptr) {
-        std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1));
+        std::array<long double, 3> miniy = pdf_cy_->minimizer(crs(1), part.ibta(), part.igb());
         chic_[1] = miniy[0];
         nrmc_[1] = miniy[1];
         divc_[1] = Numc::NEG<> * miniy[2];
@@ -166,26 +165,14 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
 
     Short_t absq = std::abs(info.chrg());
     if (absq == 1) {
-        if (isInnTr_) { 
-            pdf_cx_ = &PDF_Q01_CX_INN_;
-            pdf_cy_ = &PDF_Q01_CY_INN_;
-        }
-        else {
-            pdf_cx_ = &PDF_Q01_CX_EXT_;
-            pdf_cy_ = &PDF_Q01_CY_EXT_;
-        }
-        pdf_q_ = &PDF_Q01_QXY_;
+        pdf_cx_ = &PDF_Q01_CX_;
+        pdf_cy_ = &PDF_Q01_CY_;
+        pdf_q_  = &PDF_Q01_QXY_;
         type_ = info.type();
     } else if (absq >= 2) {
-        if (isInnTr_) { 
-            pdf_cx_ = &PDF_Q02_CX_INN_;
-            pdf_cy_ = &PDF_Q02_CY_INN_;
-        }
-        else {
-            pdf_cx_ = &PDF_Q02_CX_EXT_;
-            pdf_cy_ = &PDF_Q02_CY_EXT_;
-        }
-        pdf_q_ = &PDF_Q02_QXY_;
+        pdf_cx_ = &PDF_Q02_CX_;
+        pdf_cy_ = &PDF_Q02_CY_;
+        pdf_q_  = &PDF_Q02_QXY_;
         type_ = info.type();
     } else {
         CERR("HitStTRK::set_type() NO PartType Setting.\n");
@@ -202,96 +189,59 @@ Bool_t HitStTRK::set_type(const PartInfo& info) {
 }
 
 
-MultiGaus HitStTRK::PDF_Q01_CX_INN_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+CooMeas HitStTRK::PDF_Q01_CX_(
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
     7.61961330645686608e-01, 2.03263e-03,
     2.26788284954245273e-01, 3.67874e-03,
-    1.12503844000680815e-02, 8.39460e-03
+    1.12503844000680815e-02, 8.39460e-03),
+    { 4.20214e-01, 5.10576e-01, 1.44097e-02, 8.20524e-03 }
 );
 
-MultiGaus HitStTRK::PDF_Q01_CY_INN_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+CooMeas HitStTRK::PDF_Q01_CY_(
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
     6.33751302183348963e-01, 7.52618e-04,
     3.04067161529244734e-01, 1.30097e-03,
     5.86416168641642407e-02, 2.46420e-03,
-    3.53991942324217079e-03, 5.65686e-03
+    3.53991942324217079e-03, 5.65686e-03),
+    { -8.15267e-01, 1.61188e+00, 1.32014e-01, 2.14243e-01 }
 );
 
-MultiGaus HitStTRK::PDF_Q01_CX_EXT_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    5.36810408155873331e-01, 1.84480e-03,
-    4.44451633843737703e-01, 3.22181e-03,
-    1.87379580003889309e-02, 7.59401e-03
-);
-
-MultiGaus HitStTRK::PDF_Q01_CY_EXT_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    5.95352696369181866e-01, 1.06724e-03,
-    3.24409486956099280e-01, 1.55332e-03,
-    7.34103231635499370e-02, 2.69880e-03,
-    6.82749351116899734e-03, 5.26917e-03
-);
-
-MultiGaus HitStTRK::PDF_Q02_CX_INN_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+CooMeas HitStTRK::PDF_Q02_CX_(
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
     8.23483402633133132e-01, 1.58076e-03,
     1.56886848767209708e-01, 4.40970e-04,
     1.78728108648472869e-02, 3.43942e-03,
-    1.75693773480982223e-03, 8.60774e-03
+    1.75693773480982223e-03, 8.60774e-03),
+    { 7.83985e-01, 1.48644e-01, 1.43967e-02, 9.28284e-03 }
 );
 
-MultiGaus HitStTRK::PDF_Q02_CY_INN_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
+CooMeas HitStTRK::PDF_Q02_CY_(
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
     6.41741353237298306e-01, 2.89126e-04,
     2.13916925500147043e-01, 5.29917e-04,
     1.32054183043477047e-01, 8.97440e-04,
     1.02257539432194320e-02, 1.92346e-03,
-    2.06178427585825040e-03, 3.83662e-03
+    2.06178427585825040e-03, 3.83662e-03), 
+    { 3.91096e-01, 5.42372e-01, 1.60491e-02, 1.58355e-02 }
 );
 
-MultiGaus HitStTRK::PDF_Q02_CX_EXT_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    8.46914506107380061e-01, 1.67402e-03,
-    9.50578907857529132e-02, 2.56901e-03,
-    5.45306637637586744e-02, 5.20314e-04,
-    3.49693934310836519e-03, 7.57400e-03
-);
-
-MultiGaus HitStTRK::PDF_Q02_CY_EXT_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    5.57047413429423655e-01, 7.27972e-04,
-    3.93570943518477712e-01, 9.99026e-04,
-    4.19827792386289200e-02, 1.60732e-03,
-    6.09344578181839416e-03, 3.13326e-03,
-    1.30541803165129056e-03, 4.54254e-03
-);
-
-//IonEloss HitStTRK::PDF_Q01_QXY_(
-//    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
-//    { 2.16299e+00, 4.12329e+03, 2.57464e-01, 1.96535e+01 }, // Kpa
-//    { 3.41461e-01, 1.62724e+00, 6.49499e-01, 1.68503e+00, 5.90089e-01, 5.00000e-01 }, // Mpv
-//    { 2.63089e-03, 4.70380e+01, -1.66266e+01, 9.60228e-01, 5.97911e-04, 1.00707e+00 }, // Sgm
-//    { 3.23420e-01, 1.59525e+00, 9.06502e-01, 1.73010e+00, 5.71003e-01, 5.00000e-01 }, // Mode
-//    0.0911489 // Fluc
-//);
 
 IonEloss HitStTRK::PDF_Q01_QXY_(
-    //Robust(Robust::Option(Robust::Opt::OFF)),
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
-    { 2.16299e+00, 4.12329e+03, 2.57464e-01, 1.96535e+01 }, // Kpa
-    { 6.87350e-02, 6.90545e-01, 1.06922e+00, 1.19444e-01, 1.89241e-01, 5.00000e-01 }, // Mpv
-    { -8.09513e-02, 1.59341e-01, 8.04860e-01, 3.09285e-03, 1.11904e-03, 9.46736e-01 }, // Sgm
-    { 1.28460e-01, 6.66347e-01, 1.08361e+00, 1.22202e-01, 2.01184e-01, 5.02849e-01 }, // Mode
-    0.0911489 // Fluc
+    { 3.08975e-01, 1.35977e+00, 7.18478e-03, 1.98220e-01, 8.06396e-01 }, // Kpa
+    { 5.28872e-02, 6.90213e-01, 5.71953e-02, 3.86236e-02 }, // Mpv
+    { 2.03321e-02, 7.09628e-02, 0.0, 0.0 }, // Sgm
+    { 9.06801e-02, 6.83408e-01, 5.93934e-02, 4.14200e-02 }, // Mod
+    0.089323 // Fluc
 );
 
 IonEloss HitStTRK::PDF_Q02_QXY_(
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
-    { 1.18528e-01, 1.43470e+04, 1.37285e+01, 2.95944e+00 }, // Kpa
-    { 2.12408e+00, 1.38483e+00, 3.07698e-01, 1.82028e+00, 8.28775e-01, 5.00000e-01 }, // Mpv
-    { 2.33811e+00, 7.52322e+00, -8.02966e+00, 2.40862e-01, 5.30780e-01, 1.00230e+00 }, // Sgm
-    { 1.94924e+00, 1.36251e+00, 4.99138e-01, 1.86518e+00, 7.75742e-01, 5.00006e-01 }, // Mode
-    0.340068 // Fluc
+    { 5.37172e-01, 8.19362e-01, 5.63577e-03, 6.49063e-01, 1.87820e+00 }, // Kpa
+    { 5.52093e-02, 3.06309e+00, 1.70756e-01, 1.82024e-02 }, // Mpv
+    { 0.0, 3.27483e-01, 0.0, 0.0 }, // Sgm
+    { 6.31500e-01, 2.76368e+00, 8.55058e-02, 4.55644e-03 }, // Mod
+    0.174984 // Fluc
 );
 
 
@@ -353,7 +303,7 @@ void HitStTOF::cal(const PhySt& part) {
         Double_t ds = std::fabs(part.path() - OFFSET_S_);
         Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
-            std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.igb(), USE_TSHF_);
+            std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.ibta(), USE_TSHF_);
             chit_    = minit[0];
             nrmt_    = minit[1];
             divtsft_ = minit[2];
@@ -411,42 +361,38 @@ Bool_t HitStTOF::set_type(const PartInfo& info) {
     return true;
 }
 
+
 TmeMeas HitStTOF::PDF_Q01_T_(
-    Robust(Robust::Option(Robust::Opt::ON, 5.0L, 0.5L)),
-    { 2.38464e+00, 2.15741e+00, 7.72451e+01, 1.03508e-02, 7.73432e+01 } // Sgm
-);
-
-//IonEloss HitStTOF::PDF_Q01_Q_(
-//    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
-//    { 2.94768e+01, 2.21358e+01, 6.06181e-02, 9.45926e+01 }, // Kpa
-//    { 3.81512e-01, 2.60771e+00, -2.27962e-01, 1.27420e+00, 7.54779e-01, 6.57663e-01 }, // Mpv
-//    { 5.53873e-01, 8.14537e+00, -8.41010e+00, 1.87171e-01, 6.68142e-01, 9.80451e-01 }, // Sgm
-//    { 3.77430e-01, 2.61789e+00, -4.19394e-02, 1.26715e+00, 8.19513e-01, 6.40270e-01 }, // Mode
-//    0.082 // Fluc
-//);
-
-IonEloss HitStTOF::PDF_Q01_Q_(
-    //Robust(Robust::Option(Robust::Opt::OFF)),
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
-    { 2.94768e+01, 2.21358e+01, 6.06181e-02, 9.45926e+01 }, // Kpa
-    { -3.58927e-01, 1.77538e+00, 7.12103e-01, 7.49657e-01, 1.70803e+00, 6.46816e-01 }, // Mpv
-    { 1.14176e-01, 0.00000e+00, 0.00000e+00, -8.45237e-02, 6.41332e-01, 1.56183e+00 }, // Sgm
-    { -3.53652e-01, 1.77483e+00, 7.14691e-01, 7.60953e-01, 1.64029e+00, 6.83552e-01 }, // Mode
-    0.082 // Fluc
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
+    7.66722158352867389e-01, 3.49983e+00,
+    2.33277841647132611e-01, 5.28969e+00), 
+    { 2.05267e-01, 7.94733e-01 }
 );
 
 TmeMeas HitStTOF::PDF_Q02_T_(
-    Robust(Robust::Option(Robust::Opt::ON, 5.0L, 0.5L)),
-    { 2.13989e+00, 2.36987e-01, 7.71676e+01, 1.72728e-02, 7.76650e+01 } // Sgm
+    MultiGaus(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L),
+    6.57749858134140331e-01, 2.19754e+00,
+    3.42250141865859614e-01, 2.97941e+00), 
+    { 7.72450e-01, 2.27550e-01 }
+);
+
+
+IonEloss HitStTOF::PDF_Q01_Q_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    { 8.77160e-01, 7.84314e-01, 5.45507e-03, 2.84523e+01, 1.61855e+01 }, // Kpa
+    { 6.63128e-02, 8.60609e-01, 1.57473e-02, 3.90757e-03 }, // Mpv
+    { 4.48021e-03, 7.18446e-02, 0.0, 0.0 }, // Sgm
+    { 1.10112e-01, 8.47921e-01, 1.60048e-02, 4.16204e-03 }, // Mod
+    0.0810673 // Fluc
 );
 
 IonEloss HitStTOF::PDF_Q02_Q_(
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
-    { 3.17895e+00, 1.64932e+04, 5.05553e-01, 3.19234e+01 }, // Kpa
-    { 1.00385e-02, 2.71829e+02,  1.53998e+02, 9.24822e-01, 2.50440e-10, 3.01499e+00 }, // Mpv
-    { 4.41616e+00, 6.46553e+01, -6.48173e+01, 1.84870e-02, 7.73260e-01, 9.88732e-01 }, // Sgm
-    { 1.00385e-02, 2.71829e+02,  1.53998e+02, 9.24822e-01, 2.50440e-10, 3.01499e+00 }, // Mode
-    0.00 // Fluc
+    { 4.75812e-01, 2.92518e-01, 8.86139e-02, 0.00000e+00, 4.92484e-02 }, // Kpa
+    { 2.01919e+00, 2.32107e+00, 1.23154e-02, 4.92361e-05 }, // Mpv
+    { -4.90115e-02, 2.06891e-01, 9.39886e-02, 1.13678e-01 }, // Sgm
+    { 2.18181e+00, 2.22977e+00, 7.31254e-03, 3.37621e-06 }, // Mod
+    0.1588111 // Fluc
 );
 
 
@@ -535,16 +481,17 @@ MultiGaus HitStRICH::PDF_AGL_Q01_IB_(
     3.15265535338022374e-01, 1.64991e-03
 );
 
-MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
-    8.53153985032869877e-01, 3.16209e-03,
-    1.46846014967130206e-01, 5.38069e-03
-);
-
 MultiGaus HitStRICH::PDF_AGL_Q02_IB_(
     Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
     7.75514988289395357e-01, 6.15751e-04,
     2.24485011710604615e-01, 1.07079e-03
+);
+
+
+MultiGaus HitStRICH::PDF_NAF_Q01_IB_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 1.0L)),
+    8.53153985032869877e-01, 3.16209e-03,
+    1.46846014967130206e-01, 5.38069e-03
 );
 
 MultiGaus HitStRICH::PDF_NAF_Q02_IB_(
@@ -566,7 +513,8 @@ void HitStTRD::clear() {
     nrmel_ = Numc::ZERO<>;
     divel_.fill(Numc::ZERO<>);
 
-    pdf_el_ = nullptr;
+    pdf_el_men_ = nullptr;
+    pdf_el_cov_ = nullptr;
 
     set_type();
 }
@@ -587,7 +535,7 @@ void HitStTRD::cal(const PhySt& part) {
     nrmel_ = Numc::ZERO<>;
     divel_.fill(Numc::ZERO<>);
     if (side_el_) {
-        std::array<long double, 3>&& iontr = pdf_el_->minimizer(el_, part.ibta(), part.igb());
+        std::array<long double, 3>&& iontr = pdf_el_men_->minimizer(el_, part.ibta(), part.igb());
         chiel_    = iontr[0];
         nrmel_    = iontr[1];
         divel_[0] = iontr[2];
@@ -605,14 +553,16 @@ void HitStTRD::cal(const PhySt& part) {
 }
 
 Bool_t HitStTRD::set_type(const PartInfo& info) {
-    if ((info.is_std() && type_ == info.type()) && (pdf_el_)) return true;
+    if ((info.is_std() && type_ == info.type()) && (pdf_el_men_ && pdf_el_cov_)) return true;
     
     Short_t absq = std::abs(info.chrg());
     if (absq == 1) {
-        pdf_el_ = &PDF_Q01_EL_;
+        pdf_el_men_ = &PDF_Q01_EL_MEN_;
+        pdf_el_cov_ = &PDF_Q01_EL_COV_;
         type_ = info.type();
     } else if (absq >= 2) {
-        pdf_el_ = &PDF_Q02_EL_;
+        pdf_el_men_ = &PDF_Q02_EL_MEN_;
+        pdf_el_cov_ = &PDF_Q02_EL_COV_;
         type_ = info.type();
     } else {
         CERR("HitStTRD::set_type() NO PartType Setting.\n");
@@ -621,22 +571,40 @@ Bool_t HitStTRD::set_type(const PartInfo& info) {
     return true;
 }
 
-IonTrEloss HitStTRD::PDF_Q01_EL_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    { 3.06370e-01, 9.06750e-01, 1.81582e-01, 1.59218e-01, 9.37406e-01, 2.35234e-01, 7.21478e-01, 1.01295e+01 }, // Kpa
-    { 1.28002e+00, 1.06775e+00, 1.61320e+00, 1.56163e-01, 9.77850e-01, 4.03639e+00, 4.67177e-01, 6.82263e+00 }, // Mpv
-    { 2.11615e-01, 1.07995e+00, 2.05175e-01, 2.14309e-01, 1.35230e+00, 1.32878e+00, 4.83727e-01, 6.87510e+00 }, // Sgm
-    { 1.29759e+00, 1.05389e+00, 1.69891e+00, 1.42697e-01, 8.84571e-01, 3.94133e+00, 4.72998e-01, 6.91419e+00 }, // Mode
+IonTrEloss HitStTRD::PDF_Q01_EL_MEN_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    { 4.32812e-01, 1.17304e+00, 6.69675e-02, 1.57961e-01, 1.17835e+00, 3.33984e-01, 5.29717e-01, 7.31641e+00 }, // Kpa
+    { -1.75499e-01, 1.74838e+00, 1.38032e-01, 4.06282e+00, 5.12100e-01, 7.37625e+00 }, // Mpv
+    { -1.85617e-02, 3.21865e-01, 1.82369e-02, 1.24552e+00, 4.87605e-01, 6.86138e+00 }, // Sgm
+    { -9.11574e-02, 1.72462e+00, 1.36373e-01, 4.03260e+00, 5.14936e-01, 7.42064e+00 }, // Mode
     0.20 // Fluc
 );
 
-IonTrEloss HitStTRD::PDF_Q02_EL_(
-    Robust(Robust::Option(Robust::Opt::ON, 4.5L, 0.5L)),
-    { 3.03451e-01, 1.14913e+00, 1.19150e-01, 1.38026e-01, 7.91603e-01, 4.31403e-01, 8.23065e-01, 1.15371e+01 }, // Kpa
-    { 1.70001e+00, 1.03690e+00, 2.12635e+00, 1.44258e-01, 9.07120e-01, 6.70935e+00, 5.02516e-01, 7.28139e+00 }, // Mpv
-    { 3.19837e-01, 1.03861e+00, 3.19251e-01, 1.60424e-01, 1.05863e+00, 2.10530e+00, 5.57265e-01, 7.77524e+00 }, // Sgm
-    { 1.70201e+00, 1.03187e+00, 2.22619e+00, 1.33940e-01, 8.35504e-01, 6.61389e+00, 5.06896e-01, 7.34784e+00 }, // Mode
-    0.25 // Fluc
+IonTrEloss HitStTRD::PDF_Q01_EL_COV_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    { 0.0, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0 }, // Kpa
+    { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mpv
+    { 5.58359e-02, 3.29289e-01, 1.54825e-02, 1.00424e+00, 4.18318e-01, 5.55584e+00 }, // Sgm
+    { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mode
+    0.00 // Fluc
+);
+
+IonTrEloss HitStTRD::PDF_Q02_EL_MEN_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    { 4.32812e-01, 1.17304e+00, 6.69675e-02, 1.57961e-01, 1.17835e+00, 3.33984e-01, 5.29717e-01, 7.31641e+00 }, // Kpa
+    { -1.75499e-01, 1.74838e+00, 1.38032e-01, 4.06282e+00, 5.12100e-01, 7.37625e+00 }, // Mpv
+    { -1.85617e-02, 3.21865e-01, 1.82369e-02, 1.24552e+00, 4.87605e-01, 6.86138e+00 }, // Sgm
+    { -9.11574e-02, 1.72462e+00, 1.36373e-01, 4.03260e+00, 5.14936e-01, 7.42064e+00 }, // Mode
+    0.20 // Fluc
+);
+
+IonTrEloss HitStTRD::PDF_Q02_EL_COV_(
+    Robust(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L)),
+    { 0.0, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0 }, // Kpa
+    { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mpv
+    { 5.58359e-02, 3.29289e-01, 1.54825e-02, 1.00424e+00, 4.18318e-01, 5.55584e+00 }, // Sgm
+    { 1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00 }, // Mode
+    0.00 // Fluc
 );
 
 

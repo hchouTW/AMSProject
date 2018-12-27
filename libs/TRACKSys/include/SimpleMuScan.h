@@ -34,7 +34,7 @@ class SimpleMuScan {
 
     protected :
         void clear();
-        MuScanObj scan(const TrFitPar& fitPar, Double_t mass);
+        MuScanObj scan(const TrFitPar& fitPar, Double_t mass, Bool_t selopt = false);
 
     protected :
         Bool_t              succ_;
@@ -48,13 +48,13 @@ class SimpleMuScan {
 
     protected :
         static constexpr Short_t  LMT_SCAN = 5;
-        static constexpr Double_t CONVG_DM = 0.003; // |preM - aftM|
-        static constexpr Double_t CONVG_RM = 0.025; // |preM - aftM| / (preM + aftM)
+        static constexpr Double_t CONVG_DM = 0.005; // |preM - aftM|
+        static constexpr Double_t CONVG_RM = 0.030; // |preM - aftM| / (preM + aftM)
 
         static constexpr Double_t LMT_MASS = 0.000510999; // electron mass
-        static constexpr Double_t LMT_QLTR = 3.7;
-        static constexpr Double_t LMT_QLTB = 3.5;
-        static constexpr Double_t LMT_QLT  = 3.3;
+        static constexpr Double_t LMT_QLTR = 3.0;
+        static constexpr Double_t LMT_QLTB = 3.2;
+        static constexpr Double_t LMT_QLT  = 2.7;
 
         static const std::vector<std::vector<Double_t>> LIST_MASS_Q;
     

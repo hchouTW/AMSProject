@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -63,18 +64,14 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     part_.reset(chrg, fitPar.info().mass());
     part_.arg().reset(fitPar.sw_mscat(), fitPar.sw_eloss());
     if (part_.chrg() == 0 || part_.chrg() >= LIST_MASS_Q.size()) { clear(); return; }
-    if (part_.chrg() > 2) { clear(); return; } // testcode
     
     timer_.start();
 
     // scan
     MuScanObj condMuObj;
     for (auto&& mass : LIST_MASS_Q.at(part_.chrg())) {
-        MuScanObj&& obj = scan(fitPar, mass);
+        MuScanObj&& obj = scan(fitPar, mass, true);
         if (obj.chrg() == 0) continue;
-        if (obj.qltr() > LMT_QLTR) continue;
-        if (obj.qltb() > LMT_QLTB) continue;
-        if (obj.qlt()  > LMT_QLT ) continue;
         condMuObj = obj;
         break;
     }
@@ -92,7 +89,6 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
         Double_t difM = std::fabs(preM - aftM);
         Double_t ratM = (difM / (preM + aftM));
         Bool_t   conv = (Numc::Compare(difM, CONVG_DM) < 0 || Numc::Compare(ratM, CONVG_RM) < 0);
-        if (iter == LMT_SCAN && !conv) { clear(); return; }
         if (conv) break;
     }
 
@@ -124,20 +120,25 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
 }
 
 
-SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass) {
+SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass, Bool_t selopt) {
     PartInfo info(part_.chrg(), mass);
         
     // track fit
     TrFitPar trPar(info, fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
     for (auto&& hitTRK : fitPar.hitsTRK()) {
         if (!(hitTRK.scx() || hitTRK.scy())) continue;
-        HitStTRK hit(hitTRK.scx(), hitTRK.scy(), hitTRK.lay(), hitTRK.isInnTr());
+        HitStTRK hit(hitTRK.scx(), hitTRK.scy(), hitTRK.lay());
         hit.set_coo(hitTRK.cx(), hitTRK.cy(), hitTRK.cz());
         trPar.add_hit(hit);
     }
     PhyTrFit trfit(trPar);
     if (!trfit.status()) return MuScanObj();
     
+    Double_t qltr = std::hypot(trfit.quality(0), trfit.quality(1));
+    if (trfit.quality(0) < 0 || trfit.quality(1) < 0)
+        qltr = std::max(trfit.quality(0), trfit.quality(1));
+    if (selopt && qltr > LMT_QLTR) return MuScanObj();
+
     // beta fit
     TrFitPar btaPar(info, fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
     btaPar.add_hit( fitPar.hitsTRK()  );
@@ -147,6 +148,14 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass
     PhyBtaFit btafit(btaPar, trfit.part());
     if (!btafit.status()) return MuScanObj();
     
+    Double_t qltb = btafit.quality();
+    if (selopt && qltb > LMT_QLTB) return MuScanObj();
+        
+    // selection
+    Double_t qlt = std::hypot(qltr, qltb);
+    if (qltr < 0 || qltb < 0) qlt = std::max(qltr, qltb);
+    if (selopt && qlt > LMT_QLT) return MuScanObj();
+    
     // estimate
     auto mmz = std::minmax({ trfit.part().cz(), btafit.part().cz() });
     Double_t tagz = ((fitPar.ortt() == TrFitPar::Orientation::kDownward) ? mmz.first : mmz.second);
@@ -154,13 +163,6 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass
     PhySt&& sttBta = btafit.interpolate_to_z(tagz);
     if (Numc::EqualToZero(sttTr .mom())) return MuScanObj();
     if (Numc::EqualToZero(sttBta.mom())) return MuScanObj();
-
-    Double_t qltr = std::hypot(trfit.quality(0), trfit.quality(1));
-    if (trfit.quality(0) < 0 || trfit.quality(1) < 0)
-        qltr = std::max(trfit.quality(0), trfit.quality(1));
-    Double_t qltb = btafit.quality();
-    Double_t qlt  = std::hypot(qltr, qltb);
-    if (qltr < 0 || qltb < 0) qlt = std::max(qltr, qltb);
 
     Short_t  est_chrg = info.chrg();
     Double_t est_mass = (sttTr.mom() * sttBta.igb());

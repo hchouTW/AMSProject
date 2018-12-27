@@ -4,6 +4,7 @@
 
 #include "Sys.h"
 #include "Math.h"
+#include "CooMeas.h"
 #include "TmeMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
@@ -26,6 +27,7 @@
 
 #include "Sys.C"
 #include "Math.C"
+#include "CooMeas.C"
 #include "TmeMeas.C"
 #include "IonEloss.C"
 #include "IonTrEloss.C"
