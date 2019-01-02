@@ -13,10 +13,10 @@ DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Dec23
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Dec23
-#Stream=${CurDir}/lst/flist.ncu.mc.HE4_216000_B1200_18Dec23
+Stream=${CurDir}/lst/flist.ncu.mc.HE4_216000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
@@ -26,7 +26,7 @@ OutputDir=${CurDir}/dat
 #Nseq=100
 #Fit
 GroupSize=10
-Nseq=300
+Nseq=400
 
 for id in `seq 0 ${Nseq}`
 do

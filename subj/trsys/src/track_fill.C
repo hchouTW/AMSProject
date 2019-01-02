@@ -66,9 +66,9 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    PartInfo info(PartType::Proton);
-    //PartInfo info(PartType::Helium4);
-    
+    //PartInfo info(PartType::Proton);
+    PartInfo info(PartType::Helium4);
+   
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     Bool_t optL1 = true;

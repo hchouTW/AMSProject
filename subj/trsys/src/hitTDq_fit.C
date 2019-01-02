@@ -12,8 +12,8 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     //Hist::AddDirectory();
 
-    Hist::Load("PR_hit_fill.root", "dat");
-    //Hist::Load("HE4_hit_fill.root", "dat");
+    //Hist::Load("PR_hit_fill.root", "dat");
+    Hist::Load("HE4v2_hit_fill.root", "dat");
 
     // Fit
     //Hist* hQ = Hist::Head("hTDq");
@@ -51,22 +51,31 @@ int main(int argc, char * argv[]) {
     //Bool_t isq = true;
     
     // Proton (TDs)
-    fkpa->SetParameters(0.00000e+00, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0);
-    fmpv->SetParameters(1.10478e-01, 8.66312e-01, 5.61390e-02, 4.35985e+00, 4.58503e-01, 6.43397e+00);
-    fsgm->SetParameters(5.68283e-02, 3.28905e-01, 1.53413e-02, 1.05370e+00, 4.08763e-01, 5.45840e+00);
-    fmod->SetParameters(1.12279e-01, 8.64621e-01, 5.61388e-02, 4.35974e+00, 4.58504e-01, 6.43308e+00);
+    //fkpa->SetParameters(0.00000e+00, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0);
+    //fmpv->SetParameters(1.10478e-01, 8.66312e-01, 5.61390e-02, 4.35985e+00, 4.58503e-01, 6.43397e+00);
+    //fsgm->SetParameters(5.68283e-02, 3.28905e-01, 1.53413e-02, 1.05370e+00, 4.08763e-01, 5.45840e+00);
+    //fmod->SetParameters(1.12279e-01, 8.64621e-01, 5.61388e-02, 4.35974e+00, 4.58504e-01, 6.43308e+00);
+    //Double_t fluc = 0.0;
+    //Bool_t isq = false;
+   
+    // He4 (TDq)
+    //fkpa->SetParameters(5.02636e-01, 6.29782e-01, 3.96850e+00, 2.29894e-02, 1.54215e+00, 4.31925e-01, 5.88217e-01, 7.87117e+00);
+    //fmpv->SetParameters(5.17292e-01, 6.72552e+00, 4.93536e-01, 1.73039e+01, 4.75069e-01, 6.86345e+00);
+    //fsgm->SetParameters(2.55399e-01, 7.67649e-01, 3.17313e-02, 2.83073e+00, 4.64441e-01, 6.52800e+00);
+    //fmod->SetParameters(8.63297e-01, 6.62279e+00, 4.89280e-01, 1.71202e+01, 4.78403e-01, 6.91607e+00);
+    //Double_t fluc = 0.8;
+    //Bool_t isq = true;
+    
+    // He4 (TDs)
+    fkpa->SetParameters(7.47084e-01, 1.17180e+00, 4.69442e-01, 3.83918e-01, 5.18781e+00, 0.0, 0.0, 0.0);
+    fmpv->SetParameters(1.49998e+00, 2.02300e+00, 5.81187e-02, 7.36798e+00, 4.20838e-01, 5.92585e+00);
+    fsgm->SetParameters(8.24817e-01, 5.10777e-01, 0.00000e+00, 1.69321e+00, 4.01223e-01, 5.71100e+00);
+    fmod->SetParameters(1.50404e+00, 2.01905e+00, 5.81185e-02, 7.36787e+00, 4.20838e-01, 5.92503e+00);
     Double_t fluc = 0.0;
     Bool_t isq = false;
    
-    // He4 (TKq)
-    //fkpa->SetParameters(5.37172e-01, 8.19362e-01, 5.63577e-03, 6.49063e-01, 1.87820e+00);
-    //fmpv->SetParameters(5.52093e-02, 3.06309e+00, 1.70756e-01, 1.82024e-02);
-    //fsgm->SetParameters(0.0, 3.27483e-01, 0.0, 0.0);
-    //fmod->SetParameters(6.31500e-01, 2.76368e+00, 8.55058e-02, 4.55644e-03);
-    //Double_t fluc = 0.174984;
-   
-    TF1* func = new TF1("func", funclg, 0, 10, 5);
-    func->SetNpx(100000);
+    TF1* func = new TF1("func", funclg, 0, 40, 5);
+    func->SetNpx(200000);
 
     for (int it = 1; it <= AXigb.nbin(); ++it) {
         COUT("Process IBIN %d/%d\n", it, AXigb.nbin());
