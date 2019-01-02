@@ -44,17 +44,19 @@ int main(int argc, char * argv[]) {
 
     // Proton (TDq)
     //fkpa->SetParameters(4.32812e-01, 1.17304e+00, 6.69675e-02, 1.57961e-01, 1.17835e+00, 3.33984e-01, 5.29717e-01, 7.31641e+00);
-    //fmpv->SetParameters(-1.75499e-01, 1.74838e+00, 1.38032e-01, 4.06282e+00, 5.12100e-01, 7.37625e+00);
-    //fsgm->SetParameters(-1.85617e-02, 3.21865e-01, 1.82369e-02, 1.24552e+00, 4.87605e-01, 6.86138e+00);
-    //fmod->SetParameters(-9.11574e-02, 1.72462e+00, 1.36373e-01, 4.03260e+00, 5.14936e-01, 7.42064e+00);
+    //fmpv->SetParameters(-1.62672e-01, 1.74195e+00, 1.36595e-01, 4.56864e+00, 4.88916e-01, 7.08228e+00);
+    //fsgm->SetParameters(-1.84424e-02, 3.21822e-01, 1.82253e-02, 1.30338e+00, 4.80543e-01, 6.78145e+00);
+    //fmod->SetParameters(-7.85233e-02, 1.71828e+00, 1.34960e-01, 4.53189e+00, 4.91589e-01, 7.12373e+00);
     //Double_t fluc = 0.2;
+    //Bool_t isq = true;
     
     // Proton (TDs)
     fkpa->SetParameters(0.00000e+00, 5.56791e+00, 3.01595e-01, 3.37129e-01, 4.17765e+00, 0.0, 0.0, 0.0);
-    fmpv->SetParameters(1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00);
-    fsgm->SetParameters(5.58359e-02, 3.29289e-01, 1.54825e-02, 1.00424e+00, 4.18318e-01, 5.55584e+00);
-    fmod->SetParameters(1.08589e-01, 8.67579e-01, 5.62515e-02, 4.17614e+00, 4.65133e-01, 6.50677e+00);
+    fmpv->SetParameters(1.10478e-01, 8.66312e-01, 5.61390e-02, 4.35985e+00, 4.58503e-01, 6.43397e+00);
+    fsgm->SetParameters(5.68283e-02, 3.28905e-01, 1.53413e-02, 1.05370e+00, 4.08763e-01, 5.45840e+00);
+    fmod->SetParameters(1.12279e-01, 8.64621e-01, 5.61388e-02, 4.35974e+00, 4.58504e-01, 6.43308e+00);
     Double_t fluc = 0.0;
+    Bool_t isq = false;
    
     // He4 (TKq)
     //fkpa->SetParameters(5.37172e-01, 8.19362e-01, 5.63577e-03, 6.49063e-01, 1.87820e+00);
@@ -88,23 +90,23 @@ int main(int argc, char * argv[]) {
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+7*rms);
-        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+4*rms);
+        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+7*rms);
+        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+4*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+3*rms);
+        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+3*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
+        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
+        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
         CERR("FIT == KPA %14.8f MPV %14.8f SMG %14.8f FLUC %14.8f\n", func->GetParameter(1), func->GetParameter(2), func->GetParameter(3), func->GetParameter(4));
         
         (*hQK)()->SetBinContent(it, func->GetParameter(1));

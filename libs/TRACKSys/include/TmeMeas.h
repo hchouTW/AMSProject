@@ -11,7 +11,6 @@ class TmeMeas {
         ~TmeMeas() {}
         
         std::array<long double, 3> minimizer(long double x, long double ibta = Numc::ONE<long double>, bool is_single = true) const;
-        inline long double eftsgm(long double ibta = Numc::ONE<long double>) const { return (is_const_ ? mgs_.eftsgm() : (mgs_.eftsgm() / get_isgm(ibta))); }
 
     protected :
         long double get_isgm(long double ibta) const;

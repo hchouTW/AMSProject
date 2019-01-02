@@ -19,9 +19,9 @@ class IonTrEloss {
    
     protected :
         long double get_kpa(long double loggb) const;
-        long double get_mpv(long double ibsqr, long double loggb) const;
-        long double get_sgm(long double ibsqr, long double loggb) const;
-        long double get_mod(long double ibsqr, long double loggb) const;
+        long double get_mpv(long double ibsqr, long double igbsqr, long double loggb) const;
+        long double get_sgm(long double ibsqr, long double igbsqr, long double loggb) const;
+        long double get_mod(long double ibsqr, long double igbsqr, long double loggb) const;
 
         // derivative ibta
         long double get_divmpv(long double ibta, long double igbsqr, long double loggb) const;

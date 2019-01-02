@@ -52,12 +52,12 @@ int main(int argc, char * argv[]) {
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/hit_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
-    PartInfo info(PartType::Proton);
-    //PartInfo info(PartType::Helium4);
+    //PartInfo info(PartType::Proton);
+    PartInfo info(PartType::Helium4);
     
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Proton)  { mombd[0] = 0.55; mombd[1] = 3800.0; }
-    if (info.type() == PartType::Helium4) { mombd[0] = 2.20; mombd[1] = 3800.0; }
+    if (info.type() == PartType::Helium4) { mombd[0] = 2.20; mombd[1] = 15200.0; }
     if (info.type() == PartType::Carbon12) { mombd[0] = 5.00; mombd[1] = 10000.0; }
     Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
     

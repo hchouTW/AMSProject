@@ -16,12 +16,13 @@ DataType=MC
 Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Dec23
+#Stream=${CurDir}/lst/flist.ncu.mc.HE4_216000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
 
 #Hit
-#GroupSize=30
+#GroupSize=40
 #Nseq=100
 #Fit
 GroupSize=10

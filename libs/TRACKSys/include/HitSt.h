@@ -331,13 +331,16 @@ class HitStRICH : public VirtualHitSt {
         Double_t nrmib_; // 1/Beta nrom
         std::array<Double_t, 2> divib_; // 1/Beta div (ibta) [ibta, eta]
 
-        MultiGaus* pdf_ib_;
+        CherenkovMeas* pdf_ib_;
     
     protected :
-        static MultiGaus PDF_AGL_Q01_IB_;
-        static MultiGaus PDF_NAF_Q01_IB_;
-        static MultiGaus PDF_AGL_Q02_IB_;
-        static MultiGaus PDF_NAF_Q02_IB_;
+        static constexpr long double RFR_INDEX_AGL = 1.0529;
+        static constexpr long double RFR_INDEX_NAF = 1.33;
+
+        static CherenkovMeas PDF_AGL_Q01_IB_;
+        static CherenkovMeas PDF_NAF_Q01_IB_;
+        static CherenkovMeas PDF_AGL_Q02_IB_;
+        static CherenkovMeas PDF_NAF_Q02_IB_;
 };
 
 
@@ -355,31 +358,34 @@ class HitStTRD : public VirtualHitSt {
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_el(Double_t elm, Double_t els) {
-            side_el_ = (Numc::Compare(elm) > 0 && Numc::Compare(els) > 0);
-            elm_     = (side_el_ ? elm : Numc::ZERO<>);
-            els_     = (side_el_ ? els : Numc::ZERO<>);
-            
-            chielm_ = Numc::ZERO<>;
-            nrmelm_ = Numc::ZERO<>;
+            Bool_t side_el = (Numc::Compare(elm) > 0 && Numc::Compare(els) > 0);
+            elm_ = (side_el ? elm : Numc::ZERO<>);
+            els_ = (side_el ? els : Numc::ZERO<>);
+           
+            side_elm_ = side_el;
+            chielm_   = Numc::ZERO<>;
+            nrmelm_   = Numc::ZERO<>;
             divelm_.fill(Numc::ZERO<>);
             
-            chiels_ = Numc::ZERO<>;
-            nrmels_ = Numc::ZERO<>;
+            side_els_ = side_el;
+            chiels_   = Numc::ZERO<>;
+            nrmels_   = Numc::ZERO<>;
             divels_.fill(Numc::ZERO<>);
         }
         
         inline const Double_t& elm() const { return elm_; }
         inline const Double_t& els() const { return els_; }
 
-        inline const Short_t& seqIDel() const { return seqIDel_; }
+        inline const Short_t& seqIDelm() const { return seqIDelm_; }
+        inline const Short_t& seqIDels() const { return seqIDels_; }
         
-        inline const Bool_t& sel() const { return side_el_; }
-
+        inline const Bool_t&   selm() const { return side_elm_; }
         inline const Double_t& chielm() const { return chielm_; }
         inline const Double_t& nrmelm() const { return nrmelm_; }
         inline const Double_t& divelm_ibta() const { return divelm_[0]; }
         inline const Double_t& divelm_eta()  const { return divelm_[1]; }
         
+        inline const Bool_t&   sels() const { return side_els_; }
         inline const Double_t& chiels() const { return chiels_; }
         inline const Double_t& nrmels() const { return nrmels_; }
         inline const Double_t& divels_ibta() const { return divels_[0]; }
@@ -389,16 +395,17 @@ class HitStTRD : public VirtualHitSt {
         void clear();
 
     protected :
-        Short_t seqIDel_;
+        Short_t seqIDelm_;
+        Short_t seqIDels_;
         
-        Bool_t   side_el_;
+        Bool_t   side_elm_;
         Double_t elm_; // energy loss dE/dx mean
-        Double_t els_; // energy loss dE/dx sigma
-
         Double_t chielm_; // dE/dx chi
         Double_t nrmelm_; // dE/dx nrom
         std::array<Double_t, 2> divelm_; // dE/dx div (ibta) [ibta, eta]
         
+        Bool_t   side_els_;
+        Double_t els_; // energy loss dE/dx sigma
         Double_t chiels_; // dE/dx chi
         Double_t nrmels_; // dE/dx nrom
         std::array<Double_t, 2> divels_; // dE/dx div (ibta) [ibta, eta]

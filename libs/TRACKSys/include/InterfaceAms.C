@@ -7,6 +7,7 @@
 #include "Math.h"
 #include "CooMeas.h"
 #include "TmeMeas.h"
+#include "CherenkovMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
 #include "PartInfo.h"

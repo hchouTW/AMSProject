@@ -6,6 +6,7 @@
 #include "Math.h"
 #include "CooMeas.h"
 #include "TmeMeas.h"
+#include "CherenkovMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
 #include "PartInfo.h"
@@ -351,8 +352,10 @@ Bool_t PhyMuFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi_ib += hitTRD->chielm() * hitTRD->chielm();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->selm()) chi_ib += hitTRD->chielm() * hitTRD->chielm();
+            if (hitTRD->sels()) chi_ib += hitTRD->chiels() * hitTRD->chiels();
+            if (hitTRD->selm()) jb(hitTRD->seqIDelm(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->sels()) jb(hitTRD->seqIDels(), parIDibta) += hitTRD->divels_ibta() * jbBB;
         }
         
         if (hasCxy) {
@@ -571,8 +574,10 @@ bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residual
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
-            if (hasJacbGlb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->selm()) rs(hitTRD->seqIDelm()) += hitTRD->nrmelm();
+            if (hitTRD->sels()) rs(hitTRD->seqIDels()) += hitTRD->nrmels();
+            if (hasJacbGlb && hitTRD->selm()) jb(hitTRD->seqIDelm(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hasJacbGlb && hitTRD->sels()) jb(hitTRD->seqIDels(), parIDibta) += hitTRD->divels_ibta() * jbBB;
         }
 
         if (hasCxy) {

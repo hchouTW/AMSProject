@@ -4,7 +4,7 @@
 LIBP += -lgflags -lglog -lceres
 
 TagetDir = $(AMSCoreSubj)/trsys/vdev
-#TagetDir = $(AMSCoreSubj)/trsys/test
+TagetDir = $(AMSCoreSubj)/trsys/test
 
 #Version=18Oct17
 Version=18Dec23
@@ -44,7 +44,7 @@ all :
 	#make $(TagetDir)/bta_fill
 	#make $(TagetDir)/bta_fit
 	make $(TagetDir)/track_fill
-	#make $(TagetDir)/track_fit
+	make $(TagetDir)/track_fit
 	#make $(TagetDir)/mu_fill
 	#make $(TagetDir)/mu_fit
 

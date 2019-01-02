@@ -45,6 +45,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
+    HYC  * fHyc  = new HYC ;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -58,13 +59,13 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
     dst->SetBranchAddress("ecal", &fEcal);
+    dst->SetBranchAddress("hyc",  &fHyc);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/track_fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
     
-    //PartInfo info(PartType::Electron);
     PartInfo info(PartType::Proton);
     //PartInfo info(PartType::Helium4);
     
@@ -79,36 +80,34 @@ int main(int argc, char * argv[]) {
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3800.0; }
     if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3800.0; }
     Axis AXmom("Momentum [GeV]", nmom, mombd[0], mombd[1], AxisScale::kLog);
-    
     Axis AXrig("Rigidity [GV]", AXmom.nbin(), mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
     
-    // Time
-    Axis AXtme("Time [ms]", 1600, 0., 1000.);
-    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXmom, AXtme));
-    
-    // Fit Eff
+    // Track Inn Fit
     Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXmom, "Events/Bin"));
     Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXmom, "Events/Bin"));
-
-    // Fit R Res
+    
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -1.3, 1.3);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
     
-    //Axis AXRDrso("(1/R_L9 - 1/R_L1) [1/GV]", 2000, -1.8, 1.8);
-    //Hist* hCKRDrso = Hist::New("hCKRDrso", HistAxis(AXmom, AXRDrso));
-    //Hist* hHCRDrso = Hist::New("hHCRDrso", HistAxis(AXmom, AXRDrso));
-    //
-    //Hist* hCKRD2rso = Hist::New("hCKRD2rso", HistAxis(AXmom, AXRDrso));
-    //Hist* hHCRD2rso = Hist::New("hHCRD2rso", HistAxis(AXmom, AXRDrso));
-    
     Axis AXRqlt("Quality [1]", 800, -2.0, 4.0);
     Hist* hCKRqltx = Hist::New("hCKRqltx", HistAxis(AXmom, AXRqlt));
-    Hist* hHCRqltx = Hist::New("hHCRqltx", HistAxis(AXmom, AXRqlt));
-    
     Hist* hCKRqlty = Hist::New("hCKRqlty", HistAxis(AXmom, AXRqlt));
+    
+    Hist* hHCRqltx = Hist::New("hHCRqltx", HistAxis(AXmom, AXRqlt));
     Hist* hHCRqlty = Hist::New("hHCRqlty", HistAxis(AXmom, AXRqlt));
-   
+
+    // Fit R Res
+    Axis AXRDrso("(1/R_L9 - 1/R_L1) [1/GV]", 2000, -1.8, 1.8);
+    Hist* hCKRDrso = Hist::New("hCKRDrso", HistAxis(AXmom, AXRDrso));
+    Hist* hHCRDrso = Hist::New("hHCRDrso", HistAxis(AXmom, AXRDrso));
+    
+    // Time
+    Axis AXtme("Time [ms]", 1600, 0., 500.);
+    Hist* hJFtme = Hist::New("hJFtme", HistAxis(AXmom, AXtme));
+    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXmom, AXtme));
+    
+
     MGClock::HrsStopwatch hrssw;
     Long64_t passEntry = 0;
     Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
@@ -128,7 +127,7 @@ int main(int argc, char * argv[]) {
         
         Int_t trPatt = optL1 + optL9 * 2;
         CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
-        KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
+        //KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
         //HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
         // Geometry (TRK)
@@ -202,12 +201,12 @@ int main(int argc, char * argv[]) {
             //fitPar.add_hit(mhit);
         }
 
-        //if (!fRich->status) continue;
-        //if (fRich->kind != 0) continue;
-        //HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
-        //richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
-        //richHit.set_ib(Numc::ONE<> / fRich->beta);
-        //btaPar.add_hit(richHit);
+        if (fRich->status && fRich->isGood) {
+            HitStRICH richHit( (fRich->kind == 0 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF) );
+            richHit.set_coo(Numc::ZERO<>, Numc::ZERO<>, fRich->refz);
+            richHit.set_ib(Numc::ONE<> / fRich->beta);
+            //fitPar.add_hit(richHit);
+        }
 
         // TRD
         if (fTrd->statusKCls[0] && fTrd->recHits.size() >= 5) {

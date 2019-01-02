@@ -2040,16 +2040,16 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
 
     // Track Fitting with the all measurements
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkInAll = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
 
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL1All = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkl1, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkl1, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
     
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkL9All = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkl9, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkl9, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
     
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_tkFsAll = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkfs, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkfs, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
 
     TrackSys::PhyTrFit&& trM1TkInAll(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
     TrackSys::PhyTrFit&& trM1TkL1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
@@ -2074,10 +2074,10 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     // Beta Fitting with the TOF time measurements
     // Beta Fitting with the all measurements
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaT = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, false), TrackSys::AmsTfOpt(true, false), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
     
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaAll = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
    
     TrackSys::PhyBtaFit btaM1T(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM1TkIn.part());
     TrackSys::PhyBtaFit btaM1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM1TkIn.part());
@@ -2093,10 +2093,10 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
 
     // Mass Fitting
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muT = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, false), TrackSys::AmsTfOpt(true, false), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
     
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muAll = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
+        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
     
     TrackSys::PhyMuFit&& mutrT(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muT),   std::get<1>(opt_muT),   std::get<2>(opt_muT)));
     TrackSys::PhyMuFit&& mutrAll(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muAll), std::get<1>(opt_muAll), std::get<2>(opt_muAll)));
@@ -2540,7 +2540,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     //if (ecalSIG == nullptr) return -4004;
 
 	// ~5~ (Based on BetaH)
-	if (event->NBetaH() != 1) return -5001;
+	if (event->NBetaH() <= 0) return -5001;
 	if (btahSIG->GetBetaPattern() != 4444) return -5002;
 	
     double betah = btahSIG->GetBeta();

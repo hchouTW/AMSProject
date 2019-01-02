@@ -6,6 +6,7 @@
 #include "Math.h"
 #include "CooMeas.h"
 #include "TmeMeas.h"
+#include "CherenkovMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
 #include "PartInfo.h"
@@ -229,9 +230,12 @@ Bool_t PhyBtaFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) chi += hitTRD->chielm() * hitTRD->chielm();
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
-            if (hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->selm()) chi += hitTRD->chielm() * hitTRD->chielm();
+            if (hitTRD->sels()) chi += hitTRD->chiels() * hitTRD->chiels();
+            if (hitTRD->selm()) rs(hitTRD->seqIDelm()) += hitTRD->nrmelm();
+            if (hitTRD->sels()) rs(hitTRD->seqIDels()) += hitTRD->nrmels();
+            if (hitTRD->selm()) jb(hitTRD->seqIDelm(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->sels()) jb(hitTRD->seqIDels(), parIDibta) += hitTRD->divels_ibta() * jbBB;
         }
         
         cnt_nhit++;
@@ -334,8 +338,10 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->sel()) rs(hitTRD->seqIDel()) += hitTRD->nrmelm();
-            if (hasJacb && hitTRD->sel()) jb(hitTRD->seqIDel(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hitTRD->selm()) rs(hitTRD->seqIDelm()) += hitTRD->nrmelm();
+            if (hitTRD->sels()) rs(hitTRD->seqIDels()) += hitTRD->nrmels();
+            if (hasJacb && hitTRD->selm()) jb(hitTRD->seqIDelm(), parIDibta) += hitTRD->divelm_ibta() * jbBB;
+            if (hasJacb && hitTRD->sels()) jb(hitTRD->seqIDels(), parIDibta) += hitTRD->divels_ibta() * jbBB;
         }
 
         cnt_nhit++;

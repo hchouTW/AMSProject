@@ -6,6 +6,7 @@
 #include "Math.h"
 #include "CooMeas.h"
 #include "TmeMeas.h"
+#include "CherenkovMeas.h"
 #include "IonEloss.h"
 #include "IonTrEloss.h"
 #include "PartInfo.h"
@@ -165,7 +166,8 @@ Bool_t TrFitPar::sort_hits() {
     }
     
     for (auto&& hit : hits_TRD_) {
-        if (hit.sel()) nmes_TRDel_++;
+        if (hit.selm()) nmes_TRDel_++;
+        if (hit.sels()) nmes_TRDel_++;
     }
     
     nmes_ib_ = nmes_TRKq_ + nmes_TOFt_ + nmes_TOFq_ + nmes_RICHib_ + nmes_TRDel_;

@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  18Dec23
+PROJTITLE    =  MC_HE4_150T.B1200
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.mc.he4.pl1.l1.150T.B1200
+EVENTTYPE    =  MC
+FILEPEREXE   =  3
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  3742
+
+[QUEUE]
+QUEUE      =  ams1nd
+STORAGE    =  EOS
+EXEPERJOB  =  3
+CONFIRM    =  NONE

@@ -11,12 +11,13 @@ RunFile=${AMSCore}/subj/adSearch/${Version}/fill
 
 CurDir=${PWD}
 
-#DataType=ISS
+DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Jun18
-DataType=MC
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Dec23
+#DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
-Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
+#Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 #DataType=BT
 #Stream=${CurDir}/lst/flist.ncu.bt.PR_400_B1082_18Oct10
@@ -24,8 +25,8 @@ Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
 OutputDir=${CurDir}/dat
 
 #Fit
-GroupSize=50
-Nseq=60
+GroupSize=10
+Nseq=200
 #Fit
 #GroupSize=1
 #Nseq=52
@@ -34,6 +35,7 @@ for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
-${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log" | qsub -q ams -N JOB${id} -j oe
+${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log
+ls -alh /tmp/* | awk '{print $8}' | grep hchou | xargs /bin/rm" | qsub -q ams -N JOB${id} -j oe
 #${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done
