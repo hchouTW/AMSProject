@@ -143,52 +143,6 @@ TrFitPar Event::GetTrFitPar(const PartInfo& info, const TrFitPar::Orientation& o
 }
 
 
-/*
-TrFitPar Event::GetTrFitPar(const PartInfo& info, const TkOpt& tkOpt, const TfOpt& tfOpt, const RhOpt& rhOpt) {
-    if (Ev == nullptr) return TrFitPar();
-    if (Trtk == nullptr || !StatusTk) return TrFitPar();
-    Bool_t hasL1 = (tkOpt.dedx() ? (TkHitL1Q.scx() || TkHitL1Q.scy()) : (TkHitL1.scx() || TkHitL1.scy()));
-    Bool_t hasL9 = (tkOpt.dedx() ? (TkHitL9Q.scx() || TkHitL9Q.scy()) : (TkHitL9.scx() || TkHitL9.scy()));
-    if (tkOpt.reqL1() && !hasL1) return TrFitPar();
-    if (tkOpt.reqL9() && !hasL9) return TrFitPar();
-
-    if (tfOpt.used() && !StatusTf) return TrFitPar();
-    if (tfOpt.used()) {
-        if (Btah == nullptr) return TrFitPar();
-        if ((!tfOpt.dedx()) && TfHitT.size()  == 0) return TrFitPar(); 
-        if (( tfOpt.dedx()) && TfHitTQ.size() == 0) return TrFitPar(); 
-    }
-
-    if (rhOpt.used() && !StatusRh) return TrFitPar();
-    if (rhOpt.used()) {
-        if (Rich == nullptr) return TrFitPar();
-        if (RhOpt::Rad::AGL == rhOpt.rad())
-            if (HitStRICH::Radiator::AGL != RhHit.rad()) return TrFitPar();
-        if (RhOpt::Rad::NAF == rhOpt.rad())
-            if (HitStRICH::Radiator::NAF != RhHit.rad()) return TrFitPar();
-        if (!RhHit.sib()) return TrFitPar(); 
-    }
-
-    TrFitPar fitPar(info, ArgOrtt, ArgSwMscat, ArgSwEloss);
-
-    fitPar.add_hit(tkOpt.dedx() ? TkHitInQ : TkHitIn);
-    if (tkOpt.useL1()) fitPar.add_hit(tkOpt.dedx() ? TkHitL1Q : TkHitL1);
-    if (tkOpt.useL9()) fitPar.add_hit(tkOpt.dedx() ? TkHitL9Q : TkHitL9);
-
-    if (tfOpt.used()) {
-        if      (!tfOpt.dedx()) fitPar.add_hit(TfHitT);
-        else if ( tfOpt.dedx()) fitPar.add_hit(TfHitTQ);
-        else return TrFitPar();
-    }
-    
-    if (rhOpt.used()) fitPar.add_hit(RhHit);
-
-    if (fitPar.check()) return fitPar;
-    else                return TrFitPar();
-}
-*/
-
-
 void Event::Init() {
     TkHitIn.clear();
     TkHitL1 = HitStTRK();
@@ -231,10 +185,17 @@ Bool_t Event::BulidHitStTRK() {
         
         TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
 		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
-            
+        
+        // Qrecon: Hu Liu
         Double_t qx  = (xcls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 0, 1, fitid);
 		Double_t qy  = (ycls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 1, 1, fitid);
 		Double_t qxy = (xcls == nullptr || ycls == nullptr) ? -1.0 : Trtk->GetLayerJQH(layJ, 2, 1, fitid);
+        
+        // Qrecon: YJ
+        //Double_t qx  = (xcls == nullptr) ? -1.0 : Trtk->GetLayerQYJ(layJ, 0, 1, fitid);
+		//Double_t qy  = (ycls == nullptr) ? -1.0 : Trtk->GetLayerQYJ(layJ, 1, 1, fitid);
+		//Double_t qxy = (xcls == nullptr || ycls == nullptr) ? -1.0 : Trtk->GetLayerQYJ(layJ, 2, 1, fitid);
+        
         if (qx  == 0) qx  = -1.0;
         if (qy  == 0) qy  = -1.0;
         if (qxy == 0) qxy = -1.0;

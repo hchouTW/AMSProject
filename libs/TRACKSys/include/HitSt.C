@@ -477,14 +477,14 @@ Bool_t HitStRICH::set_type(const PartInfo& info) {
 }
 
 CherenkovMeas HitStRICH::PDF_AGL_Q01_IB_(
-    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 1.0L),
+    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L),
     6.84734464661977515e-01, 9.59147e-04,
     3.15265535338022374e-01, 1.64991e-03),
     RFR_INDEX_AGL
 );
 
 CherenkovMeas HitStRICH::PDF_AGL_Q02_IB_(
-    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 1.0L),
+    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L),
     7.75514988289395357e-01, 6.15751e-04,
     2.24485011710604615e-01, 1.07079e-03),
     RFR_INDEX_NAF
@@ -492,14 +492,14 @@ CherenkovMeas HitStRICH::PDF_AGL_Q02_IB_(
 
 
 CherenkovMeas HitStRICH::PDF_NAF_Q01_IB_(
-    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 1.0L),
+    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L),
     8.53153985032869877e-01, 3.16209e-03,
     1.46846014967130206e-01, 5.38069e-03),
     RFR_INDEX_AGL
 );
 
 CherenkovMeas HitStRICH::PDF_NAF_Q02_IB_(
-    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 1.0L),
+    MultiGaus(Robust::Option(Robust::Opt::ON, 3.5L, 0.5L),
     7.62865861184466976e-01, 1.90407e-03,
     2.37134138815532997e-01, 3.11423e-03),
     RFR_INDEX_NAF

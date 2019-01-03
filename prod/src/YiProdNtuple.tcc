@@ -82,13 +82,14 @@ bool RecEvent::rebuild(AMSEventR * event) {
         TkStID = TkStPar->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
         if (TkStID >= 0) {
             // Qrecon: Hu Liu
-            //TkStPar->GetQH_all(); // confirm rec-chrg work
-            //qin = TkStPar->GetInnerQH(2, beta, TkStID);
+            TkStPar->GetQH_all(); // confirm rec-chrg work
+            qin = TkStPar->GetInnerQH(2, beta, TkStID);
+            
             // Qrecon: YJ
-            int innerq_patt;
-            float innerq_rms;
-            TkStPar->GetQYJ_all();
-            qin = TkStPar->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, TkStID);
+            //int innerq_patt;
+            //float innerq_rms;
+            //TkStPar->GetQYJ_all();
+            //qin = TkStPar->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, TkStID);
 
             zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
             mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
@@ -771,21 +772,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
         if (!TrackSys::Numc::Valid(JFlhdT)) JFlhdT = -1.0;
         swT.stop();
         
-        fTof.JFbtaT = JFbtaT;
-        fTof.JFerrT = JFerrT;
-        fTof.JFT_cpuTime = swT.time() * 1.0e+03;
-
-        //MGClock::HrsStopwatch swAll;
-        //float JFbtaAll = fTof.betaH, JFerrAll = 0;
-        //double JFlhdAll = LxBetalhd::GetBetaLikelihood(JFbtaAll, JFerrAll, recEv.zin, recEv.mass);
-        //if (!TrackSys::Numc::Valid(JFbtaAll)) JFbtaAll = -1.0;
-        //if (!TrackSys::Numc::Valid(JFerrAll)) JFerrAll = -1.0;
-        //if (!TrackSys::Numc::Valid(JFlhdAll)) JFlhdAll = -1.0;
-        //swAll.stop();
-
-        //fTof.JFbtaAll = JFbtaAll;
-        //fTof.JFerrAll = JFerrAll;
-        //fTof.JFAll_cpuTime = swAll.time() * 1.0e+03;
+        fTof.JFbta = JFbtaT;
+        fTof.JF_cpuTime = swT.time() * 1.0e+03;
     }
 
 	fStopwatch.stop();
@@ -955,11 +943,21 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		short bitPattXY = isInnerXY + isL2XY + isL1XY + isL9XY;
 
 		fTrk.bitPatt   = bitPatt; 
-		fTrk.bitPattXY = bitPattXY; 
+		fTrk.bitPattXY = bitPattXY;
+
+        // Qrecon: Hu Liu
         fTrk.QIn = trtk->GetInnerQH(2, recEv.beta, fitidInn);
 		fTrk.QL2 = (isL2>0) ? trtk->GetLayerJQH(2, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL1 = (isL1>0) ? trtk->GetLayerJQH(1, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL9 = (isL9>0) ? trtk->GetLayerJQH(9, 2, recEv.beta, fitidInn) : -1;
+        
+        // Qrecon: YJ
+        //int innerq_patt;
+        //float innerq_rms;
+        //fTrk.QIn = trtk->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, fitidInn);
+		//fTrk.QL2 = (isL2>0) ? trtk->GetLayerQYJ(2, 2, recEv.beta, fitidInn) : -1;
+		//fTrk.QL1 = (isL1>0) ? trtk->GetLayerQYJ(1, 2, recEv.beta, fitidInn) : -1;
+		//fTrk.QL9 = (isL9>0) ? trtk->GetLayerQYJ(9, 2, recEv.beta, fitidInn) : -1;
 
 		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
@@ -981,9 +979,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             double xloc = (xcls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointX()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointX();
             double yloc = (ycls == nullptr || !tksens.LadFound() || MGNumc::Compare(std::fabs(tksens.GetImpactPointY()), 0.5) > 0) ? -1.0 : tksens.GetImpactPointY();
 
+            // Qrecon: Hu Liu
             float xchrg  = (xcls == nullptr) ? -1.0 : trtk->GetLayerJQH(ilay+1, 0, 1, fitidInn);
 			float ychrg  = (ycls == nullptr) ? -1.0 : trtk->GetLayerJQH(ilay+1, 1, 1, fitidInn);
 			float xychrg = (xcls == nullptr || ycls == nullptr) ? -1.0 : trtk->GetLayerJQH(ilay+1, 2, 1, fitidInn);
+            
+            // Qrecon: YJ
+            //float xchrg  = (xcls == nullptr) ? -1.0 : trtk->GetLayerQYJ(ilay+1, 0, 1, fitidInn);
+			//float ychrg  = (ycls == nullptr) ? -1.0 : trtk->GetLayerQYJ(ilay+1, 1, 1, fitidInn);
+			//float xychrg = (xcls == nullptr || ycls == nullptr) ? -1.0 : trtk->GetLayerQYJ(ilay+1, 2, 1, fitidInn);
+            
             if (xchrg  == 0) xchrg  = -1.0;
             if (ychrg  == 0) ychrg  = -1.0;
             if (xychrg == 0) xychrg = -1.0;
@@ -2070,49 +2075,35 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (trM1TkL9All.status()) fHyc.trM1All.at(2) = std::move(processHCTr(trM1TkL9All));
     if (trM1TkFsAll.status()) fHyc.trM1All.at(3) = std::move(processHCTr(trM1TkFsAll));
 
-    //TrackSys::PhyTrFit&& trM2TkInAll(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
-    //TrackSys::PhyTrFit&& trM2TkL1All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
-    //TrackSys::PhyTrFit&& trM2TkL9All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL9All), std::get<1>(opt_tkL9All), std::get<2>(opt_tkL9All)));
-    //TrackSys::PhyTrFit&& trM2TkFsAll(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkFsAll), std::get<1>(opt_tkFsAll), std::get<2>(opt_tkFsAll)));
+    TrackSys::PhyTrFit&& trM2TkInAll(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkInAll), std::get<1>(opt_tkInAll), std::get<2>(opt_tkInAll)));
+    TrackSys::PhyTrFit&& trM2TkL1All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL1All), std::get<1>(opt_tkL1All), std::get<2>(opt_tkL1All)));
+    TrackSys::PhyTrFit&& trM2TkL9All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkL9All), std::get<1>(opt_tkL9All), std::get<2>(opt_tkL9All)));
+    TrackSys::PhyTrFit&& trM2TkFsAll(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_tkFsAll), std::get<1>(opt_tkFsAll), std::get<2>(opt_tkFsAll)));
 
-    //if (trM2TkInAll.status()) fHyc.trM2All.at(0) = std::move(processHCTr(trM2TkInAll));
-    //if (trM2TkL1All.status()) fHyc.trM2All.at(1) = std::move(processHCTr(trM2TkL1All));
-    //if (trM2TkL9All.status()) fHyc.trM2All.at(2) = std::move(processHCTr(trM2TkL9All));
-    //if (trM2TkFsAll.status()) fHyc.trM2All.at(3) = std::move(processHCTr(trM2TkFsAll));
+    if (trM2TkInAll.status()) fHyc.trM2All.at(0) = std::move(processHCTr(trM2TkInAll));
+    if (trM2TkL1All.status()) fHyc.trM2All.at(1) = std::move(processHCTr(trM2TkL1All));
+    if (trM2TkL9All.status()) fHyc.trM2All.at(2) = std::move(processHCTr(trM2TkL9All));
+    if (trM2TkFsAll.status()) fHyc.trM2All.at(3) = std::move(processHCTr(trM2TkFsAll));
 
     // Beta Fitting with the TOF time measurements
     // Beta Fitting with the all measurements
-    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaT = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
-    
-    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_btaAll = 
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_bta = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
-   
-    TrackSys::PhyBtaFit btaM1T(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM1TkIn.part());
-    TrackSys::PhyBtaFit btaM1All(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM1TkIn.part());
     
-    if (btaM1T.status())   fHyc.btaM1T = std::move(processHCBta(btaM1T));
-    if (btaM1All.status()) fHyc.btaM1All = std::move(processHCBta(btaM1All));
-
-    //TrackSys::PhyBtaFit btaM2T(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaT), std::get<1>(opt_btaT), std::get<2>(opt_btaT)), trM2TkIn.part());
-    //TrackSys::PhyBtaFit btaM2All(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_btaAll), std::get<1>(opt_btaAll), std::get<2>(opt_btaAll)), trM2TkIn.part());
-    //
-    //if (btaM2T.status())   fHyc.btaM2T = std::move(processHCBta(btaM2T));
-    //if (btaM2All.status()) fHyc.btaM2All = std::move(processHCBta(btaM2All));
+    TrackSys::PhyBtaFit btaM1(TrackSys::AmsEvent::GetTrFitPar(m1type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_bta), std::get<1>(opt_bta), std::get<2>(opt_bta)), trM1TkIn.part());
+    TrackSys::PhyBtaFit btaM2(TrackSys::AmsEvent::GetTrFitPar(m2type, ortt, sw_mscat, sw_eloss, std::get<0>(opt_bta), std::get<1>(opt_bta), std::get<2>(opt_bta)), trM2TkIn.part());
+    
+    if (btaM1.status()) fHyc.btaM1 = std::move(processHCBta(btaM1));
+    if (btaM2.status()) fHyc.btaM2 = std::move(processHCBta(btaM2));
 
     // Mass Fitting
-    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muT = 
-        std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
-    
-    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_muAll = 
+    std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_mu = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(true));
     
-    TrackSys::PhyMuFit&& mutrT(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muT),   std::get<1>(opt_muT),   std::get<2>(opt_muT)));
-    TrackSys::PhyMuFit&& mutrAll(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_muAll), std::get<1>(opt_muAll), std::get<2>(opt_muAll)));
+    TrackSys::PhyMuFit&& mutr(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_mu), std::get<1>(opt_mu), std::get<2>(opt_mu)));
     
-    if (mutrT.status()) fHyc.mutrT = std::move(processHCMu(mutrT));
-    if (mutrAll.status()) fHyc.mutrAll = std::move(processHCMu(mutrAll));
-
+    if (mutr.status()) fHyc.mutr = std::move(processHCMu(mutr));
+    
     fStopwatch.stop();
 	return selectEvent(event);
 }
@@ -2531,7 +2522,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-    if (event->NTrTrack() <= 0) return -2001;
+    if (event->NTrTrack() != 1) return -2001;
 
 	// ~3~ (Based on TrdTrack)
 	//if (event->NTrdTrack() == 0 && event->NTrdHTrack() == 0) return -3001;
@@ -2549,7 +2540,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     //if (ecalSIG == nullptr) return -4004;
 
 	// ~5~ (Based on BetaH)
-	if (event->NBetaH() <= 0) return -5001;
+	if (event->NBetaH() != 1) return -5001;
 	if (btahSIG->GetBetaPattern() != 4444) return -5002;
 	
     double betah = btahSIG->GetBeta();
@@ -2584,13 +2575,13 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	
 	Int_t numOfTrInX = 0;
 	Int_t numOfTrInY = 0;
-	for (Int_t ilay = 2; ilay <= 7; ilay++) {
+	for (Int_t ilay = 1; ilay <= 7; ilay++) {
 		bool hasY  = ((trBitPattJ&(1<<ilay)) > 0);
 		bool hasXY = ((trBitPattXYJ&(1<<ilay)) > 0);
 		if (hasY)  numOfTrInY++;
 		if (hasXY) numOfTrInX++;
 	}
-	if (numOfTrInX <= 2 || numOfTrInY <= 3) return -6004;
+	if (numOfTrInX <= 3 || numOfTrInY <= 4) return -6004;
     
     //--------------------------//
 	//----  Reconstruction  ----//
@@ -2600,7 +2591,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
         if (!rti.processEvent(event)) return -7001;
-        //double minIGRF = (*std::min_element(rti.fRti.cfIGRF, rti.fRti.cfIGRF+4));
+        double minStormer = (*std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4));
+        double minIGRF    = (*std::min_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
+        double minCF      = std::min(minStormer, minIGRF);
     }
 
 	return 0;
@@ -2871,7 +2864,8 @@ void YiNtuple::loopEventChain() {
 		nprocessed++;
 
 		AMSEventR * event = fChain->GetEvent(ientry);
-	
+
+        if (ientry%4 != 0) continue; // testcode
 		//if (nprocessed > 1000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);

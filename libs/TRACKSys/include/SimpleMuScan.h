@@ -47,14 +47,14 @@ class SimpleMuScan {
         std::array<Double_t, 2> quality_;
 
     protected :
-        static constexpr Short_t  LMT_SCAN = 5;
+        static constexpr Short_t  LMT_SCAN = 3;
         static constexpr Double_t CONVG_DM = 0.005; // |preM - aftM|
         static constexpr Double_t CONVG_RM = 0.030; // |preM - aftM| / (preM + aftM)
 
         static constexpr Double_t LMT_MASS = 0.000510999; // electron mass
-        static constexpr Double_t LMT_QLTR = 3.0;
-        static constexpr Double_t LMT_QLTB = 3.2;
-        static constexpr Double_t LMT_QLT  = 2.7;
+        static constexpr Double_t LMT_QLTR = 4.0;
+        static constexpr Double_t LMT_QLTB = 3.7;
+        static constexpr Double_t LMT_QLT  = 3.5;
 
         static const std::vector<std::vector<Double_t>> LIST_MASS_Q;
     
@@ -66,14 +66,14 @@ class SimpleMuScan {
 // List of Particle
 const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
     { PartInfo(PartType::Photon).mass() }, // Q0
-    { PartInfo(PartType::Deuterium).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::Positron).mass() }, // Q1
-    { PartInfo(PartType::Helium4).mass(), PartInfo(PartType::Helium3).mass() }, // Q2
-    { PartInfo(PartType::Lithium7).mass(), PartInfo(PartType::Lithium6).mass() }, // Q3
-    { PartInfo(PartType::Beryllium10).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium7).mass() }, // Q4
-    { PartInfo(PartType::Boron11).mass(), PartInfo(PartType::Boron10).mass() }, // Q5
-    { PartInfo(PartType::Carbon14).mass(), PartInfo(PartType::Carbon13).mass(), PartInfo(PartType::Carbon12).mass() }, // Q6
-    { PartInfo(PartType::Nitrogen15).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen13).mass() }, // Q7
-    { PartInfo(PartType::Oxygen18).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen16).mass() } // Q8
+    { PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::Deuterium).mass() }, // Q1
+    { PartInfo(PartType::Helium3).mass(), PartInfo(PartType::Helium4).mass() }, // Q2
+    { PartInfo(PartType::Lithium6).mass(), PartInfo(PartType::Lithium7).mass() }, // Q3
+    { PartInfo(PartType::Beryllium7).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium10).mass() }, // Q4
+    { PartInfo(PartType::Boron10).mass(), PartInfo(PartType::Boron11).mass() }, // Q5
+    { PartInfo(PartType::Carbon12).mass(), PartInfo(PartType::Carbon13).mass(), PartInfo(PartType::Carbon14).mass() }, // Q6
+    { PartInfo(PartType::Nitrogen13).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen15).mass() }, // Q7
+    { PartInfo(PartType::Oxygen16).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen18).mass() } // Q8
 });
 
 

@@ -752,14 +752,8 @@ class TOF : public TObject {
 
 			std::fill_n(numOfExtCls, 4, 0);
         
-            JFbtaT      = -1;
-            JFerrT      = -1;
-            JFT_cpuTime = 0;
-
-            JFbtaAll      = -1;
-            JFerrAll      = -1;
-            JFAll_cpuTime = 0;
-
+            JFbta      = -1;
+            JF_cpuTime = 0;
 		}
 
 	public :
@@ -789,13 +783,8 @@ class TOF : public TObject {
 		Short_t numOfExtCls[4];
 
         // JFeng
-        Float_t JFbtaT; // at Tracker L1
-        Float_t JFerrT;
-        Float_t JFT_cpuTime;
-
-        Float_t JFbtaAll; // at Tracker L1
-        Float_t JFerrAll;
-        Float_t JFAll_cpuTime;
+        Float_t JFbta; // at Tracker L1
+        Float_t JF_cpuTime;
 
 	ClassDef(TOF, 10)
 };
@@ -1268,14 +1257,10 @@ class HYC : public TObject {
             trM1All = std::vector<HCTrInfo>(4);
             trM2All = std::vector<HCTrInfo>(4);
          
-            btaM1T.init();
-            btaM2T.init();
-            
-            btaM1All.init();
-            btaM2All.init();
+            btaM1.init();
+            btaM2.init();
 
-            mutrT.init();
-            mutrAll.init();
+            mutr.init();
 		}
 	
     public :
@@ -1291,23 +1276,13 @@ class HYC : public TObject {
         std::vector<HCTrInfo> trM2All;
         
         // Beta Fit [Inn]
-        // 1) time
-        // 2) time dEdX
-        // 3) rich time dEdX
-        HCBtaInfo btaM1T;
-        HCBtaInfo btaM2T;
-        
-        HCBtaInfo btaM1All;
-        HCBtaInfo btaM2All;
+        HCBtaInfo btaM1;
+        HCBtaInfo btaM2;
         
         // Mass Fit [Inn]
-        // 1) time
-        // 2) time dEdX
-        // 3) rich time dEdX
-        HCMuInfo mutrT;
-        HCMuInfo mutrAll;
+        HCMuInfo mutr;
 
-	ClassDef(HYC, 1)
+	ClassDef(HYC, 2)
 };
 
 

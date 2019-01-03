@@ -19,11 +19,11 @@ int main(int argc, const char ** argv) {
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
-    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
-    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
-
-    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
-    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
+    //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
+    //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");
+    
+    TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin");
+    TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/eos/ams/user/h/hchou/ExternalLibs/DB/material");
 
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/afs/cern.ch/work/h/hchou/public/DATABASE/DB/material");
@@ -35,15 +35,15 @@ int main(int argc, const char ** argv) {
 	//YiNtuple::setSelectionMode(YiNtuple::COPY);
 
 	DataSelection::setOption(DataSelection::LIST, DataSelection::ON);
-	DataSelection::setOption(DataSelection::RTI, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::TRG, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::ACC, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::TOF, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::TRK, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::TRD, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::RICH, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::ECAL, DataSelection::OFF);
-	DataSelection::setOption(DataSelection::HYC, DataSelection::OFF);
+	DataSelection::setOption(DataSelection::RTI, DataSelection::ON);
+	DataSelection::setOption(DataSelection::TRG, DataSelection::ON);
+	DataSelection::setOption(DataSelection::ACC, DataSelection::ON);
+	DataSelection::setOption(DataSelection::TOF, DataSelection::ON);
+	DataSelection::setOption(DataSelection::TRK, DataSelection::ON);
+	DataSelection::setOption(DataSelection::TRD, DataSelection::ON);
+	DataSelection::setOption(DataSelection::RICH, DataSelection::ON);
+	DataSelection::setOption(DataSelection::ECAL, DataSelection::ON);
+	DataSelection::setOption(DataSelection::HYC, DataSelection::ON);
 
 	EventBase::setEventVersion(EventBase::B950);
 

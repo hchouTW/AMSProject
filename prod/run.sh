@@ -1,6 +1,6 @@
 #!/bin/bash
 Version=vdev
-#Version=18Dec23
+Version=19Jan04
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
@@ -21,7 +21,7 @@ Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.cern.bt.pr.400.B1082
 #Stream=${CurDir}/lst/flist.ncu.bt.pr.400.B1082
 
-GroupId=99
+GroupId=39912
 GroupSize=1
 OutputDir=.
 
