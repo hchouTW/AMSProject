@@ -266,7 +266,6 @@ void PropPhyCal::normalized(const MatFld& mfld, PhySt& part, Double_t step) {
         mscat_uu_ = sgmTha;
         mscat_ul_ = sgmLen * relTL;
         mscat_ll_ = sgmLen * relLL;
-        
         if (!Numc::Valid(mscat_uu_) || Numc::Compare(mscat_uu_) <= 0) mscat_uu_ = Numc::ZERO<>;
         if (!Numc::Valid(mscat_ul_) || Numc::Compare(mscat_ul_) <= 0) mscat_ul_ = Numc::ZERO<>;
         if (!Numc::Valid(mscat_ll_) || Numc::Compare(mscat_ll_) <= 0) mscat_ll_ = Numc::ZERO<>;

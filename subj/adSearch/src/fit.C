@@ -26,8 +26,8 @@ int main(int argc, char * argv[]) {
     Hist* hJFtme   = Hist::Head("hJFtme");
     Hist* hHCtme   = Hist::Head("hHCtme");
 
-    Hist* hJFMrso = Hist::Head("hJFM");
-    Hist* hHCMrso = Hist::Head("hHCM2");
+    Hist* hJFMrso = Hist::Head("hJFMN");
+    Hist* hHCMrso = Hist::Head("hHCMN");
     
     const Axis& AXrig = hCKRDrso->xaxis();
     

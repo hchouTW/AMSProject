@@ -94,10 +94,13 @@ int main(int argc, char * argv[]) {
     
     // Fit M Res
     Axis AXM("Mass", 1000, 0.03, 8.0);
-    Hist* hJFM = Hist::New("hJFM", HistAxis(AXrig, AXM));
-    Hist* hHCM = Hist::New("hHCM", HistAxis(AXrig, AXM));
+    Hist* hJFMP = Hist::New("hJFMP", HistAxis(AXrig, AXM));
+    Hist* hJFMN = Hist::New("hJFMN", HistAxis(AXrig, AXM));
+    Hist* hHCMP = Hist::New("hHCMP", HistAxis(AXrig, AXM));
+    Hist* hHCMN = Hist::New("hHCMN", HistAxis(AXrig, AXM));
     
-    Hist* hHCM2 = Hist::New("hHCM2", HistAxis(AXrig, AXM));
+    Hist* hHCMP2 = Hist::New("hHCMP2", HistAxis(AXrig, AXM));
+    Hist* hHCMN2 = Hist::New("hHCMN2", HistAxis(AXrig, AXM));
     
     //Axis AXMqlt("Quality [1]", 800, -2.0, 4.0);
     //Hist* hHCMqltx = Hist::New("hHCMqltx", HistAxis(AXmom, AXMqlt));
@@ -202,10 +205,14 @@ int main(int argc, char * argv[]) {
         if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JFT_cpuTime);
         if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1T.cpuTime);
         
-        if (jfStatus) hJFM->fillH2D(hcTrIn.rig[0], jfM);
-        if (hcStatus) hHCM->fillH2D(hcTrIn.rig[0], hcM);
+        if (jfStatus && hcTrIn.rig[0] > 0) hJFMP->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
+        if (jfStatus && hcTrIn.rig[0] < 0) hJFMN->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
         
-        if (fHyc->mutrT.status) hHCM2->fillH2D(fHyc->mutrT.rig[0], fHyc->mutrT.mass);
+        if (hcStatus && hcTrIn.rig[0] > 0) hHCMP->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
+        if (hcStatus && hcTrIn.rig[0] < 0) hHCMN->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
+        
+        if (fHyc->mutrT.status && fHyc->mutrT.rig[0] > 0) hHCMP2->fillH2D(std::fabs(fHyc->mutrT.rig[0]), fHyc->mutrT.mass);
+        if (fHyc->mutrT.status && fHyc->mutrT.rig[0] < 0) hHCMN2->fillH2D(std::fabs(fHyc->mutrT.rig[0]), fHyc->mutrT.mass);
     }
     
     ofle->Write();

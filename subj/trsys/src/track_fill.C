@@ -78,7 +78,8 @@ int main(int argc, char * argv[]) {
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Electron) { mombd[0] = 0.30; mombd[1] = 450.0; }
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 3800.0; }
-    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3800.0; }
+    //if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 3800.0; }
+    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 15200.0; }
     Axis AXmom("Momentum [GeV]", nmom, mombd[0], mombd[1], AxisScale::kLog);
     Axis AXrig("Rigidity [GV]", AXmom.nbin(), mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
     
@@ -89,6 +90,7 @@ int main(int argc, char * argv[]) {
     Axis AXRrso("(1/Rm - 1/Rt) [1/GV]", 2000, -1.3, 1.3);
     Hist* hCKRrso = Hist::New("hCKRrso", HistAxis(AXmom, AXRrso));
     Hist* hHCRrso = Hist::New("hHCRrso", HistAxis(AXmom, AXRrso));
+    Hist* hHCRrso2 = Hist::New("hHCRrso2", HistAxis(AXmom, AXRrso));
     
     Axis AXRqlt("Quality [1]", 800, -2.0, 4.0);
     Hist* hCKRqltx = Hist::New("hCKRqltx", HistAxis(AXmom, AXRqlt));
@@ -129,7 +131,9 @@ int main(int argc, char * argv[]) {
         CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
         //KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
         //HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
-        
+       
+        //if (fG4mc->primPart.mom < 10) continue;
+
         // Geometry (TRK)
         if (fTrk->numOfTrack != 1) continue;
         
@@ -284,6 +288,8 @@ int main(int argc, char * argv[]) {
         
         if (ck_succ) hCKRrso->fillH2D(mc_mom, bincen * (ck_irig - mc_irig));
         if (hc_succ) hHCRrso->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
+        
+        if (hc_succ && hc_qltx < 2.0 && hc_qlty < 2.0) hHCRrso2->fillH2D(mc_mom, bincen * (hc_irig - mc_irig));
         
         if (ck_succ) hCKRqltx->fillH2D(mc_mom, ck_qltx);
         if (hc_succ) hHCRqltx->fillH2D(mc_mom, hc_qltx);

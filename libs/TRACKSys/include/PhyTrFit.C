@@ -97,7 +97,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     
     succ_ = (simpleFit() ? physicalFit() : false);
     if (!succ_) { PhyTrFit::clear(); TrFitPar::clear(); }
-    
+
     timer_.stop();
 
     //if (!succ_) CERR("FAILURE === PhyTrFit\n");

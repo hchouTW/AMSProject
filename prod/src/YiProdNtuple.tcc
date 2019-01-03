@@ -81,8 +81,15 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		TkStPar = event->pTrTrack(iTrTrack);
         TkStID = TkStPar->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
         if (TkStID >= 0) {
-            TkStPar->GetQH_all(); // confirm rec-chrg work
-            qin = TkStPar->GetInnerQH(2, beta, TkStID);
+            // Qrecon: Hu Liu
+            //TkStPar->GetQH_all(); // confirm rec-chrg work
+            //qin = TkStPar->GetInnerQH(2, beta, TkStID);
+            // Qrecon: YJ
+            int innerq_patt;
+            float innerq_rms;
+            TkStPar->GetQYJ_all();
+            qin = TkStPar->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, TkStID);
+
             zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
             mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
         }
@@ -96,6 +103,8 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
+
+    return true;
 
 
 	// ECAL Information

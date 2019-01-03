@@ -14,7 +14,7 @@ int main(int argc, char * argv[]) {
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
-    Hist* hHCRrso = Hist::Head("hHCRrso");
+    Hist* hHCRrso = Hist::Head("hHCRrso2");
     
     const Axis& AXmom = hCKRrso->xaxis();
     
