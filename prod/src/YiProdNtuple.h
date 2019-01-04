@@ -117,6 +117,7 @@ class RecEvent {
         double qin;
         double mass;
         double beta;
+        double rig;
         short  going; // (0, nothing   -1, down-going   1, up-going)
 
         double distECAL;

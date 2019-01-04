@@ -25,6 +25,7 @@ void RecEvent::init() {
     qin = 1;
     mass = 0.93827230;
     beta = 1;
+    rig  = 0;
     going = -1;
 
     distECAL = -1;
@@ -93,6 +94,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
             zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
             mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
+            rig  = TkStPar->GetRigidity(TkStID, 1); // z = 0
         }
         MCEventgR* primaryMC = event->GetPrimaryMC();
         if (primaryMC != nullptr) {
@@ -104,9 +106,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
-
-    return true;
-
 
 	// ECAL Information
 	// pre-selection (ECAL)
@@ -2594,6 +2593,8 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         double minStormer = (*std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4));
         double minIGRF    = (*std::min_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
         double minCF      = std::min(minStormer, minIGRF);
+
+        COUT("CF %14.8f RAT %14.8f\n", minCF, recEv.rig/minCF);
     }
 
 	return 0;

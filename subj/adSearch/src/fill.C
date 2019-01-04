@@ -2,7 +2,8 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Jan04/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -68,7 +69,7 @@ int main(int argc, char * argv[]) {
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     
-    Int_t    nmom     = 100;
+    Int_t    nmom     = 50;
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 50.0; }
     if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 100.0; }
@@ -162,19 +163,19 @@ int main(int argc, char * argv[]) {
         
         // Track In
         CKTrackInfo& ckTrIn = fTrk->ckTr.at(0);
-        HCTrInfo&    hcTrIn = fHyc->trM1.at(0);
+        HCTrInfo&    hcTrIn = fHyc->trM1All.at(0);
         
         // Track L1
         CKTrackInfo& ckTrL1 = fTrk->ckTr.at(1);
-        HCTrInfo&    hcTrL1 = fHyc->trM1.at(1);
+        HCTrInfo&    hcTrL1 = fHyc->trM1All.at(1);
         
         // Track L9
         CKTrackInfo& ckTrL9 = fTrk->ckTr.at(2);
-        HCTrInfo&    hcTrL9 = fHyc->trM1.at(2);
+        HCTrInfo&    hcTrL9 = fHyc->trM1All.at(2);
         
         // Track Fs
         CKTrackInfo& ckTrFs = fTrk->ckTr.at(3);
-        HCTrInfo&    hcTrFs = fHyc->trM1.at(3);
+        HCTrInfo&    hcTrFs = fHyc->trM1All.at(3);
         
         if (opt.mode() == MGConfig::JobOpt::MODE::MC) hMCnum->fillH1D(fG4mc->primPart.mom/info.chrg(), wgt);
         if (ckTrIn.status) hCKnum->fillH1D(ckTrIn.rig,    wgt);
@@ -194,16 +195,16 @@ int main(int argc, char * argv[]) {
             hHCRDrso->fillH2D(hcTrFs.rig[0], sclx * hcrd);
         }
     
-        bool jfStatus = hcTrIn.status && (fTof->JFbtaT > 0 && fTof->JFbtaT < 1.0);
-        bool hcStatus = hcTrIn.status && (fHyc->btaM1T.status && fHyc->btaM1T.bta[0] < 1.0);
+        bool jfStatus = hcTrIn.status && (fTof->JFbta > 0 && fTof->JFbta < 1.0);
+        bool hcStatus = hcTrIn.status && (fHyc->btaM1.status && fHyc->btaM1.bta[0] < 1.0);
 
-        double jfM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fTof->JFbtaT / fTof->JFbtaT - 1.0));
-        double hcM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fHyc->btaM1T.bta[0] / fHyc->btaM1T.bta[0] - 1.0));
+        double jfM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fTof->JFbta / fTof->JFbta - 1.0));
+        double hcM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fHyc->btaM1.bta[0] / fHyc->btaM1.bta[0] - 1.0));
 
         if (jfStatus) hJFevt->fillH1D(hcTrIn.rig[0]);
         if (hcStatus) hHCevt->fillH1D(hcTrIn.rig[0]);
-        if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JFT_cpuTime);
-        if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1T.cpuTime);
+        if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JF_cpuTime);
+        if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1.cpuTime);
         
         if (jfStatus && hcTrIn.rig[0] > 0) hJFMP->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
         if (jfStatus && hcTrIn.rig[0] < 0) hJFMN->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
@@ -211,8 +212,8 @@ int main(int argc, char * argv[]) {
         if (hcStatus && hcTrIn.rig[0] > 0) hHCMP->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
         if (hcStatus && hcTrIn.rig[0] < 0) hHCMN->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
         
-        if (fHyc->mutrT.status && fHyc->mutrT.rig[0] > 0) hHCMP2->fillH2D(std::fabs(fHyc->mutrT.rig[0]), fHyc->mutrT.mass);
-        if (fHyc->mutrT.status && fHyc->mutrT.rig[0] < 0) hHCMN2->fillH2D(std::fabs(fHyc->mutrT.rig[0]), fHyc->mutrT.mass);
+        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] > 0) hHCMP2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass);
+        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] < 0) hHCMN2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass);
     }
     
     ofle->Write();
