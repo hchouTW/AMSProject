@@ -830,8 +830,8 @@ class TRK : public TObject {
 
             hits.clear();
 
-            ckTr = std::vector<CKTrackInfo>(4);
-            kfTr = std::vector<KFTrackInfo>(4);
+            cktr = std::vector<CKTrackInfo>(4);
+            kftr = std::vector<KFTrackInfo>(4);
 		}
 
 	public :
@@ -857,12 +857,12 @@ class TRK : public TObject {
         std::vector<HitTRKInfo> hits;
 
         // Choutko [Inn InnL1 InnL9 FS]
-        std::vector<CKTrackInfo> ckTr;
+        std::vector<CKTrackInfo> cktr;
 
         // Kalman Fitter [Inn InnL1 InnL9 FS]
-        std::vector<KFTrackInfo> kfTr;
+        std::vector<KFTrackInfo> kftr;
 
-	ClassDef(TRK, 10)
+	ClassDef(TRK, 11)
 };
 
 
@@ -1148,6 +1148,8 @@ class HCBtaInfo : public TObject {
             nchi = 0;
             quality = 0;
             
+            std::fill_n(state, 8, 0);
+            
             std::fill_n(rig, 3, 0);
             std::fill_n(bta, 3, 0);
             
@@ -1164,12 +1166,14 @@ class HCBtaInfo : public TObject {
         Float_t nchi;
         Float_t quality;
         
+        Float_t state[8]; // (cx cy cz ux uy uz rig bta)
+        
         Float_t rig[3]; // z = 195, 0, -136
         Float_t bta[3]; // z = 195, 0, -136
         
         Float_t cpuTime; // [ms]
 
-        ClassDef(HCBtaInfo, 1)
+        ClassDef(HCBtaInfo, 2)
 };
 
 
@@ -1282,7 +1286,7 @@ class HYC : public TObject {
         // Mass Fit [Inn]
         HCMuInfo mutr;
 
-	ClassDef(HYC, 2)
+	ClassDef(HYC, 3)
 };
 
 

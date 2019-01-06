@@ -62,18 +62,20 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     Short_t chrg = std::abs(fitPar.info().chrg());
     SimpleMuScan::clear();
     
-    part_.reset(chrg, fitPar.info().mass());
+    part_.reset(fitPar.info().chrg(), fitPar.info().mass());
     part_.arg().reset(fitPar.sw_mscat(), fitPar.sw_eloss());
-    if (part_.chrg() == 0 || part_.chrg() >= LIST_MASS_Q.size()) { clear(); return; }
+    if (part_.chrg() == 0 || std::abs(part_.chrg()) >= LIST_MASS_Q.size()) { clear(); return; }
     
     timer_.start();
 
     // scan
     MuScanObj condMuObj;
-    for (auto&& mass : LIST_MASS_Q.at(part_.chrg())) {
+    Double_t initM = Numc::ZERO<>;
+    for (auto&& mass : LIST_MASS_Q.at(chrg)) {
         MuScanObj&& obj = scan(fitPar, mass, true);
         if (obj.chrg() == 0) continue;
         condMuObj = obj;
+        initM = mass;
         break;
     }
     if (condMuObj.chrg() == 0) { clear(); return; }
@@ -83,9 +85,13 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
         Double_t preM = condMuObj.mass();
         condMuObj = scan(fitPar, condMuObj.mass());
         Bool_t succ_scan = (condMuObj.chrg() != 0);
-        if (!succ_scan) { clear(); return; }
-        part_.reset(part_.chrg(), condMuObj.mass());
         
+        if (iter == LMT_SCAN && !succ_scan) { clear(); return; }
+        if (!succ_scan) { condMuObj.reset(part_.chrg(), std::sqrt(initM * preM)); continue; }
+        else initM = preM;
+        
+        part_.reset(part_.chrg(), condMuObj.mass());
+
         Double_t aftM = condMuObj.mass();
         Double_t difM = std::fabs(preM - aftM);
         Double_t ratM = (difM / (preM + aftM));

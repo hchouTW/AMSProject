@@ -47,14 +47,14 @@ class SimpleMuScan {
         std::array<Double_t, 2> quality_;
 
     protected :
-        static constexpr Short_t  LMT_SCAN = 3;
+        static constexpr Short_t  LMT_SCAN = 5;
         static constexpr Double_t CONVG_DM = 0.005; // |preM - aftM|
         static constexpr Double_t CONVG_RM = 0.030; // |preM - aftM| / (preM + aftM)
 
         static constexpr Double_t LMT_MASS = 0.000510999; // electron mass
-        static constexpr Double_t LMT_QLTR = 4.0;
-        static constexpr Double_t LMT_QLTB = 3.7;
-        static constexpr Double_t LMT_QLT  = 3.5;
+        static constexpr Double_t LMT_QLTR = 4.2;
+        static constexpr Double_t LMT_QLTB = 3.8;
+        static constexpr Double_t LMT_QLT  = 4.0;
 
         static const std::vector<std::vector<Double_t>> LIST_MASS_Q;
     
@@ -64,16 +64,30 @@ class SimpleMuScan {
 
 
 // List of Particle
+//const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
+//    { PartInfo(PartType::Photon).mass() }, // Q0
+//    { PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::Deuterium).mass() }, // Q1
+//    { PartInfo(PartType::Helium3).mass(), PartInfo(PartType::Helium4).mass() }, // Q2
+//    { PartInfo(PartType::Lithium6).mass(), PartInfo(PartType::Lithium7).mass() }, // Q3
+//    { PartInfo(PartType::Beryllium7).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium10).mass() }, // Q4
+//    { PartInfo(PartType::Boron10).mass(), PartInfo(PartType::Boron11).mass() }, // Q5
+//    { PartInfo(PartType::Carbon12).mass(), PartInfo(PartType::Carbon13).mass(), PartInfo(PartType::Carbon14).mass() }, // Q6
+//    { PartInfo(PartType::Nitrogen13).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen15).mass() }, // Q7
+//    { PartInfo(PartType::Oxygen16).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen18).mass() } // Q8
+//});
+
+
+// List of Particle
 const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
     { PartInfo(PartType::Photon).mass() }, // Q0
-    { PartInfo(PartType::PionPlus).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::Deuterium).mass() }, // Q1
-    { PartInfo(PartType::Helium3).mass(), PartInfo(PartType::Helium4).mass() }, // Q2
-    { PartInfo(PartType::Lithium6).mass(), PartInfo(PartType::Lithium7).mass() }, // Q3
-    { PartInfo(PartType::Beryllium7).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium10).mass() }, // Q4
-    { PartInfo(PartType::Boron10).mass(), PartInfo(PartType::Boron11).mass() }, // Q5
-    { PartInfo(PartType::Carbon12).mass(), PartInfo(PartType::Carbon13).mass(), PartInfo(PartType::Carbon14).mass() }, // Q6
-    { PartInfo(PartType::Nitrogen13).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen15).mass() }, // Q7
-    { PartInfo(PartType::Oxygen16).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen18).mass() } // Q8
+    { PartInfo(PartType::Deuterium).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::PionPlus).mass() }, // Q1
+    { PartInfo(PartType::Helium4).mass(), PartInfo(PartType::Helium3).mass() }, // Q2
+    { PartInfo(PartType::Lithium7).mass(), PartInfo(PartType::Lithium6).mass() }, // Q3
+    { PartInfo(PartType::Beryllium10).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium7).mass() }, // Q4
+    { PartInfo(PartType::Boron11).mass(), PartInfo(PartType::Boron10).mass() }, // Q5
+    { PartInfo(PartType::Carbon14).mass(), PartInfo(PartType::Carbon13).mass(), PartInfo(PartType::Carbon12).mass() }, // Q6
+    { PartInfo(PartType::Nitrogen15).mass(), PartInfo(PartType::Nitrogen14).mass(), PartInfo(PartType::Nitrogen13).mass() }, // Q7
+    { PartInfo(PartType::Oxygen18).mass(), PartInfo(PartType::Oxygen17).mass(), PartInfo(PartType::Oxygen16).mass() } // Q8
 });
 
 
@@ -81,6 +95,8 @@ class SimpleMuScan::MuScanObj {
     public :
         MuScanObj(Short_t chrg = 0, Double_t mass = 0, Double_t qltr = 0, Double_t qltb = 0, Double_t qlt = 0) : chrg_(chrg), mass_(mass), qltr_(qltr), qltb_(qltb), qlt_(qlt) {}
         ~MuScanObj() {}
+
+        inline void reset(Short_t chrg, Double_t mass) { if (chrg != 0 && Numc::Compare(mass) > 0) { chrg_ = chrg; mass_ = mass; qltr_ = 0; qltb_ = 0; qlt_ = 0; } }
 
         inline const Short_t&  chrg() const { return chrg_; }
         inline const Double_t& mass() const { return mass_; }

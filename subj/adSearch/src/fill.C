@@ -3,7 +3,7 @@
 #include <TRACKSys.h>
 
 //#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/19Jan04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Jan05/src/ClassDef.h"
 //#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
@@ -12,6 +12,7 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
 
+    FLAGS_logtostderr = true;
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
@@ -42,7 +43,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
-    HYC  * fHyc  = new HYC;
+    HYC  * fHyc  = new HYC ;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -94,7 +95,7 @@ int main(int argc, char * argv[]) {
     Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXrig, "Tme"));
     
     // Fit M Res
-    Axis AXM("Mass", 1000, 0.03, 8.0);
+    Axis AXM("Mass", 300, 0.03, 3.0);
     Hist* hJFMP = Hist::New("hJFMP", HistAxis(AXrig, AXM));
     Hist* hJFMN = Hist::New("hJFMN", HistAxis(AXrig, AXM));
     Hist* hHCMP = Hist::New("hHCMP", HistAxis(AXrig, AXM));
@@ -119,7 +120,7 @@ int main(int argc, char * argv[]) {
         dst->GetEntry(entry);
     
         // Reweight (MC)
-        Double_t wgt = ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXmom.min(), -1.7));
+        Double_t wgt = fList->weight * ((opt.mode() != MGConfig::JobOpt::MODE::MC) ? 1.0 : std::pow(fG4mc->primPart.mom/AXmom.min(), -1.7));
         
         // Geometry (TRK)
         if (fTrk->numOfTrack != 1) continue;
@@ -163,19 +164,19 @@ int main(int argc, char * argv[]) {
         
         // Track In
         CKTrackInfo& ckTrIn = fTrk->ckTr.at(0);
-        HCTrInfo&    hcTrIn = fHyc->trM1All.at(0);
+        HCTrInfo&    hcTrIn = fHyc->trM1.at(0);
         
         // Track L1
         CKTrackInfo& ckTrL1 = fTrk->ckTr.at(1);
-        HCTrInfo&    hcTrL1 = fHyc->trM1All.at(1);
+        HCTrInfo&    hcTrL1 = fHyc->trM1.at(1);
         
         // Track L9
         CKTrackInfo& ckTrL9 = fTrk->ckTr.at(2);
-        HCTrInfo&    hcTrL9 = fHyc->trM1All.at(2);
+        HCTrInfo&    hcTrL9 = fHyc->trM1.at(2);
         
         // Track Fs
         CKTrackInfo& ckTrFs = fTrk->ckTr.at(3);
-        HCTrInfo&    hcTrFs = fHyc->trM1All.at(3);
+        HCTrInfo&    hcTrFs = fHyc->trM1.at(3);
         
         if (opt.mode() == MGConfig::JobOpt::MODE::MC) hMCnum->fillH1D(fG4mc->primPart.mom/info.chrg(), wgt);
         if (ckTrIn.status) hCKnum->fillH1D(ckTrIn.rig,    wgt);
@@ -185,14 +186,14 @@ int main(int argc, char * argv[]) {
             double rigx = std::fabs(ckTrFs.rig);
             double ckrd = (1.0/ckTrL9.rig - 1.0/ckTrL1.rig);
             double sclx = std::sqrt(AXrig.center(AXrig.find(rigx), AxisScale::kLog));
-            hCKRDrso->fillH2D(ckTrFs.rig, sclx * ckrd);
+            hCKRDrso->fillH2D(ckTrFs.rig, sclx * ckrd, wgt);
         }
         
         if (hcTrL1.status & hcTrL9.status && hcTrFs.status) {
             double rigx = std::fabs(hcTrFs.rig[0]);
             double hcrd = (1.0/hcTrL9.rig[0] - 1.0/hcTrL1.rig[0]);
             double sclx = std::sqrt(AXrig.center(AXrig.find(rigx), AxisScale::kLog));
-            hHCRDrso->fillH2D(hcTrFs.rig[0], sclx * hcrd);
+            hHCRDrso->fillH2D(hcTrFs.rig[0], sclx * hcrd, wgt);
         }
     
         bool jfStatus = hcTrIn.status && (fTof->JFbta > 0 && fTof->JFbta < 1.0);
@@ -201,19 +202,19 @@ int main(int argc, char * argv[]) {
         double jfM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fTof->JFbta / fTof->JFbta - 1.0));
         double hcM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fHyc->btaM1.bta[0] / fHyc->btaM1.bta[0] - 1.0));
 
-        if (jfStatus) hJFevt->fillH1D(hcTrIn.rig[0]);
-        if (hcStatus) hHCevt->fillH1D(hcTrIn.rig[0]);
-        if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JF_cpuTime);
-        if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1.cpuTime);
+        if (jfStatus) hJFevt->fillH1D(hcTrIn.rig[0], wgt);
+        if (hcStatus) hHCevt->fillH1D(hcTrIn.rig[0], wgt);
+        if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JF_cpuTime * wgt);
+        if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1.cpuTime * wgt);
         
-        if (jfStatus && hcTrIn.rig[0] > 0) hJFMP->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
-        if (jfStatus && hcTrIn.rig[0] < 0) hJFMN->fillH2D(std::fabs(hcTrIn.rig[0]), jfM);
+        if (jfStatus && hcTrIn.rig[0] > 0) hJFMP->fillH2D(std::fabs(hcTrIn.rig[0]), jfM, wgt);
+        if (jfStatus && hcTrIn.rig[0] < 0) hJFMN->fillH2D(std::fabs(hcTrIn.rig[0]), jfM, wgt);
         
-        if (hcStatus && hcTrIn.rig[0] > 0) hHCMP->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
-        if (hcStatus && hcTrIn.rig[0] < 0) hHCMN->fillH2D(std::fabs(hcTrIn.rig[0]), hcM);
+        if (hcStatus && hcTrIn.rig[0] > 0) hHCMP->fillH2D(std::fabs(hcTrIn.rig[0]), hcM, wgt);
+        if (hcStatus && hcTrIn.rig[0] < 0) hHCMN->fillH2D(std::fabs(hcTrIn.rig[0]), hcM, wgt);
         
-        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] > 0) hHCMP2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass);
-        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] < 0) hHCMN2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass);
+        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] > 0) hHCMP2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass, wgt);
+        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] < 0) hHCMN2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass, wgt);
     }
     
     ofle->Write();

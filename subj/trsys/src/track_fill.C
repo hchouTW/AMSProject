@@ -12,6 +12,7 @@ int main(int argc, char * argv[]) {
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory();
 
+    FLAGS_logtostderr = true;
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 

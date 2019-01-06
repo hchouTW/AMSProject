@@ -17,7 +17,7 @@ std::array<long double, 3> CherenkovMeas::minimizer(long double x, long double i
     bool rescl = false;
     long double eftsgm = Numc::ONE<long double>;
     if (Numc::Compare(rfr_, Numc::ONE<long double>) > 0) {
-        long double thres = rfr_ - Numc::THREE<long double> * sgm_;
+        long double thres = rfr_ - Numc::TWO<long double> * sgm_;
         if (Numc::Compare(ibta, thres) > 0) {
             long double extsgm = (ibta - thres) / sgm_;
             eftsgm = Numc::ONE<long double> + extsgm * extsgm;

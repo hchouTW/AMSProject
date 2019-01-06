@@ -1,19 +1,12 @@
 -include $(AMSMKfile)
 
-
 # Test Ceres Solver
-#FLGS += -I/usr/include/eigen3 -I/usr/include/ceres/internal/miniglog
-#FLGS += -I/usr/include/eigen3 -I/usr/local/include
-#LIBP += -L/usr/lib64 -lceres -lgflags
-#LIBP +=  -L/usr/local/lib -lglog -L/usr/lib64 -lceres -lgflags
-#ICCCXX += -D__CeresSolver__
-#GCCCXX += -D__CeresSolver__
-#LD += -D__CeresSolver__
-#LDS += -D__CeresSolver__
+LIBP += -lgflags -lglog -lceres
 
 TagetDir = $(AMSCoreSubj)/appStudy/vdev
+TagetDir = $(AMSCoreSubj)/appStudy/test
 
-Version=18Feb13
+Version=19Jan05
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 
 all :
@@ -24,21 +17,21 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
-	@cp -fa $(PWD)/src/app_fill.C $(TagetDir)/src/app_fill.C 2> /dev/null
-	make $(TagetDir)/app_fill
+	@cp -fa $(PWD)/src/fill.C $(TagetDir)/src/fill.C 2> /dev/null
+	make $(TagetDir)/fill
 
-$(TagetDir)/obj/app_fill.o : $(TagetDir)/src/app_fill.C
+$(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
--include $(TagetDir)/obj/app_fill.d
+-include $(TagetDir)/obj/fill.d
 
-$(TagetDir)/app_fill : $(TagetDir)/obj/app_fill.o
+$(TagetDir)/fill : $(TagetDir)/obj/fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
-#$(TagetDir)/obj/app_fit.o : $(TagetDir)/src/app_fit.C
+#$(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
 #	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
-#-include $(TagetDir)/obj/app_fit.d
+#-include $(TagetDir)/obj/fit.d
 #
-#$(TagetDir)/app_fit : $(TagetDir)/obj/app_fit.o
+#$(TagetDir)/fit : $(TagetDir)/obj/fit.o
 #	$(LD) -o $@ $+ $(LIBP)
 
 clean :
@@ -46,4 +39,4 @@ clean :
 	@rm -fv $(TagetDir)/obj/*
 	@rm -fv $(TagetDir)/src/*
 	@rm -fv $(TagetDir)/lst/*
-	@rm -fv $(TagetDir)/app_fill
+	@rm -fv $(TagetDir)/fill

@@ -16,6 +16,7 @@ int main(int argc, const char ** argv) {
 	COUT("\n**    YiProdNtuple START    **\n");
 	COUT("\n**--------------------------**\n");
 
+    FLAGS_logtostderr = true;
     google::InitGoogleLogging(argv[0]);
     google::SetStderrLogging(google::GLOG_FATAL);
 
@@ -92,6 +93,8 @@ int main(int argc, const char ** argv) {
 	COUT("\n**------------------------**\n");
 	COUT("\n**    YiProdNtuple END    **\n");
 	COUT("\n**------------------------**\n");
+    
+    google::ShutdownGoogleLogging();
 	return 0;
 }
 #endif // __YiProdNtuple_C__

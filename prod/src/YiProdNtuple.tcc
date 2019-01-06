@@ -1078,11 +1078,11 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.stateBtm[5] = -dirBtm[2];
 
             track.cpuTime = ckSw.time() * 1.0e+3;
-            fTrk.ckTr.at(patt) = track;
+            fTrk.cktr.at(patt) = track;
         }
         
         // Kalman
-        Bool_t kfSwOpt = false;
+        Bool_t kfSwOpt = true;
         Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             if (kfRefit == -1) continue;
@@ -1165,7 +1165,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.bta[2] = track.stateBtm[7];
             
             track.cpuTime = kfSw.time() * 1.0e+3;
-            fTrk.kfTr.at(patt) = track;
+            fTrk.kftr.at(patt) = track;
         }
     }
 
@@ -2220,6 +2220,16 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
     track.nchi    = hcbta.nchi();
     track.quality = hcbta.quality();
     
+    track.state[0] = hcbta.part().cx();
+    track.state[1] = hcbta.part().cy();
+    track.state[2] = hcbta.part().cz();
+    track.state[3] = hcbta.part().ux();
+    track.state[4] = hcbta.part().uy();
+    track.state[5] = hcbta.part().uz();
+    track.state[6] = hcbta.part().rig();
+    track.state[7] = hcbta.part().bta();
+    
+    
     TrackSys::PhySt&& phyStTop = hcbta.interpolate_to_z(RecEvent::TopZ);
     if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {
         track.rig[0] = phyStTop.rig();
@@ -2272,6 +2282,15 @@ HCMuInfo EventHyc::processHCMu(TrackSys::PhyMuFit& hcmu) {
     track.nchi[1] = hctr.nchi(1);
     track.quality[0] = hctr.quality(0);
     track.quality[1] = hctr.quality(1);
+    
+    track.state[0] = hctr.part().cx();
+    track.state[1] = hctr.part().cy();
+    track.state[2] = hctr.part().cz();
+    track.state[3] = hctr.part().ux();
+    track.state[4] = hctr.part().uy();
+    track.state[5] = hctr.part().uz();
+    track.state[6] = hctr.part().rig();
+    track.state[7] = hctr.part().bta();
     
     TrackSys::PhySt&& phyStTop = hctr.interpolate_to_z(RecEvent::TopZ);
     if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {

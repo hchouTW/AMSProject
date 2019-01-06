@@ -6,7 +6,7 @@ LIBP += -lgflags -lglog -lceres
 TagetDir = $(AMSCoreSubj)/adSearch/vdev
 TagetDir = $(AMSCoreSubj)/adSearch/test
 
-Version=19Jan04
+Version=19Jan05
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 

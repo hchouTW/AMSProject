@@ -6,7 +6,7 @@ keyword=$3
 if [[ ${input} == "" ]]; then exit; fi
 if [[ ${output} == "" ]]; then exit; fi
 
-dpmurl=root://${DPNS_HOST}/${output}
+dpmurl=root://${DPNS_HOST}:1094/${output}
 dpmhost=${DPM_HOME}/${output}
 dpns-mkdir -p ${dpmhost}
 for file in `xrdfs eosams.cern.ch ls ${input}`

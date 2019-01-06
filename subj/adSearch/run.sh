@@ -14,7 +14,7 @@ CurDir=${PWD}
 DataType=ISS
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Jun18
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Dec23
-Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan04
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan05
 #DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR054000_B1200_18Jul04
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep16
@@ -27,7 +27,7 @@ OutputDir=${CurDir}/dat
 
 #Fit
 GroupSize=10
-Nseq=40
+Nseq=110
 #Fit
 #GroupSize=1
 #Nseq=52
