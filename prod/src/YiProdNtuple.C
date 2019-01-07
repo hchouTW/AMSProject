@@ -17,8 +17,9 @@ int main(int argc, const char ** argv) {
 	COUT("\n**--------------------------**\n");
 
     FLAGS_logtostderr = true;
+    FLAGS_stderrthreshold = google::GLOG_ERROR;
+    FLAGS_minloglevel = google::GLOG_ERROR;
     google::InitGoogleLogging(argv[0]);
-    google::SetStderrLogging(google::GLOG_FATAL);
 
     //TrackSys::Sys::SetEnv("TRACKSys_MagBox", "/ams_home/hchou/AMSData/magnetic/AMS02Mag.bin");
     //TrackSys::Sys::SetEnv("TRACKSys_MatBox", "/ams_home/hchou/AMSData/material");

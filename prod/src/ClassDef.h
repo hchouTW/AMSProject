@@ -752,8 +752,8 @@ class TOF : public TObject {
 
 			std::fill_n(numOfExtCls, 4, 0);
         
-            JFbta      = -1;
-            JF_cpuTime = 0;
+            //JFbta      = -1;
+            //JF_cpuTime = 0;
 		}
 
 	public :
@@ -783,10 +783,10 @@ class TOF : public TObject {
 		Short_t numOfExtCls[4];
 
         // JFeng
-        Float_t JFbta; // at Tracker L1
-        Float_t JF_cpuTime;
+        //Float_t JFbta; // at Tracker L1
+        //Float_t JF_cpuTime;
 
-	ClassDef(TOF, 10)
+	ClassDef(TOF, 11)
 };
 
 
@@ -831,7 +831,7 @@ class TRK : public TObject {
             hits.clear();
 
             cktr = std::vector<CKTrackInfo>(4);
-            kftr = std::vector<KFTrackInfo>(4);
+            //kftr = std::vector<KFTrackInfo>(4);
 		}
 
 	public :
@@ -860,7 +860,7 @@ class TRK : public TObject {
         std::vector<CKTrackInfo> cktr;
 
         // Kalman Fitter [Inn InnL1 InnL9 FS]
-        std::vector<KFTrackInfo> kftr;
+        //std::vector<KFTrackInfo> kftr;
 
 	ClassDef(TRK, 11)
 };
@@ -1265,6 +1265,9 @@ class HYC : public TObject {
             btaM2.init();
 
             mutr.init();
+
+            massM1 = 0;
+            massM2 = 0;
 		}
 	
     public :
@@ -1282,11 +1285,15 @@ class HYC : public TObject {
         // Beta Fit [Inn]
         HCBtaInfo btaM1;
         HCBtaInfo btaM2;
-        
+
         // Mass Fit [Inn]
         HCMuInfo mutr;
+        
+        // Mass from Track&Beta Fit [Inn]
+        Float_t massM1;
+        Float_t massM2;
 
-	ClassDef(HYC, 3)
+	ClassDef(HYC, 4)
 };
 
 

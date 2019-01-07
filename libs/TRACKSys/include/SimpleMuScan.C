@@ -89,7 +89,7 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
         if (iter == LMT_SCAN && !succ_scan) { clear(); return; }
         if (!succ_scan) { condMuObj.reset(part_.chrg(), std::sqrt(initM * preM)); continue; }
         else initM = preM;
-        
+
         part_.reset(part_.chrg(), condMuObj.mass());
 
         Double_t aftM = condMuObj.mass();
@@ -158,11 +158,6 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass
     Double_t qltb = btafit.quality();
     if (selopt && qltb > LMT_QLTB) return MuScanObj();
         
-    // selection
-    Double_t qlt = std::hypot(qltr, qltb);
-    if (qltr < 0 || qltb < 0) qlt = std::max(qltr, qltb);
-    if (selopt && qlt > LMT_QLT) return MuScanObj();
-    
     // estimate
     auto mmz = std::minmax({ trfit.part().cz(), btafit.part().cz() });
     Double_t tagz = ((fitPar.ortt() == TrFitPar::Orientation::kDownward) ? mmz.first : mmz.second);
@@ -175,10 +170,9 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar, Double_t mass
     Double_t est_mass = (sttTr.mom() * sttBta.igb());
     Double_t est_qltr = qltr;
     Double_t est_qltb = qltb;
-    Double_t est_qlt  = qlt;
     
     if (Numc::Compare(est_mass, LMT_MASS) <= 0) est_mass = LMT_MASS;
-    MuScanObj muObj(est_chrg, est_mass, est_qltr, est_qltb, est_qlt);
+    MuScanObj muObj(est_chrg, est_mass, est_qltr, est_qltb);
     return muObj;
 }
 

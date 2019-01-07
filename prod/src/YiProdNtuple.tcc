@@ -761,20 +761,20 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
 
     // JFeng : beta reconstruction (1 sec per event)
-    if (fTof.statusBetaH) {
-        LxBetalhd::InitialBetaLikelihood(event);
-        
-        MGClock::HrsStopwatch swT;
-        float JFbtaT = fTof.betaH, JFerrT = 0;
-        double JFlhdT = LxBetalhd::GetBetaLikelihood_TOF(JFbtaT, JFerrT);
-        if (!TrackSys::Numc::Valid(JFbtaT)) JFbtaT = -1.0;
-        if (!TrackSys::Numc::Valid(JFerrT)) JFerrT = -1.0;
-        if (!TrackSys::Numc::Valid(JFlhdT)) JFlhdT = -1.0;
-        swT.stop();
-        
-        fTof.JFbta = JFbtaT;
-        fTof.JF_cpuTime = swT.time() * 1.0e+03;
-    }
+    //if (fTof.statusBetaH) {
+    //    LxBetalhd::InitialBetaLikelihood(event);
+    //    
+    //    MGClock::HrsStopwatch swT;
+    //    float JFbtaT = fTof.betaH, JFerrT = 0;
+    //    double JFlhdT = LxBetalhd::GetBetaLikelihood_TOF(JFbtaT, JFerrT);
+    //    if (!TrackSys::Numc::Valid(JFbtaT)) JFbtaT = -1.0;
+    //    if (!TrackSys::Numc::Valid(JFerrT)) JFerrT = -1.0;
+    //    if (!TrackSys::Numc::Valid(JFlhdT)) JFlhdT = -1.0;
+    //    swT.stop();
+    //    
+    //    fTof.JFbta = JFbtaT;
+    //    fTof.JF_cpuTime = swT.time() * 1.0e+03;
+    //}
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -1082,7 +1082,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         }
         
         // Kalman
-        Bool_t kfSwOpt = true;
+        Bool_t kfSwOpt = false;
         Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             if (kfRefit == -1) continue;
@@ -1165,7 +1165,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.bta[2] = track.stateBtm[7];
             
             track.cpuTime = kfSw.time() * 1.0e+3;
-            fTrk.kftr.at(patt) = track;
+            //fTrk.kftr.at(patt) = track;
         }
     }
 
@@ -2101,9 +2101,16 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
     
     TrackSys::PhyMuFit&& mutr(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_mu), std::get<1>(opt_mu), std::get<2>(opt_mu)));
-    
+
     if (mutr.status()) fHyc.mutr = std::move(processHCMu(mutr));
+   
+    // Mass from Track&Bta Fit
+    fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : 0.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM1) || TrackSys::Numc::Compare(fHyc.massM1) <= 0) fHyc.massM1 = 0.0;
     
+    fHyc.massM2 = (fHyc.trM2.at(0).status && fHyc.btaM2.status) ? std::fabs((fHyc.trM2.at(0).rig[1] / fHyc.btaM2.rig[1]) * fHyc.btaM2.mass) : 0.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM2) || TrackSys::Numc::Compare(fHyc.massM2) <= 0) fHyc.massM2 = 0.0;
+
     fStopwatch.stop();
 	return selectEvent(event);
 }
@@ -2614,7 +2621,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
-	
+
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
         if (!rti.processEvent(event)) return -7001;
@@ -2634,7 +2641,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 
     // ~8~ (Scale events from proton and helium in the flight data)
     if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && TrackSys::Numc::Compare(recEv.rig) > 0) {
-        const double cutoff = 35.0;
+        const double cutoff = 40.0;
         double wpar[2] = { 1.0, 0.0 };
        
         if (recEv.zin == 1) { // proton

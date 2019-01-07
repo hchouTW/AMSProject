@@ -47,14 +47,13 @@ class SimpleMuScan {
         std::array<Double_t, 2> quality_;
 
     protected :
-        static constexpr Short_t  LMT_SCAN = 5;
+        static constexpr Short_t  LMT_SCAN = 3;
         static constexpr Double_t CONVG_DM = 0.005; // |preM - aftM|
         static constexpr Double_t CONVG_RM = 0.030; // |preM - aftM| / (preM + aftM)
 
         static constexpr Double_t LMT_MASS = 0.000510999; // electron mass
-        static constexpr Double_t LMT_QLTR = 4.2;
-        static constexpr Double_t LMT_QLTB = 3.8;
-        static constexpr Double_t LMT_QLT  = 4.0;
+        static constexpr Double_t LMT_QLTR = 6.0;
+        static constexpr Double_t LMT_QLTB = 4.5;
 
         static const std::vector<std::vector<Double_t>> LIST_MASS_Q;
     
@@ -93,23 +92,21 @@ const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
 
 class SimpleMuScan::MuScanObj {
     public :
-        MuScanObj(Short_t chrg = 0, Double_t mass = 0, Double_t qltr = 0, Double_t qltb = 0, Double_t qlt = 0) : chrg_(chrg), mass_(mass), qltr_(qltr), qltb_(qltb), qlt_(qlt) {}
+        MuScanObj(Short_t chrg = 0, Double_t mass = 0, Double_t qltr = 0, Double_t qltb = 0, Double_t qlt = 0) : chrg_(chrg), mass_(mass), qltr_(qltr), qltb_(qltb) {}
         ~MuScanObj() {}
 
-        inline void reset(Short_t chrg, Double_t mass) { if (chrg != 0 && Numc::Compare(mass) > 0) { chrg_ = chrg; mass_ = mass; qltr_ = 0; qltb_ = 0; qlt_ = 0; } }
+        inline void reset(Short_t chrg, Double_t mass) { if (chrg != 0 && Numc::Compare(mass) > 0) { chrg_ = chrg; mass_ = mass; qltr_ = 0; qltb_ = 0; } }
 
         inline const Short_t&  chrg() const { return chrg_; }
         inline const Double_t& mass() const { return mass_; }
         inline const Double_t& qltr() const { return qltr_; }
         inline const Double_t& qltb() const { return qltb_; }
-        inline const Double_t& qlt()  const { return qlt_; }
 
     private :
         Short_t  chrg_;
         Double_t mass_;
         Double_t qltr_;
         Double_t qltb_;
-        Double_t qlt_;
 };
 
 

@@ -453,7 +453,7 @@ Bool_t SimpleTrFit::advancedSimpleCooFit() {
     options.nonlinear_conjugate_gradient_type = ceres::FLETCHER_REEVES;
     //options.nonlinear_conjugate_gradient_type = ceres::POLAK_RIBIERE;
     //options.nonlinear_conjugate_gradient_type = ceres::HESTENES_STIEFEL;
-    options.max_num_iterations = 30;
+    options.max_num_iterations = 35;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary
@@ -514,7 +514,7 @@ Bool_t SimpleTrFit::localSimpleFit() {
     
     // CeresSolver: Options
     ceres::Solver::Options options;
-    options.max_num_iterations = 25;
+    options.max_num_iterations = 30;
     //options.max_solver_time_in_seconds = 5.0;
 
     // CeresSolver: Summary

@@ -97,9 +97,6 @@ PhyMuFit::PhyMuFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     if (!succ_) { PhyMuFit::clear(); TrFitPar::clear(); return; }
     
     timer_.stop();
-
-    // testcode
-    //COUT("PHY MASS %14.8f RIG %14.8f QLT %14.8f %14.8f\n", part_.mass(), part_.rig(), quality_.at(0), quality_.at(1));
     
     //if (!succ_) CERR("FAILURE === PhyMuFit\n");
 }
