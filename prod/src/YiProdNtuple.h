@@ -125,7 +125,8 @@ class RecEvent {
         double distTRDH;
         
         // Official
-        int    tkInID;
+        int       tkInID;
+        TrTrackR* tkTrPar;
 
 	protected :
 		MGClock::HrsStopwatch fStopwatch;

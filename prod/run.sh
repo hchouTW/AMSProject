@@ -1,6 +1,6 @@
 #!/bin/bash
 Version=vdev
-#Version=19Jan05
+Version=19Jan08
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}

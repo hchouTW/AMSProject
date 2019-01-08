@@ -317,7 +317,8 @@ class HitTRDInfo : public TObject {
 			side = 0;
 			amp  = 0;
 			len  = 0;
-			std::fill_n(coo, 3, 0);
+            cr = 0;
+            cz = 0;
 
             dEdX  = -1;
             mcMom = -1;
@@ -325,10 +326,11 @@ class HitTRDInfo : public TObject {
 
 	public :
 		Short_t lay;    // layer
-		Short_t side;   // side, 1 x, 2 y, 3 xy
+		Short_t side;   // side, 1 x, 2 y
 		Float_t amp;    // (elc) amp
 		Float_t len;    // (elc) len
-		Float_t coo[3];
+		Float_t cr;
+		Float_t cz;
 
         Float_t dEdX;   // dEdX = 0.01 * (amp/len)
         Float_t mcMom;  // (MC Info) mom
@@ -356,38 +358,25 @@ class HitRICHInfo : public TObject {
 		~HitRICHInfo() {}
 
 		void init() {
-            status = 0;
-            cross = false;
-			channel = -1;
-            npe = -1;
-            
+            type = 0;
+            bta = 0.;
+            npe = 0.;
 			std::fill_n(coo, 3, 0);
-            dist = -1.;
-            dtha = -1.;
-            dphi = -1.;
-            rtha = -1.;
-            rphi = -1.;
 		}
 
 	public :
-        Short_t status;
-        Bool_t  cross;   // cross
-		Short_t channel; // channel = 16 * PMT + pixel
-        Float_t npe;     // ADC counts above the pedestal/gain of the channel.
+        Short_t type; // 0, direct   1, reflected
+        Float_t bta;
+        Float_t npe; // ADC counts above the pedestal/gain of the channel.
 		Float_t coo[3];  // x, y, z
-        Float_t dist;    // distance to particle
-        Float_t dtha;    // direct theta
-        Float_t dphi;    // direct phi (pmt)
-        Float_t rtha;    // reflect theta
-        Float_t rphi;    // reflect phi (pmt)
 
-	ClassDef(HitRICHInfo, 1)
+	ClassDef(HitRICHInfo, 2)
 };
 
 struct HitRICHInfo_sort {
 	bool operator() (const HitRICHInfo & hit1, const HitRICHInfo & hit2) {
-		if      (hit1.channel < hit2.channel) return true;
-		else if (hit1.channel > hit2.channel) return false;
+		if      (hit1.bta < hit2.bta) return true;
+		else if (hit1.bta > hit2.bta) return false;
 		return false;
 	}
 };
@@ -967,15 +956,8 @@ class RICH : public TObject {
             numOfExpPE = -1;
             eftOfColPE = -1;
 
-            ncls = 0;
-            clsNhit.clear();
-            clsBta.clear();
-            clsRms.clear();
-
-            nhit = 0;
-            dbta.clear();
-            rbta.clear();
-            npe.clear();
+            uhits.clear();
+            ohits.clear();
 
             //vetoKind = -1;
 			//vetoTile = -1;
@@ -1010,17 +992,9 @@ class RICH : public TObject {
         Float_t numOfExpPE;
         Float_t eftOfColPE;
 
-        // Clusters
-        Short_t ncls;
-        std::vector<Float_t> clsNhit;
-        std::vector<Float_t> clsBta;
-        std::vector<Float_t> clsRms;
-
         // Hits
-        Short_t nhit;
-        std::vector<Float_t> dbta;
-        std::vector<Float_t> rbta;
-        std::vector<Float_t> npe;
+        std::vector<HitRICHInfo> uhits;
+        std::vector<HitRICHInfo> ohits;
 
 		// Rich Veto
 		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
@@ -1040,7 +1014,7 @@ class RICH : public TObject {
         // Rich Hits
         //std::vector<HitRICHInfo> hits;
 	
-    ClassDef(RICH, 10)
+    ClassDef(RICH, 11)
 };
 
 

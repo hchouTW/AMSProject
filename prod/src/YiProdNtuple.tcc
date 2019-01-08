@@ -33,6 +33,7 @@ void RecEvent::init() {
     distTRDH = -1;
 
     tkInID = -1;
+    tkTrPar = nullptr;
 }
 
 bool RecEvent::rebuild(AMSEventR * event) {
@@ -107,6 +108,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
+    tkTrPar = TkStPar;
 
 	// ECAL Information
 	// pre-selection (ECAL)
@@ -1384,9 +1386,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             hitInfo.side = hit->TRDHit_Direction;
             hitInfo.amp  = hit->TRDHit_Amp;
             hitInfo.len  = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
-            hitInfo.coo[0] = hit->TRDHit_x;
-            hitInfo.coo[1] = hit->TRDHit_y;
-            hitInfo.coo[2] = hit->TRDHit_z;
+            hitInfo.cr   = (hit->TRDHit_Direction == 0) ? hit->TRDHit_x : hit->TRDHit_y;
+            hitInfo.cz   = hit->TRDHit_z;
 
             hitInfo.dEdX = ((hitInfo.len > 0) ? (0.01 * (hitInfo.amp / hitInfo.len)) : -1.0);
             
@@ -1410,7 +1411,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
                 if (hit.dEdX <= 0) continue;
                 if (hit.len < 0.01) continue;
                 if (hit.len < 0.3 || hit.len > 0.67) continue;
-                dEdX.push_back(std::make_tuple(hit.dEdX, hit.coo[2], hit.mcMom));
+                dEdX.push_back(std::make_tuple(hit.dEdX, hit.cz, hit.mcMom));
 
             }
             std::sort(dEdX.begin(), dEdX.end());
@@ -1513,11 +1514,12 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	fStopwatch.start();
 
 	// official RichRingR - start
+    const bool rebuild = true;
+	RichRingR* rich = (recEv.iRichRing >= 0) ? event->pRichRing(recEv.iRichRing) : nullptr;
+    int richNCls = (rich != nullptr && rebuild) ? rich->ClusterizeZ1() : 0;
+
     fRich.numOfHit = event->NRichHit();
-	while (recEv.iRichRing >= 0) {
-		RichRingR* rich = event->pRichRing(recEv.iRichRing);
-        if (rich == nullptr) break;
-        if (!rich->IsGood()) break;
+	while (rich != nullptr) {
 		int kindOfRad = rich->IsNaF() ? 1 : 0;
 		int tileOfRad = rich->getTileIndex();
 
@@ -1529,7 +1531,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 		fRich.Q = rich->getCharge2Estimate(true);
 		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
 
-        fRich.isGood = true;
+        fRich.isGood = rich->IsGood();
         fRich.npmt = rich->getPMTs();
         fRich.prob = rich->getProb();
         fRich.cstcb = rich->getBetaConsistency();
@@ -1553,28 +1555,49 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         //               (fRich.numOfExpPE > cut_expPhe[kindOfRad]) &&
         //               (fRich.eftOfColPE > cut_collPhe[kindOfRad]);
 
-        // New Rich reconstruction for Z = 1
-        fRich.ncls = (recEv.zin == 1) ? rich->ClusterizeZ1() : 0;
-        if (fRich.ncls != 0) {
-            int size = 0;
-            float mean = 0, rms = 0;
-            for (int iclu = 0; iclu < fRich.ncls; ++iclu) {
-                 rich->GetClusters(iclu, size, mean, rms);
-                 fRich.clsNhit.push_back(size);
-                 fRich.clsBta.push_back(mean);
-                 fRich.clsRms.push_back(rms);
-            }
-            fRich.nhit = rich->RawBetas();
-            for (int it = 0; it < fRich.nhit; ++it) {
-                RichHitR* hit = event->pRichHit(rich->HitBeta(it));
-                if (!hit) continue;
-                float dbta = rich->RawBeta(it, 0);
-                float rbta = rich->RawBeta(it, 1);
-                fRich.dbta.push_back( (dbta>0?dbta:-1.0) );
-                fRich.rbta.push_back( (rbta>0?rbta:-1.0) );
-                fRich.npe.push_back(hit->Npe);
-            }
-        }
+	    //const float richPMTZ = -121.89; // pmt z-axis
+		//AMSPoint rhcoo(0., 0., 0.); AMSDir rhdir(0., 0., -1.);
+		//if (recEv.tkTrPar != nullptr && recEv.tkInID >= 0) recEv.tkTrPar->Interpolate(richPMTZ, rhcoo, rhdir, recEv.tkInID);
+
+        for (int it = 0; it < rich->RawBetas(); ++it) {
+            RichHitR* rawhit = event->pRichHit(rich->HitBeta(it));
+            if (rawhit == nullptr) continue;
+
+            int   type = rich->fUsedBeta[it]%2;
+            int   used = rich->fUsedBeta[it]/2;
+            float bta  = rich->fRawBeta[type][it];
+            if (bta <= 0.0) continue;
+            
+            HitRICHInfo hit;
+            hit.type = type;
+            hit.bta  = bta;
+            hit.npe  = rawhit->Npe;
+            hit.coo[0] = rawhit->Coo[0];
+            hit.coo[1] = rawhit->Coo[1];
+            hit.coo[2] = rawhit->Coo[2];
+
+            if (used == 0) fRich.uhits.push_back(hit);
+            else           fRich.ohits.push_back(hit);
+        } 
+        if (fRich.uhits.size() > 2) std::sort(fRich.uhits.begin(), fRich.uhits.end(), HitRICHInfo_sort());
+        if (fRich.ohits.size() > 2) std::sort(fRich.ohits.begin(), fRich.ohits.end(), HitRICHInfo_sort());
+        
+        //fRich.nhit = rich->RawBetas();
+        //for (int it = 0; it < fRich.nhit; ++it) {
+        //    RichHitR* hit = event->pRichHit(rich->HitBeta(it));
+        //    if (!hit) continue;
+        //    bool cross = hit->IsCrossed();
+        //    AMSPoint pnt(hit->Coo[0], hit->Coo[1], hit->Coo[2]);
+        //    float dist = pnt.dist(rhcoo);
+        //    
+        //    float dbta = rich->RawBeta(it, 0);
+        //    float rbta = rich->RawBeta(it, 1);
+        //    fRich.dbta.push_back( (dbta>0?dbta:-1.0) );
+        //    fRich.rbta.push_back( (rbta>0?rbta:-1.0) );
+        //    fRich.npe.push_back(hit->Npe);
+
+        //    //CERR("HIT %2d/%2d CROSS %d Bta %14.8f %14.8f Dist %14.8f\n", it, fRich.nhit, cross, dbta, rbta, dist);
+        //}
 
 		break;
 	}
@@ -2647,18 +2670,18 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         if (recEv.zin == 1) { // proton
             if (!hasTrL1o9XY)                  { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // Inn
             else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.015; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.040; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.040; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // FS
         }
         else if (recEv.zin == 2) { // helium
             if (!hasTrL1o9XY)                  { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // Inn
             else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.15; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.40; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.40; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // FS
         }
 
         double logir = std::log(std::fabs(cutoff / recEv.rig));
-        double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::TWO<> * logir);
+        double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logir);
         double rndm  = TrackSys::Rndm::DecimalUniform();
         if (TrackSys::Numc::Compare(rndm, thres) > 0) return -8001;
 	    EventList::Weight /= thres;
