@@ -1353,27 +1353,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             trdKDir = AMSDir(fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5]);
         }
 
-        int nhit = 0;
+        std::vector<HitTRDInfo> hits;
 		for (int ih = 0; ih < nhits; ih++) {
-			TrdKHit* hit = trdkcls->GetHit(ih);
-			if (hit == nullptr) continue;
-			if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
-				if (!hit->IsCalibrated) continue;
-			if (checkEventMode(EventBase::ISS))
-				if (!hit->IsAligned) continue;
-            nhit++;
-        }
-		
-        fTrd.statusKCls[kindOfFit] = true;
-		fTrd.LLRep[kindOfFit]      = llr[0];
-		fTrd.LLReh[kindOfFit]      = llr[1];
-		fTrd.LLRph[kindOfFit]      = llr[2];
-		fTrd.LLRnhit[kindOfFit]    = nhit;
-		fTrd.Q[kindOfFit]          = Q;
-
-        if (kindOfFit != 0) continue;
-		
-        for (int ih = 0; ih < nhits; ih++) {
 			TrdKHit* hit = trdkcls->GetHit(ih);
 			if (hit == nullptr) continue;
 			if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
@@ -1384,12 +1365,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             HitTRDInfo hitInfo;
             hitInfo.lay  = hit->TRDHit_Layer;
             hitInfo.side = hit->TRDHit_Direction;
-            hitInfo.amp  = hit->TRDHit_Amp;
+            hitInfo.amp  = 0.01 * hit->TRDHit_Amp;
             hitInfo.len  = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
             hitInfo.cr   = (hit->TRDHit_Direction == 0) ? hit->TRDHit_x : hit->TRDHit_y;
             hitInfo.cz   = hit->TRDHit_z;
-
-            hitInfo.dEdX = ((hitInfo.len > 0) ? (0.01 * (hitInfo.amp / hitInfo.len)) : -1.0);
+            hitInfo.dEdX = ((hitInfo.len > 0) ? (hitInfo.amp / hitInfo.len) : -1.0);
             
             Float_t mcMom = -1.0;
 	        if (checkEventMode(EventBase::MC)) {
@@ -1400,51 +1380,54 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
                 }
             }
             hitInfo.mcMom = mcMom;
-            
-            fTrd.hits.push_back(hitInfo);
-		}
-		if (fTrd.hits.size() != 0) std::sort(fTrd.hits.begin(), fTrd.hits.end(), HitTRDInfo_sort());
 
-        if (fTrd.hits.size() != 0) {
-            std::vector<std::tuple<Double_t, Double_t, Double_t>> dEdX; // (dEdX, cooz, mcMom)
-            for (auto&& hit : fTrd.hits) {
-                if (hit.dEdX <= 0) continue;
-                if (hit.len < 0.01) continue;
-                if (hit.len < 0.3 || hit.len > 0.67) continue;
-                dEdX.push_back(std::make_tuple(hit.dEdX, hit.cz, hit.mcMom));
-
-            }
-            std::sort(dEdX.begin(), dEdX.end());
-            
-            if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
-            if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
-            if (dEdX.size() > 0) {
-                Short_t  nh  = dEdX.size();
-                Double_t cz  = 0;
-                Double_t men = 0;
-                Double_t sgm = 0;
-                Double_t mom = 0;
-                std::vector<Float_t> cands;
-                for (auto&& elem : dEdX) {
-                    cz  += std::get<1>(elem);
-                    men += std::get<0>(elem);
-                    sgm += std::get<0>(elem) * std::get<0>(elem);
-                    mom += std::get<2>(elem);
-                    cands.push_back(std::get<0>(elem));
-                }
-                cz  /= static_cast<Double_t>(nh);
-                men /= static_cast<Double_t>(nh);
-                sgm  = std::sqrt((sgm / static_cast<Double_t>(nh)) - (men * men));
-                mom /= static_cast<Double_t>(nh);
-
-                fTrd.recNh    = nh;
-                fTrd.recCz    = cz;
-                fTrd.recMen   = men;
-                fTrd.recSgm   = sgm;
-                fTrd.recMcMom = mom;
-                fTrd.recHits  = cands;
-            }
+            hits.push_back(hitInfo);
         }
+		if (hits.size() != 0) std::sort(hits.begin(), hits.end(), HitTRDInfo_sort());
+		
+        fTrd.statusKCls[kindOfFit] = true;
+		fTrd.LLRep[kindOfFit]      = llr[0];
+		fTrd.LLReh[kindOfFit]      = llr[1];
+		fTrd.LLRph[kindOfFit]      = llr[2];
+		fTrd.LLRnhit[kindOfFit]    = hits.size();
+		fTrd.Q[kindOfFit]          = Q;
+
+
+        if (hits.size() <= 2) continue;
+        std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, mcMom, cooz, amp, len)
+        for (auto&& hit : hits) {
+            if (hit.dEdX <= 0) continue;
+            if (hit.amp < 0.0001) continue;
+            if (hit.len < 0.2500) continue;
+            dEdX.push_back(std::make_tuple(hit.dEdX, hit.mcMom, hit.cz, hit.amp, hit.len));
+        }
+        if (dEdX.size() <= 2) continue;
+        std::sort(dEdX.begin(), dEdX.end());
+        if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
+        if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
+
+        Double_t v_mom = 0;
+        Double_t v_cz  = 0;
+        Double_t v_amp = 0;
+        Double_t v_len = 0;
+        for (auto&& elem : dEdX) {
+            v_mom += std::get<1>(elem);
+            v_cz  += std::get<2>(elem);
+            v_amp += std::get<3>(elem);
+            v_len += std::get<4>(elem);
+        }
+        v_mom = v_mom / static_cast<Double_t>(dEdX.size());
+        v_cz  = v_cz  / static_cast<Double_t>(dEdX.size());
+        Double_t v_dEdX = v_amp / v_len;
+        if (!TrackSys::Numc::Valid(v_dEdX)) continue;
+
+        fTrd.ITstatus[kindOfFit] = true;
+        fTrd.ITnh[kindOfFit]     = dEdX.size();
+        fTrd.ITcz[kindOfFit]     = v_cz;
+        fTrd.ITamp[kindOfFit]    = v_amp;
+        fTrd.ITlen[kindOfFit]    = v_len;
+        fTrd.ITdEdX[kindOfFit]   = v_dEdX;
+        fTrd.ITMcMom[kindOfFit]  = (v_mom > 0.0) ? v_mom : 0.0;
 	}
 
     // Vertex
@@ -1519,7 +1502,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
     int richNCls = (rich != nullptr && rebuild) ? rich->ClusterizeZ1() : 0;
 
     fRich.numOfHit = event->NRichHit();
-	while (rich != nullptr) {
+	while (rich != nullptr && richNCls >= 0) {
 		int kindOfRad = rich->IsNaF() ? 1 : 0;
 		int tileOfRad = rich->getTileIndex();
 
@@ -1581,23 +1564,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         } 
         if (fRich.uhits.size() > 2) std::sort(fRich.uhits.begin(), fRich.uhits.end(), HitRICHInfo_sort());
         if (fRich.ohits.size() > 2) std::sort(fRich.ohits.begin(), fRich.ohits.end(), HitRICHInfo_sort());
-        
-        //fRich.nhit = rich->RawBetas();
-        //for (int it = 0; it < fRich.nhit; ++it) {
-        //    RichHitR* hit = event->pRichHit(rich->HitBeta(it));
-        //    if (!hit) continue;
-        //    bool cross = hit->IsCrossed();
-        //    AMSPoint pnt(hit->Coo[0], hit->Coo[1], hit->Coo[2]);
-        //    float dist = pnt.dist(rhcoo);
-        //    
-        //    float dbta = rich->RawBeta(it, 0);
-        //    float rbta = rich->RawBeta(it, 1);
-        //    fRich.dbta.push_back( (dbta>0?dbta:-1.0) );
-        //    fRich.rbta.push_back( (rbta>0?rbta:-1.0) );
-        //    fRich.npe.push_back(hit->Npe);
-
-        //    //CERR("HIT %2d/%2d CROSS %d Bta %14.8f %14.8f Dist %14.8f\n", it, fRich.nhit, cross, dbta, rbta, dist);
-        //}
 
 		break;
 	}
@@ -2644,27 +2610,28 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
+    if (recEv.zin > 3) return -99998;
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
         if (!rti.processEvent(event)) return -7001;
-        double minStormer = (*std::min_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4));
-        double minIGRF    = (*std::min_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
-        double minCF      = std::min(minStormer, minIGRF);
+        //double maxStormer = (*std::max_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4));
+        double maxIGRF    = (*std::max_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
        
         // select event below cutoff
-        //if (TrackSys::Numc::Compare(recEv.rig) > 0) {
-        //    double ratCF      = (minCF / (minCF + 0.2 * recEv.zin)) * std::fabs(minCF / recEv.rig);
-        //    double thresCF    = 0.1 + 0.9 * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * (ratCF - TrackSys::Numc::TWO<>));
-        //    double rndm       = TrackSys::Rndm::DecimalUniform();
-        //    if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
-	    //    EventList::Weight /= thresCF;
-        //}
+        if (TrackSys::Numc::Compare(recEv.rig) > 0) {
+            double wpar[2] = { 0.2, 0.8 };
+            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rig));
+            double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logCF);
+            double rndm    = TrackSys::Rndm::DecimalUniform();
+            if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
+	        EventList::Weight /= thresCF;
+        }
     }
 
     // ~8~ (Scale events from proton and helium in the flight data)
     if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && TrackSys::Numc::Compare(recEv.rig) > 0) {
-        const double cutoff = 40.0;
+        const double cutoff = 40.0; // current
         double wpar[2] = { 1.0, 0.0 };
        
         if (recEv.zin == 1) { // proton

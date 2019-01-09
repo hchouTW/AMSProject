@@ -877,14 +877,13 @@ class TRD : public TObject {
 			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
             
-            hits.clear();
-
-            recNh    = 0;
-            recCz    = 0;
-            recMen   = -1.0;
-            recSgm   = -1.0;
-            recMcMom = -1.0;
-            recHits.clear();
+			std::fill_n(ITstatus, 2, false);
+			std::fill_n(ITnh, 2, 0);
+			std::fill_n(ITcz, 2, 0);
+			std::fill_n(ITamp, 2, 0);
+			std::fill_n(ITlen, 2, 0);
+			std::fill_n(ITdEdX, 2, 0);
+			std::fill_n(ITMcMom, 2, 0);
 
             std::fill_n(vtxNum, 3, 0);
             vtxNTrk = 0;
@@ -910,16 +909,15 @@ class TRD : public TObject {
 		Float_t LLRph[2];
 		Short_t LLRnhit[2];
 		Float_t Q[2];
-        
-        std::vector<HitTRDInfo> hits;
 
         // TRDRec
-        Short_t              recNh;
-        Float_t              recCz;
-        Float_t              recMen;
-        Float_t              recSgm;
-        Float_t              recMcMom;
-        std::vector<Float_t> recHits;
+        Bool_t  ITstatus[2];
+        Short_t ITnh[2];
+        Float_t ITcz[2];
+        Float_t ITamp[2];
+        Float_t ITlen[2];
+        Float_t ITdEdX[2];
+        Float_t ITMcMom[2];
 
         // TRDVertex
         Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
