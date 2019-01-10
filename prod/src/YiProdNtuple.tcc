@@ -12,6 +12,9 @@
 
 //---- RecEvent ----//
 void RecEvent::init() {
+    runID = -1;
+    evtID = -1;
+
 	iBeta       = -1;
 	iBetaH      = -1;
 	iTrTrack    = -1;
@@ -26,6 +29,7 @@ void RecEvent::init() {
     mass = 0.93827230;
     beta = 1;
     rig  = 0;
+    rigMS = 0;
     going = -1;
 
     distECAL = -1;
@@ -40,6 +44,9 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	if (event == nullptr) return false;
 	fStopwatch.start();
 	init();
+
+    runID = event->Run();
+    evtID = event->Event();
 
 	/** Particle **/
 	bool isParticle = false;
@@ -93,9 +100,10 @@ bool RecEvent::rebuild(AMSEventR * event) {
             //TkStPar->GetQYJ_all();
             //qin = TkStPar->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, TkStID);
 
-            zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
-            mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
-            rig  = TkStPar->GetRigidity(TkStID, 1); // z = 0
+            zin   = (qin <= 1.0) ? 1 : std::lrint(qin);
+            mass  = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
+            rig   = TkStPar->GetRigidity(TkStID, 1); // z = 0
+            rigMS = rig;
         }
         MCEventgR* primaryMC = event->GetPrimaryMC();
         if (primaryMC != nullptr) {
@@ -692,6 +700,8 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 
     const int qopt = TofRecH::kThetaCor|TofRecH::kBirkCor|TofRecH::kReAttCor|TofRecH::kDAWeight|TofRecH::kQ2Q;
 	const short pattIdx[4] = { 1, 2, 4, 8 };
+
+    Float_t btaT[4] = { 0, 0, 0, 0 };
 	while (recEv.iBetaH >= 0 && event->pBetaH(recEv.iBetaH) != nullptr) {
 		BetaHR* betaH = event->pBetaH(recEv.iBetaH);
         if (betaH->iTrTrack() != recEv.iTrTrack) break;
@@ -721,6 +731,7 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 			fTof.Q[il]      = betaH->GetQL(il, 2, qopt);
 			fTof.betaHPatt += pattIdx[il];
             minT = std::min(minT, fTof.T[il]);
+            btaT[il] = fTof.T[il];
 		}
 		for (int il = 0; il < 4; il++) {
             if (fTof.T[il] >= 0) { fTof.T[il] = -1; continue; }
@@ -749,13 +760,15 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 	
     const double ChrgLimit = 0.875;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
+	const double TimeOfOneM = 3.335640e+00; // (speed of light)
 	for (UInt_t it = 0; it < event->NTofClusterH(); ++it) {
 		TofClusterHR * cls = event->pTofClusterH(it);
 		if (cls == nullptr) continue;
 		if (betaHClsId.at(cls->Layer) == Int_t(it)) continue;
 		int    lay  = cls->Layer;
 		double chrg = cls->GetQSignal();
-		if (chrg > ChrgLimit) nearHitNm[lay]++;
+        double dtme = std::fabs(cls->Time - btaT[lay]);
+		if (chrg > ChrgLimit && dtme < TimeOfOneM) nearHitNm[lay]++;
 	}
 	for (int il = 0; il < 4; ++il) {
 		fTof.numOfExtCls[il] = nearHitNm[il];
@@ -783,6 +796,16 @@ bool EventTof::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 bool EventTof::selectEvent(AMSEventR * event) {
+    if (fTof.numOfBetaH != 1) return false;
+    if (!fTof.statusBetaH) return false;
+    if (fTof.betaHPatt != 15) return false;
+    if (fTof.numOfInTimeCls > 4) return false;
+
+    bool noiseALL  = (fTof.numOfExtCls[0] > 0 && fTof.numOfExtCls[1] > 0 && fTof.numOfExtCls[2] > 0 && fTof.numOfExtCls[3] > 0);
+    bool noiseUTOF = (fTof.numOfExtCls[0] > 0 && fTof.numOfExtCls[1] > 0) && (fTof.numOfExtCls[0] + fTof.numOfExtCls[1] >= 3);
+    bool noiseLTOF = (fTof.numOfExtCls[2] > 0 && fTof.numOfExtCls[3] > 0) && (fTof.numOfExtCls[2] + fTof.numOfExtCls[3] >= 3);
+    if (noiseALL || noiseUTOF || noiseLTOF) return false;
+
 	return true;
 }
 
@@ -820,7 +843,6 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 	if (event == nullptr) return false;
 	fStopwatch.start();
 	
-	//event->RebuildAntiClusters();
 	fAcc.numOfCls = event->NAntiCluster();
 
 	const double TimeOfOneM = 3.335640e+00; // (speed of light)
@@ -862,7 +884,9 @@ bool EventAcc::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 bool EventAcc::selectEvent(AMSEventR * event) {
-	return true;
+    if (fAcc.clusters.size() != 0) return false;
+	
+    return true;
 }
 
 
@@ -1176,6 +1200,8 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 bool EventTrk::selectEvent(AMSEventR * event) {
+    if (!fTrk.cktr.at(0).status) return false;
+
 	return true;
 }
 
@@ -1449,6 +1475,14 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 bool EventTrd::selectEvent(AMSEventR * event) {
+    bool LLRstatus[2] = {
+        (fTrd.statusKCls[0] && fTrd.LLRnhit[0] >= 8), 
+        (fTrd.statusKCls[1] && fTrd.LLRnhit[1] >= 8) };
+    if (!LLRstatus[0] && !LLRstatus[1]) return false;
+    
+    bool ITstatus[2] = { (fTrd.ITnh[0] >= 5), (fTrd.ITnh[1] >= 5) };
+    if (!ITstatus[0] && !ITstatus[1]) return false;
+
 	return true;
 }
 
@@ -2215,7 +2249,9 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
     track.ndof    = hcbta.ndof();
     track.nchi    = hcbta.nchi();
     track.quality = hcbta.quality();
-    
+
+    track.rerr = hcbta.rerr();
+
     track.state[0] = hcbta.part().cx();
     track.state[1] = hcbta.part().cy();
     track.state[2] = hcbta.part().cz();
@@ -2383,8 +2419,8 @@ void DataSelection::setEventTree() {
 	if (checkOption(DataSelection::TRG)) trg.setEventTree(evTree);
 	if (checkOption(DataSelection::ACC)) acc.setEventTree(evTree);
 	if (checkOption(DataSelection::TOF)) tof.setEventTree(evTree);
-	if (checkOption(DataSelection::TRK)) trk.setEventTree(evTree);
 	if (checkOption(DataSelection::TRD)) trd.setEventTree(evTree);
+	if (checkOption(DataSelection::TRK)) trk.setEventTree(evTree);
 	if (checkOption(DataSelection::RICH)) rich.setEventTree(evTree);
 	if (checkOption(DataSelection::ECAL)) ecal.setEventTree(evTree);
 	if (checkOption(DataSelection::HYC)) hyc.setEventTree(evTree);
@@ -2400,8 +2436,8 @@ void DataSelection::setEnvironment() {
 	trg.setEnvironment();
 	tof.setEnvironment();
 	acc.setEnvironment();
-	trk.setEnvironment();
 	trd.setEnvironment();
+	trk.setEnvironment();
 	rich.setEnvironment();
 	ecal.setEnvironment();
 	hyc.setEnvironment();
@@ -2424,8 +2460,8 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	bool statusTrg = true;
 	bool statusTof = true;
 	bool statusAcc = true;
-	bool statusTrk = true;
 	bool statusTrd = true;
+	bool statusTrk = true;
 	bool statusRich = true;
 	bool statusEcal = true;
 	bool statusHyc = true;
@@ -2447,12 +2483,12 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 	
     if (checkOption(DataSelection::TOF)) statusTof = tof.processEvent(event);
 	if (!statusTof) return -105;
+	
+    if (checkOption(DataSelection::TRD)) statusTrd = trd.processEvent(event);
+	if (!statusTrd) return -106;
 
 	if (checkOption(DataSelection::TRK)) statusTrk = trk.processEvent(event);
-	if (!statusTrk) return -106;
-
-	if (checkOption(DataSelection::TRD)) statusTrd = trd.processEvent(event);
-	if (!statusTrd) return -107;
+	if (!statusTrk) return -107;
 
 	if (checkOption(DataSelection::RICH)) statusRich = rich.processEvent(event);
 	if (!statusRich) return -108;
@@ -2477,8 +2513,8 @@ int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
 		COUT("      TRG   %14.8f (SEC)   %6.2f%\n", trg.time(),   trg.time() / totlTime * 100);
 		COUT("      ACC   %14.8f (SEC)   %6.2f%\n", acc.time(),   acc.time() / totlTime * 100);
 		COUT("      TOF   %14.8f (SEC)   %6.2f%\n", tof.time(),   tof.time() / totlTime * 100);
-		COUT("      TRK   %14.8f (SEC)   %6.2f%\n", trk.time(),   trk.time() / totlTime * 100);
 		COUT("      TRD   %14.8f (SEC)   %6.2f%\n", trd.time(),   trd.time() / totlTime * 100);
+		COUT("      TRK   %14.8f (SEC)   %6.2f%\n", trk.time(),   trk.time() / totlTime * 100);
 		COUT("     RICH   %14.8f (SEC)   %6.2f%\n", rich.time(),  rich.time() / totlTime * 100);
 		COUT("     ECAL   %14.8f (SEC)   %6.2f%\n", ecal.time(),  ecal.time() / totlTime * 100);
 		COUT("      HYC   %14.8f (SEC)   %6.2f%\n", hyc.time(),   hyc.time() / totlTime * 100);
@@ -2496,8 +2532,8 @@ void DataSelection::fill() {
 		if (checkOption(DataSelection::TRG)) trg.fill();
 		if (checkOption(DataSelection::ACC)) acc.fill();
 		if (checkOption(DataSelection::TOF)) tof.fill();
-		if (checkOption(DataSelection::TRK)) trk.fill();
 		if (checkOption(DataSelection::TRD)) trd.fill();
+		if (checkOption(DataSelection::TRK)) trk.fill();
 		if (checkOption(DataSelection::RICH)) rich.fill();
 		if (checkOption(DataSelection::ECAL)) ecal.fill();
 		if (checkOption(DataSelection::HYC)) hyc.fill();
@@ -2610,7 +2646,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
-    if (recEv.zin > 3) return -99998;
+    if (recEv.zin > 2) return -99998;
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
@@ -2619,35 +2655,35 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         double maxIGRF    = (*std::max_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
        
         // select event below cutoff
-        if (TrackSys::Numc::Compare(recEv.rig) > 0) {
+        if (TrackSys::Numc::Compare(recEv.rigMS) > 0) {
             double wpar[2] = { 0.2, 0.8 };
-            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rig));
+            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMS));
             double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logCF);
             double rndm    = TrackSys::Rndm::DecimalUniform();
             if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
 	        EventList::Weight /= thresCF;
         }
     }
-
+    
     // ~8~ (Scale events from proton and helium in the flight data)
-    if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && TrackSys::Numc::Compare(recEv.rig) > 0) {
-        const double cutoff = 40.0; // current
+    if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && TrackSys::Numc::Compare(recEv.rigMS) > 0) {
+        const double cutoff = 50.0; // current
         double wpar[2] = { 1.0, 0.0 };
        
         if (recEv.zin == 1) { // proton
-            if (!hasTrL1o9XY)                  { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // Inn
-            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.015; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // FS
+            if (!hasTrL1o9XY)                  { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // Inn
+            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // InnL1
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // FS
         }
         else if (recEv.zin == 2) { // helium
-            if (!hasTrL1o9XY)                  { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // Inn
-            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.15; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // FS
+            if (!hasTrL1o9XY)                  { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // Inn
+            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // InnL1
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // FS
         }
 
-        double logir = std::log(std::fabs(cutoff / recEv.rig));
+        double logir = std::log(std::fabs(cutoff / recEv.rigMS));
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logir);
         double rndm  = TrackSys::Rndm::DecimalUniform();
         if (TrackSys::Numc::Compare(rndm, thres) > 0) return -8001;

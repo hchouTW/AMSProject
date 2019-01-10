@@ -92,6 +92,9 @@ class RecEvent {
 		inline float time() { return fStopwatch.time(); }
 
 	public :
+        long runID;
+        long evtID;
+
 		int iBeta;
 		int iBetaH;
 		int iTrTrack;
@@ -118,6 +121,7 @@ class RecEvent {
         double mass;
         double beta;
         double rig;
+        double rigMS; // max span
         short  going; // (0, nothing   -1, down-going   1, up-going)
 
         double distECAL;

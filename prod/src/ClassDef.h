@@ -1115,10 +1115,12 @@ class HCBtaInfo : public TObject {
             going = 0;
             chrg = 0;
             mass = 0;
-            
+
             ndof = 0;
             nchi = 0;
             quality = 0;
+            
+            rerr = 0;
             
             std::fill_n(state, 8, 0);
             
@@ -1138,6 +1140,8 @@ class HCBtaInfo : public TObject {
         Float_t nchi;
         Float_t quality;
         
+        Float_t rerr;
+
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
         Float_t rig[3]; // z = 195, 0, -136
