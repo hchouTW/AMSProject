@@ -7,18 +7,18 @@ RunFile=${AMSCore}/subj/appStudy/${Version}/fill
 CurDir=${PWD}
 
 DataType=ISS
-Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan05
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
 
 OutputDir=${CurDir}/dat
 
 GroupSize=30
-Nseq=150
+Nseq=120
 
 for id in `seq 0 ${Nseq}`
 do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
 ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log
-ls -alh /tmp/* | awk '{print $8}' | grep track_fill | xargs /bin/rm" | qsub -q ams -N JOB${id} -j oe
+ls -alh /tmp/* | awk '{print $8}' | grep fill | xargs /bin/rm" | qsub -q ams -N JOB${id} -j oe
 #${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done
