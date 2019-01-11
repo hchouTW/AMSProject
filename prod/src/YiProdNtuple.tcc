@@ -2128,11 +2128,14 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (mutr.status()) fHyc.mutr = std::move(processHCMu(mutr));
    
     // Mass from Track&Bta Fit
-    fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : 0.0;
-    if (!TrackSys::Numc::Valid(fHyc.massM1) || TrackSys::Numc::Compare(fHyc.massM1) <= 0) fHyc.massM1 = 0.0;
+    fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : -1.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM1)) fHyc.massM1 = -1.0;
     
-    fHyc.massM2 = (fHyc.trM2.at(0).status && fHyc.btaM2.status) ? std::fabs((fHyc.trM2.at(0).rig[1] / fHyc.btaM2.rig[1]) * fHyc.btaM2.mass) : 0.0;
-    if (!TrackSys::Numc::Valid(fHyc.massM2) || TrackSys::Numc::Compare(fHyc.massM2) <= 0) fHyc.massM2 = 0.0;
+    fHyc.massM2 = (fHyc.trM2.at(0).status && fHyc.btaM2.status) ? std::fabs((fHyc.trM2.at(0).rig[1] / fHyc.btaM2.rig[1]) * fHyc.btaM2.mass) : -1.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM2)) fHyc.massM2 = -1.0;
+
+    // testcode
+    //CERR("MU %d MASS %14.8f %14.8f %14.8f RIG %14.8f\n", mutr.status(), fHyc.mutr.mass, fHyc.massM1, fHyc.massM2, recEv.rigMS);
 
     fStopwatch.stop();
 	return selectEvent(event);
@@ -2647,6 +2650,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
     if (recEv.zin > 2) return -99998;
+
+    // testcode
+    if (recEv.rigMS > 0) return -2;
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
