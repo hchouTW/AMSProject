@@ -4,19 +4,21 @@ Version=test
 #RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/bta_fill
-RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
 
 CurDir=${PWD}
 
-DataType=MC
+DataType=ISS
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
+#DataType=MC
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Oct17
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Dec23
-Stream=${CurDir}/lst/flist.ncu.mc.HE4_216000_B1200_18Dec23
+#Stream=${CurDir}/lst/flist.ncu.mc.HE4_216000_B1200_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.mc.EL_025500_B1200_18Oct03
 
 OutputDir=${CurDir}/dat
@@ -33,7 +35,7 @@ do
     echo "%!/bin/bash
 source /ams_home/hchou/AMSProject/sw/ROOT/setup_amsenv_root5gcc.sh
 ${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} > ${CurDir}/log/JOB${id}.log
-ls -alh /tmp/* | awk '{print $8}' | grep hchou | xargs /bin/rm" | qsub -q ams -N JOB${id} -j oe
+ls -alh /tmp/* | awk '{print $8}' | grep fill | xargs /bin/rm" | qsub -q ams -N JOB${id} -j oe
 #${RunFile} ${DataType} ${Stream} ${id} ${GroupSize} ${OutputDir} &> /dev/null &
 done
 

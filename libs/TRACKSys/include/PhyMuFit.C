@@ -415,7 +415,7 @@ bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residual
     Short_t  signuz = Numc::Compare(part_.uz());
     Double_t igmbta = std::sqrt((parameters[0][parIDibta] + Numc::ONE<>) * (parameters[0][parIDibta] - Numc::ONE<>));
     Double_t partmu = std::fabs(igmbta / parameters[0][parIDeta]);
-    if (Numc::Compare(partmu) <= 0) return false;
+    if (Numc::Compare(partmu, EL_MU) <= 0) partmu = EL_MU; // testcode
     
     PhySt ppst(part_);
     ppst.arg().clear();

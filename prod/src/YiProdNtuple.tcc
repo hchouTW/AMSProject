@@ -2161,8 +2161,8 @@ HCTrInfo EventHyc::processHCTr(TrackSys::PhyTrFit& hctr) {
     track.ndof[1] = hctr.ndof(1);
     track.nchi[0] = hctr.nchi(0);
     track.nchi[1] = hctr.nchi(1);
-    track.quality[0] = hctr.quality(0);
-    track.quality[1] = hctr.quality(1);
+    track.qlt[0]  = hctr.quality(0);
+    track.qlt[1]  = hctr.quality(1);
     
     track.state[0] = hctr.part().cx();
     track.state[1] = hctr.part().cy();
@@ -2249,9 +2249,9 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
     track.chrg = hcbta.part().chrg();
     track.mass = hcbta.part().mass();
     
-    track.ndof    = hcbta.ndof();
-    track.nchi    = hcbta.nchi();
-    track.quality = hcbta.quality();
+    track.ndof = hcbta.ndof();
+    track.nchi = hcbta.nchi();
+    track.qlt  = hcbta.quality();
 
     track.rerr = hcbta.rerr();
 
@@ -2307,16 +2307,16 @@ HCMuInfo EventHyc::processHCMu(TrackSys::PhyMuFit& hcmu) {
     track.muNchi[0] = hcmu.nchi(0);
     track.muNchi[1] = hcmu.nchi(1);
     track.muNchi[2] = hcmu.nchi(2);
-    track.muQuality[0] = hcmu.quality(0);
-    track.muQuality[1] = hcmu.quality(1);
-    track.muQuality[2] = hcmu.quality(2);
+    track.muQlt[0]  = hcmu.quality(0);
+    track.muQlt[1]  = hcmu.quality(1);
+    track.muQlt[2]  = hcmu.quality(2);
     
     track.ndof[0] = hctr.ndof(0);
     track.ndof[1] = hctr.ndof(1);
     track.nchi[0] = hctr.nchi(0);
     track.nchi[1] = hctr.nchi(1);
-    track.quality[0] = hctr.quality(0);
-    track.quality[1] = hctr.quality(1);
+    track.qlt[0]  = hctr.quality(0);
+    track.qlt[1]  = hctr.quality(1);
     
     track.state[0] = hctr.part().cx();
     track.state[1] = hctr.part().cy();

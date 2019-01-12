@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Jan08/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -43,7 +43,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
-    ECAL * fHyc  = new HYC;
+    HYC  * fHyc  = new HYC;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -156,12 +156,12 @@ int main(int argc, char * argv[]) {
         //    if (fG4mc->primVtx.status && fG4mc->primVtx.coo[2] > -120) continue;
         
         //if (entry > 100) break;
-        if (fG4mc->primPart.mom > mombd[1]+5.0) continue; // testcode
+        //if (fG4mc->primPart.mom > mombd[1]+5.0) continue; // testcode
         //if (fG4mc->primPart.mom > 0.7) continue; // testcode
         
         Int_t trPatt = optL1 + optL9 * 2;
-        CKTrackInfo& ckTr = fTrk->ckTr.at(trPatt);
-        KFTrackInfo& kfTr = fTrk->kfTr.at(trPatt);
+        CKTrackInfo& cktr = fTrk->cktr.at(trPatt);
+        //KFTrackInfo& kftr = fTrk->kftr.at(trPatt);
         //HCTrackInfo& hcTr = fTrk->hcTr.at(trPatt);
         
         // Geometry (TRK)
@@ -203,10 +203,10 @@ int main(int argc, char * argv[]) {
 
         Bool_t hasMCL1 = false;
         Bool_t hasMCL9 = false;
-        for (auto&& mchit : fG4mc->primPart.hitsTk) {
-            if (mchit.layJ == 1) hasMCL1 = true;
-            if (mchit.layJ == 9) hasMCL9 = true;
-        }
+        //for (auto&& mchit : fG4mc->primPart.hitsTk) {
+        //    if (mchit.layJ == 1) hasMCL1 = true;
+        //    if (mchit.layJ == 9) hasMCL9 = true;
+        //}
        
         Bool_t hasL1 = false;
         Bool_t hasL9 = false;
@@ -216,7 +216,7 @@ int main(int argc, char * argv[]) {
             Bool_t isInnTr = (hit.layJ >= 2 && hit.layJ <= 8);
             HitStTRK mhit(hit.side[0], hit.side[1], hit.layJ);
             mhit.set_coo(hit.coo[0], hit.coo[1], hit.coo[2]);
-            //mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1]);
+            mhit.set_q(hit.chrg[2], hit.chrg[0], hit.chrg[1]);
          
             if (isInnTr) { fitPar.add_hit(mhit); fitParD.add_hit(mhit); }
             else {
@@ -228,7 +228,7 @@ int main(int argc, char * argv[]) {
         for (Int_t il = 0; il < 4; ++il) {
             HitStTOF mhit(il);
             mhit.set_coo(fTof->coo[il][0], fTof->coo[il][1], fTof->coo[il][2]);
-            //mhit.set_q(fTof->Q[il], info.chrg());
+            mhit.set_q(fTof->Q[il]);
             mhit.set_t(fTof->T[il]*HitStTOF::TRANS_NS_TO_CM);
             fitPar.add_hit(mhit);
             fitParD.add_hit(mhit);
@@ -243,28 +243,37 @@ int main(int argc, char * argv[]) {
         SegPARTMCInfo* mcs[9] = { nullptr };
         HitTRKMCInfo*  mch[9] = { nullptr };
         HitTRKInfo*    msh[9] = { nullptr };
-        for (auto&& seg : fG4mc->primPart.segsTk) { mcs[seg.lay] = &seg; }
-        for (auto&& hit : fG4mc->primPart.hitsTk) mch[hit.layJ-1] = &hit;
-        for (auto&& hit :             fTrk->hits) msh[hit.layJ-1] = &hit;
+        //for (auto&& seg : fG4mc->primPart.segsTk) { mcs[seg.lay] = &seg; }
+        //for (auto&& hit : fG4mc->primPart.hitsTk) mch[hit.layJ-1] = &hit;
+        //for (auto&& hit :             fTrk->hits) msh[hit.layJ-1] = &hit;
 
         Bool_t hasLay[9] = { false };
         for (Int_t it = 0; it < 9; ++it) hasLay[it] = (mcs[it] && mch[it] && msh[it]);
-
-        Double_t mc_mom  = fG4mc->primPart.mom;
-        Double_t mc_igb  = fG4mc->primPart.mass / mc_mom;
-        Double_t mc_ibta = std::hypot(1.0, mc_igb);
-        Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
-        Double_t bincen  = std::sqrt(AXmom.center(AXmom.find(mc_mom), AxisScale::kLog));
         
+        Double_t mc_mom  =0.0; 
+        Double_t mc_igb  =0.0; 
+        Double_t mc_ibta =0.0; 
+        Double_t mc_irig =0.0; 
+        Double_t bincen  =0.0; 
+
+        //Double_t mc_mom  = fG4mc->primPart.mom;
+        //Double_t mc_igb  = fG4mc->primPart.mass / mc_mom;
+        //Double_t mc_ibta = std::hypot(1.0, mc_igb);
+        //Double_t mc_irig = (fG4mc->primPart.chrg / mc_mom);
+        //Double_t bincen  = std::sqrt(AXmom.center(AXmom.find(mc_mom), AxisScale::kLog));
+       
+
+        if (cktr.rig > 0) continue;
         //-------------------------------------//
-        Bool_t   ck_succ = ckTr.status;
-        Double_t ck_irig = (ck_succ ? MGMath::ONE/ckTr.rig : 0.0);
-        Double_t ck_mom  = (ck_succ ? std::fabs(ckTr.rig * info.chrg()) : 0.0);
+        Bool_t   ck_succ = cktr.status;
+        Double_t ck_irig = (ck_succ ? MGMath::ONE/cktr.rig : 0.0);
+        Double_t ck_mom  = (ck_succ ? std::fabs(cktr.rig * info.chrg()) : 0.0);
         if (!ck_succ) { COUT("CK TR FAILURE.\n"); continue; }
 
         MGClock::HrsStopwatch sw; sw.start();
         PhyMuFit mufit(fitPar);
         if (!mufit.status()) { COUT("HC MU FAILURE.\n"); continue; }
+
         PhyTrFit trfit = mufit.fit();
         if (!trfit.status()) { COUT("HC TR FAILURE.\n"); continue; }
         sw.stop();
@@ -334,7 +343,7 @@ int main(int argc, char * argv[]) {
             hHCRqltyD->fillH2D(mc_mom, dtr.quality(1));
         }
 
-        Bool_t TFstatus = (fTof->betaH < 1.0 && ckTr.nchi[0] < 10.0 && ckTr.nchi[1] < 10.0);
+        Bool_t TFstatus = (fTof->betaH < 1.0 && cktr.nchi[0] < 10.0 && cktr.nchi[1] < 10.0);
         Bool_t RHstatus = (fRich->status && fRich->kind == 0 && fRich->beta < 1.0);
         Bool_t HCstatus = (!mufit.is_like_el());
         

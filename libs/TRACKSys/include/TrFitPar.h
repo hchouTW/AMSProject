@@ -107,8 +107,12 @@ class TrFitPar {
         static constexpr Double_t SURVIVAL_BETA = 0.30;
         
         // Limit of 1/beta
-        static constexpr Double_t LMTL_IBTA = 1.000000001;
+        static constexpr Double_t LMTL_IBTA = 1.000001;
         static constexpr Double_t LMTU_IBTA = 100.;
+        
+        // Limit of Mass (Mu)
+        static constexpr Double_t EL_MASS = 0.000510999;  // electron mass
+        static constexpr Double_t EL_MU   = 4.759926e-04; // electron mu
     
     protected :
         Sys::HrsStopwatch timer_;

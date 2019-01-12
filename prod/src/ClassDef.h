@@ -1049,7 +1049,7 @@ class HCTrInfo : public TObject {
             
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
-            std::fill_n(quality, 2, 0);
+            std::fill_n(qlt, 2, 0);
             
             std::fill_n(state, 8, 0);
             
@@ -1079,7 +1079,7 @@ class HCTrInfo : public TObject {
         
         Short_t ndof[2];
         Float_t nchi[2];
-        Float_t quality[2];
+        Float_t qlt[2];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
@@ -1118,7 +1118,7 @@ class HCBtaInfo : public TObject {
 
             ndof = 0;
             nchi = 0;
-            quality = 0;
+            qlt = 0;
             
             rerr = 0;
             
@@ -1138,7 +1138,7 @@ class HCBtaInfo : public TObject {
         
         Short_t ndof;
         Float_t nchi;
-        Float_t quality;
+        Float_t qlt;
         
         Float_t rerr;
 
@@ -1167,11 +1167,11 @@ class HCMuInfo : public TObject {
             
             std::fill_n(muNdof, 3, 0);
             std::fill_n(muNchi, 3, 0);
-            std::fill_n(muQuality, 3, 0);
+            std::fill_n(muQlt, 3, 0);
             
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
-            std::fill_n(quality, 2, 0);
+            std::fill_n(qlt,  2, 0);
             
             std::fill_n(state, 8, 0);
             
@@ -1198,11 +1198,11 @@ class HCMuInfo : public TObject {
         
         Short_t muNdof[3];
         Float_t muNchi[3];
-        Float_t muQuality[3];
+        Float_t muQlt[3];
         
         Short_t ndof[2];
         Float_t nchi[2];
-        Float_t quality[2];
+        Float_t qlt[2];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
