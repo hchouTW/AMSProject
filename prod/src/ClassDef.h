@@ -1242,8 +1242,8 @@ class HYC : public TObject {
 
             mutr.init();
 
-            massM1 = -1.0;
-            massM2 = -1.0;
+            massM1 = 0.0;
+            massM2 = 0.0;
 		}
 	
     public :

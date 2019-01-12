@@ -1046,7 +1046,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         Bool_t ckSwOpt = true;
         Int_t ckRefit = 22;
 		for (int patt = 0; patt < _npatt && ckSwOpt; ++patt) {
-            if (ckRefit == -1) continue;
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
 			if (fitid < 0) continue;
@@ -1111,7 +1110,6 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         Bool_t kfSwOpt = false;
         Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
-            if (kfRefit == -1) continue;
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
 			int fitid = trtk->iTrTrackPar(trFit, 6, _patt[patt], kfRefit, recEv.mass, recEv.zin);
@@ -2128,14 +2126,11 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (mutr.status()) fHyc.mutr = std::move(processHCMu(mutr));
    
     // Mass from Track&Bta Fit
-    fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : -1.0;
-    if (!TrackSys::Numc::Valid(fHyc.massM1)) fHyc.massM1 = -1.0;
+    fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : 0.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM1)) fHyc.massM1 = 0.0;
     
-    fHyc.massM2 = (fHyc.trM2.at(0).status && fHyc.btaM2.status) ? std::fabs((fHyc.trM2.at(0).rig[1] / fHyc.btaM2.rig[1]) * fHyc.btaM2.mass) : -1.0;
-    if (!TrackSys::Numc::Valid(fHyc.massM2)) fHyc.massM2 = -1.0;
-
-    // testcode
-    //CERR("MU %d MASS %14.8f %14.8f %14.8f RIG %14.8f\n", mutr.status(), fHyc.mutr.mass, fHyc.massM1, fHyc.massM2, recEv.rigMS);
+    fHyc.massM2 = (fHyc.trM2.at(0).status && fHyc.btaM2.status) ? std::fabs((fHyc.trM2.at(0).rig[1] / fHyc.btaM2.rig[1]) * fHyc.btaM2.mass) : 0.0;
+    if (!TrackSys::Numc::Valid(fHyc.massM2)) fHyc.massM2 = 0.0;
 
     fStopwatch.stop();
 	return selectEvent(event);
@@ -2650,9 +2645,6 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
     if (recEv.zin > 2) return -99998;
-
-    // testcode
-    if (recEv.rigMS > 0) return -2;
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
