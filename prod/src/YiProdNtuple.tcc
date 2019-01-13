@@ -129,9 +129,6 @@ bool RecEvent::rebuild(AMSEventR * event) {
         signr = 0;
         if (rigMS > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
         if (rigMS < 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
-
-        // testcode
-        CERR("SIGN %2d RIG %14.8f %14.8f %14.8f %14.8f MS %14.8f\n", signr, rigIN, rigL1, rigL9, rigFS, rigMS);
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
