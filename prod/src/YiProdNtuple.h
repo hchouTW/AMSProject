@@ -120,8 +120,12 @@ class RecEvent {
         double qin;
         double mass;
         double beta;
-        double rig;
         double rigMS; // max span
+        double rigIN; // inner
+        double rigL1; // inner+L1
+        double rigL9; // inner+L9
+        double rigFS; // full span
+        short  signr;
         short  going; // (0, nothing   -1, down-going   1, up-going)
 
         double distECAL;

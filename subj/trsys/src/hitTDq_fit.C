@@ -4,7 +4,7 @@
 
 Double_t funclg (Double_t* x, Double_t* par) { return par[0] * TrackSys::LandauGaus::Func(x[0], par[1], par[2], par[3], par[4]); }
 
-Double_t funckpa(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncKpa(ibta, std::array<long double, 8>({par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7]})); }
+Double_t funckpa(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncKpa(ibta, std::array<long double, 7>({par[0], par[1], par[2], par[3], par[4], par[5], par[6]})); }
 Double_t funcmpv(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncMpv(ibta, std::array<long double, 6>({par[0], par[1], par[2], par[3], par[4], par[5]})); }
 
 int main(int argc, char * argv[]) {
@@ -13,11 +13,11 @@ int main(int argc, char * argv[]) {
     //Hist::AddDirectory();
 
     //Hist::Load("PR_hit_fill.root", "dat");
-    Hist::Load("HE4v2_hit_fill.root", "dat");
+    Hist::Load("HE4v3_hit_fill.root", "dat");
 
     // Fit
-    //Hist* hQ = Hist::Head("hTDq");
-    Hist* hQ = Hist::Head("hTDs");
+    Hist* hQ = Hist::Head("hTDq");
+    //Hist* hQ = Hist::Head("hTDs");
     std::vector<Hist*>&& vhQ = Hist::ProjectAll(HistProj::kY, hQ);
 
     const Axis& AXigb = hQ->xaxis();
@@ -32,7 +32,7 @@ int main(int argc, char * argv[]) {
     Hist* hQF = Hist::New("hQF", HistAxis(AXigb, "Fluc"));
     Hist* hQMOD = Hist::New("hQMOD", HistAxis(AXigb, "Mode"));
     
-    TF1* fkpa = new TF1("fkpa", funckpa, 0,   1, 8);
+    TF1* fkpa = new TF1("fkpa", funckpa, 0,   1, 7);
     TF1* fmpv = new TF1("fmpv", funcmpv, 0, 100, 6);
     TF1* fsgm = new TF1("fsgm", funcmpv, 0, 100, 6);
     TF1* fmod = new TF1("fmod", funcmpv, 0, 100, 6);
@@ -63,20 +63,28 @@ int main(int argc, char * argv[]) {
     //fmpv->SetParameters(5.17292e-01, 6.72552e+00, 4.93536e-01, 1.73039e+01, 4.75069e-01, 6.86345e+00);
     //fsgm->SetParameters(2.55399e-01, 7.67649e-01, 3.17313e-02, 2.83073e+00, 4.64441e-01, 6.52800e+00);
     //fmod->SetParameters(8.63297e-01, 6.62279e+00, 4.89280e-01, 1.71202e+01, 4.78403e-01, 6.91607e+00);
-    //Double_t fluc = 0.8;
+    ////Double_t fluc = 0.75;
+    //Double_t fluc = 0.0;
     //Bool_t isq = true;
     
     // He4 (TDs)
-    fkpa->SetParameters(7.47084e-01, 1.17180e+00, 4.69442e-01, 3.83918e-01, 5.18781e+00, 0.0, 0.0, 0.0);
-    fmpv->SetParameters(1.49998e+00, 2.02300e+00, 5.81187e-02, 7.36798e+00, 4.20838e-01, 5.92585e+00);
-    fsgm->SetParameters(8.24817e-01, 5.10777e-01, 0.00000e+00, 1.69321e+00, 4.01223e-01, 5.71100e+00);
-    fmod->SetParameters(1.50404e+00, 2.01905e+00, 5.81185e-02, 7.36787e+00, 4.20838e-01, 5.92503e+00);
+    //fkpa->SetParameters(7.47084e-01, 1.17180e+00, 4.69442e-01, 3.83918e-01, 5.18781e+00, 0.0, 0.0, 0.0);
+    //fmpv->SetParameters(1.49998e+00, 2.02300e+00, 5.81187e-02, 7.36798e+00, 4.20838e-01, 5.92585e+00);
+    //fsgm->SetParameters(8.24817e-01, 5.10777e-01, 0.00000e+00, 1.69321e+00, 4.01223e-01, 5.71100e+00);
+    //fmod->SetParameters(1.50404e+00, 2.01905e+00, 5.81185e-02, 7.36787e+00, 4.20838e-01, 5.92503e+00);
+    //Double_t fluc = 0.0;
+    //Bool_t isq = false;
+    
+    // He4 (TDq)
+    fkpa->SetParameters(4.63229e-01, 5.60790e-01, 1.56910e-01, 9.58806e-03, 3.30968e-01, 5.10023e-01, 6.75037e+00);
+    fmpv->SetParameters(5.58135e-01, 6.69278e+00, 4.82667e-01, 1.58721e+01, 4.66569e-01, 6.74538e+00);
+    fsgm->SetParameters(5.64276e-01, 6.61716e-01, 2.07511e-02, 2.62420e+00, 4.34123e-01, 6.16322e+00);
+    fmod->SetParameters(5.65984e-01, 6.68546e+00, 4.82667e-01, 1.58721e+01, 4.66569e-01, 6.74487e+00);
     Double_t fluc = 0.0;
-    Bool_t isq = false;
+    Bool_t isq = true;
    
     TF1* func = new TF1("func", funclg, 0, 40, 5);
     func->SetNpx(200000);
-
     for (int it = 1; it <= AXigb.nbin(); ++it) {
         COUT("Process IBIN %d/%d\n", it, AXigb.nbin());
         Double_t igb = AXigb.center(it, AxisScale::kLog);
@@ -93,8 +101,8 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(4, 0.0, 100.0*rms);
        
         func->FixParameter(1, fkpa->Eval(igb));
-        func->FixParameter(2, fmpv->Eval(igb));
-        func->FixParameter(3, fsgm->Eval(igb));
+        //func->FixParameter(2, fmpv->Eval(igb));
+        //func->FixParameter(3, fsgm->Eval(igb));
         func->FixParameter(4, fluc);
         
         mpv = func->GetParameter(2);

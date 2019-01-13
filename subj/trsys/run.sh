@@ -1,17 +1,18 @@
 #!/bin/bash
 Version=vdev
 Version=test
-#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/bta_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
-RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
 
 CurDir=${PWD}
 
-DataType=ISS
-Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
-#DataType=MC
+#DataType=ISS
+#Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
+DataType=MC
+Stream=${CurDir}/lst/flist.ncu.mc.HE4_250T_B1200_19Jan09
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.HE4_24000_B1200_18Sep21
 #Stream=${CurDir}/lst/flist.ncu.mc.PR_054000_B1200_18Oct17
@@ -24,11 +25,11 @@ Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
 OutputDir=${CurDir}/dat
 
 #Hit
-#GroupSize=40
-#Nseq=100
+GroupSize=20
+Nseq=230
 #Fit
-GroupSize=10
-Nseq=360
+#GroupSize=10
+#Nseq=360
 
 for id in `seq 0 ${Nseq}`
 do

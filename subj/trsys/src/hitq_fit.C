@@ -88,9 +88,9 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(3, 0.0, 100.0*rms);
         func->SetParLimits(4, 0.0, 100.0*rms);
        
-        func->FixParameter(1, fkpa->Eval(igb));
-        func->FixParameter(2, fmpv->Eval(igb));
-        func->FixParameter(3, fsgm->Eval(igb));
+        //func->FixParameter(1, fkpa->Eval(igb));
+        //func->FixParameter(2, fmpv->Eval(igb));
+        //func->FixParameter(3, fsgm->Eval(igb));
         func->FixParameter(4, fluc);
 
         (*vhQ.at(it))()->Fit(func, "q0", "");

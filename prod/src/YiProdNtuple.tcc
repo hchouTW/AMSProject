@@ -28,9 +28,13 @@ void RecEvent::init() {
     qin = 1;
     mass = 0.93827230;
     beta = 1;
-    rig  = 0;
     rigMS = 0;
+    rigIN = 0;
+    rigL1 = 0;
+    rigL9 = 0;
+    rigFS = 0;
     going = -1;
+    signr = 0;
 
     distECAL = -1;
     distTRD  = -1;
@@ -102,8 +106,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
             zin   = (qin <= 1.0) ? 1 : std::lrint(qin);
             mass  = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
-            rig   = TkStPar->GetRigidity(TkStID, 1); // z = 0
-            rigMS = rig;
+            rigMS = TkStPar->GetRigidity(TkStID, 1); // z = 0
         }
         MCEventgR* primaryMC = event->GetPrimaryMC();
         if (primaryMC != nullptr) {
@@ -112,7 +115,23 @@ bool RecEvent::rebuild(AMSEventR * event) {
             mass = primaryMC->Mass;
         }
         TkStID = TkStPar->iTrTrackPar(1, 3, 22, mass, zin);
-        if (TkStID >= 0) rig = TkStPar->GetRigidity(TkStID, 1); // z = 0
+        if (TkStID >= 0) rigIN = TkStPar->GetRigidity(TkStID, 1); // z = 0
+		
+        int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, 22, mass, zin);
+        if (TkStID_L1 >= 0) rigL1 = TkStPar->GetRigidity(TkStID_L1, 1); // z = 0
+        
+        int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, 22, mass, zin);
+        if (TkStID_L9 >= 0) rigL9 = TkStPar->GetRigidity(TkStID_L9, 1); // z = 0
+        
+        int TkStID_FS = TkStPar->iTrTrackPar(1, 7, 22, mass, zin);
+        if (TkStID_FS >= 0) rigFS = TkStPar->GetRigidity(TkStID_FS, 1); // z = 0
+       
+        signr = 0;
+        if (rigMS > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
+        if (rigMS < 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
+
+        // testcode
+        CERR("SIGN %2d RIG %14.8f %14.8f %14.8f %14.8f MS %14.8f\n", signr, rigIN, rigL1, rigL9, rigFS, rigMS);
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
@@ -1044,7 +1063,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
         // Choutko
         Bool_t ckSwOpt = true;
-        Int_t ckRefit = 22;
+        Int_t ckRefit = 21; // check fit in recEv
 		for (int patt = 0; patt < _npatt && ckSwOpt; ++patt) {
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
@@ -2653,7 +2672,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         double maxIGRF    = (*std::max_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
        
         // select event below cutoff
-        if (TrackSys::Numc::Compare(recEv.rigMS) > 0) {
+        if (recEv.signr > 0) {
             double wpar[2] = { 0.2, 0.8 };
             double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMS));
             double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logCF);
@@ -2664,7 +2683,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     }
     
     // ~8~ (Scale events from proton and helium in the flight data)
-    if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && TrackSys::Numc::Compare(recEv.rigMS) > 0) {
+    if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && recEv.signr > 0) {
         const double cutoff = 50.0; // current
         double wpar[2] = { 1.0, 0.0 };
        
@@ -2672,13 +2691,13 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
             if (!hasTrL1o9XY)                  { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // Inn
             else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // InnL1
             else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // FS
         }
         else if (recEv.zin == 2) { // helium
             if (!hasTrL1o9XY)                  { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // Inn
             else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // InnL1
             else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // FS
         }
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMS));

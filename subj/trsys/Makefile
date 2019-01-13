@@ -7,7 +7,7 @@ TagetDir = $(AMSCoreSubj)/trsys/vdev
 TagetDir = $(AMSCoreSubj)/trsys/test
 
 #Version=18Oct17
-Version=19Jan08
+Version=19Jan09
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -36,7 +36,7 @@ all :
 	#make $(TagetDir)/time_fill
 	#make $(TagetDir)/time_fit
 	#make $(TagetDir)/hit_fill
-	#make $(TagetDir)/hitTDq_fit
+	make $(TagetDir)/hitTDq_fit
 	#make $(TagetDir)/hitt_fit
 	#make $(TagetDir)/hitc_fit
 	#make $(TagetDir)/prop_fill
@@ -45,7 +45,7 @@ all :
 	#make $(TagetDir)/bta_fit
 	#make $(TagetDir)/track_fill
 	#make $(TagetDir)/track_fit
-	make $(TagetDir)/mu_fill
+	#make $(TagetDir)/mu_fill
 	#make $(TagetDir)/mu_fit
 
 $(TagetDir)/obj/time_fill.o : $(TagetDir)/src/time_fill.C

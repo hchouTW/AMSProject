@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Jan09/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -57,9 +57,9 @@ int main(int argc, char * argv[]) {
     
     Double_t mombd[2] = { 1., 1000. };
     if (info.type() == PartType::Proton)  { mombd[0] = 0.55; mombd[1] = 3800.0; }
-    if (info.type() == PartType::Helium4) { mombd[0] = 2.20; mombd[1] = 15200.0; }
+    if (info.type() == PartType::Helium4) { mombd[0] = 2.20; mombd[1] = 45000.0; }
     if (info.type() == PartType::Carbon12) { mombd[0] = 5.00; mombd[1] = 10000.0; }
-    Axis AXmom("Momentum [GeV]", 100, mombd[0], mombd[1], AxisScale::kLog);
+    Axis AXmom("Momentum [GeV]", 150, mombd[0], mombd[1], AxisScale::kLog);
     
     Axis AXigb("1/GammaBeta [1]", AXmom.nbin(), info.mass()/AXmom.max(), info.mass()/AXmom.min(), AxisScale::kLog);
     Double_t lbta = std::sqrt(1.0+AXigb.min()*AXigb.min());
@@ -88,12 +88,10 @@ int main(int argc, char * argv[]) {
     
     Axis AXTDn("TDn", 30, 0., 30.);
     Axis AXTDc("TDc", 60, 85., 145.);
-    Axis AXTDq("TDq", 1200, 0.3 * info.chrg() * info.chrg(), 30.0 * info.chrg() * info.chrg());
+    Axis AXTDq("TDq", 400, 0.3 * info.chrg() * info.chrg(), 20.0 * info.chrg() * info.chrg());
     Hist* hTDn  = Hist::New("hTDn", HistAxis(AXigb, AXTDn));
-    Hist* hTDq  = Hist::New("hTDq", HistAxis(AXigb, AXTDq));
-    Hist* hTDs  = Hist::New("hTDs", HistAxis(AXigb, AXTDq));
     Hist* hTDc  = Hist::New("hTDc", HistAxis(AXigb, AXTDc));
-    Hist* hTDqb = Hist::New("hTDqb", HistAxis(AXigb, AXTDq));
+    Hist* hTDq  = Hist::New("hTDq", HistAxis(AXigb, AXTDq));
     
     Axis AXTFtme("TFtme", 800, -25, 25);
     Hist* hTFtme = Hist::New("hTFtme", HistAxis(AXigb, AXTFtme));
@@ -250,25 +248,20 @@ int main(int argc, char * argv[]) {
             if (fRich->kind == 0) hAGLib->fillH2D(igb, dlt);
             if (fRich->kind == 1) hNAFib->fillH2D(igb, dlt);
 
-            for (Int_t ih = 0; ih < fRich->nhit; ++ih) {
-                Double_t ddlt = (1.0/fRich->dbta.at(ih) - 1.0/st.bta());
-                Double_t rdlt = (1.0/fRich->rbta.at(ih) - 1.0/st.bta());
-                Double_t dlt  = (std::fabs(ddlt) < std::fabs(rdlt)) ? ddlt : rdlt;
+            for (auto&& hit : fRich->uhits) {
+                Double_t dlt = (1.0/hit.bta - 1.0/st.bta());
                 if (fRich->kind == 0) hAGLibElem->fillH2D(igb, dlt);
                 if (fRich->kind == 1) hNAFibElem->fillH2D(igb, dlt);
-                if (fRich->kind == 0 && igb < 0.1) hAGLibnpe->fillH2D(dlt, fRich->npe.at(ih));
-                if (fRich->kind == 1 && igb < 0.1) hNAFibnpe->fillH2D(dlt, fRich->npe.at(ih));
+                if (fRich->kind == 0 && igb < 0.1) hAGLibnpe->fillH2D(dlt, hit.npe);
+                if (fRich->kind == 1 && igb < 0.1) hNAFibnpe->fillH2D(dlt, hit.npe);
             }
         }
         
         // TRD
-        if (fTrd->statusKCls[0] && fTrd->recHits.size() >= 5) {
-            hTDn->fill(info.mass()/fTrd->recMcMom, fTrd->recNh);
-            hTDq->fill(info.mass()/fTrd->recMcMom, fTrd->recMen);
-            hTDs->fill(info.mass()/fTrd->recMcMom, fTrd->recSgm);
-            hTDc->fill(info.mass()/fTrd->recMcMom, fTrd->recCz);
-            
-            for (auto&& elem : fTrd->recHits) hTDqb->fill(info.mass()/fTrd->recMcMom, elem);
+        if (fTrd->ITstatus[0]) {
+            hTDn->fill(info.mass()/fTrd->ITMcMom[0], fTrd->ITnh[0]);
+            hTDc->fill(info.mass()/fTrd->ITMcMom[0], fTrd->ITcz[0]);
+            hTDq->fill(info.mass()/fTrd->ITMcMom[0], fTrd->ITdEdX[0]);
         }
     }
 
