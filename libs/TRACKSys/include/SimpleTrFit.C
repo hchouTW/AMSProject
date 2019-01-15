@@ -649,8 +649,7 @@ Bool_t SimpleTrFit::evolve() {
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->selm()) chi_ib += hitTRD->chielm() * hitTRD->chielm();
-            if (hitTRD->sels()) chi_ib += hitTRD->chiels() * hitTRD->chiels();
+            if (hitTRD->sel()) chi_ib += hitTRD->chiel() * hitTRD->chiel();
         }
         
         if (hasCxy) {
@@ -992,14 +991,9 @@ bool VirtualSimpleTrFit::Evaluate(const double* parameters, double* cost, double
         // TRD
         HitStTRD* hitTRD = Hit<HitStTRD>::Cast(hit);
         if (hitTRD != nullptr) {
-            if (hitTRD->selm()) costIb += hitTRD->chielm() * hitTRD->chielm();
-            if (hitTRD->sels()) costIb += hitTRD->chiels() * hitTRD->chiels();
-
-            if (hasGrd && hitTRD->selm()) grdIb(4) += (hitTRD->divelm_eta() * jbGG(4, 4)) * hitTRD->nrmelm();
-            if (hasGrd && hitTRD->sels()) grdIb(4) += (hitTRD->divels_eta() * jbGG(4, 4)) * hitTRD->nrmels();
-            
-            if (hasGrd && hitTRD->selm()) hesIb(4, 4) += (hitTRD->divelm_eta() * jbGG(4, 4)) * (hitTRD->divelm_eta() * jbGG(4, 4));
-            if (hasGrd && hitTRD->sels()) hesIb(4, 4) += (hitTRD->divels_eta() * jbGG(4, 4)) * (hitTRD->divels_eta() * jbGG(4, 4));
+            if (hitTRD->sel()) costIb += hitTRD->chiel() * hitTRD->chiel();
+            if (hasGrd && hitTRD->sel()) grdIb(4) += (hitTRD->divel_eta() * jbGG(4, 4)) * hitTRD->nrmel();
+            if (hasGrd && hitTRD->sel()) hesIb(4, 4) += (hitTRD->divel_eta() * jbGG(4, 4)) * (hitTRD->divel_eta() * jbGG(4, 4));
         }
         
         if (hasCxy) {

@@ -28,7 +28,7 @@ void RecEvent::init() {
     qin = 1;
     mass = 0.93827230;
     beta = 1;
-    rigMS = 0;
+    rigMAX = 0;
     rigIN = 0;
     rigL1 = 0;
     rigL9 = 0;
@@ -104,9 +104,9 @@ bool RecEvent::rebuild(AMSEventR * event) {
             //TkStPar->GetQYJ_all();
             //qin = TkStPar->GetInnerQYJ(innerq_rms, innerq_patt, 2, beta, TkStID);
 
-            zin   = (qin <= 1.0) ? 1 : std::lrint(qin);
-            mass  = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
-            rigMS = TkStPar->GetRigidity(TkStID, 1); // z = 0
+            zin    = (qin <= 1.0) ? 1 : std::lrint(qin);
+            mass   = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
+            rigMAX = std::fabs(TkStPar->GetRigidity(TkStID, 1)); // z = 0
         }
         MCEventgR* primaryMC = event->GetPrimaryMC();
         if (primaryMC != nullptr) {
@@ -116,19 +116,23 @@ bool RecEvent::rebuild(AMSEventR * event) {
         }
         TkStID = TkStPar->iTrTrackPar(1, 3, 22, mass, zin);
         if (TkStID >= 0) rigIN = TkStPar->GetRigidity(TkStID, 1); // z = 0
-		
+		if (TkStID >= 0) rigMAX = std::fabs(rigIN);
+
         int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, 22, mass, zin);
         if (TkStID_L1 >= 0) rigL1 = TkStPar->GetRigidity(TkStID_L1, 1); // z = 0
+		if (TkStID_L1 >= 0) rigMAX = std::max(std::fabs(rigL1), rigMAX);
         
         int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, 22, mass, zin);
         if (TkStID_L9 >= 0) rigL9 = TkStPar->GetRigidity(TkStID_L9, 1); // z = 0
+		if (TkStID_L9 >= 0) rigMAX = std::max(std::fabs(rigL9), rigMAX);
         
         int TkStID_FS = TkStPar->iTrTrackPar(1, 7, 22, mass, zin);
         if (TkStID_FS >= 0) rigFS = TkStPar->GetRigidity(TkStID_FS, 1); // z = 0
+		if (TkStID_FS >= 0) rigMAX = std::max(std::fabs(rigFS), rigMAX);
        
         signr = 0;
-        if (rigMS > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
-        if (rigMS < 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
+        if (rigMAX > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
+        if (rigMAX > 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
@@ -1436,9 +1440,9 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         if (hits.size() <= 2) continue;
         std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, mcMom, cooz, amp, len)
         for (auto&& hit : hits) {
-            if (hit.dEdX <= 0) continue;
-            if (hit.amp < 0.0001) continue;
-            if (hit.len < 0.2500) continue;
+            if (hit.amp < 0.05) continue;
+            if (hit.len < 0.30) continue;
+            if (hit.dEdX < 0.2) continue;
             dEdX.push_back(std::make_tuple(hit.dEdX, hit.mcMom, hit.cz, hit.amp, hit.len));
         }
         if (dEdX.size() <= 2) continue;
@@ -2455,11 +2459,6 @@ void DataSelection::setEnvironment() {
 	rich.setEnvironment();
 	ecal.setEnvironment();
 	hyc.setEnvironment();
-
-  // set scale function
-  DataSelection::gScaleFact = 0.02;
-  DataSelection::gScaleFunc1D.SetParameter(0, DataSelection::gScaleFact);
-  DataSelection::gScaleFunc2D.SetParameter(0, DataSelection::gScaleFact);
 }
 
 int DataSelection::processEvent(AMSEventR * event, AMSChain * chain) {
@@ -2671,7 +2670,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         // select event below cutoff
         if (recEv.signr > 0) {
             double wpar[2] = { 0.2, 0.8 };
-            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMS));
+            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMAX));
             double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logCF);
             double rndm    = TrackSys::Rndm::DecimalUniform();
             if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
@@ -2697,7 +2696,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
             else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // FS
         }
 
-        double logir = std::log(std::fabs(cutoff / recEv.rigMS));
+        double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logir);
         double rndm  = TrackSys::Rndm::DecimalUniform();
         if (TrackSys::Numc::Compare(rndm, thres) > 0) return -8001;

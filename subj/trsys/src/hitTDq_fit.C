@@ -5,7 +5,7 @@
 Double_t funclg (Double_t* x, Double_t* par) { return par[0] * TrackSys::LandauGaus::Func(x[0], par[1], par[2], par[3], par[4]); }
 
 Double_t funckpa(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncKpa(ibta, std::array<long double, 7>({par[0], par[1], par[2], par[3], par[4], par[5], par[6]})); }
-Double_t funcmpv(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncMpv(ibta, std::array<long double, 6>({par[0], par[1], par[2], par[3], par[4], par[5]})); }
+Double_t funcmpv(Double_t* x, Double_t* par) { long double ibta = std::hypot(1.0, x[0]); return TrackSys::IonTrEloss::FuncMpv(ibta, std::array<long double, 10>({par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9]})); }
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -33,9 +33,9 @@ int main(int argc, char * argv[]) {
     Hist* hQMOD = Hist::New("hQMOD", HistAxis(AXigb, "Mode"));
     
     TF1* fkpa = new TF1("fkpa", funckpa, 0,   1, 7);
-    TF1* fmpv = new TF1("fmpv", funcmpv, 0, 100, 6);
-    TF1* fsgm = new TF1("fsgm", funcmpv, 0, 100, 6);
-    TF1* fmod = new TF1("fmod", funcmpv, 0, 100, 6);
+    TF1* fmpv = new TF1("fmpv", funcmpv, 0, 100, 10);
+    TF1* fsgm = new TF1("fsgm", funcmpv, 0, 100, 10);
+    TF1* fmod = new TF1("fmod", funcmpv, 0, 100, 10);
     
     //TF1* fkpa = new TF1("fkpa", "0.5*(1+TMath::Erf([0]*log(x*x)-[1])) + [2]*0.5*TMath::Erfc([3]*log(x*x)+[4]) + [5]*0.5*TMath::Erfc([6]*log(x*x)+[7])");
     //TF1* fmpv = new TF1("fmpv", "[0] + [1] * (1+x*x) - [2] * TMath::Log((x*x)) + [3] * 0.5 * TMath::Erfc([4] * log(x*x) + [5])");
@@ -76,12 +76,11 @@ int main(int argc, char * argv[]) {
     //Bool_t isq = false;
     
     // He4 (TDq)
-    fkpa->SetParameters(4.63229e-01, 5.60790e-01, 1.56910e-01, 9.58806e-03, 3.30968e-01, 5.10023e-01, 6.75037e+00);
-    fmpv->SetParameters(5.58135e-01, 6.69278e+00, 4.82667e-01, 1.58721e+01, 4.66569e-01, 6.74538e+00);
-    fsgm->SetParameters(5.64276e-01, 6.61716e-01, 2.07511e-02, 2.62420e+00, 4.34123e-01, 6.16322e+00);
-    fmod->SetParameters(5.65984e-01, 6.68546e+00, 4.82667e-01, 1.58721e+01, 4.66569e-01, 6.74487e+00);
+    fkpa->SetParameters(4.64173e-01, 5.76225e-01, 1.95796e-01, 1.24523e-02, 2.52173e-01, 6.21123e-01, 7.99860e+00);
+    fmpv->SetParameters(-4.36915e+00, 1.14534e+01, 7.03697e-01, 5.27722e-01, 4.75415e+00, 7.34352e-01, 9.79897e+00, 1.08747e+01, 5.18116e-01, 7.82150e+00);
+    fsgm->SetParameters(-8.58152e-01, 2.10421e+00, 4.02927e-01, 2.70797e-02, 6.10239e-01, 7.70214e-01, 1.00874e+01, 1.69976e+00, 4.55862e-01, 6.77782e+00);
+    fmod->SetParameters(-4.36915e+00, 1.14534e+01, 7.03697e-01, 5.27722e-01, 4.75415e+00, 7.34352e-01, 9.79897e+00, 1.08747e+01, 5.18116e-01, 7.82150e+00);
     Double_t fluc = 0.0;
-    Bool_t isq = true;
    
     TF1* func = new TF1("func", funclg, 0, 40, 5);
     func->SetNpx(200000);
@@ -101,29 +100,29 @@ int main(int argc, char * argv[]) {
         func->SetParLimits(4, 0.0, 100.0*rms);
        
         func->FixParameter(1, fkpa->Eval(igb));
-        //func->FixParameter(2, fmpv->Eval(igb));
-        //func->FixParameter(3, fsgm->Eval(igb));
+        func->FixParameter(2, fmpv->Eval(igb));
+        func->FixParameter(3, fsgm->Eval(igb));
         func->FixParameter(4, fluc);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+7*rms);
-        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+4*rms);
+        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+7*rms);
+        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-3*rms, mpv+4*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+3*rms);
+        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+3*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
+        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
         
         mpv = func->GetParameter(2);
         rms = std::hypot(func->GetParameter(3), func->GetParameter(4));
-        if (isq) (*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
-        else     (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
+        //(*vhQ.at(it))()->Fit(func, "q0", "", mpv-2*rms, mpv+6*rms);
+        (*vhQ.at(it))()->Fit(func, "q0", "", mpv-1.5*rms, mpv+2.5*rms);
         CERR("FIT == KPA %14.8f MPV %14.8f SMG %14.8f FLUC %14.8f\n", func->GetParameter(1), func->GetParameter(2), func->GetParameter(3), func->GetParameter(4));
         
         (*hQK)()->SetBinContent(it, func->GetParameter(1));

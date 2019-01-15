@@ -1,10 +1,10 @@
 #!/bin/bash
 Version=vdev
 Version=test
-RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
+#RunFile=${AMSCore}/subj/trsys/${Version}/hit_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/prop_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/bta_fill
-#RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
+RunFile=${AMSCore}/subj/trsys/${Version}/track_fill
 #RunFile=${AMSCore}/subj/trsys/${Version}/mu_fill
 
 CurDir=${PWD}
@@ -25,11 +25,11 @@ Stream=${CurDir}/lst/flist.ncu.mc.HE4_250T_B1200_19Jan09
 OutputDir=${CurDir}/dat
 
 #Hit
-GroupSize=20
-Nseq=230
+#GroupSize=20
+#Nseq=230
 #Fit
-#GroupSize=10
-#Nseq=360
+GroupSize=15
+Nseq=300
 
 for id in `seq 0 ${Nseq}`
 do

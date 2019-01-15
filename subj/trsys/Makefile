@@ -36,15 +36,15 @@ all :
 	#make $(TagetDir)/time_fill
 	#make $(TagetDir)/time_fit
 	#make $(TagetDir)/hit_fill
-	make $(TagetDir)/hitTDq_fit
+	#make $(TagetDir)/hitTDq_fit
 	#make $(TagetDir)/hitt_fit
 	#make $(TagetDir)/hitc_fit
 	#make $(TagetDir)/prop_fill
 	#make $(TagetDir)/prop_fit
 	#make $(TagetDir)/bta_fill
 	#make $(TagetDir)/bta_fit
-	#make $(TagetDir)/track_fill
-	#make $(TagetDir)/track_fit
+	make $(TagetDir)/track_fill
+	make $(TagetDir)/track_fit
 	#make $(TagetDir)/mu_fill
 	#make $(TagetDir)/mu_fit
 

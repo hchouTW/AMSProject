@@ -357,67 +357,41 @@ class HitStTRD : public VirtualHitSt {
         void cal(const PhySt& part);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
-        inline void set_el(Double_t elm, Double_t els) {
-            Bool_t side_el = (Numc::Compare(elm) > 0 && Numc::Compare(els) > 0);
-            elm_ = (side_el ? elm : Numc::ZERO<>);
-            els_ = (side_el ? els : Numc::ZERO<>);
-           
-            side_elm_ = side_el;
-            chielm_   = Numc::ZERO<>;
-            nrmelm_   = Numc::ZERO<>;
-            divelm_.fill(Numc::ZERO<>);
-            
-            side_els_ = side_el;
-            chiels_   = Numc::ZERO<>;
-            nrmels_   = Numc::ZERO<>;
-            divels_.fill(Numc::ZERO<>);
+        inline void set_el(Double_t el) {
+            side_el_ = (Numc::Compare(el) > 0);
+            el_      = (side_el_ ? el : Numc::ZERO<>);
+            chiel_   = Numc::ZERO<>;
+            nrmel_   = Numc::ZERO<>;
+            divel_.fill(Numc::ZERO<>);
         }
         
-        inline const Double_t& elm() const { return elm_; }
-        inline const Double_t& els() const { return els_; }
+        inline const Double_t& el() const { return el_; }
 
-        inline const Short_t& seqIDelm() const { return seqIDelm_; }
-        inline const Short_t& seqIDels() const { return seqIDels_; }
+        inline const Short_t& seqIDel() const { return seqIDel_; }
         
-        inline const Bool_t&   selm() const { return side_elm_; }
-        inline const Double_t& chielm() const { return chielm_; }
-        inline const Double_t& nrmelm() const { return nrmelm_; }
-        inline const Double_t& divelm_ibta() const { return divelm_[0]; }
-        inline const Double_t& divelm_eta()  const { return divelm_[1]; }
-        
-        inline const Bool_t&   sels() const { return side_els_; }
-        inline const Double_t& chiels() const { return chiels_; }
-        inline const Double_t& nrmels() const { return nrmels_; }
-        inline const Double_t& divels_ibta() const { return divels_[0]; }
-        inline const Double_t& divels_eta()  const { return divels_[1]; }
+        inline const Bool_t&   sel() const { return side_el_; }
+        inline const Double_t& chiel() const { return chiel_; }
+        inline const Double_t& nrmel() const { return nrmel_; }
+        inline const Double_t& divel_ibta() const { return divel_[0]; }
+        inline const Double_t& divel_eta()  const { return divel_[1]; }
         
     protected :
         void clear();
 
     protected :
-        Short_t seqIDelm_;
-        Short_t seqIDels_;
+        Short_t seqIDel_;
         
-        Bool_t   side_elm_;
-        Double_t elm_; // energy loss dE/dx mean
-        Double_t chielm_; // dE/dx chi
-        Double_t nrmelm_; // dE/dx nrom
-        std::array<Double_t, 2> divelm_; // dE/dx div (ibta) [ibta, eta]
+        Bool_t   side_el_;
+        Double_t el_; // energy loss dE/dx mean
+        Double_t chiel_; // dE/dx chi
+        Double_t nrmel_; // dE/dx nrom
+        std::array<Double_t, 2> divel_; // dE/dx div (ibta) [ibta, eta]
         
-        Bool_t   side_els_;
-        Double_t els_; // energy loss dE/dx sigma
-        Double_t chiels_; // dE/dx chi
-        Double_t nrmels_; // dE/dx nrom
-        std::array<Double_t, 2> divels_; // dE/dx div (ibta) [ibta, eta]
-
-        IonTrEloss* pdf_elm_;
-        IonTrEloss* pdf_els_;
+        IonTrEloss* pdf_el_;
     
     protected :
-        static IonTrEloss PDF_Q01_EL_MEN_;
-        static IonTrEloss PDF_Q01_EL_SGM_;
-        static IonTrEloss PDF_Q02_EL_MEN_;
-        static IonTrEloss PDF_Q02_EL_SGM_;
+        static IonTrEloss PDF_Q01_EL_;
+        static IonTrEloss PDF_Q02_EL_;
 };
 
 

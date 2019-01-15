@@ -44,6 +44,12 @@
     TF1* fmpv4 = new TF1("fmpv4", "[0] + [1] * (1+x*x) - [2] * TMath::Log(1.0e-10+(x*x)) + [3] * 0.5 * TMath::Erfc([4] * log(x*x) + [5])");
     fmpv4->SetParameters(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
     
+    TF1* fmpv5 = new TF1("fmpv5", "[0] + [1] * TMath::Power((1+x*x), [2]) - [3] * TMath::Log(1.0e-10+(x*x)) + [4] * 0.5 * TMath::Erfc([5] * log(x*x) + [6])");
+    fmpv5->SetParameters(1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0);
+    
+    TF1* fmpv6 = new TF1("fmpv6", "[0] + [1] * TMath::Power((1+x*x), [2]) - [3] * TMath::Log(1.0e-10+(x*x)) + [4] * 0.5 * TMath::Erfc([5] * log(x*x) + [6]) + [7] * 0.5 * TMath::Erfc([8] * log(x*x) + [9])");
+    fmpv6->SetParameters(1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0);
+    
     TF1* ftme = new TF1("ftme", "[0] + [1] * TMath::Erfc([2] * (1+x*x)^[3] - [4])");
     ftme->SetParameters(2.13914e+00, 2.40467e-01, 7.71764e+01, 1.70279e-02, 7.76559e+01);
     

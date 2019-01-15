@@ -120,7 +120,7 @@ class RecEvent {
         double qin;
         double mass;
         double beta;
-        double rigMS; // max span
+        double rigMAX; // max rigidity
         double rigIN; // inner
         double rigL1; // inner+L1
         double rigL9; // inner+L9
@@ -409,18 +409,7 @@ class DataSelection {
 		EventRich rich;
 		EventEcal ecal;
 		EventHyc  hyc;
-
-	public :
-		static Float_t gScaleFact;
-		//static TF1     gScaleFunc1D; // (chrg)
-		static TF1     gScaleFunc1D; // (rig)
-		static TF2     gScaleFunc2D; // (rig, chrg)
 };
-
-Float_t DataSelection::gScaleFact = 0.02;
-//TF1     DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(x*x-6.0))", 0, 10);
-TF1     DataSelection::gScaleFunc1D("gScaleFunc1D", "0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000);
-TF2     DataSelection::gScaleFunc2D("gScaleFunc2D", "0.5*((1.0+0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))+(1.0-0.5*((1.0+[0])+(1.0-[0])*TMath::Erf(y*y-6.0)))*TMath::Erf(0.75*(TMath::Log(TMath::Abs(x))-4.5)))*(x>0)+(x<=0)", -2000, 2000, 0, 10);
 
 
 //---- RunTagOperator ----//

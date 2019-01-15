@@ -14,7 +14,7 @@ int main(int argc, char * argv[]) {
 
     // Fit
     Hist* hCKRrso = Hist::Head("hCKRrso");
-    Hist* hHCRrso = Hist::Head("hHCRrso2");
+    Hist* hHCRrso = Hist::Head("hHCRrso4");
     
     const Axis& AXmom = hCKRrso->xaxis();
     
@@ -31,14 +31,15 @@ int main(int argc, char * argv[]) {
     
     Hist* hHCCKRrsoS = Hist::New("hHCCKRrsoS", HistAxis(AXmom, "HYChou/Choutko Sigma Ratio [1]"));
    
-    //const Double_t stable = 1.7;
-    const Double_t stable = 2.0;
+    const Double_t stable = 1.7;
+    //const Double_t stable = 2.0;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
     std::vector<Hist*> vhCKRrso = Hist::ProjectAll(HistProj::kY, hCKRrso);
     std::vector<Hist*> vhHCRrso = Hist::ProjectAll(HistProj::kY, hHCRrso);
 
     for (int it = 1; it <= AXmom.nbin(); ++it) {
         Double_t bincen = std::sqrt(AXmom.center(it, AxisScale::kLog));
+        gaus->FixParameter(1, 0);
 
         // Choutko
         Double_t CKRmax = (*vhCKRrso.at(it))()->GetBinCenter((*vhCKRrso.at(it))()->GetMaximumBin());

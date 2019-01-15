@@ -7,12 +7,12 @@ RunFile=${AMSCore}/subj/appStudy/${Version}/fill
 CurDir=${PWD}
 
 DataType=ISS
-Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan08
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan12
 
 OutputDir=${CurDir}/dat
 
-GroupSize=30
-Nseq=120
+GroupSize=40
+Nseq=180
 
 for id in `seq 0 ${Nseq}`
 do
