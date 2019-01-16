@@ -93,6 +93,8 @@ bool RecEvent::rebuild(AMSEventR * event) {
 	if (iTrTrack >= 0) {
 		TkStPar = event->pTrTrack(iTrTrack);
         TkStID = TkStPar->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
+        if (TkStID < 0) TkStID = TkStPar->iTrTrackPar(1, 3, 23);
+
         if (TkStID >= 0) {
             // Qrecon: Hu Liu
             TkStPar->GetQH_all(); // confirm rec-chrg work
@@ -114,6 +116,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
             qin  = static_cast<double>(zin);
             mass = primaryMC->Mass;
         }
+
         TkStID = TkStPar->iTrTrackPar(1, 3, 22, mass, zin);
         if (TkStID >= 0) rigIN = TkStPar->GetRigidity(TkStID, 1); // z = 0
 		if (TkStID >= 0) rigMAX = std::fabs(rigIN);
