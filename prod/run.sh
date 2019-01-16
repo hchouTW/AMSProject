@@ -11,6 +11,7 @@ CurDir=${PWD}
 DataType=ISS
 Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.ncu.iss.B1130.pass7
+#Stream=${CurDir}/lst/flist.loc.iss.B1130.pass7
 #DataType=MC
 #Stream=${CurDir}/lst/flist.cern.mc.el.pl1.025500.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.pr.pl1.l1.054000.B1200
@@ -23,6 +24,7 @@ Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 
 GroupId=50
 GroupId=39912
+#GroupId=0
 GroupSize=1
 OutputDir=.
 

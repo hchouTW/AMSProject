@@ -2129,7 +2129,6 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (trM2TkL9All.status()) fHyc.trM2All.at(2) = std::move(processHCTr(trM2TkL9All));
     if (trM2TkFsAll.status()) fHyc.trM2All.at(3) = std::move(processHCTr(trM2TkFsAll));
 
-    // Beta Fitting with the TOF time measurements
     // Beta Fitting with the all measurements
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_bta = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, false, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
@@ -2662,7 +2661,10 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
-    if (recEv.zin > 2) return -99998;
+    if (recEv.qin < 0.5) return -99998;
+    if (recEv.zin != 1) return -99997;
+
+    //if (recEv.signr >= 0) return -99990; // testcode
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
@@ -2672,18 +2674,18 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
        
         // select event below cutoff
         if (recEv.signr > 0) {
-            double wpar[2] = { 0.2, 0.8 };
+            double wpar[2] = { 0.1, 0.9 };
             double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMAX));
-            double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logCF);
+            double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logCF);
             double rndm    = TrackSys::Rndm::DecimalUniform();
             if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
-	        EventList::Weight /= thresCF;
+	        if (!TrackSys::Numc::EqualToZero(thresCF - TrackSys::Numc::ONE<>)) EventList::Weight /= thresCF;
         }
     }
     
     // ~8~ (Scale events from proton and helium in the flight data)
     if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && recEv.signr > 0) {
-        const double cutoff = 50.0; // current
+        const double cutoff = 70.0; // current
         double wpar[2] = { 1.0, 0.0 };
        
         if (recEv.zin == 1) { // proton
@@ -2703,7 +2705,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logir);
         double rndm  = TrackSys::Rndm::DecimalUniform();
         if (TrackSys::Numc::Compare(rndm, thres) > 0) return -8001;
-	    EventList::Weight /= thres;
+	    if (!TrackSys::Numc::EqualToZero(thres - TrackSys::Numc::ONE<>)) EventList::Weight /= thres;
     }
 
 	return 0;
