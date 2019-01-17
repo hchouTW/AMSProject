@@ -185,7 +185,8 @@ int main(int argc, char * argv[]) {
     
     Hist* hM2llx = Hist::New("hM2llx", HistAxis(AXmass, AXqlt, "Events/Bin"));
     Hist* hM2lly = Hist::New("hM2lly", HistAxis(AXmass, AXqlt, "Events/Bin"));
-    
+   
+
     // Choutko
     Hist* hCKPRTRDllr = Hist::New("hCKPRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
     Hist* hCKNRTRDllr = Hist::New("hCKNRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
@@ -215,6 +216,20 @@ int main(int argc, char * argv[]) {
     Hist* hCKLmass = Hist::New("hCKLmass", HistAxis(AXmass, "Events/Bin"));
     Hist* hCKLmassC1 = Hist::New("hCKLmassC1", HistAxis(AXmass, "Events/Bin"));
     Hist* hCKLmassC2 = Hist::New("hCKLmassC2", HistAxis(AXmass, "Events/Bin"));
+    
+    Axis AXq("Q", 800, 0.0, 3.0);
+    Hist* hQL1   = Hist::New("hQL1",   HistAxis(AXmass, AXq, "Events/Bin"));
+    Hist* hPRQL1 = Hist::New("hPRQL1", HistAxis(AXq, "Events/Bin"));
+    Hist* hNRQL1 = Hist::New("hNRQL1", HistAxis(AXq, "Events/Bin"));
+    
+    Hist* hQL2   = Hist::New("hQL2",   HistAxis(AXmass, AXq, "Events/Bin"));
+    Hist* hPRQL2 = Hist::New("hPRQL2", HistAxis(AXq, "Events/Bin"));
+    Hist* hNRQL2 = Hist::New("hNRQL2", HistAxis(AXq, "Events/Bin"));
+    
+    Hist* hQL9   = Hist::New("hQL9",   HistAxis(AXmass, AXq, "Events/Bin"));
+    Hist* hPRQL9 = Hist::New("hPRQL9", HistAxis(AXq, "Events/Bin"));
+    Hist* hNRQL9 = Hist::New("hNRQL9", HistAxis(AXq, "Events/Bin"));
+
     
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -490,6 +505,18 @@ int main(int argc, char * argv[]) {
         
         if (islowAll && mutr.status && mugood) hM2llx->fillH2D(musign * mutr.mass, hctrAll2->qlt[0], fList->weight * (musign>0?0.001:1.0));
         if (islowAll && mutr.status && mugood) hM2lly->fillH2D(musign * mutr.mass, hctrAll2->qlt[1], fList->weight * (musign>0?0.001:1.0));
+        
+        if (islowAll && mutr.status && mugood && cktrL1.status && fTrk->QL1 > 0) hQL1->fillH2D(musign * mutr.mass, fTrk->QL1, fList->weight * (musign>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood && cktrL1.status && fTrk->QL1 > 0 && mutr.rig[0] > 0) hPRQL1->fillH1D(fTrk->QL1, fList->weight);
+        if (islowAll && mutr.status && mugood && cktrL1.status && fTrk->QL1 > 0 && mutr.rig[0] < 0) hNRQL1->fillH1D(fTrk->QL1, fList->weight);
+        
+        if (islowAll && mutr.status && mugood && fTrk->QL2 > 0) hQL2->fillH2D(musign * mutr.mass, fTrk->QL2, fList->weight * (musign>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood && fTrk->QL2 > 0 && mutr.rig[0] > 0) hPRQL2->fillH1D(fTrk->QL2, fList->weight);
+        if (islowAll && mutr.status && mugood && fTrk->QL2 > 0 && mutr.rig[0] < 0) hNRQL2->fillH1D(fTrk->QL2, fList->weight);
+        
+        if (islowAll && mutr.status && mugood && cktrL9.status && fTrk->QL9 > 0) hQL9->fillH2D(musign * mutr.mass, fTrk->QL9, fList->weight * (musign>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood && cktrL9.status && fTrk->QL9 > 0 && mutr.rig[0] > 0) hPRQL9->fillH1D(fTrk->QL9, fList->weight);
+        if (islowAll && mutr.status && mugood && cktrL9.status && fTrk->QL9 > 0 && mutr.rig[0] < 0) hNRQL9->fillH1D(fTrk->QL9, fList->weight);
     }
     ofle->Write();
     ofle->Close();
