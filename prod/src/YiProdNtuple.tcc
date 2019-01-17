@@ -88,6 +88,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 		for (int layJ = 1; layJ <= 9; layJ++)
 			trackerZJ[layJ-1] = TkDBc::Head->GetZlayerJ(layJ);
 
+    const int refit = 21;
 	int       TkStID = -1;
 	TrTrackR* TkStPar = nullptr;
 	if (iTrTrack >= 0) {
@@ -116,23 +117,23 @@ bool RecEvent::rebuild(AMSEventR * event) {
             qin  = static_cast<double>(zin);
             mass = primaryMC->Mass;
         }
-
-        TkStID = TkStPar->iTrTrackPar(1, 3, 21, mass, zin);
+       
+        TkStID = TkStPar->iTrTrackPar(1, 3, refit, mass, zin);
         if (TkStID >= 0) rigIN = TkStPar->GetRigidity(TkStID, 1); // z = 0
 		if (TkStID >= 0) rigMAX = std::fabs(rigIN);
 
-        int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, 21, mass, zin);
+        int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, refit, mass, zin);
         if (TkStID_L1 >= 0) rigL1 = TkStPar->GetRigidity(TkStID_L1, 1); // z = 0
 		if (TkStID_L1 >= 0) rigMAX = std::max(std::fabs(rigL1), rigMAX);
         
-        int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, 21, mass, zin);
+        int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, refit, mass, zin);
         if (TkStID_L9 >= 0) rigL9 = TkStPar->GetRigidity(TkStID_L9, 1); // z = 0
 		if (TkStID_L9 >= 0) rigMAX = std::max(std::fabs(rigL9), rigMAX);
         
-        int TkStID_FS = TkStPar->iTrTrackPar(1, 7, 21, mass, zin);
+        int TkStID_FS = TkStPar->iTrTrackPar(1, 7, refit, mass, zin);
         if (TkStID_FS >= 0) rigFS = TkStPar->GetRigidity(TkStID_FS, 1); // z = 0
 		if (TkStID_FS >= 0) rigMAX = std::max(std::fabs(rigFS), rigMAX);
-       
+        
         signr = 0;
         if (rigMAX > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
         if (rigMAX > 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
@@ -1067,7 +1068,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
         // Choutko
         Bool_t ckSwOpt = true;
-        Int_t ckRefit = 21; // check fit in recEv
+        Int_t ckRefit = 22; // check fit in recEv
 		for (int patt = 0; patt < _npatt && ckSwOpt; ++patt) {
             MGClock::HrsStopwatch ckSw; ckSw.start();
 			int fitid = trtk->iTrTrackPar(1, _patt[patt], ckRefit, recEv.mass, recEv.zin);
@@ -1131,7 +1132,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         
         // Kalman
         Bool_t kfSwOpt = false;
-        Int_t kfRefit = 21;
+        Int_t kfRefit = 22;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
@@ -1212,6 +1213,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.bta[2] = track.stateBtm[7];
             
             track.cpuTime = kfSw.time() * 1.0e+3;
+
             //fTrk.kftr.at(patt) = track;
         }
     }
@@ -1352,14 +1354,14 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				  	TrdTrackR * trd = event->pTrdTrack(recEv.iTrdTrack);
 				  	trdkcls->Build(trd);
 				  }
-					else break;
+				  else break;
 				  isOK = true;
 				}
 				break;
 			case 1 :
 				{
 				  if (recEv.iTrTrack < 0) break;
-				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
+				  TrTrackR* trtk = event->pTrTrack(recEv.iTrTrack);
 				  int fitid_max = trtk->iTrTrackPar(1, 0, 21, recEv.mass, recEv.zin);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
@@ -1381,7 +1383,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 			//Qerror = trdkcls->GetTRDChargeError();
 			//QnumberOfHit = trdkcls->GetQNHit();
 		}
-		else continue;
 
 		int nhits = 0; //To be filled with number of hits taken into account in Likelihood Calculation
 		float threshold = 15; //ADC above which will be taken into account in Likelihood Calculation,  15 ADC is the recommended value for the moment.
@@ -1404,10 +1405,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		for (int ih = 0; ih < nhits; ih++) {
 			TrdKHit* hit = trdkcls->GetHit(ih);
 			if (hit == nullptr) continue;
-			if (checkEventMode(EventBase::ISS) || checkEventMode(EventBase::BT))
-				if (!hit->IsCalibrated) continue;
-			if (checkEventMode(EventBase::ISS))
-				if (!hit->IsAligned) continue;
             
             HitTRDInfo hitInfo;
             hitInfo.lay  = hit->TRDHit_Layer;
@@ -1432,13 +1429,12 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         }
 		if (hits.size() != 0) std::sort(hits.begin(), hits.end(), HitTRDInfo_sort());
 		
-        fTrd.statusKCls[kindOfFit] = true;
-		fTrd.LLRep[kindOfFit]      = llr[0];
-		fTrd.LLReh[kindOfFit]      = llr[1];
-		fTrd.LLRph[kindOfFit]      = llr[2];
-		fTrd.LLRnhit[kindOfFit]    = hits.size();
-		fTrd.Q[kindOfFit]          = Q;
-
+        fTrd.LLRstatus[kindOfFit] = true;
+		fTrd.LLRnh[kindOfFit]     = hits.size();
+		fTrd.LLRep[kindOfFit]     = llr[0];
+		fTrd.LLReh[kindOfFit]     = llr[1];
+		fTrd.LLRph[kindOfFit]     = llr[2];
+		fTrd.Q[kindOfFit]         = Q;
 
         if (hits.size() <= 2) continue;
         std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, mcMom, cooz, amp, len)
@@ -1477,19 +1473,142 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         fTrd.ITMcMom[kindOfFit]  = (v_mom > 0.0) ? v_mom : 0.0;
 	}
 
-    // Vertex
-    TRDVertex trdVtx;
-    trdVtx.Reconstruction(event);
+    
+    for (int it = 0; it < static_cast<int>(event->NTrdHTrack()); ++it) {
+        if (it == recEv.iTrdHTrack) continue;
+        TrdHTrackR* trdh = event->pTrdHTrack(it);
+	    trdkcls->Build(trdh);
+		
+        int nhits = 0; //To be filled with number of hits taken into account in Likelihood Calculation
+		float threshold = 15; //ADC above which will be taken into account in Likelihood Calculation,  15 ADC is the recommended value for the moment.
+		double llr[3] = {-1, -1, -1}; //To be filled with 3 LikelihoodRatio :  e/P, e/H, P/H
+	    trdkcls->GetLikelihoodRatio_TRDRefit(threshold, llr, nhits);
+		if (llr[0] < 0 || llr[1] < 0 || llr[2] < 0) continue;
+			
+        AMSPoint trdKP0(trdh->Coo[0], trdh->Coo[1], trdh->Coo[2]);
+		AMSDir   trdKDir(trdh->Dir[0], trdh->Dir[1], trdh->Dir[2]);
+		trdKDir[0] *= -1; trdKDir[1] *= -1; trdKDir[2] *= -1;
+        double state[6] = { trdKP0[0], trdKP0[1], trdKP0[2], trdKDir[0], trdKDir[1], trdKDir[2] };
 
-    fTrd.vtxNum[0] = trdVtx.nvertex_3d;
-    fTrd.vtxNum[1] = trdVtx.nvertex_2d_y;
-    fTrd.vtxNum[2] = trdVtx.nvertex_2d_x;
-    fTrd.vtxNTrk   = trdVtx.vertex_ntrack;
-    fTrd.vtxNHit   = trdVtx.vertex_nhit;
-    fTrd.vtxChi2   = trdVtx.vertex_chi2;
-    fTrd.vtxCoo[0] = trdVtx.vertex_x;
-    fTrd.vtxCoo[1] = trdVtx.vertex_y;
-    fTrd.vtxCoo[2] = trdVtx.vertex_z;
+        std::vector<HitTRDInfo> hits;
+		for (int ih = 0; ih < nhits; ih++) {
+			TrdKHit* hit = trdkcls->GetHit(ih);
+			if (hit == nullptr) continue;
+            
+            HitTRDInfo hitInfo;
+            hitInfo.lay  = hit->TRDHit_Layer;
+            hitInfo.side = hit->TRDHit_Direction;
+            hitInfo.amp  = 0.01 * hit->TRDHit_Amp;
+            hitInfo.len  = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
+            hitInfo.cr   = (hit->TRDHit_Direction == 0) ? hit->TRDHit_x : hit->TRDHit_y;
+            hitInfo.cz   = hit->TRDHit_z;
+            hitInfo.dEdX = ((hitInfo.len > 0) ? (hitInfo.amp / hitInfo.len) : -1.0);
+            
+            hits.push_back(hitInfo);
+        }
+		if (hits.size() != 0) std::sort(hits.begin(), hits.end(), HitTRDInfo_sort());
+        if (hits.size() <= 2) continue;
+        
+        std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, cooz, amp, len)
+        for (auto&& hit : hits) {
+            if (hit.amp < 0.05) continue;
+            if (hit.len < 0.30) continue;
+            if (hit.dEdX < 0.2) continue;
+            dEdX.push_back(std::make_tuple(hit.dEdX, hit.cz, hit.amp, hit.len));
+        }
+        if (dEdX.size() <= 2) continue;
+        std::sort(dEdX.begin(), dEdX.end());
+        if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
+        if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
+
+        Double_t v_cz  = 0;
+        Double_t v_amp = 0;
+        Double_t v_len = 0;
+        for (auto&& elem : dEdX) {
+            v_cz  += std::get<1>(elem);
+            v_amp += std::get<2>(elem);
+            v_len += std::get<3>(elem);
+        }
+        v_cz  = v_cz  / static_cast<Double_t>(dEdX.size());
+        Double_t v_dEdX = v_amp / v_len;
+        if (!TrackSys::Numc::Valid(v_dEdX)) continue;
+	
+        if (hits.size() < 8 || dEdX.size() < 5) continue;
+
+        bool   vtxstatus = false;
+        double vtxdist = 0;
+        double vtxcoo[3] = { 0, 0, 0 };
+        if (fTrd.trackStatus) {
+            double d0[3] = { state[0] - fTrd.trackState[0], state[1] - fTrd.trackState[1], state[2] - fTrd.trackState[2] };
+            double sa[3] = { fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5] };
+            double sb[3] = { state[3], state[4], state[5] };
+            double sasb = sa[0] * sb[0] + sa[1] * sb[1] + sa[2] * sb[2];
+            double sad0 = sa[0] * d0[0] + sa[1] * d0[1] + sa[2] * d0[2];
+            double sbd0 = sb[0] * d0[0] + sb[1] * d0[1] + sb[2] * d0[2];
+            TrackSys::SVecD<2> res(sad0, -sbd0);
+            TrackSys::SMtxSymD<2>&& mtx = TrackSys::SMtxSymD<2>(TrackSys::SMtxId());
+            mtx(0, 1) = -sasb;
+            if (mtx.Invert()) {
+                TrackSys::SVecD<2>&& rsl = mtx * res;
+                if (TrackSys::Numc::Valid(rsl(0)) && TrackSys::Numc::Valid(rsl(1))) {
+                    TrackSys::SVecD<3> tra( fTrd.trackState[0] + rsl(0) * sa[0], fTrd.trackState[1] + rsl(0) * sa[1], fTrd.trackState[2] + rsl(0) * sa[2] );
+                    TrackSys::SVecD<3> trb( state[0] + rsl(1) * sb[0], state[1] + rsl(1) * sb[1], state[2] + rsl(1) * sb[2] );
+                    TrackSys::SVecD<3>&& cen = TrackSys::Numc::ONE_TO_TWO * (tra + trb);
+                    double dist = TrackSys::LA::Mag(trb - tra);
+
+                    vtxstatus = true;
+                    vtxdist = dist;
+                    vtxcoo[0] = cen[0];
+                    vtxcoo[1] = cen[1];
+                    vtxcoo[2] = cen[2];
+                }
+            }
+        }
+
+        TRDTrInfo trdTr;
+        trdTr.status = true;
+        trdTr.state[0] = state[0];
+        trdTr.state[1] = state[1];
+        trdTr.state[2] = state[2];
+        trdTr.state[3] = state[3];
+        trdTr.state[4] = state[4];
+        trdTr.state[5] = state[5];
+        
+        trdTr.LLRnh = hits.size();
+        trdTr.LLRep = llr[0];
+        trdTr.LLReh = llr[1];
+        trdTr.LLRph = llr[2];
+
+        trdTr.ITnh   = dEdX.size();
+        trdTr.ITcz   = v_cz;
+        trdTr.ITamp  = v_amp;
+        trdTr.ITlen  = v_len;
+        trdTr.ITdEdX = v_dEdX;
+     
+        if (vtxstatus) {
+            trdTr.VTXstatus = true;
+            trdTr.VTXdist = vtxdist;
+            trdTr.VTXcoo[0] = vtxcoo[0];
+            trdTr.VTXcoo[1] = vtxcoo[1];
+            trdTr.VTXcoo[2] = vtxcoo[2];
+        }
+
+        fTrd.others.push_back(trdTr);
+    }
+   
+    // Vertex
+    //TRDVertex trdVtx;
+    //trdVtx.Reconstruction(event);
+
+    //fTrd.vtxNum[0] = trdVtx.nvertex_3d;
+    //fTrd.vtxNum[1] = trdVtx.nvertex_2d_y;
+    //fTrd.vtxNum[2] = trdVtx.nvertex_2d_x;
+    //fTrd.vtxNTrk   = trdVtx.vertex_ntrack;
+    //fTrd.vtxNHit   = trdVtx.vertex_nhit;
+    //fTrd.vtxChi2   = trdVtx.vertex_chi2;
+    //fTrd.vtxCoo[0] = trdVtx.vertex_x;
+    //fTrd.vtxCoo[1] = trdVtx.vertex_y;
+    //fTrd.vtxCoo[2] = trdVtx.vertex_z;
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -1497,8 +1616,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 
 bool EventTrd::selectEvent(AMSEventR * event) {
     bool LLRstatus[2] = {
-        (fTrd.statusKCls[0] && fTrd.LLRnhit[0] >= 8), 
-        (fTrd.statusKCls[1] && fTrd.LLRnhit[1] >= 8) };
+        (fTrd.LLRstatus[0] && fTrd.LLRnh[0] >= 8), 
+        (fTrd.LLRstatus[1] && fTrd.LLRnh[1] >= 8) };
     if (!LLRstatus[0] && !LLRstatus[1]) return false;
     
     bool ITstatus[2] = { (fTrd.ITnh[0] >= 5), (fTrd.ITnh[1] >= 5) };
@@ -2662,8 +2781,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
     if (recEv.qin < 0.5) return -99998;
-    if (recEv.zin != 1) return -99997;
-
+   
+    // testcode
+    if (EventBase::checkEventMode(EventBase::ISS) && recEv.zin != 1) return -99997;
     //if (recEv.signr >= 0) return -99990; // testcode
 
     // ~7~ (Based on RTI)

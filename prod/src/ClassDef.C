@@ -17,6 +17,7 @@ ClassImp(VertexMCInfo)
 
 ClassImp(HitTRKInfo)
 ClassImp(HitTRDInfo)
+ClassImp(TRDTrInfo)
 ClassImp(HitRICHInfo)
 ClassImp(HitECALInfo)
 ClassImp(ClsACCInfo)
