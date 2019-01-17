@@ -351,6 +351,55 @@ struct HitTRDInfo_sort {
 };
 
 
+// TRDTrInfo
+class TRDTrInfo : public TObject {
+	public :
+		TRDTrInfo() { init(); }
+		~TRDTrInfo() {}
+
+		void init() {
+            status = false;
+            std::fill_n(state, 6, 0);
+
+            LLRnh = 0;
+            LLRep = -1;
+            LLReh = -1;
+            LLRph = -1;
+
+            ITnh = 0;
+            ITcz = 0;
+            ITamp = 0;
+            ITlen = 0;
+            ITdEdX = 0;
+
+            VTXstatus = false;
+            VTXdist = 0;
+            std::fill_n(VTXcoo, 3, 0);
+        } 
+	
+    public :
+        Bool_t  status;
+        Float_t state[6];
+
+        Short_t LLRnh;
+        Float_t LLRep;
+        Float_t LLReh;
+        Float_t LLRph;
+
+        Short_t ITnh;
+        Float_t ITcz;
+        Float_t ITamp;
+        Float_t ITlen;
+        Float_t ITdEdX;
+
+        Bool_t  VTXstatus;
+        Float_t VTXdist;
+        Float_t VTXcoo[3];
+
+        ClassDef(TRDTrInfo, 1)
+};
+
+
 // HitRICHInfo
 class HitRICHInfo : public TObject {
 	public :
@@ -870,11 +919,11 @@ class TRD : public TObject {
             trackStatus = false;
 			std::fill_n(trackState, 6, 0);
 
-			std::fill_n(statusKCls, 2, false);
+			std::fill_n(LLRstatus, 2, false);
+			std::fill_n(LLRnh, 2, -1);
 			std::fill_n(LLRep, 2, -1);
 			std::fill_n(LLReh, 2, -1);
 			std::fill_n(LLRph, 2, -1);
-			std::fill_n(LLRnhit, 2, -1);
 			std::fill_n(Q, 2, -1);
             
 			std::fill_n(ITstatus, 2, false);
@@ -885,11 +934,13 @@ class TRD : public TObject {
 			std::fill_n(ITdEdX, 2, 0);
 			std::fill_n(ITMcMom, 2, 0);
 
-            std::fill_n(vtxNum, 3, 0);
-            vtxNTrk = 0;
-            vtxNHit = 0;
-            vtxChi2 = 0;
-            std::fill_n(vtxCoo, 3, 0);
+            others.clear();
+
+            //std::fill_n(vtxNum, 3, 0);
+            //vtxNTrk = 0;
+            //vtxNHit = 0;
+            //vtxChi2 = 0;
+            //std::fill_n(vtxCoo, 3, 0);
 		}
 
 	public :
@@ -903,11 +954,11 @@ class TRD : public TObject {
 		Float_t trackState[6]; // coo, dir
 
 		// (TrdHTrack or TrdTrack) and TrTrack
-		Bool_t  statusKCls[2]; // true, rebuild success (Trd, Trk)
+		Bool_t  LLRstatus[2]; // true, rebuild success (Trd, Trk)
+		Short_t LLRnh[2];
 		Float_t LLRep[2];
 		Float_t LLReh[2];
 		Float_t LLRph[2];
-		Short_t LLRnhit[2];
 		Float_t Q[2];
 
         // TRDRec
@@ -919,12 +970,14 @@ class TRD : public TObject {
         Float_t ITdEdX[2];
         Float_t ITMcMom[2];
 
+        std::vector<TRDTrInfo> others;
+
         // TRDVertex
-        Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
-        Short_t vtxNTrk;
-        Short_t vtxNHit;
-        Float_t vtxChi2;
-        Float_t vtxCoo[3];
+        //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
+        //Short_t vtxNTrk;
+        //Short_t vtxNHit;
+        //Float_t vtxChi2;
+        //Float_t vtxCoo[3];
 
 	ClassDef(TRD, 8)
 };
