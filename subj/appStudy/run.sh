@@ -11,8 +11,8 @@ Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan12
 
 OutputDir=${CurDir}/dat
 
-GroupSize=40
-Nseq=180
+GroupSize=50
+Nseq=220
 
 for id in `seq 0 ${Nseq}`
 do

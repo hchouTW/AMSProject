@@ -65,23 +65,25 @@ int main(int argc, char * argv[]) {
     std::vector<Double_t> vmom;
     if (info.type() == PartType::Proton) {
         vmom = std::vector<Double_t>( {
-               0.20,   0.50,   0.80,
+               0.50,   0.80,
                1.00,   1.16,   1.33,   1.51,   1.71,   1.92,   2.15,   2.40,   2.67,   2.97, 
                3.29,   3.64,   4.02,   4.43,   4.88,   5.37,   5.90,   6.47,   7.09,   7.76,
                8.48,   9.26,  10.10,  11.00,  12.00,  13.00,  14.10,  15.30,  16.60,  18.00, 
                19.50,  21.10,  22.80,  24.70,  26.70,  28.80,  31.10,  33.50,  36.10,  38.90, 
                41.90,  45.10,  48.50,  52.20,  56.10,  60.30,  64.80,  69.70,  74.90,  80.50, 
-               93.00, 108.00, 125.00, 147.00, 175.00, 211.00, 259.00, 450.00 } );
+               93.00, 108.00, 125.00, 147.00, 175.00, 211.00, 259.00, 450.00,
+               800.00 } );
     }
     if (info.type() == PartType::Helium4) {
         vmom = std::vector<Double_t>( {
-               0.20,   0.50,   0.80,
+               0.50,   0.80,
                1.00,   1.16,   1.33,   1.51,   1.71,   1.92,   2.15,   2.40,   2.67,   2.97, 
                3.29,   3.64,   4.02,   4.43,   4.88,   5.37,   5.90,   6.47,   7.09,   7.76,
                8.48,   9.26,  10.10,  11.00,  12.00,  13.00,  14.10,  15.30,  16.60,  18.00, 
                19.50,  21.10,  22.80,  24.70,  26.70,  28.80,  31.10,  33.50,  36.10,  38.90, 
                41.90,  45.10,  48.50,  52.20,  56.10,  60.30,  64.80,  69.70,  74.90,  80.50, 
-               93.00, 108.00, 125.00, 147.00, 175.00, 211.00, 259.00, 450.00 } );
+               93.00, 108.00, 125.00, 147.00, 175.00, 211.00, 259.00, 450.00,
+               800.00 } );
     }
     
     std::vector<Double_t> vrig;
@@ -91,45 +93,128 @@ int main(int argc, char * argv[]) {
     Axis AXrig("Rigidity [GV]", vrig);
     Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
     
-    Axis AXtrd("TRD Estimator", 200, 0.0, 1.8);
-    Hist* hPRTRDllr = Hist::New("hPRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
-    Hist* hNRTRDllr = Hist::New("hNRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
-    
-    Axis AXqlt("Quality", 400, -2.0, 10.0);
+    Axis AXqlt("Quality", 200, -2.0, 10.0);
     Hist* hPRqltx = Hist::New("hPRqltx", HistAxis(AXrig, AXqlt, "Events/Bin"));
     Hist* hNRqltx = Hist::New("hNRqltx", HistAxis(AXrig, AXqlt, "Events/Bin"));
     Hist* hPRqlty = Hist::New("hPRqlty", HistAxis(AXrig, AXqlt, "Events/Bin"));
     Hist* hNRqlty = Hist::New("hNRqlty", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRqltxAll = Hist::New("hPRqltxAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltxAll = Hist::New("hNRqltxAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRqltyAll = Hist::New("hPRqltyAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltyAll = Hist::New("hNRqltyAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
     
-    Axis AXmass("Mass", 400, 0.03, 6.0);
-    Hist* hCKPRmass = Hist::New("hCKPRmass", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hCKNRmass = Hist::New("hCKNRmass", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hPRqltxC1 = Hist::New("hPRqltxC1", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltxC1 = Hist::New("hNRqltxC1", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRqltyC1 = Hist::New("hPRqltyC1", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltyC1 = Hist::New("hNRqltyC1", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRqltxC1All = Hist::New("hPRqltxC1All", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltxC1All = Hist::New("hNRqltxC1All", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRqltyC1All = Hist::New("hPRqltyC1All", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRqltyC1All = Hist::New("hNRqltyC1All", HistAxis(AXrig, AXqlt, "Events/Bin"));
     
-    Hist* hPRmass = Hist::New("hPRmass", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hNRmass = Hist::New("hNRmass", HistAxis(AXrig, AXmass, "Events/Bin"));
-    
-    Hist* hPRmass2 = Hist::New("hPRmass2", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hNRmass2 = Hist::New("hNRmass2", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hPRmass3 = Hist::New("hPRmass3", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hNRmass3 = Hist::New("hNRmass3", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hPRmass4 = Hist::New("hPRmass4", HistAxis(AXrig, AXmass, "Events/Bin"));
-    Hist* hNRmass4 = Hist::New("hNRmass4", HistAxis(AXrig, AXmass, "Events/Bin"));
-    
+    Axis AXtrd("TRD Estimator", 200, 0.0, 1.8);
+    Hist* hPRTRDllr = Hist::New("hPRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
+    Hist* hNRTRDllr = Hist::New("hNRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
+    Hist* hPRTRDllrAll = Hist::New("hPRTRDllrAll", HistAxis(AXrig, AXtrd, "Events/Bin"));
+    Hist* hNRTRDllrAll = Hist::New("hNRTRDllrAll", HistAxis(AXrig, AXtrd, "Events/Bin"));
+   
     Hist* hIRflux = Hist::New("hIRflux", HistAxis(AXirig, "Events/Bin"));
     Hist* hPRflux = Hist::New("hPRflux", HistAxis(AXrig, "Events/Bin"));
     Hist* hNRflux = Hist::New("hNRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxAll = Hist::New("hIRfluxAll", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxAll = Hist::New("hPRfluxAll", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxAll = Hist::New("hNRfluxAll", HistAxis(AXrig, "Events/Bin"));
+
+    Hist* hIRfluxCF10 = Hist::New("hIRfluxCF10", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10 = Hist::New("hPRfluxCF10", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10 = Hist::New("hNRfluxCF10", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxCF10All = Hist::New("hIRfluxCF10All", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10All = Hist::New("hPRfluxCF10All", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10All = Hist::New("hNRfluxCF10All", HistAxis(AXrig, "Events/Bin"));
     
-    Hist* hIRflux2 = Hist::New("hIRflux2", HistAxis(AXirig, "Events/Bin"));
-    Hist* hPRflux2 = Hist::New("hPRflux2", HistAxis(AXrig, "Events/Bin"));
-    Hist* hNRflux2 = Hist::New("hNRflux2", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxCF10C1 = Hist::New("hIRfluxCF10C1", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10C1 = Hist::New("hPRfluxCF10C1", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10C1 = Hist::New("hNRfluxCF10C1", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxCF10C1All = Hist::New("hIRfluxCF10C1All", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10C1All = Hist::New("hPRfluxCF10C1All", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10C1All = Hist::New("hNRfluxCF10C1All", HistAxis(AXrig, "Events/Bin"));
     
-    Hist* hIRflux3 = Hist::New("hIRflux3", HistAxis(AXirig, "Events/Bin"));
-    Hist* hPRflux3 = Hist::New("hPRflux3", HistAxis(AXrig, "Events/Bin"));
-    Hist* hNRflux3 = Hist::New("hNRflux3", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxCF10C2 = Hist::New("hIRfluxCF10C2", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10C2 = Hist::New("hPRfluxCF10C2", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10C2 = Hist::New("hNRfluxCF10C2", HistAxis(AXrig, "Events/Bin"));
+    Hist* hIRfluxCF10C2All = Hist::New("hIRfluxCF10C2All", HistAxis(AXirig, "Events/Bin"));
+    Hist* hPRfluxCF10C2All = Hist::New("hPRfluxCF10C2All", HistAxis(AXrig, "Events/Bin"));
+    Hist* hNRfluxCF10C2All = Hist::New("hNRfluxCF10C2All", HistAxis(AXrig, "Events/Bin"));
+
+    Hist* hPRmuqxAll = Hist::New("hPRmuqxAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRmuqxAll = Hist::New("hNRmuqxAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRmuqyAll = Hist::New("hPRmuqyAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRmuqyAll = Hist::New("hNRmuqyAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hPRmuqbAll = Hist::New("hPRmuqbAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hNRmuqbAll = Hist::New("hNRmuqbAll", HistAxis(AXrig, AXqlt, "Events/Bin"));
     
-    Hist* hIRflux4 = Hist::New("hIRflux4", HistAxis(AXirig, "Events/Bin"));
-    Hist* hPRflux4 = Hist::New("hPRflux4", HistAxis(AXrig, "Events/Bin"));
-    Hist* hNRflux4 = Hist::New("hNRflux4", HistAxis(AXrig, "Events/Bin"));
+    Axis AXmass("Mass", 2000, -5.0, 5.0);
+    Hist* hmass = Hist::New("hmass", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hmassC1 = Hist::New("hmassC1", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hmassC2 = Hist::New("hmassC2", HistAxis(AXrig, AXmass, "Events/Bin"));
+    
+    Hist* hmassAll = Hist::New("hmassAll", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hmassC1All = Hist::New("hmassC1All", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hmassC2All = Hist::New("hmassC2All", HistAxis(AXrig, AXmass, "Events/Bin"));
+    
+    Hist* hLmass = Hist::New("hLmass", HistAxis(AXmass, "Events/Bin"));
+    Hist* hLmassC1 = Hist::New("hLmassC1", HistAxis(AXmass, "Events/Bin"));
+    Hist* hLmassC2 = Hist::New("hLmassC2", HistAxis(AXmass, "Events/Bin"));
+    
+    Hist* hLmassAll = Hist::New("hLmassAll", HistAxis(AXmass, "Events/Bin"));
+    Hist* hLmassC1All = Hist::New("hLmassC1All", HistAxis(AXmass, "Events/Bin"));
+    Hist* hLmassC2All = Hist::New("hLmassC2All", HistAxis(AXmass, "Events/Bin"));
+    
+    Hist* hPRM1llx = Hist::New("hPRM1llx", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hNRM1llx = Hist::New("hNRM1llx", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hPRM1lly = Hist::New("hPRM1lly", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hNRM1lly = Hist::New("hNRM1lly", HistAxis(AXqlt, "Events/Bin"));
+    
+    Hist* hPRM2llx = Hist::New("hPRM2llx", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hNRM2llx = Hist::New("hNRM2llx", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hPRM2lly = Hist::New("hPRM2lly", HistAxis(AXqlt, "Events/Bin"));
+    Hist* hNRM2lly = Hist::New("hNRM2lly", HistAxis(AXqlt, "Events/Bin"));
+    
+    Hist* hM1llx = Hist::New("hM1llx", HistAxis(AXmass, AXqlt, "Events/Bin"));
+    Hist* hM1lly = Hist::New("hM1lly", HistAxis(AXmass, AXqlt, "Events/Bin"));
+    
+    Hist* hM2llx = Hist::New("hM2llx", HistAxis(AXmass, AXqlt, "Events/Bin"));
+    Hist* hM2lly = Hist::New("hM2lly", HistAxis(AXmass, AXqlt, "Events/Bin"));
+    
+    // Choutko
+    Hist* hCKPRTRDllr = Hist::New("hCKPRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
+    Hist* hCKNRTRDllr = Hist::New("hCKNRTRDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
+    
+    Hist* hCKPRqltx = Hist::New("hCKPRqltx", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hCKNRqltx = Hist::New("hCKNRqltx", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hCKPRqlty = Hist::New("hCKPRqlty", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    Hist* hCKNRqlty = Hist::New("hCKNRqlty", HistAxis(AXrig, AXqlt, "Events/Bin"));
+    
+    Hist* hCKIRflux = Hist::New("hCKIRflux", HistAxis(AXirig, "Events/Bin"));
+    Hist* hCKPRflux = Hist::New("hCKPRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKNRflux = Hist::New("hCKNRflux", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKIRfluxCF10 = Hist::New("hCKIRfluxCF10", HistAxis(AXirig, "Events/Bin"));
+    Hist* hCKPRfluxCF10 = Hist::New("hCKPRfluxCF10", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKNRfluxCF10 = Hist::New("hCKNRfluxCF10", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKIRfluxCF10C1 = Hist::New("hCKIRfluxCF10C1", HistAxis(AXirig, "Events/Bin"));
+    Hist* hCKPRfluxCF10C1 = Hist::New("hCKPRfluxCF10C1", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKNRfluxCF10C1 = Hist::New("hCKNRfluxCF10C1", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKIRfluxCF10C2 = Hist::New("hCKIRfluxCF10C2", HistAxis(AXirig, "Events/Bin"));
+    Hist* hCKPRfluxCF10C2 = Hist::New("hCKPRfluxCF10C2", HistAxis(AXrig, "Events/Bin"));
+    Hist* hCKNRfluxCF10C2 = Hist::New("hCKNRfluxCF10C2", HistAxis(AXrig, "Events/Bin"));
+    
+    Hist* hCKmass = Hist::New("hCKmass", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hCKmassC1 = Hist::New("hCKmassC1", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hCKmassC2 = Hist::New("hCKmassC2", HistAxis(AXrig, AXmass, "Events/Bin"));
+    
+    Hist* hCKLmass = Hist::New("hCKLmass", HistAxis(AXmass, "Events/Bin"));
+    Hist* hCKLmassC1 = Hist::New("hCKLmassC1", HistAxis(AXmass, "Events/Bin"));
+    Hist* hCKLmassC2 = Hist::New("hCKLmassC2", HistAxis(AXmass, "Events/Bin"));
     
     Long64_t printRate = dst->GetEntries();
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -145,7 +230,6 @@ int main(int argc, char * argv[]) {
         if (!fTof->statusBetaH) continue;
         
         // Geometry (TRD)
-        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
         if (!fTrd->statusKCls[0]) continue;
         if (fTrd->LLRnhit[0] < 8) continue;
         
@@ -170,32 +254,37 @@ int main(int argc, char * argv[]) {
         if (fTof->normChisqC > 10.) continue;
         
         // TRD
-        if (std::abs(info.chrg()) == 1 && fTrd->LLRph[0] > 0.3) continue;
+        //if (std::abs(info.chrg()) == 1 && fTrd->LLRph[0] > 0.3) continue;
         //if (fTrd->LLRep[0] < 0.7) continue;
         
         // Track In
         CKTrackInfo& cktrIn = fTrk->cktr.at(0);
         HCTrInfo&    hctrIn = fHyc->trM1.at(0);
         HCTrInfo&    hctrInAll = fHyc->trM1All.at(0);
+        HCTrInfo&    hctrInAll2 = fHyc->trM2All.at(0);
         
         // Track L1
         CKTrackInfo& cktrL1 = fTrk->cktr.at(1);
         HCTrInfo&    hctrL1 = fHyc->trM1.at(1);
         HCTrInfo&    hctrL1All = fHyc->trM1All.at(1);
+        HCTrInfo&    hctrL1All2 = fHyc->trM2All.at(1);
         
         // Track L9
         CKTrackInfo& cktrL9 = fTrk->cktr.at(2);
         HCTrInfo&    hctrL9 = fHyc->trM1.at(2);
         HCTrInfo&    hctrL9All = fHyc->trM1All.at(2);
+        HCTrInfo&    hctrL9All2 = fHyc->trM2All.at(2);
         
         // Track Fs
         CKTrackInfo& cktrFs = fTrk->cktr.at(3);
         HCTrInfo&    hctrFs = fHyc->trM1.at(3);
         HCTrInfo&    hctrFsAll = fHyc->trM1All.at(3);
+        HCTrInfo&    hctrFsAll2 = fHyc->trM2All.at(3);
    
         // Mass
         HCMuInfo& mutr = fHyc->mutr;
-        bool goodmu = (mutr.status && mutr.bta[0] < 1.0 && mutr.muQlt[0] < 2.5 && mutr.muQlt[1] < 2.5 && mutr.muQlt[2] < 2.5);
+        Short_t musign = (mutr.status ? (mutr.rig[0] > 0 ? 1 : -1) : 0);
+        Bool_t  mugood = (mutr.status && mutr.muQlt[0] < 2.0 && mutr.muQlt[1] < 2.0 && mutr.muQlt[2] < 2.0 && mutr.qlt[0] < 2.0 && mutr.qlt[1] < 2.0);
 
         // IGRF RTI
         double maxCF = 0;
@@ -204,10 +293,59 @@ int main(int argc, char * argv[]) {
             double maxIGRF    = (*std::max_element(fRti->cfIGRF,    fRti->cfIGRF+4));
             maxCF = std::max(maxStormer, maxIGRF);
             maxCF = maxIGRF;
-
-            //CERR("%14.8f STORMER %14.8f IGRF %14.8f\n", maxCF, maxStormer, maxIGRF);
-            //if (std::fabs(hctrIn.rig[0]) < 1.2 * maxCF) continue;
         }
+        
+        // CK Track
+        Short_t      ckpatt = -1;
+        CKTrackInfo* cktr = nullptr; 
+        if      (cktrFs.status) { ckpatt = 3; cktr = &cktrFs; } 
+        else if (cktrL9.status) { ckpatt = 2; cktr = &cktrL9; }
+        else if (cktrL1.status) { ckpatt = 1; cktr = &cktrL1; }
+        else if (cktrIn.status) { ckpatt = 0; cktr = &cktrIn; }
+        if (cktr == nullptr || !cktr->status) continue;
+        
+        Short_t  cksign = TrackSys::Numc::Compare(cktr->rig);
+        Double_t ckarig = std::fabs(cktr->rig);
+        Double_t ckirig = 1.0 / cktr->rig;
+        Double_t ckqltx = std::log(cktr->nchi[0]);
+        Double_t ckqlty = std::log(cktr->nchi[1]);
+        Double_t ckmass = (fTof->betaH < 1.0) ? std::fabs(info.chrg() * cktrIn.rig * std::sqrt(1.0/fTof->betaH/fTof->betaH-1.0)): -1.0;
+        
+        Bool_t ckllrc = fTrd->LLRep[0] > (0.2 + 0.6 * cktr->bta * cktr->bta);
+       
+        Bool_t ckislow = (fTof->betaH > 0.5 && fTof->betaH < 0.8);
+
+        if (cksign > 0) hCKPRqltx->fillH2D(ckarig, ckqltx, fList->weight);
+        if (cksign < 0) hCKNRqltx->fillH2D(ckarig, ckqltx, fList->weight);
+        if (cksign > 0) hCKPRqlty->fillH2D(ckarig, ckqlty, fList->weight);
+        if (cksign < 0) hCKNRqlty->fillH2D(ckarig, ckqlty, fList->weight);
+        
+        if (cksign > 0) hCKPRTRDllr->fillH2D(ckarig, fTrd->LLRep[0], fList->weight);
+        if (cksign < 0) hCKNRTRDllr->fillH2D(ckarig, fTrd->LLRep[0], fList->weight);
+        
+        hCKIRflux->fillH1D(ckirig, fList->weight);
+        if (cksign > 0) hCKPRflux->fillH1D(ckarig, fList->weight);
+        if (cksign < 0) hCKNRflux->fillH1D(ckarig, fList->weight);
+        
+        if (ckarig > 1.0 * maxCF) hCKIRfluxCF10->fillH1D(ckirig, fList->weight);
+        if (cksign > 0 && ckarig > 1.0 * maxCF) hCKPRfluxCF10->fillH1D(ckarig, fList->weight);
+        if (cksign < 0 && ckarig > 1.0 * maxCF) hCKNRfluxCF10->fillH1D(ckarig, fList->weight);
+        
+        if (ckllrc && ckarig > 1.0 * maxCF) hCKIRfluxCF10C1->fillH1D(ckirig, fList->weight);
+        if (ckllrc && cksign > 0 && ckarig > 1.0 * maxCF) hCKPRfluxCF10C1->fillH1D(ckarig, fList->weight);
+        if (ckllrc && cksign < 0 && ckarig > 1.0 * maxCF) hCKNRfluxCF10C1->fillH1D(ckarig, fList->weight);
+        
+        if (ckllrc && ckqltx < 2.0 && ckqlty < 2.0 && ckarig > 1.0 * maxCF) hCKIRfluxCF10C2->fillH1D(ckirig, fList->weight);
+        if (ckllrc && ckqltx < 2.0 && ckqlty < 2.0 && cksign > 0 && ckarig > 1.0 * maxCF) hCKPRfluxCF10C2->fillH1D(ckarig, fList->weight);
+        if (ckllrc && ckqltx < 2.0 && ckqlty < 2.0 && cksign < 0 && ckarig > 1.0 * maxCF) hCKNRfluxCF10C2->fillH1D(ckarig, fList->weight);
+        
+        if (ckmass > 0.0) hCKmass->fillH2D(ckarig, cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
+        if (ckmass > 0.0 && ckqltx < 2.0 && ckqlty < 2.0) hCKmassC1->fillH2D(ckarig, cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
+        if (ckmass > 0.0 && ckllrc && ckqltx < 2.0 && ckqlty < 2.0) hCKmassC2->fillH2D(ckarig, cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
+        
+        if (ckislow && ckmass > 0.0) hCKLmass->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
+        if (ckislow && ckmass > 0.0 && ckqltx < 2.0 && ckqlty < 2.0) hCKLmassC1->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
+        if (ckislow && ckmass > 0.0 && ckllrc && ckqltx < 2.0 && ckqlty < 2.0) hCKLmassC2->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.001:1.0));
         
         // HC Track
         Short_t   patt = -1;
@@ -223,12 +361,56 @@ int main(int argc, char * argv[]) {
         Double_t irig = (TrackSys::Numc::ONE<> / hctr->rig[0]);
         Double_t qltx = hctr->qlt[0];
         Double_t qlty = hctr->qlt[1];
+        Double_t qltb = fHyc->btaM1.qlt;
+
+        Bool_t llrc = fTrd->LLRep[0] > (0.2 + 0.6 * hctr->bta[0] * hctr->bta[0]);
+
+        Bool_t islow = (fHyc->btaM1.status && fHyc->btaM1.bta[0] > 0.5 && fHyc->btaM1.bta[0] < 0.8);
+
+        if (sign > 0) hPRqltx->fillH2D(arig, qltx, fList->weight);
+        if (sign < 0) hNRqltx->fillH2D(arig, qltx, fList->weight);
+        if (sign > 0) hPRqlty->fillH2D(arig, qlty, fList->weight);
+        if (sign < 0) hNRqlty->fillH2D(arig, qlty, fList->weight);
         
+        if (llrc && sign > 0) hPRqltxC1->fillH2D(arig, qltx, fList->weight);
+        if (llrc && sign < 0) hNRqltxC1->fillH2D(arig, qltx, fList->weight);
+        if (llrc && sign > 0) hPRqltyC1->fillH2D(arig, qlty, fList->weight);
+        if (llrc && sign < 0) hNRqltyC1->fillH2D(arig, qlty, fList->weight);
+        
+        if (sign > 0) hPRTRDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
+        if (sign < 0) hNRTRDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
+        
+        hIRflux->fillH1D(irig, fList->weight);
+        if (sign > 0) hPRflux->fillH1D(arig, fList->weight);
+        if (sign < 0) hNRflux->fillH1D(arig, fList->weight);
+        
+        if (arig > 1.0 * maxCF) hIRfluxCF10->fillH1D(irig, fList->weight);
+        if (sign > 0 && arig > 1.0 * maxCF) hPRfluxCF10->fillH1D(arig, fList->weight);
+        if (sign < 0 && arig > 1.0 * maxCF) hNRfluxCF10->fillH1D(arig, fList->weight);
+        
+        if (llrc && arig > 1.0 * maxCF) hIRfluxCF10C1->fillH1D(irig, fList->weight);
+        if (llrc && sign > 0 && arig > 1.0 * maxCF) hPRfluxCF10C1->fillH1D(arig, fList->weight);
+        if (llrc && sign < 0 && arig > 1.0 * maxCF) hNRfluxCF10C1->fillH1D(arig, fList->weight);
+        
+        if (llrc && qltx < 2.0 && qlty < 2.0 && arig > 1.0 * maxCF) hIRfluxCF10C2->fillH1D(irig, fList->weight);
+        if (llrc && qltx < 2.0 && qlty < 2.0 && sign > 0 && arig > 1.0 * maxCF) hPRfluxCF10C2->fillH1D(arig, fList->weight);
+        if (llrc && qltx < 2.0 && qlty < 2.0 && sign < 0 && arig > 1.0 * maxCF) hNRfluxCF10C2->fillH1D(arig, fList->weight);
+        
+        if (fHyc->massM1 > 0) hmass->fillH2D(arig, sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+        if (fHyc->massM1 > 0 && qltx < 2.0 && qlty < 2.0 && qltb < 2.0) hmassC1->fillH2D(arig, sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+        if (fHyc->massM1 > 0 && llrc && qltx < 2.0 && qlty < 2.0 && qltb < 2.0) hmassC2->fillH2D(arig, sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+        
+        if (islow && fHyc->massM1 > 0) hLmass->fillH1D(sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+        if (islow && fHyc->massM1 > 0 && qltx < 2.0 && qlty < 2.0 && qltb < 2.0) hLmassC1->fillH1D(sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+        if (islow && fHyc->massM1 > 0 && llrc && qltx < 2.0 && qlty < 2.0 && qltb < 2.0) hLmassC2->fillH1D(sign * fHyc->massM1, fList->weight * (sign>0?0.001:1.0));
+       
+
+        Short_t   pattAll = -1;
         HCTrInfo* hctrAll = nullptr; 
-        if      (hctrFsAll.status) { patt = 3; hctrAll = &hctrFsAll; } 
-        else if (hctrL9All.status) { patt = 2; hctrAll = &hctrL9All; }
-        else if (hctrL1All.status) { patt = 1; hctrAll = &hctrL1All; }
-        else if (hctrInAll.status) { patt = 0; hctrAll = &hctrInAll; }
+        if      (hctrFsAll.status) { pattAll = 3; hctrAll = &hctrFsAll; } 
+        else if (hctrL9All.status) { pattAll = 2; hctrAll = &hctrL9All; }
+        else if (hctrL1All.status) { pattAll = 1; hctrAll = &hctrL1All; }
+        else if (hctrInAll.status) { pattAll = 0; hctrAll = &hctrInAll; }
         if (hctrAll == nullptr || !hctrAll->status) continue;
 
         Short_t  signAll = TrackSys::Numc::Compare(hctrAll->rig[0]);
@@ -237,46 +419,77 @@ int main(int argc, char * argv[]) {
         Double_t qltxAll = hctrAll->qlt[0];
         Double_t qltyAll = hctrAll->qlt[1];
         
-        Double_t ckmass = (fTof->betaH < 1.0) ? std::fabs(info.chrg() * cktrIn.rig * std::sqrt(1.0/fTof->betaH/fTof->betaH-1.0)): -1.0;
-        
-        if (cktrIn.rig > 0 && ckmass > 0 && cktrIn.nchi[0] < 8 && cktrIn.nchi[1] < 8) hCKPRmass->fillH2D(std::fabs(cktrIn.rig), ckmass, fList->weight);
-        if (cktrIn.rig < 0 && ckmass > 0 && cktrIn.nchi[0] < 8 && cktrIn.nchi[1] < 8) hCKNRmass->fillH2D(std::fabs(cktrIn.rig), ckmass, fList->weight);
+        Bool_t llrcAll = fTrd->LLRep[0] > (0.2 + 0.6 * mutr.bta[0] * mutr.bta[0]);
 
-        if (sign > 0) hPRqltx->fillH2D(arig, qltx, fList->weight);
-        if (sign < 0) hNRqltx->fillH2D(arig, qltx, fList->weight);
-        if (sign > 0) hPRqlty->fillH2D(arig, qlty, fList->weight);
-        if (sign < 0) hNRqlty->fillH2D(arig, qlty, fList->weight);
-        
-        if (sign > 0) hPRTRDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
-        if (sign < 0) hNRTRDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
+        Bool_t islowAll = (mutr.status && mutr.bta[0] > 0.5 && mutr.bta[0] < 0.8 && (mutr.rig[0]*hctr->rig[0] > 0));
 
-        if (goodmu) hIRflux->fillH1D(irig, fList->weight);
-        if (sign > 0 && goodmu) hPRflux->fillH1D(arig, fList->weight);
-        if (sign < 0 && goodmu) hNRflux->fillH1D(arig, fList->weight);
+        if (signAll > 0) hPRqltxAll->fillH2D(arigAll, qltxAll, fList->weight);
+        if (signAll < 0) hNRqltxAll->fillH2D(arigAll, qltxAll, fList->weight);
+        if (signAll > 0) hPRqltyAll->fillH2D(arigAll, qltyAll, fList->weight);
+        if (signAll < 0) hNRqltyAll->fillH2D(arigAll, qltyAll, fList->weight);
         
-        if (sign > 0 && goodmu) hPRmass->fillH2D(arig, mutr.mass, fList->weight);
-        if (sign < 0 && goodmu) hNRmass->fillH2D(arig, mutr.mass, fList->weight);
+        if (llrcAll && signAll > 0) hPRqltxC1All->fillH2D(arigAll, qltxAll, fList->weight);
+        if (llrcAll && signAll < 0) hNRqltxC1All->fillH2D(arigAll, qltxAll, fList->weight);
+        if (llrcAll && signAll > 0) hPRqltyC1All->fillH2D(arigAll, qltyAll, fList->weight);
+        if (llrcAll && signAll < 0) hNRqltyC1All->fillH2D(arigAll, qltyAll, fList->weight);
         
-        if (goodmu && qltx < 2.0 && qlty < 2.0) hIRflux2->fillH1D(irig, fList->weight);
-        if (sign > 0 && goodmu && qltx < 2.0 && qlty < 2.0) hPRflux2->fillH1D(arig, fList->weight);
-        if (sign < 0 && goodmu && qltx < 2.0 && qlty < 2.0) hNRflux2->fillH1D(arig, fList->weight);
+        if (signAll > 0) hPRTRDllrAll->fillH2D(arigAll, fTrd->LLRep[0], fList->weight);
+        if (signAll < 0) hNRTRDllrAll->fillH2D(arigAll, fTrd->LLRep[0], fList->weight);
+
+        hIRfluxAll->fillH1D(irigAll, fList->weight);
+        if (signAll > 0) hPRfluxAll->fillH1D(arigAll, fList->weight);
+        if (signAll < 0) hNRfluxAll->fillH1D(arigAll, fList->weight);
+
+        if (arigAll > 1.0 * maxCF) hIRfluxCF10All->fillH1D(irigAll, fList->weight);
+        if (signAll > 0 && arigAll > 1.0 * maxCF) hPRfluxCF10All->fillH1D(arigAll, fList->weight);
+        if (signAll < 0 && arigAll > 1.0 * maxCF) hNRfluxCF10All->fillH1D(arigAll, fList->weight);
         
-        if (sign > 0 && goodmu && qltx < 2.0 && qlty < 2.0) hPRmass2->fillH2D(arig, mutr.mass, fList->weight);
-        if (sign < 0 && goodmu && qltx < 2.0 && qlty < 2.0) hNRmass2->fillH2D(arig, mutr.mass, fList->weight);
-       
-        if (goodmu) hIRflux3->fillH1D(irigAll, fList->weight);
-        if (signAll > 0 && goodmu) hPRflux3->fillH1D(arigAll, fList->weight);
-        if (signAll < 0 && goodmu) hNRflux3->fillH1D(arigAll, fList->weight);
+        if (llrcAll && arigAll > 1.0 * maxCF) hIRfluxCF10C1All->fillH1D(irigAll, fList->weight);
+        if (llrcAll && signAll > 0 && arigAll > 1.0 * maxCF) hPRfluxCF10C1All->fillH1D(arigAll, fList->weight);
+        if (llrcAll && signAll < 0 && arigAll > 1.0 * maxCF) hNRfluxCF10C1All->fillH1D(arigAll, fList->weight);
         
-        if (signAll > 0 && goodmu) hPRmass3->fillH2D(arigAll, mutr.mass, fList->weight);
-        if (signAll < 0 && goodmu) hNRmass3->fillH2D(arigAll, mutr.mass, fList->weight);
+        if (llrcAll && qltxAll < 2.0 && qltyAll < 2.0 && arigAll > 1.0 * maxCF) hIRfluxCF10C2All->fillH1D(irigAll, fList->weight);
+        if (llrcAll && qltxAll < 2.0 && qltyAll < 2.0 && signAll > 0 && arigAll > 1.0 * maxCF) hPRfluxCF10C2All->fillH1D(arigAll, fList->weight);
+        if (llrcAll && qltxAll < 2.0 && qltyAll < 2.0 && signAll < 0 && arigAll > 1.0 * maxCF) hNRfluxCF10C2All->fillH1D(arigAll, fList->weight);
         
-        if (goodmu && qltxAll < 2.0 && qltyAll < 2.0) hIRflux4->fillH1D(irigAll, fList->weight);
-        if (signAll > 0 && goodmu && qltxAll < 2.0 && qltyAll < 2.0) hPRflux4->fillH1D(arigAll, fList->weight);
-        if (signAll < 0 && goodmu && qltxAll < 2.0 && qltyAll < 2.0) hNRflux4->fillH1D(arigAll, fList->weight);
+        if (mutr.status && signAll > 0) hPRmuqxAll->fillH2D(arigAll, mutr.muQlt[0], fList->weight);
+        if (mutr.status && signAll < 0) hNRmuqxAll->fillH2D(arigAll, mutr.muQlt[0], fList->weight);
+        if (mutr.status && signAll > 0) hPRmuqyAll->fillH2D(arigAll, mutr.muQlt[1], fList->weight);
+        if (mutr.status && signAll < 0) hNRmuqyAll->fillH2D(arigAll, mutr.muQlt[1], fList->weight);
+        if (mutr.status && signAll > 0) hPRmuqbAll->fillH2D(arigAll, mutr.muQlt[2], fList->weight);
+        if (mutr.status && signAll < 0) hNRmuqbAll->fillH2D(arigAll, mutr.muQlt[2], fList->weight);
+
+        if (mutr.status) hmassAll->fillH2D(arigAll, signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
+        if (mutr.status && mugood) hmassC1All->fillH2D(arigAll, signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
+        if (mutr.status && mugood && llrcAll) hmassC2All->fillH2D(arigAll, signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
         
-        if (signAll > 0 && goodmu && qltxAll < 2.0 && qltyAll < 2.0) hPRmass4->fillH2D(arigAll, mutr.mass, fList->weight);
-        if (signAll < 0 && goodmu && qltxAll < 2.0 && qltyAll < 2.0) hNRmass4->fillH2D(arigAll, mutr.mass, fList->weight);
+        if (islowAll && mutr.status) hLmassAll->fillH1D(signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood) hLmassC1All->fillH1D(signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood && llrcAll) hLmassC2All->fillH1D(signAll * mutr.mass, fList->weight * (signAll>0?0.001:1.0));
+        
+        Short_t   pattAll2 = -1;
+        HCTrInfo* hctrAll2 = nullptr; 
+        if      (hctrFsAll2.status) { pattAll2 = 3; hctrAll2 = &hctrFsAll2; } 
+        else if (hctrL9All2.status) { pattAll2 = 2; hctrAll2 = &hctrL9All2; }
+        else if (hctrL1All2.status) { pattAll2 = 1; hctrAll2 = &hctrL1All2; }
+        else if (hctrInAll2.status) { pattAll2 = 0; hctrAll2 = &hctrInAll2; }
+        if (hctrAll2 == nullptr || !hctrAll2->status) continue;
+        
+        if (islowAll && mutr.status && mugood && mutr.rig[0] > 0) hPRM1llx->fillH1D(hctrAll->qlt[0], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] < 0) hNRM1llx->fillH1D(hctrAll->qlt[0], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] > 0) hPRM1lly->fillH1D(hctrAll->qlt[1], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] < 0) hNRM1lly->fillH1D(hctrAll->qlt[1], fList->weight);
+        
+        if (islowAll && mutr.status && mugood && mutr.rig[0] > 0) hPRM2llx->fillH1D(hctrAll2->qlt[0], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] < 0) hNRM2llx->fillH1D(hctrAll2->qlt[0], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] > 0) hPRM2lly->fillH1D(hctrAll2->qlt[1], fList->weight);
+        if (islowAll && mutr.status && mugood && mutr.rig[0] < 0) hNRM2lly->fillH1D(hctrAll2->qlt[1], fList->weight);
+        
+        if (islowAll && mutr.status && mugood) hM1llx->fillH2D(musign * mutr.mass, hctrAll->qlt[0], fList->weight * (musign>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood) hM1lly->fillH2D(musign * mutr.mass, hctrAll->qlt[1], fList->weight * (musign>0?0.001:1.0));
+        
+        if (islowAll && mutr.status && mugood) hM2llx->fillH2D(musign * mutr.mass, hctrAll2->qlt[0], fList->weight * (musign>0?0.001:1.0));
+        if (islowAll && mutr.status && mugood) hM2lly->fillH2D(musign * mutr.mass, hctrAll2->qlt[1], fList->weight * (musign>0?0.001:1.0));
     }
     ofle->Write();
     ofle->Close();

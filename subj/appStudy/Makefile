@@ -18,7 +18,9 @@ all :
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
 	@cp -fa $(PWD)/src/fill.C $(TagetDir)/src/fill.C 2> /dev/null
+	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
 	make $(TagetDir)/fill
+	make $(TagetDir)/fit
 
 $(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
@@ -27,12 +29,12 @@ $(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 $(TagetDir)/fill : $(TagetDir)/obj/fill.o
 	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
 
-#$(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
-#	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
-#-include $(TagetDir)/obj/fit.d
-#
-#$(TagetDir)/fit : $(TagetDir)/obj/fit.o
-#	$(LD) -o $@ $+ $(LIBP)
+$(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
+	$(CXX) -c -o $@ $(DEFS) $(FLGS) $(OPTS) $< -MMD
+-include $(TagetDir)/obj/fit.d
+
+$(TagetDir)/fit : $(TagetDir)/obj/fit.o
+	$(LD) -o $@ $+ $(LIBP)
 
 clean :
 	@rm -fv $(TagetDir)/env/*
@@ -40,3 +42,4 @@ clean :
 	@rm -fv $(TagetDir)/src/*
 	@rm -fv $(TagetDir)/lst/*
 	@rm -fv $(TagetDir)/fill
+	@rm -fv $(TagetDir)/fit

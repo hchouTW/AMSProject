@@ -117,19 +117,19 @@ bool RecEvent::rebuild(AMSEventR * event) {
             mass = primaryMC->Mass;
         }
 
-        TkStID = TkStPar->iTrTrackPar(1, 3, 22, mass, zin);
+        TkStID = TkStPar->iTrTrackPar(1, 3, 21, mass, zin);
         if (TkStID >= 0) rigIN = TkStPar->GetRigidity(TkStID, 1); // z = 0
 		if (TkStID >= 0) rigMAX = std::fabs(rigIN);
 
-        int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, 22, mass, zin);
+        int TkStID_L1 = TkStPar->iTrTrackPar(1, 5, 21, mass, zin);
         if (TkStID_L1 >= 0) rigL1 = TkStPar->GetRigidity(TkStID_L1, 1); // z = 0
 		if (TkStID_L1 >= 0) rigMAX = std::max(std::fabs(rigL1), rigMAX);
         
-        int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, 22, mass, zin);
+        int TkStID_L9 = TkStPar->iTrTrackPar(1, 6, 21, mass, zin);
         if (TkStID_L9 >= 0) rigL9 = TkStPar->GetRigidity(TkStID_L9, 1); // z = 0
 		if (TkStID_L9 >= 0) rigMAX = std::max(std::fabs(rigL9), rigMAX);
         
-        int TkStID_FS = TkStPar->iTrTrackPar(1, 7, 22, mass, zin);
+        int TkStID_FS = TkStPar->iTrTrackPar(1, 7, 21, mass, zin);
         if (TkStID_FS >= 0) rigFS = TkStPar->GetRigidity(TkStID_FS, 1); // z = 0
 		if (TkStID_FS >= 0) rigMAX = std::max(std::fabs(rigFS), rigMAX);
        
@@ -1131,7 +1131,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         
         // Kalman
         Bool_t kfSwOpt = false;
-        Int_t kfRefit = 22;
+        Int_t kfRefit = 21;
 		for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
             TrFit trFit;
             MGClock::HrsStopwatch kfSw; kfSw.start();
@@ -1360,7 +1360,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 				{
 				  if (recEv.iTrTrack < 0) break;
 				  TrTrackR * trtk = event->pTrTrack(recEv.iTrTrack);
-				  int fitid_max = trtk->iTrTrackPar(1, 0, 22, recEv.mass, recEv.zin);
+				  int fitid_max = trtk->iTrTrackPar(1, 0, 21, recEv.mass, recEv.zin);
 				  if (fitid_max < 0) break;
 				  trdkcls->SetTrTrack(trtk, fitid_max);
 				  isOK = true;
