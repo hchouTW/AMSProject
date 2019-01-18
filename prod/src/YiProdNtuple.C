@@ -45,9 +45,9 @@ int main(int argc, const char ** argv) {
 	DataSelection::setOption(DataSelection::TRK,  DataSelection::ON);
 	DataSelection::setOption(DataSelection::RICH, DataSelection::ON);
 	DataSelection::setOption(DataSelection::ECAL, DataSelection::ON);
-	DataSelection::setOption(DataSelection::HYC,  DataSelection::OFF);
+	DataSelection::setOption(DataSelection::HYC,  DataSelection::ON);
 
-	EventBase::setEventVersion(EventBase::B950);
+	EventBase::setEventVersion(EventBase::B1130);
 
 	COUT("\n\n");
 	COUT("Usage : YiProdNtuple event_mode file_list group_id group_size (path)\n");

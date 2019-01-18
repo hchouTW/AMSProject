@@ -374,6 +374,7 @@ class TRDTrInfo : public TObject {
 
             VTXstatus = false;
             VTXdist = 0;
+            VTXagl = 0;
             std::fill_n(VTXcoo, 3, 0);
         } 
 	
@@ -394,6 +395,7 @@ class TRDTrInfo : public TObject {
 
         Bool_t  VTXstatus;
         Float_t VTXdist;
+        Float_t VTXagl;
         Float_t VTXcoo[3];
 
         ClassDef(TRDTrInfo, 1)
@@ -514,8 +516,11 @@ class CKTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 6, 0);
             
-            std::fill_n(statusLJ, 9, false);
-            std::fill_n(stateLJ[0], 9*6, 0);
+            statusRh = false;
+            std::fill_n(stateRh, 6, 0);
+            
+            //std::fill_n(statusLJ, 9, false);
+            //std::fill_n(stateLJ[0], 9*6, 0);
 
             cpuTime = 0;
         }
@@ -537,12 +542,15 @@ class CKTrackInfo : public TObject {
         Bool_t  statusBtm;
         Float_t stateBtm[6]; // (cx cy cz ux uy uz)
 
-        Bool_t  statusLJ[9];
-        Float_t stateLJ[9][6]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
+        Bool_t  statusRh;
+        Float_t stateRh[6]; // (cx cy cz ux uy uz)
+        
+        //Bool_t  statusLJ[9];
+        //Float_t stateLJ[9][6]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 	
-    ClassDef(CKTrackInfo, 1)
+    ClassDef(CKTrackInfo, 2)
 };
 
 
@@ -557,8 +565,8 @@ class KFTrackInfo : public TObject {
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
             
-            std::fill_n(rig, 3, 0);
-            std::fill_n(bta, 3, 0);
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -569,8 +577,11 @@ class KFTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
             
-            std::fill_n(statusLJ, 9, false);
-            std::fill_n(stateLJ[0], 9*8, 0);
+            statusRh = false;
+            std::fill_n(stateRh, 8, 0);
+
+            //std::fill_n(statusLJ, 9, false);
+            //std::fill_n(stateLJ[0], 9*8, 0);
 
             cpuTime = 0;
         }
@@ -580,8 +591,8 @@ class KFTrackInfo : public TObject {
         Short_t ndof[2];
 		Float_t nchi[2];
        
-        Float_t rig[3]; // z = 195, 0, -136
-        Float_t bta[3]; // z = 195, 0, -136
+        Float_t rig[4]; // z = 195, 0, -136, -75
+        Float_t bta[4]; // z = 195, 0, -136, -75
 
         Bool_t  statusTop;
         Float_t stateTop[8]; // (cx cy cz ux uy uz rig bta)
@@ -591,13 +602,16 @@ class KFTrackInfo : public TObject {
         
         Bool_t  statusBtm;
         Float_t stateBtm[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Bool_t  statusRh;
+        Float_t stateRh[8]; // (cx cy cz ux uy uz rig bta)
 
-        Bool_t  statusLJ[9];
-        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
+        //Bool_t  statusLJ[9];
+        //Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 	
         Float_t cpuTime; // [ms]
 
-    ClassDef(KFTrackInfo, 1)
+    ClassDef(KFTrackInfo, 2)
 };
 
 
@@ -865,6 +879,7 @@ class TRK : public TObject {
 			QL2 = -1;
 			QL1 = -1;
 			QL9 = -1;
+            QInMin = -1;
 
             hits.clear();
 
@@ -890,6 +905,7 @@ class TRK : public TObject {
 		Float_t QL1;
 		Float_t QL2;
 		Float_t QL9;
+		Float_t QInMin;
 		
         // Track Hits
         std::vector<HitTRKInfo> hits;
@@ -1106,8 +1122,8 @@ class HCTrInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 3, 0);
-            std::fill_n(bta, 3, 0);
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -1118,8 +1134,11 @@ class HCTrInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
             
-            std::fill_n(statusLJ, 9, false);
-            std::fill_n(stateLJ[0], 9*8, 0);
+            statusRh = false;
+            std::fill_n(stateRh, 8, 0);
+            
+            //std::fill_n(statusLJ, 9, false);
+            //std::fill_n(stateLJ[0], 9*8, 0);
            
             cpuTime = 0;
         }
@@ -1136,20 +1155,23 @@ class HCTrInfo : public TObject {
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[3]; // z = 195, 0, -136
-        Float_t bta[3]; // z = 195, 0, -136
+        Float_t rig[4]; // z = 195, 0, -136, -75
+        Float_t bta[4]; // z = 195, 0, -136, -75
         
-        Bool_t  statusTop; // track at top of detector (z = 195.)
+        Bool_t  statusTop; // track at (z = 195.)
         Float_t stateTop[8];
         
-        Bool_t  statusCen; // track at bottom of detector (z = 0.)
+        Bool_t  statusCen; // track at (z = 0.)
         Float_t stateCen[8];
         
-        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
+        Bool_t  statusBtm; // track at (z = -136.)
         Float_t stateBtm[8];
+        
+        Bool_t  statusRh; // track at (z = -75.)
+        Float_t stateRh[8];
 
-        Bool_t  statusLJ[9];
-        Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
+        //Bool_t  statusLJ[9];
+        //Float_t stateLJ[9][8]; // track state at layerJ (1 2 3 4 5 6 7 8 9)
 
         Float_t cpuTime; // [ms]
 
@@ -1177,8 +1199,8 @@ class HCBtaInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 3, 0);
-            std::fill_n(bta, 3, 0);
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
             
             cpuTime = 0;
         }
@@ -1197,8 +1219,8 @@ class HCBtaInfo : public TObject {
 
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[3]; // z = 195, 0, -136
-        Float_t bta[3]; // z = 195, 0, -136
+        Float_t rig[4]; // z = 195, 0, -136, -75
+        Float_t bta[4]; // z = 195, 0, -136, -75
         
         Float_t cpuTime; // [ms]
 
@@ -1228,8 +1250,8 @@ class HCMuInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 3, 0);
-            std::fill_n(bta, 3, 0);
+            std::fill_n(rig, 4, 0);
+            std::fill_n(bta, 4, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -1239,6 +1261,9 @@ class HCMuInfo : public TObject {
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
+            
+            statusRh = false;
+            std::fill_n(stateRh, 8, 0);
            
             cpuTime = 0;
         }
@@ -1259,21 +1284,24 @@ class HCMuInfo : public TObject {
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[3]; // z = 195, 0, -136
-        Float_t bta[3]; // z = 195, 0, -136
+        Float_t rig[4]; // z = 195, 0, -136, -75
+        Float_t bta[4]; // z = 195, 0, -136, -75
         
-        Bool_t  statusTop; // track at top of detector (z = 195.)
+        Bool_t  statusTop; // track at (z = 195.)
         Float_t stateTop[8];
         
-        Bool_t  statusCen; // track at bottom of detector (z = 0.)
+        Bool_t  statusCen; // track at (z = 0.)
         Float_t stateCen[8];
         
-        Bool_t  statusBtm; // track at bottom of detector (z = -136.)
+        Bool_t  statusBtm; // track at (z = -136.)
         Float_t stateBtm[8];
+        
+        Bool_t  statusRh; // track at (z = -75.)
+        Float_t stateRh[8];
 
         Float_t cpuTime; // [ms]
 
-        ClassDef(HCMuInfo, 1)
+        ClassDef(HCMuInfo, 2)
 };
 
 

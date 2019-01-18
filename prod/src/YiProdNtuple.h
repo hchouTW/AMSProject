@@ -107,11 +107,8 @@ class RecEvent {
         static constexpr double TopZ =  195.;
         static constexpr double CenZ =    0.;
         static constexpr double BtmZ = -136.;
-        static constexpr double AglZ = -74.35;
-        static constexpr double NafZ = -75.45;
-        static constexpr double RichZ[2] = { -72.8, -75.9 };
-        static constexpr double RichBound = 17.50;
-
+        static constexpr double RhZ  =  -75.;
+        
         static constexpr double NOISE_Q = 0.70;
 
 		double trackerZJ[9];
@@ -160,7 +157,7 @@ class EventBase {
 		static bool checkEventMode(EventBase::MODE mode) {return (EventBase::eventMode == mode);}
 
 		enum VERSION {
-			B620, B950
+			B620, B950, B1130
 		};
 		static enum VERSION eventVersion;
 		static void setEventVersion(EventBase::VERSION version) {EventBase::eventVersion = version;}

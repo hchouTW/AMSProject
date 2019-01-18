@@ -194,7 +194,7 @@ bool RecEvent::rebuild(AMSEventR * event) {
 
 //---- EventBase ----//
 EventBase::MODE EventBase::eventMode = EventBase::ISS;
-EventBase::VERSION EventBase::eventVersion = EventBase::B950;
+EventBase::VERSION EventBase::eventVersion = EventBase::B1130;
 
 EventBase::EventBase() {
 	isTreeSelf = false;
@@ -1012,7 +1012,17 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTrk.QL2 = (isL2>0) ? trtk->GetLayerJQH(2, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL1 = (isL1>0) ? trtk->GetLayerJQH(1, 2, recEv.beta, fitidInn) : -1;
 		fTrk.QL9 = (isL9>0) ? trtk->GetLayerJQH(9, 2, recEv.beta, fitidInn) : -1;
-        
+
+        double qinmin = -1.0;
+        for (int il = 2; il <= 7; ++il) {
+            if ((bitPattXYJ&(1<<il)) == 0) continue;
+            double ql = trtk->GetLayerJQH(il+1, 2, recEv.beta, fitidInn);
+            if (ql <= 0.) continue;
+            if (qinmin <= 0.) qinmin = ql;
+            else              qinmin = std::min(qinmin, ql);
+        }
+        fTrk.QInMin = qinmin;
+
         // Qrecon: YJ
         //int innerq_patt;
         //float innerq_rms;
@@ -1020,6 +1030,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 		//fTrk.QL2 = (isL2>0) ? trtk->GetLayerQYJ(2, 2, recEv.beta, fitidInn) : -1;
 		//fTrk.QL1 = (isL1>0) ? trtk->GetLayerQYJ(1, 2, recEv.beta, fitidInn) : -1;
 		//fTrk.QL9 = (isL9>0) ? trtk->GetLayerQYJ(9, 2, recEv.beta, fitidInn) : -1;
+        
+        //double qinmin = -1.0;
+        //for (int il = 2; il <= 7; ++il) {
+        //    if ((bitPattXYJ&(1<<il)) == 0) continue;
+        //    double ql = trtk->GetLayerQYJ(il+1, 2, recEv.beta, fitidInn);
+        //    if (ql <= 0.) continue;
+        //    if (qinmin <= 0.) qinmin = ql;
+        //    else              qinmin = std::min(qinmin, ql);
+        //}
+        //fTrk.QInMin = qinmin;
 
 		for (int ilay = 0; ilay < 9; ++ilay) {
 			if (!trtk->TestHitLayerJ(ilay+1)) continue;
@@ -1096,17 +1116,17 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.rig = trtk->GetRigidity(fitid, 1); // z = 0
             track.bta = (1.0 / std::sqrt(1.0 + (recEv.mass/track.rig) * (recEv.mass/track.rig)));
         
-            for (int il = 0; il < 9; ++il) {
-				AMSPoint pnt; AMSDir dir;
-                trtk->Interpolate(recEv.trackerZJ[il], pnt, dir, fitid);
-                track.statusLJ[il] = true;
-                track.stateLJ[il][0] =  pnt[0];
-				track.stateLJ[il][1] =  pnt[1];
-				track.stateLJ[il][2] =  pnt[2];
-				track.stateLJ[il][3] = -dir[0];
-				track.stateLJ[il][4] = -dir[1];
-				track.stateLJ[il][5] = -dir[2];
-            }
+            //for (int il = 0; il < 9; ++il) {
+			//	AMSPoint pnt; AMSDir dir;
+            //    trtk->Interpolate(recEv.trackerZJ[il], pnt, dir, fitid);
+            //    track.statusLJ[il] = true;
+            //    track.stateLJ[il][0] =  pnt[0];
+			//	track.stateLJ[il][1] =  pnt[1];
+			//	track.stateLJ[il][2] =  pnt[2];
+			//	track.stateLJ[il][3] = -dir[0];
+			//	track.stateLJ[il][4] = -dir[1];
+			//	track.stateLJ[il][5] = -dir[2];
+            //}
 
 			AMSPoint pntTop; AMSDir dirTop;
             trtk->Interpolate(recEv.TopZ, pntTop, dirTop, fitid);
@@ -1137,6 +1157,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.stateBtm[3] = -dirBtm[0];
 			track.stateBtm[4] = -dirBtm[1];
 			track.stateBtm[5] = -dirBtm[2];
+            
+            AMSPoint pntRh; AMSDir dirRh;
+            trtk->Interpolate(recEv.RhZ, pntRh, dirRh, fitid);
+            track.statusRh = true;
+            track.stateRh[0] =  pntRh[0];
+			track.stateRh[1] =  pntRh[1];
+			track.stateRh[2] =  pntRh[2];
+			track.stateRh[3] = -dirRh[0];
+			track.stateRh[4] = -dirRh[1];
+			track.stateRh[5] = -dirRh[2];
 
             track.cpuTime = ckSw.time() * 1.0e+3;
             fTrk.cktr.at(patt) = track;
@@ -1160,20 +1190,20 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.nchi[1] = trtk->GetNormChisqY(fitid);
             
             const int ustate = 0; // KALMAN
-            for (int il = 0; il < 9; ++il) {
-				AMSPoint pnt; AMSDir dir; double rig = 0;
-                trFit.InterpolateKalman(recEv.trackerZJ[il], pnt, dir, rig, ustate);
-                if (MGNumc::EqualToZero(rig)) continue;
-                track.statusLJ[il] = true;
-                track.stateLJ[il][0] =  pnt[0];
-				track.stateLJ[il][1] =  pnt[1];
-				track.stateLJ[il][2] =  pnt[2];
-				track.stateLJ[il][3] = -dir[0];
-				track.stateLJ[il][4] = -dir[1];
-				track.stateLJ[il][5] = -dir[2];
-				track.stateLJ[il][6] = rig;
-				track.stateLJ[il][7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rig) * (recEv.mass/rig)));
-            }
+            //for (int il = 0; il < 9; ++il) {
+			//	AMSPoint pnt; AMSDir dir; double rig = 0;
+            //    trFit.InterpolateKalman(recEv.trackerZJ[il], pnt, dir, rig, ustate);
+            //    if (MGNumc::EqualToZero(rig)) continue;
+            //    track.statusLJ[il] = true;
+            //    track.stateLJ[il][0] =  pnt[0];
+			//	track.stateLJ[il][1] =  pnt[1];
+			//	track.stateLJ[il][2] =  pnt[2];
+			//	track.stateLJ[il][3] = -dir[0];
+			//	track.stateLJ[il][4] = -dir[1];
+			//	track.stateLJ[il][5] = -dir[2];
+			//	track.stateLJ[il][6] = rig;
+			//	track.stateLJ[il][7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rig) * (recEv.mass/rig)));
+            //}
 				
             AMSPoint pntTop; AMSDir dirTop; double rigTop = 0;
             trFit.InterpolateKalman(recEv.TopZ, pntTop, dirTop, rigTop, ustate);
@@ -1216,13 +1246,29 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			    track.stateBtm[6] = rigBtm;
 			    track.stateBtm[7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rigBtm) * (recEv.mass/rigBtm)));
             }
+            
+            AMSPoint pntRh; AMSDir dirRh; double rigRh = 0;
+            trFit.InterpolateKalman(recEv.RhZ, pntRh, dirRh, rigRh, ustate);
+            if (!MGNumc::EqualToZero(rigRh)) {
+                track.statusRh = true;
+                track.stateRh[0] =  pntRh[0];
+			    track.stateRh[1] =  pntRh[1];
+			    track.stateRh[2] =  pntRh[2];
+			    track.stateRh[3] = -dirRh[0];
+			    track.stateRh[4] = -dirRh[1];
+			    track.stateRh[5] = -dirRh[2];
+			    track.stateRh[6] = rigRh;
+			    track.stateRh[7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rigRh) * (recEv.mass/rigRh)));
+            }
                 
             track.rig[0] = track.stateTop[6];
             track.rig[1] = track.stateCen[6];
             track.rig[2] = track.stateBtm[6];
+            track.rig[3] = track.stateRh[6];
 			track.bta[0] = track.stateTop[7];
 			track.bta[1] = track.stateCen[7];
 			track.bta[2] = track.stateBtm[7];
+			track.bta[3] = track.stateRh[7];
             
             track.cpuTime = kfSw.time() * 1.0e+3;
 
@@ -1549,6 +1595,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 
         bool   vtxstatus = false;
         double vtxdist = 0;
+        double vtxagl  = 0;
         double vtxcoo[3] = { 0, 0, 0 };
         if (fTrd.trackStatus) {
             double d0[3] = { state[0] - fTrd.trackState[0], state[1] - fTrd.trackState[1], state[2] - fTrd.trackState[2] };
@@ -1567,9 +1614,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
                     TrackSys::SVecD<3> trb( state[0] + rsl(1) * sb[0], state[1] + rsl(1) * sb[1], state[2] + rsl(1) * sb[2] );
                     TrackSys::SVecD<3>&& cen = TrackSys::Numc::ONE_TO_TWO * (tra + trb);
                     double dist = TrackSys::LA::Mag(trb - tra);
+                    double agl  = std::acos(sasb);
 
                     vtxstatus = true;
                     vtxdist = dist;
+                    vtxagl  = agl;
                     vtxcoo[0] = cen[0];
                     vtxcoo[1] = cen[1];
                     vtxcoo[2] = cen[2];
@@ -1600,6 +1649,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         if (vtxstatus) {
             trdTr.VTXstatus = true;
             trdTr.VTXdist = vtxdist;
+            trdTr.VTXagl  = vtxagl;
             trdTr.VTXcoo[0] = vtxcoo[0];
             trdTr.VTXcoo[1] = vtxcoo[1];
             trdTr.VTXcoo[2] = vtxcoo[2];
@@ -1607,7 +1657,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 
         fTrd.others.push_back(trdTr);
     }
-   
+
     // Vertex
     //TRDVertex trdVtx;
     //trdVtx.Reconstruction(event);
@@ -1681,6 +1731,11 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
 	if (event == nullptr) return false;
 	fStopwatch.start();
+        
+    //static constexpr double AglZ = -74.35;
+    //static constexpr double NafZ = -75.45;
+    //static constexpr double RichZ[2] = { -72.8, -75.9 };
+    //static constexpr double RichBound = 17.50;
 
 	// official RichRingR - start
     const bool rebuild = true;
@@ -2321,19 +2376,19 @@ HCTrInfo EventHyc::processHCTr(TrackSys::PhyTrFit& hctr) {
     track.state[6] = hctr.part().rig();
     track.state[7] = hctr.part().bta();
     
-    for (int il = 0; il < 9; ++il) {
-        TrackSys::PhySt&& phySt = hctr.interpolate_to_z(recEv.trackerZJ[il]);
-        if (TrackSys::Numc::EqualToZero(phySt.mom())) continue;
-        track.statusLJ[il] = true;
-        track.stateLJ[il][0] = phySt.cx();
-        track.stateLJ[il][1] = phySt.cy();
-        track.stateLJ[il][2] = phySt.cz();
-        track.stateLJ[il][3] = phySt.ux();
-        track.stateLJ[il][4] = phySt.uy();
-        track.stateLJ[il][5] = phySt.uz();
-        track.stateLJ[il][6] = phySt.rig();
-        track.stateLJ[il][7] = phySt.bta();
-    }
+    //for (int il = 0; il < 9; ++il) {
+    //    TrackSys::PhySt&& phySt = hctr.interpolate_to_z(recEv.trackerZJ[il]);
+    //    if (TrackSys::Numc::EqualToZero(phySt.mom())) continue;
+    //    track.statusLJ[il] = true;
+    //    track.stateLJ[il][0] = phySt.cx();
+    //    track.stateLJ[il][1] = phySt.cy();
+    //    track.stateLJ[il][2] = phySt.cz();
+    //    track.stateLJ[il][3] = phySt.ux();
+    //    track.stateLJ[il][4] = phySt.uy();
+    //    track.stateLJ[il][5] = phySt.uz();
+    //    track.stateLJ[il][6] = phySt.rig();
+    //    track.stateLJ[il][7] = phySt.bta();
+    //}
     
     TrackSys::PhySt&& phyStTop = hctr.interpolate_to_z(RecEvent::TopZ);
     if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {
@@ -2373,14 +2428,29 @@ HCTrInfo EventHyc::processHCTr(TrackSys::PhyTrFit& hctr) {
         track.stateBtm[6] = phyStBtm.rig();
         track.stateBtm[7] = phyStBtm.bta();
     }
-   
+    
+    TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
+    if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
+        track.statusRh = true;
+        track.stateRh[0] = phyStRh.cx();
+        track.stateRh[1] = phyStRh.cy();
+        track.stateRh[2] = phyStRh.cz();
+        track.stateRh[3] = phyStRh.ux();
+        track.stateRh[4] = phyStRh.uy();
+        track.stateRh[5] = phyStRh.uz();
+        track.stateRh[6] = phyStRh.rig();
+        track.stateRh[7] = phyStRh.bta();
+    }
+    
     track.rig[0] = track.stateTop[6];
     track.rig[1] = track.stateCen[6];
     track.rig[2] = track.stateBtm[6];
+    track.rig[3] = track.stateRh[6];
     
     track.bta[0] = track.stateTop[7];
     track.bta[1] = track.stateCen[7];
     track.bta[2] = track.stateBtm[7];
+    track.bta[3] = track.stateRh[7];
 
     return track;
 }
@@ -2412,7 +2482,6 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
     track.state[6] = hcbta.part().rig();
     track.state[7] = hcbta.part().bta();
     
-    
     TrackSys::PhySt&& phyStTop = hcbta.interpolate_to_z(RecEvent::TopZ);
     if (!TrackSys::Numc::EqualToZero(phyStTop.mom())) {
         track.rig[0] = phyStTop.rig();
@@ -2429,6 +2498,12 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
     if (!TrackSys::Numc::EqualToZero(phyStBtm.mom())) {
         track.rig[2] = phyStBtm.rig();
         track.bta[2] = phyStBtm.bta();
+    }
+
+    TrackSys::PhySt&& phyStRh = hcbta.interpolate_to_z(RecEvent::RhZ);
+    if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
+        track.rig[3] = phyStRh.rig();
+        track.bta[3] = phyStRh.bta();
     }
 
     return track;
@@ -2513,14 +2588,29 @@ HCMuInfo EventHyc::processHCMu(TrackSys::PhyMuFit& hcmu) {
         track.stateBtm[6] = phyStBtm.rig();
         track.stateBtm[7] = phyStBtm.bta();
     }
+    
+    TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
+    if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
+        track.statusRh = true;
+        track.stateRh[0] = phyStRh.cx();
+        track.stateRh[1] = phyStRh.cy();
+        track.stateRh[2] = phyStRh.cz();
+        track.stateRh[3] = phyStRh.ux();
+        track.stateRh[4] = phyStRh.uy();
+        track.stateRh[5] = phyStRh.uz();
+        track.stateRh[6] = phyStRh.rig();
+        track.stateRh[7] = phyStRh.bta();
+    }
    
     track.rig[0] = track.stateTop[6];
     track.rig[1] = track.stateCen[6];
     track.rig[2] = track.stateBtm[6];
+    track.rig[3] = track.stateRh[6];
     
     track.bta[0] = track.stateTop[7];
     track.bta[1] = track.stateCen[7];
     track.bta[2] = track.stateBtm[7];
+    track.bta[3] = track.stateRh[7];
 
     return track;
 }
