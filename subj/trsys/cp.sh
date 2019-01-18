@@ -3,7 +3,7 @@
 #for id in `seq 0 33`
 #for id in `seq 0 41`
 #for id in `seq 0 9`
-for id in `seq 700 750`
+for id in `seq 700 800`
 do
     ii=`printf "%05d" $id`
     #sh /ams_home/hchou/AMSProject/jobs/NCU/xrdcp_cern2ncu.sh /eos/ams/user/h/hchou/AMSData/prod/18Oct17/MC_EL_025500.B1200 /ams02/user/hchou/MC_EL_025500.B1200_18Oct17 YiNtuple_MC.${ii} &
