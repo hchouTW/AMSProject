@@ -24,8 +24,11 @@ void RecEvent::init() {
 	iRichRing   = -1;
 
 	std::fill_n(trackerZJ, 9, 0);
-    zin = 1;
-    qin = 1;
+    zin = 0;
+    qin = -1;
+    qL2 = -1;
+    qL1 = -1;
+    qL9 = -1;
     mass = 0.93827230;
     beta = 1;
     rigMAX = 0;
@@ -137,6 +140,15 @@ bool RecEvent::rebuild(AMSEventR * event) {
         signr = 0;
         if (rigMAX > 0 && (TkStID < 0 || rigIN > 0) && (TkStID_L1 < 0 || rigL1 > 0) && (TkStID_L9 < 0 || rigL9 > 0) && (TkStID_FS < 0 || rigFS > 0)) signr =  1;
         if (rigMAX > 0 && (TkStID < 0 || rigIN < 0) && (TkStID_L1 < 0 || rigL1 < 0) && (TkStID_L9 < 0 || rigL9 < 0) && (TkStID_FS < 0 || rigFS < 0)) signr = -1;
+
+        // Qrecon: Hu Liu
+        if (TkStID >= 0) {
+            qin = TkStPar->GetInnerQH(2, beta, TkStID);
+		    qL2 = ((TkStPar->GetBitPatternJ()&  2) > 0) ? TkStPar->GetLayerJQH(2, 2, beta, TkStID) : -1;
+		    qL1 = ((TkStPar->GetBitPatternJ()&  1) > 0) ? TkStPar->GetLayerJQH(1, 2, beta, TkStID) : -1;
+		    qL9 = ((TkStPar->GetBitPatternJ()&256) > 0) ? TkStPar->GetLayerJQH(9, 2, beta, TkStID) : -1;
+            zin = (qin <= 1.0) ? 1 : std::lrint(qin);
+        }
 	}
 	if (TkStID < 0) { init(); fStopwatch.stop(); return false; }
     tkInID = TkStID;
@@ -2753,15 +2765,12 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	if (!isTrInnerXY) return -6002;
 	
     bool hasTrL2 = ((trBitPattJ&TrPtL2) > 0); 
-    //bool hasTrL2XY = ((trBitPattXYJ&TrPtL2) > 0); 
-    
-    //bool hasTrL1 = ((trBitPattJ&TrPtL1) > 0); 
-    //bool hasTrL9 = ((trBitPattJ&TrPtL9) > 0); 
+    bool hasTrL1 = ((trBitPattJ&TrPtL1) > 0); 
+    bool hasTrL9 = ((trBitPattJ&TrPtL9) > 0); 
     
     bool hasTrL1XY = ((trBitPattXYJ&TrPtL1) > 0); 
     bool hasTrL9XY = ((trBitPattXYJ&TrPtL9) > 0); 
     
-    //bool hasTrL1o9 = ((trBitPattJ&TrPtL19) > 0); 
     bool hasTrL1o9XY = ((trBitPattXYJ&TrPtL19) > 0); 
     
     if (!hasTrL2 && !hasTrL1o9XY) return -6003;
@@ -2780,10 +2789,14 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	//----  Reconstruction  ----//
 	//--------------------------//
 	if (!recEv.rebuild(event)) return -99999;
-    if (recEv.qin < 0.5) return -99998;
-   
+    
+    if (recEv.qin < RecEvent::NOISE_Q) return -99989;
+    if (hasTrL2 && recEv.qL2 > 0 && recEv.qL2 < RecEvent::NOISE_Q) return -99987;
+    if (hasTrL1 && recEv.qL1 > 0 && recEv.qL1 < RecEvent::NOISE_Q) return -99986;
+    if (hasTrL9 && recEv.qL9 > 0 && recEv.qL9 < RecEvent::NOISE_Q) return -99985;
+
     // testcode
-    if (EventBase::checkEventMode(EventBase::ISS) && recEv.zin != 1) return -99997;
+    if (EventBase::checkEventMode(EventBase::ISS) && recEv.zin != 1) return -99979;
     //if (recEv.signr >= 0) return -99990; // testcode
 
     // ~7~ (Based on RTI)

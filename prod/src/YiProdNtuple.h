@@ -111,6 +111,9 @@ class RecEvent {
         static constexpr double NafZ = -75.45;
         static constexpr double RichZ[2] = { -72.8, -75.9 };
         static constexpr double RichBound = 17.50;
+
+        static constexpr double NOISE_Q = 0.70;
+
 		double trackerZJ[9];
 
         // Track Refit Option
@@ -118,6 +121,9 @@ class RecEvent {
 	    // Track Pattern (Inn, InnL1, InnL9, FS)
         int    zin;
         double qin;
+        double qL2;
+        double qL1;
+        double qL9;
         double mass;
         double beta;
         double rigMAX; // max rigidity
