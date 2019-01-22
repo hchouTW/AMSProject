@@ -43,6 +43,7 @@ constexpr Double_t ONE_TO_SIX   = 1.66666666666666657e-01;
 constexpr Double_t ONE_TO_EIGHT = 1.25000000000000000e-01;
 
 constexpr Double_t PI          = 3.14159265358979312e+00;
+constexpr Double_t HALF_PI     = HALF * PI;
 constexpr Double_t INV_PI      = 3.18309886183790691e-01;
 constexpr Double_t SQRT_PI     = 1.77245385090551588e+00;
 constexpr Double_t INV_SQRT_PI = 5.64189583547756279e-01;

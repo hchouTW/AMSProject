@@ -307,7 +307,7 @@ exeEndID=\$3
 
 for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
-    logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
+    logID=\$(printf \"JOB%07i_EXE%07i\" \${jobID} \${exeID})
     locLog=\${PWD}/\${logID}
     logLog=\${jobDir}/log/\${logID}
     logProc=\${jobDir}/proc/\${logID}
@@ -325,12 +325,13 @@ do
     ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData} 2>&1 | tee -a \${locLog}
     echo -e \"==== (Exe) End Time: \`date\`\\n\\n\" | tee -a \${locLog}
     
-    FileID=\$(printf "%i" \${exeID})
+    FileID=\$(printf \"%i\" \${exeID})
     rootFile=\`ls \${tmpData} | grep \${FileID}.root\`
     rootPath=\${tmpData}/\${rootFile}
     
     echo -e \"\\n\\n\" | tee -a \${locLog}
     ls -alh \${tmpData} | tee -a \${locLog}
+    echo -e \"\\n\" | tee -a \${locLog}
     ls -alh \${rootPath} | tee -a \${locLog}
     echo -e \"\\n\\n\" | tee -a \${locLog}
     
@@ -420,7 +421,7 @@ do
     runIt=0
     for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
     do
-        logID=\$(printf "JOB%07i_EXE%07i" \${jobID} \${exeID})
+        logID=\$(printf \"JOB%07i_EXE%07i\" \${jobID} \${exeID})
         if [ \${runmode} == "RUN" ]; then
             touch \${jobDir}/proc/\${logID}
             runIt=1
@@ -435,7 +436,7 @@ do
         continue
     fi
 
-    jobLogID=\$(printf "JOB%07i" \${jobID})
+    jobLogID=\$(printf \"JOB%07i\" \${jobID})
     jobLog=\${jobDir}/log/log.\${jobLogID}
 
     BSUBComd=\"bsub -q ${queue} -J \${jobLogID} -oo \${jobLog} sh \${jobScript} \${jobID} \${exeSatID} \${exeEndID}\"

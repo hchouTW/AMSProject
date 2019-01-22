@@ -7,6 +7,8 @@ export AFSWORK=/afs/cern.ch/work/h/hchou
 export ubackup=/afs/cern.ch/ubackup/h/hchou
 
 # Submit command
+alias readflist='sh ${AMSProjJobs}/CERN/readflist.sh'
 alias mkjob='sh ${AMSProjJobs}/CERN/mkjob.sh'
 alias submit='sh ${AMSProjJobs}/CERN/submit.sh'
-alias readflist='sh ${AMSProjJobs}/CERN/readflist.sh'
+alias mkjob_condor='sh ${AMSProjJobs}/CERN/mkjob_condor.sh'
+alias submit_condor='sh ${AMSProjJobs}/CERN/submit_condor.sh'
