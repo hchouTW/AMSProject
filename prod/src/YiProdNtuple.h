@@ -107,8 +107,11 @@ class RecEvent {
         static constexpr double TopZ =  195.;
         static constexpr double CenZ =    0.;
         static constexpr double BtmZ = -136.;
+        static constexpr double TdZ  =  115.;
         static constexpr double RhZ  =  -75.;
-        
+       
+        static constexpr double RhPmtZ = -121.89;
+
         static constexpr double NOISE_Q = 0.70;
 
 		double trackerZJ[9];

@@ -572,6 +572,9 @@ bool EventRti::processEvent(AMSEventR * event, AMSChain * chain) {
 		fRti.cfIGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
 			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
 	}
+    fRti.maxCfStormer = (*std::max_element(fRti.cfStormer, fRti.cfStormer+4));
+    fRti.maxCfIGRF    = (*std::max_element(fRti.cfIGRF,    fRti.cfIGRF+4));
+
 	fRti.radiusGTOD = rti.r;
 	fRti.thetaGTOD  = rti.theta;
 	fRti.phiGTOD    = rti.phi;
@@ -1015,7 +1018,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 
         double qinmin = -1.0;
         for (int il = 2; il <= 7; ++il) {
-            if ((bitPattXYJ&(1<<il)) == 0) continue;
+            if ((bitPattJ&(1<<il)) == 0) continue;
             double ql = trtk->GetLayerJQH(il+1, 2, recEv.beta, fitidInn);
             if (ql <= 0.) continue;
             if (qinmin <= 0.) qinmin = ql;
@@ -1033,7 +1036,7 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
         
         //double qinmin = -1.0;
         //for (int il = 2; il <= 7; ++il) {
-        //    if ((bitPattXYJ&(1<<il)) == 0) continue;
+        //    if ((bitPattJ&(1<<il)) == 0) continue;
         //    double ql = trtk->GetLayerQYJ(il+1, 2, recEv.beta, fitidInn);
         //    if (ql <= 0.) continue;
         //    if (qinmin <= 0.) qinmin = ql;
@@ -1158,6 +1161,16 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			track.stateBtm[4] = -dirBtm[1];
 			track.stateBtm[5] = -dirBtm[2];
             
+            AMSPoint pntTd; AMSDir dirTd;
+            trtk->Interpolate(recEv.TdZ, pntTd, dirTd, fitid);
+            track.statusTd = true;
+            track.stateTd[0] =  pntTd[0];
+			track.stateTd[1] =  pntTd[1];
+			track.stateTd[2] =  pntTd[2];
+			track.stateTd[3] = -dirTd[0];
+			track.stateTd[4] = -dirTd[1];
+			track.stateTd[5] = -dirTd[2];
+            
             AMSPoint pntRh; AMSDir dirRh;
             trtk->Interpolate(recEv.RhZ, pntRh, dirRh, fitid);
             track.statusRh = true;
@@ -1247,6 +1260,20 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
 			    track.stateBtm[7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rigBtm) * (recEv.mass/rigBtm)));
             }
             
+            AMSPoint pntTd; AMSDir dirTd; double rigTd = 0;
+            trFit.InterpolateKalman(recEv.TdZ, pntTd, dirTd, rigTd, ustate);
+            if (!MGNumc::EqualToZero(rigTd)) {
+                track.statusTd = true;
+                track.stateTd[0] =  pntTd[0];
+			    track.stateTd[1] =  pntTd[1];
+			    track.stateTd[2] =  pntTd[2];
+			    track.stateTd[3] = -dirTd[0];
+			    track.stateTd[4] = -dirTd[1];
+			    track.stateTd[5] = -dirTd[2];
+			    track.stateTd[6] = rigTd;
+			    track.stateTd[7] = (1.0 / std::sqrt(1.0 + (recEv.mass/rigTd) * (recEv.mass/rigTd)));
+            }
+            
             AMSPoint pntRh; AMSDir dirRh; double rigRh = 0;
             trFit.InterpolateKalman(recEv.RhZ, pntRh, dirRh, rigRh, ustate);
             if (!MGNumc::EqualToZero(rigRh)) {
@@ -1264,11 +1291,14 @@ bool EventTrk::processEvent(AMSEventR * event, AMSChain * chain) {
             track.rig[0] = track.stateTop[6];
             track.rig[1] = track.stateCen[6];
             track.rig[2] = track.stateBtm[6];
-            track.rig[3] = track.stateRh[6];
-			track.bta[0] = track.stateTop[7];
+            track.rig[3] = track.stateTd[6];
+            track.rig[4] = track.stateRh[6];
+			
+            track.bta[0] = track.stateTop[7];
 			track.bta[1] = track.stateCen[7];
 			track.bta[2] = track.stateBtm[7];
-			track.bta[3] = track.stateRh[7];
+			track.bta[3] = track.stateTd[7];
+			track.bta[4] = track.stateRh[7];
             
             track.cpuTime = kfSw.time() * 1.0e+3;
 
@@ -1396,7 +1426,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 	std::sort(mcHits.begin(), mcHits.end(), HitTRDMCInfo_sort());
 
 	// TrdKCluster
-	TrdKCluster * trdkcls = TrdKCluster::gethead();
+    double hitRange[2] = { -1, -1 }; // (min, max)
+	TrdKCluster* trdkcls = TrdKCluster::gethead();
 	for (int kindOfFit = 0; kindOfFit <= 1; ++kindOfFit) {
 		if (!(checkEventMode(EventBase::BT) || (trdkcls->IsReadAlignmentOK == 2 && trdkcls->IsReadCalibOK == 1))) break;
 		bool isOK = false;
@@ -1486,6 +1517,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
             hits.push_back(hitInfo);
         }
 		if (hits.size() != 0) std::sort(hits.begin(), hits.end(), HitTRDInfo_sort());
+        if (hits.size() <= 2) continue;
 		
         fTrd.LLRstatus[kindOfFit] = true;
 		fTrd.LLRnh[kindOfFit]     = hits.size();
@@ -1494,7 +1526,11 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
 		fTrd.LLRph[kindOfFit]     = llr[2];
 		fTrd.Q[kindOfFit]         = Q;
 
-        if (hits.size() <= 2) continue;
+        if (kindOfFit == 0) {
+            hitRange[0] = hits.at(0).cz;
+            hitRange[1] = hits.at(hits.size()-1).cz;
+        }
+
         std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, mcMom, cooz, amp, len)
         for (auto&& hit : hits) {
             if (hit.amp < 0.05) continue;
@@ -1531,7 +1567,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         fTrd.ITMcMom[kindOfFit]  = (v_mom > 0.0) ? v_mom : 0.0;
 	}
 
-    
+   
+    Short_t numOfOther = 0;
     for (int it = 0; it < static_cast<int>(event->NTrdHTrack()); ++it) {
         if (it == recEv.iTrdHTrack) continue;
         TrdHTrackR* trdh = event->pTrdHTrack(it);
@@ -1566,6 +1603,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         }
 		if (hits.size() != 0) std::sort(hits.begin(), hits.end(), HitTRDInfo_sort());
         if (hits.size() <= 2) continue;
+        Double_t hitr[2] = { hits.at(0).cz, hits.at(hits.size()-1).cz }; // (min, max)
         
         std::vector<std::tuple<Double_t, Double_t, Double_t, Double_t>> dEdX; // (dEdX, cooz, amp, len)
         for (auto&& hit : hits) {
@@ -1597,6 +1635,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         double vtxdist = 0;
         double vtxagl  = 0;
         double vtxcoo[3] = { 0, 0, 0 };
+        const double dthres = 0.0001;
         if (fTrd.trackStatus) {
             double d0[3] = { state[0] - fTrd.trackState[0], state[1] - fTrd.trackState[1], state[2] - fTrd.trackState[2] };
             double sa[3] = { fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5] };
@@ -1616,14 +1655,30 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
                     double dist = TrackSys::LA::Mag(trb - tra);
                     double agl  = std::acos(sasb);
 
-                    vtxstatus = true;
-                    vtxdist = dist;
-                    vtxagl  = agl;
-                    vtxcoo[0] = cen[0];
-                    vtxcoo[1] = cen[1];
-                    vtxcoo[2] = cen[2];
+                    if (dist < dthres && agl < TrackSys::Numc::HALF_PI) {
+                        vtxstatus = true;
+                        vtxdist = dist;
+                        vtxagl  = agl;
+                        vtxcoo[0] = cen[0];
+                        vtxcoo[1] = cen[1];
+                        vtxcoo[2] = cen[2];
+                    }
                 }
             }
+        }
+        if (!vtxstatus) continue;
+
+        if (vtxcoo[2] < state[2]) {
+            state[3] *= -1.0;
+            state[4] *= -1.0;
+            state[5] *= -1.0;
+            vtxagl += TrackSys::Numc::HALF_PI;
+        }
+
+        if (hitRange[0] > 0 && hitRange[1] > 0) {
+            Double_t minz = std::max(hitRange[0], hitr[0]);
+            Double_t maxz = std::min(hitRange[1], hitr[1]);
+            if (maxz < minz) continue;
         }
 
         TRDTrInfo trdTr;
@@ -1646,17 +1701,17 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         trdTr.ITlen  = v_len;
         trdTr.ITdEdX = v_dEdX;
      
-        if (vtxstatus) {
-            trdTr.VTXstatus = true;
-            trdTr.VTXdist = vtxdist;
-            trdTr.VTXagl  = vtxagl;
-            trdTr.VTXcoo[0] = vtxcoo[0];
-            trdTr.VTXcoo[1] = vtxcoo[1];
-            trdTr.VTXcoo[2] = vtxcoo[2];
-        }
+        trdTr.VTXdist = vtxdist;
+        trdTr.VTXagl  = vtxagl;
+        trdTr.VTXcx   = vtxcoo[0];
+        trdTr.VTXcy   = vtxcoo[1];
+        trdTr.VTXcz   = vtxcoo[2];
 
-        fTrd.others.push_back(trdTr);
+        if (numOfOther == 0 || vtxdist < trdTr.VTXdist) fTrd.other = trdTr;
+        numOfOther++;
     }
+    fTrd.numOfOther = numOfOther;
+
 
     // Vertex
     //TRDVertex trdVtx;
@@ -1684,6 +1739,8 @@ bool EventTrd::selectEvent(AMSEventR * event) {
     
     bool ITstatus[2] = { (fTrd.ITnh[0] >= 5), (fTrd.ITnh[1] >= 5) };
     if (!ITstatus[0] && !ITstatus[1]) return false;
+
+    if (fTrd.numOfOther >= 2) return false;
 
 	return true;
 }
@@ -1752,10 +1809,13 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         fRich.kind = kindOfRad;
         fRich.tile = tileOfRad;
         fRich.refz = rich->AMSTrPars[2];
+        fRich.pmtz = RecEvent::RhPmtZ;
+        fRich.dist = rich->DistanceTileBorder();
 		fRich.Q = rich->getCharge2Estimate(true);
 		fRich.Q = (fRich.Q > 1.0e-3) ? std::sqrt(fRich.Q) : -1;
 
         fRich.isGood = rich->IsGood();
+        fRich.nhit = rich->getHits();
         fRich.npmt = rich->getPMTs();
         fRich.prob = rich->getProb();
         fRich.cstcb = rich->getBetaConsistency();
@@ -1779,9 +1839,8 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         //               (fRich.numOfExpPE > cut_expPhe[kindOfRad]) &&
         //               (fRich.eftOfColPE > cut_collPhe[kindOfRad]);
 
-	    //const float richPMTZ = -121.89; // pmt z-axis
-		//AMSPoint rhcoo(0., 0., 0.); AMSDir rhdir(0., 0., -1.);
-		//if (recEv.tkTrPar != nullptr && recEv.tkInID >= 0) recEv.tkTrPar->Interpolate(richPMTZ, rhcoo, rhdir, recEv.tkInID);
+		AMSPoint rhcoo(0., 0., 0.); AMSDir rhdir(0., 0., -1.);
+		if (recEv.tkTrPar != nullptr && recEv.tkInID >= 0) recEv.tkTrPar->Interpolate(RecEvent::RhPmtZ, rhcoo, rhdir, recEv.tkInID);
 
         for (int it = 0; it < rich->RawBetas(); ++it) {
             RichHitR* rawhit = event->pRichHit(rich->HitBeta(it));
@@ -1790,15 +1849,18 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             int   type = rich->fUsedBeta[it]%2;
             int   used = rich->fUsedBeta[it]/2;
             float bta  = rich->fRawBeta[type][it];
+            float dist = std::hypot(rawhit->Coo[0] - rhcoo[0], rawhit->Coo[1] - rhcoo[1]);
             if (bta <= 0.0) continue;
-            
+
             HitRICHInfo hit;
-            hit.type = type;
-            hit.bta  = bta;
-            hit.npe  = rawhit->Npe;
-            hit.coo[0] = rawhit->Coo[0];
-            hit.coo[1] = rawhit->Coo[1];
-            hit.coo[2] = rawhit->Coo[2];
+            hit.channel = rawhit->Channel;
+            hit.type    = type;
+            hit.bta[0]  = rich->fRawBeta[0][it];
+            hit.bta[1]  = rich->fRawBeta[1][it];
+            hit.npe     = rawhit->Npe;
+            hit.cx      = rawhit->Coo[0];
+            hit.cy      = rawhit->Coo[1];
+            hit.dist    = dist;
 
             if (used == 0) fRich.uhits.push_back(hit);
             else           fRich.ohits.push_back(hit);
@@ -2429,6 +2491,19 @@ HCTrInfo EventHyc::processHCTr(TrackSys::PhyTrFit& hctr) {
         track.stateBtm[7] = phyStBtm.bta();
     }
     
+    TrackSys::PhySt&& phyStTd = hctr.interpolate_to_z(RecEvent::TdZ);
+    if (!TrackSys::Numc::EqualToZero(phyStTd.mom())) {
+        track.statusTd = true;
+        track.stateTd[0] = phyStTd.cx();
+        track.stateTd[1] = phyStTd.cy();
+        track.stateTd[2] = phyStTd.cz();
+        track.stateTd[3] = phyStTd.ux();
+        track.stateTd[4] = phyStTd.uy();
+        track.stateTd[5] = phyStTd.uz();
+        track.stateTd[6] = phyStTd.rig();
+        track.stateTd[7] = phyStTd.bta();
+    }
+    
     TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
     if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
         track.statusRh = true;
@@ -2445,12 +2520,14 @@ HCTrInfo EventHyc::processHCTr(TrackSys::PhyTrFit& hctr) {
     track.rig[0] = track.stateTop[6];
     track.rig[1] = track.stateCen[6];
     track.rig[2] = track.stateBtm[6];
-    track.rig[3] = track.stateRh[6];
+    track.rig[3] = track.stateTd[6];
+    track.rig[4] = track.stateRh[6];
     
     track.bta[0] = track.stateTop[7];
     track.bta[1] = track.stateCen[7];
     track.bta[2] = track.stateBtm[7];
-    track.bta[3] = track.stateRh[7];
+    track.bta[3] = track.stateTd[7];
+    track.bta[4] = track.stateRh[7];
 
     return track;
 }
@@ -2500,10 +2577,16 @@ HCBtaInfo EventHyc::processHCBta(TrackSys::PhyBtaFit& hcbta) {
         track.bta[2] = phyStBtm.bta();
     }
 
+    TrackSys::PhySt&& phyStTd = hcbta.interpolate_to_z(RecEvent::TdZ);
+    if (!TrackSys::Numc::EqualToZero(phyStTd.mom())) {
+        track.rig[3] = phyStTd.rig();
+        track.bta[3] = phyStTd.bta();
+    }
+
     TrackSys::PhySt&& phyStRh = hcbta.interpolate_to_z(RecEvent::RhZ);
     if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
-        track.rig[3] = phyStRh.rig();
-        track.bta[3] = phyStRh.bta();
+        track.rig[4] = phyStRh.rig();
+        track.bta[4] = phyStRh.bta();
     }
 
     return track;
@@ -2589,6 +2672,19 @@ HCMuInfo EventHyc::processHCMu(TrackSys::PhyMuFit& hcmu) {
         track.stateBtm[7] = phyStBtm.bta();
     }
     
+    TrackSys::PhySt&& phyStTd = hctr.interpolate_to_z(RecEvent::TdZ);
+    if (!TrackSys::Numc::EqualToZero(phyStTd.mom())) {
+        track.statusTd = true;
+        track.stateTd[0] = phyStTd.cx();
+        track.stateTd[1] = phyStTd.cy();
+        track.stateTd[2] = phyStTd.cz();
+        track.stateTd[3] = phyStTd.ux();
+        track.stateTd[4] = phyStTd.uy();
+        track.stateTd[5] = phyStTd.uz();
+        track.stateTd[6] = phyStTd.rig();
+        track.stateTd[7] = phyStTd.bta();
+    }
+   
     TrackSys::PhySt&& phyStRh = hctr.interpolate_to_z(RecEvent::RhZ);
     if (!TrackSys::Numc::EqualToZero(phyStRh.mom())) {
         track.statusRh = true;
@@ -2605,12 +2701,14 @@ HCMuInfo EventHyc::processHCMu(TrackSys::PhyMuFit& hcmu) {
     track.rig[0] = track.stateTop[6];
     track.rig[1] = track.stateCen[6];
     track.rig[2] = track.stateBtm[6];
-    track.rig[3] = track.stateRh[6];
+    track.rig[3] = track.stateTd[6];
+    track.rig[4] = track.stateRh[6];
     
     track.bta[0] = track.stateTop[7];
     track.bta[1] = track.stateCen[7];
     track.bta[2] = track.stateBtm[7];
-    track.bta[3] = track.stateRh[7];
+    track.bta[3] = track.stateTd[7];
+    track.bta[4] = track.stateRh[7];
 
     return track;
 }
@@ -2892,13 +2990,11 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
         if (!rti.processEvent(event)) return -7001;
-        //double maxStormer = (*std::max_element(rti.fRti.cfStormer, rti.fRti.cfStormer+4));
-        double maxIGRF    = (*std::max_element(rti.fRti.cfIGRF,    rti.fRti.cfIGRF+4));
        
         // select event below cutoff
         if (recEv.signr > 0) {
             double wpar[2] = { 0.1, 0.9 };
-            double logCF   = std::log((maxIGRF / (maxIGRF + 0.25 * recEv.zin)) * std::fabs(maxIGRF / recEv.rigMAX));
+            double logCF   = std::log((rti.fRti.maxCfIGRF / (rti.fRti.maxCfIGRF + 0.25 * recEv.zin)) * std::fabs(rti.fRti.maxCfIGRF / recEv.rigMAX));
             double thresCF = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logCF);
             double rndm    = TrackSys::Rndm::DecimalUniform();
             if (TrackSys::Numc::Compare(rndm, thresCF) > 0) return -7002;
@@ -2913,15 +3009,15 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
        
         if (recEv.zin == 1) { // proton
             if (!hasTrL1o9XY)                  { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // Inn
-            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.005; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.030; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.010; wpar[1] = 1.0 - wpar[0]; } // InnL1
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.020; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.040; wpar[1] = 1.0 - wpar[0]; } // FS
         }
         else if (recEv.zin == 2) { // helium
             if (!hasTrL1o9XY)                  { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // Inn
-            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.05; wpar[1] = 1.0 - wpar[0]; } // InnL1
-            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // InnL9
-            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.30; wpar[1] = 1.0 - wpar[0]; } // FS
+            else if ( hasTrL1XY && !hasTrL9XY) { wpar[0] = 0.10; wpar[1] = 1.0 - wpar[0]; } // InnL1
+            else if (!hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.20; wpar[1] = 1.0 - wpar[0]; } // InnL9
+            else if ( hasTrL1XY &&  hasTrL9XY) { wpar[0] = 0.40; wpar[1] = 1.0 - wpar[0]; } // FS
         }
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
@@ -3171,8 +3267,8 @@ void YiNtuple::loopEventChain() {
 
 	Long64_t npassed = 0;
 	Long64_t nprocessed = 0;
-	const Long64_t printLimit = 2000;
-	Long64_t printRate = loop_entries / 200;
+	const Long64_t printLimit = 5000;
+	Long64_t printRate = loop_entries / 100;
 	if (printRate < printLimit) printRate = printLimit;
 	if (printRate > printLimit * 20) printRate = printLimit * 20;
 	for (Long64_t ientry = first_entry; ientry < last_entry; ++ientry){

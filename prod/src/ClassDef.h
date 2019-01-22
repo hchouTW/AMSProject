@@ -372,10 +372,11 @@ class TRDTrInfo : public TObject {
             ITlen = 0;
             ITdEdX = 0;
 
-            VTXstatus = false;
             VTXdist = 0;
             VTXagl = 0;
-            std::fill_n(VTXcoo, 3, 0);
+            VTXcx = 0;
+            VTXcy = 0;
+            VTXcz = 0;
         } 
 	
     public :
@@ -393,10 +394,11 @@ class TRDTrInfo : public TObject {
         Float_t ITlen;
         Float_t ITdEdX;
 
-        Bool_t  VTXstatus;
         Float_t VTXdist;
         Float_t VTXagl;
-        Float_t VTXcoo[3];
+        Float_t VTXcx;
+        Float_t VTXcy;
+        Float_t VTXcz;
 
         ClassDef(TRDTrInfo, 1)
 };
@@ -409,25 +411,32 @@ class HitRICHInfo : public TObject {
 		~HitRICHInfo() {}
 
 		void init() {
+            channel = 0;
             type = 0;
-            bta = 0.;
+            bta[0] = 0.;
+            bta[1] = 0.;
             npe = 0.;
-			std::fill_n(coo, 3, 0);
+            cx = 0;
+            cy = 0;
+            dist = -1;
 		}
 
 	public :
+        Short_t channel;
         Short_t type; // 0, direct   1, reflected
-        Float_t bta;
+        Float_t bta[2];
         Float_t npe; // ADC counts above the pedestal/gain of the channel.
-		Float_t coo[3];  // x, y, z
+		Float_t cx;
+        Float_t cy;
+        Float_t dist;
 
-	ClassDef(HitRICHInfo, 2)
+	ClassDef(HitRICHInfo, 3)
 };
 
 struct HitRICHInfo_sort {
 	bool operator() (const HitRICHInfo & hit1, const HitRICHInfo & hit2) {
-		if      (hit1.bta < hit2.bta) return true;
-		else if (hit1.bta > hit2.bta) return false;
+		if      (hit1.channel < hit2.channel) return true;
+		else if (hit1.channel > hit2.channel) return false;
 		return false;
 	}
 };
@@ -516,6 +525,9 @@ class CKTrackInfo : public TObject {
             statusBtm = false;
             std::fill_n(stateBtm, 6, 0);
             
+            statusTd = false;
+            std::fill_n(stateTd, 6, 0);
+            
             statusRh = false;
             std::fill_n(stateRh, 6, 0);
             
@@ -542,6 +554,9 @@ class CKTrackInfo : public TObject {
         Bool_t  statusBtm;
         Float_t stateBtm[6]; // (cx cy cz ux uy uz)
 
+        Bool_t  statusTd;
+        Float_t stateTd[6]; // (cx cy cz ux uy uz)
+        
         Bool_t  statusRh;
         Float_t stateRh[6]; // (cx cy cz ux uy uz)
         
@@ -565,8 +580,8 @@ class KFTrackInfo : public TObject {
             std::fill_n(ndof, 2, 0);
             std::fill_n(nchi, 2, 0);
             
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
+            std::fill_n(rig, 5, 0);
+            std::fill_n(bta, 5, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -576,6 +591,9 @@ class KFTrackInfo : public TObject {
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
+            
+            statusTd = false;
+            std::fill_n(stateTd, 8, 0);
             
             statusRh = false;
             std::fill_n(stateRh, 8, 0);
@@ -591,8 +609,8 @@ class KFTrackInfo : public TObject {
         Short_t ndof[2];
 		Float_t nchi[2];
        
-        Float_t rig[4]; // z = 195, 0, -136, -75
-        Float_t bta[4]; // z = 195, 0, -136, -75
+        Float_t rig[5]; // z = 195, 0, -136, 115, -75
+        Float_t bta[5]; // z = 195, 0, -136, 115, -75
 
         Bool_t  statusTop;
         Float_t stateTop[8]; // (cx cy cz ux uy uz rig bta)
@@ -602,6 +620,9 @@ class KFTrackInfo : public TObject {
         
         Bool_t  statusBtm;
         Float_t stateBtm[8]; // (cx cy cz ux uy uz rig bta)
+        
+        Bool_t  statusTd;
+        Float_t stateTd[8]; // (cx cy cz ux uy uz rig bta)
         
         Bool_t  statusRh;
         Float_t stateRh[8]; // (cx cy cz ux uy uz rig bta)
@@ -698,6 +719,8 @@ class RTI : public TObject {
 			zenith = -1;
 			std::fill_n(cfStormer, 4, -1);
 			std::fill_n(cfIGRF, 4, -1);
+            maxCfStormer = -1;
+            maxCfIGRF = -1;
 			radiusGTOD = -1;
 			thetaGTOD = -99;
 			phiGTOD = -99;
@@ -722,8 +745,10 @@ class RTI : public TObject {
 		Bool_t  flagRun;             // true, if good
 		Bool_t  isGoodSecond;        // true, if good
 		Float_t zenith;              // ams zenith (z-axis) angle [degrees]
-		Float_t cfStormer[4];        // max Stormer cutoff for 25, 30, 35, 40 degrees [GeV]
-		Float_t cfIGRF[4];           // max IGRF cutoff for 25, 30, 35, 40 degrees [GeV]
+		Float_t cfStormer[4];        // Stormer cutoff for 25, 30, 35, 40 degrees [GV]
+		Float_t cfIGRF[4];           // IGRF cutoff for 25, 30, 35, 40 degrees [GV]
+        Float_t maxCfStormer;        // Stormer max cutoff [GV]
+        Float_t maxCfIGRF;           // IGRF max cutoff [GV]
 		Float_t radiusGTOD;          // distance from earth to ams [cm]
 		Float_t thetaGTOD;           // earth coordinate [rad]
 		Float_t phiGTOD;             // earth coordinate [rad]
@@ -950,7 +975,8 @@ class TRD : public TObject {
 			std::fill_n(ITdEdX, 2, 0);
 			std::fill_n(ITMcMom, 2, 0);
 
-            others.clear();
+            numOfOther = 0;
+            other.init();
 
             //std::fill_n(vtxNum, 3, 0);
             //vtxNTrk = 0;
@@ -986,7 +1012,9 @@ class TRD : public TObject {
         Float_t ITdEdX[2];
         Float_t ITMcMom[2];
 
-        std::vector<TRDTrInfo> others;
+        // other
+        Short_t   numOfOther;
+        TRDTrInfo other;
 
         // TRDVertex
         //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
@@ -995,7 +1023,7 @@ class TRD : public TObject {
         //Float_t vtxChi2;
         //Float_t vtxCoo[3];
 
-	ClassDef(TRD, 8)
+	ClassDef(TRD, 9)
 };
 
 
@@ -1012,10 +1040,13 @@ class RICH : public TObject {
             kind = -1;
             tile = -1;
             refz =  0;
+            pmtz =  0;
 			beta = -1;
 			Q = -1;
 
 			isGood = false;
+            dist = -1;
+            nhit = -1;
             npmt = -1;
             prob = -1.0;
             cstcb = -1.0;
@@ -1048,10 +1079,13 @@ class RICH : public TObject {
         Short_t kind;
         Short_t tile;
         Float_t refz;
+        Float_t pmtz;
+        Float_t dist;
 		Float_t beta;
 		Float_t Q;
         
 		Bool_t  isGood;
+        Short_t nhit;
         Short_t npmt;
         Float_t prob;
         Float_t cstcb; // consistency beta
@@ -1122,8 +1156,8 @@ class HCTrInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
+            std::fill_n(rig, 5, 0);
+            std::fill_n(bta, 5, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -1133,6 +1167,9 @@ class HCTrInfo : public TObject {
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
+            
+            statusTd = false;
+            std::fill_n(stateTd, 8, 0);
             
             statusRh = false;
             std::fill_n(stateRh, 8, 0);
@@ -1155,8 +1192,8 @@ class HCTrInfo : public TObject {
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[4]; // z = 195, 0, -136, -75
-        Float_t bta[4]; // z = 195, 0, -136, -75
+        Float_t rig[5]; // z = 195, 0, -136, 115, -75
+        Float_t bta[5]; // z = 195, 0, -136, 115, -75
         
         Bool_t  statusTop; // track at (z = 195.)
         Float_t stateTop[8];
@@ -1167,7 +1204,10 @@ class HCTrInfo : public TObject {
         Bool_t  statusBtm; // track at (z = -136.)
         Float_t stateBtm[8];
         
-        Bool_t  statusRh; // track at (z = -75.)
+        Bool_t  statusTd; // track at (z = -75.)
+        Float_t stateTd[8];
+        
+        Bool_t  statusRh; // track at (z = 115.)
         Float_t stateRh[8];
 
         //Bool_t  statusLJ[9];
@@ -1199,8 +1239,8 @@ class HCBtaInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
+            std::fill_n(rig, 5, 0);
+            std::fill_n(bta, 5, 0);
             
             cpuTime = 0;
         }
@@ -1219,8 +1259,8 @@ class HCBtaInfo : public TObject {
 
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[4]; // z = 195, 0, -136, -75
-        Float_t bta[4]; // z = 195, 0, -136, -75
+        Float_t rig[5]; // z = 195, 0, -136, 115, -75
+        Float_t bta[5]; // z = 195, 0, -136, 115, -75
         
         Float_t cpuTime; // [ms]
 
@@ -1250,8 +1290,8 @@ class HCMuInfo : public TObject {
             
             std::fill_n(state, 8, 0);
             
-            std::fill_n(rig, 4, 0);
-            std::fill_n(bta, 4, 0);
+            std::fill_n(rig, 5, 0);
+            std::fill_n(bta, 5, 0);
 
             statusTop = false;
             std::fill_n(stateTop, 8, 0);
@@ -1261,6 +1301,9 @@ class HCMuInfo : public TObject {
             
             statusBtm = false;
             std::fill_n(stateBtm, 8, 0);
+            
+            statusTd = false;
+            std::fill_n(stateTd, 8, 0);
             
             statusRh = false;
             std::fill_n(stateRh, 8, 0);
@@ -1284,8 +1327,8 @@ class HCMuInfo : public TObject {
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
-        Float_t rig[4]; // z = 195, 0, -136, -75
-        Float_t bta[4]; // z = 195, 0, -136, -75
+        Float_t rig[5]; // z = 195, 0, -136, 115, -75
+        Float_t bta[5]; // z = 195, 0, -136, 115, -75
         
         Bool_t  statusTop; // track at (z = 195.)
         Float_t stateTop[8];
@@ -1296,7 +1339,10 @@ class HCMuInfo : public TObject {
         Bool_t  statusBtm; // track at (z = -136.)
         Float_t stateBtm[8];
         
-        Bool_t  statusRh; // track at (z = -75.)
+        Bool_t  statusTd; // track at (z = -75.)
+        Float_t stateTd[8];
+        
+        Bool_t  statusRh; // track at (z = 115.)
         Float_t stateRh[8];
 
         Float_t cpuTime; // [ms]
