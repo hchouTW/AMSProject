@@ -58,7 +58,7 @@ class SimpleMuScan {
 // List of Particle
 const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
     { PartInfo(PartType::Photon).mass() }, // Q0
-    { PartInfo(PartType::Deuterium).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::PionPlus).mass() }, // Q1
+    { PartInfo(PartType::Tritium).mass(), PartInfo(PartType::Deuterium).mass(), PartInfo(PartType::Proton).mass(), PartInfo(PartType::KaonPlus).mass(), PartInfo(PartType::PionPlus).mass() }, // Q1
     { PartInfo(PartType::Helium4).mass(), PartInfo(PartType::Helium3).mass() }, // Q2
     { PartInfo(PartType::Lithium7).mass(), PartInfo(PartType::Lithium6).mass() }, // Q3
     { PartInfo(PartType::Beryllium10).mass(), PartInfo(PartType::Beryllium9).mass(), PartInfo(PartType::Beryllium7).mass() }, // Q4

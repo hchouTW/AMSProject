@@ -205,15 +205,20 @@ if [ ! -d ${jobdir} ]; then
     echo "JOBDIR(${jobdir}) is not exist."
     exit
 else
-    rm -rf ${jobdir}/*
+    if [ ! -f ${jobdir}/proc ]; then
+        rm -rf ${jobdir}/*
+        touch ${jobdir}/proc
+    else
+        cp -fa ${jobdir}/proc /tmp/${USER}/jobproc
+        rm -rf ${jobdir}/*
+        cp -fa /tmp/${USER}/jobproc ${jobdir}/proc
+        rm /tmp/${USER}/jobproc
+    fi
 fi
 
 mkdir -p ${jobdir}/out
 mkdir -p ${jobdir}/err
 mkdir -p ${jobdir}/log
-if [ ! -f ${jobdir}/proc ]; then
-    touch ${jobdir}/proc
-fi
 
 cp -fa ${proj_env} ${jobdir}/env.sh
 cp -fa ${proj_bin} ${jobdir}/jobexe
@@ -257,7 +262,7 @@ echo -e \"====  Local Host : \${HOSTNAME}\"
 echo -e \"====  Redhat-release  ====\"
 cat /etc/redhat-release
 
-if [ \$# -ne 3 ]; then
+if [ \$# -ne 2 ]; then
     echo -e \"illegal number of parameters.\"
     exit
 fi
@@ -322,13 +327,12 @@ echo -e \"*************************\"
 echo -e \"****  START RUNNING  ****\"
 echo -e \"*************************\"
 
-jobID=\$1
-exeSatID=\$2
-exeEndID=\$3
+exeSatID=\$1
+exeEndID=\$2
 
 for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
 do
-    logID=\$(printf \"JOB%07i_EXE%07i\" \${jobID} \${exeID})
+    logID=\$(printf \"EXE%07i\" \${exeID})
     if [ \"\`grep -n \${logID} \${procFile}\`\" != \"\" ]; then 
         continue
     fi
@@ -338,9 +342,11 @@ do
     echo \"PWD:  \${PWD}\"
     ls -alh \${PWD}
     echo -e \"\\n\\n\"
+    echo -e \"COMD:    ldd \${PWD}/jobexe\"
     ldd \${PWD}/jobexe
     
     echo -e \"\\n\\n==== (Exe) Start Time: \`date\`\"
+    echo -e \"COMD:   ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData}\"
     ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData}
     echo -e \"==== (Exe) End Time: \`date\`\\n\\n\"
     
@@ -380,12 +386,18 @@ echo -e \"**************************\"
 chmod 755 $job_script
 
 unique_job_script=${jobdir}/job__${PROJPATH}__${PROJVERSION}__${proj_title}.sh
+if [[ ${PROJPATH} == *"/"* ]]; then
+    proj_path1=$(echo $PROJPATH | awk -F / '{ print $1 }')
+    proj_path2=$(echo $PROJPATH | awk -F / '{ print $2 }')
+    unique_job_script=${jobdir}/job__${proj_path1}__${proj_path2}__${PROJVERSION}__${proj_title}.sh
+fi
+
 cp $job_script $unique_job_script
 
 
 args_file=${jobdir}/arguments
 if [ -f ${args_file} ]; then
-    /bin/rm ${args_file}
+    rm ${args_file}
 fi
 touch ${args_file}
 
@@ -446,7 +458,7 @@ if [ ! -f \${procFile} ]; then
 fi
 
 if [ \${runmode} == "RUN" ]; then
-    /bin/rm \${procFile}
+    rm \${procFile}
     touch \${procFile}
 fi
 
@@ -482,7 +494,7 @@ do
     runIt=0
     for (( exeID=\${exeSatID}; exeID<=\${exeEndID}; exeID++ ))
     do
-        logID=\$(printf \"JOB%07i_EXE%07i\" \${jobID} \${exeID})
+        logID=\$(printf \"EXE%07i\" \${exeID})
         if [ \${runmode} == "RUN" ]; then
             runIt=1
         else
@@ -496,13 +508,17 @@ do
         continue
     fi
 
-    vargs=\$(printf \"%7i %7i %7i\" \${jobID} \${exeSatID} \${exeEndID})
+    vargs=\$(printf \"%7i %7i\" \${exeSatID} \${exeEndID})
     echo \"\${vargs}\" >> \${argsFile}
 
     jobLogID=\$(printf \"ARGS:  JOB %07i    EXE %07i %07i\" \${jobID} \${exeSatID} \${exeEndID})
     echo \"\${jobLogID}\"
 done
+echo \"**********************************************************************\"
 echo \"***************************** CONDOR *********************************\"
+echo \"**********************************************************************\"
+echo \"\"
+echo \"TOTAL OF JOBS: \`cat \${argsFile} | wc -l\`\"
 echo \"\"
 echo \"COMD:  condor_submit \${submitSub}\"
 condor_submit \${submitSub}

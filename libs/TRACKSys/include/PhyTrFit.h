@@ -72,6 +72,10 @@ class PhyTrFit : public TrFitPar {
         inline const Short_t&  ndof(Int_t it)    const { return ndof_.at(it); }
         inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
         inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
+        
+        inline const Short_t&  ndof_all() const { return ndof_all_; }
+        inline const Double_t& nchi_all() const { return nchi_all_; }
+        inline const Double_t& quality_all() const { return quality_all_; }
 
         inline const Short_t& ndof_cx() const { return ndof_cx_; }
         inline const Short_t& ndof_cy() const { return ndof_cy_; }
@@ -100,6 +104,10 @@ class PhyTrFit : public TrFitPar {
         std::array<Short_t,  2> ndof_;
         std::array<Double_t, 2> nchi_;
         std::array<Double_t, 2> quality_;
+
+        Short_t  ndof_all_;
+        Double_t nchi_all_;
+        Double_t quality_all_;
 
         Short_t ndof_tt_; // (total)
         Short_t ndof_cx_; // (cx + mstau)

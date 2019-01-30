@@ -124,6 +124,7 @@ class RecEvent {
         double qL2;
         double qL1;
         double qL9;
+        double qinmin;
         double mass;
         double beta;
         double rigMAX; // max rigidity
@@ -137,7 +138,10 @@ class RecEvent {
         double distECAL;
         double distTRD;
         double distTRDH;
-        
+       
+        // MC
+        double arigMC;
+
         // Official
         int       tkInID;
         TrTrackR* tkTrPar;

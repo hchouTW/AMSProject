@@ -643,6 +643,8 @@ class ShowerInfo : public TObject {
 		~ShowerInfo() {}
 		
 		void init() {
+            status = false;
+
 			energyD = -1;
 			energyE = -1;
 			PisaBDT = -2;
@@ -653,6 +655,8 @@ class ShowerInfo : public TObject {
 		}
 
 	public :
+        Bool_t status;
+
 		Float_t energyD;  // energy deposit [GeV]
 		Float_t energyE;  // Pisa
 		Float_t PisaBDT;  // Pisa
@@ -661,7 +665,7 @@ class ShowerInfo : public TObject {
 		Short_t hadronApex; // reject high-apex events (say, Apex > 12)
 		Float_t hadronEnergy;
 
-		ClassDef(ShowerInfo, 4)
+		ClassDef(ShowerInfo, 5)
 };
 
 
@@ -828,7 +832,8 @@ class TOF : public TObject {
             Zall = -1;
 
 			std::fill_n(numOfExtCls, 4, 0);
-        
+            noiseExtCls = 0;
+
             //JFbta      = -1;
             //JF_cpuTime = 0;
 		}
@@ -858,6 +863,7 @@ class TOF : public TObject {
 
 		// extern clusters
 		Short_t numOfExtCls[4];
+        Short_t noiseExtCls; // noiseALL*1 + noiseUTOF*2 + noiseLTOF*4
 
         // JFeng
         //Float_t JFbta; // at Tracker L1
@@ -1054,6 +1060,7 @@ class RICH : public TObject {
             numOfExpPE = -1;
             eftOfColPE = -1;
 
+            clsbta = -1;
             uhits.clear();
             ohits.clear();
 
@@ -1094,6 +1101,7 @@ class RICH : public TObject {
         Float_t eftOfColPE;
 
         // Hits
+        Float_t clsbta;
         std::vector<HitRICHInfo> uhits;
         std::vector<HitRICHInfo> ohits;
 
@@ -1128,13 +1136,19 @@ class ECAL : public TObject {
 		void init() {
 			numOfShower = 0;
             shower.init();
+
+            numOfOther = 0;
+            other.init();
 		}
 
 	public :
 		Short_t    numOfShower;
 		ShowerInfo shower;
 
-	ClassDef(ECAL, 5)
+        Short_t    numOfOther;
+        ShowerInfo other;
+
+	ClassDef(ECAL, 6)
 };
 
 
@@ -1150,9 +1164,9 @@ class HCTrInfo : public TObject {
             chrg = 0;
             mass = 0;
             
-            std::fill_n(ndof, 2, 0);
-            std::fill_n(nchi, 2, 0);
-            std::fill_n(qlt, 2, 0);
+            std::fill_n(ndof, 3, 0);
+            std::fill_n(nchi, 3, 0);
+            std::fill_n(qlt, 3, 0);
             
             std::fill_n(state, 8, 0);
             
@@ -1186,9 +1200,9 @@ class HCTrInfo : public TObject {
         Short_t chrg;
         Float_t mass;
         
-        Short_t ndof[2];
-        Float_t nchi[2];
-        Float_t qlt[2];
+        Short_t ndof[3]; // x, y-beta, all
+        Float_t nchi[3];
+        Float_t qlt[3];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         
@@ -1284,9 +1298,9 @@ class HCMuInfo : public TObject {
             std::fill_n(muNchi, 3, 0);
             std::fill_n(muQlt, 3, 0);
             
-            std::fill_n(ndof, 2, 0);
-            std::fill_n(nchi, 2, 0);
-            std::fill_n(qlt,  2, 0);
+            std::fill_n(ndof, 3, 0);
+            std::fill_n(nchi, 3, 0);
+            std::fill_n(qlt,  3, 0);
             
             std::fill_n(state, 8, 0);
             
@@ -1317,13 +1331,13 @@ class HCMuInfo : public TObject {
         Short_t chrg;
         Float_t mass;
         
-        Short_t muNdof[3];
+        Short_t muNdof[3]; // x, y, beta
         Float_t muNchi[3];
         Float_t muQlt[3];
         
-        Short_t ndof[2];
-        Float_t nchi[2];
-        Float_t qlt[2];
+        Short_t ndof[3]; // x, y-beta, all
+        Float_t nchi[3];
+        Float_t qlt[3];
         
         Float_t state[8]; // (cx cy cz ux uy uz rig bta)
         

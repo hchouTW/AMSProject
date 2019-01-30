@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/appStudy
+PROJVERSION  =  test
+PROJTITLE    =  CERN_TEST9
+PROJBIN      =  fill
+PROJFLIST    =  flist.cern.iss.pass7_19Jan21
+EVENTTYPE    =  ISS
+FILEPEREXE   =  100
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  20
+
+[QUEUE]
+QUEUE      =  longlunch
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

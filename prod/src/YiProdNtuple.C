@@ -45,7 +45,7 @@ int main(int argc, const char ** argv) {
 	DataSelection::setOption(DataSelection::TRK,  DataSelection::ON);
 	DataSelection::setOption(DataSelection::RICH, DataSelection::ON);
 	DataSelection::setOption(DataSelection::ECAL, DataSelection::ON);
-	DataSelection::setOption(DataSelection::HYC,  DataSelection::ON);
+	DataSelection::setOption(DataSelection::HYC,  DataSelection::OFF);
 
 	EventBase::setEventVersion(EventBase::B1130);
 

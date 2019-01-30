@@ -82,7 +82,7 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
         PhyTrFit trAll(trpar);
         if (!trAll.status()) continue;
         
-        Double_t qlt = std::hypot(trAll.quality(0), trAll.quality(1));
+        Double_t qlt = trAll.quality_all();
         if (condID < 0 || qlt < condQLT) { condID = vecTrs.size(); condQLT = qlt; }
         vecTrs.push_back(trAll);
     }

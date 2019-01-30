@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  prod
+PROJVERSION  =  19Jan21
+PROJTITLE    =  ISS_PART02
+PROJBIN      =  YiProdNtuple
+PROJFLIST    =  flist.cern.iss.B1130.pass7
+EVENTTYPE    =  ISS
+FILEPEREXE   =  1
+JOBREGION    =  PART
+EXESATID     =  80000
+EXEENDID     =  155848
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  5
+CONFIRM    =  NONE

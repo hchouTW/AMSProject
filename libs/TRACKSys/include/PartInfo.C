@@ -46,6 +46,8 @@ void PartInfo::reset(const PartType& type) {
         case PartType::AntiProton    : reset(PartType::AntiProton   , "AntiProton"   , -1,  0.938272297); break;
         case PartType::Deuterium     : reset(PartType::Deuterium    , "Deuterium"    ,  1,  1.876123915); break;
         case PartType::AntiDeuterium : reset(PartType::AntiDeuterium, "AntiDeuterium", -1,  1.876123915); break;
+        case PartType::Tritium       : reset(PartType::Tritium      , "Tritium"      ,  1,  2.809432020); break;
+        case PartType::AntiTritium   : reset(PartType::AntiTritium  , "AntiTritium"  , -1,  2.809432020); break;
         case PartType::Helium3       : reset(PartType::Helium3      , "Helium3"      ,  2,  2.809413500); break;
         case PartType::AntiHelium3   : reset(PartType::AntiHelium3  , "AntiHelium3"  , -2,  2.809413500); break;
         case PartType::Helium4       : reset(PartType::Helium4      , "Helium4"      ,  2,  3.727379240); break;

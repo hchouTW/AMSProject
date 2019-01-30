@@ -12,20 +12,21 @@ int main(int argc, char * argv[]) {
    
     Hist::Load("fill.root", "dat");
     
-    Hist* hMrso = Hist::Head("hmassC");
-    Hist* hCKMrso = Hist::Head("hCKmassC");
-    Hist* hHCMrso = Hist::Head("hHCmassC");
+    //Hist* hMrso = Hist::Head("hmassC");
+    //Hist* hCKMrso = Hist::Head("hCKmassC");
+    //Hist* hHCMrso = Hist::Head("hHCmassC");
     
-    Hist* hLMrso = Hist::Head("hLmassC");
-    Hist* hCKLMrso = Hist::Head("hCKLmassC");
-    Hist* hHCLMrso = Hist::Head("hHCLmassC");
+    Hist* hAD_TF_CKMrso  = Hist::Head("hAD_TF_CKmass");
+    Hist* hAD_TF_CKMrsoQ = Hist::Head("hAD_TF_CKmassQ");
+    Hist* hAD_TF_HCMrso  = Hist::Head("hAD_TF_mass");
+    Hist* hAD_TF_HCMrsoQ = Hist::Head("hAD_TF_massQ");
     
-    Hist* hM1llx = Hist::Head("hPRM1llx");
-    Hist* hM2llx = Hist::Head("hPRM2llx");
-    Hist* hM1lly = Hist::Head("hPRM1lly");
-    Hist* hM2lly = Hist::Head("hPRM2lly");
+    Hist* hAD_RH_CKMrso  = Hist::Head("hAD_RH_CKmass");
+    Hist* hAD_RH_CKMrsoQ = Hist::Head("hAD_RH_CKmassQ");
+    Hist* hAD_RH_HCMrso  = Hist::Head("hAD_RH_mass");
+    Hist* hAD_RH_HCMrsoQ = Hist::Head("hAD_RH_massQ");
     
-    const Axis& AXrig = hHCMrso->xaxis();
+    const Axis& AXrig = hAD_TF_HCMrso->xaxis();
     
     TFile * ofle = new TFile("fit.root", "RECREATE");
     ofle->cd();
@@ -34,36 +35,33 @@ int main(int argc, char * argv[]) {
     const Double_t stable = 1.7;
     TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
 
-    std::vector<Hist*> vhMrso   = Hist::ProjectAll(HistProj::kY, hMrso);
-    std::vector<Hist*> vhCKMrso = Hist::ProjectAll(HistProj::kY, hCKMrso);
-    std::vector<Hist*> vhHCMrso = Hist::ProjectAll(HistProj::kY, hHCMrso);
-    for (int it = 1; it <= AXrig.nbin(); ++it) {
-        vhMrso.at(it)->style(Line(kGreen+2, 0, 3), Marker(kGreen+2));
-        vhCKMrso.at(it)->style(Line(kBlue, 0, 3), Marker(kBlue));
-        vhHCMrso.at(it)->style(Line(kRed, 0, 3), Marker(kRed));
-        THStack* cvhMrso = Hist::Collect(Form("cvhMrso%03d", it), HistList({ vhMrso.at(it), vhCKMrso.at(it), vhHCMrso.at(it) }));
-        cvhMrso->SetMinimum(0.5);
-        cvhMrso->Write();
-    } 
+    //std::vector<Hist*> vhMrso   = Hist::ProjectAll(HistProj::kY, hMrso);
+    //std::vector<Hist*> vhCKMrso = Hist::ProjectAll(HistProj::kY, hCKMrso);
+    //std::vector<Hist*> vhHCMrso = Hist::ProjectAll(HistProj::kY, hHCMrso);
+    //for (int it = 1; it <= AXrig.nbin(); ++it) {
+    //    vhMrso.at(it)->style(Line(kGreen+2, 0, 3), Marker(kGreen+2));
+    //    vhCKMrso.at(it)->style(Line(kBlue, 0, 3), Marker(kBlue));
+    //    vhHCMrso.at(it)->style(Line(kRed, 0, 3), Marker(kRed));
+    //    THStack* cvhMrso = Hist::Collect(Form("cvhMrso%03d", it), HistList({ vhMrso.at(it), vhCKMrso.at(it), vhHCMrso.at(it) }));
+    //    cvhMrso->SetMinimum(0.5);
+    //    cvhMrso->Write();
+    //} 
     
-    hLMrso->style(Line(kGreen+2, 0, 3), Marker(kGreen+2));
-    hCKLMrso->style(Line(kBlue, 0, 3), Marker(kBlue));
-    hHCLMrso->style(Line(kRed, 0, 3), Marker(kRed));
-    THStack* chLMrso = Hist::Collect("chLMrso", HistList({ hLMrso, hCKLMrso, hHCLMrso }));
-    chLMrso->SetMinimum(0.5);
-    chLMrso->Write();
-    
-    hM1llx->style(Line(kBlue, 0, 3), Marker(kBlue));
-    hM2llx->style(Line(kRed, 0, 3), Marker(kRed));
-    THStack* chMllx = Hist::Collect("chMllx", HistList({ hM1llx, hM2llx }));
-    chMllx->SetMinimum(0.5);
-    chMllx->Write();
+    hAD_TF_CKMrso ->style(Line(kBlue+1, 0, 1), Marker(kBlue-1));
+    hAD_TF_CKMrsoQ->style(Line(kBlue, 0, 3), Marker(kBlue));
+    hAD_TF_HCMrso ->style(Line(kRed+1, 0, 1), Marker(kRed-1));
+    hAD_TF_HCMrsoQ->style(Line(kRed, 0, 3), Marker(kRed));
+    THStack* chAD_TF_Mrso = Hist::Collect("chAD_TF_Mrso", HistList({ hAD_TF_CKMrso, hAD_TF_HCMrso, hAD_TF_CKMrsoQ, hAD_TF_HCMrsoQ }));
+    chAD_TF_Mrso->SetMinimum(0.5);
+    chAD_TF_Mrso->Write();
    
-    hM1lly->style(Line(kBlue, 0, 3), Marker(kBlue));
-    hM2lly->style(Line(kRed, 0, 3), Marker(kRed));
-    THStack* chMlly = Hist::Collect("chMlly", HistList({ hM1lly, hM2lly }));
-    chMlly->SetMinimum(0.5);
-    chMlly->Write();
+    hAD_RH_CKMrso ->style(Line(kBlue+1, 0, 1), Marker(kBlue+1));
+    hAD_RH_CKMrsoQ->style(Line(kBlue, 0, 3), Marker(kBlue));
+    hAD_RH_HCMrso ->style(Line(kRed+1, 0, 1), Marker(kRed+1));
+    hAD_RH_HCMrsoQ->style(Line(kRed, 0, 3), Marker(kRed));
+    THStack* chAD_RH_Mrso = Hist::Collect("chAD_RH_Mrso", HistList({ hAD_RH_CKMrso, hAD_RH_HCMrso, hAD_RH_CKMrsoQ, hAD_RH_HCMrsoQ }));
+    chAD_RH_Mrso->SetMinimum(0.5);
+    chAD_RH_Mrso->Write();
    
     ofle->Write();
     ofle->Close();

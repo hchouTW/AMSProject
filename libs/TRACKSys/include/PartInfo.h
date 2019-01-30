@@ -15,6 +15,7 @@ enum class PartType {
     KaonPlus, KaonMinus,
     Proton, AntiProton,
     Deuterium, AntiDeuterium,
+    Tritium, AntiTritium,
     Helium3, AntiHelium3, Helium4, AntiHelium4,
     Lithium6, Lithium7,
     Beryllium7, Beryllium9, Beryllium10,

@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  19Jan09
-PROJTITLE    =  MC_HE4_216000.B1200
+PROJVERSION  =  19Jan26
+PROJTITLE    =  MC_HE4_216000_B1200
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.mc.he4.pl1.l19.216000.B1200
 EVENTTYPE    =  MC
@@ -11,7 +11,7 @@ EXESATID     =  0
 EXEENDID     =  3742
 
 [QUEUE]
-QUEUE      =  ams1nd
+QUEUE      =  tomorrow
 STORAGE    =  EOS
-EXEPERJOB  =  3
+EXEPERJOB  =  4
 CONFIRM    =  NONE

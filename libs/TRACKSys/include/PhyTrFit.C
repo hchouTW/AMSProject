@@ -37,6 +37,10 @@ PhyTrFit& PhyTrFit::operator=(const PhyTrFit& rhs) {
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
         quality_ = rhs.quality_;
+        
+        ndof_all_    = rhs.ndof_all_;
+        nchi_all_    = rhs.nchi_all_;
+        quality_all_ = rhs.quality_all_;
 
         ndof_tt_ = rhs.ndof_tt_;
         ndof_cx_ = rhs.ndof_cx_;
@@ -65,6 +69,10 @@ void PhyTrFit::clear() {
     nchi_.fill(0);
     quality_.fill(0);
 
+    ndof_all_ = 0;
+    nchi_all_ = 0;
+    quality_all_ = 0;
+
     ndof_tt_ = 0;
     ndof_cx_ = 0;
     ndof_cy_ = 0;
@@ -92,6 +100,7 @@ PhyTrFit::PhyTrFit(const TrFitPar& fitPar) : TrFitPar(fitPar) {
     ndof_.at(1) = ndof_cy_ + ndof_ib_;
     if (ndof_.at(0) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
     if (ndof_.at(1) <= Numc::ONE<Short_t>) { PhyTrFit::clear(); TrFitPar::clear(); return; }
+    ndof_all_ = ndof_.at(0) + ndof_.at(1);
 
     timer_.start();
     
@@ -372,7 +381,10 @@ Bool_t PhyTrFit::evolve() {
     nchi_.at(1) = nchi_cyib;
     quality_.at(0) = Numc::NormQuality(nchi_.at(0), ndof_.at(0));
     quality_.at(1) = Numc::NormQuality(nchi_.at(1), ndof_.at(1));
-   
+  
+    nchi_all_    = nchi_tt_;
+    quality_all_ = Numc::NormQuality(nchi_all_, ndof_all_);
+
     // Local States
     for (auto&& stt : stts) stt.arg().clear();
     for (UInt_t it = 0; it < args_.size(); ++it) {
