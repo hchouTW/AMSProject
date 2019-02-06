@@ -205,12 +205,15 @@ if [ ! -d ${jobdir} ]; then
     echo "JOBDIR(${jobdir}) is not exist."
     exit
 else
+    if [ -d ${jobdir}/out ] && [ ! -z "$(ls ${jobdir}/out)" ]; then rm ${jobdir}/out/*.out; fi
+    if [ -d ${jobdir}/err ] && [ ! -z "$(ls ${jobdir}/err)" ]; then rm ${jobdir}/err/*.err; fi
+    if [ -d ${jobdir}/log ] && [ ! -z "$(ls ${jobdir}/log)" ]; then rm ${jobdir}/log/*.log; fi
     if [ ! -f ${jobdir}/proc ]; then
-        rm -rf ${jobdir}/*
+        if [ ! -z "$(ls ${jobdir})" ]; then rm -rf ${jobdir}/*; fi
         touch ${jobdir}/proc
     else
         cp -fa ${jobdir}/proc /tmp/${USER}/jobproc
-        rm -rf ${jobdir}/*
+        if [ ! -z "$(ls ${jobdir})" ]; then rm -rf ${jobdir}/*; fi
         cp -fa /tmp/${USER}/jobproc ${jobdir}/proc
         rm /tmp/${USER}/jobproc
     fi
@@ -464,8 +467,10 @@ fi
 
 argsFile=${args_file}
 if [ ! -f \${argsFile} ]; then
-    echo -e \"argsFile is not exist.\"
-    exit
+    touch \${argsFile}
+else
+    rm \${argsFile}
+    touch \${argsFile}
 fi
 
 submitSub=${submit_sub}

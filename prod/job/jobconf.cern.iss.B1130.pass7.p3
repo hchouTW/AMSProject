@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  19Jan26
+PROJVERSION  =  19Jan31
 PROJTITLE    =  ISS_PART03
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.iss.B1130.pass7
@@ -13,5 +13,5 @@ EXEENDID     =  89999
 [QUEUE]
 QUEUE      =  tomorrow
 STORAGE    =  EOS
-EXEPERJOB  =  5
+EXEPERJOB  =  6
 CONFIRM    =  NONE

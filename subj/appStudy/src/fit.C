@@ -23,8 +23,14 @@ int main(int argc, char * argv[]) {
     
     Hist* hAD_RH_CKMrso  = Hist::Head("hAD_RH_CKmass");
     Hist* hAD_RH_CKMrsoQ = Hist::Head("hAD_RH_CKmassQ");
+    Hist* hAD_RH_CKMrsoQ1 = Hist::Head("hAD_RH_CKmassQ1");
+    Hist* hAD_RH_CKMrsoQ2 = Hist::Head("hAD_RH_CKmassQ2");
+    Hist* hAD_RH_CKMrsoQ3 = Hist::Head("hAD_RH_CKmassQ3");
     Hist* hAD_RH_HCMrso  = Hist::Head("hAD_RH_mass");
     Hist* hAD_RH_HCMrsoQ = Hist::Head("hAD_RH_massQ");
+    Hist* hAD_RH_HCMrsoQ1 = Hist::Head("hAD_RH_massQ1");
+    Hist* hAD_RH_HCMrsoQ2 = Hist::Head("hAD_RH_massQ2");
+    Hist* hAD_RH_HCMrsoQ3 = Hist::Head("hAD_RH_massQ3");
     
     const Axis& AXrig = hAD_TF_HCMrso->xaxis();
     
@@ -32,8 +38,8 @@ int main(int argc, char * argv[]) {
     ofle->cd();
     
     //Hist::AddDirectory();
-    const Double_t stable = 1.7;
-    TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
+    //const Double_t stable = 1.7;
+    //TF1 * gaus = new TF1("gaus", "gaus", -3.0, 3.0);
 
     //std::vector<Hist*> vhMrso   = Hist::ProjectAll(HistProj::kY, hMrso);
     //std::vector<Hist*> vhCKMrso = Hist::ProjectAll(HistProj::kY, hCKMrso);
@@ -62,6 +68,20 @@ int main(int argc, char * argv[]) {
     THStack* chAD_RH_Mrso = Hist::Collect("chAD_RH_Mrso", HistList({ hAD_RH_CKMrso, hAD_RH_HCMrso, hAD_RH_CKMrsoQ, hAD_RH_HCMrsoQ }));
     chAD_RH_Mrso->SetMinimum(0.5);
     chAD_RH_Mrso->Write();
+    
+    hAD_RH_CKMrsoQ1->style(Line(kBlue+1, 0, 2), Marker(kBlue));
+    hAD_RH_CKMrsoQ2->style(Line(kBlue+2, 0, 2), Marker(kBlue));
+    hAD_RH_CKMrsoQ3->style(Line(kBlue+3, 0, 2), Marker(kBlue));
+    THStack* chAD_RH_MCK = Hist::Collect("chAD_RH_MCK", HistList({ hAD_RH_CKMrsoQ, hAD_RH_CKMrsoQ1, hAD_RH_CKMrsoQ2, hAD_RH_CKMrsoQ3 }));
+    chAD_RH_MCK->SetMinimum(0.5);
+    chAD_RH_MCK->Write();
+    
+    hAD_RH_HCMrsoQ1->style(Line(kRed+1, 0, 2), Marker(kRed));
+    hAD_RH_HCMrsoQ2->style(Line(kRed+2, 0, 2), Marker(kRed));
+    hAD_RH_HCMrsoQ3->style(Line(kRed+3, 0, 2), Marker(kRed));
+    THStack* chAD_RH_MHC = Hist::Collect("chAD_RH_MHC", HistList({ hAD_RH_HCMrsoQ, hAD_RH_HCMrsoQ1, hAD_RH_HCMrsoQ2, hAD_RH_HCMrsoQ3 }));
+    chAD_RH_MHC->SetMinimum(0.5);
+    chAD_RH_MHC->Write();
    
     ofle->Write();
     ofle->Close();

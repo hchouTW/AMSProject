@@ -1553,6 +1553,17 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
         if (dEdX.size() != 0) dEdX.erase(dEdX.begin());
 
+        std::vector<HitTRDSimpleInfo> simpleHits;
+        for (auto&& elem : dEdX) {
+            HitTRDSimpleInfo hit;
+            hit.cz    = std::get<2>(elem);
+            hit.amp   = std::get<3>(elem);
+            hit.len   = std::get<4>(elem);
+            hit.dEdX  = hit.amp / hit.len;
+            hit.mcMom = std::get<1>(elem);
+            simpleHits.push_back(hit);
+        }
+
         Double_t v_mom = 0;
         Double_t v_cz  = 0;
         Double_t v_amp = 0;
@@ -1575,6 +1586,8 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         fTrd.ITlen[kindOfFit]    = v_len;
         fTrd.ITdEdX[kindOfFit]   = v_dEdX;
         fTrd.ITMcMom[kindOfFit]  = (v_mom > 0.0) ? v_mom : 0.0;
+
+        fTrd.IThits[kindOfFit]   = simpleHits;
 	}
 
    
@@ -1641,7 +1654,7 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         double vtxdist = 0;
         double vtxagl  = 0;
         double vtxcoo[3] = { 0, 0, 0 };
-        const double dthres = 0.00008;
+        const double dthres = 0.00005;
         if (fTrd.trackStatus) {
             double d0[3] = { state[0] - fTrd.trackState[0], state[1] - fTrd.trackState[1], state[2] - fTrd.trackState[2] };
             double sa[3] = { fTrd.trackState[3], fTrd.trackState[4], fTrd.trackState[5] };
@@ -1716,20 +1729,6 @@ bool EventTrd::processEvent(AMSEventR * event, AMSChain * chain) {
         if (fTrd.numOfOther == 0 || trdTr.VTXdist < fTrd.other.VTXdist) fTrd.other = trdTr;
         fTrd.numOfOther++;
     }
-
-    // Vertex
-    //TRDVertex trdVtx;
-    //trdVtx.Reconstruction(event);
-
-    //fTrd.vtxNum[0] = trdVtx.nvertex_3d;
-    //fTrd.vtxNum[1] = trdVtx.nvertex_2d_y;
-    //fTrd.vtxNum[2] = trdVtx.nvertex_2d_x;
-    //fTrd.vtxNTrk   = trdVtx.vertex_ntrack;
-    //fTrd.vtxNHit   = trdVtx.vertex_nhit;
-    //fTrd.vtxChi2   = trdVtx.vertex_chi2;
-    //fTrd.vtxCoo[0] = trdVtx.vertex_x;
-    //fTrd.vtxCoo[1] = trdVtx.vertex_y;
-    //fTrd.vtxCoo[2] = trdVtx.vertex_z;
 
 	fStopwatch.stop();
 	return selectEvent(event);
@@ -3044,7 +3043,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     
     // ~8~ (Scale events from proton and helium in the flight data)
     if (EventBase::checkEventMode(EventBase::ISS) && (recEv.zin == 1 || recEv.zin == 2) && recEv.signr > 0) {
-        const double cutoff = 50.0; // current
+        const double cutoff = 60.0; // current
         double wpar[2] = { 1.0, 0.0 };
        
         if (recEv.zin == 1) { // proton
@@ -3061,7 +3060,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         }
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
-        double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::THREE<> * logir);
+        double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logir);
         double rndm  = TrackSys::Rndm::DecimalUniform();
         if (TrackSys::Numc::Compare(rndm, thres) > 0) return -8001;
 	    if (!TrackSys::Numc::EqualToZero(thres - TrackSys::Numc::ONE<>)) EventList::Weight /= thres;

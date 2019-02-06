@@ -1,9 +1,9 @@
 [PROJECT]
 PROJPATH     =  subj/appStudy
 PROJVERSION  =  test
-PROJTITLE    =  CERN_TEST9
+PROJTITLE    =  CERN_TEST21
 PROJBIN      =  fill
-PROJFLIST    =  flist.cern.iss.pass7_19Jan21
+PROJFLIST    =  flist.cern.iss.pass7_19Jan31
 EVENTTYPE    =  ISS
 FILEPEREXE   =  100
 JOBREGION    =  WHOLE

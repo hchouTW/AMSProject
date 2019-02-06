@@ -35,6 +35,9 @@
 #pragma link C++ class HitTRDInfo;
 #pragma link C++ class std::vector<HitTRDInfo>+;
 
+#pragma link C++ class HitTRDSimpleInfo;
+#pragma link C++ class std::vector<HitTRDSimpleInfo>+;
+
 #pragma link C++ class TRDTrInfo;
 #pragma link C++ class std::vector<TRDTrInfo>+;
 

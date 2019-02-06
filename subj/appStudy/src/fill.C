@@ -3,7 +3,7 @@
 #include <TRACKSys.h>
 
 //#include "/ams_home/hchou/AMSCore/prod/19Jan21/src/ClassDef.h"
-#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/19Jan21/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/19Jan31/src/ClassDef.h"
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -120,9 +120,15 @@ int main(int argc, char * argv[]) {
     
     Hist* hAD_RH_mass    = Hist::New("hAD_RH_mass",    HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_massQ   = Hist::New("hAD_RH_massQ",   HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_massQ1   = Hist::New("hAD_RH_massQ1",   HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_massQ2   = Hist::New("hAD_RH_massQ2",   HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_massQ3   = Hist::New("hAD_RH_massQ3",   HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_massC   = Hist::New("hAD_RH_massC",   HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_CKmass  = Hist::New("hAD_RH_CKmass",  HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_CKmassQ = Hist::New("hAD_RH_CKmassQ", HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_CKmassQ1 = Hist::New("hAD_RH_CKmassQ1", HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_CKmassQ2 = Hist::New("hAD_RH_CKmassQ2", HistAxis(AXmu, "Events/Bin"));
+    Hist* hAD_RH_CKmassQ3 = Hist::New("hAD_RH_CKmassQ3", HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_CKmassC = Hist::New("hAD_RH_CKmassC", HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_TDvtx   = Hist::New("hAD_RH_TDvtx",   HistAxis(AXmu, AXvtx, "Events/Bin"));
     Hist* hAD_RH_TDllr   = Hist::New("hAD_RH_TDllr",   HistAxis(AXmu, AXtrd, "Events/Bin"));
@@ -138,6 +144,8 @@ int main(int argc, char * argv[]) {
     Hist* hAP_LNR_mass  = Hist::New("hAP_LNR_mass",  HistAxis(AXrig, AXmass, "Events/Bin"));
     Hist* hAP_LPR_mass2 = Hist::New("hAP_LPR_mass2", HistAxis(AXrig, AXmass, "Events/Bin"));
     Hist* hAP_LNR_mass2 = Hist::New("hAP_LNR_mass2", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hAP_LPR_CKmass = Hist::New("hAP_LPR_CKmass", HistAxis(AXrig, AXmass, "Events/Bin"));
+    Hist* hAP_LNR_CKmass = Hist::New("hAP_LNR_CKmass", HistAxis(AXrig, AXmass, "Events/Bin"));
     Hist* hAP_LPR_TDllr = Hist::New("hAD_LPR_TDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
     Hist* hAP_LNR_TDllr = Hist::New("hAD_LNR_TDllr", HistAxis(AXrig, AXtrd, "Events/Bin"));
     Hist* hAP_LPR_qltx  = Hist::New("hAD_LPR_qltx",  HistAxis(AXrig, AXqlt, "Events/Bin"));
@@ -282,12 +290,15 @@ int main(int argc, char * argv[]) {
             Double_t ckqltx = std::log(cktrIn.nchi[0]);
             Double_t ckqlty = std::log(cktrIn.nchi[1]);
             Bool_t   overcf = (std::fabs(cktrIn.rig) > 1.0 * maxCF);
+            Bool_t   llrc   = (fTrd->LLRep[0] > (0.2 + 0.6 * fTof->betaH * fTof->betaH));
             hAD_TF_CKmass->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
-            if (ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassQ->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
-            if (overcf && ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassC->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
+            if (llrc && ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassQ->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
+            if (llrc && overcf && ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassC->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
         }
         
-        if (cktrIn.status && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98) {
+        if (cktrIn.status && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98 && fRich->nhit > 2 && fRich->npmt > 2) {
+            Bool_t rhcut[3] = { fRich->prob > 0.01, fRich->numOfExpPE > 2.0, fRich->eftOfColPE > 0.4 };
+            
             Short_t  cksign = TrackSys::Numc::Compare(cktrIn.rig);
             Double_t ckmass = std::fabs(info.chrg() * cktrIn.rig * std::sqrt(1.0/fRich->beta/fRich->beta-1.0));
             Double_t ckqltx = std::log(cktrIn.nchi[0]);
@@ -296,6 +307,9 @@ int main(int argc, char * argv[]) {
             Bool_t   llrc   = (fTrd->LLRep[0] > 0.8);
             if (llrc) hAD_RH_CKmass->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
             if (llrc && ckqltx < 2.0 && ckqlty < 2.0) hAD_RH_CKmassQ->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
+            if (llrc && ckqltx < 2.0 && ckqlty < 2.0 && rhcut[0]) hAD_RH_CKmassQ1->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
+            if (llrc && ckqltx < 2.0 && ckqlty < 2.0 && rhcut[0] && rhcut[1]) hAD_RH_CKmassQ2->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
+            if (llrc && ckqltx < 2.0 && ckqlty < 2.0 && rhcut[0] && rhcut[1] && rhcut[2]) hAD_RH_CKmassQ3->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
             if (llrc && overcf && ckqltx < 2.0 && ckqlty < 2.0) hAD_RH_CKmassC->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
         }
         
@@ -318,10 +332,12 @@ int main(int argc, char * argv[]) {
             if (mugood && mullrc && hctrM2In.status) hAD_TF_M2qlty->fillH2D(musign * mutr.mass, hctrM2In.qlt[1], fList->weight * (musign>0?0.01:1.0));
 
             // new tree
-            if (mugood && (musign * mutr.mass) < -1.6 && (musign * mutr.mass) > -2.2) tree->Fill();
+            if (mugood && (musign * mutr.mass) < -1.5 && (musign * mutr.mass) > -3.0) tree->Fill();
         }
         
-        if (hctrIn.status && hctrIn.statusRh && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98) {
+        if (hctrIn.status && hctrIn.statusRh && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98 && fRich->nhit > 2 && fRich->npmt > 2) {
+            Bool_t rhcut[3] = { fRich->prob > 0.01, fRich->numOfExpPE > 2.0, fRich->eftOfColPE > 0.4 };
+
             Bool_t overcf   = (std::fabs(hctrIn.rig[0]) > 1.0 * maxCF);
             Short_t  rhsign = TrackSys::Numc::Compare(hctrIn.rig[4]);
             Double_t rhmass = std::fabs(info.chrg() * hctrIn.rig[4] * std::sqrt(1.0/fRich->beta/fRich->beta-1.0));
@@ -331,6 +347,9 @@ int main(int argc, char * argv[]) {
             Bool_t   llrc   = (fTrd->LLRep[0] > 0.8);
             if (llrc) hAD_RH_mass->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc) hAD_RH_massQ->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
+            if (rhgood && llrc && rhcut[0]) hAD_RH_massQ1->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
+            if (rhgood && llrc && rhcut[0] && rhcut[1]) hAD_RH_massQ2->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
+            if (rhgood && llrc && rhcut[0] && rhcut[1] && rhcut[2]) hAD_RH_massQ3->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc && overcf) hAD_RH_massC->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood) hAD_RH_TDllr->fillH2D(rhsign * rhmass, fTrd->LLRep[0], fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc && istrdvtx) hAD_RH_TDvtx->fillH2D(rhsign * rhmass, fTrd->other.VTXcz, fList->weight * (rhsign>0?0.01:1.0));
@@ -347,12 +366,15 @@ int main(int argc, char * argv[]) {
             Bool_t   good = (hctrIn.qlt[0] < 2.0 && hctrIn.qlt[1] < 2.0);
             Bool_t   llrc = (fTrd->LLRep[0] > 0.8);
             Bool_t overcf = (arig > 1.0 * maxCF);
+            Double_t ckmass = (fTof->betaH < 1.0 ? std::fabs(info.chrg() * cktrIn.rig * std::sqrt(1.0/fTof->betaH/fTof->betaH-1.0)) : -1);
             if (overcf && sign>0 && mugood && good && mullrc) hAP_LPR_flux->fillH1D(arig, fList->weight);
             if (overcf && sign<0 && mugood && good && mullrc) hAP_LNR_flux->fillH1D(arig, fList->weight);
             if (overcf && sign>0 && mugood && good && mullrc) hAP_LPR_mass->fillH2D(arig, mutr.mass, fList->weight);
             if (overcf && sign<0 && mugood && good && mullrc) hAP_LNR_mass->fillH2D(arig, mutr.mass, fList->weight);
-            if (overcf && sign>0 && good && fHyc->btaM1.status && fHyc->btaM1.qlt < 2.0 && mullrc) hAP_LPR_mass2->fillH2D(arig, fHyc->massM1, fList->weight);
-            if (overcf && sign<0 && good && fHyc->btaM1.status && fHyc->btaM1.qlt < 2.0 && mullrc) hAP_LNR_mass2->fillH2D(arig, fHyc->massM1, fList->weight);
+            if (overcf && sign>0 && mugood && good && mullrc && mutr.bta[0] < 0.99) hAP_LPR_mass2->fillH2D(arig, mutr.mass, fList->weight);
+            if (overcf && sign<0 && mugood && good && mullrc && mutr.bta[0] < 0.99) hAP_LNR_mass2->fillH2D(arig, mutr.mass, fList->weight);
+            if (overcf && sign>0 && good && mullrc && ckmass > 0) hAP_LPR_CKmass->fillH2D(arig, ckmass, fList->weight);
+            if (overcf && sign<0 && good && mullrc && ckmass > 0) hAP_LNR_CKmass->fillH2D(arig, ckmass, fList->weight);
             if (overcf && sign>0 && mugood && good) hAP_LPR_TDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
             if (overcf && sign<0 && mugood && good) hAP_LNR_TDllr->fillH2D(arig, fTrd->LLRep[0], fList->weight);
             if (overcf && sign>0 && mugood && mullrc) hAP_LPR_qltx->fillH2D(arig, hctrIn.qlt[0], fList->weight);

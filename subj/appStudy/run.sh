@@ -7,7 +7,7 @@ RunFile=${AMSCore}/subj/appStudy/${Version}/fill
 CurDir=${PWD}
 
 DataType=ISS
-Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan12
+Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan31
 
 OutputDir=${CurDir}/dat
 

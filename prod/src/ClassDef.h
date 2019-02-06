@@ -351,6 +351,32 @@ struct HitTRDInfo_sort {
 };
 
 
+class HitTRDSimpleInfo : public TObject {
+	public :
+		HitTRDSimpleInfo() { init(); }
+		~HitTRDSimpleInfo() {}
+
+		void init() {
+            cz  = 0;
+			amp = 0;
+			len = 0;
+
+            dEdX  = -1;
+            mcMom = -1;
+        }
+
+    public :
+		Float_t cz;
+		Float_t amp;    // (elc) amp
+		Float_t len;    // (elc) len
+        
+        Float_t dEdX;   // dEdX = 0.01 * (amp/len)
+        Float_t mcMom;  // (MC Info) mom
+
+	ClassDef(HitTRDSimpleInfo, 1)
+};
+
+
 // TRDTrInfo
 class TRDTrInfo : public TObject {
 	public :
@@ -981,14 +1007,11 @@ class TRD : public TObject {
 			std::fill_n(ITdEdX, 2, 0);
 			std::fill_n(ITMcMom, 2, 0);
 
+            IThits[0].clear();
+            IThits[1].clear();
+
             numOfOther = 0;
             other.init();
-
-            //std::fill_n(vtxNum, 3, 0);
-            //vtxNTrk = 0;
-            //vtxNHit = 0;
-            //vtxChi2 = 0;
-            //std::fill_n(vtxCoo, 3, 0);
 		}
 
 	public :
@@ -1018,18 +1041,13 @@ class TRD : public TObject {
         Float_t ITdEdX[2];
         Float_t ITMcMom[2];
 
+        std::vector<HitTRDSimpleInfo> IThits[2];
+
         // other
         Short_t   numOfOther;
         TRDTrInfo other;
 
-        // TRDVertex
-        //Short_t vtxNum[3]; // (3d, 2d_y, 2d_x)
-        //Short_t vtxNTrk;
-        //Short_t vtxNHit;
-        //Float_t vtxChi2;
-        //Float_t vtxCoo[3];
-
-	ClassDef(TRD, 9)
+	ClassDef(TRD, 10)
 };
 
 
