@@ -264,6 +264,7 @@ echo -e \"====  Start Run Time : \$(date)\"
 echo -e \"====  Local Host : \${HOSTNAME}\"
 echo -e \"====  Redhat-release  ====\"
 cat /etc/redhat-release
+lsb_release -a
 
 if [ \$# -ne 2 ]; then
     echo -e \"illegal number of parameters.\"

@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  subj/appStudy
 PROJVERSION  =  test
-PROJTITLE    =  CERN_TEST21
+PROJTITLE    =  CERN_TEST25
 PROJBIN      =  fill
 PROJFLIST    =  flist.cern.iss.pass7_19Jan31
 EVENTTYPE    =  ISS
@@ -11,7 +11,7 @@ EXESATID     =  0
 EXEENDID     =  20
 
 [QUEUE]
-QUEUE      =  longlunch
+QUEUE      =  ams1nd
 STORAGE    =  EOS
 EXEPERJOB  =  1
 CONFIRM    =  NONE

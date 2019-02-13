@@ -1,6 +1,6 @@
 #!/bin/bash
 Version=vdev
-Version=19Jan31
+#Version=19Feb09
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
@@ -12,9 +12,9 @@ DataType=ISS
 Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.ncu.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.loc.iss.B1130.pass7
-DataType=MC
+#DataType=MC
 #Stream=${CurDir}/lst/flist.cern.mc.el.pl1.025200.B1200
-Stream=${CurDir}/lst/flist.cern.mc.el.pl1.2004000.B1200
+#Stream=${CurDir}/lst/flist.cern.mc.el.pl1.2004000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.pr.pl1.l1.054000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l1.24000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l19.216000.B1200
@@ -24,9 +24,9 @@ Stream=${CurDir}/lst/flist.cern.mc.el.pl1.2004000.B1200
 #Stream=${CurDir}/lst/flist.ncu.bt.pr.400.B1082
 
 GroupId=50
-#GroupId=19912
+GroupId=19912
 #GroupId=5005
-GroupSize=10
+GroupSize=1
 OutputDir=.
 
 if [[ -f ${RunFile} && -f ${Stream} ]]; then

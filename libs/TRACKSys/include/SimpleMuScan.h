@@ -30,6 +30,10 @@ class SimpleMuScan {
         inline const Double_t& nchi(Int_t it)    const { return nchi_.at(it); }
         inline const Double_t& quality(Int_t it) const { return quality_.at(it); }
         
+        inline const Short_t&  ndof_all()    const { return ndof_all_; }
+        inline const Double_t& nchi_all()    const { return nchi_all_; }
+        inline const Double_t& quality_all() const { return quality_all_; }
+        
         inline const Sys::HrsStopwatch& timer() const { return timer_; }
 
     protected :
@@ -45,6 +49,10 @@ class SimpleMuScan {
         std::array<Short_t,  2> ndof_;
         std::array<Double_t, 2> nchi_;
         std::array<Double_t, 2> quality_;
+        
+        Short_t  ndof_all_;
+        Double_t nchi_all_;
+        Double_t quality_all_;
 
     protected :
         static constexpr Double_t EL_MASS = 0.000510999;  // electron mass

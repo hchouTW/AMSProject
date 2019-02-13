@@ -5,7 +5,7 @@ LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
 
 Version = vdev
-#Version = 19Jan31
+#Version = 19Feb09
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :
@@ -17,6 +17,7 @@ all :
 	@mkdir -p $(TagetDir)/lst
 	@cp -fa $(PWD)/lst/* $(TagetDir)/lst 2> /dev/null
 	@cp -fa $(AMSENV) $(TagetDir)/env/amsenv.sh 2> /dev/null
+	@cp -fa $(TESTFILE_PATH) $(TagetDir)/testfile.C 2> /dev/null
 	@cp -fa $(PWD)/src/testing.C $(TagetDir)/src/testing.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.C $(TagetDir)/src/ClassDef.C 2> /dev/null
 	@cp -fa $(PWD)/src/ClassDef.h $(TagetDir)/src/ClassDef.h 2> /dev/null

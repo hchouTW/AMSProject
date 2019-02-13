@@ -36,6 +36,10 @@ SimpleMuScan& SimpleMuScan::operator=(const SimpleMuScan& rhs) {
         ndof_    = rhs.ndof_;
         nchi_    = rhs.nchi_;
         quality_ = rhs.quality_;
+    
+        ndof_all_    = rhs.ndof_all_;
+        nchi_all_    = rhs.nchi_all_;
+        quality_all_ = rhs.quality_all_;
 
         timer_   = rhs.timer_;
     }
@@ -53,6 +57,10 @@ void SimpleMuScan::clear() {
     ndof_.fill(0);
     nchi_.fill(0);
     quality_.fill(0);
+    
+    ndof_all_ = 0;
+    nchi_all_ = 0;
+    quality_all_ = 0;
 
     timer_.clear();
 }
@@ -87,7 +95,7 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
         vecTrs.push_back(trAll);
     }
     if (vecTrs.size() == 0 || condID < 0) { vecTrs.clear(); clear(); return; }
-    
+
     MuScanObj condMuObj = scan(static_cast<const TrFitPar&>(vecTrs.at(condID)));
     if (condMuObj.chrg() == 0) { vecTrs.clear(); clear(); return; }
 
@@ -112,6 +120,10 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     nchi_.at(1) = trfit.nchi(1);
     quality_.at(0) = trfit.quality(0);
     quality_.at(1) = trfit.quality(1);
+        
+    ndof_all_    = trfit.ndof_all();
+    nchi_all_    = trfit.nchi_all();
+    quality_all_ = trfit.quality_all();
     
     timer_.stop();
 
@@ -130,10 +142,7 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar) {
     }
     PhyTrFit trfit(trPar);
     if (!trfit.status()) return MuScanObj();
-    
-    Double_t qltr = std::hypot(trfit.quality(0), trfit.quality(1));
-    if (trfit.quality(0) < 0 || trfit.quality(1) < 0)
-        qltr = std::max(trfit.quality(0), trfit.quality(1));
+    Double_t qltr = trfit.quality_all();
 
     // beta fit
     TrFitPar btaPar(fitPar.info(), fitPar.ortt(), fitPar.sw_mscat(), fitPar.sw_eloss());
@@ -143,7 +152,6 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar) {
     btaPar.add_hit( fitPar.hitsTRD()  );
     PhyBtaFit btafit(btaPar, trfit.part());
     if (!btafit.status()) return MuScanObj();
-    
     Double_t qltb = btafit.quality();
         
     // estimate

@@ -58,7 +58,6 @@
 #include <GeoMagTrace.h>
 #include <TrReconQ.h>
 #include <MagField.h>
-#include <TrMass.h>
 
 // User defination library
 #include <CPPLibs/CPPLibs.h>
@@ -69,10 +68,6 @@
 
 #include <EcalHadron.h>
 #include <EcalHadron.C>
-#include <TRDVertex.h>
-
-#include <LxBetalhd.h>
-#include <LxBetalhd.C>
 
 #include "ClassDef.h"
 

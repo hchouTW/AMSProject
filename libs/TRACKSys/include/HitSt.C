@@ -148,12 +148,12 @@ void HitStTRK::cal(const PhySt& part) {
         nrmq_    = ion[1];
         divq_[0] = ion[2];
         divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divq_[2] = ion[2] * (part.bta() * part.mu()) * (part.eta() * part.eta());
         
-        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
-            chiq_    = Numc::ZERO<>;
-            nrmq_    = Numc::ZERO<>;
-            divq_[0] = Numc::ZERO<>;
-            divq_[1] = Numc::ZERO<>;
+        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1]) || !Numc::Valid(divq_[2])) {
+            chiq_ = Numc::ZERO<>;
+            nrmq_ = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
         }
     }
 
@@ -311,9 +311,9 @@ void HitStTOF::cal(const PhySt& part) {
             Double_t divt = (Numc::NEG<> * minit[2] * ds); // d(t) / d(ibta)
             divt_[0] = divt;
             divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
+            divt_[2] = divt * (part.bta() * part.mu()) * (part.eta() * part.eta());
 
-
-            if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1])) {
+            if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1]) || !Numc::Valid(divt_[2])) {
                 chit_    = Numc::ZERO<>;
                 nrmt_    = Numc::ZERO<>;
                 divtsft_ = Numc::ZERO<>;
@@ -331,8 +331,9 @@ void HitStTOF::cal(const PhySt& part) {
         nrmq_    = ion[1];
         divq_[0] = ion[2];
         divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divq_[2] = ion[2] * (part.bta() * part.mu()) * (part.eta() * part.eta());
     
-        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1])) {
+        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1]) || !Numc::Valid(divq_[2])) {
             chiq_ = Numc::ZERO<>;
             nrmq_ = Numc::ZERO<>;
             divq_.fill(Numc::ZERO<>);
@@ -441,8 +442,9 @@ void HitStRICH::cal(const PhySt& part) {
         Double_t divib = (Numc::NEG<> * miniib[2]);
         divib_[0] = divib;
         divib_[1] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divib_[2] = divib * (part.bta() * part.mu()) * (part.eta() * part.eta());
         
-        if (!Numc::Valid(chiib_) || !Numc::Valid(nrmib_) || !Numc::Valid(divib)) {
+        if (!Numc::Valid(chiib_) || !Numc::Valid(nrmib_) || !Numc::Valid(divib_[0]) || !Numc::Valid(divib_[1]) || !Numc::Valid(divib_[2])) {
             chiib_ = Numc::ZERO<>;
             nrmib_ = Numc::ZERO<>;
             divib_.fill(Numc::ZERO<>);
@@ -543,8 +545,9 @@ void HitStTRD::cal(const PhySt& part) {
         nrmel_    = iontr[1];
         divel_[0] = iontr[2];
         divel_[1] = iontr[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divel_[2] = iontr[2] * (part.bta() * part.mu()) * (part.eta() * part.eta());
 
-        if (!Numc::Valid(chiel_) || !Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1])) {
+        if (!Numc::Valid(chiel_) || !Numc::Valid(nrmel_) || !Numc::Valid(divel_[0]) || !Numc::Valid(divel_[1]) || !Numc::Valid(divel_[2])) {
             chiel_ = Numc::ZERO<>;
             nrmel_ = Numc::ZERO<>;
             divel_.fill(Numc::ZERO<>);

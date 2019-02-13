@@ -377,59 +377,6 @@ class HitTRDSimpleInfo : public TObject {
 };
 
 
-// TRDTrInfo
-class TRDTrInfo : public TObject {
-	public :
-		TRDTrInfo() { init(); }
-		~TRDTrInfo() {}
-
-		void init() {
-            status = false;
-            std::fill_n(state, 6, 0);
-
-            LLRnh = 0;
-            LLRep = -1;
-            LLReh = -1;
-            LLRph = -1;
-
-            ITnh = 0;
-            ITcz = 0;
-            ITamp = 0;
-            ITlen = 0;
-            ITdEdX = 0;
-
-            VTXdist = 0;
-            VTXagl = 0;
-            VTXcx = 0;
-            VTXcy = 0;
-            VTXcz = 0;
-        } 
-	
-    public :
-        Bool_t  status;
-        Float_t state[6];
-
-        Short_t LLRnh;
-        Float_t LLRep;
-        Float_t LLReh;
-        Float_t LLRph;
-
-        Short_t ITnh;
-        Float_t ITcz;
-        Float_t ITamp;
-        Float_t ITlen;
-        Float_t ITdEdX;
-
-        Float_t VTXdist;
-        Float_t VTXagl;
-        Float_t VTXcx;
-        Float_t VTXcy;
-        Float_t VTXcz;
-
-        ClassDef(TRDTrInfo, 1)
-};
-
-
 // HitRICHInfo
 class HitRICHInfo : public TObject {
 	public :
@@ -859,9 +806,6 @@ class TOF : public TObject {
 
 			std::fill_n(numOfExtCls, 4, 0);
             noiseExtCls = 0;
-
-            //JFbta      = -1;
-            //JF_cpuTime = 0;
 		}
 
 	public :
@@ -890,10 +834,6 @@ class TOF : public TObject {
 		// extern clusters
 		Short_t numOfExtCls[4];
         Short_t noiseExtCls; // noiseALL*1 + noiseUTOF*2 + noiseLTOF*4
-
-        // JFeng
-        //Float_t JFbta; // at Tracker L1
-        //Float_t JF_cpuTime;
 
 	ClassDef(TOF, 11)
 };
@@ -986,6 +926,7 @@ class TRD : public TObject {
 		void init() {
             numOfCls = 0;
             numOfSegment = 0;
+            numOfHSegment = 0;
 			numOfTrack = 0;
 			numOfHTrack = 0;
 			
@@ -1010,14 +951,22 @@ class TRD : public TObject {
             IThits[0].clear();
             IThits[1].clear();
 
-            numOfOther = 0;
-            other.init();
+            VTXstatus = false;
+            VTXncls = 0;
+            VTXnseg = 0;
+            VTXcx = 0;
+            VTXcy = 0;
+            VTXcz = 0;
+            
+            OTHERncls = 0;
+            OTHERnseg = 0;
 		}
 
 	public :
         Short_t numOfCls;
         Short_t numOfSegment;
 		Short_t numOfTrack;
+        Short_t numOfHSegment;
 		Short_t numOfHTrack;
 		
         // TrdTrack or TrdHTrack (first TrdH, second Trd)
@@ -1043,11 +992,19 @@ class TRD : public TObject {
 
         std::vector<HitTRDSimpleInfo> IThits[2];
 
-        // other
-        Short_t   numOfOther;
-        TRDTrInfo other;
+        // vertex seg
+        Bool_t  VTXstatus;
+        Short_t VTXncls;
+        Short_t VTXnseg;
+        Float_t VTXcx;
+        Float_t VTXcy;
+        Float_t VTXcz;
+        
+        // other seg
+        Short_t OTHERncls;
+        Short_t OTHERnseg;
 
-	ClassDef(TRD, 10)
+	ClassDef(TRD, 13)
 };
 
 

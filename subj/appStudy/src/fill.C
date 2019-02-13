@@ -101,22 +101,24 @@ int main(int argc, char * argv[]) {
     // AntiD
     Axis AXmu("Mass", 500, -5.0, 5.0);
     Axis AXmass("Mass", 500, 0.0, 5.0);
-    Axis AXvtx("TRD Vertex", 50, 50, 200);
+    Axis AXnh("TRD NHit", 200, 0, 200);
+    Axis AXns("TRD NSeg", 20, 0, 20);
     Axis AXtrd("TRD Estimator", 200, 0.0, 1.8);
     Axis AXqlt("Quality", 200, -2.0, 10.0);
     
     Hist* hAD_TF_mass    = Hist::New("hAD_TF_mass",    HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_TF_massQ   = Hist::New("hAD_TF_massQ",   HistAxis(AXmu, "Events/Bin"));
-    Hist* hAD_TF_massC   = Hist::New("hAD_TF_massC",   HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_TF_CKmass  = Hist::New("hAD_TF_CKmass",  HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_TF_CKmassQ = Hist::New("hAD_TF_CKmassQ", HistAxis(AXmu, "Events/Bin"));
-    Hist* hAD_TF_CKmassC = Hist::New("hAD_TF_CKmassC", HistAxis(AXmu, "Events/Bin"));
-    Hist* hAD_TF_TDvtx   = Hist::New("hAD_TF_TDvtx",   HistAxis(AXmu, AXvtx, "Events/Bin"));
+    Hist* hAD_TF_TDnh    = Hist::New("hAD_TF_TDnh",    HistAxis(AXmu, AXnh, "Events/Bin"));
+    Hist* hAD_TF_TDns    = Hist::New("hAD_TF_TDns",    HistAxis(AXmu, AXns, "Events/Bin"));
     Hist* hAD_TF_TDllr   = Hist::New("hAD_TF_TDllr",   HistAxis(AXmu, AXtrd, "Events/Bin"));
     Hist* hAD_TF_M1qltx  = Hist::New("hAD_TF_M1qltx",  HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_TF_M1qlty  = Hist::New("hAD_TF_M1qlty",  HistAxis(AXmu, AXqlt, "Events/Bin"));
+    Hist* hAD_TF_M1qlt   = Hist::New("hAD_TF_M1qlt",   HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_TF_M2qltx  = Hist::New("hAD_TF_M2qltx",  HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_TF_M2qlty  = Hist::New("hAD_TF_M2qlty",  HistAxis(AXmu, AXqlt, "Events/Bin"));
+    Hist* hAD_TF_M2qlt   = Hist::New("hAD_TF_M2qlt",   HistAxis(AXmu, AXqlt, "Events/Bin"));
     
     Hist* hAD_RH_mass    = Hist::New("hAD_RH_mass",    HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_massQ   = Hist::New("hAD_RH_massQ",   HistAxis(AXmu, "Events/Bin"));
@@ -130,12 +132,15 @@ int main(int argc, char * argv[]) {
     Hist* hAD_RH_CKmassQ2 = Hist::New("hAD_RH_CKmassQ2", HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_CKmassQ3 = Hist::New("hAD_RH_CKmassQ3", HistAxis(AXmu, "Events/Bin"));
     Hist* hAD_RH_CKmassC = Hist::New("hAD_RH_CKmassC", HistAxis(AXmu, "Events/Bin"));
-    Hist* hAD_RH_TDvtx   = Hist::New("hAD_RH_TDvtx",   HistAxis(AXmu, AXvtx, "Events/Bin"));
+    Hist* hAD_RH_TDnh    = Hist::New("hAD_RH_TDnh",    HistAxis(AXmu, AXnh, "Events/Bin"));
+    Hist* hAD_RH_TDns    = Hist::New("hAD_RH_TDns",    HistAxis(AXmu, AXns, "Events/Bin"));
     Hist* hAD_RH_TDllr   = Hist::New("hAD_RH_TDllr",   HistAxis(AXmu, AXtrd, "Events/Bin"));
     Hist* hAD_RH_M1qltx  = Hist::New("hAD_RH_M1qltx",  HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_RH_M1qlty  = Hist::New("hAD_RH_M1qlty",  HistAxis(AXmu, AXqlt, "Events/Bin"));
+    Hist* hAD_RH_M1qlt   = Hist::New("hAD_RH_M1qlt",   HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_RH_M2qltx  = Hist::New("hAD_RH_M2qltx",  HistAxis(AXmu, AXqlt, "Events/Bin"));
     Hist* hAD_RH_M2qlty  = Hist::New("hAD_RH_M2qlty",  HistAxis(AXmu, AXqlt, "Events/Bin"));
+    Hist* hAD_RH_M2qlt   = Hist::New("hAD_RH_M2qlt",   HistAxis(AXmu, AXqlt, "Events/Bin"));
 
     // Antiproton
     Hist* hAP_LPR_flux  = Hist::New("hAP_LPR_flux",  HistAxis(AXrig, "Events/Bin"));
@@ -215,16 +220,16 @@ int main(int argc, char * argv[]) {
         double maxCF = (opt.mode() == MGConfig::JobOpt::MODE::ISS) ? fRti->maxCfIGRF : 0;
         
         // Geometry (TRK)
-        //if (fTrk->numOfTrack != 1) continue;
+        if (fTrk->numOfTrack != 1) continue;
      
         // Geometry (TOF)
-        //if (fTof->numOfBetaH != 1) continue;
-        //if (!fTof->statusBetaH) continue;
+        if (fTof->numOfBetaH != 1) continue;
+        if (!fTof->statusBetaH) continue;
         
         // Geometry (TRD)
         if (!fTrd->LLRstatus[0]) continue;
         if (fTrd->LLRnh[0] < 10) continue;
-        if (fTrd->ITnh[0]  < 5) continue;
+        if (fTrd->ITnh[0]  < 6) continue;
         
         // Geometry (ACC)
         if (fAcc->clusters.size() != 0) continue;
@@ -236,28 +241,33 @@ int main(int argc, char * argv[]) {
         if (std::abs(info.chrg()) == 1) {
             if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
             if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
-            if (fTrk->QL2 > 1.8) continue;
-            if (fTrk->QL1 > 1.8) continue;
-            if (fTrk->QL9 > 1.8) continue;
+            if (fTrk->QInMin < 0.7) continue;
+            
+            if (fTrk->QL2 > 0 && (fTrk->QL2 < 0.7 || fTrk->QL2 > 1.8)) continue;
+            if (fTrk->QL1 > 0 && (fTrk->QL1 < 0.7 || fTrk->QL1 > 1.8)) continue;
+            if (fTrk->QL9 > 0 && (fTrk->QL9 < 0.7 || fTrk->QL9 > 1.8)) continue;
         }
         if (std::abs(info.chrg()) == 2) {
             if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
             if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
-            if (fTrk->QL2 > 2.8) continue;
-            if (fTrk->QL1 > 2.8) continue;
-            if (fTrk->QL9 > 2.8) continue;
+            if (fTrk->QInMin < 1.7) continue;
+            
+            if (fTrk->QL2 > 0 && (fTrk->QL2 < 1.7 || fTrk->QL2 > 2.8)) continue;
+            if (fTrk->QL1 > 0 && (fTrk->QL1 < 1.7 || fTrk->QL1 > 2.8)) continue;
+            if (fTrk->QL9 > 0 && (fTrk->QL9 < 1.7 || fTrk->QL9 > 2.8)) continue;
         }
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
         if (fTof->normChisqC > 10.) continue;
-        //if (fTof->noiseExtCls != 0) continue;
+        if (fTof->noiseExtCls != 0) continue;
         if (fTof->numOfInTimeCls > 4) continue;
+        
+        // TRD
+        //if (fTrd.VTXstatus && fTrd.VTXncls >= 15 && fTrd.VTXnseg >= 2) continue;
        
         // ECAL
         if (fEcal->shower.energyE > 0 && fEcal->shower.PisaBDT > -0.2) continue;
-
-        Bool_t istrdvtx = (fTrd->other.status && fTrd->other.LLRnh >= 12 && fTrd->other.ITnh >= 8);
 
         // Track In
         CKTrackInfo& cktrIn = fTrk->cktr.at(0);
@@ -293,7 +303,6 @@ int main(int argc, char * argv[]) {
             Bool_t   llrc   = (fTrd->LLRep[0] > (0.2 + 0.6 * fTof->betaH * fTof->betaH));
             hAD_TF_CKmass->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
             if (llrc && ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassQ->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
-            if (llrc && overcf && ckqltx < 2.0 && ckqlty < 2.0) hAD_TF_CKmassC->fillH1D(cksign * ckmass, fList->weight * (cksign>0?0.01:1.0));
         }
         
         if (cktrIn.status && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98 && fRich->nhit > 2 && fRich->npmt > 2) {
@@ -316,23 +325,25 @@ int main(int argc, char * argv[]) {
         HCMuInfo& mutr = fHyc->mutr;
         Short_t musign = (mutr.status ? (mutr.rig[0] > 0 ? 1 : -1) : 0);
         Float_t muarig = (mutr.status ? std::fabs(mutr.rig[0]) : 0);
-        Bool_t  mugood = (mutr.status && mutr.muQlt[0] < 2.0 && mutr.muQlt[1] < 2.0 && mutr.muQlt[2] < 2.0 && mutr.qlt[0] < 2.0 && mutr.qlt[1] < 2.0);
+        Bool_t  mugood = (mutr.status && mutr.muQlt[0] < 2.0 && mutr.muQlt[1] < 2.0 && mutr.muQlt[2] < 2.0 && mutr.qlt[0] < 2.0 && mutr.qlt[1] < 2.0 && mutr.qlt[2] < 2.0);
         Bool_t  mullrc = (mutr.status ? (fTrd->LLRep[0] > (0.2 + 0.6 * mutr.bta[0] * mutr.bta[0])) : true);
 
         if (mutr.status && mutr.bta[0] > 0.5 && mutr.bta[0] < 0.8) {
             Bool_t overcf = (muarig > 1.0 * maxCF);
             hAD_TF_mass->fillH1D(musign * mutr.mass, fList->weight * (musign>0?0.01:1.0));
             if (mugood && mullrc) hAD_TF_massQ->fillH1D(musign * mutr.mass, fList->weight * (musign>0?0.01:1.0));
-            if (mugood && mullrc && overcf) hAD_TF_massC->fillH1D(musign * mutr.mass, fList->weight * (musign>0?0.01:1.0));
+            if (mugood) hAD_TF_TDnh->fillH2D(musign * mutr.mass, fTrd->numOfCls, fList->weight * (musign>0?0.01:1.0));
+            if (mugood) hAD_TF_TDns->fillH2D(musign * mutr.mass, fTrd->numOfSegment, fList->weight * (musign>0?0.01:1.0));
             if (mugood) hAD_TF_TDllr->fillH2D(musign * mutr.mass, fTrd->LLRep[0], fList->weight * (musign>0?0.01:1.0));
-            if (mugood && mullrc && istrdvtx) hAD_TF_TDvtx->fillH2D(musign * mutr.mass, fTrd->other.VTXcz, fList->weight * (musign>0?0.01:1.0));
             if (mugood && mullrc && hctrM1In.status) hAD_TF_M1qltx->fillH2D(musign * mutr.mass, hctrM1In.qlt[0], fList->weight * (musign>0?0.01:1.0));
             if (mugood && mullrc && hctrM1In.status) hAD_TF_M1qlty->fillH2D(musign * mutr.mass, hctrM1In.qlt[1], fList->weight * (musign>0?0.01:1.0));
+            if (mugood && mullrc && hctrM1In.status) hAD_TF_M1qlt ->fillH2D(musign * mutr.mass, hctrM1In.qlt[2], fList->weight * (musign>0?0.01:1.0));
             if (mugood && mullrc && hctrM2In.status) hAD_TF_M2qltx->fillH2D(musign * mutr.mass, hctrM2In.qlt[0], fList->weight * (musign>0?0.01:1.0));
             if (mugood && mullrc && hctrM2In.status) hAD_TF_M2qlty->fillH2D(musign * mutr.mass, hctrM2In.qlt[1], fList->weight * (musign>0?0.01:1.0));
+            if (mugood && mullrc && hctrM2In.status) hAD_TF_M2qlt ->fillH2D(musign * mutr.mass, hctrM2In.qlt[2], fList->weight * (musign>0?0.01:1.0));
 
             // new tree
-            if (mugood && (musign * mutr.mass) < -1.5 && (musign * mutr.mass) > -3.0) tree->Fill();
+            if (mugood && (musign * mutr.mass) < -1.5) tree->Fill();
         }
         
         if (hctrIn.status && hctrIn.statusRh && fRich->status && fRich->kind == 0 && fRich->isGood && fRich->beta > 0.95 && fRich->beta < 0.98 && fRich->nhit > 2 && fRich->npmt > 2) {
@@ -343,7 +354,8 @@ int main(int argc, char * argv[]) {
             Double_t rhmass = std::fabs(info.chrg() * hctrIn.rig[4] * std::sqrt(1.0/fRich->beta/fRich->beta-1.0));
             Double_t qltx   = hctrIn.qlt[0];
             Double_t qlty   = hctrIn.qlt[1];
-            Bool_t   rhgood = (qltx < 2.0 && qlty < 2.0);
+            Double_t qlt    = hctrIn.qlt[2];
+            Bool_t   rhgood = (qltx < 2.0 && qlty < 2.0 && qlt < 2.0);
             Bool_t   llrc   = (fTrd->LLRep[0] > 0.8);
             if (llrc) hAD_RH_mass->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc) hAD_RH_massQ->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
@@ -351,19 +363,22 @@ int main(int argc, char * argv[]) {
             if (rhgood && llrc && rhcut[0] && rhcut[1]) hAD_RH_massQ2->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc && rhcut[0] && rhcut[1] && rhcut[2]) hAD_RH_massQ3->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood && llrc && overcf) hAD_RH_massC->fillH1D(rhsign * rhmass, fList->weight * (rhsign>0?0.01:1.0));
+            if (rhgood) hAD_RH_TDnh->fillH2D(rhsign * rhmass, fTrd->numOfCls, fList->weight * (rhsign>0?0.01:1.0));
+            if (rhgood) hAD_RH_TDns->fillH2D(rhsign * rhmass, fTrd->numOfSegment, fList->weight * (rhsign>0?0.01:1.0));
             if (rhgood) hAD_RH_TDllr->fillH2D(rhsign * rhmass, fTrd->LLRep[0], fList->weight * (rhsign>0?0.01:1.0));
-            if (rhgood && llrc && istrdvtx) hAD_RH_TDvtx->fillH2D(rhsign * rhmass, fTrd->other.VTXcz, fList->weight * (rhsign>0?0.01:1.0));
             if (hctrM1In.status && llrc) hAD_RH_M1qltx->fillH2D(rhsign * rhmass, hctrM1In.qlt[0], fList->weight * (rhsign>0?0.01:1.0));
             if (hctrM1In.status && llrc) hAD_RH_M1qlty->fillH2D(rhsign * rhmass, hctrM1In.qlt[1], fList->weight * (rhsign>0?0.01:1.0));
+            if (hctrM1In.status && llrc) hAD_RH_M1qlt ->fillH2D(rhsign * rhmass, hctrM1In.qlt[2], fList->weight * (rhsign>0?0.01:1.0));
             if (hctrM2In.status && llrc) hAD_RH_M2qltx->fillH2D(rhsign * rhmass, hctrM2In.qlt[0], fList->weight * (rhsign>0?0.01:1.0));
             if (hctrM2In.status && llrc) hAD_RH_M2qlty->fillH2D(rhsign * rhmass, hctrM2In.qlt[1], fList->weight * (rhsign>0?0.01:1.0));
+            if (hctrM2In.status && llrc) hAD_RH_M2qlt ->fillH2D(rhsign * rhmass, hctrM2In.qlt[2], fList->weight * (rhsign>0?0.01:1.0));
         }
         
         // Antiproton
         if (mutr.status && hctrIn.status) {
             Short_t  sign = TrackSys::Numc::Compare(hctrIn.rig[4]);
             Double_t arig = std::fabs(hctrIn.rig[0]);
-            Bool_t   good = (hctrIn.qlt[0] < 2.0 && hctrIn.qlt[1] < 2.0);
+            Bool_t   good = (hctrIn.qlt[0] < 2.0 && hctrIn.qlt[1] < 2.0 && hctrIn.qlt[2] < 2.0);
             Bool_t   llrc = (fTrd->LLRep[0] > 0.8);
             Bool_t overcf = (arig > 1.0 * maxCF);
             Double_t ckmass = (fTof->betaH < 1.0 ? std::fabs(info.chrg() * cktrIn.rig * std::sqrt(1.0/fTof->betaH/fTof->betaH-1.0)) : -1);
@@ -387,7 +402,7 @@ int main(int argc, char * argv[]) {
             Short_t  rhsign = TrackSys::Numc::Compare(hctrIn.rig[4]);
             Double_t rharig = std::fabs(hctrIn.rig[0]);
             Double_t rhmass = (fRich->beta >= 1.0) ? 0.0 : std::fabs(info.chrg() * hctrIn.rig[4] * std::sqrt(1.0/fRich->beta/fRich->beta-1.0));
-            Bool_t   good   = (hctrIn.qlt[0] < 2.0 && hctrIn.qlt[1] < 2.0);
+            Bool_t   good   = (hctrIn.qlt[0] < 2.0 && hctrIn.qlt[1] < 2.0 && hctrIn.qlt[2] < 2.0);
             Bool_t   llrc   = (fTrd->LLRep[0] > 0.8);
             Bool_t   overcf = (rharig > 1.0 * maxCF);
             if (overcf && rhsign>0 && good && llrc) hAP_MPR_flux->fillH1D(rharig, fList->weight);
@@ -408,7 +423,7 @@ int main(int argc, char * argv[]) {
             Double_t  arig = std::fabs(hctr->rig[0]);
             Double_t  qltx = hctr->qlt[0];
             Double_t  qlty = hctr->qlt[1];
-            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0);
+            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0 && hctr->qlt[2] < 2.0);
             Bool_t    llrc = (fTrd->LLRep[0] > 0.75);
             Bool_t   overcf = (arig > 1.0 * maxCF);
             if (overcf && sign>0 && good && llrc) hAP_INPR_flux->fillH1D(arig, fList->weight);
@@ -427,7 +442,7 @@ int main(int argc, char * argv[]) {
             Double_t  arig = std::fabs(hctr->rig[0]);
             Double_t  qltx = hctr->qlt[0];
             Double_t  qlty = hctr->qlt[1];
-            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0);
+            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0 && hctr->qlt[2] < 2.0);
             Bool_t    llrc = (fTrd->LLRep[0] > 0.75);
             Bool_t overcf = (arig > 1.0 * maxCF);
             if (overcf && sign>0 && good && llrc) hAP_L1PR_flux->fillH1D(arig, fList->weight);
@@ -446,7 +461,7 @@ int main(int argc, char * argv[]) {
             Double_t  arig = std::fabs(hctr->rig[0]);
             Double_t  qltx = hctr->qlt[0];
             Double_t  qlty = hctr->qlt[1];
-            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0);
+            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0 && hctr->qlt[2] < 2.0);
             Bool_t    llrc = (fTrd->LLRep[0] > 0.75);
             Bool_t overcf = (arig > 1.0 * maxCF);
             if (overcf && sign>0 && good && llrc) hAP_L9PR_flux->fillH1D(arig, fList->weight);
@@ -465,7 +480,7 @@ int main(int argc, char * argv[]) {
             Double_t  arig = std::fabs(hctr->rig[0]);
             Double_t  qltx = hctr->qlt[0];
             Double_t  qlty = hctr->qlt[1];
-            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0);
+            Bool_t    good = (hctr->qlt[0] < 2.0 && hctr->qlt[1] < 2.0 && hctr->qlt[2] < 2.0);
             Bool_t    llrc = (fTrd->LLRep[0] > 0.75);
             Bool_t overcf = (arig > 1.0 * maxCF);
             if (overcf && sign>0 && good && llrc) hAP_FSPR_flux->fillH1D(arig, fList->weight);
