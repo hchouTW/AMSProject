@@ -289,7 +289,10 @@ namespace TrackSys {
 // Gaussian Core f ~ [0]*exp(-0.5*x*x/[1]/[1])
 class MultiGaus {
     public :
-        static long double Func(long double x, long double men, const std::vector<std::array<long double, 2>>& group);
+        static long double Func(long double r, const std::vector<std::array<long double, 2>>& group);
+        static inline long double Func(long double r, long double sgm) { return MultiGaus::Func(r, { { Numc::ONE<long double>, sgm } }); }
+        static inline long double Func(long double r, long double wgt1, long double sgm1, long double wgt2, long double sgm2) { return MultiGaus::Func(r, { { wgt1, sgm1 }, {wgt2, sgm2 } }); }
+        static inline long double Func(long double r, long double wgt1, long double sgm1, long double wgt2, long double sgm2, long double wgt3, long double sgm3) { return MultiGaus::Func(r, { { wgt1, sgm1 }, { wgt2, sgm2 }, { wgt3, sgm3 } }); }
     
     public :
         MultiGaus() : robust_(Robust()), rand_func_(nullptr), eftsgm_(Numc::ONE<long double>) {}

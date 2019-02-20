@@ -1710,6 +1710,9 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 	// official RichRingR - start
     bool rebuild = (recEv.zin == 1);
 	RichRingR* rich = (recEv.iRichRing >= 0) ? event->pRichRing(recEv.iRichRing) : nullptr;
+    
+    // testcode
+    if (rich == 0 || rich->IsNaF()) return false;
 
     fRich.numOfHit = event->NRichHit();
 	while (rich != nullptr) {
@@ -1735,6 +1738,8 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         
         fRich.numOfExpPE = rich->getExpectedPhotoelectrons();
         fRich.eftOfColPE = rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons();
+            
+        fRich.betaCrr = rich->betaCorrection();
 
 	    // Rich cuts from Javie/Jorge
         //const short cut_pmt = 3;                     // number of PMTs
@@ -1777,11 +1782,63 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
                 hit.cy      = rawhit->Coo[1];
                 hit.dist    = dist;
 
+                if (hit.bta[0] <= 0.0) hit.bta[0] = -1.0;
+                if (hit.bta[1] <= 0.0) hit.bta[1] = -1.0;
+
                 if (used == 0) fRich.uhits.push_back(hit);
                 else           fRich.ohits.push_back(hit);
             } 
-            if (fRich.uhits.size() > 2) std::sort(fRich.uhits.begin(), fRich.uhits.end(), HitRICHInfo_sort());
-            if (fRich.ohits.size() > 2) std::sort(fRich.ohits.begin(), fRich.ohits.end(), HitRICHInfo_sort());
+            if (fRich.uhits.size() >= 2) std::sort(fRich.uhits.begin(), fRich.uhits.end(), HitRICHInfo_sort());
+            if (fRich.ohits.size() >= 2) std::sort(fRich.ohits.begin(), fRich.ohits.end(), HitRICHInfo_sort());
+
+            std::vector<TrackSys::CherenkovHit> ckhits;
+            for (auto&& hit : fRich.uhits) ckhits.push_back(TrackSys::CherenkovHit(hit.bta[0], hit.bta[1], hit.dist, hit.npe));
+            for (auto&& hit : fRich.ohits) ckhits.push_back(TrackSys::CherenkovHit(hit.bta[0], hit.bta[1], hit.dist, hit.npe));
+
+            //std::array<double, 5> args_bta({ 3.67947546707309947e-01, 1.30876e-03, 6.32052453292690108e-01, 2.74137e-03, 0.025 });
+            std::array<double, 2> scan_bta({ 1.25e-03, 0.01 });
+            std::array<double, 4> scan_npe({ 3.03876e-01, 9.55998e-01, 5.16975e-01, 0.01 });
+            std::array<double, 5> args_bta({ 3.44219393655640804e-01, 1.39600e-03, 6.55780606344359196e-01, 2.47223e-03, 0.025 });
+          
+            TrackSys::CherenkovFit ckmeas(ckhits, scan_bta, scan_npe, args_bta);
+           
+            //if (ckmeas.clss().size() >= 2 && recEv.rigIN > 20.) {
+            //CERR("\nClustering: BETA %14.8f NH %3d (%2d) TIME %14.8f\n", fRich.beta, ckmeas.hits().size(), fRich.uhits.size(), ckmeas.timer().time());
+            //for (auto&& cls : ckmeas.clss()) {
+            //    CERR("BTA %14.8f CNT %14.8f NOS %14.8f ETA %14.8f NDOF %3d NCHI %14.8f QLT %14.8f COMPACT %14.8f %14.8f %14.8f\n", cls.beta(), cls.cnt(), cls.nos(), cls.eta(), cls.ndof(), cls.nchi(), cls.quality(), cls.compact_c(), cls.compact_b(), cls.compact_s());
+            //    for (auto&& hit : cls.hits()) {
+            //        CERR("HIT BTA %14.8f NPE %14.8f DIST %14.8f\n", hit.beta(), hit.npe(), hit.dist());
+            //    }
+            //}}
+
+            int idx = 0;
+            for (auto&& cls : ckmeas.clss()) {
+                if (idx >= 10) break;
+                fRich.FITstatus[idx] = true;
+                fRich.FITbeta[idx] = cls.beta();
+                fRich.FITcnt[idx]  = cls.cnt();
+                fRich.FITnos[idx]  = cls.nos();
+                fRich.FITeta[idx]  = cls.eta();
+                fRich.FITndof[idx] = cls.ndof();
+                fRich.FITnchi[idx] = cls.nchi();
+                fRich.FITqlt[idx]  = cls.quality();
+                fRich.FITc[idx]    = cls.compact_c();
+                fRich.FITb[idx]    = cls.compact_b();
+                fRich.FITs[idx]    = cls.compact_s();
+                if (idx == 0) {
+                    int cnt = 0;
+                    for (auto&& hit : cls.hits()) {
+                        if (cnt >= 100) break;
+                        fRich.FITbta[cnt] = hit.beta();
+                        fRich.FITnpe[cnt] = hit.npe();
+                        fRich.FITdist[cnt] = hit.dist();
+                        cnt++;
+                    }
+                    fRich.FITnh = cnt;
+                }
+                idx++;
+            }
+            fRich.FITnc = idx;
         }
 
 		break;
@@ -2102,8 +2159,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 }
 
 bool EventRich::selectEvent(AMSEventR * event) {
-    // testcode
-    if (!fRich.status) return false;
+
 
 	return true;
 }
@@ -2826,8 +2882,8 @@ void DataSelection::fill() {
 }
 
 int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialDir) {
-	if (event == nullptr) return -1;
 	EventList::Weight = 1.;
+	if (event == nullptr) return -1;
 
 	// Resolution tuning (by Qi Yan)
 	if (EventBase::checkEventMode(EventBase::ISS) || EventBase::checkEventMode(EventBase::BT)) {

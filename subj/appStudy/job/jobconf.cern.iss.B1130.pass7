@@ -1,14 +1,14 @@
 [PROJECT]
 PROJPATH     =  subj/appStudy
 PROJVERSION  =  test
-PROJTITLE    =  CERN_TEST25
+PROJTITLE    =  TEST01
 PROJBIN      =  fill
-PROJFLIST    =  flist.cern.iss.pass7_19Jan31
+PROJFLIST    =  flist.cern.iss.pass7_19Jan31_ad
 EVENTTYPE    =  ISS
-FILEPEREXE   =  100
+FILEPEREXE   =  10
 JOBREGION    =  WHOLE
 EXESATID     =  0
-EXEENDID     =  20
+EXEENDID     =  40
 
 [QUEUE]
 QUEUE      =  ams1nd

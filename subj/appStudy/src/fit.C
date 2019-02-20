@@ -20,6 +20,12 @@ int main(int argc, char * argv[]) {
     Hist* hAD_TF_CKMrsoQ = Hist::Head("hAD_TF_CKmassQ");
     Hist* hAD_TF_HCMrso  = Hist::Head("hAD_TF_mass");
     Hist* hAD_TF_HCMrsoQ = Hist::Head("hAD_TF_massQ");
+    Hist* hAD_TF_HCMrsoQ1 = Hist::Head("hAD_TF_massQ1");
+    Hist* hAD_TF_HCMrsoQ2 = Hist::Head("hAD_TF_massQ2");
+    Hist* hAD_TF_HCMrsoQ3 = Hist::Head("hAD_TF_massQ3");
+    Hist* hAD_TF_HCMrsoQ4 = Hist::Head("hAD_TF_massQ4");
+    Hist* hAD_TF_HCMrsoQ5 = Hist::Head("hAD_TF_massQ5");
+    Hist* hAD_TF_HCMrsoQ6 = Hist::Head("hAD_TF_massQ6");
     
     Hist* hAD_RH_CKMrso  = Hist::Head("hAD_RH_CKmass");
     Hist* hAD_RH_CKMrsoQ = Hist::Head("hAD_RH_CKmassQ");
@@ -53,11 +59,18 @@ int main(int argc, char * argv[]) {
     //    cvhMrso->Write();
     //} 
     
-    hAD_TF_CKMrso ->style(Line(kBlue+1, 0, 1), Marker(kBlue-1));
+    //hAD_TF_CKMrso ->style(Line(kBlue+1, 0, 1), Marker(kBlue-1));
     hAD_TF_CKMrsoQ->style(Line(kBlue, 0, 3), Marker(kBlue));
-    hAD_TF_HCMrso ->style(Line(kRed+1, 0, 1), Marker(kRed-1));
+    //hAD_TF_HCMrso ->style(Line(kRed+1, 0, 1), Marker(kRed-1));
     hAD_TF_HCMrsoQ->style(Line(kRed, 0, 3), Marker(kRed));
-    THStack* chAD_TF_Mrso = Hist::Collect("chAD_TF_Mrso", HistList({ hAD_TF_CKMrso, hAD_TF_HCMrso, hAD_TF_CKMrsoQ, hAD_TF_HCMrsoQ }));
+    hAD_TF_HCMrsoQ1->style(Line(kGreen+0, 0, 3), Marker(kGreen+0));
+    hAD_TF_HCMrsoQ2->style(Line(kGreen+1, 0, 3), Marker(kGreen+1));
+    hAD_TF_HCMrsoQ3->style(Line(kGreen+2, 0, 3), Marker(kGreen+2));
+    hAD_TF_HCMrsoQ4->style(Line(kGreen+3, 0, 3), Marker(kGreen+3));
+    hAD_TF_HCMrsoQ5->style(Line(kGreen+4, 0, 3), Marker(kGreen+4));
+    hAD_TF_HCMrsoQ6->style(Line(kGreen+5, 0, 3), Marker(kGreen+5));
+    //THStack* chAD_TF_Mrso = Hist::Collect("chAD_TF_Mrso", HistList({ hAD_TF_CKMrso, hAD_TF_HCMrso, hAD_TF_CKMrsoQ, hAD_TF_HCMrsoQ }));
+    THStack* chAD_TF_Mrso = Hist::Collect("chAD_TF_Mrso", HistList({ hAD_TF_CKMrsoQ, hAD_TF_HCMrsoQ, hAD_TF_HCMrsoQ1, hAD_TF_HCMrsoQ2, hAD_TF_HCMrsoQ3, hAD_TF_HCMrsoQ4, hAD_TF_HCMrsoQ5, hAD_TF_HCMrsoQ6 }));
     chAD_TF_Mrso->SetMinimum(0.5);
     chAD_TF_Mrso->Write();
    

@@ -112,7 +112,7 @@ namespace TrackSys {
 
 TRandom* MultiGaus::rndm_gen_ = nullptr;
         
-long double MultiGaus::Func(long double x, long double men, const std::vector<std::array<long double, 2>>& group) {
+long double MultiGaus::Func(long double r, const std::vector<std::array<long double, 2>>& group) {
     if (group.size() == 0) return Numc::ZERO<long double>;
 
     long double sumw = Numc::ZERO<long double>;
@@ -121,7 +121,7 @@ long double MultiGaus::Func(long double x, long double men, const std::vector<st
         if (!Numc::Valid(elem[0]) || Numc::Compare(elem[0]) <= 0) continue;
         if (!Numc::Valid(elem[1]) || Numc::Compare(elem[1]) <= 0) continue;
         long double wgt = elem[0];
-        long double res = (x - men) / elem[1];
+        long double res = r / elem[1];
         regroup.push_back(std::array<long double, 2>({ wgt, res }));
         sumw += wgt;
     }

@@ -1034,10 +1034,32 @@ class RICH : public TObject {
             cstcq = -1.0;
             numOfExpPE = -1;
             eftOfColPE = -1;
+            
+            betaCrr = 1;
 
             clsbta = -1;
             uhits.clear();
             ohits.clear();
+        
+            FITnc = 0;
+            std::fill_n(FITstatus, 10, false);
+            std::fill_n(FITbeta, 10, 0);
+            std::fill_n(FITcnt, 10, 0);
+            std::fill_n(FITnos, 10, 0);
+            std::fill_n(FITeta, 10, 0);
+            
+            std::fill_n(FITndof, 10, 0);
+            std::fill_n(FITnchi, 10, 0);
+            std::fill_n(FITqlt, 10, 0);
+
+            std::fill_n(FITc, 10, 0);
+            std::fill_n(FITb, 10, 0);
+            std::fill_n(FITs, 10, 0);
+
+            FITnh = 0;
+            std::fill_n(FITbta, 100, 0);
+            std::fill_n(FITnpe, 100, 0);
+            std::fill_n(FITdist, 100, 0);
 
             //vetoKind = -1;
 			//vetoTile = -1;
@@ -1074,11 +1096,34 @@ class RICH : public TObject {
         Float_t cstcq; // consistency charge
         Float_t numOfExpPE;
         Float_t eftOfColPE;
+    
+        Float_t betaCrr;
 
         // Hits
         Float_t clsbta;
         std::vector<HitRICHInfo> uhits;
         std::vector<HitRICHInfo> ohits;
+
+
+        Short_t FITnc;
+        Bool_t  FITstatus[10];
+        Float_t FITbeta[10];
+        Float_t FITcnt[10];
+        Float_t FITnos[10];
+        Float_t FITeta[10];
+        
+        Short_t FITndof[10];
+        Float_t FITnchi[10];
+        Float_t FITqlt[10];
+
+        Float_t FITc[10];
+        Float_t FITb[10];
+        Float_t FITs[10];
+
+        Short_t FITnh;
+        Float_t FITbta[100];
+        Float_t FITnpe[100];
+        Float_t FITdist[100];
 
 		// Rich Veto
 		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF
