@@ -1042,19 +1042,16 @@ class RICH : public TObject {
             ohits.clear();
         
             FITnc = 0;
+            FITidx = -1;
             std::fill_n(FITstatus, 10, false);
             std::fill_n(FITbeta, 10, 0);
-            std::fill_n(FITcnt, 10, 0);
+            std::fill_n(FITsig, 10, 0);
             std::fill_n(FITnos, 10, 0);
-            std::fill_n(FITeta, 10, 0);
+            std::fill_n(FITsn, 10, 0);
             
             std::fill_n(FITndof, 10, 0);
             std::fill_n(FITnchi, 10, 0);
             std::fill_n(FITqlt, 10, 0);
-
-            std::fill_n(FITc, 10, 0);
-            std::fill_n(FITb, 10, 0);
-            std::fill_n(FITs, 10, 0);
 
             FITnh = 0;
             std::fill_n(FITbta, 100, 0);
@@ -1106,19 +1103,15 @@ class RICH : public TObject {
 
 
         Short_t FITnc;
+        Short_t FITidx;
         Bool_t  FITstatus[10];
         Float_t FITbeta[10];
-        Float_t FITcnt[10];
+        Float_t FITsig[10];
         Float_t FITnos[10];
-        Float_t FITeta[10];
-        
+        Float_t FITsn[10];
         Short_t FITndof[10];
         Float_t FITnchi[10];
         Float_t FITqlt[10];
-
-        Float_t FITc[10];
-        Float_t FITb[10];
-        Float_t FITs[10];
 
         Short_t FITnh;
         Float_t FITbta[100];

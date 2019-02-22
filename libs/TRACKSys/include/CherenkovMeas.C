@@ -10,32 +10,19 @@
 namespace TrackSys {
 
         
-CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 2>& scan_bta, const std::array<double, 4>& scan_npe, const std::array<double, 5>& args_bta) : scan_bta_(scan_bta), scan_npe_(scan_npe), args_bta_(args_bta) {
-    std::vector<CherenkovHit> hits;
-    for (auto&& hit : args_hits) { if (hit.status() && (hit.dist() > LMTL_DIST)) hits.push_back(hit); }
-    if (hits.size() <= 2 || !check()) { clear(); return; }
- 
+CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 4>& args_bta, const std::array<double, 2>& scan_bta, const std::array<double, 4>& scan_npe) {
+    args_bta_ = std::array<double, 4>({ args_bta[0], args_bta[1], args_bta[2], args_bta[3] });
+    scan_bta_sig_ = scan_bta[0];
+    scan_bta_nos_ = scan_bta[1];
+    scan_npe_sig_ = std::array<double, 3>({ scan_npe[0], scan_npe[1], scan_npe[2] });
+    scan_npe_nos_ = scan_npe[3];
+    
     timer_.start();
-    
-    std::vector<std::pair<double, std::vector<CherenkovHit>>>&& clusters = clustering(hits);
-    if (clusters.size() == 0) { clear(); return; }
-    
-    for (auto&& cluster : clusters) {
-        CherenkovCls&& chcls = physicalFit(cluster);
-        if (!chcls.status()) continue;
-        clss_.push_back(chcls);
-    }
-    if (clss_.size() == 0) { clear(); return; }
-    if (clss_.size() > 1) std::sort(clss_.begin(), clss_.end(), CherenkovCls_sort());
-
-    for (auto&& cls : clss_) {
-    for (auto&& hit : cls.hits()) {
-        hits_.push_back(hit);
-    }}
-    if (hits_.size() <= 2) { clear(); return; }
-    
+    if (args_hits.size() < 2 || !check()) { clear(); return; }
+    succ_ = fit(args_hits);    
     timer_.stop();
-    succ_ = true;
+
+    if (!succ_) { clear(); return; }
 }
 
 
@@ -44,32 +31,90 @@ void CherenkovFit::clear() {
     hits_.clear();
     clss_.clear();
 
-    scan_bta_ = std::array<double, 2>({0, 0});
-    scan_npe_ = std::array<double, 4>({0, 0, 0, 0});
-    args_bta_ = std::array<double, 5>({0, 0, 0, 0, 0});
+    args_bta_ = std::array<double, 4>({0, 0, 0, 0});
+    pdf_bta_  = std::move(MultiGaus());
+
+    scan_bta_sig_ = 0;
+    scan_bta_nos_ = 0;
+    pdf_scan_bta_ = std::move(MultiGaus());
     
-    mgscan_ = std::move(MultiGaus());
-    mgfit_  = std::move(MultiGaus());
+    scan_npe_sig_ = std::array<double, 3>({0, 0, 0});
+    scan_npe_nos_ = Numc::ZERO<>;
+
+    convg_epsilon_   = 0;
+    convg_tolerance_ = 0;
+    convg_closed_    = 0;
 
     timer_.clear();
 }
 
 
 bool CherenkovFit::check() {
-    if (Numc::Compare(scan_bta_[0]) <= 0 || 
-        Numc::Compare(scan_bta_[1]) < 0) return false;
-    if (Numc::Compare(scan_npe_[0]) <= 0 || 
-        Numc::Compare(scan_npe_[1]) <= 0 || 
-        Numc::Compare(scan_npe_[2]) <= 0 || 
-        Numc::Compare(scan_npe_[3]) < 0) return false;
     if (Numc::Compare(args_bta_[0]) <= 0 || 
         Numc::Compare(args_bta_[1]) <= 0 || 
         Numc::Compare(args_bta_[2]) <= 0 || 
-        Numc::Compare(args_bta_[3]) <= 0 || 
-        Numc::Compare(args_bta_[4]) < 0) return false;
-    mgscan_ = std::move(MultiGaus(Robust(Robust::Opt::OFF), scan_bta_[0]));
-    mgfit_  = std::move(MultiGaus(Robust(Robust::Opt::OFF), args_bta_[0], args_bta_[1], args_bta_[2], args_bta_[3]));
+        Numc::Compare(args_bta_[3]) <= 0) return false; 
+    if (Numc::Compare(scan_bta_sig_) <= 0 || 
+        Numc::Compare(scan_bta_nos_) <  0) return false;
+    if (Numc::Compare(scan_npe_sig_[0]) <= 0 || 
+        Numc::Compare(scan_npe_sig_[1]) <= 0 || 
+        Numc::Compare(scan_npe_sig_[2]) <= 0 || 
+        Numc::Compare(scan_npe_nos_)     <  0) return false;
+    pdf_bta_      = std::move(MultiGaus(Robust::Option(Robust::Opt::ON, 4.0L, 0.5L), args_bta_[0], args_bta_[1], args_bta_[2], args_bta_[3]));
+    pdf_scan_bta_ = std::move(MultiGaus(Robust::Option(Robust::Opt::ON, 3.0L, 0.5L), scan_bta_sig_));
+    convg_epsilon_   = scan_bta_sig_ * CONVG_EPSILON;
+    convg_tolerance_ = scan_bta_sig_ * CONVG_TOLERANCE;
+    convg_closed_    = scan_bta_sig_ * CONVG_CLOSED;
     return true;
+}
+
+        
+bool CherenkovFit::fit(const std::vector<CherenkovHit>& hits) {
+    std::vector<short> hitsID;
+    clss_.clear();
+    hits_.clear();
+
+    int iter = 0;
+    const int max_iter = 100;
+    while(true) {
+        iter++;
+        std::vector<CherenkovHit> cand_hits;
+        for (auto&& hit : hits) {
+            if (!hit.status()) continue;
+            bool has = false;
+            for (auto&& idx : hitsID) {
+                if (idx == hit.index()) { has = true; break; }
+            }
+            if (has) continue;
+            cand_hits.push_back(hit);
+        }
+        if (cand_hits.size() == 0) break;
+
+        std::vector<std::pair<double, std::vector<CherenkovHit>>>&& clusters = clustering(cand_hits);
+        if (clusters.size() == 0) break;
+        
+        std::vector<CherenkovCls> clss;
+        for (auto&& cluster : clusters) {
+            CherenkovCls&& chcls = physicalFit(cluster);
+            if (!chcls.status()) continue;
+            clss.push_back(chcls);
+        }
+        if (clss.size() == 0) break;
+        if (clss.size() > 1) std::sort(clss.begin(), clss.end(), CherenkovCls_sort());
+
+        CherenkovCls& main_cls = clss.at(0);
+        clss_.push_back(main_cls);
+        for (auto&& hit : main_cls.hits()) {
+            hits_.push_back(hit);
+            hitsID.push_back(hit.index());
+        }
+
+        if (iter >= max_iter) break;
+    }
+    if (clss_.size() > 1) std::sort(clss_.begin(), clss_.end(), CherenkovCls_sort());
+
+    bool succ = (clss_.size() >= 1 && hits_.size() >= 1);
+    return succ;
 }
 
 
@@ -85,16 +130,13 @@ CherenkovCls CherenkovFit::physicalFit(const std::pair<double, std::vector<Chere
 
         short cnt_nhit = 0;
         for (auto&& hit : hits) {
-            double dlt_b = hit.search_closed_beta(beta) - beta;
-            double bta_s = MultiGaus::Func(dlt_b, args_bta_[0], args_bta_[1], args_bta_[2], args_bta_[3]);
-            double npe_s = LandauGaus::Func(hit.npe(), scan_npe_[0], scan_npe_[1], scan_npe_[2]);
-            double bta_w = bta_s * (Numc::ONE<> + args_bta_[4]) / (bta_s + args_bta_[4]);
-            double npe_w = npe_s * (Numc::ONE<> + scan_npe_[3]) / (npe_s + scan_npe_[3]);
-            double wgt   = (bta_w * npe_w);
-        
-            std::array<long double, 3>&& minib = mgfit_.minimizer(dlt_b);
-            grdB += wgt * (Numc::NEG<> * minib[2] * minib[1]);
-            cvBB += wgt * (minib[2] * minib[2]);
+            double dlt_b  = hit.search_closed_beta(beta) - beta;
+            double npe_s  = LandauGaus::Func(hit.npe(), scan_npe_sig_[0], scan_npe_sig_[1], scan_npe_sig_[2]);
+            double wgtnpe = npe_s * (Numc::ONE<> + scan_npe_nos_) / (npe_s + scan_npe_nos_);
+            
+            std::array<long double, 3>&& minib = pdf_bta_.minimizer(dlt_b);
+            grdB += wgtnpe * (Numc::NEG<> * minib[2] * minib[1]);
+            cvBB += wgtnpe * (minib[2] * minib[2]);
             
             cnt_nhit++;
         }
@@ -110,7 +152,7 @@ CherenkovCls CherenkovFit::physicalFit(const std::pair<double, std::vector<Chere
         long double rat = std::fabs(newbta - beta) / (newbta + beta);
         if (!Numc::Valid(dlt) || !Numc::Valid(rat)) break;
 
-        if (iter >= Numc::TWO<short> * LMTL_ITER && dlt < CONVG_EPSILON && rat < CONVG_TOLERANCE) { 
+        if (iter >= Numc::TWO<short> * LMTL_ITER && dlt < convg_epsilon_ && rat < convg_tolerance_) { 
             succ = true;
             beta = newbta; 
             break; 
@@ -121,56 +163,99 @@ CherenkovCls CherenkovFit::physicalFit(const std::pair<double, std::vector<Chere
     
     short  ndof = hits.size() - Numc::ONE<short>;
     double nchi = Numc::ZERO<>;
-   
-    double cnt = Numc::ZERO<>;
-    double nos = Numc::ZERO<>;
-    double eft_ndof = -Numc::ONE<double>;
-    double eft_nchi = Numc::ZERO<>;
-
-    double sum_bw  = Numc::ZERO<>;
-    double sum_sw  = Numc::ZERO<>;
-    double sum_bsw = Numc::ZERO<>;
-    for (auto&& hit : hits) {
-        double dlt_b = hit.search_closed_beta(beta) - beta;
-        double bta_s = MultiGaus::Func(dlt_b, args_bta_[0], args_bta_[1], args_bta_[2], args_bta_[3]);
-        double npe_s = LandauGaus::Func(hit.npe(), scan_npe_[0], scan_npe_[1], scan_npe_[2]);
-        double bta_w = bta_s * (Numc::ONE<> + args_bta_[4]) / (bta_s + args_bta_[4]);
-        double npe_w = npe_s * (Numc::ONE<> + scan_npe_[3]) / (npe_s + scan_npe_[3]);
-        double wgt   = (bta_w * npe_w);
     
-        sum_bw  += bta_w;
-        sum_sw  += npe_w;
-        sum_bsw += wgt;
+    double sig_s2 = Numc::ZERO<>;
+    double sig_s3 = Numc::ZERO<>;
+    double sig_s4 = Numc::ZERO<>;
+    double sig_s5 = Numc::ZERO<>;
+    
+    double nos_s2 = Numc::ZERO<>;
+    double nos_s3 = Numc::ZERO<>;
+    double nos_s4 = Numc::ZERO<>;
+    double nos_s5 = Numc::ZERO<>;
+    
+    double scan_s2 = Numc::ZERO<>;
+    double scan_s3 = Numc::ZERO<>;
+    double scan_s4 = Numc::ZERO<>;
+    double scan_s5 = Numc::ZERO<>;
 
-        std::array<long double, 3>&& minib = mgfit_.minimizer(dlt_b);
+    for (auto&& hit : hits) {
+        double dlt_b  = hit.search_closed_beta(beta) - beta;
+        double npe_s  = LandauGaus::Func(hit.npe(), scan_npe_sig_[0], scan_npe_sig_[1], scan_npe_sig_[2]);
+        double wgtnpe = npe_s * (Numc::ONE<> + scan_npe_nos_) / (npe_s + scan_npe_nos_);
+        
+        std::array<long double, 3>&& minib = pdf_bta_.minimizer(dlt_b);
         nchi += minib[0] * minib[0];
+        
+        double bta_s     = MultiGaus::Func(dlt_b, args_bta_[0], args_bta_[1], args_bta_[2], args_bta_[3]);
+        double wgtbta_s2 = bta_s * (Numc::ONE<> + PROB_SIGMA2) / (bta_s + PROB_SIGMA2);
+        double wgtbta_s3 = bta_s * (Numc::ONE<> + PROB_SIGMA3) / (bta_s + PROB_SIGMA3);
+        double wgtbta_s4 = bta_s * (Numc::ONE<> + PROB_SIGMA4) / (bta_s + PROB_SIGMA4);
+        double wgtbta_s5 = bta_s * (Numc::ONE<> + PROB_SIGMA5) / (bta_s + PROB_SIGMA5);
+        double wgt_s2    = (wgtbta_s2 * wgtnpe);
+        double wgt_s3    = (wgtbta_s3 * wgtnpe);
+        double wgt_s4    = (wgtbta_s4 * wgtnpe);
+        double wgt_s5    = (wgtbta_s5 * wgtnpe);
 
-        cnt += wgt;
-        nos += (Numc::ONE<double> - wgt);
+        sig_s2 += wgt_s2;
+        sig_s3 += wgt_s3;
+        sig_s4 += wgt_s4;
+        sig_s5 += wgt_s5;
 
-        eft_ndof += wgt;
-        eft_nchi += wgt * minib[0] * minib[0];
+        nos_s2 += Numc::ONE<> - wgt_s2;
+        nos_s3 += Numc::ONE<> - wgt_s3;
+        nos_s4 += Numc::ONE<> - wgt_s4;
+        nos_s5 += Numc::ONE<> - wgt_s5;
+        
+        scan_s2 += wgt_s2;
+        scan_s3 += wgt_s3;
+        scan_s4 += wgt_s4;
+        scan_s5 += wgt_s5;
     }
-    if (!Numc::Valid(sum_bw)  || Numc::Compare(sum_bw)  <= 0) return CherenkovCls();
-    if (!Numc::Valid(sum_sw)  || Numc::Compare(sum_sw)  <= 0) return CherenkovCls();
-    if (!Numc::Valid(sum_bsw) || Numc::Compare(sum_bsw) <= 0) return CherenkovCls();
     
     nchi = (nchi / static_cast<double>(ndof));
     double quality = Numc::NormQuality(nchi, ndof); 
     if (!Numc::Valid(nchi) || !Numc::Valid(quality)) return CherenkovCls();
     
-    double eta = (eft_nchi / eft_ndof);
-    if (!Numc::Valid(eta) || Numc::Compare(eta) <= 0) return CherenkovCls();
+    if (!Numc::Valid(sig_s2) || !Numc::Valid(sig_s3) || !Numc::Valid(sig_s4) || !Numc::Valid(sig_s5)) return CherenkovCls(); 
+    if (!Numc::Valid(nos_s2) || !Numc::Valid(nos_s3) || !Numc::Valid(nos_s4) || !Numc::Valid(nos_s5)) return CherenkovCls(); 
 
-    double compact_c = -Numc::TWO<> * std::log(sum_bsw / static_cast<double>(hits.size())); // compact of cluster
-    double compact_b = -Numc::TWO<> * std::log(sum_bsw / sum_sw); // compact of beta
-    double compact_s = -Numc::TWO<> * std::log(sum_bsw / sum_bw); // compact of signal(npe)
+    scan_s2 = (scan_s2 / static_cast<double>(hits.size()));
+    scan_s3 = (scan_s3 / static_cast<double>(hits.size()));
+    scan_s4 = (scan_s4 / static_cast<double>(hits.size()));
+    scan_s5 = (scan_s5 / static_cast<double>(hits.size()));
+    if (!Numc::Valid(scan_s2) || !Numc::Valid(scan_s3) || !Numc::Valid(scan_s4) || !Numc::Valid(scan_s5)) return CherenkovCls(); 
 
-    if (!Numc::Valid(compact_c) || Numc::Compare(compact_c) <= 0) compact_c = Numc::ZERO<>;
-    if (!Numc::Valid(compact_b) || Numc::Compare(compact_b) <= 0) compact_b = Numc::ZERO<>;
-    if (!Numc::Valid(compact_s) || Numc::Compare(compact_s) <= 0) compact_s = Numc::ZERO<>;
+    double compact_s2 = -Numc::TWO<> * std::log(scan_s2); // compact of cluster in sigma2
+    double compact_s3 = -Numc::TWO<> * std::log(scan_s3); // compact of cluster in sigma3
+    double compact_s4 = -Numc::TWO<> * std::log(scan_s4); // compact of cluster in sigma4
+    double compact_s5 = -Numc::TWO<> * std::log(scan_s5); // compact of cluster in sigma5
+    if (!Numc::Valid(compact_s2) || Numc::Compare(compact_s2) <= 0) compact_s2 = Numc::ZERO<>;
+    if (!Numc::Valid(compact_s3) || Numc::Compare(compact_s3) <= 0) compact_s3 = Numc::ZERO<>;
+    if (!Numc::Valid(compact_s4) || Numc::Compare(compact_s4) <= 0) compact_s4 = Numc::ZERO<>;
+    if (!Numc::Valid(compact_s5) || Numc::Compare(compact_s5) <= 0) compact_s5 = Numc::ZERO<>;
 
-    return CherenkovCls(hits, beta, cnt, nos, eta, ndof, nchi, quality, compact_c, compact_b, compact_s);
+    std::array<double, 4> sig({sig_s2, sig_s3, sig_s4, sig_s5});
+    std::array<double, 4> nos({nos_s2, nos_s3, nos_s4, nos_s5});
+    std::array<double, 4> compact({compact_s2, compact_s3, compact_s4, compact_s5});
+
+    double signal_s2s4 = (Numc::Compare(sig_s4) > 0) ? (sig_s2 / sig_s4) : Numc::ZERO<>;
+    double signal_s3s4 = (Numc::Compare(sig_s4) > 0) ? (sig_s3 / sig_s4) : Numc::ZERO<>;
+    double noise_s2s4 = (Numc::Compare(nos_s2) > 0) ? (nos_s4 / nos_s2) : Numc::ZERO<>;
+    double noise_s3s4 = (Numc::Compare(nos_s3) > 0) ? (nos_s4 / nos_s3) : Numc::ZERO<>;
+    if (!Numc::Valid(signal_s2s4) || !Numc::Valid(signal_s3s4)) return CherenkovCls(); 
+    if (!Numc::Valid(noise_s2s4) || !Numc::Valid(noise_s3s4)) return CherenkovCls(); 
+
+    double sn_s2s4 = signal_s2s4 / (signal_s2s4 + noise_s2s4);
+    double sn_s3s4 = signal_s3s4 / (signal_s3s4 + noise_s3s4);
+    if (!Numc::Valid(sn_s2s4) || !Numc::Valid(sn_s3s4)) return CherenkovCls(); 
+
+    return CherenkovCls(hits, beta, 
+                        ndof, nchi, quality, 
+                        sig, nos, compact, 
+                        signal_s2s4, signal_s3s4, 
+                        noise_s2s4, noise_s3s4, 
+                        sn_s2s4, sn_s3s4);
 }
 
 
@@ -180,16 +265,14 @@ std::vector<std::pair<double, std::vector<CherenkovHit>>> CherenkovFit::clusteri
     
     std::vector<std::pair<std::array<double, 2>, CherenkovHit*>> rawcls;
     for (auto&& hit : hits) {
-        std::array<double, 2> candcls({ 0., 0. });
         for (short mode = 0; mode <= 1; ++mode) {
             if (mode == 0 && hit.type() != 1 && hit.type() != 3) continue;
             if (mode == 1 && hit.type() != 2 && hit.type() != 3) continue;
             double sbta = (mode == 0) ? hit.dbta() : hit.rbta();
             std::array<double, 2>&& rsl = clustering_evolve(hits, sbta);
             if (Numc::Compare(rsl[0]) <= 0) continue;
-            if (Numc::Compare(candcls[0]) <= 0 || rsl[1] < candcls[1]) candcls = rsl;
+            rawcls.push_back(std::make_pair(rsl, &hit));
         }
-        if (Numc::Compare(candcls[0]) > 0) rawcls.push_back(std::make_pair(candcls, &hit));
     }
     if (rawcls.size() == 0) return clusters;
     std::sort(rawcls.begin(), rawcls.end());
@@ -199,7 +282,7 @@ std::vector<std::pair<double, std::vector<CherenkovHit>>> CherenkovFit::clusteri
     for (short it = 0; it < rawcls.size(); ++it) {
         double tmpb = (it == 0) ? 0.0 : (rawcls.at(it-1).first)[0];
         double tmpa = (rawcls.at(it).first)[0];
-        if (it != 0 && std::fabs(tmpa - tmpb) < CONVG_CLUSTERING) { presets.back().at(1) = it; continue; }
+        if (it != 0 && std::fabs(tmpa - tmpb) < convg_closed_) { presets.back().at(1) = it; continue; }
         presets.push_back(std::array<short, 2>({it, it}));
     }
     std::vector<std::array<short, 2>> sets;
@@ -238,29 +321,29 @@ std::array<double, 2> CherenkovFit::clustering_evolve(std::vector<CherenkovHit>&
     double beta = sbta;
     double compact = Numc::ZERO<>;
     for (short iter = 1; iter <= LMTU_ITER; ++iter) {
-        double chic = Numc::ZERO<>;
+        double cnt  = Numc::ZERO<>;
         double grdB = Numc::ZERO<>;
         double cvBB = Numc::ZERO<>;
 
         short cnt_nhit = 0;
         for (auto&& hit : hits) {
-            double dlt_b = hit.search_closed_beta(beta) - beta;
-            double bta_s = MultiGaus::Func(dlt_b, scan_bta_[0]);
-            double npe_s = LandauGaus::Func(hit.npe(), scan_npe_[0], scan_npe_[1], scan_npe_[2]);
-            double bta_w = bta_s * (Numc::ONE<> + scan_bta_[1]) / (bta_s + scan_bta_[1]);
-            double npe_w = npe_s * (Numc::ONE<> + scan_npe_[3]) / (npe_s + scan_npe_[3]);
-            double wgt   = (bta_w * npe_w);
-            chic += wgt;
+            double dlt_b  = hit.search_closed_beta(beta) - beta;
+            double bta_s  = MultiGaus::Func(dlt_b, scan_bta_sig_);
+            double npe_s  = LandauGaus::Func(hit.npe(), scan_npe_sig_[0], scan_npe_sig_[1], scan_npe_sig_[2]);
+            double wgtbta = bta_s * (Numc::ONE<> + scan_bta_nos_) / (bta_s + scan_bta_nos_);
+            double wgtnpe = npe_s * (Numc::ONE<> + scan_npe_nos_) / (npe_s + scan_npe_nos_);
+            double wgt    = (wgtbta * wgtnpe);
 
-            std::array<long double, 3>&& minib = mgscan_.minimizer(dlt_b);
+            std::array<long double, 3>&& minib = pdf_scan_bta_.minimizer(dlt_b);
             grdB += wgt * (Numc::NEG<> * minib[2] * minib[1]);
             cvBB += wgt * (minib[2] * minib[2]);
             
+            cnt += wgt;
             cnt_nhit++;
         }
         if (cnt_nhit != hits.size()) return result;
         
-        chic = -Numc::TWO<> * std::log(chic / static_cast<double>(hits.size()));
+        double chic = -Numc::TWO<> * std::log(cnt / static_cast<double>(hits.size()));
         if (!Numc::Valid(chic) || Numc::Compare(chic) <= 0) chic = Numc::ZERO<>;
 
         double rslB = grdB / cvBB;

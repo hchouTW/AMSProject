@@ -351,40 +351,64 @@ long double MultiGaus::find_eftsgm() const {
     if      (multi_gaus_.size() == 0) return Numc::ONE<long double>;
     else if (multi_gaus_.size() == 1) return multi_gaus_.at(0).second;
     else {
-        std::vector<long double> chivec;
-        for (auto&& gaus : multi_gaus_) chivec.push_back( chi(gaus.second) );
+        long double chiv  = Numc::ZERO<long double>;
+        long double inits = Numc::ZERO<long double>;
+        for (auto&& gaus : multi_gaus_)
+            inits += (gaus.first / (gaus.second * gaus.second));
+        inits = std::sqrt(Numc::ONE<long double> / inits);
+        chiv = chi(inits);
+        if (!Numc::Valid(inits) || !Numc::Valid(chiv)) return sgm;
         
-        long double chil = Numc::ZERO<>;
-        long double sgml = Numc::ZERO<>;
-        for (int it = 0; it < chivec.size(); ++it)
-            if (chivec.at(it) < Numc::ONE<long double>)
-                { chil = chivec.at(it); sgml = multi_gaus_.at(it).second; }
-
-        long double chiu = Numc::ZERO<>;
-        long double sgmu = Numc::ZERO<>;
-        for (int it = chivec.size()-1; it >= 0; --it)
-            if (chivec.at(it) > Numc::ONE<long double>)
-                { chiu = chivec.at(it); sgmu = multi_gaus_.at(it).second; }
-
-        const int max_iter = 50;
-        const long double lmt = 1.0e-04;
-        if (std::fabs(chiu - chil) < lmt) sgm = 0.5L * (sgml + sgmu);
-        else {
-            for (int iter = 1; iter <= max_iter; ++iter) {
-                if (std::fabs(chiu - chil) < lmt) { sgm = 0.5L * (sgml + sgmu); break; }
-                long double wgtl = std::exp(-Numc::HALF * (chil * chil - Numc::ONE<long double>));
-                long double wgtu = std::exp(-Numc::HALF * (chiu * chiu - Numc::ONE<long double>));
-                long double sgmm = (wgtl * sgmu + wgtu * sgml) / (wgtl + wgtu);
-                long double chim = chi(sgmm);
-
-                sgm = sgmm;
-                if (std::fabs(chim - Numc::ONE<long double>) < lmt) break;
-                if (chim < Numc::ONE<long double>) { chil = chim; sgml = sgmm; }
-                else                               { chiu = chim; sgmu = sgmm; }
-            }
+        const int min_iter =   3;
+        const int max_iter = 100;
+        const long double lmt = 1.0e-05;
+        for (int iter = 1; iter <= max_iter; ++iter) {
+            long double new_sgm = inits / chiv;
+            long double new_chi = chi(new_sgm);
+            if (!Numc::Valid(new_sgm) || !Numc::Valid(new_chi)) return sgm;
+            if (iter <= min_iter) { inits = new_sgm; chiv = new_chi; continue; }
+            
+            if   (std::fabs(chiv - Numc::ONE<long double>) < lmt && std::fabs(chiv - new_chi) < lmt) break;
+            else { inits = new_sgm; chiv = new_chi; }
+            if (iter == max_iter) return sgm;
         }
+        if (Numc::Valid(inits)) sgm = inits;
     }
-    if (!Numc::Valid(sgm)) sgm = multi_gaus_.at(0).second;
+    //else {
+    //    std::vector<long double> chivec;
+    //    for (auto&& gaus : multi_gaus_) chivec.push_back( chi(gaus.second) );
+    //    
+    //    long double chil = Numc::ZERO<>;
+    //    long double sgml = Numc::ZERO<>;
+    //    for (int it = 0; it < chivec.size(); ++it)
+    //        if (chivec.at(it) <= Numc::ONE<long double>)
+    //            { chil = chivec.at(it); sgml = multi_gaus_.at(it).second; }
+
+    //    long double chiu = Numc::ZERO<>;
+    //    long double sgmu = Numc::ZERO<>;
+    //    for (int it = chivec.size()-1; it >= 0; --it)
+    //        if (chivec.at(it) >= Numc::ONE<long double>)
+    //            { chiu = chivec.at(it); sgmu = multi_gaus_.at(it).second; }
+
+    //    const int max_iter = 50;
+    //    const long double lmt = 1.0e-04;
+    //    if (std::fabs(chiu - chil) < lmt) sgm = 0.5L * (sgml + sgmu);
+    //    else {
+    //        for (int iter = 1; iter <= max_iter; ++iter) {
+    //            if (std::fabs(chiu - chil) < lmt) { sgm = 0.5L * (sgml + sgmu); break; }
+    //            long double wgtl = std::exp(-Numc::HALF * (chil * chil - Numc::ONE<long double>));
+    //            long double wgtu = std::exp(-Numc::HALF * (chiu * chiu - Numc::ONE<long double>));
+    //            long double sgmm = (wgtl * sgmu + wgtu * sgml) / (wgtl + wgtu);
+    //            long double chim = chi(sgmm);
+
+    //            sgm = sgmm;
+    //            if (std::fabs(chim - Numc::ONE<long double>) < lmt) break;
+    //            if (chim < Numc::ONE<long double>) { chil = chim; sgml = sgmm; }
+    //            else                               { chiu = chim; sgmu = sgmm; }
+    //        }
+    //    }
+    //}
+    if (!Numc::Valid(sgm)) sgm = Numc::ONE<long double>;
     return sgm;
 }
 

@@ -6,9 +6,11 @@ namespace TrackSys {
 
 class CherenkovHit {
     public :
-        CherenkovHit(double dbta = -1.0, double rbta = -1.0, double dist = -1.0, double npe = -1.0) : status_(false), mode_(-1), beta_(-1.0), type_(0), dbta_(dbta), rbta_(rbta), dist_(dist), npe_(npe) {
-            status_ = ((dbta_ > 0.0 || rbta_ > 0.0) && dist_ > 0.0 && npe_ > 0.0);
-            if (!status_) { dbta_ = -1.0; rbta_ = -1.0; dist_ = -1.0; npe_ = -1.0; }
+        CherenkovHit(short idx = -1, double dbta = -1.0, double rbta = -1.0, double dist = -1.0, double npe = -1.0) : status_(false), index_(idx), mode_(-1), beta_(-1.0), type_(0), dbta_(dbta), rbta_(rbta), dist_(dist), npe_(npe) {
+            if (dbta_ && dist_ < LMT_DIST_FOR_D) dbta_ = 0.0;
+            if (rbta_ && dist_ < LMT_DIST_FOR_R) rbta_ = 0.0;
+            status_ = (index_ >= 0 && (dbta_ > 0.0 || rbta_ > 0.0) && npe_ > 0.0);
+            if (!status_) { index_ = -1; dbta_ = -1.0; rbta_ = -1.0; dist_ = -1.0; npe_ = -1.0; }
             else {
                 if (dbta_ > 0.0) type_ += 1;
                 if (rbta_ > 0.0) type_ += 2;
@@ -17,7 +19,8 @@ class CherenkovHit {
         }
         ~CherenkovHit() {}
         
-        inline const bool& status() const { return status_; }
+        inline const bool&  status() const { return status_; }
+        inline const short& index()  const { return index_; }
         
         inline const short&  mode() const { return mode_; }
         inline const double& beta() const { return beta_; }
@@ -41,6 +44,7 @@ class CherenkovHit {
 
     protected :
         bool   status_;
+        short  index_;
         short  mode_; // -1(null), 0(d), 1(r) 
         double beta_;
 
@@ -49,6 +53,10 @@ class CherenkovHit {
         double rbta_;
         double dist_;
         double npe_;
+        
+    private :
+        static constexpr double LMT_DIST_FOR_D = 5.0;
+        static constexpr double LMT_DIST_FOR_R = 3.0;
 };
 
 
@@ -57,28 +65,42 @@ class CherenkovCls {
         CherenkovCls() { clear(); }
         ~CherenkovCls() { clear(); }
         
-        CherenkovCls(const std::vector<CherenkovHit>& hits, double beta, double cnt, double nos, double eta, short ndof, double nchi, double quality, double compact_c, double compact_b, double compact_s) : CherenkovCls() { 
+        CherenkovCls(const std::vector<CherenkovHit>& hits, double beta, 
+                     short ndof, double nchi, double quality, 
+                     const std::array<double, 4>& sig, const std::array<double, 4>& nos, const std::array<double, 4>& compact,
+                     double signal_s2s4, double signal_s3s4, double noise_s2s4, double noise_s3s4, double sn_s2s4, double sn_s3s4) : CherenkovCls() { 
             hits_ = hits; 
             status_ = true; beta_ = beta;
-            cnt_ = cnt; nos_ = nos; eta_ = eta;
             ndof_ = ndof; nchi_ = nchi; quality_ = quality; 
-            compact_c_ = compact_c; compact_b_ = compact_b; compact_s_ = compact_s; 
+            sig_ = sig; nos_ = nos; compact_ = compact;
+            signal_s2s4_ = signal_s2s4; noise_s2s4_ = noise_s2s4;
+            signal_s3s4_ = signal_s3s4; noise_s3s4_ = noise_s3s4;
+            sn_s2s4_ = sn_s2s4; sn_s3s4_ = sn_s3s4;
         }
 
         inline const bool& status() const { return status_; }
-
         inline const double& beta() const { return beta_; }
-        inline const double& cnt()  const { return cnt_; }
-        inline const double& nos()  const { return nos_; }
-        inline const double& eta()  const { return eta_; }
-        
+
         inline const short&  ndof()    const { return ndof_; }
         inline const double& nchi()    const { return nchi_; }
         inline const double& quality() const { return quality_; }
         
-        inline const double& compact_c() const { return compact_c_; }
-        inline const double& compact_b() const { return compact_b_; }
-        inline const double& compact_s() const { return compact_s_; }
+        inline const double& sig(int it)     const { return sig_.at(it); }
+        inline const double& nos(int it)     const { return nos_.at(it); }
+        inline const double& compact(int it) const { return compact_.at(it); }
+        
+        inline const std::array<double, 4>& sig()     const { return sig_; }
+        inline const std::array<double, 4>& nos()     const { return nos_; }
+        inline const std::array<double, 4>& compact() const { return compact_; }
+        
+        inline const double& signal_s2s4() const { return signal_s2s4_; }
+        inline const double& signal_s3s4() const { return signal_s3s4_; }
+        
+        inline const double& noise_s2s4() const { return noise_s2s4_; }
+        inline const double& noise_s3s4() const { return noise_s3s4_; }
+        
+        inline const double& sn_s2s4() const { return sn_s2s4_; }
+        inline const double& sn_s3s4() const { return sn_s3s4_; }
         
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
 
@@ -86,25 +108,33 @@ class CherenkovCls {
         inline void clear() {
             hits_.clear(); 
             status_ = false; beta_ = 0;
-            cnt_ = 0; nos_ = 0; eta_ = 0;
             ndof_ = 0; nchi_ = 0; quality_ = 0; 
-            compact_c_ = 0; compact_b_ = 0; compact_s_ = 0; 
+            sig_.fill(0); nos_.fill(0); compact_.fill(0);
+            signal_s2s4_ = 0; noise_s2s4_ = 0;
+            signal_s3s4_ = 0; noise_s3s4_ = 0;
+            sn_s2s4_ = 0; sn_s3s4_ = 0;
         }
 
     protected :
         bool   status_;
         double beta_;
-        double cnt_;
-        double nos_;
-        double eta_;
-
+        
         short  ndof_;
         double nchi_;
         double quality_;
+        
+        std::array<double, 4> sig_;
+        std::array<double, 4> nos_;
+        std::array<double, 4> compact_; // compact of cluster
 
-        double compact_c_; // compact of cluster
-        double compact_b_; // compact of beta
-        double compact_s_; // compact of signal(npe)
+        double signal_s2s4_;
+        double signal_s3s4_;
+        
+        double noise_s2s4_;
+        double noise_s3s4_;
+
+        double sn_s2s4_;
+        double sn_s3s4_;
 
     protected :
         std::vector<CherenkovHit> hits_;
@@ -113,8 +143,8 @@ class CherenkovCls {
 
 struct CherenkovCls_sort {
     bool operator() (const CherenkovCls& cls1, const CherenkovCls& cls2) {
-        if      (cls1.cnt() > cls2.cnt()) return true;
-        else if (cls1.cnt() < cls2.cnt()) return false;
+        if      (cls1.sig(0) > cls2.sig(0)) return true;
+        else if (cls1.sig(0) < cls2.sig(0)) return false;
         return false;
     }
 };
@@ -122,7 +152,7 @@ struct CherenkovCls_sort {
 
 class CherenkovFit {
     public :
-        CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 2>& scan_bta, const std::array<double, 4>& scan_npe, const std::array<double, 5>& args_bta);
+        CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 4>& args_bta, const std::array<double, 2>& scan_bta, const std::array<double, 4>& scan_npe);
         ~CherenkovFit() { clear(); }
    
         inline const bool& status() const { return succ_; }
@@ -135,6 +165,8 @@ class CherenkovFit {
         void clear();
         bool check();
 
+        bool fit(const std::vector<CherenkovHit>& hits);
+
         CherenkovCls physicalFit(const std::pair<double, std::vector<CherenkovHit>>& param);
         
         std::vector<std::pair<double, std::vector<CherenkovHit>>> clustering(std::vector<CherenkovHit>& hits);
@@ -146,28 +178,35 @@ class CherenkovFit {
         std::vector<CherenkovCls> clss_;
 
     protected :
-        std::array<double, 2> scan_bta_; // sgm, noise
-        std::array<double, 4> scan_npe_; // kpa, mpv, sgm, noise
-        std::array<double, 5> args_bta_; // wgt1, sgm1, wgt2, sgm2, noise
+        std::array<double, 4> args_bta_; // wgt1, sgm1, wgt2, sgm2
+        MultiGaus pdf_bta_;
         
-        MultiGaus mgscan_;
-        MultiGaus mgfit_;
+        double scan_bta_sig_;
+        double scan_bta_nos_;
+        MultiGaus pdf_scan_bta_;
+
+        std::array<double, 3> scan_npe_sig_; // kpa, mpv, sgm
+        double                scan_npe_nos_;
+
+        double convg_epsilon_;
+        double convg_tolerance_;
+        double convg_closed_;
 
     protected :
         Sys::HrsStopwatch timer_;
 
     private :
-        static constexpr short  LMTL_ITER = 4;
+        static constexpr short  LMTL_ITER = 3;
         static constexpr short  LMTU_ITER = 50;
-        static constexpr double LMTL_DIST = 2.5;
-        static constexpr double CONVG_EPSILON    = 5.0e-07;
-        static constexpr double CONVG_TOLERANCE  = 5.0e-07;
-        static constexpr double CONVG_CLUSTERING = 2.0e-05;
+        static constexpr double CONVG_EPSILON   = 1.0e-05;
+        static constexpr double CONVG_TOLERANCE = 1.0e-05;
+        static constexpr double CONVG_CLOSED    = 0.3;
+
+        static constexpr double PROB_SIGMA2 = 0.135335280000;
+        static constexpr double PROB_SIGMA3 = 0.011108997000;
+        static constexpr double PROB_SIGMA4 = 0.000335462630;
+        static constexpr double PROB_SIGMA5 = 0.000003726653;
 };
-
-
-
-
 
 
 class CherenkovMeas {
