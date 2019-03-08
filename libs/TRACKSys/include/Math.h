@@ -39,14 +39,18 @@ template<typename T = Double_t> constexpr T THOUSAND = static_cast<T>(1000);
 constexpr long double HALF = 5.00000000000000000e-01;
 
 constexpr Double_t ONE_TO_TWO   = 5.00000000000000000e-01;
+constexpr Double_t ONE_TO_THREE = 3.33333333333333333e-01;
+constexpr Double_t ONE_TO_FOUR  = 2.50000000000000000e-01;
 constexpr Double_t ONE_TO_SIX   = 1.66666666666666657e-01;
 constexpr Double_t ONE_TO_EIGHT = 1.25000000000000000e-01;
 
-constexpr Double_t PI          = 3.14159265358979312e+00;
-constexpr Double_t HALF_PI     = 1.57079632679489656e+00;
-constexpr Double_t INV_PI      = 3.18309886183790691e-01;
-constexpr Double_t SQRT_PI     = 1.77245385090551588e+00;
-constexpr Double_t INV_SQRT_PI = 5.64189583547756279e-01;
+constexpr Double_t PI              = 3.14159265358979312e+00;
+constexpr Double_t HALF_PI         = 1.57079632679489656e+00;
+constexpr Double_t SQRT_PI         = 1.77245385090551588e+00;
+constexpr Double_t INV_PI          = 3.18309886183790691e-01;
+constexpr Double_t INV_TWO_PI      = 1.59154943091895346e-01;
+constexpr Double_t INV_SQRT_PI     = 5.64189583547756279e-01;
+constexpr Double_t INV_SQRT_TWO_PI = 3.98942280401432647e-01;
 
 constexpr Double_t SQRT_TWO    = 1.41421356237309515e+00;
 constexpr Double_t SQRT_THREE  = 1.73205080756887719e+00;

@@ -14,10 +14,10 @@ OSRelease=`grep SLC /etc/redhat-release | cut -d' ' -f6`
 OSVersion=${OSRelease%.*}
 
 #### CERN CVMFS %% GCC Compiler
-GCCTAG=6.2.0
-source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
-#GCCTAG=4.9.3
-#source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTAG}/x86_64-slc6/setup.sh
+#GCCTAG=6.2.0
+#source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
+GCCTAG=4.9.3
+source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
 #### CERN AFS %% INTEL Compiler
 #ICCTAG=17
@@ -39,7 +39,7 @@ source ${ICCDIR}/${ICCTAG}-all-setup.sh intel64 &> /dev/null
 source ${ICCLUX}/bin/compilervars.sh intel64 
 
 #### AMS %% ROOT Environment
-AMSSW=root-v5-34-9-icc64-slc6
+AMSSW=root6-04-08-icc16
 export Offline=/cvmfs/ams.cern.ch/Offline
 #export Offline=/afs/cern.ch/ams/Offline
 export ROOTSYS=${Offline}/root/Linux/${AMSSW}
@@ -55,17 +55,12 @@ export LD_LIBRARY_PATH=${AMSXRD}/lib64:${LD_LIBRARY_PATH}
 
 #### AMS %% Software Environment
 AMSVersion=vdev
-ROOTARCH=linuxx8664icc5.34
+ROOTARCH=linuxx8664icc6.04
 export AMSSRC=${Offline}/${AMSVersion}
 export AMSLIB=${AMSSRC}/lib/${ROOTARCH}
 export LIBRARY_PATH=${AMSLIB}:${LIBRARY_PATH}
 export LD_LIBRARY_PATH=${AMSLIB}:${LD_LIBRARY_PATH}
 export CPLUS_INCLUDE_PATH=${AMSSRC}/include:${CPLUS_INCLUDE_PATH}
-
-## testcode
-#EXTERN_AMSLIB=/afs/cern.ch/work/h/hchou/public/AMSOffLibs/V.20190227/lib/linuxx8664icc5.34
-#export LIBRARY_PATH=${EXTERN_AMSLIB}:${LIBRARY_PATH}
-#export LD_LIBRARY_PATH=${EXTERN_AMSLIB}:${LD_LIBRARY_PATH}
 
 export AMSWD=${AMSSRC}
 export AMSDataDir=${Offline}/AMSDataDir
@@ -90,7 +85,7 @@ export LD_LIBRARY_PATH=${CERNLIB}:${LD_LIBRARY_PATH}
 ### AMS %% Software Install Environment
 AFSOffline=/afs/cern.ch/ams/Offline
 
-export G4INSTALL=${AFSOffline}/geant4.10.04-ams
+export G4INSTALL=${AFSOffline}/geant4.10.01.p01-ams
 export G4LIB=${G4INSTALL}/lib.p02
 export G4SYSTEM=Linux-icc
 

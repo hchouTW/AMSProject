@@ -56,6 +56,7 @@ source ${AMSProjLibs}/external/google/bin/google.sh
 source ${AMSProjLibs}/AMSLibs/bin/amslibs.sh
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
+alias amsenv_root6icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root6icc.sh"
 alias amsenv=amsenv_root5gcc
 
 # TRACKSys Software

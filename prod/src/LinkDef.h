@@ -41,6 +41,15 @@
 #pragma link C++ class HitRICHInfo;
 #pragma link C++ class std::vector<HitRICHInfo>+;
 
+#pragma link C++ class ChStoneInfo;
+#pragma link C++ class std::vector<ChStoneInfo>+;
+
+#pragma link C++ class ChCloudInfo;
+#pragma link C++ class std::vector<ChCloudInfo>+;
+
+#pragma link C++ class ChFitInfo;
+#pragma link C++ class std::vector<ChFitInfo>+;
+
 #pragma link C++ class HitECALInfo;
 #pragma link C++ class std::vector<HitECALInfo>+;
 

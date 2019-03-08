@@ -415,6 +415,103 @@ struct HitRICHInfo_sort {
 };
 
 
+class ChStoneInfo : public TObject {
+    public :
+        ChStoneInfo() { init(); }
+        ~ChStoneInfo() {}
+        
+        void init() {
+            status  = false;
+            cx      = 0;
+            cy      = 0;
+            dist    = 0;
+            npe     = 0;
+            cnt     = 0;
+            nchi    = 0;
+            quality = 0;
+        }
+
+    public :
+        Bool_t  status;
+        Float_t cx;
+        Float_t cy;
+        Float_t dist;
+        Float_t npe;
+
+        Float_t cnt;
+        Float_t nchi;
+        Float_t quality;
+
+    ClassDef(ChStoneInfo, 1)
+};
+
+
+class ChCloudInfo : public TObject {
+    public :
+        ChCloudInfo() { init(); }
+        ~ChCloudInfo() {}
+		
+        void init() {
+            status  = false;
+            beta    = 0;
+            cbta    = 0;
+            npe     = 0;
+            nhit    = 0;
+            npmt    = 0;
+            cnt     = 0;
+            wgt     = 0;
+            all     = 0;
+            nchi    = 0;
+            quality = 0;
+        }
+
+    public :
+        Bool_t  status;
+        Float_t beta;
+        Float_t cbta;
+        Float_t npe;
+
+        Short_t nhit;
+        Short_t npmt;
+
+        Float_t cnt;
+        Float_t wgt;
+        Float_t all;
+        Float_t nchi;
+        Float_t quality;
+
+    ClassDef(ChCloudInfo, 1)
+};
+
+
+class ChFitInfo : public TObject {
+    public :
+        ChFitInfo() { init(); }
+        ~ChFitInfo() {}
+
+        void init() {
+            status = false;
+            numOfStone = 0;
+            numOfCloud = 0;
+            stone.init();
+            cloud.init();
+            cpuTime = 0;
+        }
+
+    public :
+        Bool_t  status;
+        Short_t numOfStone;
+        Short_t numOfCloud;
+
+        ChStoneInfo stone;
+        ChCloudInfo cloud;
+
+        Float_t cpuTime;
+
+    ClassDef(ChFitInfo, 1)
+};
+
+
 // HitECALInfo
 class HitECALInfo : public TObject {
 	public :
@@ -1016,6 +1113,8 @@ class RICH : public TObject {
 
 		void init() {
             numOfHit = 0;
+            numOfCls = 0;
+            numOfRing = 0;
             
             status = false;
             kind = -1;
@@ -1040,23 +1139,12 @@ class RICH : public TObject {
             clsbta = -1;
             uhits.clear();
             ohits.clear();
-        
-            FITnc = 0;
-            FITidx = -1;
-            std::fill_n(FITstatus, 10, false);
-            std::fill_n(FITbeta, 10, 0);
-            std::fill_n(FITsig, 10, 0);
-            std::fill_n(FITnos, 10, 0);
-            std::fill_n(FITsn, 10, 0);
-            
-            std::fill_n(FITndof, 10, 0);
-            std::fill_n(FITnchi, 10, 0);
-            std::fill_n(FITqlt, 10, 0);
+
+            chfit.init();
 
             FITnh = 0;
             std::fill_n(FITbta, 100, 0);
             std::fill_n(FITnpe, 100, 0);
-            std::fill_n(FITdist, 100, 0);
 
             //vetoKind = -1;
 			//vetoTile = -1;
@@ -1074,7 +1162,9 @@ class RICH : public TObject {
 
 	public :
         Short_t numOfHit;
-        
+        Short_t numOfCls;
+        Short_t numOfRing;
+
         // Official RichRingR
 		Bool_t  status;
         Short_t kind;
@@ -1102,21 +1192,11 @@ class RICH : public TObject {
         std::vector<HitRICHInfo> ohits;
 
 
-        Short_t FITnc;
-        Short_t FITidx;
-        Bool_t  FITstatus[10];
-        Float_t FITbeta[10];
-        Float_t FITsig[10];
-        Float_t FITnos[10];
-        Float_t FITsn[10];
-        Short_t FITndof[10];
-        Float_t FITnchi[10];
-        Float_t FITqlt[10];
+        ChFitInfo chfit;
 
         Short_t FITnh;
         Float_t FITbta[100];
         Float_t FITnpe[100];
-        Float_t FITdist[100];
 
 		// Rich Veto
 		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF

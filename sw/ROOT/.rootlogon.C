@@ -80,10 +80,10 @@
 	//---------------//
 	//  User Define  //
 	//---------------//
-	gROOT->LoadMacro("$AMSProjLibs/CPPLibs/CPPLibs.h");
-	gROOT->LoadMacro("$AMSProjLibs/ROOTLibs/ROOTLibs.h");
-	gROOT->LoadMacro("$AMSProjLibs/TRACKLibs/TRACKLibs.h");
-	gROOT->ProcessLine("MGROOT::LoadDefaultEnvironment();");
-	gROOT->ProcessLine("using namespace MGROOT;");
-	gROOT->ProcessLine("using namespace TrackSys;");
+	//gROOT->LoadMacro("$AMSProjLibs/CPPLibs/CPPLibs.h");
+	//gROOT->LoadMacro("$AMSProjLibs/ROOTLibs/ROOTLibs.h");
+	//gROOT->LoadMacro("$AMSProjLibs/TRACKLibs/TRACKLibs.h");
+	//gROOT->ProcessLine("MGROOT::LoadDefaultEnvironment();");
+	//gROOT->ProcessLine("using namespace MGROOT;");
+	//gROOT->ProcessLine("using namespace TrackSys;");
 }
