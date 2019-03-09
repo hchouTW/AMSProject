@@ -491,6 +491,9 @@ class ChFitInfo : public TObject {
 
         void init() {
             status = false;
+            kind = -1;
+            tile = -1;
+
             numOfStone = 0;
             numOfCloud = 0;
             stone.init();
@@ -500,6 +503,9 @@ class ChFitInfo : public TObject {
 
     public :
         Bool_t  status;
+        Short_t kind;
+        Short_t tile;
+
         Short_t numOfStone;
         Short_t numOfCloud;
 

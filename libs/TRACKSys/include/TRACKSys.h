@@ -24,6 +24,7 @@
 #include "PhyTrFit.h"
 #include "SimpleMuScan.h"
 #include "PhyMuFit.h"
+#include "RichAms.h"
 #include "InterfaceAms.h"
 
 #include "Sys.C"
@@ -48,6 +49,7 @@
 #include "PhyTrFit.C"
 #include "SimpleMuScan.C"
 #include "PhyMuFit.C"
+#include "RichAms.C"
 #include "InterfaceAms.C"
 
 

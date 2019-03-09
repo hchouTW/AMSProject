@@ -6,7 +6,7 @@ namespace TrackSys {
 
 class CherenkovHit {
     public :
-        CherenkovHit(int chann = -1, double dbta = -1.0, double rbta = -1.0, double npe = -1.0, double cx = 0.0, double cy = 0.0) : status_(false), chann_(chann), pmtid_(chann/16), mode_(-1), beta_(-1.0), type_(0), dbta_(dbta), rbta_(rbta), npe_(npe), cx_(cx), cy_(cy), cnt_(0.0), wgt_(0.0) {
+        CherenkovHit(short chann = -1, short pmtid = -1, double dbta = -1.0, double rbta = -1.0, double npe = -1.0, double cx = 0.0, double cy = 0.0) : status_(false), chann_(chann), pmtid_(pmtid), mode_(-1), beta_(-1.0), type_(0), dbta_(dbta), rbta_(rbta), npe_(npe), cx_(cx), cy_(cy), cnt_(0.0), wgt_(0.0) {
             status_ = (chann_ >= 0 && pmtid_ >= 0 && (dbta_ > 0.0 || rbta_ > 0.0) && npe_ > 0.0);
             if (!status_) clear(); 
             else {
@@ -35,9 +35,9 @@ class CherenkovHit {
         inline void set_wgt(double wgt) { if (Numc::Compare(wgt) > 0) wgt_ = wgt; else wgt_ = Numc::ZERO<>; }
 
      public :
-        inline const bool& status() const { return status_; }
-        inline const int&  chann()  const { return chann_; }
-        inline const int&  pmtid()  const { return pmtid_; }
+        inline const bool&  status() const { return status_; }
+        inline const short& chann()  const { return chann_; }
+        inline const short& pmtid()  const { return pmtid_; }
         
         inline const short&  mode() const { return mode_; }
         inline const double& beta() const { return beta_; }
@@ -64,7 +64,7 @@ class CherenkovHit {
 
     protected :
         bool   status_;
-        int    chann_;
+        short  chann_;
         short  pmtid_;
         short  mode_; // -1(null), 0(d), 1(r) 
         double beta_; // raw beta
