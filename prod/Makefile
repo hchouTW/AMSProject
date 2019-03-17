@@ -5,7 +5,7 @@ LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
 
 Version = vdev
-Version = 19Feb09
+Version = 19Mar12v03
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :

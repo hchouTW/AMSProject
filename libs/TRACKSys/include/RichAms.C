@@ -3,45 +3,57 @@
 #define __TRACKLibs_RichAms_C__
 
 
+#include <RichAms.h>
+
+
 namespace TrackSys {
 
 
-RichHitAms::RichHitAms(RichHitR* hit, double dbta, double rbta, double dist) : RichHitAms() {
-    if (hit == nullptr || (dbta <= 0 && rbta <= 0)) return;
+RichHitAms::RichHitAms(RichHitR* hit, double dbta, double rbtaA, double rbtaB, double dist) : RichHitAms() {
+    if (hit == nullptr || (dbta <= 0 && rbtaA <= 0 && rbtaB <= 0)) return;
     status_ = true;
     chann_  = hit->Channel;
-    pmtid_  = chann_ / 16;
-    type_   = (dbta > 0) + (rbta > 0) * 2;
-    dbta_   = (type_%2==1) ? dbta : -1.0;
-    rbta_   = (type_/2==1) ? rbta : -1.0;
-    npe_    = hit->Npe;
-    cx_     = hit->Coo[0];
-    cy_     = hit->Coo[1];
-    cz_     = hit->Coo[2];
-    dist_   = dist;
-    hit_    = hit;
+    pmtid_  = chann_ / NUM_CHANN_IN_2D_PMT;
+    pixel_  = chann_ - pmtid_ * NUM_CHANN_IN_2D_PMT;
+    locid_[0] = (pixel_ / NUM_CHANN_IN_1D_PMT);
+    locid_[1] = (pixel_ % NUM_CHANN_IN_1D_PMT);
+
+    type_  = (dbta > 0) + (rbtaA > 0) * 2 + (rbtaB > 0) * 4;
+    dbta_  = (type_&1 == 1) ? dbta  : -1.0;
+    rbtaA_ = (type_&2 == 2) ? rbtaA : -1.0;
+    rbtaB_ = (type_&4 == 4) ? rbtaB : -1.0;
+    npe_   = hit->Npe;
+    cx_    = hit->Coo[0];
+    cy_    = hit->Coo[1];
+    cz_    = hit->Coo[2];
+    dist_  = dist;
+    hit_   = hit;
 }
 
 
 CherenkovHit RichHitAms::trans() const {
     if (!status_) return CherenkovHit();
-    return CherenkovHit(chann_, pmtid_, dbta_, rbta_, npe_, cx_, cy_);
+    return CherenkovHit(chann_, pmtid_, locid_[0], locid_[1], dbta_, rbtaA_, rbtaB_, npe_, cx_, cy_);
 }
 
 
 void RichHitAms::clear() {
-    status_ = false;
-    chann_  = -1; 
-    pmtid_  = -1;
-    type_   = -1;
-    dbta_   = -1;
-    rbta_   = -1;
-    npe_    = -1;
-    cx_     = 0;
-    cy_     = 0;
-    cz_     = 0;
-    dist_   = 0;
-    hit_    = nullptr;
+    status_   = false;
+    chann_    = -1; 
+    pmtid_    = -1;
+    pixel_    = -1;
+    locid_[0] = -1;
+    locid_[1] = -1;
+    type_     = -1;
+    dbta_     = -1;
+    rbtaA_    = -1;
+    rbtaB_    = -1;
+    npe_      = -1;
+    cx_       = 0;
+    cy_       = 0;
+    cz_       = 0;
+    dist_     = 0;
+    hit_      = nullptr;
 }
 
 
@@ -79,17 +91,22 @@ RichAms::RichAms(AMSEventR* event, TrTrackR* trtk) : RichAms() {
 void RichAms::clear() {
     status_  = false;
     kind_    = KIND_EMPTY;
-    tile_    = 0;
+    tile_    = -1;
     index_   = 0;
     dist_    = 0;
     dirp_    = AMSPoint();
     dird_    = AMSDir();
     refp_    = AMSPoint();
     refd_    = AMSDir();
+    
     radp_    = AMSPoint();
     radd_    = AMSDir();
     pmtp_    = AMSPoint();
     bta_crr_ = 1.0;
+    
+    is_good_in_geometry_ = false;
+    is_bad_tile_ = false;
+
     event_   = nullptr;
     trtk_    = nullptr;
     rhhits_.clear();
@@ -98,18 +115,176 @@ void RichAms::clear() {
 }
 
 
+CherenkovFit RichAms::fit() const {
+    if (!status_ || kind_ == KIND_EMPTY || chhits_.size() == 0) return CherenkovFit();
+    if (kind_ == KIND_AGL) {
+        return CherenkovFit(chhits_, index_, AGL_BETA_WIDTH, AGL_BETA_PDF, bta_crr_, OPT_WEIGHTED);
+    }
+    else if (kind_ == KIND_NAF) {
+        return CherenkovFit(chhits_, index_, NAF_BETA_WIDTH, NAF_BETA_PDF, bta_crr_, OPT_WEIGHTED);
+    }
+    return CherenkovFit();
+}
+
+
+std::tuple<double, std::vector<std::array<double, 2>>> RichAms::cal_trace(double cbta) const {
+    std::tuple<double, std::vector<std::array<double, 2>>> rlt_trace;
+    if (!status_ || kind_ == KIND_EMPTY || cbta <= (Numc::ONE<> / index_)) return rlt_trace;
+
+    double cosv = Numc::ONE<> / (index_ * cbta);
+    double sinv = std::sqrt((Numc::ONE<> - cosv) * (Numc::ONE<> + cosv));
+    if (!Numc::Valid(cosv) || !Numc::Valid(sinv)) return rlt_trace;
+    int kind = (kind_ == KIND_AGL) ? 0 : 1;
+
+    double lmtrfr = -std::cos(std::asin(Numc::ONE<> / index_));
+
+    SVecD<3> radp(radp_[0], radp_[1], radp_[2]);
+    SVecD<3> radd(radd_[0], radd_[1], radd_[2]);
+    OrthCoord orth(radd);
+
+    int count = 0;
+    const int nphi = 780;
+    std::vector<std::array<double, 2>> simhits(nphi, std::array<double, 2>({0., 0.}));
+    for (int it = 0; it < nphi; ++it) {
+        double phi = Numc::TWO_PI * static_cast<double>(it) / static_cast<double>(nphi);
+        SVecD<3>&& phivec = orth.tau() * std::cos(phi) + orth.rho() * std::sin(phi);
+        SVecD<3>&& srcvec = radd * cosv + phivec * sinv;
+        if (srcvec[2] >= lmtrfr) continue;
+
+        double planex = radp[0] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * srcvec[0] / srcvec[2];
+        double planey = radp[1] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * srcvec[1] / srcvec[2];
+        double planez = radp[2] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]);
+        if (std::hypot(planex, planey) > MIRROR_TOP_RADIUS) continue;
+        
+        short tile = RichRingR::getTileIndex(planex, planey);
+        if (tile < 0 || tile != tile_) continue;
+
+        double cosvac = Numc::NEG<> * std::sqrt(Numc::ONE<> - (index_ * index_) * (Numc::ONE<> - srcvec[2]) * (Numc::ONE<> + srcvec[2]));
+        double sinvac = std::sqrt((Numc::ONE<> - cosvac) * (Numc::ONE<> + cosvac));
+        if (!Numc::Valid(cosvac) || !Numc::Valid(sinvac)) continue;
+        SVecD<2>&& vacr = LA::Unit(SVecD<2>(srcvec[0], srcvec[1])) * sinvac;
+        if (!Numc::Valid(vacr[0]) || !Numc::Valid(vacr[1])) vacr = std::move(SVecD<2>());
+
+        SVecD<3> vacp(planex, planey, planez);
+        SVecD<3> vacd(vacr[0], vacr[1], cosvac);
+
+        double dheight = (PMT_CZ - vacp[2]);
+        double pmtx = vacp[0] + dheight * (vacd[0] / vacd[2]);
+        double pmty = vacp[1] + dheight * (vacd[1] / vacd[2]);
+        if (std::fabs(pmtx) < PMT_HOLE[0] && std::fabs(pmty) < PMT_HOLE[1]) continue;
+        if (std::hypot(pmtx, pmty) < MIRROR_BTM_RADIUS) {
+            simhits.at(count)[0] = pmtx;
+            simhits.at(count)[1] = pmty;
+            count++; continue; 
+        }
+
+        double vactx = (vacd[0] / vacd[2]);
+        double vacty = (vacd[1] / vacd[2]);
+        double mirtr = ((MIRROR_BTM_RADIUS - MIRROR_TOP_RADIUS) / dheight);
+        double poly0 = (vacp[0] * vacp[0] + vacp[1] * vacp[1] - MIRROR_TOP_RADIUS * MIRROR_TOP_RADIUS);
+        double poly1 = Numc::TWO<> * (vacp[0] * vactx + vacp[1] * vacty - MIRROR_TOP_RADIUS * mirtr);
+        double poly2 = (vactx * vactx + vacty * vacty - mirtr * mirtr);
+
+        double det  = std::sqrt(poly1 * poly1 - Numc::FOUR<> * poly2 * poly0);
+        double sol1 = Numc::ONE_TO_TWO * (-poly1 + det) / poly2;
+        double sol2 = Numc::ONE_TO_TWO * (-poly1 - det) / poly2;
+        bool is_ok1 = (Numc::Valid(sol1) && sol1 < 0.0 && sol1 > dheight);
+        bool is_ok2 = (Numc::Valid(sol2) && sol2 < 0.0 && sol2 > dheight);
+        if (!is_ok1 && !is_ok2) continue;
+
+        double sol = 0;
+        if (is_ok1) sol = sol1;
+        if (is_ok2) sol = sol2;
+        vacp[0] = vacp[0] + sol * vactx;
+        vacp[1] = vacp[1] + sol * vacty;
+        vacp[2] = vacp[2] + sol;
+        
+        double mirr = std::hypot(vacp[0], vacp[1]);
+        double cosr = Numc::NEG<> * std::sin(std::atan(std::fabs(mirtr)));
+        double sinr = std::sqrt((Numc::ONE<> - cosr) * (Numc::ONE<> + cosr));
+        if (!Numc::Valid(cosr) || !Numc::Valid(sinr)) continue;
+        SVecD<3> mirn(-vacp[0] * sinr / mirr, -vacp[1] * sinr / mirr, cosr);
+
+        double cosrfl = std::fabs(LA::Dot(vacd, mirn));
+        if (!Numc::Valid(cosrfl)) continue;
+        
+        vacd = std::move(LA::Unit(vacd + Numc::TWO<> * cosrfl * mirn));
+        if (vacd[2] >= Numc::ZERO<>) continue;
+
+        dheight = (PMT_CZ - vacp[2]);
+        pmtx = vacp[0] + dheight * (vacd[0] / vacd[2]);
+        pmty = vacp[1] + dheight * (vacd[1] / vacd[2]);
+        if (std::fabs(pmtx) < PMT_HOLE[0] && std::fabs(pmty) < PMT_HOLE[1]) continue;
+        if (std::hypot(pmtx, pmty) > MIRROR_BTM_RADIUS) continue;
+ 
+        simhits.at(count)[0] = pmtx;
+        simhits.at(count)[1] = pmty;
+        count++;
+    }
+    simhits.resize(count);
+    double trace = static_cast<double>(count) / static_cast<double>(nphi);
+    if (!Numc::Valid(trace) || simhits.size() == 0) { trace = 0; simhits.clear(); }
+
+    std::get<0>(rlt_trace) = trace;
+    std::get<1>(rlt_trace) = simhits;
+    return rlt_trace;
+}
+        
+
+std::array<double, 2> RichAms::cal_trace(const CherenkovCloud& cloud) const {
+    std::array<double, 2> rlt_trace({0., 0.});
+    if (!cloud.status()) return rlt_trace;
+
+    auto&& trace = cal_trace(cloud.cbta());
+    if (Numc::EqualToZero(std::get<0>(trace)) || std::get<1>(trace).size() == 0) return rlt_trace;
+
+    std::vector<int> pmtid;
+    std::vector<double> pmtdd;
+
+    int count = 0;
+    for (auto&& hit : cloud.hits()) {
+        bool is_inside = false;
+        double dd = 0;
+        for (auto&& cxy : std::get<1>(trace)) {
+            double dist = std::hypot(hit.cx() - cxy[0], hit.cy() - cxy[1]);
+            if (dist > 3.4) continue;
+            is_inside = true;
+            dd = dist;
+            break;
+        }
+        count += is_inside;
+        if (!is_inside) {
+            pmtid.push_back(hit.pmtid());
+            pmtdd.push_back(dd);
+        }
+    }
+    double eft = static_cast<double>(count) / static_cast<double>(cloud.hits().size());
+
+
+    if (pmtid.size() != 0) {
+        for (int it = 0; it < pmtid.size(); ++it) {
+            CERR("NO HIT %d %14.8f\n", pmtid.at(it), pmtdd.at(it));
+        }
+    }
+
+    rlt_trace[0] = std::get<0>(trace);
+    rlt_trace[1] = eft;
+    return rlt_trace;
+}
+
+
 bool RichAms::build(RichOffline::TrTrack track) {
     RichOffline::RichRadiatorTileManager crossed_tile(&track);
     if(crossed_tile.getkind() == KIND_EMPTY) return false;
     
-    kind_  = static_cast<short>(crossed_tile.getkind());
-    tile_  = static_cast<short>(crossed_tile.getcurrenttile());
-    index_ = static_cast<double>(crossed_tile.getindex());
-    dist_  = static_cast<double>(crossed_tile.getdistance());
-    dirp_  = crossed_tile.getemissionpoint();
-    dird_  = crossed_tile.getemissiondir();
-    refp_  = crossed_tile.getemissionpoint(1);
-    refd_  = crossed_tile.getemissiondir(1);
+    kind_   = static_cast<short>(crossed_tile.getkind());
+    tile_   = static_cast<short>(crossed_tile.getcurrenttile());
+    index_  = static_cast<double>(crossed_tile.getindex());
+    dist_   = static_cast<double>(crossed_tile.getdistance());
+    dirp_   = crossed_tile.getemissionpoint();
+    dird_   = crossed_tile.getemissiondir();
+    refp_   = crossed_tile.getemissionpoint(1);
+    refd_   = crossed_tile.getemissiondir(1);
 
     // Charge to AMS coordinate
     AMSPoint amsp = RichOffline::RichAlignment::RichToAMS(dirp_);
@@ -124,7 +299,28 @@ bool RichAms::build(RichOffline::TrTrack track) {
         if (bta_crr > 0) bta_crr_ = bta_crr;
     }
 
+    double radius = std::hypot(radp_[0], radp_[1]);
+    is_good_in_geometry_ = (radius < EXTERNAL_RAD_RADIUS);
+    if (is_good_in_geometry_ && kind_ == KIND_AGL) {
+        is_good_in_geometry_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) > RAD_BOUNDARY[0]);
+    }
+    if (is_good_in_geometry_ && kind_ == KIND_NAF) {
+        is_good_in_geometry_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) < RAD_BOUNDARY[1]);
+    }
+    tile_ = RichRingR::getTileIndex(radp_[0], radp_[1]);
+    if (tile_ < 0) return false;
+
+    bool is_bad_tile = false;
+    for (auto&& tile_index : BAD_TILE_INDEX) {
+        if (tile_ == tile_index) is_bad_tile = true;
+    }
+    is_bad_tile_ = is_bad_tile;
+
     int bit = event_->nRichRing();
+
+    // testcode
+    //RichPMTCalib *corr=RichPMTCalib::Update();
+    //if (RichChargeUniformityCorrection::getHead()) ptr->_npexp*=RichChargeUniformityCorrection::getHead()->getCorrection(beta, dirp_[0], dirp_[1], dird_[0], dird_[1]);
 
     const double betamin = 0.01;
     const double betamax = 5.00;
@@ -136,15 +332,14 @@ bool RichAms::build(RichOffline::TrTrack track) {
         
         if (recs[0] <= 0 && recs[1] <= 0 && recs[2] <= 0) continue;
         RichHitR* phit = rawhit->getpointer();
-        double dbta = (recs[0] > 0) ? recs[0] : -1.0;
-        double rbta = -1.0;
-        if ((recs[1] > 0 || recs[2] > 0) && !(recs[1] > 0 && recs[2] > 0)) {
-            rbta = (recs[1] > recs[2]) ? recs[1] : recs[2];
-        }
+        double dbta  = (recs[0] > 0) ? recs[0] : -1.0;
+        double rbtaA = (recs[1] > 0) ? recs[1] : -1.0;
+        double rbtaB = (recs[2] > 0) ? recs[2] : -1.0;
+        
         if (phit == nullptr || phit->Npe <= 0) continue;
         double dist = std::hypot(phit->Coo[0] - pmtp_[0], phit->Coo[1] - pmtp_[1]);
 
-        RichHitAms rhhit(phit, dbta, rbta, dist);
+        RichHitAms rhhit(phit, dbta, rbtaA, rbtaB, dist);
         if (!rhhit.status()) continue;
         
         CherenkovHit&& chhit = rhhit.trans();
@@ -155,19 +350,6 @@ bool RichAms::build(RichOffline::TrTrack track) {
     }
     if (rhhits_.size() > 1) std::sort(rhhits_.begin(), rhhits_.end(), RichHitAms_sort());
     if (chhits_.size() > 1) std::sort(chhits_.begin(), chhits_.end(), CherenkovHit_sort());
-
-    if (chhits_.size() > 1) {
-        double sumnpe = 0.0;
-        for (auto&& hit : chhits_) sumnpe += hit.npe();
-        for (auto&& hit : chhits_) hit.set_wgt(static_cast<double>(chhits_.size()) * hit.npe() / sumnpe);
-    }
-   
-    int cnt = 0;
-    for (auto&& hit : chhits_) {
-        CERR("[P] PMT %3d WGT %14.8f DIST %14.8f NPE %14.8f [D] BTA %14.8f [R] BTA %14.8f\n", hit.pmtid(), hit.wgt(), rhhits_.at(cnt).dist(), hit.npe(), hit.dbta(), hit.rbta());
-        cnt++;
-    }
-
 
     return true;
 }

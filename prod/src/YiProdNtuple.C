@@ -34,7 +34,7 @@ int main(int argc, const char ** argv) {
     TrackSys::MatMgnt::Load();
 
 	YiNtuple::setSelectionMode(YiNtuple::NORM);
-	//YiNtuple::setSelectionMode(YiNtuple::COPY);
+    //YiNtuple::setSelectionMode(YiNtuple::COPY);
 
 	DataSelection::setOption(DataSelection::LIST, DataSelection::ON);
 	DataSelection::setOption(DataSelection::RTI,  DataSelection::ON);

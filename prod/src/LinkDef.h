@@ -47,6 +47,9 @@
 #pragma link C++ class ChCloudInfo;
 #pragma link C++ class std::vector<ChCloudInfo>+;
 
+#pragma link C++ class ChTumorInfo;
+#pragma link C++ class std::vector<ChTumorInfo>+;
+
 #pragma link C++ class ChFitInfo;
 #pragma link C++ class std::vector<ChFitInfo>+;
 

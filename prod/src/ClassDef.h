@@ -421,18 +421,25 @@ class ChStoneInfo : public TObject {
         ~ChStoneInfo() {}
         
         void init() {
-            status  = false;
-            cx      = 0;
-            cy      = 0;
-            dist    = 0;
-            npe     = 0;
-            cnt     = 0;
-            nchi    = 0;
-            quality = 0;
+            status   = false;
+            nhit     = 0;
+            npmt     = 0;
+            cx       = 0;
+            cy       = 0;
+            dist     = 0;
+            npe      = 0;
+            cnt      = 0;
+            nchi     = 0;
+            quality  = 0;
+            skewness = 0;
+            kurtosis = 0;
         }
 
     public :
         Bool_t  status;
+        Short_t nhit;
+        Short_t npmt;
+        
         Float_t cx;
         Float_t cy;
         Float_t dist;
@@ -441,6 +448,9 @@ class ChStoneInfo : public TObject {
         Float_t cnt;
         Float_t nchi;
         Float_t quality;
+
+        Float_t skewness;
+        Float_t kurtosis;
 
     ClassDef(ChStoneInfo, 1)
 };
@@ -452,35 +462,75 @@ class ChCloudInfo : public TObject {
         ~ChCloudInfo() {}
 		
         void init() {
-            status  = false;
-            beta    = 0;
-            cbta    = 0;
-            npe     = 0;
-            nhit    = 0;
-            npmt    = 0;
-            cnt     = 0;
-            wgt     = 0;
-            all     = 0;
-            nchi    = 0;
-            quality = 0;
+            status   = false;
+            nhit     = 0;
+            npmt     = 0;
+            trace    = 0;
+            
+            beta     = 0;
+            cbta     = 0;
+            npe      = 0;
+            expnpe   = 0;
+
+            cnt      = 0;
+            nchi     = 0;
+            quality  = 0;
+
+            skewness = 0;
+            kurtosis = 0;
         }
 
     public :
         Bool_t  status;
+        Short_t nhit;
+        Short_t npmt;
+        Float_t trace;
+        
+        Float_t beta;
+        Float_t cbta;
+        Float_t npe;
+        Float_t expnpe;
+
+        Float_t cnt;
+        Float_t nchi;
+        Float_t quality;
+
+        Float_t skewness;
+        Float_t kurtosis;
+
+    ClassDef(ChCloudInfo, 1)
+};
+
+
+class ChTumorInfo : public TObject {
+    public :
+        ChTumorInfo() { init(); }
+        ~ChTumorInfo() {}
+		
+        void init() {
+            status  = false;
+            nhit    = 0;
+            npmt    = 0;
+            
+            cx      = 0;
+            cy      = 0;
+            beta    = 0;
+            cbta    = 0;
+            npe     = 0;
+        }
+
+    public :
+        Bool_t  status;
+        Short_t nhit;
+        Short_t npmt;
+       
+        Float_t cx;
+        Float_t cy;
         Float_t beta;
         Float_t cbta;
         Float_t npe;
 
-        Short_t nhit;
-        Short_t npmt;
-
-        Float_t cnt;
-        Float_t wgt;
-        Float_t all;
-        Float_t nchi;
-        Float_t quality;
-
-    ClassDef(ChCloudInfo, 1)
+    ClassDef(ChTumorInfo, 1)
 };
 
 
@@ -491,13 +541,38 @@ class ChFitInfo : public TObject {
 
         void init() {
             status = false;
-            kind = -1;
-            tile = -1;
+            kind = 0;
+            tile = 0;
 
-            numOfStone = 0;
-            numOfCloud = 0;
+            index = 0;
+            dist = 0;
+
+            is_good_geom = false;
+            is_bad_tile = false;
+
+            std::fill_n(radp, 0., 3);
+            std::fill_n(radd, 0., 3);
+
+            nstn = 0;
+            ncld = 0;
+            
+            ntmrstn = 0;
+            ntmrcld = 0;
+            
             stone.init();
             cloud.init();
+            
+            tmrstn.init();
+            tmrcld.init();
+        
+            npe_ttl = 0;
+            npe_stn = 0;
+            npe_cld = 0;
+            npe_tmr = 0;
+            npe_oth = 0;
+        
+            bta_crr = 1;
+
             cpuTime = 0;
         }
 
@@ -506,11 +581,34 @@ class ChFitInfo : public TObject {
         Short_t kind;
         Short_t tile;
 
-        Short_t numOfStone;
-        Short_t numOfCloud;
+        Float_t index;
+        Float_t dist;
+
+        Bool_t  is_good_geom;
+        Bool_t  is_bad_tile;
+
+        Float_t radp[3];
+        Float_t radd[3];
+
+        Short_t nstn;
+        Short_t ncld;
+        
+        Short_t ntmrstn;
+        Short_t ntmrcld;
 
         ChStoneInfo stone;
         ChCloudInfo cloud;
+        
+        ChTumorInfo tmrstn;
+        ChTumorInfo tmrcld;
+
+        Float_t npe_ttl;
+        Float_t npe_stn;
+        Float_t npe_cld;
+        Float_t npe_tmr;
+        Float_t npe_oth;
+
+        Float_t bta_crr;
 
         Float_t cpuTime;
 
@@ -1123,7 +1221,7 @@ class RICH : public TObject {
             numOfRing = 0;
             
             status = false;
-            kind = -1;
+            kind =  0;
             tile = -1;
             refz =  0;
             pmtz =  0;
@@ -1143,8 +1241,8 @@ class RICH : public TObject {
             betaCrr = 1;
 
             clsbta = -1;
-            uhits.clear();
-            ohits.clear();
+            //uhits.clear();
+            //ohits.clear();
 
             chfit.init();
 
@@ -1194,8 +1292,8 @@ class RICH : public TObject {
 
         // Hits
         Float_t clsbta;
-        std::vector<HitRICHInfo> uhits;
-        std::vector<HitRICHInfo> ohits;
+        //std::vector<HitRICHInfo> uhits;
+        //std::vector<HitRICHInfo> ohits;
 
 
         ChFitInfo chfit;

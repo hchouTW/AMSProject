@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
+#include <chrono>
 
 #include <TROOT.h>
 
@@ -60,9 +61,12 @@ inline void ShowError(const Msg& info, const Msgs& msgs) { ShowMsg(info, msgs, "
 inline void ShowErrorExit(const Msg& info, const Msgs& msgs) { ShowMsgExit(info, msgs, "ERROR", std::cerr); }
 
 
-typedef std::chrono::high_resolution_clock             HrsClock;
-typedef std::chrono::high_resolution_clock::time_point HrsTime;
-typedef std::chrono::high_resolution_clock::duration   HrsDuration;
+//typedef std::chrono::high_resolution_clock             HrsClock;
+//typedef std::chrono::high_resolution_clock::time_point HrsTime;
+//typedef std::chrono::high_resolution_clock::duration   HrsDuration;
+using HrsClock    = std::chrono::high_resolution_clock;
+using HrsTime     = std::chrono::high_resolution_clock::time_point;
+using HrsDuration = std::chrono::high_resolution_clock::duration; 
 class HrsStopwatch;
 
 } // namespace Sys
