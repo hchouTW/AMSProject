@@ -18,6 +18,8 @@ GCCTAG=6.2.0
 source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 #GCCTAG=4.9.3
 #source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTAG}/x86_64-slc6/setup.sh
+#GCCTAG=8.2.0
+#source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
 #### CERN AFS %% INTEL Compiler
 #ICCTAG=17

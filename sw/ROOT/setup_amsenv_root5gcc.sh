@@ -16,6 +16,7 @@ OSVersion=${OSRelease%.*}
 #### CERN CVMFS %% GCC Compiler
 GCCTAG=6.2.0
 source /cvmfs/sft.cern.ch/lcg/external/gcc/${GCCTAG}/x86_64-slc6/setup.sh
+#GCCTAG=8.2.0
 #source /cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTAG}/x86_64-slc6/setup.sh
 
 #### CERN CVMFS %% INTEL Compiler

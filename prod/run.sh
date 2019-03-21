@@ -1,6 +1,6 @@
 #!/bin/bash
 Version=vdev
-Version=19Mar12v03
+Version=19Mar25
 
 ClassDef=${AMSCore}/prod/${Version}/lib
 LD_LIBRARY_PATH=${ClassDef}:${LD_LIBRARY_PATH}
@@ -9,7 +9,7 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 CurDir=${PWD}
 
 DataType=ISS
-#Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
+Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7.test
 #Stream=${CurDir}/lst/flist.ncu.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.loc.iss.B1130.pass7
@@ -27,7 +27,7 @@ Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7.test
 GroupId=5
 #GroupId=19912
 #GroupId=5005
-GroupSize=10
+GroupSize=1
 OutputDir=.
 
 if [[ -f ${RunFile} && -f ${Stream} ]]; then

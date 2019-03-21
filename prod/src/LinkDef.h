@@ -41,6 +41,9 @@
 #pragma link C++ class HitRICHInfo;
 #pragma link C++ class std::vector<HitRICHInfo>+;
 
+#pragma link C++ class ChHitInfo;
+#pragma link C++ class std::vector<ChHitInfo>+;
+
 #pragma link C++ class ChStoneInfo;
 #pragma link C++ class std::vector<ChStoneInfo>+;
 
@@ -49,6 +52,9 @@
 
 #pragma link C++ class ChTumorInfo;
 #pragma link C++ class std::vector<ChTumorInfo>+;
+
+#pragma link C++ class ChGhostInfo;
+#pragma link C++ class std::vector<ChGhostInfo>+;
 
 #pragma link C++ class ChFitInfo;
 #pragma link C++ class std::vector<ChFitInfo>+;

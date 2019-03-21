@@ -40,7 +40,9 @@ class RichHitAms {
         inline const double& cz() const { return cz_; }
         
         inline const double& dist() const { return dist_; }
-        
+       
+        inline const bool& cross() const { return cross_; }
+
         CherenkovHit trans() const;
 
     protected :
@@ -62,6 +64,8 @@ class RichHitAms {
         double cy_;
         double cz_;
         double dist_;
+
+        bool   cross_;
 
     protected :
         RichHitR* hit_;
@@ -101,8 +105,7 @@ class RichAms {
 
         CherenkovFit fit() const;
         
-        std::tuple<double, std::vector<std::array<double, 2>>> cal_trace(double cbta = 1.0) const;
-        std::array<double, 2> cal_trace(const CherenkovCloud& cloud) const;
+        std::array<double, 3> cal_trace(double cbta = 1.0) const;
 
         inline const bool& status() const { return status_; }
 
@@ -128,11 +131,12 @@ class RichAms {
         inline const bool& is_good_in_geometry() const { return is_good_in_geometry_; }
         inline const bool& is_bad_tile() const { return is_bad_tile_; }
 
+        inline const double& npe_col() const { return npe_col_; }
         inline const double& bta_crr() const { return bta_crr_; }
 
         inline const std::vector<RichHitAms>&   rhhits() const { return rhhits_; }
         inline const std::vector<CherenkovHit>& chhits() const { return chhits_; }
-        
+
         inline const Sys::HrsStopwatch& timer() const { return timer_; }
 
     protected :
@@ -157,6 +161,7 @@ class RichAms {
         bool is_good_in_geometry_;
         bool is_bad_tile_;
 
+        double npe_col_;
         double bta_crr_;
 
         std::vector<RichHitAms>   rhhits_;
@@ -179,23 +184,21 @@ class RichAms {
         static constexpr double EXTERNAL_RAD_RADIUS = 58.0;
         static constexpr double MIRROR_TOP_RADIUS = 60.10;
         static constexpr double MIRROR_BTM_RADIUS = 67.00;
-        static constexpr std::array<double, 2> PMT_HOLE = { 31.9, 32.15 };
+        static constexpr std::array<double, 2> PMT_HOLE { 31.9, 32.15 };
         
-        static constexpr std::array<double, 2> RAD_HEIGHT = { 2.5, 0.5 }; // AGL, NAF
-        static constexpr std::array<double, 2> RAD_BOUNDARY = { 19.0, 17.0 }; // AGL, NAF
-        static constexpr std::array<short, 7> BAD_TILE_INDEX = { 3, 7, 12, 20, 87, 100, 108 };
+        static constexpr std::array<double, 2> RAD_HEIGHT { 2.5, 0.5 }; // AGL, NAF
+        static constexpr std::array<double, 2> RAD_BOUNDARY { 19.0, 17.0 }; // AGL, NAF
+        static constexpr std::array<short, 7> BAD_TILE_INDEX { 3, 7, 12, 20, 87, 100, 108 };
 
     // interface of clustering, fitting
     private :
-        static constexpr bool   OPT_WEIGHTED = false;
         static constexpr double AGL_BETA_WIDTH = 2.0e-03;
         static constexpr double NAF_BETA_WIDTH = 7.0e-03;
         static MultiGaus AGL_BETA_PDF;
         static MultiGaus NAF_BETA_PDF;
 };
 
-
-MultiGaus RichAms::AGL_BETA_PDF(Robust::Option(Robust::Opt::ON, 3.0L, 0.5L), 8.17271690165564890e-01, 1.66460e-03, 1.82728309834435165e-01, 3.98084e-03);
+MultiGaus RichAms::AGL_BETA_PDF(Robust::Option(Robust::Opt::ON, 3.0L, 0.5L), 7.53836973171249758e-01, 1.87228e-03, 2.46163026828750242e-01, 3.72749e-03);
 MultiGaus RichAms::NAF_BETA_PDF(Robust::Option(Robust::Opt::ON, 3.0L, 0.5L), 7.00000e-03);
 
 

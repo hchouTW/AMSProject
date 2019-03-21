@@ -415,24 +415,56 @@ struct HitRICHInfo_sort {
 };
 
 
+class ChHitInfo : public TObject {
+    public :
+        ChHitInfo() { init(); }
+        ~ChHitInfo() {}
+        
+        void init() {
+            chann = -1;
+            pmtid = -1;
+
+            cls  = -1;
+            mode = -1;
+            beta = -1;
+            npe  = -1;
+            cx   =  0;
+            cy   =  0;
+        }
+
+    public :
+        Short_t chann;
+        Short_t pmtid;
+
+        Short_t cls;
+
+        Short_t mode;
+        Float_t beta;
+        
+        Float_t npe;
+
+        Float_t cx;
+        Float_t cy;
+    
+    ClassDef(ChHitInfo, 1)
+};
+
+
 class ChStoneInfo : public TObject {
     public :
         ChStoneInfo() { init(); }
         ~ChStoneInfo() {}
         
         void init() {
-            status   = false;
-            nhit     = 0;
-            npmt     = 0;
-            cx       = 0;
-            cy       = 0;
-            dist     = 0;
-            npe      = 0;
-            cnt      = 0;
-            nchi     = 0;
-            quality  = 0;
-            skewness = 0;
-            kurtosis = 0;
+            status = false;
+            nhit   = 0;
+            npmt   = 0;
+            cx     = 0;
+            cy     = 0;
+            dist   = 0;
+            npe    = 0;
+            cnt    = 0;
+            nchi   = 0;
         }
 
     public :
@@ -447,10 +479,6 @@ class ChStoneInfo : public TObject {
 
         Float_t cnt;
         Float_t nchi;
-        Float_t quality;
-
-        Float_t skewness;
-        Float_t kurtosis;
 
     ClassDef(ChStoneInfo, 1)
 };
@@ -465,7 +493,13 @@ class ChCloudInfo : public TObject {
             status   = false;
             nhit     = 0;
             npmt     = 0;
+
+            nhit_dir = 0;
+            nhit_rfl = 0;
+
             trace    = 0;
+            dtrace   = 0;
+            rtrace   = 0;
             
             beta     = 0;
             cbta     = 0;
@@ -474,17 +508,20 @@ class ChCloudInfo : public TObject {
 
             cnt      = 0;
             nchi     = 0;
-            quality  = 0;
 
-            skewness = 0;
-            kurtosis = 0;
+            misjudge = 0;
         }
 
     public :
         Bool_t  status;
         Short_t nhit;
         Short_t npmt;
+        Short_t nhit_dir;
+        Short_t nhit_rfl;
+
         Float_t trace;
+        Float_t dtrace;
+        Float_t rtrace;
         
         Float_t beta;
         Float_t cbta;
@@ -493,10 +530,8 @@ class ChCloudInfo : public TObject {
 
         Float_t cnt;
         Float_t nchi;
-        Float_t quality;
 
-        Float_t skewness;
-        Float_t kurtosis;
+        Float_t misjudge;
 
     ClassDef(ChCloudInfo, 1)
 };
@@ -511,9 +546,6 @@ class ChTumorInfo : public TObject {
             status  = false;
             nhit    = 0;
             npmt    = 0;
-            
-            cx      = 0;
-            cy      = 0;
             beta    = 0;
             cbta    = 0;
             npe     = 0;
@@ -523,14 +555,37 @@ class ChTumorInfo : public TObject {
         Bool_t  status;
         Short_t nhit;
         Short_t npmt;
-       
-        Float_t cx;
-        Float_t cy;
         Float_t beta;
         Float_t cbta;
         Float_t npe;
 
     ClassDef(ChTumorInfo, 1)
+};
+
+
+class ChGhostInfo : public TObject {
+    public :
+        ChGhostInfo() { init(); }
+        ~ChGhostInfo() {}
+		
+        void init() {
+            status  = false;
+            nhit    = 0;
+            npmt    = 0;
+            beta    = 0;
+            cbta    = 0;
+            npe     = 0;
+        }
+
+    public :
+        Bool_t  status;
+        Short_t nhit;
+        Short_t npmt;
+        Float_t beta;
+        Float_t cbta;
+        Float_t npe;
+
+    ClassDef(ChGhostInfo, 1)
 };
 
 
@@ -552,25 +607,32 @@ class ChFitInfo : public TObject {
 
             std::fill_n(radp, 0., 3);
             std::fill_n(radd, 0., 3);
+            std::fill_n(pmtp, 0., 3);
 
             nstn = 0;
             ncld = 0;
-            
-            ntmrstn = 0;
-            ntmrcld = 0;
+            ntmr = 0;
+            ngst = 0;
             
             stone.init();
             cloud.init();
+            tumor.init();
+            ghost.init();
             
-            tmrstn.init();
-            tmrcld.init();
+            nhit_ttl = 0;
+            nhit_stn = 0;
+            nhit_cld = 0;
+            nhit_tmr = 0;
+            nhit_gst = 0;
+            nhit_oth = 0;
         
             npe_ttl = 0;
             npe_stn = 0;
             npe_cld = 0;
             npe_tmr = 0;
+            npe_gst = 0;
             npe_oth = 0;
-        
+
             bta_crr = 1;
 
             cpuTime = 0;
@@ -589,23 +651,30 @@ class ChFitInfo : public TObject {
 
         Float_t radp[3];
         Float_t radd[3];
+        Float_t pmtp[3];
 
         Short_t nstn;
         Short_t ncld;
-        
-        Short_t ntmrstn;
-        Short_t ntmrcld;
+        Short_t ntmr;
+        Short_t ngst;
 
         ChStoneInfo stone;
         ChCloudInfo cloud;
-        
-        ChTumorInfo tmrstn;
-        ChTumorInfo tmrcld;
+        ChTumorInfo tumor;
+        ChGhostInfo ghost;
+
+        Short_t nhit_ttl;
+        Short_t nhit_stn;
+        Short_t nhit_cld;
+        Short_t nhit_tmr;
+        Short_t nhit_gst;
+        Short_t nhit_oth;
 
         Float_t npe_ttl;
         Float_t npe_stn;
         Float_t npe_cld;
         Float_t npe_tmr;
+        Float_t npe_gst;
         Float_t npe_oth;
 
         Float_t bta_crr;
@@ -1235,7 +1304,9 @@ class RICH : public TObject {
             prob = -1.0;
             cstcb = -1.0;
             cstcq = -1.0;
+            numOfClsPE = -1;
             numOfExpPE = -1;
+            numOfColPE = -1;
             eftOfColPE = -1;
             
             betaCrr = 1;
@@ -1245,10 +1316,6 @@ class RICH : public TObject {
             //ohits.clear();
 
             chfit.init();
-
-            FITnh = 0;
-            std::fill_n(FITbta, 100, 0);
-            std::fill_n(FITnpe, 100, 0);
 
             //vetoKind = -1;
 			//vetoTile = -1;
@@ -1285,7 +1352,9 @@ class RICH : public TObject {
         Float_t prob;
         Float_t cstcb; // consistency beta
         Float_t cstcq; // consistency charge
+        Float_t numOfClsPE;
         Float_t numOfExpPE;
+        Float_t numOfColPE;
         Float_t eftOfColPE;
     
         Float_t betaCrr;
@@ -1295,12 +1364,7 @@ class RICH : public TObject {
         //std::vector<HitRICHInfo> uhits;
         //std::vector<HitRICHInfo> ohits;
 
-
         ChFitInfo chfit;
-
-        Short_t FITnh;
-        Float_t FITbta[100];
-        Float_t FITnpe[100];
 
 		// Rich Veto
 		//Short_t vetoKind;          // -1, None, 0, Aerogel 1, NaF

@@ -6,17 +6,18 @@ namespace TrackSys {
 
 class CherenkovHit {
     public :
+        enum Cluster { stone = 0, cloud = 1, tumor = 2, ghost = 3, other = 4 };
+
+    public :
         CherenkovHit() { clear(); }
         ~CherenkovHit() { clear(); }
         
-        CherenkovHit(short chann, short pmtid = -1, short locid0 = -1, short locid1 = -1, double dbta = -1.0, double rbtaA = -1.0, double rbtaB = -1.0, double npe = -1.0, double cx = 0.0, double cy = 0.0) : CherenkovHit() {
+        CherenkovHit(short chann, short pmtid = -1, double dbta = -1.0, double rbtaA = -1.0, double rbtaB = -1.0, double npe = -1.0, double cx = 0.0, double cy = 0.0) : CherenkovHit() {
             chann_ = chann; pmtid_ = pmtid;
             dbta_ = dbta; rbtaA_ = rbtaA; rbtaB_ = rbtaB;
             npe_ = npe;
             cx_ = cx; cy_ = cy;
-            locid_[0] = locid0;
-            locid_[1] = locid1;
-            status_ = (chann_ >= 0 && pmtid_ >= 0 && locid_[0] >= 0 && locid_[1] >= 0 && (dbta_ > 0.0 || rbtaA_ > 0.0 || rbtaB_ > 0.0) && npe_ > 0.0);
+            status_ = (chann_ >= 0 && pmtid_ >= 0 && (dbta_ > 0.0 || rbtaA_ > 0.0 || rbtaB_ > 0.0) && npe_ > 0.0);
             if (!status_) clear(); 
             else {
                 set_lmt_bta();
@@ -29,8 +30,11 @@ class CherenkovHit {
         const double& search_closest_beta(double bta);
 
         // expert only
-        inline void set_wgt(double wgt) { if (status_ && Numc::Compare(wgt) > 0) wgt_ = wgt; else wgt_ = Numc::ZERO<>; }
-        inline void set_cnt(double cnt) { if (status_ && Numc::Compare(cnt) > 0) cnt_ = cnt; else cnt_ = Numc::ZERO<>; }
+        inline void set_cluster(short cls) { cluster_ = ((status_ && cls >= 0 && cls <= 4) ? cls : -1); }
+
+        // expert only
+        inline void set_wgt(double wgt) { wgt_ = ((status_ && Numc::Compare(wgt) > 0) ? wgt : Numc::ZERO<>); }
+        inline void set_cnt(double cnt) { cnt_ = ((status_ && Numc::Compare(cnt) > 0) ? cnt : Numc::ZERO<>); }
 
         // expert only
         void set_lmt_bta(double lmtl_bta = 0.0, double lmtu_bta = 0.0);
@@ -39,8 +43,9 @@ class CherenkovHit {
         inline const bool&  status() const { return status_; }
         inline const short& chann()  const { return chann_; }
         inline const short& pmtid()  const { return pmtid_; }
-        inline const short& locid(int it)  const { return ((it == 0) ? locid_[0] : locid_[1]); }
-        
+       
+        inline const short& cluster() const { return cluster_; }
+
         inline const short&  mode() const { return mode_; }
         inline const double& beta() const { return beta_; }
 
@@ -48,7 +53,7 @@ class CherenkovHit {
         inline const double& dbta()  const { return dbta_; }
         inline const double& rbtaA() const { return rbtaA_; }
         inline const double& rbtaB() const { return rbtaB_; }
-        
+
         inline const bool hasDb()  const { return ((type_&1) == 1); } 
         inline const bool hasRbA() const { return ((type_&2) == 2); } 
         inline const bool hasRbB() const { return ((type_&4) == 4); } 
@@ -63,7 +68,7 @@ class CherenkovHit {
     protected :
         inline void clear() {
             status_ = false; chann_ = -1; pmtid_ = -1;
-            locid_[0] = -1; locid_[1] = -1;
+            cluster_ = -1;
             mode_ = -1; beta_ = -1.0;
             dbta_ = -1.0; rbtaA_ = -1.0; rbtaB_ = -1.0;
             npe_ = -1.0; 
@@ -75,7 +80,8 @@ class CherenkovHit {
         bool   status_;
         short  chann_;
         short  pmtid_;
-        short  locid_[2];
+
+        short  cluster_; // 0 (stone), 1(cloud), 2(tumor), 3(other)
 
         short  mode_; // -1(null), 0(d), 1(rA), 2(rB) 
         double beta_; // raw beta
@@ -84,6 +90,7 @@ class CherenkovHit {
         double dbta_;
         double rbtaA_;
         double rbtaB_;
+
         double npe_;
         double cx_;
         double cy_;
@@ -92,11 +99,14 @@ class CherenkovHit {
         double cnt_;
 };
 
-
 struct CherenkovHit_sort {
     bool operator() (const CherenkovHit& cls1, const CherenkovHit& cls2) {
-        if      (cls1.chann() < cls2.chann()) return true;
-        else if (cls1.chann() > cls2.chann()) return false;
+        if      (cls1.cluster() < cls2.cluster()) return true;
+        else if (cls1.cluster() > cls2.cluster()) return false;
+        else {
+            if      (cls1.chann() < cls2.chann()) return true;
+            else if (cls1.chann() > cls2.chann()) return false;
+        }
         return false;
     }
 };
@@ -109,14 +119,12 @@ class CherenkovStone {
         
         CherenkovStone(const std::vector<CherenkovHit>& hits, short nhit, short npmt,
                        double cx, double cy, double npe,
-                       double cnt, double nchi, double quality, 
-                       double skewness, double kurtosis) : CherenkovStone() { 
+                       double cnt, double nchi) : CherenkovStone() { 
             hits_ = hits; 
             status_ = true;
             nhit_ = nhit; npmt_ = npmt;
             cx_ = cx; cy_ = cy; npe_ = npe;
-            cnt_ = cnt; nchi_ = nchi; quality_ = quality;
-            skewness_ = skewness; kurtosis_ = kurtosis;
+            cnt_ = cnt; nchi_ = nchi;
         }
         
         inline const bool& status() const { return status_; }
@@ -130,10 +138,6 @@ class CherenkovStone {
 
         inline const double& cnt()     const { return cnt_; }
         inline const double& nchi()    const { return nchi_; }
-        inline const double& quality() const { return quality_; }
-        
-        inline const double& skewness() const { return skewness_; }
-        inline const double& kurtosis() const { return kurtosis_; }
         
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
         
@@ -143,8 +147,7 @@ class CherenkovStone {
             status_ = false;
             nhit_ = 0; npmt_ = 0;
             cx_ = 0; cy_ = 0; npe_ = 0;
-            cnt_ = 0; nchi_ = 0; quality_ = 0;
-            skewness_ = 0; kurtosis_ = 0;
+            cnt_ = 0; nchi_ = 0;
         }
 
     protected :
@@ -159,10 +162,6 @@ class CherenkovStone {
 
         double cnt_;
         double nchi_;
-        double quality_;
-        
-        double skewness_;
-        double kurtosis_;
     
     protected :
         std::vector<CherenkovHit> hits_;
@@ -186,16 +185,18 @@ class CherenkovCloud {
         CherenkovCloud() { clear(); }
         ~CherenkovCloud() { clear(); }
         
-        CherenkovCloud(const std::vector<CherenkovHit>& hits, short nhit, short npmt, 
+        CherenkovCloud(const std::vector<CherenkovHit>& hits,
+                       short nhit, short npmt, short nhit_dir, short nhit_rfl,
                        double beta, double cbta, double npe,
-                       double cnt, double nchi, double quality, 
-                       double skewness, double kurtosis) : CherenkovCloud() { 
+                       double cnt, double nchi,
+                       double misjudge) : CherenkovCloud() { 
             hits_ = hits; 
             status_ = true;
             nhit_ = nhit; npmt_ = npmt;
+            nhit_dir_ = nhit_dir; nhit_rfl_ = nhit_rfl;
             beta_ = beta; cbta_ = cbta; npe_ = npe;
-            cnt_ = cnt; nchi_ = nchi; quality_ = quality;
-            skewness_ = skewness; kurtosis_ = kurtosis;
+            cnt_ = cnt; nchi_ = nchi;
+            misjudge_ = misjudge;
         }
 
         inline const bool& status() const { return status_; }
@@ -203,27 +204,31 @@ class CherenkovCloud {
         inline const short& nhit() const { return nhit_; }
         inline const short& npmt() const { return npmt_; }
         
+        inline const short& nhit_dir() const { return nhit_dir_; }
+        inline const short& nhit_rfl() const { return nhit_rfl_; }
+        
         inline const double& beta() const { return beta_; }
         inline const double& cbta() const { return cbta_; }
         inline const double& npe()  const { return npe_; }
 
         inline const double& cnt()     const { return cnt_; }
         inline const double& nchi()    const { return nchi_; }
-        inline const double& quality() const { return quality_; }
         
-        inline const double& skewness() const { return skewness_; }
-        inline const double& kurtosis() const { return kurtosis_; }
+        inline const double& misjudge() const { return misjudge_; }
         
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
+
+        void set_misjudge(double mj) { misjudge_ = (mj > 0.0) ? mj : 0.0; }
 
     protected :
         inline void clear() {
             hits_.clear(); 
             status_ = false;
             nhit_ = 0; npmt_ = 0;
+            nhit_dir_ = 0; nhit_rfl_ = 0;
             beta_ = 0; cbta_ = 0; npe_ = 0;
-            cnt_ = 0; nchi_ = 0; quality_ = 0;
-            skewness_ = 0; kurtosis_ = 0;
+            cnt_ = 0; nchi_ = 0;
+            misjudge_ = 0;
         }
 
     protected :
@@ -231,17 +236,18 @@ class CherenkovCloud {
         
         short nhit_;
         short npmt_;
-        
+       
+        short nhit_dir_;
+        short nhit_rfl_;
+
         double beta_;
         double cbta_;
         double npe_;
 
         double cnt_;
         double nchi_;
-        double quality_;
 
-        double skewness_;
-        double kurtosis_;
+        double misjudge_;
 
     protected :
         std::vector<CherenkovHit> hits_;
@@ -265,24 +271,19 @@ class CherenkovTumor {
         CherenkovTumor() { clear(); }
         ~CherenkovTumor() { clear(); }
         
-        CherenkovTumor(const std::vector<CherenkovHit>& hits, short mode, short nhit, short npmt, 
-                       double cx, double cy, double beta, double cbta, double npe) : CherenkovTumor() { 
+        CherenkovTumor(const std::vector<CherenkovHit>& hits, short nhit, short npmt, 
+                       double beta, double cbta, double npe) : CherenkovTumor() { 
             hits_ = hits; 
             status_ = true;
-            mode_ = mode;
             nhit_ = nhit; npmt_ = npmt;
-            cx_ = cx; cy_ = cy;
             beta_ = beta; cbta_ = cbta; npe_ = npe;
         }
         
-        inline const bool&  status() const { return status_; }
-        inline const short& mode()   const { return mode_; }
+        inline const bool& status() const { return status_; }
         
         inline const short& nhit() const { return nhit_; }
         inline const short& npmt() const { return npmt_; }
         
-        inline const double& cx()   const { return cx_; }
-        inline const double& cy()   const { return cy_; }
         inline const double& beta() const { return beta_; }
         inline const double& cbta() const { return cbta_; }
         inline const double& npe()  const { return npe_; }
@@ -293,21 +294,16 @@ class CherenkovTumor {
         inline void clear() {
             hits_.clear(); 
             status_ = false;
-            mode_ = -1;
             nhit_ = 0; npmt_ = 0;
-            cx_ = 0; cy_ = 0;
             beta_ = 0; cbta_ = 0; npe_ = 0;
         }
 
     protected :
         bool  status_;
-        short mode_; // 0, stone  1, cloud
 
         short nhit_;
         short npmt_;
         
-        double cx_;
-        double cy_;
         double beta_;
         double cbta_;
         double npe_;
@@ -316,21 +312,16 @@ class CherenkovTumor {
         std::vector<CherenkovHit> hits_;
 };
 
-
 struct CherenkovTumor_sort {
     bool operator() (const CherenkovTumor& tmr1, const CherenkovTumor& tmr2) {
-        if      (tmr1.mode() < tmr2.mode()) return true;
-        else if (tmr1.mode() > tmr2.mode()) return false;
+        if      (tmr1.nhit() > tmr2.nhit()) return true;
+        else if (tmr1.nhit() < tmr2.nhit()) return false;
         else {
-            if      (tmr1.nhit() > tmr2.nhit()) return true;
-            else if (tmr1.nhit() < tmr2.nhit()) return false;
+            if      (tmr1.npmt() > tmr2.npmt()) return true;
+            else if (tmr1.npmt() < tmr2.npmt()) return false;
             else {
-                if      (tmr1.npmt() > tmr2.npmt()) return true;
-                else if (tmr1.npmt() < tmr2.npmt()) return false;
-                else {
-                    if      (tmr1.npe() >= tmr2.npe()) return true;
-                    else if (tmr1.npe() <  tmr2.npe()) return false;
-                }
+                if      (tmr1.npe() >= tmr2.npe()) return true;
+                else if (tmr1.npe() <  tmr2.npe()) return false;
             }
         }
         return false;
@@ -338,26 +329,96 @@ struct CherenkovTumor_sort {
 };
 
 
+class CherenkovGhost {
+    public :
+        CherenkovGhost() { clear(); }
+        ~CherenkovGhost() { clear(); }
+        
+        CherenkovGhost(const std::vector<CherenkovHit>& hits, short nhit, short npmt, 
+                       double beta, double cbta, double npe) : CherenkovGhost() { 
+            hits_ = hits;
+            status_ = true;
+            nhit_ = nhit; npmt_ = npmt;
+            beta_ = beta; cbta_ = cbta; npe_ = npe;
+        }
+        
+        inline const bool& status() const { return status_; }
+        
+        inline const short& nhit() const { return nhit_; }
+        inline const short& npmt() const { return npmt_; }
+        
+        inline const double& beta() const { return beta_; }
+        inline const double& cbta() const { return cbta_; }
+        inline const double& npe()  const { return npe_; }
+
+        inline const std::vector<CherenkovHit>& hits() const { return hits_; }
+
+    protected :
+        inline void clear() {
+            hits_.clear(); 
+            status_ = false;
+            nhit_ = 0; npmt_ = 0;
+            beta_ = 0; cbta_ = 0; npe_ = 0;
+        }
+
+    protected :
+        bool  status_;
+
+        short nhit_;
+        short npmt_;
+        
+        double beta_;
+        double cbta_;
+        double npe_;
+    
+    protected :
+        std::vector<CherenkovHit> hits_;
+};
+
+struct CherenkovGhost_sort {
+    bool operator() (const CherenkovGhost& gst1, const CherenkovGhost& gst2) {
+        if      (gst1.nhit() > gst2.nhit()) return true;
+        else if (gst1.nhit() < gst2.nhit()) return false;
+        else {
+            if      (gst1.npmt() > gst2.npmt()) return true;
+            else if (gst1.npmt() < gst2.npmt()) return false;
+            else {
+                if      (gst1.npe() >= gst2.npe()) return true;
+                else if (gst1.npe() <  gst2.npe()) return false;
+            }
+        }
+        return false;
+    }
+};
+
 
 class CherenkovFit {
     public :
         CherenkovFit() { clear(); }
         ~CherenkovFit() { clear(); }
 
-        CherenkovFit(const std::vector<CherenkovHit>& args_hits, double rfr_index, double width_bta, const MultiGaus& pdf_bta, double bta_crr = 1.0, bool weighted = false);
+        CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 2>& pmtc, double rfr_index, double width_bta, const MultiGaus& pdf_bta, double bta_crr = 1.0);
    
         inline const bool& status()   const { return succ_; }
-        inline const bool& weighted() const { return weighted_; }
         
-        inline const std::vector<CherenkovStone>& stns()    const { return stns_; }
-        inline const std::vector<CherenkovCloud>& clds()    const { return clds_; }
-        inline const std::vector<CherenkovTumor>& tmrstns() const { return tmrstns_; }
-        inline const std::vector<CherenkovTumor>& tmrclds() const { return tmrclds_; }
+        inline const std::vector<CherenkovStone>& stns() const { return stns_; }
+        inline const std::vector<CherenkovCloud>& clds() const { return clds_; }
+        inline const std::vector<CherenkovTumor>& tmrs() const { return tmrs_; }
+        inline const std::vector<CherenkovGhost>& gsts() const { return gsts_; }
+        inline const std::vector<CherenkovHit>&   hits() const { return hits_; }
+        
+        inline const short& nhit_total() const { return nhit_total_; }
+        inline const short& nhit_stone() const { return nhit_stone_; }
+        inline const short& nhit_cloud() const { return nhit_cloud_; }
+        inline const short& nhit_tumor() const { return nhit_tumor_; }
+        inline const short& nhit_ghost() const { return nhit_ghost_; }
+        inline const short& nhit_other() const { return nhit_other_; }
         
         inline const double& npe_total() const { return npe_total_; }
         inline const double& npe_stone() const { return npe_stone_; }
         inline const double& npe_cloud() const { return npe_cloud_; }
         inline const double& npe_tumor() const { return npe_tumor_; }
+        inline const double& npe_ghost() const { return npe_ghost_; }
         inline const double& npe_other() const { return npe_other_; }
         
         inline const Sys::HrsStopwatch& timer() const { return timer_; }
@@ -366,41 +427,53 @@ class CherenkovFit {
         void clear();
         bool check();
 
-        std::array<double, 5> build_npe(const std::vector<CherenkovHit>& args_hits, const std::vector<CherenkovStone>& stns, const std::vector<CherenkovCloud>& clds, const std::vector<CherenkovTumor>& tmrstns, const std::vector<CherenkovTumor>& tmrclds);
+        inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < (Numc::THREE<> * WIDTH_CELL)); }
 
-        std::vector<std::vector<CherenkovHit>> make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone = true, bool opt_cloud = true);
+        std::vector<std::vector<CherenkovHit>> make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone = false, double width_stone = 1.0, bool opt_cloud = false, double width_cloud = 1.0);
 
-        std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> build(const std::vector<std::vector<CherenkovHit>>& args_gtable, bool weighted = false);
-        std::pair<std::vector<CherenkovStone>, std::vector<CherenkovCloud>> build(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
+        std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovGhost>, std::vector<CherenkovHit>> build(const std::vector<CherenkovHit>& args_hits);
 
-        std::pair<std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> build_tumor(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
-
-        CherenkovTumor fit_tumor(std::vector<CherenkovHit>& hits, short mode);
-
+        std::vector<CherenkovStone> build_stone(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
         std::vector<CherenkovStone> fit_stone(std::vector<CherenkovHit>& hits);
         std::vector<std::array<double, 3>> clustering_stone(std::vector<CherenkovHit>& hits);
         
+        std::vector<CherenkovCloud> build_cloud(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
         CherenkovCloud refit_cloud(const CherenkovCloud& cand_cld);
         std::vector<CherenkovCloud> fit_cloud(std::vector<CherenkovHit>& hits);
         std::vector<std::array<double, 2>> clustering_cloud(std::vector<CherenkovHit>& hits);
+        
+        std::vector<CherenkovTumor> build_tumor(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
+        CherenkovTumor fit_tumor(std::vector<CherenkovHit>& hits);
+        
+        std::vector<CherenkovGhost> build_ghost(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
+        CherenkovGhost fit_ghost(std::vector<CherenkovHit>& hits);
     
     protected :
         bool succ_;
-        bool weighted_;
         
         std::vector<CherenkovStone> stns_;
         std::vector<CherenkovCloud> clds_;
-        
-        std::vector<CherenkovTumor> tmrstns_;
-        std::vector<CherenkovTumor> tmrclds_;
+        std::vector<CherenkovTumor> tmrs_;
+        std::vector<CherenkovGhost> gsts_;
+        std::vector<CherenkovHit>   hits_;
+
+        short nhit_total_;
+        short nhit_stone_;
+        short nhit_cloud_;
+        short nhit_tumor_;
+        short nhit_ghost_;
+        short nhit_other_;
 
         double npe_total_;
         double npe_stone_;
         double npe_cloud_;
         double npe_tumor_;
+        double npe_ghost_;
         double npe_other_;
 
     protected :
+        std::array<double, 2> pmtc_; // particle on the PMTs plane
+
         double    rfr_index_;
         double    width_bta_;
         MultiGaus scan_bta_;
@@ -413,19 +486,16 @@ class CherenkovFit {
         Sys::HrsStopwatch timer_;
 
     private :
-        static constexpr double WIDTH_CORE_COS = 1.4e-03; // (half width of PMT in the cos-core)
-        static constexpr double WIDTH_CORE_COO = 1.275;   // (3/8  width of PMT in the coo-core)
         static constexpr double WIDTH_CELL = 0.85;
         static constexpr double WIDTH_PMT  = 3.40;
+        
+        static constexpr double WIDTH_CORE_COS = 1.4e-03; // (half width of PMT in the cos-core)
+        static constexpr double WIDTH_CORE_COO = 0.85;    // (width of CELL in the coo-core)
+        static constexpr double WIDTH_COO      = 0.66;
 
         static constexpr short  LMTMIN_GROUP_HIT = 3;
         static constexpr double LMTMAX_GROUP_SGM = 2.5;
         
-        static constexpr short  LMTMIN_TUMOR_STONE_PMT_HITS = 3;
-        static constexpr short  LMTMIN_TUMOR_STONE_HITS = 3;
-        static constexpr short  LMTMIN_TUMOR_CLOUD_HITS = 3;
-        static constexpr short  LMTMIN_TUMOR_CLOUD_PMTS = 2;
-
         static constexpr short  LMTMIN_STONE_PMT_HITS_L = 3;
         static constexpr short  LMTMIN_STONE_PMT_HITS_H = 5;
         static constexpr short  LMTMIN_STONE_HITS = 6;
@@ -433,13 +503,23 @@ class CherenkovFit {
         static constexpr short  LMTMIN_CLOUD_SETS = 2;
         static constexpr short  LMTMIN_CLOUD_HITS = 3;
         static constexpr short  LMTMIN_CLOUD_PMTS = 3;
+        static constexpr short  LMTMIN_CLOUD_SPCS = 3;
+        
+        static constexpr short  LMTMIN_TUMOR_HITS = 2;
+        static constexpr short  LMTMIN_TUMOR_PMTS = 2;
+        
+        static constexpr short  LMTMIN_GHOST_HITS = 2;
+        static constexpr short  LMTMIN_GHOST_PMTS = 2;
 
     private :
         static constexpr short  LMTL_ITER   = 6;
         static constexpr short  LMTM_ITER   = 12;
         static constexpr short  LMTU_ITER   = 20;
         static constexpr short  LMTMAX_ITER = 200;
-        
+       
+        static constexpr double                SMOOTH_RATE  = 0.25;
+        static constexpr std::array<double, 2> SMOOTH_BOUND = { 3.0, 5.0 };
+
         static constexpr double CONVG_EPSILON    = 1.0e-06;
         static constexpr double CONVG_TOLERANCE  = 1.0e-06;
         static constexpr double CONVG_CLOSED     = 0.7;

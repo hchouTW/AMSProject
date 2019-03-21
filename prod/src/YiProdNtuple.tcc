@@ -1738,10 +1738,20 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         fRich.cstcb = rich->getBetaConsistency();
         fRich.cstcq = rich->getPMTChargeConsistency();
         
+        fRich.numOfClsPE = rich->getPhotoElectrons();
         fRich.numOfExpPE = rich->getExpectedPhotoelectrons();
+        fRich.numOfColPE = RichHitR::getCollectedPhotoElectrons();
         fRich.eftOfColPE = rich->getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons();
             
         fRich.betaCrr = rich->betaCorrection();
+        
+        int richNCls = (rich != nullptr && rebuild) ? rich->ClusterizeZ1() : 0;
+        if (richNCls >= 0) {
+            fRich.numOfCls = richNCls;
+            fRich.clsbta = rich->getBeta();
+        }
+		
+        break;
 
 	    // Rich cuts from Javie/Jorge
         //const short cut_pmt = 3;                     // number of PMTs
@@ -1757,46 +1767,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         //               (fRich.cstcq < cut_chrgCstc) && 
         //               (fRich.numOfExpPE > cut_expPhe[kindOfRad-1]) &&
         //               (fRich.eftOfColPE > cut_collPhe[kindOfRad-1]);
-
-        int richNCls = (rich != nullptr && rebuild) ? rich->ClusterizeZ1() : 0;
-        if (richNCls >= 0) {
-            fRich.numOfCls = richNCls;
-            fRich.clsbta = rich->getBeta();
-/*
-		    AMSPoint rhcoo(0., 0., 0.); AMSDir rhdir(0., 0., -1.);
-		    if (recEv.tkTrPar != nullptr && recEv.tkInID >= 0) recEv.tkTrPar->Interpolate(RecEvent::RhPmtZ, rhcoo, rhdir, recEv.tkInID);
-
-            for (int it = 0; it < rich->RawBetas(); ++it) {
-                RichHitR* rawhit = event->pRichHit(rich->HitBeta(it));
-                if (rawhit == nullptr) continue;
-
-                int   type = rich->fUsedBeta[it]%2;
-                int   used = rich->fUsedBeta[it]/2;
-                float bta  = rich->fRawBeta[type][it];
-                float dist = std::hypot(rawhit->Coo[0] - rhcoo[0], rawhit->Coo[1] - rhcoo[1]);
-                if (bta <= 0.0) continue;
-
-                HitRICHInfo hit;
-                hit.channel = rawhit->Channel;
-                hit.type    = type;
-                hit.bta[0]  = rich->fRawBeta[0][it];
-                hit.bta[1]  = rich->fRawBeta[1][it];
-                hit.npe     = rawhit->Npe;
-                hit.cx      = rawhit->Coo[0];
-                hit.cy      = rawhit->Coo[1];
-                hit.dist    = dist;
-
-                if (hit.bta[0] <= 0.0) hit.bta[0] = -1.0;
-                if (hit.bta[1] <= 0.0) hit.bta[1] = -1.0;
-
-                if (used == 0) fRich.uhits.push_back(hit);
-                else           fRich.ohits.push_back(hit);
-            } 
-            if (fRich.uhits.size() >= 2) std::sort(fRich.uhits.begin(), fRich.uhits.end(), HitRICHInfo_sort());
-            if (fRich.ohits.size() >= 2) std::sort(fRich.ohits.begin(), fRich.ohits.end(), HitRICHInfo_sort());
-            */
-        }
-		break;
 	}
 	// official RichRingR - end
 
@@ -1806,7 +1776,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
     TrackSys::CherenkovFit&& chfit = richams.fit();
     
     // testcode
-    //if (!chfit.status() && rich == nullptr) return false;
+    if (!(chfit.status() && chfit.clds().size() != 0) && rich == nullptr) return false;
     
     if (!chfit.status()) {
         ChFitInfo chinfo;
@@ -1823,12 +1793,27 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.radd[0] = richams.radd()[0];
         chinfo.radd[1] = richams.radd()[1];
         chinfo.radd[2] = richams.radd()[2];
+        chinfo.pmtp[0] = richams.pmtp()[0];
+        chinfo.pmtp[1] = richams.pmtp()[1];
+        chinfo.pmtp[2] = richams.pmtp()[2];
+        chinfo.nhit_ttl = chfit.nhit_total();
+        chinfo.nhit_stn = chfit.nhit_stone();
+        chinfo.nhit_cld = chfit.nhit_cloud();
+        chinfo.nhit_tmr = chfit.nhit_tumor();
+        chinfo.nhit_gst = chfit.nhit_ghost();
+        chinfo.nhit_oth = chfit.nhit_other();
+        chinfo.npe_ttl = chfit.npe_total();
+        chinfo.npe_stn = chfit.npe_stone();
+        chinfo.npe_cld = chfit.npe_cloud();
+        chinfo.npe_tmr = chfit.npe_tumor();
+        chinfo.npe_gst = chfit.npe_ghost();
+        chinfo.npe_oth = chfit.npe_other();
         chinfo.bta_crr = richams.bta_crr();
         
         fRich.chfit = chinfo;
     }
     else {
-        //CERR("\n\n\n\n--------------------------------------------------------------------------------------------------\n");
+        //CERR("\n\n--------------------------------------------------------------------------------------------------\n");
         //CERR("RICH KIND %d TILE %3d NHIT %d NPE %14.8f %14.8f %14.8f %14.8f %14.8f DIST %14.8f TIME %14.8f\n\n", richams.kind(), richams.tile(), richams.rhhits().size(), chfit.npe_total(), chfit.npe_stone(), chfit.npe_cloud(), chfit.npe_tumor(), chfit.npe_other(), richams.dist(), chfit.timer().time());
         //CERR("OFF RICH KIND %d TILE %3d\n", fRich.kind, fRich.tile);
        
@@ -1846,10 +1831,20 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.radd[0] = richams.radd()[0];
         chinfo.radd[1] = richams.radd()[1];
         chinfo.radd[2] = richams.radd()[2];
+        chinfo.pmtp[0] = richams.pmtp()[0];
+        chinfo.pmtp[1] = richams.pmtp()[1];
+        chinfo.pmtp[2] = richams.pmtp()[2];
+        chinfo.nhit_ttl = chfit.nhit_total();
+        chinfo.nhit_stn = chfit.nhit_stone();
+        chinfo.nhit_cld = chfit.nhit_cloud();
+        chinfo.nhit_tmr = chfit.nhit_tumor();
+        chinfo.nhit_gst = chfit.nhit_ghost();
+        chinfo.nhit_oth = chfit.nhit_other();
         chinfo.npe_ttl = chfit.npe_total();
         chinfo.npe_stn = chfit.npe_stone();
         chinfo.npe_cld = chfit.npe_cloud();
         chinfo.npe_tmr = chfit.npe_tumor();
+        chinfo.npe_gst = chfit.npe_ghost();
         chinfo.npe_oth = chfit.npe_other();
         chinfo.bta_crr = richams.bta_crr();
         chinfo.cpuTime = chfit.timer().time() * 1.0e+03;
@@ -1858,18 +1853,15 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         for (auto&& stn : chfit.stns()) {
             double dist = std::hypot(stn.cx() - richams.pmtp()[0], stn.cy() - richams.pmtp()[1]);
             ChStoneInfo stone;
-            stone.status   = true;
-            stone.nhit     = stn.nhit();
-            stone.npmt     = stn.npmt();
-            stone.cx       = stn.cx();
-            stone.cy       = stn.cy();
-            stone.dist     = dist;
-            stone.npe      = stn.npe();
-            stone.cnt      = stn.cnt();
-            stone.nchi     = stn.nchi();
-            stone.quality  = stn.quality();
-            stone.skewness = stn.skewness();
-            stone.kurtosis = stn.kurtosis();
+            stone.status = true;
+            stone.nhit   = stn.nhit();
+            stone.npmt   = stn.npmt();
+            stone.cx     = stn.cx();
+            stone.cy     = stn.cy();
+            stone.dist   = dist;
+            stone.npe    = stn.npe();
+            stone.cnt    = stn.cnt();
+            stone.nchi   = stn.nchi();
             if (!chinfo.stone.status) chinfo.stone = stone;
             chinfo.nstn++;
             
@@ -1881,79 +1873,66 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         //CERR("Cloud Clustering: NCLD %2d   OFF_BETA %14.8f\n", chfit.clds().size(), fRich.beta);
         for (auto&& cld : chfit.clds()) {
             double expnpe = RichRingR::ComputeNpExp(recEv.tkTrPar, cld.cbta(), recEv.zin);
+            auto&& trace = richams.cal_trace(cld.cbta());
             ChCloudInfo cloud;
             cloud.status   = true;
             cloud.nhit     = cld.nhit();
             cloud.npmt     = cld.npmt();
-            cloud.trace    = std::get<0>(richams.cal_trace(cld.cbta()));
+            cloud.nhit_dir = cld.nhit_dir();
+            cloud.nhit_rfl = cld.nhit_rfl();
+            cloud.trace    = trace[0];
+            cloud.dtrace   = trace[1];
+            cloud.rtrace   = trace[2];
             cloud.beta     = cld.beta();
             cloud.cbta     = cld.cbta();
             cloud.npe      = cld.npe();
             cloud.expnpe   = expnpe;
             cloud.cnt      = cld.cnt();
             cloud.nchi     = cld.nchi();
-            cloud.quality  = cld.quality();
-            cloud.skewness = cld.skewness();
-            cloud.kurtosis = cld.kurtosis();
+            cloud.misjudge = cld.misjudge();
             if (!chinfo.cloud.status) chinfo.cloud = cloud;
             chinfo.ncld++;
 
-            //CERR("CNT %14.8f NHIT %2d NPMT %2d TRACE %14.8f %14.8f BETA %14.8f %14.8f NPE %14.8f EXP-NPE %14.8f NCHI %14.8f SKEWNESS %14.8f\n", cld.cnt(), cld.nhit(), cld.npmt(), cloud.trace, eft, cld.beta(), cld.cbta(), cld.npe(), expnpe, cld.nchi(), cld.skewness());
+            //CERR("CNT %14.8f NHIT %2d NPMT %2d TRACE %14.8f %14.8f %14.8f BETA %14.8f %14.8f NCHI %14.8f MISJUDGE %14.8f\n", cld.cnt(), cld.nhit(), cld.npmt(), cloud.trace, cloud.dtrace, cloud.rtrace, cld.beta(), cld.cbta(), cld.nchi(), cld.misjudge());
             //for (auto&& hit : cld.hits())
-                //CERR("HIT PMT %3d LOC %d %d CNT %14.8f MODE %d BETA %14.8f %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.mode(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.npe());
-        }
-           
-        //CERR("Tumor Stone Clustering:\n");
-        for (auto&& tmr : chfit.tmrstns()) {
-            ChTumorInfo tumor;
-            tumor.status = true;
-            tumor.nhit   = tmr.nhit();
-            tumor.npmt   = tmr.npmt();
-            tumor.cx     = tmr.beta();
-            tumor.cy     = tmr.beta();
-            tumor.beta   = tmr.beta();
-            tumor.cbta   = tmr.cbta();
-            tumor.npe    = tmr.npe();
-            if (!chinfo.tmrstn.status) chinfo.tmrstn = tumor;
-            chinfo.ntmrstn++;
-
-            //CERR("NHIT %2d NPMT %2d XY %14.8f %14.8f BETA %14.8f %14.8f NPE %14.8f\n", tmr.nhit(), tmr.npmt(), tmr.cx(), tmr.cy(), tmr.beta(), tmr.cbta(), tmr.npe());
-            //for (auto&& hit : tmr.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f XY %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.cx(), hit.cy(), hit.npe());
+            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f MODE %d BETA %14.8f %14.8f %14.8f CXY %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.mode(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.cx(), hit.cy(), hit.npe());
         }
         
-        //CERR("Tumor Cloud Clustering:\n");
-        for (auto&& tmr : chfit.tmrclds()) {
+        //CERR("Tumor Clustering:\n");
+        for (auto&& tmr : chfit.tmrs()) {
             ChTumorInfo tumor;
             tumor.status = true;
             tumor.nhit   = tmr.nhit();
             tumor.npmt   = tmr.npmt();
-            tumor.cx     = tmr.beta();
-            tumor.cy     = tmr.beta();
             tumor.beta   = tmr.beta();
             tumor.cbta   = tmr.cbta();
             tumor.npe    = tmr.npe();
-            if (!chinfo.tmrcld.status) chinfo.tmrcld = tumor;
-            chinfo.ntmrcld++;
+            if (!chinfo.tumor.status) chinfo.tumor = tumor;
+            chinfo.ntmr++;
             
-            //CERR("NHIT %2d NPMT %2d XY %14.8f %14.8f BETA %14.8f %14.8f NPE %14.8f\n", tmr.nhit(), tmr.npmt(), tmr.cx(), tmr.cy(), tmr.beta(), tmr.cbta(), tmr.npe());
+            //CERR("NHIT %2d NPMT %2d BETA %14.8f %14.8f NPE %14.8f\n", tmr.nhit(), tmr.npmt(), tmr.beta(), tmr.cbta(), tmr.npe());
             //for (auto&& hit : tmr.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f BETA %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.dbta(), hit.rbta(), hit.npe());
+            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f BETA %14.8f %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.npe());
+        }
+        
+        //CERR("Ghost Clustering:\n");
+        for (auto&& gst : chfit.gsts()) {
+            ChGhostInfo ghost;
+            ghost.status = true;
+            ghost.nhit   = gst.nhit();
+            ghost.npmt   = gst.npmt();
+            ghost.beta   = gst.beta();
+            ghost.cbta   = gst.cbta();
+            ghost.npe    = gst.npe();
+            if (!chinfo.ghost.status) chinfo.ghost = ghost;
+            chinfo.ngst++;
+            
+            //CERR("NHIT %2d NPMT %2d BETA %14.8f %14.8f NPE %14.8f\n", gst.nhit(), gst.npmt(), gst.beta(), gst.cbta(), gst.npe());
+            //for (auto&& hit : gst.hits())
+            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f BETA %14.8f %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.npe());
         }
         
         fRich.chfit = chinfo;
-
-        if (chfit.clds().size() >= 1) {
-            auto&& cld = chfit.clds().at(0);
-            int count = 0;
-            for (auto&& hit : cld.hits()) {
-                if (count >= 100) break;
-                fRich.FITbta[count] = hit.beta();
-                fRich.FITnpe[count] = hit.npe();
-                count++;
-            }
-            fRich.FITnh = count;
-        }
     }
 
 
@@ -2336,7 +2315,7 @@ bool EventEcal::processEvent(AMSEventR * event, AMSChain * chain) {
 		fEcal.shower = shower;
 	}
 
-    for (int it = 0; it < event->NEcalShower(); ++it) {
+    for (int it = 0; it < static_cast<int>(event->NEcalShower()); ++it) {
         if (it == recEv.iEcalShower) continue;
         EcalShowerR* ecalr = event->pEcalShower(it);
         if (ecalr == nullptr) continue;
@@ -3037,11 +3016,13 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	BetaHR      * btahSIG = (partSIG != nullptr) ? partSIG->pBetaH() : nullptr;
 	//TrdTrackR   * tdtrSIG = (partSIG != nullptr) ? partSIG->pTrdTrack() : nullptr;
 	//TrdHTrackR  * trdhSIG = (partSIG != nullptr) ? partSIG->pTrdHTrack() : nullptr;
+    //RichRingR   * richSIG = (partSIG != nullptr) ? partSIG->pRichRing() : nullptr;
 	//EcalShowerR * ecalSIG = (partSIG != nullptr) ? partSIG->pEcalShower() : nullptr;
 	if (partSIG == nullptr) return -4001;
 	if (trtkSIG == nullptr || btahSIG == nullptr) return -4002;
     //if (tdtrSIG == nullptr && trdhSIG == nullptr) return -4003;
-    //if (ecalSIG == nullptr) return -4004;
+    //if (richSIG == nullptr) return -4004;
+    //if (ecalSIG == nullptr) return -4005;
 
 	// ~5~ (Based on BetaH)
 	if (event->NBetaH() != 1) return -5001;
@@ -3106,6 +3087,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
     // testcode
     if (EventBase::checkEventMode(EventBase::ISS) && recEv.zin != 1) return -99979; // testcode
     //if (recEv.rigIN < 20) return -99990; // testcode
+    if (recEv.rigIN < 3) return -99990; // testcode
 
     // ~7~ (Based on RTI)
     if (EventBase::checkEventMode(EventBase::ISS) && checkOption(DataSelection::RTI)) {
@@ -3141,7 +3123,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         }
 
         // testcode
-        wpar[0] = 0.3; wpar[1] = 1.0 - wpar[0];
+        wpar[0] = 0.2; wpar[1] = 1.0 - wpar[0];
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logir);

@@ -1,18 +1,18 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  19Mar12v03
-PROJTITLE    =  NEW_TEST02
+PROJVERSION  =  19Mar25
+PROJTITLE    =  NEW_TEST01
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.iss.B1130.pass7.test
 EVENTTYPE    =  ISS
-FILEPEREXE   =  5
+FILEPEREXE   =  1
 JOBREGION    =  WHOLE
 EXESATID     =  80000
-EXEENDID     =  83999
+EXEENDID     =  89999
 
 [QUEUE]
-###QUEUE      =  tomorrow
+##QUEUE      =  tomorrow
 QUEUE      =  ams1nd
 STORAGE    =  EOS
-EXEPERJOB  =  1
+EXEPERJOB  =  4
 CONFIRM    =  NONE

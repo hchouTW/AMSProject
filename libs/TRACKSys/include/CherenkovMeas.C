@@ -35,6 +35,7 @@ const double& CherenkovHit::search_closest_beta(double bta) {
         mode_ = (std::fabs(dbta_ - bta) <= std::fabs(beta_ - bta)) ? 0 : mode_;
         beta_ = (mode_ == 0 ? dbta_ : beta_);
     }
+    
     return beta_;
 }
         
@@ -48,63 +49,71 @@ void CherenkovHit::set_lmt_bta(double lmtl_bta, double lmtu_bta) {
     if (dbta_  > 0.0 && (!sw_lmtl || dbta_  > lmtl_bta) && (!sw_lmtu || dbta_  < lmtu_bta)) type_ += 1;
     if (rbtaA_ > 0.0 && (!sw_lmtl || rbtaA_ > lmtl_bta) && (!sw_lmtu || rbtaA_ < lmtu_bta)) type_ += 2;
     if (rbtaB_ > 0.0 && (!sw_lmtl || rbtaB_ > lmtl_bta) && (!sw_lmtu || rbtaB_ < lmtu_bta)) type_ += 4;
+    
+    search_closest_beta(Numc::ONE<>);
 }
 
         
-CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, double rfr_index, double width_bta, const MultiGaus& pdf_bta, double bta_crr, bool weighted) {
+CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std::array<double, 2>& pmtc, double rfr_index, double width_bta, const MultiGaus& pdf_bta, double bta_crr) : CherenkovFit() {
+    pmtc_      = pmtc;
     rfr_index_ = rfr_index;
     width_bta_ = width_bta;
     pdf_bta_   = pdf_bta;
     bta_crr_   = bta_crr;
-    weighted_  = weighted;
     if (!check()) { clear(); return; }
-    if (args_hits.size() == 0) { clear(); return; }
+    if (args_hits.size() == 0) { succ_ = true; return; }
 
     timer_.start();
 
-    // (hits) group table
-    auto&& gtable = make_group_table(args_hits);
-    if (gtable.size() == 0) { clear(); return; }
-    
     // build (stone cloud tumor)
-    auto&& rlt = build(gtable, weighted_);
+    auto&& rlt = build(args_hits);
     stns_ = std::get<0>(rlt);
     clds_ = std::get<1>(rlt);
-    tmrstns_ = std::get<2>(rlt);
-    tmrclds_ = std::get<3>(rlt);
-            
-    // build (npe)
-    auto&& npe = build_npe(args_hits, stns_, clds_, tmrstns_, tmrclds_);
-    npe_total_ = npe[0];
-    npe_stone_ = npe[1];
-    npe_cloud_ = npe[2];
-    npe_tumor_ = npe[3];
-    npe_other_ = npe[4];
+    tmrs_ = std::get<2>(rlt);
+    gsts_ = std::get<3>(rlt);
+    hits_ = std::get<4>(rlt);
 
-    // result
-    succ_ = (stns_.size() != 0 || clds_.size() != 0 || tmrstns_.size() != 0 || tmrclds_.size() != 0);
+    // build (npe)
+    for (auto&& hit : hits_) {
+        if (hit.cluster() == CherenkovHit::Cluster::stone) { nhit_stone_++; npe_stone_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::cloud) { nhit_cloud_++; npe_cloud_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::tumor) { nhit_tumor_++; npe_tumor_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::ghost) { nhit_ghost_++; npe_ghost_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::other) { nhit_other_++; npe_other_ += hit.npe(); }
+        nhit_total_++; npe_total_ += hit.npe();
+    }
     
     timer_.stop();
 
+    succ_ = true;
     if (!succ_) { clear(); return; }
 }
 
 
 void CherenkovFit::clear() {
     succ_ = false;
-    weighted_ = false;
 
     stns_.clear();
     clds_.clear();
-    tmrstns_.clear();
-    tmrclds_.clear();
-    
+    tmrs_.clear();
+    gsts_.clear();
+    hits_.clear();
+
+    nhit_total_ = 0;
+    nhit_stone_ = 0;
+    nhit_cloud_ = 0;
+    nhit_tumor_ = 0;
+    nhit_ghost_ = 0;
+    nhit_other_ = 0;
+
     npe_total_ = Numc::ZERO<>;
     npe_stone_ = Numc::ZERO<>;
     npe_cloud_ = Numc::ZERO<>;
     npe_tumor_ = Numc::ZERO<>;
+    npe_ghost_ = Numc::ZERO<>;
     npe_other_ = Numc::ZERO<>;
 
+    pmtc_      = std::array<double, 2>({ 0.0, 0.0 });
     rfr_index_ = Numc::ONE<>;
     width_bta_ = Numc::ZERO<>; 
     scan_bta_  = std::move(MultiGaus());
@@ -122,64 +131,14 @@ bool CherenkovFit::check() {
     if (Numc::Compare(width_bta_) <= 0) return false;
     if (Numc::Compare(bta_crr_)   <= 0) return false;
     scan_bta_ = std::move(MultiGaus(Robust::Option(Robust::Opt::ON, 3.0L, 0.5L), width_bta_));
-    lmtl_bta_ = (Numc::ONE<> + WIDTH_CORE_COS) / rfr_index_ + width_bta_ * (Numc::THREE<> * Numc::ONE_TO_FOUR);
+    lmtl_bta_ = (Numc::ONE<> + WIDTH_CORE_COS) / rfr_index_ + width_bta_;
     lmtu_bta_ = Numc::ONE<> + width_bta_ * Numc::SIX<>;
     if (Numc::Compare(lmtl_bta_) <= 0 || Numc::Compare(lmtu_bta_) <= 0) return false;
     return true;
 }
 
 
-std::array<double, 5> CherenkovFit::build_npe(const std::vector<CherenkovHit>& args_hits, const std::vector<CherenkovStone>& stns, const std::vector<CherenkovCloud>& clds, const std::vector<CherenkovTumor>& tmrstns, const std::vector<CherenkovTumor>& tmrclds) {
-    std::array<double, 5> npes({0.0, 0.0, 0.0, 0.0, 0.0});
-
-    double npe_ttl = 0.0;
-    for (auto&& hit : args_hits) npe_ttl += hit.npe();
-    
-    double npe_stn = 0.0;
-    std::set<short> chann_stn;
-    for (auto&& stn : stns) { 
-        for (auto&& hit : stn.hits()) {
-            if (chann_stn.find(hit.chann()) != chann_stn.end()) continue;
-            chann_stn.insert(hit.chann());
-            npe_stn += hit.npe();
-        }
-    }
-    
-    double npe_cld = 0.0;
-    std::set<short> chann_cld;
-    for (auto&& cld : clds) { 
-        for (auto&& hit : cld.hits()) {
-            if (chann_cld.find(hit.chann()) != chann_cld.end()) continue;
-            chann_cld.insert(hit.chann());
-            npe_cld += hit.npe();
-        }
-    }
-    
-    double npe_tmr = 0.0;
-    std::set<short> chann_tmr;
-    for (auto&& tmrstn : tmrstns) { 
-        for (auto&& hit : tmrstn.hits()) {
-            if (chann_tmr.find(hit.chann()) != chann_tmr.end()) continue;
-            chann_tmr.insert(hit.chann());
-            npe_tmr += hit.npe();
-        }
-    }
-    for (auto&& tmrcld : tmrclds) { 
-        for (auto&& hit : tmrcld.hits()) {
-            if (chann_tmr.find(hit.chann()) != chann_tmr.end()) continue;
-            chann_tmr.insert(hit.chann());
-            npe_tmr += hit.npe();
-        }
-    }
-    
-    double npe_oth = npe_ttl - (npe_stn + npe_cld + npe_tmr);
-
-    npes = std::move(std::array<double, 5>({ npe_ttl, npe_stn, npe_cld, npe_tmr, npe_oth }));
-    return npes;
-}
-
-
-std::vector<std::vector<CherenkovHit>> CherenkovFit::make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone, bool opt_cloud) {
+std::vector<std::vector<CherenkovHit>> CherenkovFit::make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone, double width_stone, bool opt_cloud, double width_cloud) {
     std::vector<std::vector<CherenkovHit>> gtable;
     if (!opt_stone && !opt_cloud) return gtable;
     if (args_hits.size() == 0) return gtable;
@@ -198,18 +157,18 @@ std::vector<std::vector<CherenkovHit>> CherenkovFit::make_group_table(const std:
             const CherenkovHit& ihit = args_hits.at(it);
             const CherenkovHit& jhit = args_hits.at(jt);
 
-            double dist = Numc::INV_SQRT_TWO * std::hypot(ihit.cx() - jhit.cx(), ihit.cy() - jhit.cy()) / WIDTH_CORE_COO;
+            double dist = Numc::INV_SQRT_TWO * std::hypot(ihit.cx() - jhit.cx(), ihit.cy() - jhit.cy()) / width_stone;
             if (opt_stone && dist < LMTMAX_GROUP_SGM) continue;
 
-            if (opt_cloud && (ihit.hasDb()  && jhit.hasDb() ) && (std::fabs(ihit.dbta()  - jhit.dbta() ) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasDb()  && jhit.hasRbA()) && (std::fabs(ihit.dbta()  - jhit.rbtaA()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasDb()  && jhit.hasRbB()) && (std::fabs(ihit.dbta()  - jhit.rbtaB()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbA() && jhit.hasDb() ) && (std::fabs(ihit.rbtaA() - jhit.dbta() ) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbA() && jhit.hasRbA()) && (std::fabs(ihit.rbtaA() - jhit.rbtaA()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbA() && jhit.hasRbB()) && (std::fabs(ihit.rbtaA() - jhit.rbtaB()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbB() && jhit.hasDb() ) && (std::fabs(ihit.rbtaB() - jhit.dbta() ) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbB() && jhit.hasRbA()) && (std::fabs(ihit.rbtaB() - jhit.rbtaA()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
-            if (opt_cloud && (ihit.hasRbB() && jhit.hasRbB()) && (std::fabs(ihit.rbtaB() - jhit.rbtaB()) / width_bta_) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasDb()  && jhit.hasDb() ) && (std::fabs(ihit.dbta()  - jhit.dbta() ) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasDb()  && jhit.hasRbA()) && (std::fabs(ihit.dbta()  - jhit.rbtaA()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasDb()  && jhit.hasRbB()) && (std::fabs(ihit.dbta()  - jhit.rbtaB()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbA() && jhit.hasDb() ) && (std::fabs(ihit.rbtaA() - jhit.dbta() ) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbA() && jhit.hasRbA()) && (std::fabs(ihit.rbtaA() - jhit.rbtaA()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbA() && jhit.hasRbB()) && (std::fabs(ihit.rbtaA() - jhit.rbtaB()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbB() && jhit.hasDb() ) && (std::fabs(ihit.rbtaB() - jhit.dbta() ) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbB() && jhit.hasRbA()) && (std::fabs(ihit.rbtaB() - jhit.rbtaA()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
+            if (opt_cloud && (ihit.hasRbB() && jhit.hasRbB()) && (std::fabs(ihit.rbtaB() - jhit.rbtaB()) / width_cloud) < LMTMAX_GROUP_SGM) continue;
 
             discontact_table.at(it).at(jt) = 1; // set to discontact
             discontact_table.at(jt).at(it) = 1; // set to discontact
@@ -276,87 +235,22 @@ std::vector<std::vector<CherenkovHit>> CherenkovFit::make_group_table(const std:
 }
 
 
-std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> CherenkovFit::build(const std::vector<std::vector<CherenkovHit>>& args_gtable, bool weighted) {
-    std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> result;
+std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovGhost>, std::vector<CherenkovHit>> CherenkovFit::build(const std::vector<CherenkovHit>& args_hits) {
+    std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector<CherenkovTumor>, std::vector<CherenkovGhost>, std::vector<CherenkovHit>> result;
     std::vector<CherenkovStone>& rltstns = std::get<0>(result);
     std::vector<CherenkovCloud>& rltclds = std::get<1>(result);
-    std::vector<CherenkovTumor>& rlttmrs_stone = std::get<2>(result);
-    std::vector<CherenkovTumor>& rlttmrs_cloud = std::get<3>(result);
-    if (args_gtable.size() == 0) return result;
-
-    std::vector<CherenkovHit> other_hits;
-    for (auto&& group_hits : args_gtable) {
-        if (group_hits.size() < LMTMIN_GROUP_HIT) {
-            for (auto&& hit : group_hits) other_hits.push_back(hit);
-            continue;
-        }
-        auto&& sub_rlt = build(group_hits, weighted);
-        std::vector<CherenkovStone>& sub_rltstns = sub_rlt.first;
-        std::vector<CherenkovCloud>& sub_rltclds = sub_rlt.second;
-        for (auto&& stn : sub_rltstns) rltstns.push_back(stn);
-        for (auto&& cld : sub_rltclds) rltclds.push_back(cld);
-
-        // find other hits
-        for (auto&& hit : group_hits) {
-            bool is_used_hit = false;
-            
-            for (auto&& stn : sub_rltstns) {
-                for (auto&& stn_hit : stn.hits()) {
-                    if (stn_hit.chann() != hit.chann()) continue;
-                    is_used_hit = true;
-                    break;
-                }
-                if (is_used_hit) break;
-            }
-            if (is_used_hit) continue;
-            
-            for (auto&& cld : sub_rltclds) {
-                for (auto&& cld_hit : cld.hits()) {
-                    if (cld_hit.chann() != hit.chann()) continue;
-                    is_used_hit = true;
-                    break;
-                }
-                if (is_used_hit) break;
-            }
-            if (is_used_hit) continue;
-
-            other_hits.push_back(hit);
-        }
-    }
-    if (rltstns.size() > 1) std::sort(rltstns.begin(), rltstns.end(), CherenkovStone_sort());
-    if (rltclds.size() > 1) std::sort(rltclds.begin(), rltclds.end(), CherenkovCloud_sort());
-    if (other_hits.size() > 1) std::sort(other_hits.begin(), other_hits.end(), CherenkovHit_sort());
-
-    auto&& rlttmrs = build_tumor(other_hits);
-    rlttmrs_stone = rlttmrs.first;
-    rlttmrs_cloud = rlttmrs.second;
-
-    return result;
-}
-
-
-std::pair<std::vector<CherenkovStone>, std::vector<CherenkovCloud>> CherenkovFit::build(const std::vector<CherenkovHit>& args_hits, bool weighted) {
-    std::pair<std::vector<CherenkovStone>, std::vector<CherenkovCloud>> result;
-    std::vector<CherenkovStone>& rltstns = result.first;
-    std::vector<CherenkovCloud>& rltclds = result.second;
+    std::vector<CherenkovTumor>& rlttmrs = std::get<2>(result);
+    std::vector<CherenkovGhost>& rltgsts = std::get<3>(result);
+    std::vector<CherenkovHit>&   rlthits = std::get<4>(result);
     if (args_hits.size() == 0) return result; 
 
     // stone
-    std::vector<CherenkovHit> all_hits = args_hits;
-    
-    for (auto&& hit : all_hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
-    if (weighted) {
-        double sumnpe = Numc::ZERO<>;
-        for (auto&& hit : all_hits) sumnpe += hit.npe();
-        for (auto&& hit : all_hits) hit.set_wgt(static_cast<double>(all_hits.size()) * (hit.npe() / sumnpe));
-    }
-
-    rltstns = std::move(fit_stone(all_hits));
-    std::vector<CherenkovHit> remainder_hits = all_hits;
+    rltstns = std::move(build_stone(args_hits, true));
+    std::vector<CherenkovHit> remainder_hits = args_hits;
     
     while (rltstns.size() != 0) {
         remainder_hits.clear();
-        for (auto&& hit : all_hits) {
+        for (auto&& hit : args_hits) {
             bool is_stn = false;
             for (auto&& stn : rltstns) {
                 for (auto&& stn_hit : stn.hits()) {
@@ -385,30 +279,157 @@ std::pair<std::vector<CherenkovStone>, std::vector<CherenkovCloud>> CherenkovFit
         hit.search_closest_beta(Numc::ONE<>);
         if (hit.mode() < 0) continue;
 
+        if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+
         cld_hits.push_back(hit);
     }
 
-    std::vector<CherenkovCloud>&& cand_clds = fit_cloud(cld_hits);
-    for (auto&& cand_cld : cand_clds) {
-        CherenkovCloud&& cld = refit_cloud(cand_cld);
-        if (!cld.status()) continue;
-        rltclds.push_back(cld);
+    rltclds = std::move(build_cloud(cld_hits, false));
+
+    // find tumor hits
+    std::vector<CherenkovHit> tumor_hits;
+    for (auto&& hit : args_hits) {
+        bool is_used_hit = false;
+        
+        for (auto&& stn : rltstns) {
+            for (auto&& stn_hit : stn.hits()) {
+                if (stn_hit.chann() != hit.chann()) continue;
+                is_used_hit = true;
+                break;
+            }
+            if (is_used_hit) break;
+        }
+        if (is_used_hit) continue;
+        
+        for (auto&& cld : rltclds) {
+            for (auto&& cld_hit : cld.hits()) {
+                if (cld_hit.chann() != hit.chann()) continue;
+                is_used_hit = true;
+                break;
+            }
+            if (is_used_hit) break;
+        }
+        if (is_used_hit) continue;
+        
+        if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+
+        tumor_hits.push_back(hit);
     }
-    if (rltclds.size() > 1) std::sort(rltclds.begin(), rltclds.end(), CherenkovCloud_sort());
+    if (tumor_hits.size() > 1) std::sort(tumor_hits.begin(), tumor_hits.end(), CherenkovHit_sort());
+    
+    rlttmrs = std::move(build_tumor(tumor_hits, false));
+   
+    // find ghost hits
+    std::vector<CherenkovHit> ghost_hits;
+    for (auto&& hit : args_hits) {
+        bool is_used_hit = false;
+        
+        for (auto&& stn : rltstns) {
+            for (auto&& stn_hit : stn.hits()) {
+                if (stn_hit.chann() != hit.chann()) continue;
+                is_used_hit = true;
+                break;
+            }
+            if (is_used_hit) break;
+        }
+        if (is_used_hit) continue;
+        
+        for (auto&& cld : rltclds) {
+            for (auto&& cld_hit : cld.hits()) {
+                if (cld_hit.chann() != hit.chann()) continue;
+                is_used_hit = true;
+                break;
+            }
+            if (is_used_hit) break;
+        }
+        if (is_used_hit) continue;
+        
+        for (auto&& tmr : rlttmrs) {
+            for (auto&& tmr_hit : tmr.hits()) {
+                if (tmr_hit.chann() != hit.chann()) continue;
+                is_used_hit = true;
+                break;
+            }
+            if (is_used_hit) break;
+        }
+        if (is_used_hit) continue;
+        
+        if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+
+        ghost_hits.push_back(hit);
+    }
+    if (ghost_hits.size() > 1) std::sort(ghost_hits.begin(), ghost_hits.end(), CherenkovHit_sort());
+    
+    rltgsts = std::move(build_ghost(ghost_hits, false));
+   
+    // result
+    rlthits.clear();
+    for (auto&& stn : rltstns) {
+        for (auto&& hit : stn.hits()) {
+            rlthits.push_back(hit);
+        }
+    }
+    for (auto&& cld : rltclds) {
+        for (auto&& hit : cld.hits()) {
+            rlthits.push_back(hit);
+        }
+    }
+    for (auto&& tmr : rlttmrs) {
+        for (auto&& hit : tmr.hits()) {
+            rlthits.push_back(hit);
+        }
+    }
+    for (auto&& gst : rltgsts) {
+        for (auto&& hit : gst.hits()) {
+            rlthits.push_back(hit);
+        }
+    }
+
+    // other
+    std::vector<CherenkovHit> othhits;
+    for (auto&& hit : args_hits) {
+        bool is_found = false;
+        for (auto&& rlthit : rlthits) {
+            if (hit.chann() != rlthit.chann()) continue;
+            is_found = true;
+            break;
+        }
+        if (is_found) continue;
+        
+        if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+        
+        othhits.push_back(hit);
+    }
+    for (auto&& hit : othhits) {
+        hit.set_lmt_bta();
+        hit.set_wgt(Numc::ONE<>);
+        hit.set_cnt(Numc::ONE<>);
+        hit.set_cluster(CherenkovHit::Cluster::other);
+        if (rltclds.size() == 0) continue;
+        if (hit.type() == 0) continue;
+        double beta = Numc::ONE<>;
+
+        std::vector<std::array<double, 2>> dltset;
+        for (auto&& cld : rltclds) {
+            double dlt = std::fabs(hit.search_closest_beta(cld.beta()) - cld.beta());
+            dltset.push_back(std::array<double, 2>({ dlt, cld.beta() }));
+        }
+        if (dltset.size() > 1) std::sort(dltset.begin(), dltset.end());
+        if (dltset.size() == 0) continue;
+
+        hit.search_closest_beta(dltset.at(0)[1]);
+    }
+    for (auto&& hit : othhits) rlthits.push_back(hit);
 
     return result;
 }
-        
 
-std::pair<std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> CherenkovFit::build_tumor(const std::vector<CherenkovHit>& args_hits, bool weighted) {
-    std::pair<std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> tmrs;
-    std::vector<CherenkovTumor>& tmrs_stone = tmrs.first;
-    std::vector<CherenkovTumor>& tmrs_cloud = tmrs.second;
-    if (args_hits.size() == 0) return tmrs;
 
-    std::vector<CherenkovHit> hits = args_hits;
-    for (auto&& hit : hits) hit.set_lmt_bta(lmtl_bta_, lmtu_bta_);
+std::vector<CherenkovStone> CherenkovFit::build_stone(const std::vector<CherenkovHit>& args_hits, bool weighted) {
+    std::vector<CherenkovStone> stns;
+    if (args_hits.size() == 0) return stns;
     
+    std::vector<CherenkovHit> hits = args_hits;
     for (auto&& hit : hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
     if (weighted) {
         double sumnpe = Numc::ZERO<>;
@@ -416,150 +437,17 @@ std::pair<std::vector<CherenkovTumor>, std::vector<CherenkovTumor>> CherenkovFit
         for (auto&& hit : hits) hit.set_wgt(static_cast<double>(hits.size()) * (hit.npe() / sumnpe));
     }
 
-    // tumor (stone)
-    auto&& otable_stone = make_group_table(hits, true, false);
-    for (auto otable : otable_stone) {
-        if (otable.size() < LMTMIN_TUMOR_STONE_HITS) continue;
-        bool is_exist_core = false;
-        std::map<int, int> pmt_maps;
-        for (auto&& hit : otable) {
-            if (pmt_maps.count(hit.pmtid()) == 0) pmt_maps[hit.pmtid()] = 1;
-            else pmt_maps[hit.pmtid()]++;
+    auto&& gtable = make_group_table(hits, true, WIDTH_CORE_COO, false, width_bta_);
+    for (auto table : gtable) {
+        auto&& cstns = fit_stone(table);
+        for (auto&& cstn : cstns) {
+            if (!cstn.status()) continue;
+            stns.push_back(cstn);
         }
-        for (auto&& pmt : pmt_maps) {
-            if (pmt.second >= LMTMIN_TUMOR_STONE_PMT_HITS) { is_exist_core = true; }
-        }
-        if (!is_exist_core) continue;
-        
-        CherenkovTumor&& tmr = fit_tumor(otable, 0);
-        if (!tmr.status()) continue;
-        tmrs_stone.push_back(tmr);
     }
-    if (tmrs_stone.size() > 1) std::sort(tmrs_stone.begin(), tmrs_stone.end(), CherenkovTumor_sort());
+    if (stns.size() > 1) std::sort(stns.begin(), stns.end(), CherenkovStone_sort());
 
-    // tumor (cloud)
-    auto&& otable_cloud = make_group_table(hits, false, true);
-    for (auto otable : otable_cloud) {
-        if (otable.size() < LMTMIN_TUMOR_CLOUD_HITS) continue;
-        std::map<int, int> pmt_maps;
-        for (auto&& hit : otable) {
-            if (pmt_maps.count(hit.pmtid()) == 0) pmt_maps[hit.pmtid()] = 1;
-            else pmt_maps[hit.pmtid()]++;
-        }
-        if (pmt_maps.size() < LMTMIN_TUMOR_CLOUD_PMTS) continue;
-        
-        CherenkovTumor&& tmr = fit_tumor(otable, 1);
-        if (!tmr.status()) continue;
-        tmrs_cloud.push_back(tmr);
-    }
-    if (tmrs_cloud.size() > 1) std::sort(tmrs_cloud.begin(), tmrs_cloud.end(), CherenkovTumor_sort());
-
-    return tmrs;
-}
-        
-
-CherenkovTumor CherenkovFit::fit_tumor(std::vector<CherenkovHit>& hits, short mode) {
-    if (hits.size() == 0 || mode < 0 || mode > 1) return CherenkovTumor();
-        
-    std::map<int, int> pmt_maps;
-    for (auto&& hit : hits) {
-        if (pmt_maps.count(hit.pmtid()) == 0) pmt_maps[hit.pmtid()] = 1;
-        else pmt_maps[hit.pmtid()]++;
-    }
-    short nhit = hits.size();
-    short npmt = pmt_maps.size();
-    if (nhit <= 0 || npmt <= 0) return CherenkovTumor();
-        
-    double weight = Numc::ZERO<>;
-    for (auto&& hit : hits) weight += hit.wgt();
-    if (Numc::EqualToZero(weight)) return CherenkovTumor();
-    for (auto&& hit : hits) hit.set_cnt(static_cast<double>(hits.size()) * (hit.wgt() / weight));
-
-    double sum_cx = Numc::ZERO<>;
-    double sum_cy = Numc::ZERO<>;
-    double sum_cw = Numc::ZERO<>;
-    double npe    = Numc::ZERO<>;
-    for (auto&& hit : hits) {
-        sum_cx += hit.cnt() * hit.cx();
-        sum_cy += hit.cnt() * hit.cy();
-        sum_cw += hit.cnt();
-        npe    += hit.npe();
-    }
-    double cx = sum_cx / sum_cw;
-    double cy = sum_cy / sum_cw;
-
-    double init_beta = Numc::ZERO<>;
-    double count_beta = Numc::ZERO<>;
-    for (auto&& hit : hits) {
-        if (hit.type() == 0) continue;
-        double multi = hit.cnt() / static_cast<double>(hit.hasDb() + hit.hasRbA() + hit.hasRbB());
-        if (hit.hasDb() ) { init_beta += multi * hit.dbta() ; count_beta += multi; }
-        if (hit.hasRbA()) { init_beta += multi * hit.rbtaA(); count_beta += multi; }
-        if (hit.hasRbB()) { init_beta += multi * hit.rbtaB(); count_beta += multi; }
-    }
-    init_beta = (!Numc::EqualToZero(count_beta) ? (init_beta / count_beta) : Numc::ZERO<>);
-
-    double beta = init_beta;
-    if (Numc::Compare(beta) > 0) {
-        bool succ = false;
-        short iter = 1;
-        while (!succ && iter <= LMTMAX_ITER) {
-            double sum_bta = Numc::ZERO<>;
-            double sum_cnt = Numc::ZERO<>;
-            for (auto&& hit : hits) {
-                if (hit.type() == 0) continue;
-                sum_bta += hit.cnt() * hit.search_closest_beta(beta);
-                sum_cnt += hit.cnt();
-            }
-            if (Numc::EqualToZero(sum_cnt)) break;
-            double new_beta = (sum_bta / sum_cnt);
-            succ = (iter >= LMTL_ITER && Numc::Compare(std::fabs(new_beta - beta), CONVG_TOLERANCE) <= 0);
-            if (!succ) beta = new_beta;
-            iter++;
-        }
-        if (!succ) beta = Numc::ZERO<>;
-    }
-
-    // refit
-    bool succ = false;
-    double nchi = Numc::ZERO<>;
-    for (int iter = 0; iter <= LMTMAX_ITER && (beta > 0.0); ++iter) {
-        double count = Numc::ZERO<>;
-        double chisq = Numc::ZERO<>;
-        double grdB  = Numc::ZERO<>;
-        double cvBB  = Numc::ZERO<>;
-
-        for (auto&& hit : hits) {
-            double dlt = hit.search_closest_beta(beta) - beta;
-            std::array<long double, 3>&& minib = pdf_bta_.minimizer(dlt);
-            
-            count += hit.cnt();
-            chisq += hit.cnt() * (minib[0] * minib[0]);
-            grdB  += hit.cnt() * (Numc::NEG<> * minib[2] * minib[1]);
-            cvBB  += hit.cnt() * (minib[2] * minib[2]);
-        }
-        if (!Numc::Valid(count) || Numc::Compare(count, Numc::ONE<>) <= 0) break;
-
-        double new_nchi = chisq / (count - Numc::ONE<>);
-        if (!Numc::Valid(new_nchi)) break;
-
-        double resB = grdB / cvBB;
-        double new_beta = beta - resB;
-        if (!Numc::Valid(resB) || Numc::Compare(new_beta) <= 0) break;
-       
-        if (iter >= LMTL_ITER) {
-            succ = (Numc::Compare(std::fabs(new_beta - beta), CONVG_TOLERANCE) <= 0) && 
-                   (Numc::Compare(std::fabs(new_nchi - nchi), CONVG_TOLERANCE) <= 0);
-            if (succ) break;
-        }
-
-        beta = new_beta;
-        nchi = new_nchi;
-    }
-    double cbta = bta_crr_ * beta;
-    if (!succ) return CherenkovTumor();
-    
-    return CherenkovTumor(hits, mode, nhit, npmt, cx, cy, beta, cbta, npe);
+    return stns;
 }
         
 
@@ -575,8 +463,8 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         std::vector<double> elms;
         double sumprb = Numc::ZERO<>;
         for (auto&& stn : cand_cstns) {
-            double dcx = (hit.cx() - stn[0]) / WIDTH_CORE_COO;
-            double dcy = (hit.cy() - stn[1]) / WIDTH_CORE_COO;
+            double dcx = (hit.cx() - stn[0]) / WIDTH_COO;
+            double dcy = (hit.cy() - stn[1]) / WIDTH_COO;
             double nrm = Numc::INV_SQRT_TWO * std::hypot(dcx,  dcy);
             double pdf = std::exp(Numc::NEG<> * nrm * nrm);
             double prb = stn[2] * pdf;
@@ -592,7 +480,7 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         for (auto&& elm : elms) elm = (elm / sumprb);
         
         for (int it = 0; it < cand_chits.size(); ++it) {
-            if (Numc::Compare(elms.at(it), CONVG_PROB_SGM30) < 0) continue;
+            if (Numc::Compare(elms.at(it), CONVG_PROB_SGM50) < 0) continue;
             std::vector<CherenkovHit>& chit = cand_chits.at(it);
             chit.push_back(hit);
         }
@@ -622,6 +510,7 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         double weight = Numc::ZERO<>;
         for (auto&& hit : cand_chit) weight += hit.wgt();
         if (Numc::EqualToZero(weight)) continue;
+
         for (auto&& hit : cand_chit) hit.set_cnt(static_cast<double>(cand_chit.size()) * (hit.wgt() / weight));
         
         short nhit = cand_chit.size();
@@ -630,33 +519,23 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         double cnt = 0.;
         double npe = 0.;
         double chisq = 0.;
-        double chicb = 0.;
-        double chiqd = 0.;
         for (auto&& hit : cand_chit) {
             cnt += hit.cnt();
             npe += hit.npe();
-            double dcx = (hit.cx() - cand_cstn[0]) / WIDTH_CORE_COO;
-            double dcy = (hit.cy() - cand_cstn[1]) / WIDTH_CORE_COO;
+            double dcx = (hit.cx() - cand_cstn[0]) / WIDTH_COO;
+            double dcy = (hit.cy() - cand_cstn[1]) / WIDTH_COO;
             double nrm = Numc::INV_SQRT_TWO * std::hypot(dcx,  dcy);
             chisq += hit.cnt() * (nrm * nrm); 
-            chicb += hit.cnt() * (nrm * nrm * nrm); 
-            chiqd += hit.cnt() * (nrm * nrm * nrm * nrm); 
         }
 
         double ndof = (cnt - Numc::ONE<>);
         double nchi = chisq / ndof;
-        double qlt  = Numc::NormQuality(nchi, ndof);
         if (!Numc::Valid(ndof) || Numc::Compare(ndof) <= 0) continue;
         if (!Numc::Valid(nchi)) continue;
-        if (!Numc::Valid(qlt)) continue;
 
-        double skewness = std::cbrt(chicb / cnt);
-        if (!Numc::Valid(skewness)) continue;
-        
-        double kurtosis = std::sqrt(std::sqrt(chiqd / cnt));
-        if (!Numc::Valid(kurtosis)) continue;
-        
-        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi, qlt, skewness, kurtosis));
+        for (auto&& hit : cand_chit) hit.set_cluster(CherenkovHit::Cluster::stone);
+
+        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi));
     }
     if (stns.size() > 1) std::sort(stns.begin(), stns.end(), CherenkovStone_sort());
 
@@ -671,6 +550,7 @@ std::vector<std::array<double, 3>> CherenkovFit::clustering_stone(std::vector<Ch
     double weight = Numc::ZERO<>;
     for (auto&& hit : hits) weight += hit.wgt();
     if (Numc::EqualToZero(weight)) return cstns;
+    
     for (auto&& hit : hits) hit.set_cnt(static_cast<double>(hits.size()) * (hit.wgt() / weight));
     for (auto&& hit : hits) cstns.push_back(std::array<double, 3>({ hit.cx(), hit.cy(), (hit.wgt() / weight) }));
     if (cstns.size() == 0) return cstns;
@@ -688,8 +568,8 @@ std::vector<std::array<double, 3>> CherenkovFit::clustering_stone(std::vector<Ch
                     elms.push_back(std::array<double, 3>({ 0.0, 0.0, 0.0 }));
                     continue;
                 }
-                double nrmx = (hit.cx() - stn[0]) / WIDTH_CORE_COO;
-                double nrmy = (hit.cy() - stn[1]) / WIDTH_CORE_COO;
+                double nrmx = (hit.cx() - stn[0]) / WIDTH_COO;
+                double nrmy = (hit.cy() - stn[1]) / WIDTH_COO;
                 double nrm  = Numc::INV_SQRT_TWO * std::hypot(nrmx, nrmy);
                 double pdf  = std::exp(Numc::NEG<> * nrm * nrm);
                 double prb  = stn[2] * pdf;
@@ -760,10 +640,10 @@ std::vector<std::array<double, 3>> CherenkovFit::clustering_stone(std::vector<Ch
                     double prbB = gausB[2];
                     double newx = (gausA[0] * gausA[2] + gausB[0] * gausB[2]) / (gausA[2] + gausB[2]);
                     double newy = (gausA[1] * gausA[2] + gausB[1] * gausB[2]) / (gausA[2] + gausB[2]);
-                    double dnxA = (newx - gausA[0]) / WIDTH_CORE_COO;
-                    double dnyA = (newy - gausA[1]) / WIDTH_CORE_COO;
-                    double dnxB = (newx - gausB[0]) / WIDTH_CORE_COO;
-                    double dnyB = (newy - gausB[1]) / WIDTH_CORE_COO;
+                    double dnxA = (newx - gausA[0]) / WIDTH_COO;
+                    double dnyA = (newy - gausA[1]) / WIDTH_COO;
+                    double dnxB = (newx - gausB[0]) / WIDTH_COO;
+                    double dnyB = (newy - gausB[1]) / WIDTH_COO;
                     double dnA  = Numc::INV_SQRT_TWO * std::sqrt(dnxA * dnxA + dnyA * dnyA);
                     double dnB  = Numc::INV_SQRT_TWO * std::sqrt(dnxB * dnxB + dnyB * dnyB);
                     double prb  = gausA[2] * std::exp(Numc::NEG<> * dnA * dnA) + 
@@ -821,6 +701,83 @@ std::vector<std::array<double, 3>> CherenkovFit::clustering_stone(std::vector<Ch
     if (!succ) cstns.clear();
     return cstns;
 }
+
+
+std::vector<CherenkovCloud> CherenkovFit::build_cloud(const std::vector<CherenkovHit>& args_hits, bool weighted) {
+    std::vector<CherenkovCloud> clds;
+    if (args_hits.size() == 0) return clds;
+    
+    std::vector<CherenkovHit> hits = args_hits;
+    for (auto&& hit : hits) hit.set_lmt_bta(lmtl_bta_, lmtu_bta_);
+
+    for (auto&& hit : hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
+    if (weighted) {
+        double sumnpe = Numc::ZERO<>;
+        for (auto&& hit : hits) sumnpe += hit.npe();
+        for (auto&& hit : hits) hit.set_wgt(static_cast<double>(hits.size()) * (hit.npe() / sumnpe));
+    }
+
+    auto&& gtable = make_group_table(hits, false, WIDTH_CORE_COO, true, width_bta_);
+    for (auto table : gtable) {
+        auto&& cclds = fit_cloud(table);
+        for (auto&& ccld : cclds) {
+            if (!ccld.status()) continue;
+            CherenkovCloud&& cld = refit_cloud(ccld);
+            if (!cld.status()) continue;
+            clds.push_back(cld);
+        }
+    }
+    if (clds.size() > 1) std::sort(clds.begin(), clds.end(), CherenkovCloud_sort());
+
+    // testcode (umbra)
+    for (auto&& cld : clds) {
+        std::vector<CherenkovHit> ubr_hits;
+        for (auto&& hit : cld.hits()) {
+            bool hasDb  = (hit.hasDb()  && hit.mode() != 0);
+            bool hasRbA = (hit.hasRbA() && hit.mode() != 1);
+            bool hasRbB = (hit.hasRbB() && hit.mode() != 2);
+            if (!hasDb && !hasRbA && !hasRbB) continue;
+            ubr_hits.push_back(
+                CherenkovHit(hit.chann(), hit.pmtid(),
+                             (hasDb  ? hit.dbta()  : -1.0),
+                             (hasRbA ? hit.rbtaA() : -1.0),
+                             (hasRbB ? hit.rbtaB() : -1.0), 
+                             hit.npe(), hit.cx(), hit.cy())
+            );
+        }
+        if (ubr_hits.size() == 0) continue;
+        
+        for (auto&& hit : ubr_hits) hit.set_lmt_bta(lmtl_bta_, lmtu_bta_);
+        
+        for (auto&& hit : ubr_hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
+        if (weighted) {
+            double sumnpe = Numc::ZERO<>;
+            for (auto&& hit : ubr_hits) sumnpe += hit.npe();
+            for (auto&& hit : ubr_hits) hit.set_wgt(static_cast<double>(ubr_hits.size()) * (hit.npe() / sumnpe));
+        }
+        
+        auto&& ubr_gtable = make_group_table(ubr_hits, false, WIDTH_CORE_COO, true, width_bta_);
+        for (auto table : ubr_gtable) {
+            auto&& cubrs = fit_cloud(table);
+            for (auto&& cubr : cubrs) {
+                if (!cubr.status()) continue;
+                CherenkovCloud&& ubr = refit_cloud(cubr);
+                if (!ubr.status()) continue;
+
+                double wgtgbl = static_cast<double>(ubr.hits().size()) / static_cast<double>(cld.hits().size());
+                double wgtloc = static_cast<double>(ubr.hits().size()) / static_cast<double>(ubr_hits.size());
+                if (Numc::Compare(wgtgbl, (Numc::TWO<> / Numc::THREE<>)) <= 0) continue;
+                if (Numc::Compare(wgtloc, (Numc::TWO<> / Numc::THREE<>)) <= 0) continue;
+                
+                double dist = std::fabs(cld.cbta() - ubr.cbta()) / width_bta_;
+                if (dist < cld.misjudge()) continue;
+                cld.set_misjudge(dist);
+            }
+        }
+    }
+
+    return clds;
+}
     
 
 CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
@@ -837,33 +794,30 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     double cand_cnt  = Numc::ZERO<>;
     double cand_nchi = Numc::ZERO<>;
 
-    double cand_chisq = Numc::ZERO<>;
-    double cand_chicb = Numc::ZERO<>;
-    double cand_chiqd = Numc::ZERO<>;
-    
     // refit cloud
     bool succ = false;
     for (int iter = 0; iter <= LMTMAX_ITER; ++iter) {
         double count = Numc::ZERO<>;
         double chisq = Numc::ZERO<>;
-        double chicb = Numc::ZERO<>;
-        double chiqd = Numc::ZERO<>;
         double grdB  = Numc::ZERO<>;
         double cvBB  = Numc::ZERO<>;
-
+        
         for (auto&& hit : cand_chit) {
             double dlt = hit.search_closest_beta(cand_beta) - cand_beta;
             double nrm = dlt / width_bta_;
+
+            double smooth = SMOOTH_BOUND[1] - static_cast<double>(iter) * SMOOTH_RATE;
+            if (smooth < SMOOTH_BOUND[0]) smooth = SMOOTH_BOUND[0];
             
-            if (Numc::Compare(std::fabs(nrm), Numc::FIVE<>) > 0) continue;
+            double smnrm = std::fabs(nrm) - smooth;
+            double smprb = (Numc::Compare(smnrm) <= 0) ? Numc::ONE<> : std::exp(-Numc::ONE_TO_TWO * smnrm * smnrm);
+
             std::array<long double, 3>&& minib = pdf_bta_.minimizer(dlt);
             
             count += hit.cnt();
             chisq += hit.cnt() * (minib[0] * minib[0]);
-            chicb += hit.cnt() * (minib[0] * minib[0] * minib[0]);
-            chiqd += hit.cnt() * (minib[0] * minib[0] * minib[0] * minib[0]);
-            grdB  += hit.cnt() * (Numc::NEG<> * minib[2] * minib[1]);
-            cvBB  += hit.cnt() * (minib[2] * minib[2]);
+            grdB  += hit.cnt() * smprb * (Numc::NEG<> * minib[2] * minib[1]);
+            cvBB  += hit.cnt() * smprb * (minib[2] * minib[2]);
         }
         if (!Numc::Valid(count) || Numc::Compare(count, Numc::ONE<>) <= 0) break;
 
@@ -874,7 +828,7 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
         double beta = cand_beta - resB;
         if (!Numc::Valid(resB) || Numc::Compare(beta) <= 0) break;
        
-        if (iter >= LMTL_ITER) {
+        if (iter >= LMTM_ITER) {
             succ = (Numc::Compare(std::fabs(cand_beta - beta), CONVG_TOLERANCE) <= 0) && 
                    (Numc::Compare(std::fabs(cand_cnt - count), CONVG_TOLERANCE) <= 0) &&
                    (Numc::Compare(std::fabs(cand_nchi - nchi), CONVG_TOLERANCE) <= 0);
@@ -884,10 +838,6 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
         cand_beta = beta;
         cand_cnt  = count;
         cand_nchi = nchi;
-
-        cand_chisq = chisq;
-        cand_chicb = chicb;
-        cand_chiqd = chiqd;
     }
     if (!succ) return CherenkovCloud();
   
@@ -917,27 +867,31 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
         count_pmt_over_two_hits++;
     }
     if (pmt_maps.size() < LMTMIN_CLOUD_PMTS) return CherenkovCloud();
-  
+    
     short cand_nhit = cand_reduce_chit.size();
     short cand_npmt = pmt_maps.size();
-    
+    double cand_nhit_npmt = static_cast<double>(cand_nhit) / static_cast<double>(cand_npmt);
+
+    short cand_nhit_dir = 0;
+    short cand_nhit_rfl = 0;
+    for (auto&& hit : cand_reduce_chit) {
+        if (hit.mode() == 0) cand_nhit_dir++;
+        else                 cand_nhit_rfl++;
+    }
+
     double cand_npe = 0.;
     for (auto&& hit : cand_reduce_chit) cand_npe += hit.npe();
 
     double cand_cbta = cand_beta * bta_crr_;
     double cand_ndof = cand_cnt - Numc::ONE<>;
-    double cand_qlt  = Numc::NormQuality(cand_nchi, cand_ndof);
     if (!Numc::Valid(cand_ndof) || Numc::Compare(cand_ndof) <= 0) return CherenkovCloud();
     if (!Numc::Valid(cand_nchi)) return CherenkovCloud();
-    if (!Numc::Valid(cand_qlt)) return CherenkovCloud();
         
-    double cand_skewness = std::cbrt(cand_chicb / cand_cnt);
-    if (!Numc::Valid(cand_skewness)) return CherenkovCloud();
-    
-    double cand_kurtosis = std::sqrt(std::sqrt(cand_chiqd / cand_cnt));
-    if (!Numc::Valid(cand_kurtosis)) return CherenkovCloud();
+    double cand_misjudge = Numc::ZERO<>; 
+
+    for (auto&& hit : cand_reduce_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
         
-    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_qlt, cand_skewness, cand_kurtosis);
+    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge);
 }
 
 
@@ -1000,6 +954,14 @@ std::vector<CherenkovCloud> CherenkovFit::fit_cloud(std::vector<CherenkovHit>& h
         
         short nhit = cand_chit.size();
         short npmt = pmt_maps.size();
+        double nhit_npmt = static_cast<double>(nhit) / static_cast<double>(npmt);
+        
+        short nhit_dir = 0;
+        short nhit_rfl = 0;
+        for (auto&& hit : cand_chit) {
+            if (hit.mode() == 0) nhit_dir++;
+            else                 nhit_rfl++;
+        }
 
         double beta = cand_ccld[0];
         double cbta = cand_ccld[0] * bta_crr_;
@@ -1007,8 +969,6 @@ std::vector<CherenkovCloud> CherenkovFit::fit_cloud(std::vector<CherenkovHit>& h
         double cnt = 0.;
         double npe = 0.;
         double chisq = 0.;
-        double chicb = 0.;
-        double chiqd = 0.;
         for (auto&& hit : cand_chit) {
             cnt += hit.cnt();
             npe += hit.npe();
@@ -1016,24 +976,18 @@ std::vector<CherenkovCloud> CherenkovFit::fit_cloud(std::vector<CherenkovHit>& h
             double dlt = hit.search_closest_beta(cand_ccld[0]) - cand_ccld[0];
             std::array<long double, 3>&& minib = scan_bta_.minimizer(dlt);
             chisq += hit.cnt() * (minib[0] * minib[0]);
-            chicb += hit.cnt() * (minib[0] * minib[0] * minib[0]);
-            chiqd += hit.cnt() * (minib[0] * minib[0] * minib[0] * minib[0]);
         }
 
         double ndof = (cnt - Numc::ONE<>);
         double nchi = chisq / ndof;
-        double qlt  = Numc::NormQuality(nchi, ndof);
         if (!Numc::Valid(ndof) || Numc::Compare(ndof) <= 0) continue;
         if (!Numc::Valid(nchi)) continue;
-        if (!Numc::Valid(qlt)) continue;
     
-        double skewness = std::cbrt(chicb / cnt);
-        if (!Numc::Valid(skewness)) continue;
+        double misjudge = Numc::ZERO<>;
+    
+        for (auto&& hit : cand_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
         
-        double kurtosis = std::sqrt(std::sqrt(chiqd / cnt));
-        if (!Numc::Valid(kurtosis)) continue;
-        
-        cclds.push_back(CherenkovCloud(cand_chit, nhit, npmt, beta, cbta, npe, cnt, nchi, qlt, skewness, kurtosis));
+        cclds.push_back(CherenkovCloud(cand_chit, nhit, npmt, nhit_dir, nhit_rfl, beta, cbta, npe, cnt, nchi, misjudge));
     }
     if (cclds.size() > 1) std::sort(cclds.begin(), cclds.end(), CherenkovCloud_sort());
 
@@ -1053,10 +1007,10 @@ std::vector<std::array<double, 2>> CherenkovFit::clustering_cloud(std::vector<Ch
 
     for (auto&& hit : hits) {
         if (hit.type() == 0) continue;
-        double multi = hit.cnt() / static_cast<double>(hit.hasDb() + hit.hasRbA() + hit.hasRbB());
-        if (hit.hasDb() ) cclds.push_back(std::array<double, 2>({ hit.dbta() , multi }));
-        if (hit.hasRbA()) cclds.push_back(std::array<double, 2>({ hit.rbtaA(), multi }));
-        if (hit.hasRbB()) cclds.push_back(std::array<double, 2>({ hit.rbtaB(), multi }));
+        double multi = hit.cnt() / static_cast<double>(hit.hasDb() * Numc::TWO<> + hit.hasRbA() + hit.hasRbB());
+        if (hit.hasDb() ) cclds.push_back(std::array<double, 2>({ hit.dbta() , Numc::TWO<> * multi }));
+        if (hit.hasRbA()) cclds.push_back(std::array<double, 2>({ hit.rbtaA(), Numc::ONE<> * multi }));
+        if (hit.hasRbB()) cclds.push_back(std::array<double, 2>({ hit.rbtaB(), Numc::ONE<> * multi }));
     }
     if (cclds.size() > 1) std::sort(cclds.begin(), cclds.end());
     if (cclds.size() == 0) return cclds;
@@ -1194,6 +1148,249 @@ std::vector<std::array<double, 2>> CherenkovFit::clustering_cloud(std::vector<Ch
 
     if (!succ) cclds.clear();
     return cclds;
+}
+
+
+std::vector<CherenkovTumor> CherenkovFit::build_tumor(const std::vector<CherenkovHit>& args_hits, bool weighted) {
+    std::vector<CherenkovTumor> tmrs;
+    if (args_hits.size() == 0) return tmrs;
+
+    std::vector<CherenkovHit> hits = args_hits;
+    for (auto&& hit : hits) hit.set_lmt_bta(lmtl_bta_, lmtu_bta_ + width_bta_ * Numc::FOUR<>);
+    
+    for (auto&& hit : hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
+    if (weighted) {
+        double sumnpe = Numc::ZERO<>;
+        for (auto&& hit : hits) sumnpe += hit.npe();
+        for (auto&& hit : hits) hit.set_wgt(static_cast<double>(hits.size()) * (hit.npe() / sumnpe));
+    }
+
+    // tumor (cloud)
+    auto&& gtable = make_group_table(hits, false, WIDTH_CORE_COO, true, width_bta_);
+    for (auto&& table : gtable) {
+        CherenkovTumor&& tmr = fit_tumor(table);
+        if (!tmr.status()) continue;
+        tmrs.push_back(tmr);
+    }
+    if (tmrs.size() > 1) std::sort(tmrs.begin(), tmrs.end(), CherenkovTumor_sort());
+
+    return tmrs;
+}
+        
+
+CherenkovTumor CherenkovFit::fit_tumor(std::vector<CherenkovHit>& hits) {
+    if (hits.size() == 0) return CherenkovTumor();
+
+    double weight = Numc::ZERO<>;
+    for (auto&& hit : hits) weight += hit.wgt();
+    if (Numc::EqualToZero(weight)) return CherenkovTumor();
+    for (auto&& hit : hits) hit.set_cnt(static_cast<double>(hits.size()) * (hit.wgt() / weight));
+
+    double init_beta = Numc::ZERO<>;
+    double count_beta = Numc::ZERO<>;
+    for (auto&& hit : hits) {
+        if (hit.type() == 0) continue;
+        double multi = hit.cnt() / static_cast<double>(hit.hasDb() + hit.hasRbA() + hit.hasRbB());
+        if (hit.hasDb() ) { init_beta += multi * hit.dbta() ; count_beta += multi; }
+        if (hit.hasRbA()) { init_beta += multi * hit.rbtaA(); count_beta += multi; }
+        if (hit.hasRbB()) { init_beta += multi * hit.rbtaB(); count_beta += multi; }
+    }
+    init_beta = (!Numc::EqualToZero(count_beta) ? (init_beta / count_beta) : Numc::ZERO<>);
+
+    double beta = init_beta;
+    if (Numc::Compare(beta) > 0) {
+        short iter = 1;
+        bool is_ok = false;
+        while (!is_ok && iter <= LMTMAX_ITER) {
+            double sum_bta = Numc::ZERO<>;
+            double sum_cnt = Numc::ZERO<>;
+            for (auto&& hit : hits) {
+                if (hit.type() == 0) continue;
+                sum_bta += hit.cnt() * hit.search_closest_beta(beta);
+                sum_cnt += hit.cnt();
+            }
+            if (Numc::EqualToZero(sum_cnt)) break;
+            double new_beta = (sum_bta / sum_cnt);
+            is_ok = (iter >= LMTL_ITER && Numc::Compare(std::fabs(new_beta - beta), CONVG_TOLERANCE) <= 0);
+            if (!is_ok) beta = new_beta;
+            iter++;
+        }
+        if (!is_ok) beta = Numc::ZERO<>;
+    }
+
+    // refit
+    bool succ = false;
+    double nchi = Numc::ZERO<>;
+    for (int iter = 0; iter <= LMTMAX_ITER && (beta > 0.0); ++iter) {
+        double count = Numc::ZERO<>;
+        double chisq = Numc::ZERO<>;
+        double grdB  = Numc::ZERO<>;
+        double cvBB  = Numc::ZERO<>;
+
+        for (auto&& hit : hits) {
+            double dlt = hit.search_closest_beta(beta) - beta;
+            double nrm = dlt / width_bta_;
+            
+            double smooth = SMOOTH_BOUND[1] - static_cast<double>(iter) * SMOOTH_RATE;
+            if (smooth < SMOOTH_BOUND[0]) smooth = SMOOTH_BOUND[0];
+            
+            double smnrm = std::fabs(nrm) - smooth;
+            double smprb = (Numc::Compare(smnrm) <= 0) ? Numc::ONE<> : std::exp(-Numc::ONE_TO_TWO * smnrm * smnrm);
+            
+            std::array<long double, 3>&& minib = pdf_bta_.minimizer(dlt);
+            
+            count += hit.cnt();
+            chisq += hit.cnt() * (minib[0] * minib[0]);
+            grdB  += hit.cnt() * smprb * (Numc::NEG<> * minib[2] * minib[1]);
+            cvBB  += hit.cnt() * smprb * (minib[2] * minib[2]);
+        }
+        if (!Numc::Valid(count) || Numc::Compare(count, Numc::ONE<>) <= 0) break;
+
+        double new_nchi = chisq / (count - Numc::ONE<>);
+        if (!Numc::Valid(new_nchi)) break;
+
+        double resB = grdB / cvBB;
+        double new_beta = beta - resB;
+        if (!Numc::Valid(resB) || Numc::Compare(new_beta) <= 0) break;
+       
+        if (iter >= LMTL_ITER) {
+            succ = (Numc::Compare(std::fabs(new_beta - beta), CONVG_TOLERANCE) <= 0) && 
+                   (Numc::Compare(std::fabs(new_nchi - nchi), CONVG_TOLERANCE) <= 0);
+            if (succ) break;
+        }
+
+        beta = new_beta;
+        nchi = new_nchi;
+    }
+    double cbta = bta_crr_ * beta;
+    if (!succ) return CherenkovTumor();
+    
+    // check result
+    int count_within_three_sigma = 0;
+    std::vector<CherenkovHit> reduce_hits;
+    for (auto&& hit : hits) {
+        double absnrm = std::fabs(hit.search_closest_beta(beta) - beta) / width_bta_;
+        if (Numc::Compare(absnrm, Numc::FIVE<>) > 0) continue;
+        reduce_hits.push_back(hit);
+
+        if (Numc::Compare(absnrm, Numc::THREE<>) < 0) count_within_three_sigma++;
+    } 
+    if (reduce_hits.size() < LMTMIN_TUMOR_HITS) return CherenkovTumor();
+    std::sort(reduce_hits.begin(), reduce_hits.end(), CherenkovHit_sort());
+    
+    if (count_within_three_sigma  < LMTMIN_TUMOR_HITS) return CherenkovTumor();
+    
+    std::map<int, int> pmt_maps;
+    for (auto&& hit : reduce_hits) {
+        if (pmt_maps.count(hit.pmtid()) == 0) pmt_maps[hit.pmtid()] = 1;
+        else pmt_maps[hit.pmtid()]++;
+    }
+    short nhit = reduce_hits.size();
+    short npmt = pmt_maps.size();
+    if (nhit < LMTMIN_TUMOR_HITS) return CherenkovTumor();
+    if (npmt < LMTMIN_TUMOR_PMTS) return CherenkovTumor();
+        
+    double npe = Numc::ZERO<>;
+    for (auto&& hit : reduce_hits) npe += hit.npe();
+
+    for (auto&& hit : reduce_hits) hit.set_cluster(CherenkovHit::Cluster::tumor);
+
+    return CherenkovTumor(reduce_hits, nhit, npmt, beta, cbta, npe);
+}
+        
+
+std::vector<CherenkovGhost> CherenkovFit::build_ghost(const std::vector<CherenkovHit>& args_hits, bool weighted) {
+    std::vector<CherenkovGhost> gsts;
+    if (args_hits.size() == 0) return gsts;
+
+    std::vector<CherenkovHit> hits = args_hits;
+    for (auto&& hit : hits) hit.set_lmt_bta(lmtl_bta_, lmtu_bta_ + width_bta_ * Numc::SIX<>);
+    
+    for (auto&& hit : hits) { hit.set_wgt(Numc::ONE<>); hit.set_cnt(Numc::ONE<>); }
+    if (weighted) {
+        double sumnpe = Numc::ZERO<>;
+        for (auto&& hit : hits) sumnpe += hit.npe();
+        for (auto&& hit : hits) hit.set_wgt(static_cast<double>(hits.size()) * (hit.npe() / sumnpe));
+    }
+    
+    // ghost (cloud)
+    auto&& gtable = make_group_table(hits, false, Numc::ONE_TO_THREE * WIDTH_PMT, true, (Numc::ONE<> + Numc::ONE_TO_TWO) * width_bta_);
+    for (auto&& table : gtable) {
+        if (table.size() < LMTMIN_GHOST_HITS) continue;
+        
+        short maxnhits = 0;
+        auto&& gstones = make_group_table(table, true, Numc::ONE_TO_THREE * WIDTH_PMT, false, (Numc::ONE<> + Numc::ONE_TO_THREE) * width_bta_);
+        for (auto&& gstone : gstones) maxnhits = std::max(maxnhits, static_cast<short>(gstone.size()));
+        if (gstones.size() < LMTMIN_GHOST_PMTS && maxnhits <= (LMTMIN_GHOST_HITS + 1)) continue;
+
+        CherenkovGhost&& gst = fit_ghost(table);
+        if (!gst.status()) continue;
+        
+        gsts.push_back(gst);
+    }
+    if (gsts.size() > 1) std::sort(gsts.begin(), gsts.end(), CherenkovGhost_sort());
+
+    return gsts;
+}
+
+
+CherenkovGhost CherenkovFit::fit_ghost(std::vector<CherenkovHit>& hits) {
+    if (hits.size() == 0) return CherenkovGhost();
+
+    double weight = Numc::ZERO<>;
+    for (auto&& hit : hits) weight += hit.wgt();
+    if (Numc::EqualToZero(weight)) return CherenkovGhost();
+    for (auto&& hit : hits) hit.set_cnt(static_cast<double>(hits.size()) * (hit.wgt() / weight));
+
+    double init_beta = Numc::ZERO<>;
+    double count_beta = Numc::ZERO<>;
+    for (auto&& hit : hits) {
+        if (hit.type() == 0) continue;
+        double multi = hit.cnt() / static_cast<double>(hit.hasDb() + hit.hasRbA() + hit.hasRbB());
+        if (hit.hasDb() ) { init_beta += multi * hit.dbta() ; count_beta += multi; }
+        if (hit.hasRbA()) { init_beta += multi * hit.rbtaA(); count_beta += multi; }
+        if (hit.hasRbB()) { init_beta += multi * hit.rbtaB(); count_beta += multi; }
+    }
+    init_beta = (!Numc::EqualToZero(count_beta) ? (init_beta / count_beta) : Numc::ZERO<>);
+
+    double beta = init_beta;
+    if (Numc::Compare(beta) > 0) {
+        short iter = 1;
+        bool is_ok = false;
+        while (!is_ok && iter <= LMTMAX_ITER) {
+            double sum_bta = Numc::ZERO<>;
+            double sum_cnt = Numc::ZERO<>;
+            for (auto&& hit : hits) {
+                if (hit.type() == 0) continue;
+                sum_bta += hit.cnt() * hit.search_closest_beta(beta);
+                sum_cnt += hit.cnt();
+            }
+            if (Numc::EqualToZero(sum_cnt)) break;
+            double new_beta = (sum_bta / sum_cnt);
+            is_ok = (iter >= LMTL_ITER && Numc::Compare(std::fabs(new_beta - beta), CONVG_TOLERANCE) <= 0);
+            if (!is_ok) beta = new_beta;
+            iter++;
+        }
+        if (!is_ok) beta = Numc::ZERO<>;
+    }
+    if (Numc::Compare(beta) <= 0) return CherenkovGhost();
+    double cbta = bta_crr_ * beta;
+    
+    std::map<int, int> pmt_maps;
+    for (auto&& hit : hits) {
+        if (pmt_maps.count(hit.pmtid()) == 0) pmt_maps[hit.pmtid()] = 1;
+        else pmt_maps[hit.pmtid()]++;
+    }
+    short nhit = hits.size();
+    short npmt = pmt_maps.size();
+    if (nhit < LMTMIN_GHOST_HITS) return CherenkovGhost();
+    
+    double npe = Numc::ZERO<>;
+    for (auto&& hit : hits) npe += hit.npe();
+
+    for (auto&& hit : hits) hit.set_cluster(CherenkovHit::Cluster::ghost);
+
+    return CherenkovGhost(hits, nhit, npmt, beta, cbta, npe);
 }
 
 
