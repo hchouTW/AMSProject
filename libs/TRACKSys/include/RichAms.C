@@ -3,6 +3,9 @@
 #define __TRACKLibs_RichAms_C__
 
 
+#include "Sys.h"
+#include "Math.h"
+#include "CherenkovMeas.h"
 #include "RichAms.h"
 
 
@@ -83,9 +86,9 @@ RichAms::RichAms(AMSEventR* event, TrTrackR* trtk) : RichAms() {
 
     event_ = event;
     trtk_  = cand_trtk;
-
-    status_ = build(track);
     
+    status_ = build(track);
+
     timer_.stop();
     if (!status_) clear();
 }
@@ -130,13 +133,15 @@ CherenkovFit RichAms::fit() const {
     }
     return CherenkovFit();
 }
+        
 
+std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* cloud) const {
+    std::array<double, 2> RAD_HEIGHT { 2.5, 0.5 }; // AGL, NAF
+    std::array<double, 4> rlt_trace({ 0.0, 0.0, 1.0, 0.0 });
+    bool has_cloud = (cloud != nullptr && cloud->status());
+    if (!status_ || kind_ == KIND_EMPTY || (has_cloud ? cloud->cbta() : cbta) <= (Numc::ONE<> / index_)) return rlt_trace;
 
-std::array<double, 3> RichAms::cal_trace(double cbta) const {
-    std::array<double, 3> rlt_trace({0., 0., 0.});
-    if (!status_ || kind_ == KIND_EMPTY || cbta <= (Numc::ONE<> / index_)) return rlt_trace;
-
-    double cosv = Numc::ONE<> / (index_ * cbta);
+    double cosv = Numc::ONE<> / (index_ * (has_cloud ? cloud->cbta() : cbta));
     double sinv = std::sqrt((Numc::ONE<> - cosv) * (Numc::ONE<> + cosv));
     if (!Numc::Valid(cosv) || !Numc::Valid(sinv)) return rlt_trace;
     int kind = (kind_ == KIND_AGL) ? 0 : 1;
@@ -146,25 +151,37 @@ std::array<double, 3> RichAms::cal_trace(double cbta) const {
     SVecD<3> radp(radp_[0], radp_[1], radp_[2]);
     SVecD<3> radd(radd_[0], radd_[1], radd_[2]);
     OrthCoord orth(radd);
+    
+    double topx = radp[0] + (Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * (radd[0] / radd[2]);
+    double topy = radp[1] + (Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * (radd[1] / radd[2]);
+    double topz = radp[2] + (Numc::ONE_TO_TWO * RAD_HEIGHT[kind]);
 
-    int count = 0;
-    int count_dir = 0;
-    int count_rfl = 0;
-    const int nphi = 780;
-    std::vector<std::array<double, 2>> simhits(nphi, std::array<double, 2>({0., 0.}));
-    for (int it = 0; it < nphi; ++it) {
-        double phi = Numc::TWO_PI * static_cast<double>(it) / static_cast<double>(nphi);
+    std::array<std::array<short,  TRACE_NSET>, TRACE_NPHI> border;  // 0 no,  1 pass
+    std::array<std::array<short,  TRACE_NSET>, TRACE_NPHI> simphs;  // 0 no,  1 dir,  2 rfl
+    std::array<std::array<double, TRACE_NSET>, TRACE_NPHI> simphsx;
+    std::array<std::array<double, TRACE_NSET>, TRACE_NPHI> simphsy;
+    for(auto&& phs : border) phs.fill(0);
+    for(auto&& phs : simphs) phs.fill(0);
+    for(auto&& phsx : simphsx) phsx.fill(0.0);
+    for(auto&& phsy : simphsy) phsy.fill(0.0);
+
+    for (int it = 0; it < TRACE_NPHI; ++it) {
+    for (int is = 0; is < TRACE_NSET; ++is) {
+        double locwgt = (static_cast<double>(is) + Numc::ONE_TO_TWO) / static_cast<double>(TRACE_NSET);
+        
+        double phi = Numc::TWO_PI * static_cast<double>(it) / static_cast<double>(TRACE_NPHI);
         SVecD<3>&& phivec = orth.tau() * std::cos(phi) + orth.rho() * std::sin(phi);
         SVecD<3>&& srcvec = radd * cosv + phivec * sinv;
         if (srcvec[2] >= lmtrfr) continue;
 
-        double planex = radp[0] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * srcvec[0] / srcvec[2];
-        double planey = radp[1] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]) * srcvec[1] / srcvec[2];
-        double planez = radp[2] + (-Numc::ONE_TO_TWO * RAD_HEIGHT[kind]);
+        double planex = topx + (-RAD_HEIGHT[kind]) * (locwgt * (radd[0] / radd[2]) + (Numc::ONE<> - locwgt) * (srcvec[0] / srcvec[2]));
+        double planey = topy + (-RAD_HEIGHT[kind]) * (locwgt * (radd[1] / radd[2]) + (Numc::ONE<> - locwgt) * (srcvec[1] / srcvec[2]));
+        double planez = topz + (-RAD_HEIGHT[kind]);
         if (std::hypot(planex, planey) > MIRROR_TOP_RADIUS) continue;
         
         short tile = RichRingR::getTileIndex(planex, planey);
         if (tile < 0 || tile != tile_) continue;
+        border[it][is] = 1; 
 
         double cosvac = Numc::NEG<> * std::sqrt(Numc::ONE<> - (index_ * index_) * (Numc::ONE<> - srcvec[2]) * (Numc::ONE<> + srcvec[2]));
         double sinvac = std::sqrt((Numc::ONE<> - cosvac) * (Numc::ONE<> + cosvac));
@@ -178,28 +195,28 @@ std::array<double, 3> RichAms::cal_trace(double cbta) const {
         double dheight = (PMT_CZ - vacp[2]);
         double pmtx = vacp[0] + dheight * (vacd[0] / vacd[2]);
         double pmty = vacp[1] + dheight * (vacd[1] / vacd[2]);
-        if (RichOffline::RichPMTsManager::FindChannel(pmtx, pmty) < 0) continue;
         if (std::fabs(pmtx) < PMT_HOLE[0] && std::fabs(pmty) < PMT_HOLE[1]) continue;
-        if (std::hypot(pmtx, pmty) < MIRROR_BTM_RADIUS) {
-            simhits.at(count)[0] = pmtx;
-            simhits.at(count)[1] = pmty;
-            count_dir++;
-            count++; 
+        if (std::hypot(pmtx, pmty) < MIRROR_BTM_RADIUS) { 
+            if (RichOffline::RichPMTsManager::FindChannel(pmtx, pmty) < 0) continue;
+            simphs[it][is]  = 1; 
+            simphsx[it][is] = pmtx; 
+            simphsy[it][is] = pmty; 
             continue; 
         }
 
         double vactx = (vacd[0] / vacd[2]);
         double vacty = (vacd[1] / vacd[2]);
-        double mirtr = ((MIRROR_BTM_RADIUS - MIRROR_TOP_RADIUS) / dheight);
-        double poly0 = (vacp[0] * vacp[0] + vacp[1] * vacp[1] - MIRROR_TOP_RADIUS * MIRROR_TOP_RADIUS);
-        double poly1 = Numc::TWO<> * (vacp[0] * vactx + vacp[1] * vacty - MIRROR_TOP_RADIUS * mirtr);
-        double poly2 = (vactx * vactx + vacty * vacty - mirtr * mirtr);
+        double mirtr = ((MIRROR_TOP_RADIUS - MIRROR_BTM_RADIUS) / MIRROR_HEIGHT);
+        double poly0 = (mirtr * mirtr - (vactx * vactx + vacty * vacty));
+        double poly1 = Numc::TWO<> * (MIRROR_TOP_RADIUS * mirtr - (vacp[0] * vactx + vacp[1] * vacty));
+        double poly2 = (MIRROR_TOP_RADIUS * MIRROR_TOP_RADIUS - (vacp[0] * vacp[0] + vacp[1] * vacp[1]));
 
-        double det  = std::sqrt(poly1 * poly1 - Numc::FOUR<> * poly2 * poly0);
-        double sol1 = Numc::ONE_TO_TWO * (-poly1 + det) / poly2;
-        double sol2 = Numc::ONE_TO_TWO * (-poly1 - det) / poly2;
+        double det  = std::sqrt(poly1 * poly1 - Numc::FOUR<> * poly0 * poly2);
+        double sol1 = Numc::ONE_TO_TWO * (-poly1 + det) / poly0;
+        double sol2 = Numc::ONE_TO_TWO * (-poly1 - det) / poly0;
         bool is_ok1 = (Numc::Valid(sol1) && sol1 < 0.0 && sol1 > dheight);
         bool is_ok2 = (Numc::Valid(sol2) && sol2 < 0.0 && sol2 > dheight);
+
         if (!is_ok1 && !is_ok2) continue;
 
         double sol = 0;
@@ -209,37 +226,139 @@ std::array<double, 3> RichAms::cal_trace(double cbta) const {
         vacp[1] = vacp[1] + sol * vacty;
         vacp[2] = vacp[2] + sol;
         
-        double mirr = std::hypot(vacp[0], vacp[1]);
-        double cosr = Numc::NEG<> * std::sin(std::atan(std::fabs(mirtr)));
-        double sinr = std::sqrt((Numc::ONE<> - cosr) * (Numc::ONE<> + cosr));
-        if (!Numc::Valid(cosr) || !Numc::Valid(sinr)) continue;
-        SVecD<3> mirn(-vacp[0] * sinr / mirr, -vacp[1] * sinr / mirr, cosr);
+        double cosmir = Numc::NEG<> * std::sqrt((mirtr * mirtr) / (Numc::ONE<> + mirtr * mirtr));
+        double sinmir = std::sqrt(Numc::ONE<> - cosmir * cosmir);
+        SVecD<2>&& mirr = LA::Unit(SVecD<2>(-vacp[0], -vacp[1])) * sinmir;
+        SVecD<3> mird(mirr[0], mirr[1], cosmir);
 
-        double cosrfl = std::fabs(LA::Dot(vacd, mirn));
+        double cosrfl = std::fabs(LA::Dot(vacd, mird));
         if (!Numc::Valid(cosrfl)) continue;
         
-        vacd = std::move(LA::Unit(vacd + Numc::TWO<> * cosrfl * mirn));
+        vacd = std::move(LA::Unit(vacd + Numc::TWO<> * cosrfl * mird));
         if (vacd[2] >= Numc::ZERO<>) continue;
 
         dheight = (PMT_CZ - vacp[2]);
         pmtx = vacp[0] + dheight * (vacd[0] / vacd[2]);
         pmty = vacp[1] + dheight * (vacd[1] / vacd[2]);
-        if (RichOffline::RichPMTsManager::FindChannel(pmtx, pmty) < 0) continue;
-        if (std::fabs(pmtx) < PMT_HOLE[0] && std::fabs(pmty) < PMT_HOLE[1]) continue;
-        if (std::hypot(pmtx, pmty) > MIRROR_BTM_RADIUS) continue;
- 
-        simhits.at(count)[0] = pmtx;
-        simhits.at(count)[1] = pmty;
-        count_rfl++;
-        count++;
-    }
-    simhits.resize(count);
-    double trace     = static_cast<double>(count    ) / static_cast<double>(nphi);
-    double trace_dir = static_cast<double>(count_dir) / static_cast<double>(nphi);
-    double trace_rfl = static_cast<double>(count_rfl) / static_cast<double>(nphi);
-    if (!Numc::Valid(trace) || !Numc::Valid(trace_dir) || !Numc::Valid(trace_rfl) || simhits.size() == 0) return rlt_trace;
 
-    rlt_trace = std::move(std::array<double, 3>({ trace, trace_dir, trace_rfl }));
+        if (std::fabs(pmtx) < PMT_HOLE[0] && std::fabs(pmty) < PMT_HOLE[1]) continue;
+        if (std::hypot(pmtx, pmty) < MIRROR_BTM_RADIUS) {
+            if (RichOffline::RichPMTsManager::FindChannel(pmtx, pmty) < 0) continue;
+            simphs[it][is]  = 2;
+            simphsx[it][is] = pmtx;
+            simphsy[it][is] = pmty;
+        }
+    }}
+    
+    short count_bd = 0;
+    for(auto&& phs : border) {
+    for (auto&& ph : phs) {
+        count_bd += (ph != 0);
+    }}
+    double trace_bd = static_cast<double>(count_bd) / static_cast<double>(TRACE_NPHI * TRACE_NSET);
+    
+    short count = 0;
+    for(auto&& phs : simphs) {
+    for (auto&& ph : phs) {
+        count += (ph != 0);
+    }}
+    double trace = static_cast<double>(count) / static_cast<double>(TRACE_NPHI * TRACE_NSET);
+    
+    if (!Numc::Valid(trace_bd) || !Numc::Valid(trace)) return rlt_trace;
+
+    if (!has_cloud) {
+        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, 1.0, 0.0 }));
+        return rlt_trace;
+    }
+
+    const double thres = 3.4; // pmt width
+    const std::vector<CherenkovHit>& hits = cloud->hits();
+    std::vector<short>  hphi(hits.size(), -1);
+    std::vector<double> hdxy(hits.size(), -1.0);
+    for (int is = 0; is < TRACE_NSET; ++is) {
+    for (int it = 0; it < TRACE_NPHI; ++it) {
+        if (simphs[it][is] == 0) continue;
+        for (int ih = 0; ih < hphi.size(); ++ih) {
+            const CherenkovHit& hit = hits.at(ih);
+            if (simphs[it][is] == 1 && (hit.mode() != 0)) continue;
+            if (simphs[it][is] == 2 && (hit.mode() != 1 && hit.mode() != 2)) continue;
+            
+            double dist = std::hypot(hit.cx() - simphsx[it][is], hit.cy() - simphsy[it][is]);
+            if (dist > thres || (hdxy.at(ih) >= 0.0 && hdxy.at(ih) < dist)) continue;
+            
+            hphi.at(ih) = it;
+            hdxy.at(ih) = dist;
+        }
+    }}
+
+    for (int ih = hphi.size() - 1; ih >= 0; --ih) {
+        if (hphi.at(ih) >= 0) continue;
+        hphi.erase(hphi.begin() + ih);
+    }
+    double accuracy = static_cast<double>(hphi.size()) / static_cast<double>(hits.size());
+
+    if (hphi.size() < 2) {
+        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 0.0 }));
+        return rlt_trace;
+    }
+
+    std::vector<double> hnpas(hphi.size(), 0.0);
+    for (int iphi = 0; iphi < TRACE_NPHI; ++iphi) {
+        std::vector<std::pair<short, int>> hpair(hphi.size(), std::pair<short, int>({ -1, -1 }));
+        for (int ih = 0; ih < hphi.size(); ++ih) {
+            short dphi = std::abs(hphi.at(ih) - iphi);
+            if (dphi > TRACE_NPHI / 2) dphi = (TRACE_NPHI - dphi);
+            hpair.at(ih).first  = dphi;
+            hpair.at(ih).second = ih;
+        }
+        std::sort(hpair.begin(), hpair.end());
+        for (int jt = 0; jt < hpair.size() - 1; ++jt) {
+            if (hpair.at(jt+1).first == hpair.at(jt).first) continue;
+            hpair.resize(jt + 1);
+            break;
+        }
+
+        double wgt = Numc::ONE<> / static_cast<double>(hpair.size());
+        for (auto&& ipair : hpair) {
+            for (int is = 0; is < TRACE_NSET; ++is) {
+                hnpas.at(ipair.second) += wgt * (simphs[iphi][is] != 0);
+            }
+        }
+    }
+    std::vector<double> hprb(hphi.size(), 0.0);
+    for (int ih = 0; ih < hphi.size(); ++ih) hprb.at(ih) = (hnpas.at(ih) / static_cast<double>(count));
+    double avgprb = Numc::ONE<> / static_cast<double>(hphi.size());
+    double nrmsgm = avgprb * (Numc::ONE<> - avgprb);
+    
+    double uniformity = Numc::ZERO<>;
+    for (int it = 0; it < hphi.size(); ++it) {
+        double res = (hprb.at(it) - avgprb) / nrmsgm;
+        uniformity += res * res;
+    }
+    if (!Numc::Valid(uniformity)) {
+        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 0.0 }));
+        return rlt_trace;
+    }
+
+    //TVectorD res(hphi.size());
+    //TMatrixDSym cov(hphi.size());
+    //for (int it = 0; it < hphi.size(); ++it) {
+    //    res(it) = hprb.at(it) - avgprb;
+    //    for (int jt = it; jt < hphi.size(); ++jt) {
+    //        if (it == jt) cov(it, jt) = avgprb * (Numc::ONE<> - avgprb);
+    //        else          cov(it, jt) = Numc::NEG<> * avgprb * avgprb;
+    //    }
+    //}
+    //
+    //double det = 0;
+    //cov.Invert(&det);
+    //double uniformity = cov.Similarity(res);
+    //if (!Numc::Valid(det) || !Numc::Valid(uniformity)) {
+    //    rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 0.0 }));
+    //    return rlt_trace;
+    //}
+
+    rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, uniformity }));
     return rlt_trace;
 }
         
@@ -280,8 +399,9 @@ bool RichAms::build(RichOffline::TrTrack track) {
     }
     tile_ = RichRingR::getTileIndex(radp_[0], radp_[1]);
     if (tile_ < 0) return false;
-
+        
     bool is_bad_tile = false;
+    std::array<short, 7>  BAD_TILE_INDEX { 3, 7, 12, 20, 87, 100, 108 };
     for (int idx = 0; idx < BAD_TILE_INDEX.size(); ++idx) {
         if (tile_ == BAD_TILE_INDEX[idx]) is_bad_tile = true;
     }

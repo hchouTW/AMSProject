@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  19Mar25
-PROJTITLE    =  NEW_TEST01
+PROJVERSION  =  19Mar25v2
+PROJTITLE    =  NEW_TEST03
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.iss.B1130.pass7.test
 EVENTTYPE    =  ISS

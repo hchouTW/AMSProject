@@ -80,6 +80,8 @@ CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std
         if (hit.cluster() == CherenkovHit::Cluster::tumor) { nhit_tumor_++; npe_tumor_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::ghost) { nhit_ghost_++; npe_ghost_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::other) { nhit_other_++; npe_other_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::other && hit.type() != 0) { nhit_other_inn_++; npe_other_inn_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::other && hit.type() == 0) { nhit_other_out_++; npe_other_out_ += hit.npe(); }
         nhit_total_++; npe_total_ += hit.npe();
     }
     
@@ -105,6 +107,8 @@ void CherenkovFit::clear() {
     nhit_tumor_ = 0;
     nhit_ghost_ = 0;
     nhit_other_ = 0;
+    nhit_other_inn_ = 0;
+    nhit_other_out_ = 0;
 
     npe_total_ = Numc::ZERO<>;
     npe_stone_ = Numc::ZERO<>;
@@ -112,6 +116,8 @@ void CherenkovFit::clear() {
     npe_tumor_ = Numc::ZERO<>;
     npe_ghost_ = Numc::ZERO<>;
     npe_other_ = Numc::ZERO<>;
+    npe_other_inn_ = Numc::ZERO<>;
+    npe_other_out_ = Numc::ZERO<>;
 
     pmtc_      = std::array<double, 2>({ 0.0, 0.0 });
     rfr_index_ = Numc::ONE<>;
@@ -401,9 +407,9 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         othhits.push_back(hit);
     }
     for (auto&& hit : othhits) {
-        hit.set_lmt_bta();
         hit.set_wgt(Numc::ONE<>);
         hit.set_cnt(Numc::ONE<>);
+        hit.set_lmt_bta(lmtl_bta_, lmtu_bta_);
         hit.set_cluster(CherenkovHit::Cluster::other);
         if (rltclds.size() == 0) continue;
         if (hit.type() == 0) continue;
@@ -533,9 +539,11 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         if (!Numc::Valid(ndof) || Numc::Compare(ndof) <= 0) continue;
         if (!Numc::Valid(nchi)) continue;
 
+        double dist = cal_dist_to_pmtc(cand_cstn[0], cand_cstn[1]);
+
         for (auto&& hit : cand_chit) hit.set_cluster(CherenkovHit::Cluster::stone);
 
-        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi));
+        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi, dist));
     }
     if (stns.size() > 1) std::sort(stns.begin(), stns.end(), CherenkovStone_sort());
 
@@ -729,7 +737,7 @@ std::vector<CherenkovCloud> CherenkovFit::build_cloud(const std::vector<Cherenko
     }
     if (clds.size() > 1) std::sort(clds.begin(), clds.end(), CherenkovCloud_sort());
 
-    // testcode (umbra)
+    // umbra (misjudge)
     for (auto&& cld : clds) {
         std::vector<CherenkovHit> ubr_hits;
         for (auto&& hit : cld.hits()) {
@@ -769,9 +777,9 @@ std::vector<CherenkovCloud> CherenkovFit::build_cloud(const std::vector<Cherenko
                 if (Numc::Compare(wgtgbl, (Numc::TWO<> / Numc::THREE<>)) <= 0) continue;
                 if (Numc::Compare(wgtloc, (Numc::TWO<> / Numc::THREE<>)) <= 0) continue;
                 
-                double dist = std::fabs(cld.cbta() - ubr.cbta()) / width_bta_;
-                if (dist < cld.misjudge()) continue;
-                cld.set_misjudge(dist);
+                double misjudge = std::fabs(cld.cbta() - ubr.cbta()) / width_bta_;
+                if (misjudge < cld.misjudge()) continue;
+                cld.set_misjudge(misjudge);
             }
         }
     }
@@ -1321,7 +1329,7 @@ std::vector<CherenkovGhost> CherenkovFit::build_ghost(const std::vector<Cherenko
         short maxnhits = 0;
         auto&& gstones = make_group_table(table, true, Numc::ONE_TO_THREE * WIDTH_PMT, false, (Numc::ONE<> + Numc::ONE_TO_THREE) * width_bta_);
         for (auto&& gstone : gstones) maxnhits = std::max(maxnhits, static_cast<short>(gstone.size()));
-        if (gstones.size() < LMTMIN_GHOST_PMTS && maxnhits <= (LMTMIN_GHOST_HITS + 1)) continue;
+        if (gstones.size() < LMTMIN_GHOST_PMTS && maxnhits <= LMTMIN_GHOST_HITS) continue;
 
         CherenkovGhost&& gst = fit_ghost(table);
         if (!gst.status()) continue;

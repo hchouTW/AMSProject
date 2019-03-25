@@ -497,9 +497,10 @@ class ChCloudInfo : public TObject {
             nhit_dir = 0;
             nhit_rfl = 0;
 
+            border   = 0;
             trace    = 0;
-            dtrace   = 0;
-            rtrace   = 0;
+            accuracy = 1;
+            uniform  = 0;
             
             beta     = 0;
             cbta     = 0;
@@ -519,9 +520,10 @@ class ChCloudInfo : public TObject {
         Short_t nhit_dir;
         Short_t nhit_rfl;
 
+        Float_t border;
         Float_t trace;
-        Float_t dtrace;
-        Float_t rtrace;
+        Float_t accuracy;
+        Float_t uniform;
         
         Float_t beta;
         Float_t cbta;
@@ -618,13 +620,17 @@ class ChFitInfo : public TObject {
             cloud.init();
             tumor.init();
             ghost.init();
-            
+        
+            hits.clear();
+
             nhit_ttl = 0;
             nhit_stn = 0;
             nhit_cld = 0;
             nhit_tmr = 0;
             nhit_gst = 0;
             nhit_oth = 0;
+            nhit_oth_inn = 0;
+            nhit_oth_out = 0;
         
             npe_ttl = 0;
             npe_stn = 0;
@@ -632,6 +638,8 @@ class ChFitInfo : public TObject {
             npe_tmr = 0;
             npe_gst = 0;
             npe_oth = 0;
+            npe_oth_inn = 0;
+            npe_oth_out = 0;
 
             bta_crr = 1;
 
@@ -663,12 +671,16 @@ class ChFitInfo : public TObject {
         ChTumorInfo tumor;
         ChGhostInfo ghost;
 
+        std::vector<ChHitInfo> hits;
+
         Short_t nhit_ttl;
         Short_t nhit_stn;
         Short_t nhit_cld;
         Short_t nhit_tmr;
         Short_t nhit_gst;
         Short_t nhit_oth;
+        Short_t nhit_oth_inn;
+        Short_t nhit_oth_out;
 
         Float_t npe_ttl;
         Float_t npe_stn;
@@ -676,6 +688,8 @@ class ChFitInfo : public TObject {
         Float_t npe_tmr;
         Float_t npe_gst;
         Float_t npe_oth;
+        Float_t npe_oth_inn;
+        Float_t npe_oth_out;
 
         Float_t bta_crr;
 

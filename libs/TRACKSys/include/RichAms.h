@@ -104,8 +104,8 @@ class RichAms {
         ~RichAms() {}
 
         CherenkovFit fit() const;
-        
-        std::array<double, 3> cal_trace(double cbta = 1.0) const;
+       
+        std::array<double, 4> cal_trace(double cbta = 1.0, const CherenkovCloud* cloud = nullptr) const;
 
         inline const bool& status() const { return status_; }
 
@@ -184,11 +184,17 @@ class RichAms {
         static constexpr double EXTERNAL_RAD_RADIUS = 58.0;
         static constexpr double MIRROR_TOP_RADIUS = 60.10;
         static constexpr double MIRROR_BTM_RADIUS = 67.00;
+        static constexpr double MIRROR_HEIGHT     = 46.32;
         static constexpr std::array<double, 2> PMT_HOLE { 31.9, 32.15 };
         
-        static constexpr std::array<double, 2> RAD_HEIGHT { 2.5, 0.5 }; // AGL, NAF
+        //static constexpr std::array<double, 2> RAD_HEIGHT { 2.5, 0.5 }; // AGL, NAF
         static constexpr std::array<double, 2> RAD_BOUNDARY { 19.0, 17.0 }; // AGL, NAF
-        static constexpr std::array<short, 7> BAD_TILE_INDEX { 3, 7, 12, 20, 87, 100, 108 };
+        //static constexpr std::array<short, 7>  BAD_TILE_INDEX { 3, 7, 12, 20, 87, 100, 108 };
+
+    // trace
+    private :
+        static constexpr short TRACE_NSET = 5;
+        static constexpr short TRACE_NPHI = 780;
 
     // interface of clustering, fitting
     private :
