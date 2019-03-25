@@ -3144,7 +3144,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         }
 
         // testcode
-        wpar[0] = 1.0; wpar[1] = 1.0 - wpar[0];
+        wpar[0] = 0.1; wpar[1] = 1.0 - wpar[0];
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logir);
