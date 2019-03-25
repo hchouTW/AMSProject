@@ -1,11 +1,13 @@
 -include $(AMSMKfile)
 
 CXX += -DGLOG_NO_ABBREVIATED_SEVERITIES
-LD += -DGLOG_NO_ABBREVIATED_SEVERITIES
+LDP += -DGLOG_NO_ABBREVIATED_SEVERITIES
+LDS += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
+LIBS += -lgflags -lglog -lceres
 
 Version = vdev
-Version = 19Mar26
+Version = 19Mar27
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :
@@ -35,7 +37,7 @@ $(TagetDir)/obj/testing.o : $(TagetDir)/src/testing.C
 -include $(TagetDir)/obj/testing.d
 
 $(TagetDir)/testing : $(TagetDir)/obj/testing.o
-	$(LD) -o $@ $+ $(LIBP)
+	$(LDP) -o $@ $+ $(LIBP)
 
 $(TagetDir)/src/dict.C : $(TagetDir)/src/ClassDef.h $(TagetDir)/src/LinkDef.h
 	rootcint -f $@ -c -p $(FLGS) $+
@@ -53,7 +55,7 @@ $(TagetDir)/obj/YiProdNtuple.o : $(TagetDir)/src/YiProdNtuple.C $(TagetDir)/src/
 -include $(TagetDir)/obj/YiProdNtuple.d
 
 $(TagetDir)/YiProdNtuple : $(TagetDir)/obj/YiProdNtuple.o
-	$(LD) -o $@ $+ $(LIBP) -L$(TagetDir)/lib -lClassDef
+	$(LDP) -o $@ $+ $(LIBP) -L$(TagetDir)/lib -lClassDef
 
 clean :
 	@rm -fv $(TagetDir)/env/*
