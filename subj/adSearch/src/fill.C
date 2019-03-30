@@ -2,9 +2,10 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-//#include "/ams_home/hchou/AMSCore/prod/18Dec23/src/ClassDef.h"
-#include "/ams_home/hchou/AMSCore/prod/19Jan05/src/ClassDef.h"
-//#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/18Jul04/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Mar27/src/ClassDef.h"
+
+#include "TMultiGraph.h"
+
 
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
@@ -25,8 +26,8 @@ int main(int argc, char * argv[]) {
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MagBox") );
     //TrackSys::Sys::ShowMsg( TrackSys::Sys::GetEnv("TRACKSys_MatBox") );
     
-    TrackSys::MagMgnt::Load();
-    TrackSys::MatMgnt::Load();
+    //TrackSys::MagMgnt::Load();
+    //TrackSys::MatMgnt::Load();
 
     MGConfig::JobOpt opt(argc, argv);
 
@@ -43,7 +44,7 @@ int main(int argc, char * argv[]) {
     TRD  * fTrd  = new TRD ;
     RICH * fRich = new RICH;
     ECAL * fEcal = new ECAL;
-    HYC  * fHyc  = new HYC ;
+    //HYC  * fHyc  = new HYC ;
 
     dst->SetBranchAddress("list", &fList);
     if (opt.mode() == MGConfig::JobOpt::MODE::MC)
@@ -57,58 +58,105 @@ int main(int argc, char * argv[]) {
     dst->SetBranchAddress("trd",  &fTrd);
     dst->SetBranchAddress("rich", &fRich);
     dst->SetBranchAddress("ecal", &fEcal);
-    dst->SetBranchAddress("hyc",  &fHyc);
+    //dst->SetBranchAddress("hyc",  &fHyc);
     
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     //---------------------------------------------------------------//
     TFile * ofle = new TFile(Form("%s/fill%04ld.root", opt.opath().c_str(), opt.gi()), "RECREATE");
-    
+    PdfEditor editor(WindowSize::kSliceLR, Form("events%04ld", opt.gi()), opt.opath().c_str());
+
     PartInfo info(PartType::Proton);
     //PartInfo info(PartType::Helium4);
     
     PartInfo::SetDefault(info.type());
     PhyArg::SetOpt(true, true);
     
-    Int_t    nmom     = 50;
-    Double_t mombd[2] = { 1., 1000. };
-    if (info.type() == PartType::Proton)   { mombd[0] = 0.55; mombd[1] = 50.0; }
-    if (info.type() == PartType::Helium4)  { mombd[0] = 2.20; mombd[1] = 100.0; }
-    Axis AXmom("Momentum [GeV]", nmom, mombd[0], mombd[1], AxisScale::kLog);
-    Axis AXrig("Rigidity [GV]", AXmom.nbin(), mombd[0]/std::fabs(info.chrg()), mombd[1]/std::fabs(info.chrg()), AxisScale::kLog);
+    std::vector<Double_t> vmom;
+    if (info.type() == PartType::Proton) {
+        vmom = std::vector<Double_t>( {
+               0.50,
+               1.00,    1.33,   1.71,   2.15,   2.67, 
+               3.29,    4.02,   4.88,   5.90,   7.09,
+               8.48,   10.10,  12.00,  14.10,  16.60, 
+               19.50,  22.80,  26.70,  31.10,  36.10, 
+               41.90,  48.50,  56.10,  64.80,  74.90, 
+               93.00, 125.00, 175.00, 259.00, 
+               800.00 } );
+    }
+    if (info.type() == PartType::Helium4) {
+        vmom = std::vector<Double_t>( {
+               0.50,
+               1.00,    1.33,   1.71,   2.15,   2.67, 
+               3.29,    4.02,   4.88,   5.90,   7.09,
+               8.48,   10.10,  12.00,  14.10,  16.60, 
+               19.50,  22.80,  26.70,  31.10,  36.10, 
+               41.90,  48.50,  56.10,  64.80,  74.90, 
+               93.00, 125.00, 175.00, 259.00, 
+               800.00 } );
+    }
     
-    // Num (InnTr)
-    Hist* hMCnum = Hist::New("hMCnum", HistAxis(AXrig, "Events/Bin"));
-    Hist* hCKnum = Hist::New("hCKnum", HistAxis(AXrig, "Events/Bin"));
-    Hist* hHCnum = Hist::New("hHCnum", HistAxis(AXrig, "Events/Bin"));
+    std::vector<Double_t> vrig;
+    for (auto&& val : vmom) vrig.push_back(std::fabs(val / info.chrg()));
+
+    Axis AXmom("Momentum [GeV]", vmom);
+    Axis AXrig("Rigidity [GV]", vrig);
+    Axis AXirig("1/Rigidity [1/GV]", AXrig, 1, true);
+    Axis AXbtas("Beta", 20, 0.95, 0.995);
    
-    // RigDef
-    Axis AXRDrso("(1/R_L9 - 1/R_L1) [1/GV]", 1600, -1.0, 1.0);
-    Hist* hCKRDrso = Hist::New("hCKRDrso", HistAxis(AXrig, AXRDrso));
-    Hist* hHCRDrso = Hist::New("hHCRDrso", HistAxis(AXrig, AXRDrso));
+    Axis AXbta("Beta", 400, 0.95, 1.02);
+    Hist* hOFFbeta = Hist::New("hOFFbeta", HistAxis(AXrig, AXbta, "Events/Bin"));
+    Hist* hNEWbeta = Hist::New("hNEWbeta", HistAxis(AXrig, AXbta, "Events/Bin"));
     
-    // Time
-    Axis AXtme("Time [ms]", 1600, 0., 1000.);
-    Hist* hJFevt = Hist::New("hJFevt", HistAxis(AXrig));
-    Hist* hHCevt = Hist::New("hHCevt", HistAxis(AXrig));
-    Hist* hJFtme = Hist::New("hJFtme", HistAxis(AXrig, "Tme"));
-    Hist* hHCtme = Hist::New("hHCtme", HistAxis(AXrig, "Tme"));
+    Hist* hOFFbetaH = Hist::New("hOFFbetaH", HistAxis(AXbta, "Events/Bin"));
+    Hist* hNEWbetaH = Hist::New("hNEWbetaH", HistAxis(AXbta, "Events/Bin"));
     
-    // Fit M Res
-    Axis AXM("Mass", 300, 0.03, 3.0);
-    Hist* hJFMP = Hist::New("hJFMP", HistAxis(AXrig, AXM));
-    Hist* hJFMN = Hist::New("hJFMN", HistAxis(AXrig, AXM));
-    Hist* hHCMP = Hist::New("hHCMP", HistAxis(AXrig, AXM));
-    Hist* hHCMN = Hist::New("hHCMN", HistAxis(AXrig, AXM));
+    Hist* hOFFbetaCut = Hist::New("hOFFbetaCut", HistAxis(AXrig, AXbta, "Events/Bin"));
+    Hist* hNEWbetaCut = Hist::New("hNEWbetaCut", HistAxis(AXrig, AXbta, "Events/Bin"));
+    Hist* hNEWbetaCut2 = Hist::New("hNEWbetaCut2", HistAxis(AXrig, AXbta, "Events/Bin"));
     
-    Hist* hHCMP2 = Hist::New("hHCMP2", HistAxis(AXrig, AXM));
-    Hist* hHCMN2 = Hist::New("hHCMN2", HistAxis(AXrig, AXM));
+    Hist* hOFFbetaHCut = Hist::New("hOFFbetaHCut", HistAxis(AXbta, "Events/Bin"));
+    Hist* hNEWbetaHCut = Hist::New("hNEWbetaHCut", HistAxis(AXbta, "Events/Bin"));
+    Hist* hNEWbetaHCut2 = Hist::New("hNEWbetaHCut2", HistAxis(AXbta, "Events/Bin"));
+   
+    Axis AXnh("Nhit", 60, -30, 30);
+    Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
+    Hist* hNEWbetaHCutCldNH = Hist::New("hNEWbetaHCutCldNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     
-    //Axis AXMqlt("Quality [1]", 800, -2.0, 4.0);
-    //Hist* hHCMqltx = Hist::New("hHCMqltx", HistAxis(AXmom, AXMqlt));
-    //Hist* hHCMqlty = Hist::New("hHCMqlty", HistAxis(AXmom, AXMqlt));
-    //Hist* hHCMqltb = Hist::New("hHCMqltb", HistAxis(AXmom, AXMqlt));
+    Axis AXnp("Npe", 200, -50, 50);
+    Hist* hNEWbetaHCutOthNP = Hist::New("hNEWbetaHCutOthNP", HistAxis(AXbta, AXnp, "Events/Bin"));
+    //Hist* hNEWbetaHCutCldNP = Hist::New("hNEWbetaHCutCldNP", HistAxis(AXbta, AXnp, "Events/Bin"));
+
+    Axis AXc("Coo [cm]", 30, 0, 102);
+    Hist* hNEWbetaHCutGxy = Hist::New("hNEWbetaHCutGxy", HistAxis(AXc, "Events/Bin"));
+    Hist* hNEWbetaHCutBxy = Hist::New("hNEWbetaHCutBxy", HistAxis(AXc, "Events/Bin"));
+   
+    Hist* hNEWbetaHCutGp = Hist::New("hNEWbetaHCutGp", HistAxis(AXc, "Events/Bin"));
+    Hist* hNEWbetaHCutBp = Hist::New("hNEWbetaHCutBp", HistAxis(AXc, "Events/Bin"));
+
+    Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
+    Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
+    Hist* hNEWmass = Hist::New("hNEWmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
+
+    Hist* hOFFmassCut = Hist::New("hOFFmassCut", HistAxis(AXbtas, AXmass, "Events/Bin"));
+    Hist* hNEWmassCut = Hist::New("hNEWmassCut", HistAxis(AXbtas, AXmass, "Events/Bin"));
+    Hist* hNEWmassCut2 = Hist::New("hNEWmassCut2", HistAxis(AXbtas, AXmass, "Events/Bin"));
+
     
+
+
+    TGraph grmir;
+    for (int it = 0; it <= 780; ++it) {
+        double tha = 2.0 * TMath::Pi() * (it / 780.0);        
+        grmir.SetPoint(it, 67.00 * std::cos(tha), 67.00 * std::sin(tha));
+    }
+    grmir.SetLineColor(kBlack);
+    TGraph grhole;
+    for (int it = -10; it <= 10; ++it) grhole.SetPoint(grhole.GetN(), 31.9*0.1*it, -32.15);
+    for (int it = -10; it <= 10; ++it) grhole.SetPoint(grhole.GetN(), 31.9, 32.15*0.1*it);
+    for (int it = -10; it <= 10; ++it) grhole.SetPoint(grhole.GetN(), -31.9*0.1*it, 32.15);
+    for (int it = -10; it <= 10; ++it) grhole.SetPoint(grhole.GetN(), -31.9, -32.15*0.1*it);
+
     MGClock::HrsStopwatch hrssw; hrssw.start();
     Long64_t printRate = static_cast<Long64_t>(0.1 * dst->GetEntries());
     std::cout << Form("\n==== Totally Entries %lld ====\n", dst->GetEntries());
@@ -128,12 +176,11 @@ int main(int argc, char * argv[]) {
         // Geometry (TOF)
         if (fTof->numOfBetaH != 1) continue;
         if (!fTof->statusBetaH) continue;
-        if (fTof->betaHPatt != 15) continue;
        
         // Geometry (TRD)
-        //if (fTrd->numOfTrack != 1 && fTrd->numOfHTrack != 1) continue;
-        if (!fTrd->statusKCls[0]) continue;
-        if (fTrd->LLRnhit[0] < 8) continue;
+        if (!fTrd->LLRstatus[0]) continue;
+        if (fTrd->LLRnh[0] < 10) continue;
+        if (fTrd->ITnh[0]  < 6) continue;
         
         // Geometry (ACC)
         if (fAcc->clusters.size() != 0) continue;
@@ -145,78 +192,162 @@ int main(int argc, char * argv[]) {
         if (std::abs(info.chrg()) == 1) {
             if (fTof->Qall < 0.8 || fTof->Qall > 1.3) continue;
             if (fTrk->QIn < 0.8 || fTrk->QIn > 1.3) continue;
+            if (fTrk->QInMin < 0.7) continue;
+            
+            if (fTrk->QL2 > 0 && (fTrk->QL2 < 0.7 || fTrk->QL2 > 1.8)) continue;
+            if (fTrk->QL1 > 0 && (fTrk->QL1 < 0.7 || fTrk->QL1 > 1.8)) continue;
+            if (fTrk->QL9 > 0 && (fTrk->QL9 < 0.7 || fTrk->QL9 > 1.8)) continue;
         }
         if (std::abs(info.chrg()) == 2) {
             if (fTof->Qall < 1.7 || fTof->Qall > 2.4) continue;
             if (fTrk->QIn < 1.7 || fTrk->QIn > 2.4) continue;
+            if (fTrk->QInMin < 1.7) continue;
+            
+            if (fTrk->QL2 > 0 && (fTrk->QL2 < 1.7 || fTrk->QL2 > 2.8)) continue;
+            if (fTrk->QL1 > 0 && (fTrk->QL1 < 1.7 || fTrk->QL1 > 2.8)) continue;
+            if (fTrk->QL9 > 0 && (fTrk->QL9 < 1.7 || fTrk->QL9 > 2.8)) continue;
         }
 
         // TOF
         if (fTof->normChisqT > 10.) continue;
         if (fTof->normChisqC > 10.) continue;
-        
+        if (fTof->noiseExtCls != 0) continue;
         if (fTof->numOfInTimeCls > 4) continue;
-        if ((fTof->numOfExtCls[0]+fTof->numOfExtCls[1]) > 0 || 
-            (fTof->numOfExtCls[2]+fTof->numOfExtCls[3]) > 1) continue; 
-
+        
         // TRD
-        if (fTrd->LLRep[0] < 0.7) continue;
+        //if (fTrd.VTXstatus && fTrd.VTXncls >= 15 && fTrd.VTXnseg >= 2) continue;
+       
+        // ECAL
+        if (fEcal->shower.energyE > 0 && fEcal->shower.PisaBDT > -0.2) continue;
         
         // Track In
-        CKTrackInfo& ckTrIn = fTrk->ckTr.at(0);
-        HCTrInfo&    hcTrIn = fHyc->trM1.at(0);
-        
-        // Track L1
-        CKTrackInfo& ckTrL1 = fTrk->ckTr.at(1);
-        HCTrInfo&    hcTrL1 = fHyc->trM1.at(1);
-        
-        // Track L9
-        CKTrackInfo& ckTrL9 = fTrk->ckTr.at(2);
-        HCTrInfo&    hcTrL9 = fHyc->trM1.at(2);
-        
-        // Track Fs
-        CKTrackInfo& ckTrFs = fTrk->ckTr.at(3);
-        HCTrInfo&    hcTrFs = fHyc->trM1.at(3);
-        
-        if (opt.mode() == MGConfig::JobOpt::MODE::MC) hMCnum->fillH1D(fG4mc->primPart.mom/info.chrg(), wgt);
-        if (ckTrIn.status) hCKnum->fillH1D(ckTrIn.rig,    wgt);
-        if (hcTrIn.status) hHCnum->fillH1D(hcTrIn.rig[0], wgt);
-        
-        if (ckTrL1.status & ckTrL9.status && ckTrFs.status) {
-            double rigx = std::fabs(ckTrFs.rig);
-            double ckrd = (1.0/ckTrL9.rig - 1.0/ckTrL1.rig);
-            double sclx = std::sqrt(AXrig.center(AXrig.find(rigx), AxisScale::kLog));
-            hCKRDrso->fillH2D(ckTrFs.rig, sclx * ckrd, wgt);
-        }
-        
-        if (hcTrL1.status & hcTrL9.status && hcTrFs.status) {
-            double rigx = std::fabs(hcTrFs.rig[0]);
-            double hcrd = (1.0/hcTrL9.rig[0] - 1.0/hcTrL1.rig[0]);
-            double sclx = std::sqrt(AXrig.center(AXrig.find(rigx), AxisScale::kLog));
-            hHCRDrso->fillH2D(hcTrFs.rig[0], sclx * hcrd, wgt);
-        }
-    
-        bool jfStatus = hcTrIn.status && (fTof->JFbta > 0 && fTof->JFbta < 1.0);
-        bool hcStatus = hcTrIn.status && (fHyc->btaM1.status && fHyc->btaM1.bta[0] < 1.0);
+        CKTrackInfo& cktrIn = fTrk->cktr.at(0);
+        if (!cktrIn.status) continue;
+        if (cktrIn.rig < 0) continue;
+        if (cktrIn.nchi[0] > 8) continue;
+        if (cktrIn.nchi[1] > 8) continue;
 
-        double jfM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fTof->JFbta / fTof->JFbta - 1.0));
-        double hcM = std::sqrt((hcTrIn.rig[0] * hcTrIn.rig[0]) * (1.0 / fHyc->btaM1.bta[0] / fHyc->btaM1.bta[0] - 1.0));
+        ChFitInfo& chfit = fRich->chfit;
+        if (!chfit.status || chfit.kind != 1 || chfit.is_bad_tile || !chfit.is_good_geom) continue;
 
-        if (jfStatus) hJFevt->fillH1D(hcTrIn.rig[0], wgt);
-        if (hcStatus) hHCevt->fillH1D(hcTrIn.rig[0], wgt);
-        if (jfStatus) hJFtme->fillH1D(hcTrIn.rig[0], fTof->JF_cpuTime * wgt);
-        if (hcStatus) hHCtme->fillH1D(hcTrIn.rig[0], fHyc->btaM1.cpuTime * wgt);
-        
-        if (jfStatus && hcTrIn.rig[0] > 0) hJFMP->fillH2D(std::fabs(hcTrIn.rig[0]), jfM, wgt);
-        if (jfStatus && hcTrIn.rig[0] < 0) hJFMN->fillH2D(std::fabs(hcTrIn.rig[0]), jfM, wgt);
-        
-        if (hcStatus && hcTrIn.rig[0] > 0) hHCMP->fillH2D(std::fabs(hcTrIn.rig[0]), hcM, wgt);
-        if (hcStatus && hcTrIn.rig[0] < 0) hHCMN->fillH2D(std::fabs(hcTrIn.rig[0]), hcM, wgt);
-        
-        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] > 0) hHCMP2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass, wgt);
-        if (hcTrIn.status && fHyc->mutr.status && fHyc->mutr.rig[0] < 0) hHCMN2->fillH2D(std::fabs(hcTrIn.rig[0]), fHyc->mutr.mass, wgt);
+        if (fRich->status && fRich->kind == 1 && fRich->npmt >= 3) {
+            double mass = (fRich->beta < 1) ? std::sqrt((cktrIn.rig * cktrIn.rig) * (1.0 / fRich->beta / fRich->beta - 1.0)) : -1.0;
+            hOFFbeta->fillH2D(cktrIn.rig, fRich->beta, wgt);
+            if (cktrIn.rig > 20) hOFFbetaH->fillH1D(fRich->beta, wgt);
+            hOFFmass->fillH2D(fRich->beta, mass, wgt);
+            
+            bool cut = (fRich->numOfCls <= 3 && fRich->numOfCls >= 1 && fRich->prob > 0.01 && fRich->cstcq < 5 && fRich->eftOfColPE > 0.4);
+            if (cut) {
+                hOFFbetaCut->fillH2D(cktrIn.rig, fRich->beta, wgt);
+                if (cktrIn.rig > 20) hOFFbetaHCut->fillH1D(fRich->beta, wgt);
+                hOFFmassCut->fillH2D(fRich->beta, mass, wgt);
+            }
+        }
+
+        if (chfit.cloud.status) {
+            double mass = (chfit.cloud.cbta < 1) ? std::sqrt((cktrIn.rig * cktrIn.rig) * (1.0 / chfit.cloud.cbta / chfit.cloud.cbta - 1.0)) : -1.0;
+            hNEWbeta->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+            if (cktrIn.rig > 20) hNEWbetaH->fillH1D(chfit.cloud.cbta, wgt);
+            hNEWmass->fillH2D(chfit.cloud.cbta, mass, wgt);
+
+            bool cut_cloud = (chfit.ncld == 1 && chfit.cloud.status && chfit.cloud.nchi < 3.5 && chfit.cloud.misjudge < 3.5 && chfit.cloud.border > 0.35 && chfit.cloud.trace > 0.1 && chfit.cloud.accuracy > 0.99);
+            bool cut_stone = (chfit.nstn <= 1 && chfit.stone.nchi < 3.5 && chfit.stone.dist < 3.4);
+            bool cut = (cut_cloud && cut_stone && chfit.ntmr == 0 && chfit.ngst == 0);
+            if (cut) {
+                hNEWbetaCut->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+                if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(chfit.cloud.cbta, wgt);
+                hNEWmassCut->fillH2D(chfit.cloud.cbta, mass, wgt);
+                
+                if (chfit.nhit_oth - chfit.cloud.nhit <= 0) {
+                    hNEWbetaCut2->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+                    if (cktrIn.rig > 20) hNEWbetaHCut2->fillH1D(chfit.cloud.cbta, wgt);
+                    hNEWmassCut2->fillH2D(chfit.cloud.cbta, mass, wgt);
+                }
+                
+                if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
+                if (cktrIn.rig > 20) hNEWbetaHCutOthNP->fillH2D(chfit.cloud.cbta, chfit.npe_oth - chfit.cloud.npe, wgt);
+                if (cktrIn.rig > 20) hNEWbetaHCutCldNH->fillH2D(chfit.cloud.cbta, chfit.cloud.nhit_dir - chfit.cloud.nhit_rfl, wgt);
+                //if (cktrIn.rig > 20) hNEWbetaHCutCldNP->fillH2D(chfit.cloud.cbta, chfit.cloud.npe_dir - chfit.cloud.npe_rfl, wgt);
+            }
+
+            bool is_bad  = chfit.cloud.cbta < 0.975;
+            bool is_good = std::fabs(chfit.cloud.cbta-1.0) < 0.005;
+            if (cut && cktrIn.rig > 20 && (is_good || is_bad)) {
+                Hist* hNEWxy = (is_good ? hNEWbetaHCutGxy : hNEWbetaHCutBxy);
+                for (auto&& hit : chfit.hits) {
+                    if (hit.cls != 4) continue;
+                    hNEWxy->fillH1D(std::hypot(hit.cx, hit.cy), wgt);
+                }
+                Hist* hNEWp = (is_good ? hNEWbetaHCutGp : hNEWbetaHCutBp);
+                hNEWp->fillH1D(std::hypot(chfit.pmtp[0], chfit.pmtp[1]), wgt);
+            }
+
+            if (cut && cktrIn.rig > 20 && (is_bad || (is_good && TrackSys::Rndm::DecimalUniform() < 0.0002))) {
+                TGraph grstn;
+                grstn.SetMarkerColor(kBlue);
+                grstn.SetMarkerStyle(29);
+                grstn.SetMarkerSize(0.4);
+
+                TGraph grcldd;
+                TGraph grcldr;
+                grcldd.SetMarkerColor(kRed);
+                grcldr.SetMarkerColor(kRed);
+                grcldd.SetMarkerStyle(20);
+                grcldr.SetMarkerStyle(21);
+                grcldd.SetMarkerSize(0.8);
+                grcldr.SetMarkerSize(0.8);
+                
+                TGraph grinn;
+                TGraph grout;
+                grinn.SetMarkerColor(kGreen+1);
+                grout.SetMarkerColor(kGreen+1);
+                grinn.SetMarkerStyle(33);
+                grout.SetMarkerStyle(27);
+                grinn.SetMarkerSize(0.8);
+                grout.SetMarkerSize(0.8);
+                
+                TGraph grpart;
+                grpart.SetMarkerColor(kBlack);
+                grpart.SetMarkerStyle(30);
+                grpart.SetMarkerSize(1.0);
+
+                grpart.SetPoint(0, chfit.pmtp[0], chfit.pmtp[1]);
+                for (auto&& hit : chfit.hits) {
+                    if (hit.cls == 0) grstn.SetPoint(grstn.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 1 && hit.mode == 0) grcldd.SetPoint(grcldd.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 1 && hit.mode != 0) grcldr.SetPoint(grcldr.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 4 && hit.mode != -1) grinn.SetPoint(grinn.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 4 && hit.mode == -1) grout.SetPoint(grout.GetN(), hit.cx, hit.cy);
+                }
+
+                TMultiGraph mg("mg", "mg");
+                if (grpart.GetN() > 0) mg.Add(&grpart);
+                if (grstn.GetN() > 0) mg.Add(&grstn);
+                if (grcldd.GetN() > 0) mg.Add(&grcldd);
+                if (grcldr.GetN() > 0) mg.Add(&grcldr);
+                if (grinn.GetN() > 0) mg.Add(&grinn);
+                if (grout.GetN() > 0) mg.Add(&grout);
+
+                editor.create();
+                mg.Draw("ap");
+                mg.GetHistogram()->SetLineColor(0);
+                mg.GetHistogram()->GetXaxis()->SetLimits(-80., 80.);
+                mg.GetHistogram()->SetMinimum(-80.);
+                mg.GetHistogram()->SetMaximum(80.);
+                mg.GetHistogram()->GetXaxis()->SetTitle("X [cm]");
+                mg.GetHistogram()->GetYaxis()->SetTitle("Y [cm]");
+                mg.Draw("ap");
+                grmir.Draw("l");
+                grhole.Draw("l");
+                TitleDraw(Form("(%s) Beta %6.3f (Cloud) NHIT %2d NPMT %2d (Other) INN %2d OUT %2d", is_good ? "GOOD" : "BAD", chfit.cloud.cbta, chfit.cloud.nhit, chfit.cloud.npmt, chfit.nhit_oth_inn, chfit.nhit_oth_out));
+                editor.save();
+            }
+        }
     }
     
+
+    editor.close();
+
     ofle->Write();
     ofle->Close();
 
@@ -233,7 +364,7 @@ int main(int argc, char * argv[]) {
     if (fTrd ) { delete fTrd ; fTrd  = nullptr; }
     if (fRich) { delete fRich; fRich = nullptr; }
     if (fEcal) { delete fEcal; fEcal = nullptr; }
-    if (fHyc ) { delete fHyc;  fHyc  = nullptr; }
+    //if (fHyc ) { delete fHyc;  fHyc  = nullptr; }
 
     google::ShutdownGoogleLogging();
     return 0;

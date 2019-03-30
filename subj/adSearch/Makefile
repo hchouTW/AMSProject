@@ -1,12 +1,14 @@
 -include $(AMSMKfile)
 
 # Test Ceres Solver
+CXX  += -DGLOG_NO_ABBREVIATED_SEVERITIES
 LIBP += -lgflags -lglog -lceres
+LIBS += -lgflags -lglog -lceres
 
 TagetDir = $(AMSCoreSubj)/adSearch/vdev
 TagetDir = $(AMSCoreSubj)/adSearch/test
 
-Version=19Jan05
+Version=19Mar27
 ClassLib = $(AMSCoreProd)/${Version}/lib/libClassDef.so
 #ClassLib = -L$(AMSCoreProd)/${Version}/lib -lClassDef
 
@@ -28,14 +30,14 @@ $(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 -include $(TagetDir)/obj/fill.d
 
 $(TagetDir)/fill : $(TagetDir)/obj/fill.o
-	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+	$(LDP) -o $@ $+ $(LIBP) $(ClassLib)
 
 $(TagetDir)/obj/fit.o : $(TagetDir)/src/fit.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD
 -include $(TagetDir)/obj/fit.d
 
 $(TagetDir)/fit : $(TagetDir)/obj/fit.o
-	$(LD) -o $@ $+ $(LIBP) $(ClassLib)
+	$(LDP) -o $@ $+ $(LIBP) $(ClassLib)
 
 clean :
 	@rm -fv $(TagetDir)/env/*

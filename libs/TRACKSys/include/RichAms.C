@@ -426,6 +426,9 @@ bool RichAms::build(RichOffline::TrTrack track) {
         if (phit == nullptr || phit->Npe <= 0) continue;
         double dist = std::hypot(phit->Coo[0] - pmtp_[0], phit->Coo[1] - pmtp_[1]);
 
+        double pmt_radius = std::hypot(phit->Coo[0], phit->Coo[1]);
+        if (pmt_radius > (MIRROR_BTM_RADIUS - WIDTH_CELL)) continue;
+
         RichHitAms rhhit(phit, dbta, rbtaA, rbtaB, dist);
         if (!rhhit.status()) continue;
         

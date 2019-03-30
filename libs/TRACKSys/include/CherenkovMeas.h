@@ -513,8 +513,8 @@ class CherenkovFit {
         static constexpr double LMTMAX_GROUP_SGM = 2.5;
         
         static constexpr short  LMTMIN_STONE_PMT_HITS_L = 3;
-        static constexpr short  LMTMIN_STONE_PMT_HITS_H = 5;
-        static constexpr short  LMTMIN_STONE_HITS = 6;
+        static constexpr short  LMTMIN_STONE_PMT_HITS_H = 4; // testcode, org 5
+        static constexpr short  LMTMIN_STONE_HITS = 5; // testcode, org 6
       
         static constexpr short  LMTMIN_CLOUD_SETS = 2;
         static constexpr short  LMTMIN_CLOUD_HITS = 3;

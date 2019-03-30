@@ -63,7 +63,8 @@ void TextDraw(const std::vector<Text>& text, const TextAlign& align) {
 Window::Window(WindowSize size) {
 	switch(size) {
 		case WindowSize::kSliceHR :    width = 2048; height = 1536; break;
-		case WindowSize::kSliceLR :    width = 1024; height =  768; break;
+		case WindowSize::kSliceMR :    width = 1024; height =  768; break;
+		case WindowSize::kSliceLR :    width =  768; height =  576; break;
 		case WindowSize::kA4Vertical : width = 2480; height = 3508; break;
 		case WindowSize::kA4Horizon :  width = 3508; height = 2480; break;
 		case WindowSize::kMac :        width = 3840; height = 2400; break;

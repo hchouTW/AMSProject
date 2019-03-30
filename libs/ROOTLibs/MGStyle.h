@@ -64,7 +64,7 @@ using TextList = std::vector<Text>;
 
 
 //---- Window ----//
-enum class WindowSize : Int_t { kSliceHR, kSliceLR, kA4Vertical, kA4Horizon, kMac, kMovie };
+enum class WindowSize : Int_t { kSliceHR, kSliceMR, kSliceLR, kA4Vertical, kA4Horizon, kMac, kMovie };
 struct Window {
 	Window(UInt_t _width = 800, UInt_t _height = 600) : width(_width), height(_height) {}
 	Window(WindowSize size);

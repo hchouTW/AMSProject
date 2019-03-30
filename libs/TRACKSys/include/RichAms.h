@@ -179,6 +179,9 @@ class RichAms {
         static constexpr short KIND_AGL   = 1;
         static constexpr short KIND_NAF   = 2;
 
+        static constexpr double WIDTH_CELL = 0.85;
+        static constexpr double WIDTH_PMT  = 3.40;
+        
         static constexpr double PMT_CZ = -121.89;
 
         static constexpr double EXTERNAL_RAD_RADIUS = 58.0;
