@@ -277,6 +277,7 @@ std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* clou
     const std::vector<CherenkovHit>& hits = cloud->hits();
     std::vector<short>  hphi(hits.size(), -1);
     std::vector<double> hdxy(hits.size(), -1.0);
+    std::vector<short>  hpmt(hits.size(), -1);
     for (int is = 0; is < TRACE_NSET; ++is) {
     for (int iphi = 0; iphi < TRACE_NPHI; ++iphi) {
         if (simphs[iphi][is] == 0) continue;
@@ -290,21 +291,26 @@ std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* clou
             
             hphi.at(ih) = iphi;
             hdxy.at(ih) = dist;
+            hpmt.at(ih) = hit.pmtid();
         }
     }}
 
     for (int ih = hphi.size() - 1; ih >= 0; --ih) {
         if (hphi.at(ih) >= 0) continue;
         hphi.erase(hphi.begin() + ih);
+        hpmt.erase(hpmt.begin() + ih);
     }
+    std::set<short> setpmt;
+    for (int ih = 0; ih < hpmt.size(); ++ih) setpmt.insert(hpmt.at(ih));
+    
     double accuracy = static_cast<double>(hphi.size()) / static_cast<double>(hits.size());
 
-    if (hphi.size() < 2) {
-        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 1.0 }));
+    if (hphi.size() < 2 || setpmt.size() < 2) {
+        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 0.0 }));
         return rlt_trace;
     }
 
-    int uniformity_width = static_cast<int>(Numc::ONE_TO_TWO * static_cast<double>(count) / static_cast<double>(hphi.size()));
+    int uniformity_width = static_cast<int>(Numc::ONE_TO_TWO * static_cast<double>(count) / static_cast<double>(setpmt.size()));
     if (uniformity_width <= 0) uniformity_width = 1;
 
     std::set<int> withphi;
@@ -477,8 +483,6 @@ std::vector<std::array<double, 2>> RichAms::RayTrace(const std::array<double, 6>
         SVecD<3>&& phivec = orth.tau() * std::cos(phi) + orth.rho() * std::sin(phi);
         SVecD<3>&& srcvec = partd * cosv + phivec * sinv;
         if (srcvec[2] >= lmtrfr) continue;
-    
-
 
         double planex = topx + (-height) * (locwgt * (partd[0] / partd[2]) + (Numc::ONE<> - locwgt) * (srcvec[0] / srcvec[2]));
         double planey = topy + (-height) * (locwgt * (partd[1] / partd[2]) + (Numc::ONE<> - locwgt) * (srcvec[1] / srcvec[2]));

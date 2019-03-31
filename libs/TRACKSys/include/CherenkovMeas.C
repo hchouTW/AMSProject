@@ -536,7 +536,11 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
             double dcy = (hit.cy() - cand_cstn[1]) / WIDTH_COO;
             double nrm = Numc::INV_SQRT_TWO * std::hypot(dcx,  dcy);
             chisq += hit.cnt() * (nrm * nrm); 
-            chisqc += (nrm * nrm);
+            
+            double dcxc = (hit.cx() - cand_cstn[0]) / WIDTH_CELL;
+            double dcyc = (hit.cy() - cand_cstn[1]) / WIDTH_CELL;
+            double nrmc = Numc::INV_SQRT_TWO * std::hypot(dcxc,  dcyc);
+            chisqc += (nrmc * nrmc);
         }
 
         double ndof = (cnt - Numc::ONE<>);

@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Mar28/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Mar29/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -118,22 +118,31 @@ int main(int argc, char * argv[]) {
     Hist* hOFFbetaHCut = Hist::New("hOFFbetaHCut", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut = Hist::New("hNEWbetaHCut", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut2 = Hist::New("hNEWbetaHCut2", HistAxis(AXbta, "Events/Bin"));
-   
+    
     Axis AXnh("Nhit", 60, -30, 30);
     Axis AXu("Uniformity", 100, 0, 1.00001);
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     Hist* hNEWbetaHCutCldNH = Hist::New("hNEWbetaHCutCldNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     Hist* hNEWbetaHCutCldu = Hist::New("hNEWbetaHCutCldu", HistAxis(AXbta, AXu, "Events/Bin"));
-    
+   
+    Axis AXchi("NChi", 100, 0, 20.0);
+    Hist* hNEWbetaHCutStnChi = Hist::New("hNEWbetaHCutStnChi", HistAxis(AXbta, AXchi, "Events/Bin"));
+
     Axis AXc("Coo [cm]", 30, 0, 102);
     Hist* hNEWbetaHCutGxy = Hist::New("hNEWbetaHCutGxy", HistAxis(AXc, "Events/Bin"));
     Hist* hNEWbetaHCutBxy = Hist::New("hNEWbetaHCutBxy", HistAxis(AXc, "Events/Bin"));
    
-    Hist* hNEWbetaHCutGp = Hist::New("hNEWbetaHCutGp", HistAxis(AXc, "Events/Bin"));
-    Hist* hNEWbetaHCutBp = Hist::New("hNEWbetaHCutBp", HistAxis(AXc, "Events/Bin"));
-
     Hist* hNEWbetaHCutGu = Hist::New("hNEWbetaHCutGu", HistAxis(AXu, "Events/Bin"));
     Hist* hNEWbetaHCutBu = Hist::New("hNEWbetaHCutBu", HistAxis(AXu, "Events/Bin"));
+    
+    Hist* hNEWbetaHCutGu3 = Hist::New("hNEWbetaHCutGu3", HistAxis(AXu, "Events/Bin"));
+    Hist* hNEWbetaHCutBu3 = Hist::New("hNEWbetaHCutBu3", HistAxis(AXu, "Events/Bin"));
+    
+    Hist* hNEWbetaHCutGu4 = Hist::New("hNEWbetaHCutGu4", HistAxis(AXu, "Events/Bin"));
+    Hist* hNEWbetaHCutBu4 = Hist::New("hNEWbetaHCutBu4", HistAxis(AXu, "Events/Bin"));
+    
+    Hist* hNEWbetaHCutGchi = Hist::New("hNEWbetaHCutGchi", HistAxis(AXchi, "Events/Bin"));
+    Hist* hNEWbetaHCutBchi = Hist::New("hNEWbetaHCutBchi", HistAxis(AXchi, "Events/Bin"));
     
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -143,12 +152,9 @@ int main(int argc, char * argv[]) {
     Hist* hNEWmassCut = Hist::New("hNEWmassCut", HistAxis(AXbtas, AXmass, "Events/Bin"));
     Hist* hNEWmassCut2 = Hist::New("hNEWmassCut2", HistAxis(AXbtas, AXmass, "Events/Bin"));
 
-    
-
-
     TGraph grmir;
-    for (int it = 0; it <= 780; ++it) {
-        double tha = 2.0 * TMath::Pi() * (it / 780.0);        
+    for (int it = 0; it <= 360; ++it) {
+        double tha = 2.0 * TMath::Pi() * (it / 360.0);        
         grmir.SetPoint(it, 67.00 * std::cos(tha), 67.00 * std::sin(tha));
     }
     grmir.SetLineColor(kBlack);
@@ -268,6 +274,8 @@ int main(int argc, char * argv[]) {
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
                 if (cktrIn.rig > 20) hNEWbetaHCutCldNH->fillH2D(chfit.cloud.cbta, chfit.cloud.nhit_dir - chfit.cloud.nhit_rfl, wgt);
                 if (cktrIn.rig > 20) hNEWbetaHCutCldu->fillH2D(chfit.cloud.cbta, chfit.cloud.uniform, wgt);
+                
+                if (cktrIn.rig > 20 && chfit.nstn == 1) hNEWbetaHCutStnChi->fillH2D(chfit.cloud.cbta, chfit.stone.chic, wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;
@@ -278,11 +286,17 @@ int main(int argc, char * argv[]) {
                     if (hit.cls != 4) continue;
                     hNEWxy->fillH1D(std::hypot(hit.cx, hit.cy), wgt);
                 }
-                Hist* hNEWp = (is_good ? hNEWbetaHCutGp : hNEWbetaHCutBp);
-                hNEWp->fillH1D(std::hypot(chfit.rayp[0], chfit.rayp[1]), wgt);
-                
                 Hist* hNEWu = (is_good ? hNEWbetaHCutGu : hNEWbetaHCutBu);
                 hNEWu->fillH1D(chfit.cloud.uniform, wgt);
+                
+                Hist* hNEWu3 = (is_good ? hNEWbetaHCutGu3 : hNEWbetaHCutBu3);
+                if (chfit.cloud.nhit == 3) hNEWu3->fillH1D(chfit.cloud.uniform, wgt);
+                
+                Hist* hNEWu4 = (is_good ? hNEWbetaHCutGu4 : hNEWbetaHCutBu4);
+                if (chfit.cloud.nhit == 4) hNEWu4->fillH1D(chfit.cloud.uniform, wgt);
+                
+                Hist* hNEWchi = (is_good ? hNEWbetaHCutGchi : hNEWbetaHCutBchi);
+                if (chfit.nstn == 1) hNEWchi->fillH1D(chfit.stone.chic, wgt);
             }
 
             if (cut && cktrIn.rig > 20 && (is_bad || (is_good && TrackSys::Rndm::DecimalUniform() < 0.0002))) {
