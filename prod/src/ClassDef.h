@@ -465,6 +465,7 @@ class ChStoneInfo : public TObject {
             npe    = 0;
             cnt    = 0;
             nchi   = 0;
+            chic   = 0;
         }
 
     public :
@@ -479,6 +480,7 @@ class ChStoneInfo : public TObject {
 
         Float_t cnt;
         Float_t nchi;
+        Float_t chic;
 
     ClassDef(ChStoneInfo, 1)
 };
@@ -500,7 +502,7 @@ class ChCloudInfo : public TObject {
             border   = 0;
             trace    = 0;
             accuracy = 1;
-            uniform  = 0;
+            uniform  = 1;
             
             beta     = 0;
             cbta     = 0;
@@ -607,9 +609,13 @@ class ChFitInfo : public TObject {
             is_good_geom = false;
             is_bad_tile = false;
 
+            is_in_pmt_plane = false;
+
             std::fill_n(radp, 0., 3);
             std::fill_n(radd, 0., 3);
             std::fill_n(pmtp, 0., 3);
+            std::fill_n(rayp, 0., 3);
+            std::fill_n(rayd, 0., 3);
 
             nstn = 0;
             ncld = 0;
@@ -657,9 +663,13 @@ class ChFitInfo : public TObject {
         Bool_t  is_good_geom;
         Bool_t  is_bad_tile;
 
+        Bool_t  is_in_pmt_plane;
+
         Float_t radp[3];
         Float_t radd[3];
         Float_t pmtp[3];
+        Float_t rayp[3];
+        Float_t rayd[3];
 
         Short_t nstn;
         Short_t ncld;

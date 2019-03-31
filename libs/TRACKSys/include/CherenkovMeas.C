@@ -286,6 +286,7 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         if (hit.mode() < 0) continue;
 
         if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+        if (!is_within_detectable(hit.cx(), hit.cy())) continue;
 
         cld_hits.push_back(hit);
     }
@@ -318,6 +319,7 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         if (is_used_hit) continue;
         
         if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+        if (!is_within_detectable(hit.cx(), hit.cy())) continue;
 
         tumor_hits.push_back(hit);
     }
@@ -361,6 +363,7 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         if (is_used_hit) continue;
         
         if (is_within_pmtc(hit.cx(), hit.cy())) continue;
+        if (!is_within_detectable(hit.cx(), hit.cy())) continue;
 
         ghost_hits.push_back(hit);
     }
@@ -525,6 +528,7 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
         double cnt = 0.;
         double npe = 0.;
         double chisq = 0.;
+        double chisqc = 0.;
         for (auto&& hit : cand_chit) {
             cnt += hit.cnt();
             npe += hit.npe();
@@ -532,18 +536,21 @@ std::vector<CherenkovStone> CherenkovFit::fit_stone(std::vector<CherenkovHit>& h
             double dcy = (hit.cy() - cand_cstn[1]) / WIDTH_COO;
             double nrm = Numc::INV_SQRT_TWO * std::hypot(dcx,  dcy);
             chisq += hit.cnt() * (nrm * nrm); 
+            chisqc += (nrm * nrm);
         }
 
         double ndof = (cnt - Numc::ONE<>);
         double nchi = chisq / ndof;
+        double chic = chisqc / static_cast<double>(cand_chit.size() - 1);
         if (!Numc::Valid(ndof) || Numc::Compare(ndof) <= 0) continue;
         if (!Numc::Valid(nchi)) continue;
+        if (!Numc::Valid(chic)) continue;
 
         double dist = cal_dist_to_pmtc(cand_cstn[0], cand_cstn[1]);
 
         for (auto&& hit : cand_chit) hit.set_cluster(CherenkovHit::Cluster::stone);
 
-        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi, dist));
+        stns.push_back(CherenkovStone(cand_chit, nhit, npmt, cand_cstn[0], cand_cstn[1], npe, cnt, nchi, chic, dist));
     }
     if (stns.size() > 1) std::sort(stns.begin(), stns.end(), CherenkovStone_sort());
 

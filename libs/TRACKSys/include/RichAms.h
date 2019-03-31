@@ -127,9 +127,13 @@ class RichAms {
         inline const AMSPoint& radp() const { return radp_; }
         inline const AMSDir&   radd() const { return radd_; }
         inline const AMSPoint& pmtp() const { return pmtp_; }
+        inline const AMSPoint& rayp() const { return rayp_; }
+        inline const AMSDir&   rayd() const { return rayd_; }
         
         inline const bool& is_good_in_geometry() const { return is_good_in_geometry_; }
         inline const bool& is_bad_tile() const { return is_bad_tile_; }
+        
+        inline const bool& is_in_pmt_plane() const { return is_in_pmt_plane_; }
 
         inline const double& npe_col() const { return npe_col_; }
         inline const double& bta_crr() const { return bta_crr_; }
@@ -157,9 +161,13 @@ class RichAms {
         AMSPoint radp_; // charged particle in RAD plane (AMS coord)
         AMSDir   radd_; // charged particle in RAD plane (AMS coord)
         AMSPoint pmtp_; // charged particle in PMT plane (AMS coord)
+        AMSPoint rayp_; // ray of charged particle in PMT plane (AMS coord)
+        AMSDir   rayd_; // ray of charged particle in PMT plane (AMS coord)
 
         bool is_good_in_geometry_;
         bool is_bad_tile_;
+
+        bool is_in_pmt_plane_;
 
         double npe_col_;
         double bta_crr_;

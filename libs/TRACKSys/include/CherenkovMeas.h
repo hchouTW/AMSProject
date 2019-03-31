@@ -119,13 +119,13 @@ class CherenkovStone {
         
         CherenkovStone(const std::vector<CherenkovHit>& hits, short nhit, short npmt,
                        double cx, double cy, double npe,
-                       double cnt, double nchi,
+                       double cnt, double nchi, double chic,
                        double dist) : CherenkovStone() { 
             hits_ = hits; 
             status_ = true;
             nhit_ = nhit; npmt_ = npmt;
             cx_ = cx; cy_ = cy; npe_ = npe;
-            cnt_ = cnt; nchi_ = nchi;
+            cnt_ = cnt; nchi_ = nchi; chic_ = chic;
             dist_ = dist;
         }
         
@@ -140,6 +140,7 @@ class CherenkovStone {
 
         inline const double& cnt()  const { return cnt_; }
         inline const double& nchi() const { return nchi_; }
+        inline const double& chic() const { return chic_; }
        
         inline const double& dist() const { return dist_; }
 
@@ -151,7 +152,7 @@ class CherenkovStone {
             status_ = false;
             nhit_ = 0; npmt_ = 0;
             cx_ = 0; cy_ = 0; npe_ = 0;
-            cnt_ = 0; nchi_ = 0;
+            cnt_ = 0; nchi_ = 0; chic_ = 0;
             dist_ = 0;
         }
 
@@ -167,7 +168,8 @@ class CherenkovStone {
 
         double cnt_;
         double nchi_;
-    
+        double chic_;
+
         double dist_;
 
     protected :
@@ -181,6 +183,83 @@ struct CherenkovStone_sort {
         else {
             if      (stn1.npe() >= stn2.npe()) return true;
             else if (stn1.npe() <  stn2.npe()) return false;
+        }
+        return false;
+    }
+};
+
+
+class CherenkovEmery {
+    public :
+        CherenkovEmery() { clear(); }
+        ~CherenkovEmery() { clear(); }
+        
+        CherenkovEmery(const std::vector<CherenkovHit>& hits, short nhit, short npmt,
+                       double cx, double cy, double npe,
+                       double cnt, double nchi, double chic,
+                       double dist) : CherenkovEmery() { 
+            hits_ = hits; 
+            status_ = true;
+            nhit_ = nhit; npmt_ = npmt;
+            cx_ = cx; cy_ = cy; npe_ = npe;
+            cnt_ = cnt; nchi_ = nchi; chic_ = chic;
+            dist_ = dist;
+        }
+        
+        inline const bool& status() const { return status_; }
+        
+        inline const short& nhit() const { return nhit_; }
+        inline const short& npmt() const { return npmt_; }
+        
+        inline const double& cx()  const { return cx_; }
+        inline const double& cy()  const { return cy_; }
+        inline const double& npe() const { return npe_; }
+
+        inline const double& cnt()  const { return cnt_; }
+        inline const double& nchi() const { return nchi_; }
+        inline const double& chic() const { return chic_; }
+       
+        inline const double& dist() const { return dist_; }
+
+        inline const std::vector<CherenkovHit>& hits() const { return hits_; }
+        
+    protected :
+        inline void clear() {
+            hits_.clear(); 
+            status_ = false;
+            nhit_ = 0; npmt_ = 0;
+            cx_ = 0; cy_ = 0; npe_ = 0;
+            cnt_ = 0; nchi_ = 0; chic_ = 0;
+            dist_ = 0;
+        }
+
+    protected :
+        bool status_;
+        
+        short nhit_;
+        short npmt_;
+        
+        double cx_;
+        double cy_;
+        double npe_;
+
+        double cnt_;
+        double nchi_;
+        double chic_;
+
+        double dist_;
+
+    protected :
+        std::vector<CherenkovHit> hits_;
+};
+
+struct CherenkovEmery_sort {
+    bool operator() (const CherenkovEmery& emy1, const CherenkovEmery& emy2) {
+        if      (emy1.cnt() > emy2.cnt()) return true;
+        else if (emy1.cnt() < emy2.cnt()) return false;
+        else {
+            if      (emy1.npe() >= emy2.npe()) return true;
+            else if (emy1.npe() <  emy2.npe()) return false;
         }
         return false;
     }
@@ -440,6 +519,7 @@ class CherenkovFit {
 
         inline double cal_dist_to_pmtc(double cx, double cy) { return std::hypot(cx - pmtc_[0], cy - pmtc_[1]); }
         inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < WIDTH_PMT); }
+        inline bool is_within_detectable(double cx, double cy) { return (std::hypot(cx, cy) < (MIRROR_BTM_RADIUS - WIDTH_CELL)); }
 
         std::vector<std::vector<CherenkovHit>> make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone = false, double width_stone = 1.0, bool opt_cloud = false, double width_cloud = 1.0);
 
@@ -489,7 +569,7 @@ class CherenkovFit {
 
     protected :
         std::array<double, 2> pmtc_; // particle on the PMTs plane
-
+        
         double    rfr_index_;
         double    width_bta_;
         MultiGaus scan_bta_;
@@ -502,6 +582,8 @@ class CherenkovFit {
         Sys::HrsStopwatch timer_;
 
     private :
+        static constexpr double MIRROR_TOP_RADIUS = 60.10;
+        static constexpr double MIRROR_BTM_RADIUS = 67.00;
         static constexpr double WIDTH_CELL = 0.85;
         static constexpr double WIDTH_PMT  = 3.40;
         

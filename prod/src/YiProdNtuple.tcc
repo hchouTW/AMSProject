@@ -1787,6 +1787,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.dist  = richams.dist();
         chinfo.is_good_geom = richams.is_good_in_geometry();
         chinfo.is_bad_tile  = richams.is_bad_tile();
+        chinfo.is_in_pmt_plane = richams.is_in_pmt_plane();
         chinfo.radp[0] = richams.radp()[0];
         chinfo.radp[1] = richams.radp()[1];
         chinfo.radp[2] = richams.radp()[2];
@@ -1796,6 +1797,12 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.pmtp[0] = richams.pmtp()[0];
         chinfo.pmtp[1] = richams.pmtp()[1];
         chinfo.pmtp[2] = richams.pmtp()[2];
+        chinfo.rayp[0] = richams.rayp()[0];
+        chinfo.rayp[1] = richams.rayp()[1];
+        chinfo.rayp[2] = richams.rayp()[2];
+        chinfo.rayd[0] = richams.rayd()[0];
+        chinfo.rayd[1] = richams.rayd()[1];
+        chinfo.rayd[2] = richams.rayd()[2];
         chinfo.nhit_ttl = chfit.nhit_total();
         chinfo.nhit_stn = chfit.nhit_stone();
         chinfo.nhit_cld = chfit.nhit_cloud();
@@ -1829,6 +1836,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.dist  = richams.dist();
         chinfo.is_good_geom = richams.is_good_in_geometry();
         chinfo.is_bad_tile  = richams.is_bad_tile();
+        chinfo.is_in_pmt_plane = richams.is_in_pmt_plane();
         chinfo.radp[0] = richams.radp()[0];
         chinfo.radp[1] = richams.radp()[1];
         chinfo.radp[2] = richams.radp()[2];
@@ -1838,6 +1846,12 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.pmtp[0] = richams.pmtp()[0];
         chinfo.pmtp[1] = richams.pmtp()[1];
         chinfo.pmtp[2] = richams.pmtp()[2];
+        chinfo.rayp[0] = richams.rayp()[0];
+        chinfo.rayp[1] = richams.rayp()[1];
+        chinfo.rayp[2] = richams.rayp()[2];
+        chinfo.rayd[0] = richams.rayd()[0];
+        chinfo.rayd[1] = richams.rayd()[1];
+        chinfo.rayd[2] = richams.rayd()[2];
         chinfo.nhit_ttl = chfit.nhit_total();
         chinfo.nhit_stn = chfit.nhit_stone();
         chinfo.nhit_cld = chfit.nhit_cloud();
@@ -1869,6 +1883,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             stone.npe    = stn.npe();
             stone.cnt    = stn.cnt();
             stone.nchi   = stn.nchi();
+            stone.chic   = stn.chic();
             if (!chinfo.stone.status) chinfo.stone = stone;
             chinfo.nstn++;
             
@@ -1901,7 +1916,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             if (!chinfo.cloud.status) chinfo.cloud = cloud;
             chinfo.ncld++;
 
-            //CERR("CNT %14.8f NHIT %2d NPMT %2d TRACE %14.8f %14.8f BETA %14.8f %14.8f NCHI %14.8f MISJUDGE %14.8f\n", cld.cnt(), cld.nhit(), cld.npmt(), cloud.trace, cloud.uniform, cld.beta(), cld.cbta(), cld.nchi(), cld.misjudge());
+            //CERR("CNT %14.8f NHIT %2d NPMT %2d TRACE %14.8f %14.8f BETA %14.8f %14.8f NCHI %14.8f MISJUDGE %14.8f UNIFORM %14.8f\n", cld.cnt(), cld.nhit(), cld.npmt(), cloud.trace, cloud.uniform, cld.beta(), cld.cbta(), cld.nchi(), cld.misjudge(), cloud.uniform);
             //for (auto&& hit : cld.hits())
             //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f MODE %d BETA %14.8f %14.8f %14.8f CXY %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.mode(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.cx(), hit.cy(), hit.npe());
         }
@@ -3107,6 +3122,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 
     // testcode
     if (EventBase::checkEventMode(EventBase::ISS) && recEv.zin != 1) return -99979; // testcode
+    if (recEv.rigIN < 0.0) return -99990; // testcode
     //if (recEv.rigIN < 20) return -99990; // testcode
     //if (recEv.rigIN < 2.5) return -99990; // testcode
 
@@ -3144,7 +3160,7 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
         }
 
         // testcode
-        wpar[0] = 0.1; wpar[1] = 1.0 - wpar[0];
+        wpar[0] = 1.0; wpar[1] = 1.0 - wpar[0];
 
         double logir = std::log(std::fabs(cutoff / recEv.rigMAX));
         double thres = wpar[0] + wpar[1] * TrackSys::Numc::ONE_TO_TWO * std::erfc(TrackSys::Numc::FOUR<> * logir);
