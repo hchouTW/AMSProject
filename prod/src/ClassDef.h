@@ -614,8 +614,6 @@ class ChFitInfo : public TObject {
             std::fill_n(radp, 0., 3);
             std::fill_n(radd, 0., 3);
             std::fill_n(pmtp, 0., 3);
-            std::fill_n(rayp, 0., 3);
-            std::fill_n(rayd, 0., 3);
 
             nstn = 0;
             ncld = 0;
@@ -668,8 +666,6 @@ class ChFitInfo : public TObject {
         Float_t radp[3];
         Float_t radd[3];
         Float_t pmtp[3];
-        Float_t rayp[3];
-        Float_t rayd[3];
 
         Short_t nstn;
         Short_t ncld;

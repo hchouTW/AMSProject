@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Mar27/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Mar28/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -120,13 +120,11 @@ int main(int argc, char * argv[]) {
     Hist* hNEWbetaHCut2 = Hist::New("hNEWbetaHCut2", HistAxis(AXbta, "Events/Bin"));
    
     Axis AXnh("Nhit", 60, -30, 30);
+    Axis AXu("Uniformity", 100, 0, 1.00001);
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     Hist* hNEWbetaHCutCldNH = Hist::New("hNEWbetaHCutCldNH", HistAxis(AXbta, AXnh, "Events/Bin"));
+    Hist* hNEWbetaHCutCldu = Hist::New("hNEWbetaHCutCldu", HistAxis(AXbta, AXu, "Events/Bin"));
     
-    Axis AXnp("Npe", 200, -50, 50);
-    Hist* hNEWbetaHCutOthNP = Hist::New("hNEWbetaHCutOthNP", HistAxis(AXbta, AXnp, "Events/Bin"));
-    //Hist* hNEWbetaHCutCldNP = Hist::New("hNEWbetaHCutCldNP", HistAxis(AXbta, AXnp, "Events/Bin"));
-
     Axis AXc("Coo [cm]", 30, 0, 102);
     Hist* hNEWbetaHCutGxy = Hist::New("hNEWbetaHCutGxy", HistAxis(AXc, "Events/Bin"));
     Hist* hNEWbetaHCutBxy = Hist::New("hNEWbetaHCutBxy", HistAxis(AXc, "Events/Bin"));
@@ -134,6 +132,9 @@ int main(int argc, char * argv[]) {
     Hist* hNEWbetaHCutGp = Hist::New("hNEWbetaHCutGp", HistAxis(AXc, "Events/Bin"));
     Hist* hNEWbetaHCutBp = Hist::New("hNEWbetaHCutBp", HistAxis(AXc, "Events/Bin"));
 
+    Hist* hNEWbetaHCutGu = Hist::New("hNEWbetaHCutGu", HistAxis(AXu, "Events/Bin"));
+    Hist* hNEWbetaHCutBu = Hist::New("hNEWbetaHCutBu", HistAxis(AXu, "Events/Bin"));
+    
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
     Hist* hNEWmass = Hist::New("hNEWmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -265,9 +266,8 @@ int main(int argc, char * argv[]) {
                 }
                 
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
-                if (cktrIn.rig > 20) hNEWbetaHCutOthNP->fillH2D(chfit.cloud.cbta, chfit.npe_oth - chfit.cloud.npe, wgt);
                 if (cktrIn.rig > 20) hNEWbetaHCutCldNH->fillH2D(chfit.cloud.cbta, chfit.cloud.nhit_dir - chfit.cloud.nhit_rfl, wgt);
-                //if (cktrIn.rig > 20) hNEWbetaHCutCldNP->fillH2D(chfit.cloud.cbta, chfit.cloud.npe_dir - chfit.cloud.npe_rfl, wgt);
+                if (cktrIn.rig > 20) hNEWbetaHCutCldu->fillH2D(chfit.cloud.cbta, chfit.cloud.uniform, wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;
@@ -279,7 +279,10 @@ int main(int argc, char * argv[]) {
                     hNEWxy->fillH1D(std::hypot(hit.cx, hit.cy), wgt);
                 }
                 Hist* hNEWp = (is_good ? hNEWbetaHCutGp : hNEWbetaHCutBp);
-                hNEWp->fillH1D(std::hypot(chfit.pmtp[0], chfit.pmtp[1]), wgt);
+                hNEWp->fillH1D(std::hypot(chfit.rayp[0], chfit.rayp[1]), wgt);
+                
+                Hist* hNEWu = (is_good ? hNEWbetaHCutGu : hNEWbetaHCutBu);
+                hNEWu->fillH1D(chfit.cloud.uniform, wgt);
             }
 
             if (cut && cktrIn.rig > 20 && (is_bad || (is_good && TrackSys::Rndm::DecimalUniform() < 0.0002))) {
@@ -310,8 +313,24 @@ int main(int argc, char * argv[]) {
                 grpart.SetMarkerColor(kBlack);
                 grpart.SetMarkerStyle(30);
                 grpart.SetMarkerSize(1.0);
+                
+                TGraph grray;
+                grray.SetMarkerColor(kCyan);
+                grray.SetMarkerStyle(20);
+                grray.SetMarkerSize(0.05);
 
                 grpart.SetPoint(0, chfit.pmtp[0], chfit.pmtp[1]);
+
+                auto&& rays = RichAms::RayTrace(
+                              std::array<double, 6>({chfit.radp[0], chfit.radp[1], chfit.radp[2], chfit.radd[0], chfit.radd[1], chfit.radd[2]}), 
+                              chfit.cloud.cbta, 
+                              chfit.index, 
+                              2.5, 
+                              chfit.tile);
+                for (auto&& ray : rays) {
+                    grray.SetPoint(grray.GetN(), ray[0], ray[1]);
+                }
+                
                 for (auto&& hit : chfit.hits) {
                     if (hit.cls == 0) grstn.SetPoint(grstn.GetN(), hit.cx, hit.cy);
                     if (hit.cls == 1 && hit.mode == 0) grcldd.SetPoint(grcldd.GetN(), hit.cx, hit.cy);
@@ -322,6 +341,7 @@ int main(int argc, char * argv[]) {
 
                 TMultiGraph mg("mg", "mg");
                 if (grpart.GetN() > 0) mg.Add(&grpart);
+                if (grray.GetN() > 0) mg.Add(&grray);
                 if (grstn.GetN() > 0) mg.Add(&grstn);
                 if (grcldd.GetN() > 0) mg.Add(&grcldd);
                 if (grcldr.GetN() > 0) mg.Add(&grcldr);

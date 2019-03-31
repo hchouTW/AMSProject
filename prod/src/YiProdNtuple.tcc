@@ -1797,12 +1797,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.pmtp[0] = richams.pmtp()[0];
         chinfo.pmtp[1] = richams.pmtp()[1];
         chinfo.pmtp[2] = richams.pmtp()[2];
-        chinfo.rayp[0] = richams.rayp()[0];
-        chinfo.rayp[1] = richams.rayp()[1];
-        chinfo.rayp[2] = richams.rayp()[2];
-        chinfo.rayd[0] = richams.rayd()[0];
-        chinfo.rayd[1] = richams.rayd()[1];
-        chinfo.rayd[2] = richams.rayd()[2];
         chinfo.nhit_ttl = chfit.nhit_total();
         chinfo.nhit_stn = chfit.nhit_stone();
         chinfo.nhit_cld = chfit.nhit_cloud();
@@ -1846,12 +1840,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.pmtp[0] = richams.pmtp()[0];
         chinfo.pmtp[1] = richams.pmtp()[1];
         chinfo.pmtp[2] = richams.pmtp()[2];
-        chinfo.rayp[0] = richams.rayp()[0];
-        chinfo.rayp[1] = richams.rayp()[1];
-        chinfo.rayp[2] = richams.rayp()[2];
-        chinfo.rayd[0] = richams.rayd()[0];
-        chinfo.rayd[1] = richams.rayd()[1];
-        chinfo.rayd[2] = richams.rayd()[2];
         chinfo.nhit_ttl = chfit.nhit_total();
         chinfo.nhit_stn = chfit.nhit_stone();
         chinfo.nhit_cld = chfit.nhit_cloud();

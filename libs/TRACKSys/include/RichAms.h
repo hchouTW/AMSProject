@@ -98,6 +98,8 @@ class RichAms {
             }
         }
 
+        static std::vector<std::array<double, 2>> RayTrace(const std::array<double, 6>& part, double cbta, double index, double height, short tile);
+
     public :
         RichAms() { clear(); }
         RichAms(AMSEventR* event, TrTrackR* trtk = nullptr);
@@ -127,8 +129,6 @@ class RichAms {
         inline const AMSPoint& radp() const { return radp_; }
         inline const AMSDir&   radd() const { return radd_; }
         inline const AMSPoint& pmtp() const { return pmtp_; }
-        inline const AMSPoint& rayp() const { return rayp_; }
-        inline const AMSDir&   rayd() const { return rayd_; }
         
         inline const bool& is_good_in_geometry() const { return is_good_in_geometry_; }
         inline const bool& is_bad_tile() const { return is_bad_tile_; }
@@ -161,8 +161,6 @@ class RichAms {
         AMSPoint radp_; // charged particle in RAD plane (AMS coord)
         AMSDir   radd_; // charged particle in RAD plane (AMS coord)
         AMSPoint pmtp_; // charged particle in PMT plane (AMS coord)
-        AMSPoint rayp_; // ray of charged particle in PMT plane (AMS coord)
-        AMSDir   rayd_; // ray of charged particle in PMT plane (AMS coord)
 
         bool is_good_in_geometry_;
         bool is_bad_tile_;
