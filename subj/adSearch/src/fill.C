@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Mar30/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Apr01/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -287,6 +287,11 @@ int main(int argc, char * argv[]) {
                 grcldd.SetMarkerSize(0.8);
                 grcldr.SetMarkerSize(0.8);
                 
+                TGraph gremy;
+                gremy.SetMarkerColor(kGreen+1);
+                gremy.SetMarkerStyle(29);
+                gremy.SetMarkerSize(0.4);
+                
                 TGraph grinn;
                 TGraph grout;
                 grinn.SetMarkerColor(kGreen+1);
@@ -322,8 +327,9 @@ int main(int argc, char * argv[]) {
                     if (hit.cls == 0) grstn.SetPoint(grstn.GetN(), hit.cx, hit.cy);
                     if (hit.cls == 1 && hit.mode == 0) grcldd.SetPoint(grcldd.GetN(), hit.cx, hit.cy);
                     if (hit.cls == 1 && hit.mode != 0) grcldr.SetPoint(grcldr.GetN(), hit.cx, hit.cy);
-                    if (hit.cls == 4 && hit.mode != -1) grinn.SetPoint(grinn.GetN(), hit.cx, hit.cy);
-                    if (hit.cls == 4 && hit.mode == -1) grout.SetPoint(grout.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 4) gremy.SetPoint(gremy.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 5 && hit.mode != -1) grinn.SetPoint(grinn.GetN(), hit.cx, hit.cy);
+                    if (hit.cls == 5 && hit.mode == -1) grout.SetPoint(grout.GetN(), hit.cx, hit.cy);
                 }
 
                 TMultiGraph mg("mg", "mg");
@@ -332,6 +338,7 @@ int main(int argc, char * argv[]) {
                 if (grstn.GetN() > 0) mg.Add(&grstn);
                 if (grcldd.GetN() > 0) mg.Add(&grcldd);
                 if (grcldr.GetN() > 0) mg.Add(&grcldr);
+                if (gremy.GetN() > 0) mg.Add(&gremy);
                 if (grinn.GetN() > 0) mg.Add(&grinn);
                 if (grout.GetN() > 0) mg.Add(&grout);
 
