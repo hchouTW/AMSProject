@@ -5,7 +5,7 @@ LIBP += -lgflags -lglog -lceres
 LIBS += -lgflags -lglog -lceres
 
 Version = vdev
-Version = 19Mar30
+Version = 19Apr01
 TagetDir = $(AMSCoreProd)/$(Version)
 
 all :

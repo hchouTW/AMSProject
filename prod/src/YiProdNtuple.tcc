@@ -1845,6 +1845,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.nhit_cld = chfit.nhit_cloud();
         chinfo.nhit_tmr = chfit.nhit_tumor();
         chinfo.nhit_gst = chfit.nhit_ghost();
+        chinfo.nhit_emy = chfit.nhit_emery();
         chinfo.nhit_oth = chfit.nhit_other();
         chinfo.nhit_oth_inn = chfit.nhit_other_inn();
         chinfo.nhit_oth_out = chfit.nhit_other_out();
@@ -1853,6 +1854,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
         chinfo.npe_cld = chfit.npe_cloud();
         chinfo.npe_tmr = chfit.npe_tumor();
         chinfo.npe_gst = chfit.npe_ghost();
+        chinfo.npe_emy = chfit.npe_emery();
         chinfo.npe_oth = chfit.npe_other();
         chinfo.npe_oth_inn = chfit.npe_other_inn();
         chinfo.npe_oth_out = chfit.npe_other_out();

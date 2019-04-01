@@ -6,7 +6,7 @@ namespace TrackSys {
 
 class CherenkovHit {
     public :
-        enum Cluster { stone = 0, cloud = 1, tumor = 2, ghost = 3, other = 4 };
+        enum Cluster { stone = 0, cloud = 1, tumor = 2, ghost = 3, emery = 4, other = 5 };
 
     public :
         CherenkovHit() { clear(); }
@@ -81,7 +81,7 @@ class CherenkovHit {
         short  chann_;
         short  pmtid_;
 
-        short  cluster_; // 0 (stone), 1(cloud), 2(tumor), 3(other)
+        short  cluster_; // 0 (stone), 1(cloud), 2(tumor), 3(ghost), 4(emery), 5(other)
 
         short  mode_; // -1(null), 0(d), 1(rA), 2(rB) 
         double beta_; // raw beta
@@ -421,6 +421,7 @@ class CherenkovFit {
         inline const short& nhit_cloud() const { return nhit_cloud_; }
         inline const short& nhit_tumor() const { return nhit_tumor_; }
         inline const short& nhit_ghost() const { return nhit_ghost_; }
+        inline const short& nhit_emery() const { return nhit_emery_; }
         inline const short& nhit_other() const { return nhit_other_; }
         inline const short& nhit_other_inn() const { return nhit_other_inn_; }
         inline const short& nhit_other_out() const { return nhit_other_out_; }
@@ -430,6 +431,7 @@ class CherenkovFit {
         inline const double& npe_cloud() const { return npe_cloud_; }
         inline const double& npe_tumor() const { return npe_tumor_; }
         inline const double& npe_ghost() const { return npe_ghost_; }
+        inline const double& npe_emery() const { return npe_emery_; }
         inline const double& npe_other() const { return npe_other_; }
         inline const double& npe_other_inn() const { return npe_other_inn_; }
         inline const double& npe_other_out() const { return npe_other_out_; }
@@ -477,6 +479,7 @@ class CherenkovFit {
         short nhit_cloud_;
         short nhit_tumor_;
         short nhit_ghost_;
+        short nhit_emery_;
         short nhit_other_;
         short nhit_other_inn_;
         short nhit_other_out_;
@@ -486,6 +489,7 @@ class CherenkovFit {
         double npe_cloud_;
         double npe_tumor_;
         double npe_ghost_;
+        double npe_emery_;
         double npe_other_;
         double npe_other_inn_;
         double npe_other_out_;

@@ -632,6 +632,7 @@ class ChFitInfo : public TObject {
             nhit_cld = 0;
             nhit_tmr = 0;
             nhit_gst = 0;
+            nhit_emy = 0;
             nhit_oth = 0;
             nhit_oth_inn = 0;
             nhit_oth_out = 0;
@@ -641,6 +642,7 @@ class ChFitInfo : public TObject {
             npe_cld = 0;
             npe_tmr = 0;
             npe_gst = 0;
+            npe_emy = 0;
             npe_oth = 0;
             npe_oth_inn = 0;
             npe_oth_out = 0;
@@ -684,6 +686,7 @@ class ChFitInfo : public TObject {
         Short_t nhit_cld;
         Short_t nhit_tmr;
         Short_t nhit_gst;
+        Short_t nhit_emy;
         Short_t nhit_oth;
         Short_t nhit_oth_inn;
         Short_t nhit_oth_out;
@@ -693,6 +696,7 @@ class ChFitInfo : public TObject {
         Float_t npe_cld;
         Float_t npe_tmr;
         Float_t npe_gst;
+        Float_t npe_emy;
         Float_t npe_oth;
         Float_t npe_oth_inn;
         Float_t npe_oth_out;

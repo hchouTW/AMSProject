@@ -79,6 +79,7 @@ CherenkovFit::CherenkovFit(const std::vector<CherenkovHit>& args_hits, const std
         if (hit.cluster() == CherenkovHit::Cluster::cloud) { nhit_cloud_++; npe_cloud_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::tumor) { nhit_tumor_++; npe_tumor_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::ghost) { nhit_ghost_++; npe_ghost_ += hit.npe(); }
+        if (hit.cluster() == CherenkovHit::Cluster::emery) { nhit_emery_++; npe_emery_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::other) { nhit_other_++; npe_other_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::other && hit.type() != 0) { nhit_other_inn_++; npe_other_inn_ += hit.npe(); }
         if (hit.cluster() == CherenkovHit::Cluster::other && hit.type() == 0) { nhit_other_out_++; npe_other_out_ += hit.npe(); }
@@ -106,6 +107,7 @@ void CherenkovFit::clear() {
     nhit_cloud_ = 0;
     nhit_tumor_ = 0;
     nhit_ghost_ = 0;
+    nhit_emery_ = 0;
     nhit_other_ = 0;
     nhit_other_inn_ = 0;
     nhit_other_out_ = 0;
@@ -115,6 +117,7 @@ void CherenkovFit::clear() {
     npe_cloud_ = Numc::ZERO<>;
     npe_tumor_ = Numc::ZERO<>;
     npe_ghost_ = Numc::ZERO<>;
+    npe_emery_ = Numc::ZERO<>;
     npe_other_ = Numc::ZERO<>;
     npe_other_inn_ = Numc::ZERO<>;
     npe_other_out_ = Numc::ZERO<>;
@@ -319,7 +322,6 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         if (is_used_hit) continue;
         
         if (is_within_pmtc(hit.cx(), hit.cy())) continue;
-        if (!is_within_detectable(hit.cx(), hit.cy())) continue;
 
         tumor_hits.push_back(hit);
     }
@@ -363,7 +365,6 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         if (is_used_hit) continue;
         
         if (is_within_pmtc(hit.cx(), hit.cy())) continue;
-        if (!is_within_detectable(hit.cx(), hit.cy())) continue;
 
         ghost_hits.push_back(hit);
     }
@@ -405,15 +406,16 @@ std::tuple<std::vector<CherenkovStone>, std::vector<CherenkovCloud>, std::vector
         }
         if (is_found) continue;
         
-        if (is_within_pmtc(hit.cx(), hit.cy())) continue;
-        
         othhits.push_back(hit);
     }
     for (auto&& hit : othhits) {
         hit.set_wgt(Numc::ONE<>);
         hit.set_cnt(Numc::ONE<>);
         hit.set_lmt_bta(lmtl_bta_, lmtu_bta_);
-        hit.set_cluster(CherenkovHit::Cluster::other);
+        
+        if (is_within_pmtc(hit.cx(), hit.cy())) { hit.set_cluster(CherenkovHit::Cluster::emery); }
+        else                                    { hit.set_cluster(CherenkovHit::Cluster::other); }
+        
         if (rltclds.size() == 0) continue;
         if (hit.type() == 0) continue;
         double beta = Numc::ONE<>;
@@ -861,19 +863,19 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     if (!succ) return CherenkovCloud();
   
     // check result
-    int count_within_three_sigma = 0;
+    int count_within_two_and_half_sigma = 0;
     std::vector<CherenkovHit> cand_reduce_chit;
     for (auto&& hit : cand_chit) {
         double absnrm = std::fabs(hit.search_closest_beta(cand_beta) - cand_beta) / width_bta_;
-        if (Numc::Compare(absnrm, Numc::FIVE<>) > 0) continue;
+        if (Numc::Compare(absnrm, Numc::FOUR<>) > 0) continue;
         cand_reduce_chit.push_back(hit);
 
-        if (Numc::Compare(absnrm, Numc::THREE<>) < 0) count_within_three_sigma++;
+        if (Numc::Compare(absnrm, Numc::TWO<> + Numc::ONE_TO_TWO) < 0) count_within_two_and_half_sigma++;
     } 
     if (cand_reduce_chit.size() < LMTMIN_CLOUD_HITS) return CherenkovCloud();
     std::sort(cand_reduce_chit.begin(), cand_reduce_chit.end(), CherenkovHit_sort());
     
-    if (count_within_three_sigma  < LMTMIN_CLOUD_HITS) return CherenkovCloud();
+    if (count_within_two_and_half_sigma  < LMTMIN_CLOUD_HITS) return CherenkovCloud();
     
     std::map<int, int> pmt_maps;
     int count_pmt_over_two_hits = 0;
