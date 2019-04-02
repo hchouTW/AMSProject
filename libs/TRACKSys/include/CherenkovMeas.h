@@ -30,7 +30,7 @@ class CherenkovHit {
         const double& search_closest_beta(double bta);
 
         // expert only
-        inline void set_cluster(short cls) { cluster_ = ((status_ && cls >= 0 && cls <= 4) ? cls : -1); }
+        inline void set_cluster(short cls) { cluster_ = ((status_ && cls >= static_cast<int>(Cluster::stone) && cls <= static_cast<int>(Cluster::other)) ? cls : -1); }
 
         // expert only
         inline void set_wgt(double wgt) { wgt_ = ((status_ && Numc::Compare(wgt) > 0) ? wgt : Numc::ZERO<>); }
@@ -198,7 +198,8 @@ class CherenkovCloud {
                        short nhit, short npmt, short nhit_dir, short nhit_rfl,
                        double beta, double cbta, double npe,
                        double cnt, double nchi,
-                       double misjudge) : CherenkovCloud() { 
+                       double misjudge,
+                       std::array<short, 8> ngps = std::array<short, 8>({0,0,0,0,0,0,0,0})) : CherenkovCloud() { 
             hits_ = hits; 
             status_ = true;
             nhit_ = nhit; npmt_ = npmt;
@@ -206,6 +207,7 @@ class CherenkovCloud {
             beta_ = beta; cbta_ = cbta; npe_ = npe;
             cnt_ = cnt; nchi_ = nchi;
             misjudge_ = misjudge;
+            ngps_ = ngps;
         }
 
         inline const bool& status() const { return status_; }
@@ -225,6 +227,8 @@ class CherenkovCloud {
         
         inline const double& misjudge() const { return misjudge_; }
         
+        inline const std::array<short, 8>& ngps() const { return ngps_; }
+        
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
 
         void set_misjudge(double mj) { misjudge_ = (mj > 0.0) ? mj : 0.0; }
@@ -238,6 +242,7 @@ class CherenkovCloud {
             beta_ = 0; cbta_ = 0; npe_ = 0;
             cnt_ = 0; nchi_ = 0;
             misjudge_ = 0;
+            ngps_ = std::array<short, 8>({0,0,0,0,0,0,0,0});
         }
 
     protected :
@@ -257,6 +262,8 @@ class CherenkovCloud {
         double nchi_;
 
         double misjudge_;
+        
+        std::array<short, 8> ngps_;
 
     protected :
         std::vector<CherenkovHit> hits_;
@@ -522,7 +529,7 @@ class CherenkovFit {
         static constexpr double LMTMAX_GROUP_SGM = 2.5;
         
         static constexpr short  LMTMIN_STONE_PMT_HITS_L = 3;
-        static constexpr short  LMTMIN_STONE_PMT_HITS_H = 4; // testcode, org 5
+        static constexpr short  LMTMIN_STONE_PMT_HITS_H = 5;
         static constexpr short  LMTMIN_STONE_HITS = 6;
       
         static constexpr short  LMTMIN_CLOUD_SETS = 2;

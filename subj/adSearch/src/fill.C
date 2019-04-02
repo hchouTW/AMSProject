@@ -6,7 +6,6 @@
 
 #include "TMultiGraph.h"
 
-
 int main(int argc, char * argv[]) {
     using namespace MGROOT;
     using namespace TrackSys;
@@ -117,20 +116,13 @@ int main(int argc, char * argv[]) {
     
     Hist* hOFFbetaHCut = Hist::New("hOFFbetaHCut", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut = Hist::New("hNEWbetaHCut", HistAxis(AXbta, "Events/Bin"));
-    Hist* hNEWbetaHCutA1 = Hist::New("hNEWbetaHCutA1", HistAxis(AXbta, "Events/Bin"));
-    Hist* hNEWbetaHCutA2 = Hist::New("hNEWbetaHCutA2", HistAxis(AXbta, "Events/Bin"));
-    Hist* hNEWbetaHCutA3 = Hist::New("hNEWbetaHCutA3", HistAxis(AXbta, "Events/Bin"));
-    Hist* hNEWbetaHCutA4 = Hist::New("hNEWbetaHCutA4", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut2 = Hist::New("hNEWbetaHCut2", HistAxis(AXbta, "Events/Bin"));
     
     Axis AXnh("Nhit", 60, -30, 30);
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     
-    Axis AXnh2("Nhit", 30, 0, 30);
-    Axis AXnp("Nhit", 50, 0, 250);
-    Hist* hNEWbetaHCutStnNH = Hist::New("hNEWbetaHCutStnNH", HistAxis(AXbta, AXnh2, "Events/Bin"));
-    Hist* hNEWbetaHCutStnNM = Hist::New("hNEWbetaHCutStnNM", HistAxis(AXbta, AXnh2, "Events/Bin"));
-    Hist* hNEWbetaHCutStnNP = Hist::New("hNEWbetaHCutStnNP", HistAxis(AXbta, AXnp, "Events/Bin"));
+    Axis AXnh2("Nhit", 20, 0, 20);
+    Hist* hNEWbetaHCutEmyNH = Hist::New("hNEWbetaHCutEmyNH", HistAxis(AXbta, AXnh2, "Events/Bin"));
     
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -251,10 +243,6 @@ int main(int argc, char * argv[]) {
             if (cut) {
                 hNEWbetaCut->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
                 if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(chfit.cloud.cbta, wgt);
-                if (cktrIn.rig > 20 && (chfit.nhit_oth - chfit.cloud.nhit) <= 2) hNEWbetaHCutA1->fillH1D(chfit.cloud.cbta, wgt);
-                if (cktrIn.rig > 20 && (chfit.nhit_oth - chfit.cloud.nhit) <= 1) hNEWbetaHCutA2->fillH1D(chfit.cloud.cbta, wgt);
-                if (cktrIn.rig > 20 && (chfit.nhit_oth - chfit.cloud.nhit) <= 0) hNEWbetaHCutA3->fillH1D(chfit.cloud.cbta, wgt);
-                if (cktrIn.rig > 20 && (chfit.nhit_oth - chfit.cloud.nhit) <= -1) hNEWbetaHCutA4->fillH1D(chfit.cloud.cbta, wgt);
                 hNEWmassCut->fillH2D(chfit.cloud.cbta, mass, wgt);
                 
                 if (chfit.nhit_oth - chfit.cloud.nhit <= 0) {
@@ -264,9 +252,7 @@ int main(int argc, char * argv[]) {
                 }
                 
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
-                if (cktrIn.rig > 20 && chfit.nstn == 1) hNEWbetaHCutStnNH->fillH2D(chfit.cloud.cbta, chfit.stone.nhit, wgt);
-                if (cktrIn.rig > 20 && chfit.nstn == 1) hNEWbetaHCutStnNM->fillH2D(chfit.cloud.cbta, chfit.stone.npmt, wgt);
-                if (cktrIn.rig > 20 && chfit.nstn == 1) hNEWbetaHCutStnNP->fillH2D(chfit.cloud.cbta, chfit.stone.npe, wgt);
+                if (cktrIn.rig > 20 && chfit.is_in_pmt_plane) hNEWbetaHCutEmyNH->fillH2D(chfit.cloud.cbta, chfit.nhit_emy, wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;

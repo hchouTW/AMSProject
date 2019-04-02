@@ -911,8 +911,19 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     double cand_misjudge = Numc::ZERO<>; 
 
     for (auto&& hit : cand_reduce_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
-        
-    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge);
+    
+    // testcode
+    short ngps1 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::ONE<>  , false, width_bta_)).size();
+    short ngps2 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::TWO<>  , false, width_bta_)).size();
+    short ngps3 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::THREE<>, false, width_bta_)).size();
+    short ngps4 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::FOUR<> , false, width_bta_)).size();
+    short ngps5 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::FIVE<> , false, width_bta_)).size();
+    short ngps6 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::SIX<>  , false, width_bta_)).size();
+    short ngps7 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::SEVEN<>, false, width_bta_)).size();
+    short ngps8 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::EIGHT<>, false, width_bta_)).size();
+    std::array<short, 8> cand_ngps({ ngps1, ngps2, ngps3, ngps4, ngps5, ngps6, ngps7, ngps8 });
+
+    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge, cand_ngps);
 }
 
 
@@ -1340,7 +1351,7 @@ std::vector<CherenkovGhost> CherenkovFit::build_ghost(const std::vector<Cherenko
         if (table.size() < LMTMIN_GHOST_HITS) continue;
         
         short maxnhits = 0;
-        auto&& gstones = make_group_table(table, true, Numc::ONE_TO_THREE * WIDTH_PMT, false, (Numc::ONE<> + Numc::ONE_TO_THREE) * width_bta_);
+        auto&& gstones = make_group_table(table, true, Numc::ONE_TO_THREE * WIDTH_PMT, false, (Numc::ONE<> + Numc::ONE_TO_TWO) * width_bta_);
         for (auto&& gstone : gstones) maxnhits = std::max(maxnhits, static_cast<short>(gstone.size()));
         if (gstones.size() < LMTMIN_GHOST_PMTS && maxnhits <= LMTMIN_GHOST_HITS) continue;
 

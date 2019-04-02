@@ -513,6 +513,8 @@ class ChCloudInfo : public TObject {
             nchi     = 0;
 
             misjudge = 0;
+
+            std::fill_n(ngps, 8, 0);
         }
 
     public :
@@ -536,6 +538,8 @@ class ChCloudInfo : public TObject {
         Float_t nchi;
 
         Float_t misjudge;
+
+        Short_t ngps[8];
 
     ClassDef(ChCloudInfo, 1)
 };

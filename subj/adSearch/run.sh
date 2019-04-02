@@ -28,7 +28,7 @@ Stream=${CurDir}/lst/flist.ncu.iss.rich5
 OutputDir=${CurDir}/dat
 
 #Fit
-GroupSize=35
+GroupSize=10
 Nseq=30
 #Fit
 #GroupSize=1
