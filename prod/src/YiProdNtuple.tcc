@@ -2513,6 +2513,8 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     if (btaM1.status()) fHyc.btaM1 = std::move(processHCBta(btaM1));
     if (btaM2.status()) fHyc.btaM2 = std::move(processHCBta(btaM2));
 
+    // testcode
+    /*
     // Mass Fitting
     std::tuple<TrackSys::AmsTkOpt, TrackSys::AmsTfOpt, TrackSys::AmsRhOpt> opt_mu = 
         std::make_tuple(TrackSys::AmsTkOpt(tkin, true, true), TrackSys::AmsTfOpt(true, true), TrackSys::AmsRhOpt(false));
@@ -2520,7 +2522,8 @@ bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
     TrackSys::PhyMuFit&& mutr(TrackSys::AmsEvent::GetTrFitPar(mqtype, ortt, sw_mscat, sw_eloss, std::get<0>(opt_mu), std::get<1>(opt_mu), std::get<2>(opt_mu)));
 
     if (mutr.status()) fHyc.mutr = std::move(processHCMu(mutr));
-   
+    */
+
     // Mass from Track&Bta Fit
     fHyc.massM1 = (fHyc.trM1.at(0).status && fHyc.btaM1.status) ? std::fabs((fHyc.trM1.at(0).rig[1] / fHyc.btaM1.rig[1]) * fHyc.btaM1.mass) : 0.0;
     if (!TrackSys::Numc::Valid(fHyc.massM1)) fHyc.massM1 = 0.0;
