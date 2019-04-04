@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Apr01/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Apr03/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -121,9 +121,6 @@ int main(int argc, char * argv[]) {
     Axis AXnh("Nhit", 60, -30, 30);
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     
-    Axis AXnh2("Nhit", 20, 0, 20);
-    Hist* hNEWbetaHCutEmyNH = Hist::New("hNEWbetaHCutEmyNH", HistAxis(AXbta, AXnh2, "Events/Bin"));
-    
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
     Hist* hNEWmass = Hist::New("hNEWmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -131,6 +128,7 @@ int main(int argc, char * argv[]) {
     Hist* hOFFmassCut = Hist::New("hOFFmassCut", HistAxis(AXbtas, AXmass, "Events/Bin"));
     Hist* hNEWmassCut = Hist::New("hNEWmassCut", HistAxis(AXbtas, AXmass, "Events/Bin"));
     Hist* hNEWmassCut2 = Hist::New("hNEWmassCut2", HistAxis(AXbtas, AXmass, "Events/Bin"));
+    Hist* hNEWmassCut3 = Hist::New("hNEWmassCut3", HistAxis(AXbtas, AXmass, "Events/Bin"));
 
     TGraph grmir;
     for (int it = 0; it <= 360; ++it) {
@@ -252,7 +250,6 @@ int main(int argc, char * argv[]) {
                 }
                 
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
-                if (cktrIn.rig > 20 && chfit.is_in_pmt_plane) hNEWbetaHCutEmyNH->fillH2D(chfit.cloud.cbta, chfit.nhit_emy, wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;

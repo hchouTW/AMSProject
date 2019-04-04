@@ -1661,45 +1661,74 @@ class HYC : public TObject {
 		~HYC() {}
 
 		void init() {
-            trM1 = std::vector<HCTrInfo>(4);
-            trM2 = std::vector<HCTrInfo>(4);
-            
-            trM1All = std::vector<HCTrInfo>(4);
-            trM2All = std::vector<HCTrInfo>(4);
-         
-            btaM1.init();
-            btaM2.init();
+            trPrm    = std::vector<HCTrInfo>(4);
+            trPrmAll = std::vector<HCTrInfo>(4);
+            btaPrm.init();
+            massPrm = 0.0;
+
+            trSecIn.init();
+            trSecAllIn.init();
+            btaSec.init();
+            massSec = 0.0;
 
             mutr.init();
 
-            massM1 = 0.0;
-            massM2 = 0.0;
+            //trM1 = std::vector<HCTrInfo>(4);
+            //trM2 = std::vector<HCTrInfo>(4);
+            //
+            //trM1All = std::vector<HCTrInfo>(4);
+            //trM2All = std::vector<HCTrInfo>(4);
+         
+            //btaM1.init();
+            //btaM2.init();
+
+            //mutr.init();
+
+            //massM1 = 0.0;
+            //massM2 = 0.0;
 		}
 	
     public :
+        // Two main particles (P/D or He4/He3)
+        
+        // first (P or He4)
+        std::vector<HCTrInfo> trPrm;
+        std::vector<HCTrInfo> trPrmAll;
+        HCBtaInfo             btaPrm;
+        Float_t               massPrm;
+
+        // second (D or He3)
+        HCTrInfo  trSecIn;
+        HCTrInfo  trSecAllIn;
+        HCBtaInfo btaSec;
+        Float_t   massSec;
+        
+        // Mass Fit [Inn]
+        HCMuInfo mutr;
+
         // Two main particles (P/D or He4/He3)
         // M1: P or He4
         // M2: D or He3
 
         // Track Fit [Inn InnL1 InnL9 FS]
-        std::vector<HCTrInfo> trM1;
-        std::vector<HCTrInfo> trM2;
+        //std::vector<HCTrInfo> trM1;
+        //std::vector<HCTrInfo> trM2;
 
-        std::vector<HCTrInfo> trM1All;
-        std::vector<HCTrInfo> trM2All;
+        //std::vector<HCTrInfo> trM1All;
+        //std::vector<HCTrInfo> trM2All;
         
         // Beta Fit [Inn]
-        HCBtaInfo btaM1;
-        HCBtaInfo btaM2;
+        //HCBtaInfo btaM1;
+        //HCBtaInfo btaM2;
 
         // Mass Fit [Inn]
-        HCMuInfo mutr;
+        //HCMuInfo mutr;
         
         // Mass from Track&Beta Fit [Inn]
-        Float_t massM1;
-        Float_t massM2;
+        //Float_t massM1;
+        //Float_t massM2;
 
-	ClassDef(HYC, 4)
+	ClassDef(HYC, 5)
 };
 
 
