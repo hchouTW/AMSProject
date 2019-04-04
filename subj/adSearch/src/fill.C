@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Apr03/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Apr04/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -113,13 +113,25 @@ int main(int argc, char * argv[]) {
     Hist* hOFFbetaCut = Hist::New("hOFFbetaCut", HistAxis(AXrig, AXbta, "Events/Bin"));
     Hist* hNEWbetaCut = Hist::New("hNEWbetaCut", HistAxis(AXrig, AXbta, "Events/Bin"));
     Hist* hNEWbetaCut2 = Hist::New("hNEWbetaCut2", HistAxis(AXrig, AXbta, "Events/Bin"));
+    Hist* hNEWbetaCut3 = Hist::New("hNEWbetaCut3", HistAxis(AXrig, AXbta, "Events/Bin"));
     
     Hist* hOFFbetaHCut = Hist::New("hOFFbetaHCut", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut = Hist::New("hNEWbetaHCut", HistAxis(AXbta, "Events/Bin"));
     Hist* hNEWbetaHCut2 = Hist::New("hNEWbetaHCut2", HistAxis(AXbta, "Events/Bin"));
+    Hist* hNEWbetaHCut3 = Hist::New("hNEWbetaHCut3", HistAxis(AXbta, "Events/Bin"));
     
     Axis AXnh("Nhit", 60, -30, 30);
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
+    
+    Axis AXnh2("Nhit", 20, 0, 20);
+    Hist* hNEWbetaHCutS1 = Hist::New("hNEWbetaHCutS1", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS2 = Hist::New("hNEWbetaHCutS2", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS3 = Hist::New("hNEWbetaHCutS3", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS4 = Hist::New("hNEWbetaHCutS4", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS5 = Hist::New("hNEWbetaHCutS5", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS6 = Hist::New("hNEWbetaHCutS6", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS7 = Hist::New("hNEWbetaHCutS7", HistAxis(AXbta, AXnh2, "Events/Bin"));
+    Hist* hNEWbetaHCutS8 = Hist::New("hNEWbetaHCutS8", HistAxis(AXbta, AXnh2, "Events/Bin"));
     
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -249,7 +261,22 @@ int main(int argc, char * argv[]) {
                     hNEWmassCut2->fillH2D(chfit.cloud.cbta, mass, wgt);
                 }
                 
+                if (chfit.cloud.ngps[2] >= 3) {
+                    hNEWbetaCut3->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+                    if (cktrIn.rig > 20) hNEWbetaHCut3->fillH1D(chfit.cloud.cbta, wgt);
+                    hNEWmassCut3->fillH2D(chfit.cloud.cbta, mass, wgt);
+                }
+                
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
+                
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS1->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[0], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS2->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[1], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS3->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[2], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS4->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[3], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS5->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[4], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS6->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[5], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS7->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[6], wgt);
+                if (cktrIn.rig > 20 && chfit.cloud.nhit == 3) hNEWbetaHCutS8->fillH2D(chfit.cloud.cbta, chfit.cloud.ngps[7], wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;

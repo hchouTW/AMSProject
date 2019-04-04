@@ -198,8 +198,7 @@ class CherenkovCloud {
                        short nhit, short npmt, short nhit_dir, short nhit_rfl,
                        double beta, double cbta, double npe,
                        double cnt, double nchi,
-                       double misjudge,
-                       std::array<short, 8> ngps = std::array<short, 8>({0,0,0,0,0,0,0,0})) : CherenkovCloud() { 
+                       double misjudge) : CherenkovCloud() { 
             hits_ = hits; 
             status_ = true;
             nhit_ = nhit; npmt_ = npmt;
@@ -207,7 +206,6 @@ class CherenkovCloud {
             beta_ = beta; cbta_ = cbta; npe_ = npe;
             cnt_ = cnt; nchi_ = nchi;
             misjudge_ = misjudge;
-            ngps_ = ngps;
         }
 
         inline const bool& status() const { return status_; }
@@ -227,8 +225,6 @@ class CherenkovCloud {
         
         inline const double& misjudge() const { return misjudge_; }
         
-        inline const std::array<short, 8>& ngps() const { return ngps_; }
-        
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
 
         void set_misjudge(double mj) { misjudge_ = (mj > 0.0) ? mj : 0.0; }
@@ -242,7 +238,6 @@ class CherenkovCloud {
             beta_ = 0; cbta_ = 0; npe_ = 0;
             cnt_ = 0; nchi_ = 0;
             misjudge_ = 0;
-            ngps_ = std::array<short, 8>({0,0,0,0,0,0,0,0});
         }
 
     protected :
@@ -263,8 +258,6 @@ class CherenkovCloud {
 
         double misjudge_;
         
-        std::array<short, 8> ngps_;
-
     protected :
         std::vector<CherenkovHit> hits_;
 };
@@ -450,7 +443,7 @@ class CherenkovFit {
         bool check();
 
         inline double cal_dist_to_pmtc(double cx, double cy) { return std::hypot(cx - pmtc_[0], cy - pmtc_[1]); }
-        inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < WIDTH_PMT); }
+        inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < WIDTH_PMT * (Numc::ONE<> + Numc::ONE_TO_TWO)); } // testcode   org = 1.0
         inline bool is_within_detectable(double cx, double cy) { return (std::hypot(cx, cy) < (MIRROR_BTM_RADIUS - WIDTH_CELL)); }
 
         std::vector<std::vector<CherenkovHit>> make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone = false, double width_stone = 1.0, bool opt_cloud = false, double width_cloud = 1.0);

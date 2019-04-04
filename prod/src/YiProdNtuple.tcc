@@ -1903,14 +1903,6 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             cloud.cnt      = cld.cnt();
             cloud.nchi     = cld.nchi();
             cloud.misjudge = cld.misjudge();
-            cloud.ngps[0]  = cld.ngps()[0];
-            cloud.ngps[1]  = cld.ngps()[1];
-            cloud.ngps[2]  = cld.ngps()[2];
-            cloud.ngps[3]  = cld.ngps()[3];
-            cloud.ngps[4]  = cld.ngps()[4];
-            cloud.ngps[5]  = cld.ngps()[5];
-            cloud.ngps[6]  = cld.ngps()[6];
-            cloud.ngps[7]  = cld.ngps()[7];
             if (!chinfo.cloud.status) chinfo.cloud = cloud;
             chinfo.ncld++;
 

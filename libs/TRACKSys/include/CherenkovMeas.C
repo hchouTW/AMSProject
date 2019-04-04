@@ -912,18 +912,7 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
 
     for (auto&& hit : cand_reduce_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
     
-    // testcode
-    short ngps1 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::ONE<>   / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps2 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::TWO<>   / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps3 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::THREE<> / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps4 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::FOUR<>  / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps5 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::FIVE<>  / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps6 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::SIX<>   / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps7 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::SEVEN<> / Numc::FOUR<>, false, width_bta_)).size();
-    short ngps8 = (make_group_table(cand_reduce_chit, true, WIDTH_CELL * Numc::EIGHT<> / Numc::FOUR<>, false, width_bta_)).size();
-    std::array<short, 8> cand_ngps({ ngps1, ngps2, ngps3, ngps4, ngps5, ngps6, ngps7, ngps8 });
-
-    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge, cand_ngps);
+    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge);
 }
 
 
