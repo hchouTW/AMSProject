@@ -867,10 +867,10 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     std::vector<CherenkovHit> cand_reduce_chit;
     for (auto&& hit : cand_chit) {
         double absnrm = std::fabs(hit.search_closest_beta(cand_beta) - cand_beta) / width_bta_;
-        if (Numc::Compare(absnrm, Numc::FOUR<>) > 0) continue;
+        if (Numc::Compare(absnrm, Numc::FIVE<>) > 0) continue;
         cand_reduce_chit.push_back(hit);
 
-        if (Numc::Compare(absnrm, Numc::TWO<> + Numc::ONE_TO_TWO) < 0) count_within_two_and_half_sigma++;
+        if (Numc::Compare(absnrm, Numc::THREE<>) < 0) count_within_two_and_half_sigma++;
     } 
     if (cand_reduce_chit.size() < LMTMIN_CLOUD_HITS) return CherenkovCloud();
     std::sort(cand_reduce_chit.begin(), cand_reduce_chit.end(), CherenkovHit_sort());

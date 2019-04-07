@@ -121,7 +121,20 @@ int main(int argc, char * argv[]) {
     Hist* hNEWbetaHCut3 = Hist::New("hNEWbetaHCut3", HistAxis(AXbta, "Events/Bin"));
     
     Axis AXnh("Nhit", 60, -30, 30);
+    Hist* hNEWbetaLCutOthNH = Hist::New("hNEWbetaLCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
+   
+    Axis AXQ2("Q2", 100, 0, 10);
+    Hist* hNEWbetaLCutQ2 = Hist::New("hNEWbetaLCutQ2", HistAxis(AXbta, AXQ2, "Events/Bin"));
+    Hist* hNEWbetaHCutQ2 = Hist::New("hNEWbetaHCutQ2", HistAxis(AXbta, AXQ2, "Events/Bin"));
+    
+    Axis AXQT("QT", 100, 0, 100);
+    Hist* hNEWbetaLCutQT = Hist::New("hNEWbetaLCutQT", HistAxis(AXbta, AXQT, "Events/Bin"));
+    Hist* hNEWbetaHCutQT = Hist::New("hNEWbetaHCutQT", HistAxis(AXbta, AXQT, "Events/Bin"));
+    
+    Axis AXEQ("EQ", 20, 1, 5);
+    Hist* hNEWbetaLCutEQ = Hist::New("hNEWbetaLCutEQ", HistAxis(AXbta, AXEQ, "Events/Bin"));
+    Hist* hNEWbetaHCutEQ = Hist::New("hNEWbetaHCutEQ", HistAxis(AXbta, AXEQ, "Events/Bin"));
     
     Axis AXmass("mass [GeV]", 400, 0.0, 5.0);
     Hist* hOFFmass = Hist::New("hOFFmass", HistAxis(AXbtas, AXmass, "Events/Bin"));
@@ -252,6 +265,18 @@ int main(int argc, char * argv[]) {
                 }
                 
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
+                if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
+               
+                double corr = (chfit.index * chfit.index - 1.0) / (chfit.index * chfit.index - 1.0 / chfit.cloud.cbta / chfit.cloud.cbta) * std::fabs(chfit.radd[2]) * 0.1;
+
+                if (cktrIn.rig > 20) hNEWbetaHCutQ2->fillH2D(chfit.cloud.cbta, corr * chfit.cloud.npe / chfit.cloud.trace, wgt);
+                if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutQ2->fillH2D(chfit.cloud.cbta, corr * chfit.cloud.npe / chfit.cloud.trace, wgt);
+                
+                if (cktrIn.rig > 20) hNEWbetaHCutQT->fillH2D(chfit.cloud.cbta, (chfit.cloud.expnpe > 0) ? chfit.cloud.npe / chfit.cloud.expnpe : 0.0, wgt);
+                if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutQT->fillH2D(chfit.cloud.cbta, (chfit.cloud.expnpe > 0) ? chfit.cloud.npe / chfit.cloud.expnpe : 0.0, wgt);
+                
+                if (cktrIn.rig > 20) hNEWbetaHCutEQ->fillH2D(chfit.cloud.cbta, chfit.cloud.nhit / std::fabs(chfit.cloud.npmt), wgt);
+                if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutEQ->fillH2D(chfit.cloud.cbta, chfit.cloud.nhit / std::fabs(chfit.cloud.npmt), wgt);
             }
 
             bool is_bad  = chfit.cloud.cbta < 0.975;
