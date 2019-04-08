@@ -1896,6 +1896,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             cloud.trace    = trace[1];
             cloud.accuracy = trace[2];
             cloud.uniform  = trace[3];
+            cloud.crrch    = trace[4];
             cloud.beta     = cld.beta();
             cloud.cbta     = cld.cbta();
             cloud.npe      = cld.npe();

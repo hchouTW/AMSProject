@@ -543,7 +543,7 @@ class CherenkovFit {
         static constexpr short  LMTMAX_ITER = 200;
        
         static constexpr double                SMOOTH_RATE  = 0.25;
-        static constexpr std::array<double, 2> SMOOTH_BOUND { 3.0, 5.0 };
+        static constexpr std::array<double, 2> SMOOTH_BOUND { 3.0, 6.0 };
 
         static constexpr double CONVG_EPSILON    = 1.0e-06;
         static constexpr double CONVG_TOLERANCE  = 1.0e-06;

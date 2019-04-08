@@ -107,7 +107,7 @@ class RichAms {
 
         CherenkovFit fit() const;
        
-        std::array<double, 4> cal_trace(double cbta = 1.0, const CherenkovCloud* cloud = nullptr) const;
+        std::array<double, 5> cal_trace(double cbta = 1.0, const CherenkovCloud* cloud = nullptr) const;
 
         inline const bool& status() const { return status_; }
 

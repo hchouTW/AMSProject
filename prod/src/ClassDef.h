@@ -503,6 +503,7 @@ class ChCloudInfo : public TObject {
             trace    = 0;
             accuracy = 1;
             uniform  = 1;
+            crrch    = 0;
             
             beta     = 0;
             cbta     = 0;
@@ -526,6 +527,7 @@ class ChCloudInfo : public TObject {
         Float_t trace;
         Float_t accuracy;
         Float_t uniform;
+        Float_t crrch;
         
         Float_t beta;
         Float_t cbta;

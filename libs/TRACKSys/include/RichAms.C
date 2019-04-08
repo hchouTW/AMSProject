@@ -137,9 +137,9 @@ CherenkovFit RichAms::fit() const {
 }
         
 
-std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* cloud) const {
+std::array<double, 5> RichAms::cal_trace(double cbta, const CherenkovCloud* cloud) const {
     const std::array<double, 2> RAD_HEIGHT { 2.5, 0.5 }; // AGL, NAF
-    std::array<double, 4> rlt_trace({ 0.0, 0.0, 1.0, 1.0 });
+    std::array<double, 5> rlt_trace({ 0.0, 0.0, 1.0, 1.0 });
     bool has_cloud = (cloud != nullptr && cloud->status());
     if (!status_ || kind_ == KIND_EMPTY || (has_cloud ? cloud->cbta() : cbta) <= (Numc::ONE<> / index_)) return rlt_trace;
 
@@ -265,11 +265,12 @@ std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* clou
         count += (ph != 0);
     }}
     double trace = static_cast<double>(count) / static_cast<double>(TRACE_NPHI * TRACE_NSET);
-    
-    if (!Numc::Valid(trace_bd) || !Numc::Valid(trace)) return rlt_trace;
+    double crrch = (Numc::Compare(trace) > 0) ? (0.1 * ((index_ * index_ - Numc::ONE<>) / (sinv * sinv)) * std::fabs(radd[2]) / trace) : 0.0;
+
+    if (!Numc::Valid(trace_bd) || !Numc::Valid(trace) || !Numc::Valid(crrch)) return rlt_trace;
 
     if (!has_cloud) {
-        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, 1.0, 1.0 }));
+        rlt_trace = std::move(std::array<double, 5>({ trace_bd, trace, 1.0, 1.0, crrch }));
         return rlt_trace;
     }
 
@@ -306,7 +307,7 @@ std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* clou
     double accuracy = static_cast<double>(hphi.size()) / static_cast<double>(hits.size());
 
     if (hphi.size() < 2 || setpmt.size() < 2) {
-        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 0.0 }));
+        rlt_trace = std::move(std::array<double, 5>({ trace_bd, trace, accuracy, 0.0, crrch }));
         return rlt_trace;
     }
 
@@ -342,11 +343,11 @@ std::array<double, 4> RichAms::cal_trace(double cbta, const CherenkovCloud* clou
     
     double uniformity = static_cast<double>(withphi.size()) / static_cast<double>(count);
     if (!Numc::Valid(uniformity)) {
-        rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, 1.0 }));
+        rlt_trace = std::move(std::array<double, 5>({ trace_bd, trace, accuracy, 1.0, crrch }));
         return rlt_trace;
     }
 
-    rlt_trace = std::move(std::array<double, 4>({ trace_bd, trace, accuracy, uniformity }));
+    rlt_trace = std::move(std::array<double, 5>({ trace_bd, trace, accuracy, uniformity, crrch }));
     return rlt_trace;
 }
         

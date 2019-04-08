@@ -863,19 +863,22 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     if (!succ) return CherenkovCloud();
   
     // check result
-    int count_within_two_and_half_sigma = 0;
+    int count_within_three_sigma = 0;
+    int count_within_one_half_sigma = 0;
     std::vector<CherenkovHit> cand_reduce_chit;
     for (auto&& hit : cand_chit) {
         double absnrm = std::fabs(hit.search_closest_beta(cand_beta) - cand_beta) / width_bta_;
         if (Numc::Compare(absnrm, Numc::FIVE<>) > 0) continue;
         cand_reduce_chit.push_back(hit);
 
-        if (Numc::Compare(absnrm, Numc::THREE<>) < 0) count_within_two_and_half_sigma++;
+        if (Numc::Compare(absnrm, Numc::THREE<>) < 0) count_within_three_sigma++;
+        if (Numc::Compare(absnrm, Numc::ONE<> + Numc::ONE_TO_TWO) < 0) count_within_one_half_sigma++;
     } 
     if (cand_reduce_chit.size() < LMTMIN_CLOUD_HITS) return CherenkovCloud();
     std::sort(cand_reduce_chit.begin(), cand_reduce_chit.end(), CherenkovHit_sort());
     
-    if (count_within_two_and_half_sigma  < LMTMIN_CLOUD_HITS) return CherenkovCloud();
+    if (count_within_three_sigma < LMTMIN_CLOUD_HITS) return CherenkovCloud();
+    if (count_within_one_half_sigma <= Numc::ONE<short>) return CherenkovCloud();
     
     std::map<int, int> pmt_maps;
     int count_pmt_over_two_hits = 0;
