@@ -12,8 +12,7 @@ RunFile=${AMSCore}/subj/adSearch/${Version}/fill
 CurDir=${PWD}
 
 DataType=ISS
-Stream=${CurDir}/lst/flist.ncu.iss.rich
-Stream=${CurDir}/lst/flist.ncu.iss.rich8
+Stream=${CurDir}/lst/flist.ncu.iss.rich9
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Jun18
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_18Dec23
 #Stream=${CurDir}/lst/flist.ncu.iss.pass7_19Jan05

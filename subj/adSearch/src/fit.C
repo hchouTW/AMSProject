@@ -12,10 +12,10 @@ int main(int argc, char * argv[]) {
    
     Hist::Load("fill.root", "dat");
     
-    Hist* hOFFbta = Hist::Head("hOFFbetaCut");
+    Hist* hOFFbta = Hist::Head("hOFFbetaCut2");
     Hist* hNEWbta = Hist::Head("hNEWbetaCut2");
     
-    Hist* hOFFmass = Hist::Head("hOFFmassCut");
+    Hist* hOFFmass = Hist::Head("hOFFmassCut2");
     Hist* hNEWmass = Hist::Head("hNEWmassCut2");
     
     const Axis& AXrig = hOFFbta->xaxis();
