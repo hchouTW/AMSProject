@@ -513,6 +513,7 @@ class ChCloudInfo : public TObject {
             cnt      = 0;
             nchi     = 0;
 
+            clcrad   = 0;
             misjudge = 0;
         }
 
@@ -537,6 +538,7 @@ class ChCloudInfo : public TObject {
         Float_t cnt;
         Float_t nchi;
 
+        Float_t clcrad;
         Float_t misjudge;
 
     ClassDef(ChCloudInfo, 1)

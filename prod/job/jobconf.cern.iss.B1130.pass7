@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  prod
-PROJVERSION  =  19Apr06
+PROJVERSION  =  19Apr07
 PROJTITLE    =  NEW_RICH
 PROJBIN      =  YiProdNtuple
 PROJFLIST    =  flist.cern.iss.B1130.pass7

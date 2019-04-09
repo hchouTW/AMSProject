@@ -198,6 +198,7 @@ class CherenkovCloud {
                        short nhit, short npmt, short nhit_dir, short nhit_rfl,
                        double beta, double cbta, double npe,
                        double cnt, double nchi,
+                       double clcrad,
                        double misjudge) : CherenkovCloud() { 
             hits_ = hits; 
             status_ = true;
@@ -205,6 +206,7 @@ class CherenkovCloud {
             nhit_dir_ = nhit_dir; nhit_rfl_ = nhit_rfl;
             beta_ = beta; cbta_ = cbta; npe_ = npe;
             cnt_ = cnt; nchi_ = nchi;
+            clcrad_ = clcrad;
             misjudge_ = misjudge;
         }
 
@@ -223,6 +225,7 @@ class CherenkovCloud {
         inline const double& cnt()     const { return cnt_; }
         inline const double& nchi()    const { return nchi_; }
         
+        inline const double& clcrad() const { return clcrad_; }
         inline const double& misjudge() const { return misjudge_; }
         
         inline const std::vector<CherenkovHit>& hits() const { return hits_; }
@@ -237,6 +240,7 @@ class CherenkovCloud {
             nhit_dir_ = 0; nhit_rfl_ = 0;
             beta_ = 0; cbta_ = 0; npe_ = 0;
             cnt_ = 0; nchi_ = 0;
+            clcrad_ = 0;
             misjudge_ = 0;
         }
 
@@ -256,6 +260,7 @@ class CherenkovCloud {
         double cnt_;
         double nchi_;
 
+        double clcrad_;
         double misjudge_;
         
     protected :
@@ -464,7 +469,7 @@ class CherenkovFit {
         
         std::vector<CherenkovGhost> build_ghost(const std::vector<CherenkovHit>& args_hits, bool weighted = false);
         CherenkovGhost fit_ghost(std::vector<CherenkovHit>& hits);
-    
+   
     protected :
         bool succ_;
         

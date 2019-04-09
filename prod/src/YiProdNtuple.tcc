@@ -1903,6 +1903,7 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
             cloud.expnpe   = expnpe;
             cloud.cnt      = cld.cnt();
             cloud.nchi     = cld.nchi();
+            cloud.clcrad   = cld.clcrad();
             cloud.misjudge = cld.misjudge();
             if (!chinfo.cloud.status) chinfo.cloud = cloud;
             chinfo.ncld++;
