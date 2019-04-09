@@ -2,7 +2,7 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Apr06/src/ClassDef.h"
+#include "/ams_home/hchou/AMSCore/prod/19Apr07/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
@@ -123,6 +123,10 @@ int main(int argc, char * argv[]) {
     Axis AXnh("Nhit", 60, -30, 30);
     Hist* hNEWbetaLCutOthNH = Hist::New("hNEWbetaLCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
     Hist* hNEWbetaHCutOthNH = Hist::New("hNEWbetaHCutOthNH", HistAxis(AXbta, AXnh, "Events/Bin"));
+    
+    Axis AXDD("DD", 100, 0, 10);
+    Hist* hNEWbetaLCutDD = Hist::New("hNEWbetaLCutDD", HistAxis(AXbta, AXDD, "Events/Bin"));
+    Hist* hNEWbetaHCutDD = Hist::New("hNEWbetaHCutDD", HistAxis(AXbta, AXDD, "Events/Bin"));
    
     Axis AXQ2("Q2", 120, 0, 6);
     Hist* hNEWbetaLCutQ2 = Hist::New("hNEWbetaLCutQ2", HistAxis(AXbta, AXQ2, "Events/Bin"));
@@ -238,20 +242,20 @@ int main(int argc, char * argv[]) {
             
             bool cut = (fRich->numOfCls <= 3 && fRich->numOfCls >= 1 && fRich->prob > 0.01 && fRich->cstcq < 5 && fRich->eftOfColPE > 0.4);
             if (cut) {
-                //hOFFbetaCut->fillH2D(cktrIn.rig, fRich->beta, wgt);
-                //if (cktrIn.rig > 20) hOFFbetaHCut->fillH1D(fRich->beta, wgt);
-                //hOFFmassCut->fillH2D(fRich->beta, mass, wgt);
-                hOFFbetaCut->fillH2D(fG4mc->primPart.mom, fRich->beta, wgt);
-                if (cktrIn.rig > 20) hOFFbetaHCut->fillH1D(fG4mc->primPart.bta, wgt);
-                hOFFmassCut->fillH2D(fG4mc->primPart.bta, mass, wgt);
+                hOFFbetaCut->fillH2D(cktrIn.rig, fRich->beta, wgt);
+                if (cktrIn.rig > 20) hOFFbetaHCut->fillH1D(fRich->beta, wgt);
+                hOFFmassCut->fillH2D(fRich->beta, mass, wgt);
+                //hOFFbetaCut->fillH2D(fG4mc->primPart.mom, fRich->beta, wgt);
+                //if (cktrIn.rig > 20) hOFFbetaHCut->fillH1D(fG4mc->primPart.bta, wgt);
+                //hOFFmassCut->fillH2D(fG4mc->primPart.bta, mass, wgt);
             }
             if (cut && fRich->Q < 2.0 && fRich->numOfExpPE > 0){
-                //hOFFbetaCut2->fillH2D(cktrIn.rig, fRich->beta, wgt);
-                //if (cktrIn.rig > 20) hOFFbetaHCut2->fillH1D(fRich->beta, wgt);
-                //hOFFmassCut2->fillH2D(fRich->beta, mass, wgt);
-                hOFFbetaCut2->fillH2D(fG4mc->primPart.mom, fRich->beta, wgt);
-                if (cktrIn.rig > 20) hOFFbetaHCut2->fillH1D(fG4mc->primPart.bta, wgt);
-                hOFFmassCut2->fillH2D(fG4mc->primPart.bta, mass, wgt);
+                hOFFbetaCut2->fillH2D(cktrIn.rig, fRich->beta, wgt);
+                if (cktrIn.rig > 20) hOFFbetaHCut2->fillH1D(fRich->beta, wgt);
+                hOFFmassCut2->fillH2D(fRich->beta, mass, wgt);
+                //hOFFbetaCut2->fillH2D(fG4mc->primPart.mom, fRich->beta, wgt);
+                //if (cktrIn.rig > 20) hOFFbetaHCut2->fillH1D(fG4mc->primPart.bta, wgt);
+                //hOFFmassCut2->fillH2D(fG4mc->primPart.bta, mass, wgt);
             }
         }
 
@@ -268,24 +272,27 @@ int main(int argc, char * argv[]) {
             bool cut_other = ((chfit.nhit_oth - chfit.cloud.nhit) <= 0);
             bool cut = (cut_cloud && cut_stone && chfit.ntmr == 0 && chfit.ngst == 0);
             if (cut) {
-                //hNEWbetaCut->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
-                //if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(chfit.cloud.cbta, wgt);
-                //hNEWmassCut->fillH2D(chfit.cloud.cbta, mass, wgt);
-                hNEWbetaCut->fillH2D(fG4mc->primPart.mom, chfit.cloud.cbta, wgt);
-                if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(fG4mc->primPart.bta, wgt);
-                hNEWmassCut->fillH2D(fG4mc->primPart.bta, mass, wgt);
+                hNEWbetaCut->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+                if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(chfit.cloud.cbta, wgt);
+                hNEWmassCut->fillH2D(chfit.cloud.cbta, mass, wgt);
+                //hNEWbetaCut->fillH2D(fG4mc->primPart.mom, chfit.cloud.cbta, wgt);
+                //if (cktrIn.rig > 20) hNEWbetaHCut->fillH1D(fG4mc->primPart.bta, wgt);
+                //hNEWmassCut->fillH2D(fG4mc->primPart.bta, mass, wgt);
                 
                 if (cut_other) {
-                    //hNEWbetaCut2->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
-                    //if (cktrIn.rig > 20) hNEWbetaHCut2->fillH1D(chfit.cloud.cbta, wgt);
-                    //hNEWmassCut2->fillH2D(chfit.cloud.cbta, mass, wgt);
-                    hNEWbetaCut2->fillH2D(fG4mc->primPart.mom, chfit.cloud.cbta, wgt);
-                    if (cktrIn.rig > 20) hNEWbetaHCut2->fillH1D(fG4mc->primPart.bta, wgt);
-                    hNEWmassCut2->fillH2D(fG4mc->primPart.bta, mass, wgt);
+                    hNEWbetaCut2->fillH2D(cktrIn.rig, chfit.cloud.cbta, wgt);
+                    if (cktrIn.rig > 20) hNEWbetaHCut2->fillH1D(chfit.cloud.cbta, wgt);
+                    hNEWmassCut2->fillH2D(chfit.cloud.cbta, mass, wgt);
+                    //hNEWbetaCut2->fillH2D(fG4mc->primPart.mom, chfit.cloud.cbta, wgt);
+                    //if (cktrIn.rig > 20) hNEWbetaHCut2->fillH1D(fG4mc->primPart.bta, wgt);
+                    //hNEWmassCut2->fillH2D(fG4mc->primPart.bta, mass, wgt);
                 }
                 
                 if (cktrIn.rig > 20) hNEWbetaHCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
                 if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutOthNH->fillH2D(chfit.cloud.cbta, chfit.nhit_oth - chfit.cloud.nhit, wgt);
+                
+                if (cktrIn.rig > 20) hNEWbetaHCutDD->fillH2D(chfit.cloud.cbta, chfit.cloud.clcrad / 3.4, wgt);
+                if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutDD->fillH2D(chfit.cloud.cbta, chfit.cloud.clcrad / 3.4, wgt);
                
                 //if (cktrIn.rig > 20) hNEWbetaHCutQ2->fillH2D(chfit.cloud.cbta, std::sqrt(chfit.cloud.crrch * chfit.cloud.npe), wgt);
                 //if (cktrIn.rig > 3.5 && cktrIn.rig < 4.5) hNEWbetaLCutQ2->fillH2D(chfit.cloud.cbta, std::sqrt(chfit.cloud.crrch * chfit.cloud.npe), wgt);
@@ -300,7 +307,7 @@ int main(int argc, char * argv[]) {
             bool is_bad  = chfit.cloud.cbta < 0.975;
             bool is_good = std::fabs(chfit.cloud.cbta-1.0) < 0.005;
 
-            if (cut && cut_other && cktrIn.rig > 20 && (is_bad || (is_good && TrackSys::Rndm::DecimalUniform() < 0.0002))) {
+            if (cut && cut_other && cktrIn.rig > 3.5 && cktrIn.rig < 5 && (is_bad || (is_good && TrackSys::Rndm::DecimalUniform() < 0.0002))) {
                 TGraph grstn;
                 grstn.SetMarkerColor(kBlue);
                 grstn.SetMarkerStyle(29);

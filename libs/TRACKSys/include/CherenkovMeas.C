@@ -910,33 +910,12 @@ CherenkovCloud CherenkovFit::refit_cloud(const CherenkovCloud& cand_cld) {
     double cand_ndof = cand_cnt - Numc::ONE<>;
     if (!Numc::Valid(cand_ndof) || Numc::Compare(cand_ndof) <= 0) return CherenkovCloud();
     if (!Numc::Valid(cand_nchi)) return CherenkovCloud();
-        
-    double cand_clcrad = Numc::ZERO<>;
-    for (int it = 0;    it < cand_reduce_chit.size(); ++it) {
-    for (int jt = it+1; jt < cand_reduce_chit.size(); ++jt) {
-        double radius = Numc::ONE_TO_TWO * std::hypot(cand_reduce_chit.at(it).cx() - cand_reduce_chit.at(jt).cx(), cand_reduce_chit.at(it).cy() - cand_reduce_chit.at(jt).cy());
-        if (radius > cand_clcrad) cand_clcrad = radius;
-    }}
-    for (int it = 0;    it < cand_reduce_chit.size(); ++it) {
-    for (int jt = it+1; jt < cand_reduce_chit.size(); ++jt) {
-    for (int kt = jt+1; kt < cand_reduce_chit.size(); ++kt) {
-        auto&& mmx = std::minmax({ cand_reduce_chit.at(it).cx(), cand_reduce_chit.at(jt).cx(), cand_reduce_chit.at(kt).cx() });
-        auto&& mmy = std::minmax({ cand_reduce_chit.at(it).cy(), cand_reduce_chit.at(jt).cy(), cand_reduce_chit.at(kt).cy() });
-        double len = Numc::ONE_TO_TWO * std::hypot(mmx.second - mmx.first, mmy.second - mmy.first);
-        if (len < cand_clcrad) continue;
-        
-        double la = std::hypot(cand_reduce_chit.at(it).cx() - cand_reduce_chit.at(jt).cx(), cand_reduce_chit.at(it).cy() - cand_reduce_chit.at(jt).cy());
-        double lb = std::hypot(cand_reduce_chit.at(jt).cx() - cand_reduce_chit.at(kt).cx(), cand_reduce_chit.at(jt).cy() - cand_reduce_chit.at(kt).cy());
-        double lc = std::hypot(cand_reduce_chit.at(kt).cx() - cand_reduce_chit.at(it).cx(), cand_reduce_chit.at(kt).cy() - cand_reduce_chit.at(it).cy());
-        double radius = (la * lb * lc) / std::sqrt((la + lb + lc) * (-la + lb + lc) * (la - lb + lc) * (la + lb - lc));
-        if (radius > cand_clcrad) cand_clcrad = radius;
-    }}}
-    
+
     double cand_misjudge = Numc::ZERO<>; 
 
     for (auto&& hit : cand_reduce_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
     
-    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_clcrad, cand_misjudge);
+    return CherenkovCloud(cand_reduce_chit, cand_nhit, cand_npmt, cand_nhit_dir, cand_nhit_rfl, cand_beta, cand_cbta, cand_npe, cand_cnt, cand_nchi, cand_misjudge);
 }
 
 
@@ -1028,12 +1007,11 @@ std::vector<CherenkovCloud> CherenkovFit::fit_cloud(std::vector<CherenkovHit>& h
         if (!Numc::Valid(ndof) || Numc::Compare(ndof) <= 0) continue;
         if (!Numc::Valid(nchi)) continue;
     
-        double clcrad = Numc::ZERO<>;
         double misjudge = Numc::ZERO<>;
     
         for (auto&& hit : cand_chit) hit.set_cluster(CherenkovHit::Cluster::cloud);
         
-        cclds.push_back(CherenkovCloud(cand_chit, nhit, npmt, nhit_dir, nhit_rfl, beta, cbta, npe, cnt, nchi, clcrad, misjudge));
+        cclds.push_back(CherenkovCloud(cand_chit, nhit, npmt, nhit_dir, nhit_rfl, beta, cbta, npe, cnt, nchi, misjudge));
     }
     if (cclds.size() > 1) std::sort(cclds.begin(), cclds.end(), CherenkovCloud_sort());
 

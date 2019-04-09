@@ -513,7 +513,6 @@ class ChCloudInfo : public TObject {
             cnt      = 0;
             nchi     = 0;
 
-            clcrad   = 0;
             misjudge = 0;
         }
 
@@ -538,7 +537,6 @@ class ChCloudInfo : public TObject {
         Float_t cnt;
         Float_t nchi;
 
-        Float_t clcrad;
         Float_t misjudge;
 
     ClassDef(ChCloudInfo, 1)
@@ -1661,17 +1659,19 @@ class HYC : public TObject {
 		~HYC() {}
 
 		void init() {
-            trPrm    = std::vector<HCTrInfo>(4);
-            trPrmAll = std::vector<HCTrInfo>(4);
-            btaPrm.init();
-            massPrm = 0.0;
-
-            trSecIn.init();
-            trSecAllIn.init();
-            btaSec.init();
-            massSec = 0.0;
-
+            tktr = std::vector<HCTrInfo>(4);
+            
             mutr.init();
+            
+            prmTrAll.init();
+            prmTr.init();
+            prmBta.init();
+            prmMass = 0.0;
+            
+            secTrAll.init();
+            secTr.init();
+            secBta.init();
+            secMass = 0.0;
 
             //trM1 = std::vector<HCTrInfo>(4);
             //trM2 = std::vector<HCTrInfo>(4);
@@ -1691,20 +1691,23 @@ class HYC : public TObject {
     public :
         // Two main particles (P/D or He4/He3)
         
-        // first (P or He4)
-        std::vector<HCTrInfo> trPrm;
-        std::vector<HCTrInfo> trPrmAll;
-        HCBtaInfo             btaPrm;
-        Float_t               massPrm;
-
-        // second (D or He3)
-        HCTrInfo  trSecIn;
-        HCTrInfo  trSecAllIn;
-        HCBtaInfo btaSec;
-        Float_t   massSec;
+        // Track Fit [Inn InnL1 InnL9 FullSpan] (P or He4)
+        std::vector<HCTrInfo> tktr;
         
         // Mass Fit [Inn]
         HCMuInfo mutr;
+
+        // (P or He4)
+        HCTrInfo  prmTrAll;
+        HCTrInfo  prmTr;
+        HCBtaInfo prmBta;
+        Float_t   prmMass;
+
+        // second (D or He3)
+        HCTrInfo  secTrAll;
+        HCTrInfo  secTr;
+        HCBtaInfo secBta;
+        Float_t   secMass;
 
         // Two main particles (P/D or He4/He3)
         // M1: P or He4
