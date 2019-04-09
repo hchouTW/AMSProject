@@ -25,7 +25,7 @@ Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.ncu.bt.pr.400.B1082
 
 GroupId=5
-#GroupId=19912
+GroupId=19912
 #GroupId=5005
 GroupSize=1
 OutputDir=.
