@@ -8,15 +8,15 @@ RunFile=${AMSCore}/prod/${Version}/YiProdNtuple
 
 CurDir=${PWD}
 
-DataType=ISS
-Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
+#DataType=ISS
+#Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.cern.iss.B1130.pass7.test
 #Stream=${CurDir}/lst/flist.ncu.iss.B1130.pass7
 #Stream=${CurDir}/lst/flist.loc.iss.B1130.pass7
-#DataType=MC
+DataType=MC
 #Stream=${CurDir}/lst/flist.cern.mc.el.pl1.025200.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.el.pl1.2004000.B1200
-#Stream=${CurDir}/lst/flist.cern.mc.pr.pl1.l1.054000.B1200
+Stream=${CurDir}/lst/flist.cern.mc.pr.pl1.l1.054000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l1.24000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l19.216000.B1200
 #Stream=${CurDir}/lst/flist.cern.mc.he4.pl1.l1.150T.B1200

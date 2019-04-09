@@ -413,6 +413,7 @@ error       = ${jobdir}/err/CLS\$(ClusterId).PROC\$(ProcId).err
 log         = ${jobdir}/log/CLS\$(ClusterId).PROC\$(ProcId).log
 +JobFlavour = \"${queue}\"
 transfer_output_files = \"\"
+requirements = ( (OpSysAndVer == \"CentOS7\") && (Arch == \"INTEL\") )
 queue arguments from ${args_file}
 " > $submit_sub
 
