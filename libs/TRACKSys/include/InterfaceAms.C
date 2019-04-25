@@ -40,6 +40,8 @@ Bool_t     Event::StatusTk = false;
 Bool_t     Event::StatusTf = false;
 Bool_t     Event::StatusRh = false;
 
+RichObjAms Event::RichObj;
+
 std::vector<HitStTRK> Event::TkHitIn = std::vector<HitStTRK>();
 HitStTRK              Event::TkHitL1 = HitStTRK();
 HitStTRK              Event::TkHitL9 = HitStTRK();
@@ -69,6 +71,8 @@ void Event::Clear() {
     StatusTk = false;
     StatusTf = false;
     StatusRh = false;
+
+    RichObj.init();
 }
 
         
@@ -88,6 +92,9 @@ Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
     BetaHR*    btah = (iBetaH    >= 0) ? event->pBetaH(iBetaH)       : nullptr;
     RichRingR* rich = (iRichRing >= 0) ? event->pRichRing(iRichRing) : nullptr;
     if (trtk == nullptr) return false;
+
+    TrackSys::RichAms richams(event);
+    RichObj = std::move(richams.get_obj_by_fit(1));
 
     RunID = event->Run();
     EvID  = event->Event();

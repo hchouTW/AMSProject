@@ -16,6 +16,163 @@
 namespace TrackSys {
 
 
+class RichObjAms {
+    public :
+        RichObjAms() { init(); }
+        ~RichObjAms() {}
+
+        inline void init() {
+            status = false;
+            kind = -1;
+            tile = -1;
+
+            index = 0;
+            dist = 0;
+
+            is_good_geom = false;
+            is_bad_tile = false;
+            
+            bta_crr = 1.0;
+
+            std::fill_n(radp, 3, 0);
+            std::fill_n(radd, 3, 0);
+            std::fill_n(pmtp, 3, 0);
+
+            nstn = 0;
+            ncld = 0;
+            ntmr = 0;
+            ngst = 0; 
+
+            nhit_ttl = 0;
+            nhit_stn = 0;
+            nhit_cld = 0;
+            nhit_tmr = 0;
+            nhit_gst = 0;
+            nhit_oth = 0;
+            
+            npe_ttl = 0;
+            npe_stn = 0;
+            npe_cld = 0;
+            npe_tmr = 0;
+            npe_gst = 0;
+            npe_oth = 0;
+
+            stn_status = false;
+            stn_nhit = 0;
+            stn_npmt = 0;
+            stn_cx = 0;
+            stn_cy = 0;
+            stn_dist = 0;
+            stn_npe = 0;
+            stn_cnt = 0;
+            stn_nchi = 0;
+            stn_chic = 0;
+
+            cld_status = false;
+            cld_nhit = 0;
+            cld_npmt = 0;
+            cld_border = 0;
+            cld_trace = 0;
+            cld_accuracy = 0;
+            cld_uniform = 0;
+            cld_crrch = 0;
+            cld_beta = 0;
+            cld_cbta = 0;
+            cld_npe = 0;
+            cld_expnpe = 0;
+            cld_cnt = 0;
+            cld_nchi = 0;
+            cld_misjudge = 0;
+
+            nhit = 0;
+            hit_chann.clear();
+            hit_pmtid.clear();
+            hit_cls.clear();
+            hit_mode.clear();
+            hit_beta.clear();
+            hit_npe.clear();
+            hit_cx.clear();
+            hit_cy.clear();
+
+            cpuTime = 0;
+        }
+
+    public :
+        bool  status;
+        short kind;
+        short tile;
+        float index;
+        float dist;
+
+        bool is_good_geom;
+        bool is_bad_tile;
+        
+        float bta_crr;
+
+        float radp[3];
+        float radd[3];
+        float pmtp[3];
+
+        short nstn;
+        short ncld;
+        short ntmr;
+        short ngst;
+
+        short nhit_ttl;
+        short nhit_stn;
+        short nhit_cld;
+        short nhit_tmr;
+        short nhit_gst;
+        short nhit_oth;
+        
+        float npe_ttl;
+        float npe_stn;
+        float npe_cld;
+        float npe_tmr;
+        float npe_gst;
+        float npe_oth;
+
+        bool  stn_status;
+        short stn_nhit;
+        short stn_npmt;
+        float stn_cx;
+        float stn_cy;
+        float stn_dist;
+        float stn_npe;
+        float stn_cnt;
+        float stn_nchi;
+        float stn_chic;
+
+        bool  cld_status;
+        short cld_nhit;
+        short cld_npmt;
+        float cld_border;
+        float cld_trace;
+        float cld_accuracy;
+        float cld_uniform;
+        float cld_crrch;
+        float cld_beta;
+        float cld_cbta;
+        float cld_npe;
+        float cld_expnpe;
+        float cld_cnt;
+        float cld_nchi;
+        float cld_misjudge;
+
+        short              nhit;
+        std::vector<short> hit_chann;
+        std::vector<short> hit_pmtid;
+        std::vector<short> hit_cls;
+        std::vector<short> hit_mode;
+        std::vector<float> hit_beta;
+        std::vector<float> hit_npe;
+        std::vector<float> hit_cx;
+        std::vector<float> hit_cy;
+
+        float cpuTime;
+};
+
+
 class RichHitAms {
     public :
         RichHitAms() { clear(); }
@@ -105,8 +262,9 @@ class RichAms {
         RichAms(AMSEventR* event, TrTrackR* trtk = nullptr);
         ~RichAms() {}
 
-        CherenkovFit fit() const;
-       
+        CherenkovFit fit();
+        RichObjAms get_obj_by_fit(int zin = 1);
+
         std::array<double, 5> cal_trace(double cbta = 1.0, const CherenkovCloud* cloud = nullptr) const;
 
         inline const bool& status() const { return status_; }
@@ -130,7 +288,7 @@ class RichAms {
         inline const AMSDir&   radd() const { return radd_; }
         inline const AMSPoint& pmtp() const { return pmtp_; }
         
-        inline const bool& is_good_in_geometry() const { return is_good_in_geometry_; }
+        inline const bool& is_good_geom() const { return is_good_geom_; }
         inline const bool& is_bad_tile() const { return is_bad_tile_; }
         
         inline const bool& is_in_pmt_plane() const { return is_in_pmt_plane_; }
@@ -162,7 +320,7 @@ class RichAms {
         AMSDir   radd_; // charged particle in RAD plane (AMS coord)
         AMSPoint pmtp_; // charged particle in PMT plane (AMS coord)
 
-        bool is_good_in_geometry_;
+        bool is_good_geom_;
         bool is_bad_tile_;
 
         bool is_in_pmt_plane_;

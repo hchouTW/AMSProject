@@ -193,6 +193,7 @@ class HitStTOF : public VirtualHitSt {
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
+        void recal_t(const PhySt& part, double bta = 1.0);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
@@ -242,8 +243,8 @@ class HitStTOF : public VirtualHitSt {
         Short_t seqIDq_;
         
         Bool_t   side_t_;
-        Double_t orgt_; // T [cm]
-        Double_t tsft_; // T [cm]
+        Double_t orgt_; // T [cm] (TOF time)
+        Double_t tsft_; // T [cm] (Part time with shift correction)
         
         Double_t chit_; // T chi
         Double_t nrmt_; // T nrom
@@ -273,14 +274,18 @@ class HitStTOF : public VirtualHitSt {
         static void SetOffsetPathTime(Double_t offset_s = Numc::ZERO<>, Double_t offset_t = Numc::ZERO<>, Bool_t use_tshf = false) { 
             OFFSET_S_ = offset_s; OFFSET_T_ = offset_t; USE_TSHF_ = use_tshf; 
         }
-        static const Bool_t&   USED_TSHF()  { return USE_TSHF_; }
-        static const Double_t& OffsetTime() { return OFFSET_T_; }
-        static const Double_t& OffsetPath() { return OFFSET_S_; }
+        static void SetBaselineTime(Double_t baseline_t = Numc::ZERO<>) { BASELINE_T_ = baseline_t; }
+
+        static const Bool_t&   USED_TSHF()    { return USE_TSHF_; }
+        static const Double_t& OffsetTime()   { return OFFSET_T_; }
+        static const Double_t& OffsetPath()   { return OFFSET_S_; }
+        static const Double_t& BaselineTime() { return BASELINE_T_; }
 
     protected :
         static Bool_t   USE_TSHF_;
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
         static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
+        static Double_t BASELINE_T_; // TOF time of the first hit in TOFs
 };
 
 

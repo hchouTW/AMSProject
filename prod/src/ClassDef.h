@@ -496,9 +496,6 @@ class ChCloudInfo : public TObject {
             nhit     = 0;
             npmt     = 0;
 
-            nhit_dir = 0;
-            nhit_rfl = 0;
-
             border   = 0;
             trace    = 0;
             accuracy = 1;
@@ -520,8 +517,6 @@ class ChCloudInfo : public TObject {
         Bool_t  status;
         Short_t nhit;
         Short_t npmt;
-        Short_t nhit_dir;
-        Short_t nhit_rfl;
 
         Float_t border;
         Float_t trace;
@@ -543,58 +538,6 @@ class ChCloudInfo : public TObject {
 };
 
 
-class ChTumorInfo : public TObject {
-    public :
-        ChTumorInfo() { init(); }
-        ~ChTumorInfo() {}
-		
-        void init() {
-            status  = false;
-            nhit    = 0;
-            npmt    = 0;
-            beta    = 0;
-            cbta    = 0;
-            npe     = 0;
-        }
-
-    public :
-        Bool_t  status;
-        Short_t nhit;
-        Short_t npmt;
-        Float_t beta;
-        Float_t cbta;
-        Float_t npe;
-
-    ClassDef(ChTumorInfo, 1)
-};
-
-
-class ChGhostInfo : public TObject {
-    public :
-        ChGhostInfo() { init(); }
-        ~ChGhostInfo() {}
-		
-        void init() {
-            status  = false;
-            nhit    = 0;
-            npmt    = 0;
-            beta    = 0;
-            cbta    = 0;
-            npe     = 0;
-        }
-
-    public :
-        Bool_t  status;
-        Short_t nhit;
-        Short_t npmt;
-        Float_t beta;
-        Float_t cbta;
-        Float_t npe;
-
-    ClassDef(ChGhostInfo, 1)
-};
-
-
 class ChFitInfo : public TObject {
     public :
         ChFitInfo() { init(); }
@@ -602,16 +545,13 @@ class ChFitInfo : public TObject {
 
         void init() {
             status = false;
-            kind = 0;
-            tile = 0;
-
+            kind  = -1;
+            tile  = 0;
             index = 0;
-            dist = 0;
+            dist  = 0;
 
             is_good_geom = false;
             is_bad_tile = false;
-
-            is_in_pmt_plane = false;
 
             std::fill_n(radp, 0., 3);
             std::fill_n(radd, 0., 3);
@@ -624,8 +564,6 @@ class ChFitInfo : public TObject {
             
             stone.init();
             cloud.init();
-            tumor.init();
-            ghost.init();
         
             hits.clear();
 
@@ -634,20 +572,14 @@ class ChFitInfo : public TObject {
             nhit_cld = 0;
             nhit_tmr = 0;
             nhit_gst = 0;
-            nhit_emy = 0;
             nhit_oth = 0;
-            nhit_oth_inn = 0;
-            nhit_oth_out = 0;
         
             npe_ttl = 0;
             npe_stn = 0;
             npe_cld = 0;
             npe_tmr = 0;
             npe_gst = 0;
-            npe_emy = 0;
             npe_oth = 0;
-            npe_oth_inn = 0;
-            npe_oth_out = 0;
 
             bta_crr = 1;
 
@@ -664,8 +596,8 @@ class ChFitInfo : public TObject {
 
         Bool_t  is_good_geom;
         Bool_t  is_bad_tile;
-
-        Bool_t  is_in_pmt_plane;
+        
+        Float_t bta_crr;
 
         Float_t radp[3];
         Float_t radd[3];
@@ -676,38 +608,28 @@ class ChFitInfo : public TObject {
         Short_t ntmr;
         Short_t ngst;
 
-        ChStoneInfo stone;
-        ChCloudInfo cloud;
-        ChTumorInfo tumor;
-        ChGhostInfo ghost;
-
-        std::vector<ChHitInfo> hits;
-
         Short_t nhit_ttl;
         Short_t nhit_stn;
         Short_t nhit_cld;
         Short_t nhit_tmr;
         Short_t nhit_gst;
-        Short_t nhit_emy;
         Short_t nhit_oth;
-        Short_t nhit_oth_inn;
-        Short_t nhit_oth_out;
 
         Float_t npe_ttl;
         Float_t npe_stn;
         Float_t npe_cld;
         Float_t npe_tmr;
         Float_t npe_gst;
-        Float_t npe_emy;
         Float_t npe_oth;
-        Float_t npe_oth_inn;
-        Float_t npe_oth_out;
+        
+        ChStoneInfo stone;
+        ChCloudInfo cloud;
 
-        Float_t bta_crr;
+        std::vector<ChHitInfo> hits;
 
         Float_t cpuTime;
 
-    ClassDef(ChFitInfo, 1)
+    ClassDef(ChFitInfo, 2)
 };
 
 

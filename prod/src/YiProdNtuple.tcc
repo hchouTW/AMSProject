@@ -1772,196 +1772,105 @@ bool EventRich::processEvent(AMSEventR * event, AMSChain * chain) {
 
 
     // testcode
-    TrackSys::RichAms richams(event);
-    TrackSys::CherenkovFit&& chfit = richams.fit();
+    const TrackSys::RichObjAms& chobj = TrackSys::AmsEvent::GetRichObj();
     
-    // testcode
-    //if (!(chfit.status() && chfit.clds().size() != 0) && rich == nullptr) return false;
-    
-    if (!chfit.status()) {
-        ChFitInfo chinfo;
+    ChFitInfo chinfo;
+    if (chobj.status) {
         chinfo.status = true;
-        chinfo.kind = richams.kind();
-        chinfo.tile = richams.tile();
-        chinfo.index = richams.index();
-        chinfo.dist  = richams.dist();
-        chinfo.is_good_geom = richams.is_good_in_geometry();
-        chinfo.is_bad_tile  = richams.is_bad_tile();
-        chinfo.is_in_pmt_plane = richams.is_in_pmt_plane();
-        chinfo.radp[0] = richams.radp()[0];
-        chinfo.radp[1] = richams.radp()[1];
-        chinfo.radp[2] = richams.radp()[2];
-        chinfo.radd[0] = richams.radd()[0];
-        chinfo.radd[1] = richams.radd()[1];
-        chinfo.radd[2] = richams.radd()[2];
-        chinfo.pmtp[0] = richams.pmtp()[0];
-        chinfo.pmtp[1] = richams.pmtp()[1];
-        chinfo.pmtp[2] = richams.pmtp()[2];
-        chinfo.nhit_ttl = chfit.nhit_total();
-        chinfo.nhit_stn = chfit.nhit_stone();
-        chinfo.nhit_cld = chfit.nhit_cloud();
-        chinfo.nhit_tmr = chfit.nhit_tumor();
-        chinfo.nhit_gst = chfit.nhit_ghost();
-        chinfo.nhit_oth = chfit.nhit_other();
-        chinfo.nhit_oth_inn = chfit.nhit_other_inn();
-        chinfo.nhit_oth_out = chfit.nhit_other_out();
-        chinfo.npe_ttl = chfit.npe_total();
-        chinfo.npe_stn = chfit.npe_stone();
-        chinfo.npe_cld = chfit.npe_cloud();
-        chinfo.npe_tmr = chfit.npe_tumor();
-        chinfo.npe_gst = chfit.npe_ghost();
-        chinfo.npe_oth = chfit.npe_other();
-        chinfo.npe_oth_inn = chfit.npe_other_inn();
-        chinfo.npe_oth_out = chfit.npe_other_out();
-        chinfo.bta_crr = richams.bta_crr();
+        chinfo.kind   = chobj.kind;
+        chinfo.tile   = chobj.tile;
+        chinfo.index  = chobj.index;
+        chinfo.dist   = chobj.dist;
         
-        fRich.chfit = chinfo;
-    }
-    else {
-        //CERR("\n\n--------------------------------------------------------------------------------------------------\n");
-        //CERR("RICH KIND %d TILE %3d NHIT %d NPE %14.8f %14.8f %14.8f %14.8f %14.8f DIST %14.8f TIME %14.8f\n\n", richams.kind(), richams.tile(), richams.rhhits().size(), chfit.npe_total(), chfit.npe_stone(), chfit.npe_cloud(), chfit.npe_tumor(), chfit.npe_other(), richams.dist(), chfit.timer().time());
-        //CERR("OFF RICH KIND %d TILE %3d\n", fRich.kind, fRich.tile);
+        chinfo.is_good_geom = chobj.is_good_geom;
+        chinfo.is_bad_tile  = chobj.is_bad_tile;
+        
+        chinfo.radp[0] = chobj.radp[0];
+        chinfo.radp[1] = chobj.radp[1];
+        chinfo.radp[2] = chobj.radp[2];
+        chinfo.radd[0] = chobj.radd[0];
+        chinfo.radd[1] = chobj.radd[1];
+        chinfo.radd[2] = chobj.radd[2];
+        chinfo.pmtp[0] = chobj.pmtp[0];
+        chinfo.pmtp[1] = chobj.pmtp[1];
+        chinfo.pmtp[2] = chobj.pmtp[2];
+        
+        chinfo.bta_crr = chobj.bta_crr;
        
-        ChFitInfo chinfo;
-        chinfo.status = true;
-        chinfo.kind = richams.kind();
-        chinfo.tile = richams.tile();
-        chinfo.index = richams.index();
-        chinfo.dist  = richams.dist();
-        chinfo.is_good_geom = richams.is_good_in_geometry();
-        chinfo.is_bad_tile  = richams.is_bad_tile();
-        chinfo.is_in_pmt_plane = richams.is_in_pmt_plane();
-        chinfo.radp[0] = richams.radp()[0];
-        chinfo.radp[1] = richams.radp()[1];
-        chinfo.radp[2] = richams.radp()[2];
-        chinfo.radd[0] = richams.radd()[0];
-        chinfo.radd[1] = richams.radd()[1];
-        chinfo.radd[2] = richams.radd()[2];
-        chinfo.pmtp[0] = richams.pmtp()[0];
-        chinfo.pmtp[1] = richams.pmtp()[1];
-        chinfo.pmtp[2] = richams.pmtp()[2];
-        chinfo.nhit_ttl = chfit.nhit_total();
-        chinfo.nhit_stn = chfit.nhit_stone();
-        chinfo.nhit_cld = chfit.nhit_cloud();
-        chinfo.nhit_tmr = chfit.nhit_tumor();
-        chinfo.nhit_gst = chfit.nhit_ghost();
-        chinfo.nhit_emy = chfit.nhit_emery();
-        chinfo.nhit_oth = chfit.nhit_other();
-        chinfo.nhit_oth_inn = chfit.nhit_other_inn();
-        chinfo.nhit_oth_out = chfit.nhit_other_out();
-        chinfo.npe_ttl = chfit.npe_total();
-        chinfo.npe_stn = chfit.npe_stone();
-        chinfo.npe_cld = chfit.npe_cloud();
-        chinfo.npe_tmr = chfit.npe_tumor();
-        chinfo.npe_gst = chfit.npe_ghost();
-        chinfo.npe_emy = chfit.npe_emery();
-        chinfo.npe_oth = chfit.npe_other();
-        chinfo.npe_oth_inn = chfit.npe_other_inn();
-        chinfo.npe_oth_out = chfit.npe_other_out();
-        chinfo.bta_crr = richams.bta_crr();
-        chinfo.cpuTime = chfit.timer().time() * 1.0e+03;
+        chinfo.nstn = chobj.nstn;
+        chinfo.ncld = chobj.ncld;
+        chinfo.ntmr = chobj.ntmr;
+        chinfo.ngst = chobj.ngst;
         
-        //CERR("Stone Clustering: NSTN %2d   PART_XY %14.8f %14.8f\n", chfit.stns().size(), richams.pmtp()[0], richams.pmtp()[1]);
-        for (auto&& stn : chfit.stns()) {
+        chinfo.nhit_ttl = chobj.nhit_ttl;
+        chinfo.nhit_stn = chobj.nhit_stn;
+        chinfo.nhit_cld = chobj.nhit_cld;
+        chinfo.nhit_tmr = chobj.nhit_tmr;
+        chinfo.nhit_gst = chobj.nhit_gst;
+        chinfo.nhit_oth = chobj.nhit_oth;
+
+        chinfo.npe_ttl = chobj.npe_ttl;
+        chinfo.npe_stn = chobj.npe_stn;
+        chinfo.npe_cld = chobj.npe_cld;
+        chinfo.npe_tmr = chobj.npe_tmr;
+        chinfo.npe_gst = chobj.npe_gst;
+        chinfo.npe_oth = chobj.npe_oth;
+
+        if (chobj.stn_status) {
             ChStoneInfo stone;
-            stone.status = true;
-            stone.nhit   = stn.nhit();
-            stone.npmt   = stn.npmt();
-            stone.cx     = stn.cx();
-            stone.cy     = stn.cy();
-            stone.dist   = stn.dist();
-            stone.npe    = stn.npe();
-            stone.cnt    = stn.cnt();
-            stone.nchi   = stn.nchi();
-            stone.chic   = stn.chic();
-            if (!chinfo.stone.status) chinfo.stone = stone;
-            chinfo.nstn++;
-            
-            //CERR("CNT %14.8f DIST %14.8f XY %14.8f %14.8f NPE %14.8f NCHI %14.8f SKEWNESS %14.8f\n", stn.cnt(), stone.dist, stn.cx(), stn.cy(), stn.npe(), stn.nchi(), stn.skewness());
-            //for (auto&& hit : stn.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f XY %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.cx(), hit.cy(), hit.npe());
+            stone.status = chobj.stn_status;
+            stone.nhit   = chobj.stn_nhit;
+            stone.npmt   = chobj.stn_npmt;
+            stone.cx     = chobj.stn_cx;
+            stone.cy     = chobj.stn_cy;
+            stone.dist   = chobj.stn_dist;
+            stone.npe    = chobj.stn_npe;
+            stone.cnt    = chobj.stn_cnt;
+            stone.nchi   = chobj.stn_nchi;
+            stone.chic   = chobj.stn_chic;
+
+            chinfo.stone = stone;
         }
-            
-        //CERR("Cloud Clustering: NCLD %2d   OFF_BETA %14.8f\n", chfit.clds().size(), fRich.beta);
-        for (auto&& cld : chfit.clds()) {
-            double expnpe = RichRingR::ComputeNpExp(recEv.tkTrPar, cld.cbta(), recEv.zin);
-            auto&& trace = richams.cal_trace(cld.cbta(), &cld);
+
+        if (chobj.cld_status) {
             ChCloudInfo cloud;
-            cloud.status   = true;
-            cloud.nhit     = cld.nhit();
-            cloud.npmt     = cld.npmt();
-            cloud.nhit_dir = cld.nhit_dir();
-            cloud.nhit_rfl = cld.nhit_rfl();
-            cloud.border   = trace[0];
-            cloud.trace    = trace[1];
-            cloud.accuracy = trace[2];
-            cloud.uniform  = trace[3];
-            cloud.crrch    = trace[4];
-            cloud.beta     = cld.beta();
-            cloud.cbta     = cld.cbta();
-            cloud.npe      = cld.npe();
-            cloud.expnpe   = expnpe;
-            cloud.cnt      = cld.cnt();
-            cloud.nchi     = cld.nchi();
-            cloud.misjudge = cld.misjudge();
-            if (!chinfo.cloud.status) chinfo.cloud = cloud;
-            chinfo.ncld++;
+            cloud.status   = chobj.cld_status;
+            cloud.nhit     = chobj.cld_nhit;
+            cloud.npmt     = chobj.cld_npmt;
+            cloud.border   = chobj.cld_border;
+            cloud.trace    = chobj.cld_trace;
+            cloud.accuracy = chobj.cld_accuracy;
+            cloud.uniform  = chobj.cld_uniform;
+            cloud.crrch    = chobj.cld_crrch;
+            cloud.beta     = chobj.cld_beta;
+            cloud.cbta     = chobj.cld_cbta;
+            cloud.npe      = chobj.cld_npe;
+            cloud.expnpe   = chobj.cld_expnpe;
+            cloud.cnt      = chobj.cld_cnt;
+            cloud.nchi     = chobj.cld_nchi;
+            cloud.misjudge = chobj.cld_misjudge;
 
-            //CERR("CNT %14.8f NHIT %2d NPMT %2d TRACE %14.8f %14.8f BETA %14.8f %14.8f NCHI %14.8f MISJUDGE %14.8f UNIFORM %14.8f\n", cld.cnt(), cld.nhit(), cld.npmt(), cloud.trace, cloud.uniform, cld.beta(), cld.cbta(), cld.nchi(), cld.misjudge(), cloud.uniform);
-            //for (auto&& hit : cld.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f MODE %d BETA %14.8f %14.8f %14.8f CXY %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.mode(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.cx(), hit.cy(), hit.npe());
+            chinfo.cloud = cloud;
         }
-        
-        //CERR("Tumor Clustering:\n");
-        for (auto&& tmr : chfit.tmrs()) {
-            ChTumorInfo tumor;
-            tumor.status = true;
-            tumor.nhit   = tmr.nhit();
-            tumor.npmt   = tmr.npmt();
-            tumor.beta   = tmr.beta();
-            tumor.cbta   = tmr.cbta();
-            tumor.npe    = tmr.npe();
-            if (!chinfo.tumor.status) chinfo.tumor = tumor;
-            chinfo.ntmr++;
+
+        if (chobj.nhit != 0) {
+            for (int ih = 0; ih < chobj.nhit; ++ih) {
+                ChHitInfo hit;
+                hit.chann = chobj.hit_chann.at(ih);
+                hit.pmtid = chobj.hit_pmtid.at(ih);
+                hit.cls   = chobj.hit_cls.at(ih);
+                hit.mode  = chobj.hit_mode.at(ih);
+                hit.beta  = chobj.hit_beta.at(ih);
+                hit.npe   = chobj.hit_npe.at(ih);
+                hit.cx    = chobj.hit_cx.at(ih);
+                hit.cy    = chobj.hit_cy.at(ih);
+
+                chinfo.hits.push_back(hit);
+            }
+        }
             
-            //CERR("NHIT %2d NPMT %2d BETA %14.8f %14.8f NPE %14.8f\n", tmr.nhit(), tmr.npmt(), tmr.beta(), tmr.cbta(), tmr.npe());
-            //for (auto&& hit : tmr.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f BETA %14.8f %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.npe());
-        }
-        
-        //CERR("Ghost Clustering:\n");
-        for (auto&& gst : chfit.gsts()) {
-            ChGhostInfo ghost;
-            ghost.status = true;
-            ghost.nhit   = gst.nhit();
-            ghost.npmt   = gst.npmt();
-            ghost.beta   = gst.beta();
-            ghost.cbta   = gst.cbta();
-            ghost.npe    = gst.npe();
-            if (!chinfo.ghost.status) chinfo.ghost = ghost;
-            chinfo.ngst++;
-            
-            //CERR("NHIT %2d NPMT %2d BETA %14.8f %14.8f NPE %14.8f\n", gst.nhit(), gst.npmt(), gst.beta(), gst.cbta(), gst.npe());
-            //for (auto&& hit : gst.hits())
-            //    CERR("HIT PMT %3d LOC %d %d CNT %14.8f BETA %14.8f %14.8f %14.8f NPE %14.8f\n", hit.pmtid(), hit.locid(0), hit.locid(1), hit.cnt(), hit.dbta(), hit.rbtaA(), hit.rbtaB(), hit.npe());
-        }
-        
-        for (auto&& hit : chfit.hits()) {
-            ChHitInfo info;
-            info.chann = hit.chann();
-            info.pmtid = hit.pmtid();
-            info.cls   = hit.cluster();
-            info.mode  = hit.mode();
-            info.beta  = hit.beta();
-            info.npe   = hit.npe();
-            info.cx    = hit.cx();
-            info.cy    = hit.cy();
-            chinfo.hits.push_back(info);
-        }
-        
         fRich.chfit = chinfo;
-    }
-
+    } 
 
 
     /*
@@ -2410,7 +2319,7 @@ void EventHyc::setEnvironment() {
 bool EventHyc::processEvent(AMSEventR * event, AMSChain * chain) {
 	initEvent();
 	if (event == nullptr) return false;
-    if (!TrackSys::AmsEvent::Load(event, 0)) return false;
+    if (!TrackSys::AmsEvent::Status()) return false;
 	fStopwatch.start();
  
     // Fit Parameters
@@ -3228,6 +3137,9 @@ int DataSelection::preselectEvent(AMSEventR* event, const std::string& officialD
 	    if (!TrackSys::Numc::EqualToZero(thres - TrackSys::Numc::ONE<>)) EventList::Weight /= thres;
     }
     
+    // ~9~ (TrackSys Load Event)
+    if (!TrackSys::AmsEvent::Load(event, 0)) return -9001;
+    
     // ~9~ (Scale events from MC momentum)
     //if (EventBase::checkEventMode(EventBase::MC)) {
     //    const double cutoff = 60.0; // current
@@ -3508,7 +3420,7 @@ void YiNtuple::loopEventChain() {
 
 		AMSEventR * event = fChain->GetEvent(ientry);
 
-		//if (nprocessed > 5000) break; // testcode
+		if (nprocessed > 5000) break; // testcode
 		
 		fRunTagOp->processEvent(event, fChain);
 

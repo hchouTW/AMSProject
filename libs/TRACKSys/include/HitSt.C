@@ -247,9 +247,10 @@ IonEloss HitStTRK::PDF_Q02_QXY_(
 
 
 // HitStTOF
-Bool_t   HitStTOF::USE_TSHF_ = false;
-Double_t HitStTOF::OFFSET_T_ = Numc::ZERO<>;
-Double_t HitStTOF::OFFSET_S_ = Numc::ZERO<>;
+Bool_t   HitStTOF::USE_TSHF_   = false;
+Double_t HitStTOF::OFFSET_T_   = Numc::ZERO<>;
+Double_t HitStTOF::OFFSET_S_   = Numc::ZERO<>;
+Double_t HitStTOF::BASELINE_T_ = Numc::ZERO<>;
 
 void HitStTOF::clear() {
     seqIDcx_ = -1;
@@ -342,6 +343,41 @@ void HitStTOF::cal(const PhySt& part) {
     
     set_dummy_x(part.cx());
     set_dummy_y(part.cy());
+}
+        
+void HitStTOF::recal_t(const PhySt& part, double bta) {
+    bool over_light_speed = (bta >= Numc::ONE<>);
+    chit_    = Numc::ZERO<>;
+    nrmt_    = Numc::ZERO<>;
+    divtsft_ = Numc::ZERO<>;
+    divt_.fill(Numc::ZERO<>);
+    if (side_t_ && pdf_t_ != nullptr) {
+        // correct time when velocity > 1
+        Double_t crrt = (over_light_speed) ? (orgt_ - BASELINE_T_) * (bta - Numc::ONE<>) : Numc::ZERO<>;
+        // 1/bta := (1+igb*igb)^(1/2)
+        // t     := (delta_S / bta)
+        // res_t := (meas_t - part_t)
+        tsft_ = (orgt_ + crrt) + OFFSET_T_; // update shift time
+        Double_t ds = std::fabs(part.path() - OFFSET_S_);
+        Double_t dt = tsft_ - part.time();
+        if (Numc::Compare(ds) >= 0) {
+            std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.ibta(), USE_TSHF_);
+            chit_    = minit[0];
+            nrmt_    = minit[1];
+            divtsft_ = minit[2];
+            Double_t divt = (Numc::NEG<> * minit[2] * ds); // d(t) / d(ibta)
+            divt_[0] = divt;
+            divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
+            divt_[2] = divt * (part.bta() * part.mu()) * (part.eta() * part.eta());
+
+            if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1]) || !Numc::Valid(divt_[2])) {
+                chit_    = Numc::ZERO<>;
+                nrmt_    = Numc::ZERO<>;
+                divtsft_ = Numc::ZERO<>;
+                divt_.fill(Numc::ZERO<>);
+            }
+        }
+    }
 }
 
 Bool_t HitStTOF::set_type(const PartInfo& info) {

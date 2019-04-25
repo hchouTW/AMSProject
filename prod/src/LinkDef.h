@@ -50,12 +50,6 @@
 #pragma link C++ class ChCloudInfo;
 #pragma link C++ class std::vector<ChCloudInfo>+;
 
-#pragma link C++ class ChTumorInfo;
-#pragma link C++ class std::vector<ChTumorInfo>+;
-
-#pragma link C++ class ChGhostInfo;
-#pragma link C++ class std::vector<ChGhostInfo>+;
-
 #pragma link C++ class ChFitInfo;
 #pragma link C++ class std::vector<ChFitInfo>+;
 

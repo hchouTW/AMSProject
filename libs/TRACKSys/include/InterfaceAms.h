@@ -84,6 +84,8 @@ class Event {
         static Bool_t HasRICH_AGL() { return (StatusRh && (HitStRICH::Radiator::AGL == RhHit.rad())); }
         static Bool_t HasRICH_NAF() { return (StatusRh && (HitStRICH::Radiator::NAF == RhHit.rad())); }
 
+        static const RichObjAms& GetRichObj() { return RichObj; }
+
     public : 
         static TrFitPar GetTrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss(), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
 
@@ -100,6 +102,8 @@ class Event {
         static Bool_t     StatusTf;
         static Bool_t     StatusRh;
     
+        static RichObjAms RichObj;
+
     protected :
         static void   Init();
         static Bool_t BulidHitStTRK();

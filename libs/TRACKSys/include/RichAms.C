@@ -111,7 +111,7 @@ void RichAms::clear() {
     npe_col_ = 0.0;
     bta_crr_ = 1.0;
     
-    is_good_in_geometry_ = false;
+    is_good_geom_ = false;
     is_bad_tile_ = false;
 
     is_in_pmt_plane_ = false;
@@ -124,7 +124,7 @@ void RichAms::clear() {
 }
 
 
-CherenkovFit RichAms::fit() const {
+CherenkovFit RichAms::fit() {
     if (!status_ || kind_ == KIND_EMPTY || chhits_.size() == 0) return CherenkovFit();
     std::array<double, 2> pmtc({ pmtp_[0], pmtp_[1] });
     if (kind_ == KIND_AGL) {
@@ -134,6 +134,107 @@ CherenkovFit RichAms::fit() const {
         return CherenkovFit(chhits_, pmtc, index_, NAF_BETA_WIDTH, NAF_BETA_PDF, bta_crr_);
     }
     return CherenkovFit();
+}
+        
+
+RichObjAms RichAms::get_obj_by_fit(int zin) {
+    if (!status_ || kind_ == KIND_EMPTY || chhits_.size() == 0 || zin <= 0) return RichObjAms();
+    CherenkovFit&& fit = this->fit();
+
+    RichObjAms obj;
+    obj.status = status_;
+    obj.kind   = kind_;
+    obj.tile   = tile_;
+    obj.index  = index_;
+    obj.dist   = dist_;
+    
+    obj.is_good_geom = is_good_geom_;
+    obj.is_bad_tile  = is_bad_tile_;
+   
+    obj.bta_crr  = bta_crr_;
+
+    obj.radp[0]  = radp_[0];
+    obj.radp[1]  = radp_[1];
+    obj.radp[2]  = radp_[2];
+    obj.radd[0]  = radd_[0];
+    obj.radd[1]  = radd_[1];
+    obj.radd[2]  = radd_[2];
+    obj.pmtp[0]  = pmtp_[0];
+    obj.pmtp[1]  = pmtp_[1];
+    obj.pmtp[2]  = pmtp_[2];
+
+    if (!fit.status()) return obj;
+    obj.nstn = fit.stns().size(); 
+    obj.ncld = fit.clds().size(); 
+    obj.ntmr = fit.tmrs().size(); 
+    obj.ngst = fit.gsts().size(); 
+
+    obj.nhit_ttl = fit.nhit_total();
+    obj.nhit_stn = fit.nhit_stone();
+    obj.nhit_cld = fit.nhit_cloud();
+    obj.nhit_tmr = fit.nhit_tumor();
+    obj.nhit_gst = fit.nhit_ghost();
+    obj.nhit_oth = fit.nhit_other();
+    
+    obj.npe_ttl = fit.npe_total();
+    obj.npe_stn = fit.npe_stone();
+    obj.npe_cld = fit.npe_cloud();
+    obj.npe_tmr = fit.npe_tumor();
+    obj.npe_gst = fit.npe_ghost();
+    obj.npe_oth = fit.npe_other();
+
+    if (fit.stns().size() != 0) {
+        auto& stn = fit.stns().at(0);
+        obj.stn_status = stn.status();
+        obj.stn_nhit   = stn.nhit();
+        obj.stn_npmt   = stn.npmt();
+        obj.stn_cx     = stn.cx();
+        obj.stn_cy     = stn.cy();
+        obj.stn_dist   = stn.dist();
+        obj.stn_npe    = stn.npe();
+        obj.stn_cnt    = stn.cnt();
+        obj.stn_nchi   = stn.nchi();
+        obj.stn_chic   = stn.chic();
+    }
+    
+    if (fit.clds().size() != 0) {
+        auto& cld = fit.clds().at(0);
+        double expnpe = RichRingR::ComputeNpExp(trtk_, cld.cbta(), zin);
+        auto&& trace  = cal_trace(cld.cbta(), &cld);
+        
+        obj.cld_status   = cld.status();
+        obj.cld_nhit     = cld.nhit();
+        obj.cld_npmt     = cld.npmt();
+        obj.cld_border   = trace[0];
+        obj.cld_trace    = trace[1];
+        obj.cld_accuracy = trace[2];
+        obj.cld_uniform  = trace[3];
+        obj.cld_crrch    = trace[4];
+        obj.cld_beta     = cld.beta();
+        obj.cld_cbta     = cld.cbta();
+        obj.cld_npe      = cld.npe();
+        obj.cld_expnpe   = expnpe;
+        obj.cld_cnt      = cld.cnt();
+        obj.cld_nchi     = cld.nchi();
+        obj.cld_misjudge = cld.misjudge();
+    }
+
+    if (fit.hits().size() != 0) {
+        for (auto&& hit : fit.hits()) {
+            obj.hit_chann.push_back(hit.chann());
+            obj.hit_pmtid.push_back(hit.pmtid());
+            obj.hit_cls.push_back(hit.cluster());
+            obj.hit_mode.push_back(hit.mode());
+            obj.hit_beta.push_back(hit.beta());
+            obj.hit_npe.push_back(hit.npe());
+            obj.hit_cx.push_back(hit.cx());
+            obj.hit_cy.push_back(hit.cy());
+            obj.nhit++;
+        }
+    }
+
+    obj.cpuTime = fit.timer().time() * 1.0e+03;
+    return obj;
 }
         
 
@@ -381,12 +482,12 @@ bool RichAms::build(RichOffline::TrTrack track) {
     }
 
     double radius = std::hypot(radp_[0], radp_[1]);
-    is_good_in_geometry_ = (radius < EXTERNAL_RAD_RADIUS);
-    if (is_good_in_geometry_ && kind_ == KIND_AGL) {
-        is_good_in_geometry_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) > RAD_BOUNDARY[0]);
+    is_good_geom_ = (radius < EXTERNAL_RAD_RADIUS);
+    if (is_good_geom_ && kind_ == KIND_AGL) {
+        is_good_geom_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) > RAD_BOUNDARY[0]);
     }
-    if (is_good_in_geometry_ && kind_ == KIND_NAF) {
-        is_good_in_geometry_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) < RAD_BOUNDARY[1]);
+    if (is_good_geom_ && kind_ == KIND_NAF) {
+        is_good_geom_ = (std::max(std::fabs(radp_[0]), std::fabs(radp_[1])) < RAD_BOUNDARY[1]);
     }
     tile_ = RichRingR::getTileIndex(radp_[0], radp_[1]);
     if (tile_ < 0) return false;
