@@ -443,7 +443,7 @@ class CherenkovFit {
         bool check();
 
         inline double cal_dist_to_pmtc(double cx, double cy) { return std::hypot(cx - pmtc_[0], cy - pmtc_[1]); }
-        inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < (WIDTH_CELL * Numc::SIX<>)); } // testcode   org = 1.0
+        inline bool is_within_pmtc(double cx, double cy) { return (std::hypot(cx - pmtc_[0], cy - pmtc_[1]) < (WIDTH_CELL * Numc::SIX<>)); }
         inline bool is_within_detectable(double cx, double cy) { return (std::hypot(cx, cy) < (MIRROR_BTM_RADIUS - WIDTH_CELL)); }
 
         std::vector<std::vector<CherenkovHit>> make_group_table(const std::vector<CherenkovHit>& args_hits, bool opt_stone = false, double width_stone = 1.0, bool opt_cloud = false, double width_cloud = 1.0);

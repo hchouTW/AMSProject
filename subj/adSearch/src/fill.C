@@ -2,11 +2,22 @@
 #include <ROOTLibs/ROOTLibs.h>
 #include <TRACKSys.h>
 
-#include "/ams_home/hchou/AMSCore/prod/19Apr07/src/ClassDef.h"
+//#include "/ams_home/hchou/AMSCore/prod/19Apr07/src/ClassDef.h"
+#include "/afs/cern.ch/work/h/hchou/AMSCore/prod/19Apr07/src/ClassDef.h"
 
 #include "TMultiGraph.h"
 
+#include "/afs/cern.ch/user/h/hchou/TrackSys/include/LinearAlgebra.h"
+
+
 int main(int argc, char * argv[]) {
+    TrSys::TinyLinAlg::Vec<double, 3> vec;
+    TrSys::TinyLinAlg::Vec<double, 3> vec2;
+    std::cerr << Form("%f %f %f\n", vec(0), vec(1), vec(2));
+    TrSys::TinyLinAlg::Vec<double, 3> vec3 = vec + vec2;
+    vec.resize(2);
+    std::cerr << Form("%f %f %f\n", vec(0), vec(1), vec(2));
+
     using namespace MGROOT;
     using namespace TrackSys;
     MGROOT::LoadDefaultEnvironment();

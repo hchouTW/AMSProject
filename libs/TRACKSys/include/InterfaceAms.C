@@ -77,9 +77,6 @@ void Event::Clear() {
 
         
 Bool_t Event::Load(AMSEventR* event, UInt_t ipart) {
-    MagMgnt::Load();
-    MatMgnt::Load();
-
     Clear(); Init();
     if (event == nullptr || ipart >= event->NParticle()) return false;
     ParticleR* part = event->pParticle(ipart);
@@ -285,11 +282,27 @@ Bool_t Event::BulidHitStTOF() {
 }
 
 
+//Bool_t Event::BulidHitStRICH() {
+//    if (Rich == nullptr) return false;
+//    HitStRICH::Radiator radiator = (Rich->IsNaF() ? HitStRICH::Radiator::NAF : HitStRICH::Radiator::AGL);
+//    Double_t ibta = ((Numc::Compare(Rich->getBeta()) > 0) ? (Numc::ONE<> / Rich->getBeta()) : Numc::ZERO<>);
+//    SVecD<3> coo(Rich->AMSTrPars[0], Rich->AMSTrPars[1], Rich->AMSTrPars[2]);
+//
+//    HitStRICH hit(radiator);
+//    hit.set_coo(coo(0), coo(1), coo(2));
+//    hit.set_ib(ibta);
+//
+//    RhHit = hit;
+//    return true;
+//}
+
+
 Bool_t Event::BulidHitStRICH() {
-    if (Rich == nullptr) return false;
-    HitStRICH::Radiator radiator = (Rich->IsNaF() ? HitStRICH::Radiator::NAF : HitStRICH::Radiator::AGL);
-    Double_t ibta = ((Numc::Compare(Rich->getBeta()) > 0) ? (Numc::ONE<> / Rich->getBeta()) : Numc::ZERO<>);
-    SVecD<3> coo(Rich->AMSTrPars[0], Rich->AMSTrPars[1], Rich->AMSTrPars[2]);
+    if (!(RichObj.status && RichObj.kind != 0 && RichObj.cld_status)) return false;
+    HitStRICH::Radiator radiator = (RichObj.kind == 1 ? HitStRICH::Radiator::AGL : HitStRICH::Radiator::NAF);
+
+    Double_t ibta = Numc::ONE<> / RichObj.cld_cbta;
+    SVecD<3> coo(RichObj.radp[0], RichObj.radp[1], RichObj.radp[2]);
 
     HitStRICH hit(radiator);
     hit.set_coo(coo(0), coo(1), coo(2));

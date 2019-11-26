@@ -22,6 +22,7 @@ class SimpleMuScan {
     public :
         inline const Bool_t&   status() const { return succ_; }
         inline const PhySt&    part() const { return part_; }
+        inline const Double_t& ibta() const { return ibta_; }
         inline const Double_t& tsft() const { return tsft_; }
         
         inline const std::vector<PhyArg>& args() const { return args_; }
@@ -43,6 +44,7 @@ class SimpleMuScan {
     protected :
         Bool_t              succ_;
         PhySt               part_;
+        Double_t            ibta_; // beta from fit (may be not physical 1/beta)
         Double_t            tsft_; // time shift [cm]
         std::vector<PhyArg> args_; 
         
@@ -60,6 +62,10 @@ class SimpleMuScan {
     
     protected :
         Sys::HrsStopwatch timer_;
+
+    private :
+        // Limit of 1/beta
+        static constexpr Double_t LMTL_IBTA_APPROX_LIGHT = 1.00000000000001;
 };
 
 
@@ -79,18 +85,22 @@ const std::vector<std::vector<Double_t>> SimpleMuScan::LIST_MASS_Q({
 
 class SimpleMuScan::MuScanObj {
     public :
-        MuScanObj(Short_t chrg = 0, Double_t mass = 0, Double_t qltr = 0, Double_t qltb = 0, Double_t rig = 0, Double_t bta = 0) : chrg_(chrg), mass_(mass), qltr_(qltr), qltb_(qltb), rig_(rig), bta_(bta) {}
+        MuScanObj(Short_t chrg = 0, Double_t mass = 0, Double_t qltr = 0, Double_t qltb = 0, Double_t mom = 0, Double_t ibta = 0, Double_t sqrm = 0, Double_t paribta = 0) : chrg_(chrg), mass_(mass), qltr_(qltr), qltb_(qltb), mom_(mom), ibta_(ibta), sqrm_(sqrm), paribta_(paribta) {}
         ~MuScanObj() {}
 
-        inline void reset(Short_t chrg, Double_t mass) { if (chrg != 0 && Numc::Compare(mass) > 0) { chrg_ = chrg; mass_ = mass; qltr_ = 0; qltb_ = 0; rig_ = 0; bta_ = 0; } }
-
+        inline void reset(Short_t chrg, Double_t mass) { if (chrg != 0 && Numc::Compare(mass) > 0) { chrg_ = chrg; mass_ = mass; qltr_ = 0; qltb_ = 0; mom_ = 0; ibta_ = 0; sqrm_ = 0; paribta_ = 0; } }
+        
         inline const Short_t&  chrg() const { return chrg_; }
         inline const Double_t& mass() const { return mass_; }
         inline const Double_t& qltr() const { return qltr_; }
         inline const Double_t& qltb() const { return qltb_; }
+
+        inline const Double_t& mom()  const { return mom_; }
+        inline const Double_t& ibta() const { return ibta_; }
         
-        inline const Double_t& rig() const { return rig_; }
-        inline const Double_t& bta() const { return bta_; }
+        inline const Double_t& sqrm() const { return sqrm_; }
+        
+        inline const Double_t& paribta() const { return paribta_; }
 
     private :
         Short_t  chrg_;
@@ -98,8 +108,12 @@ class SimpleMuScan::MuScanObj {
         Double_t qltr_;
         Double_t qltb_;
 
-        Double_t rig_;
-        Double_t bta_;
+        Double_t mom_;
+        Double_t ibta_;
+        
+        Double_t sqrm_; // sqrt_mass := mom^2 * (ibta^2 - 1) (may be not physical mass)
+        
+        Double_t paribta_; // beta from fitting
 };
 
 

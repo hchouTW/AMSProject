@@ -122,6 +122,7 @@ class HitStTRK : public VirtualHitSt {
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
+        void recal(const PhySt& part, double ibta = 1.0);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
         
         inline void set_q(Double_t qxy, Double_t qx, Double_t qy) {
@@ -193,7 +194,7 @@ class HitStTOF : public VirtualHitSt {
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
-        void recal_t(const PhySt& part, double bta = 1.0);
+        void recal(const PhySt& part, double ibta = 1.0);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_t(Double_t t) {
@@ -286,6 +287,22 @@ class HitStTOF : public VirtualHitSt {
         static Double_t OFFSET_S_; // move TOF to particle path (FIRST-TOF)
         static Double_t OFFSET_T_; // move TOF to particle time (FIRST-TOF | PART-TOF)
         static Double_t BASELINE_T_; // TOF time of the first hit in TOFs
+
+    public :
+        static const Double_t SetRefPartPath(Double_t path = 0) { REF_PART_S_ = path; }
+        static const Double_t SetRefPartTime(Double_t time = 0) { REF_PART_T_ = time; }
+        
+        static const Double_t SetRefMeasPath(Double_t path = 0) { REF_MEAS_S_ = path; }
+        static const Double_t SetRefMeasTime(Double_t time = 0) { REF_MEAS_T_ = time; }
+        
+        static const Double_t SetRefOffsetTime(Double_t time = 0) { REF_OFFSET_T_ = time; }
+
+    protected :
+        static Double_t REF_PART_S_; // set particle's reference path to first hit in TOFs
+        static Double_t REF_PART_T_; // set particle's reference time to first hit in TOFs
+        static Double_t REF_MEAS_S_; // set measurement's reference path to first hit in TOFs
+        static Double_t REF_MEAS_T_; // set measurement's reference time to first hit in TOFs
+        static Double_t REF_OFFSET_T_;
 };
 
 
@@ -301,6 +318,7 @@ class HitStRICH : public VirtualHitSt {
         Short_t set_seqID(Short_t seqID); 
         
         void cal(const PhySt& part);
+        void recal(const PhySt& part, double ibta = 1.0);
         Bool_t set_type(const PartInfo& info = PartInfo(PartType::Proton));
 
         inline void set_ib(Double_t ib) {

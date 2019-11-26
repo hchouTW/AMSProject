@@ -87,6 +87,14 @@ class Event {
         static const RichObjAms& GetRichObj() { return RichObj; }
 
     public : 
+        static void LoadEnv(bool is_iss = false) {
+            PhyArg::SetOpt(true, true);
+            //PhyArg::SetOpt(true, false); // testcode
+            RichAms::LoadEnv(is_iss);
+            MagMgnt::Load();
+            MatMgnt::Load();
+        }
+
         static TrFitPar GetTrFitPar(const PartInfo& info = PartInfo(PartType::Proton), const TrFitPar::Orientation& ortt = TrFitPar::Orientation::kDownward, const Bool_t& sw_mscat = PhyArg::OptMscat(), const Bool_t& sw_eloss = PhyArg::OptEloss(), const TkOpt& tkOpt = TkOpt(), const TfOpt& tfOpt = TfOpt(), const RhOpt& rhOpt = RhOpt());
 
     protected :

@@ -45,6 +45,7 @@ PhyBtaFit& PhyBtaFit::operator=(const PhyBtaFit& rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
         part_ = rhs.part_;
+        ibta_ = rhs.ibta_;
         tsft_ = rhs.tsft_;
         rerr_ = rhs.rerr_;
       
@@ -60,6 +61,7 @@ void PhyBtaFit::clear() {
     succ_ = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
+    ibta_ = 0;
     tsft_ = 0;
     rerr_ = 0;
 
@@ -96,12 +98,14 @@ PhyBtaFit::PhyBtaFit(const TrFitPar& fitPar, const PhySt& refSt) : TrFitPar(buli
 Bool_t PhyBtaFit::simpleFit(const PhySt& refSt) {
     SimpleBtaFit btafit(dynamic_cast<TrFitPar&>(*this), refSt);
     if (!btafit.status()) return false;
+    Double_t init_ibta = btafit.part().ibta();
 
     // init state
     part_ = btafit.interpolate_to_z(hits_.at(0)->cz());
     if (Numc::EqualToZero(part_.mom())) return false;
     if (Numc::Compare(part_.uz() * refSt.uz()) < 0) return false;
     if (!survival_test_and_modify(part_, sw_eloss_)) return false;
+    ibta_ = (part_.ibta() / init_ibta) * btafit.ibta();
     tsft_ = btafit.tsft();
 
     return true;
@@ -113,7 +117,7 @@ Bool_t PhyBtaFit::physicalFit() {
     Bool_t opt_tsft = (nmes_TOFt_ > LMTN_TOF_T);
  
     // Gobal Parameters
-    std::vector<double> params_glb({ part_.ibta() });
+    std::vector<double> params_glb({ ibta_ });
     if (opt_tsft) { params_glb.push_back(tsft_); } // time shift
 
     // CeresSolver: Cost Function
@@ -139,11 +143,18 @@ Bool_t PhyBtaFit::physicalFit() {
     //if (ceres::NO_CONVERGENCE == summary.termination_type) return false;
  
     // Result (Global)
-    Double_t igmbta  = std::sqrt((params_glb.at(parIDibta) + Numc::ONE<>) * (params_glb.at(parIDibta) - Numc::ONE<>));
+    Double_t paribta = params_glb.at(parIDibta);
+    Double_t ibta    = ((paribta > LMTL_IBTA_APPROX_LIGHT) ? paribta : LMTL_IBTA_APPROX_LIGHT);
+    //Double_t igmbta  = std::sqrt((ibta + Numc::ONE<>) * (ibta - Numc::ONE<>));
+    Double_t igmbta  = std::sqrt(std::fabs((paribta + Numc::ONE<>) * (ibta - Numc::ONE<>))); // testcode
     Double_t parteta = part_.eta_sign() * (igmbta / part_.mu());
     part_.set_eta(parteta);
+    ibta_ = paribta;
     
     if (opt_tsft) { tsft_ = params_glb.at(parIDtsft); } // TOF Shift Time
+
+    // testcode
+    //if (std::fabs(ibta_ - 1.0) < 1.0e-5) std::cerr << summary.FullReport() << std::endl; 
 
     Bool_t succ = evolve();
     return succ;
@@ -159,7 +170,13 @@ Bool_t PhyBtaFit::evolve() {
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
+    HitStTOF::SetBaselineTime();
     HitStTOF::SetOffsetPathTime();
+    HitStTOF::SetRefPartPath();
+    HitStTOF::SetRefPartTime();
+    HitStTOF::SetRefMeasPath();
+    HitStTOF::SetRefMeasTime();
+    HitStTOF::SetRefOffsetTime();
     
     // time shift
     Double_t tsft = (opt_tsft ? tsft_ : Numc::ZERO<>);
@@ -168,6 +185,9 @@ Bool_t PhyBtaFit::evolve() {
 
     // Particle Status
     PhySt ppst(part_);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
     
     // Matrix (Jb)
     Double_t jbBB = Numc::ONE<>;
@@ -185,11 +205,17 @@ Bool_t PhyBtaFit::evolve() {
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
+                HitStTOF::SetBaselineTime(firstHitTOF->orgt());
                 HitStTOF::SetOffsetPathTime(
                     ppst.path(), 
                     (ppst.time() - firstHitTOF->orgt()) + tsft, 
                     true
                 );
+                HitStTOF::SetRefPartPath(ppst.path());
+                HitStTOF::SetRefPartTime(ppst.time());
+                HitStTOF::SetRefMeasPath(0.0);
+                HitStTOF::SetRefMeasTime(firstHitTOF->orgt());
+                HitStTOF::SetRefOffsetTime(tsft);
                 resetTOF = false;
             }
         }
@@ -267,17 +293,29 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
     
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
+    HitStTOF::SetBaselineTime();
     HitStTOF::SetOffsetPathTime();
+    HitStTOF::SetRefPartPath();
+    HitStTOF::SetRefPartTime();
+    HitStTOF::SetRefMeasPath();
+    HitStTOF::SetRefMeasTime();
+    HitStTOF::SetRefOffsetTime();
 
     // time shift
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft] : Numc::ZERO<>);
 
     // Particle Status
-    Double_t igmbta  = std::sqrt((parameters[0][parIDibta] + Numc::ONE<>) * (parameters[0][parIDibta] - Numc::ONE<>));
+    Double_t paribta = parameters[0][parIDibta];
+    Double_t ibta    = ((paribta > LMTL_IBTA_APPROX_LIGHT) ? paribta : LMTL_IBTA_APPROX_LIGHT);
+    //Double_t igmbta  = std::sqrt((ibta + Numc::ONE<>) * (ibta - Numc::ONE<>));
+    Double_t igmbta  = std::sqrt(std::fabs((paribta + Numc::ONE<>) * (ibta - Numc::ONE<>))); // testcode
     Double_t parteta = part_.eta_sign() * (igmbta / part_.mu());
     PhySt ppst(part_);
     ppst.arg().clear();
     ppst.set_eta(parteta);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
 
     Double_t jbBB = Numc::ONE<>;
     ceres::Vector rs = ceres::Vector::Zero(numOfRes_);
@@ -294,15 +332,24 @@ bool VirtualPhyBtaFit::Evaluate(double const *const *parameters, double *residua
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
+                HitStTOF::SetBaselineTime(firstHitTOF->orgt());
                 HitStTOF::SetOffsetPathTime(
                     ppst.path(),
                     (ppst.time() - firstHitTOF->orgt()) + tsft,
                     true
                 );
+                HitStTOF::SetRefPartPath(ppst.path());
+                HitStTOF::SetRefPartTime(ppst.time());
+                HitStTOF::SetRefMeasPath(0.0);
+                HitStTOF::SetRefMeasTime(firstHitTOF->orgt());
+                HitStTOF::SetRefOffsetTime(tsft);
                 resetTOF = false;
             }
         }
         hit->cal(ppst);
+        if (Hit<HitStTRK>::IsSame(hit)) Hit<HitStTRK>::Cast(hit)->recal(ppst, paribta);
+        if (Hit<HitStTOF>::IsSame(hit)) Hit<HitStTOF>::Cast(hit)->recal(ppst, paribta);
+        if (Hit<HitStRICH>::IsSame(hit)) Hit<HitStRICH>::Cast(hit)->recal(ppst, paribta);
 
         // Update Jacb
         Double_t curJbBB = (ppst.ibta() / preIbta);

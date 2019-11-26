@@ -122,6 +122,7 @@ class RecEvent {
         double qinmin;
         double mass;
         double beta;
+        double rigMIN; // max rigidity
         double rigMAX; // max rigidity
         double rigIN; // inner
         double rigL1; // inner+L1
@@ -129,6 +130,11 @@ class RecEvent {
         double rigFS; // full span
         short  signr;
         short  going; // (0, nothing   -1, down-going   1, up-going)
+        
+        int    tdLLR_nhit;
+        int    tkLLR_nhit;
+        double tdLLR[3]; // ep, eH, pH
+        double tkLLR[3]; // ep, eH, pH
 
         double distECAL;
         double distTRD;

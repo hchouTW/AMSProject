@@ -53,6 +53,7 @@ class PhyBtaFit : public TrFitPar {
     public :
         inline const Bool_t&   status() const { return succ_; }
         inline const PhySt&    part() const { return part_; }
+        inline const Double_t& ibta() const { return ibta_; }
         inline const Double_t& tsft() const { return tsft_; }
         inline const Double_t& rerr() const { return rerr_; }
 
@@ -74,6 +75,7 @@ class PhyBtaFit : public TrFitPar {
     protected :
         Bool_t   succ_;
         PhySt    part_;
+        Double_t ibta_; // beta from fit (may be not physical 1/beta)
         Double_t tsft_; // time shift [cm]
         Double_t rerr_; // ibta rel-error
         

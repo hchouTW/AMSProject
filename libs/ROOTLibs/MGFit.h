@@ -16,6 +16,7 @@
 #include <RooChi2Var.h>
 #include <RooMsgService.h>
 
+//using namespace RooFit;
 
 namespace MGROOT {
 namespace Fit {
@@ -77,6 +78,8 @@ class RooVar {
         inline  Hist *       temp(Int_t idx) const { return fTemp.at(idx); }
         inline const Double_t&    min() const { return fMin; }
         inline const Double_t&    max() const { return fMax; }
+        inline const Int_t&       min_bin() const { return fMinBin; }
+        inline const Int_t&       max_bin() const { return fMaxBin; }
 
         void set(const std::string& name, Hist * samp, Hist * sumt, const HistList& temp, Bool_t link = true, Double_t min = 0., Double_t max = 0.);
         void set(const std::string& name, Hist * samp, const HistList& temp, Bool_t link = true, Double_t min = 0., Double_t max = 0.);
@@ -90,6 +93,8 @@ class RooVar {
         HistList     fTemp;
         Double_t     fMin;
         Double_t     fMax;
+        Int_t        fMinBin;
+        Int_t        fMaxBin;
 };
 
 

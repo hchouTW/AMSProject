@@ -48,6 +48,8 @@ if [ "$proj_title" == "" ]; then
     proj_title=`date '+DATE%Y%m%dTIME%H%M%S'`
 fi
 
+proj_testing=${proj_path}/testing
+
 proj_bin=${proj_path}/${PROJBIN}
 if [ ! -f ${proj_bin} ]; then
     echo "not found PROJBIN(${proj_bin}\)"
@@ -109,15 +111,15 @@ else
         exit
     fi
     if [ ${exe_satID} -gt ${exe_endID} ]; then
-        echo "satID > endID  (${exe_satID} > ${exe_endID})"
+        echo "satID > endID  (${exe_satID} >= ${exe_endID})"
         exit
     fi
     if [ ${exe_satID} -ge ${lstlen_exe} ]; then
-        echo "satID >= len  (${exe_satID} > ${lstlen_exe})"
+        echo "satID >= len  (${exe_satID} >= ${lstlen_exe})"
         exit
     fi
     if [ ${exe_endID} -ge ${lstlen_exe} ]; then
-        echo "endID >= len  (${exe_endID} > ${lstlen_exe})"
+        echo "endID >= len  (${exe_endID} >= ${lstlen_exe})"
         exit
     fi
 fi
@@ -227,6 +229,10 @@ cp -fa ${proj_env} ${jobdir}/env.sh
 cp -fa ${proj_bin} ${jobdir}/jobexe
 cp -fa ${proj_lst} ${jobdir}/flist
 
+if [ -f ${proj_testing} ]; then
+    cp -fa ${proj_testing} ${jobdir}/testing
+fi
+
 # libClassDef
 proj_libClassDef=${proj_path}/lib/libClassDef.so
 if [ -f ${proj_libClassDef} ]; then
@@ -271,6 +277,10 @@ if [ \$# -ne 2 ]; then
     exit
 fi
 
+mkdir -p log
+mkdir -p out
+mkdir -p err
+
 jobDir=${jobdir}
 if [ ! -d \${jobDir} ]; then
     echo -e \"jobDir is not exist.\"
@@ -301,6 +311,10 @@ fi
 cp -fa \${jobDir}/env.sh \${PWD}/env.sh
 cp -fa \${jobDir}/jobexe \${PWD}/jobexe
 cp -fa \${jobDir}/flist  \${PWD}/flist
+
+if [ -f \${jobDir}/testing ]; then
+    cp -fa \${jobDir}/testing \${PWD}/testing
+fi
 
 # libClassDef
 libClassDef=\${jobDir}/libClassDef.so
@@ -350,8 +364,8 @@ do
     ldd \${PWD}/jobexe
     
     echo -e \"\\n\\n==== (Exe) Start Time: \`date\`\"
-    echo -e \"COMD:   ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData}\"
-    ./jobexe ${event_type} flist \${exeID} ${file_per_exe} \${tmpData}
+    echo -e \"COMD:   ./jobexe -type=${event_type} -inpath=flist -gindex=\${exeID} -gsize=${file_per_exe} -outpath=\${tmpData}\"
+    ./jobexe -type=${event_type} -inpath=flist -gindex=\${exeID} -gsize=${file_per_exe} -outpath=\${tmpData}
     echo -e \"==== (Exe) End Time: \`date\`\\n\\n\"
     
     FileID=\$(printf \"%i\" \${exeID})
@@ -363,6 +377,13 @@ do
     echo -e \"\\n\"
     ls -alh \${rootPath}
     echo -e \"\\n\\n\"
+
+    if [ -f \${jobDir}/testing ]; then
+        if [ -f \${rootPath} ]; then
+            echo -e \"COMD:   ./testing kill \${rootPath}\"
+            ./testing kill \${rootPath} 
+        fi
+    fi
     
     if [ ! -f \${rootPath} ]; then
         echo \"ROOT file is not exist.\"
@@ -413,7 +434,7 @@ error       = ${jobdir}/err/CLS\$(ClusterId).PROC\$(ProcId).err
 log         = ${jobdir}/log/CLS\$(ClusterId).PROC\$(ProcId).log
 +JobFlavour = \"${queue}\"
 transfer_output_files = \"\"
-requirements = ( OpSysAndVer =?= \"CentOS7\" )
+#requirements = ( OpSysAndVer =?= \"CentOS7\" )
 queue arguments from ${args_file}
 " > $submit_sub
 

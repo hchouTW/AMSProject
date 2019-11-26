@@ -88,8 +88,8 @@ void Canvas::create(UInt_t ndivx, UInt_t ndivy, const Window& window, const PadM
 	window_ = window;
 
 	UInt_t  npad = (ndivx<1?1:ndivx) * (ndivy<1?1:ndivy);
-	Float_t wmargin = 0.01;
-	Float_t hmargin = 0.01;
+	Float_t wmargin = 0.00;
+	Float_t hmargin = 0.00;
 
 	canvas_.cd(0);
 	canvas_.SetCanvasSize(window.width, window.height);

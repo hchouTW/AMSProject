@@ -217,7 +217,7 @@ class PhySt {
         inline void set_state_with_uxy(const SVecD<3>& c, const SVecD<3>& u = SVecD<3>(0., 0., -1.)) { set_state_with_uxy(c(0), c(1), c(2), u(0), u(1), u(2)); }
         inline void set_state_with_mom(const SVecD<3>& c, const SVecD<3>& m) { set_state_with_mom(c(0), c(1), c(2), m(0), m(1), m(2)); }
        
-        inline void set_state(const SVecD<7>& stt) { set_state_with_cos(stt(0), stt(1), stt(2), stt(3), stt(4), stt(5)); set_eta(6); }
+        inline void set_state(const SVecD<7>& stt) { set_state_with_cos(stt(0), stt(1), stt(2), stt(3), stt(4), stt(5)); set_eta(stt(6)); }
 
         void set_mom(Double_t mom, Short_t sign = 0);
         

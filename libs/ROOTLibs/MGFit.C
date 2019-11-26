@@ -45,6 +45,8 @@ void RooVar::set(const std::string& name, Hist * samp, Hist * sumt, const HistLi
     Bool_t norm = (MGNumc::Compare(min, max) < 0);
     fMin = (min < minEdge || !norm) ? minEdge : min;
     fMax = (max > maxEdge || !norm) ? maxEdge : max;
+    fMinBin = (*samp)()->FindBin(fMin);
+    fMaxBin = (*samp)()->FindBin(fMax);
 
     fName = name;
     fLink = link;
@@ -55,11 +57,11 @@ void RooVar::set(const std::string& name, Hist * samp, Hist * sumt, const HistLi
         fTemp = temp;
     }
     else {
-        fSamp = Hist::New(STR("RVAR__%s", samp->name().c_str()), samp->title(), (*samp)());
+        fSamp = Hist::New(STR("RVAR_%s__%s", fName.c_str(), samp->name().c_str()), samp->title(), (*samp)());
         if (sumt != nullptr)
-            fSumt = Hist::New(STR("RVAR__%s", sumt->name().c_str()), sumt->title(), (*sumt)());
+            fSumt = Hist::New(STR("RVAR_%s__%s", fName.c_str(), sumt->name().c_str()), sumt->title(), (*sumt)());
         for (auto&& elem : temp) {
-            Hist * hist = Hist::New(STR("RVAR__%s", elem->name().c_str()), elem->title(), (*elem)());
+            Hist * hist = Hist::New(STR("RVAR_%s__%s", fName.c_str(), elem->name().c_str()), elem->title(), (*elem)());
             fTemp.push_back(hist);
         }
     }
@@ -85,6 +87,8 @@ void RooVar::clear() {
     fLink = true;
     fMin = 0;
     fMax = 0;
+    fMinBin = 0;
+    fMaxBin = 0;
 }
 
 
@@ -146,7 +150,8 @@ RooResult::RooResult(const RooVar& var, Bool_t extended, Bool_t fluc) : exist_(f
     Int_t lwBin = (*var_.samp())()->FindBin(var_.min());
     Int_t upBin = (*var_.samp())()->FindBin(var_.max());
     Double_t total = (*var_.samp())()->Integral(lwBin, upBin);
-    Double_t lwLmt = -7.0 * std::sqrt(total);
+    Double_t lwLmt = 0.0 * std::sqrt(total); // testcode
+    //Double_t lwLmt = -7.0 * std::sqrt(total);
     Double_t upLmt = total + 7.0 * std::sqrt(total);
     Double_t meanVal = (total / var_.num());
     
@@ -305,7 +310,7 @@ RooSysResult::RooSysResult(const RooVar& var, Bool_t extended, Int_t ntimes) : e
         sys_par_.push(val, err, sys);
        
         // TODO (hchou): find Correct way
-        if (ip==0) CERR("PAR %8.2f %8.2f %8.2f    (%8.2f %8.2f)\n", val, err, sys, result.par().val(ip), result.par().err(ip));
+        //CERR("PAR(%d) VAL %8.2f STAT_ERR %8.2f SYS_ERR %8.2f\n", ip, val, err, sys);
     }
     sys_par_.set_ndf_and_chi(ndf, avgchi * ndf);
     sys_fit_set_ = parvec;

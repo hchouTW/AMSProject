@@ -429,6 +429,9 @@ Bool_t SimpleTrFit::simpleFit() {
         if (!succ) curIter++;
     }
     
+    // Check status
+    succ = (Numc::Valid(part_.mom()) && !Numc::EqualToZero(part_.mom()));
+    
     // Turn Back (mscat, eloss)
     part_.arg().reset(sw_mscat_, sw_eloss_);
     nchi_tt_ = Numc::ZERO<>;
@@ -465,6 +468,9 @@ Bool_t SimpleTrFit::advancedSimpleCooFit() {
 
     part_.set_state_with_uxy(params.at(0), params.at(1), part_.cz(), params.at(2), params.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(params.at(4));
+    
+    // Check status
+    if (!Numc::Valid(part_.mom()) || Numc::EqualToZero(part_.mom())) return false;
 
     return true;
 }
@@ -493,6 +499,9 @@ Bool_t SimpleTrFit::advancedSimpleFit() {
     
     part_.set_state_with_uxy(params.at(0), params.at(1), part_.cz(), params.at(2), params.at(3), Numc::Compare(part_.uz()));
     part_.set_eta(params.at(4));
+    
+    // Check status
+    if (!Numc::Valid(part_.mom()) || Numc::EqualToZero(part_.mom())) return false;
 
     return true;
 }
@@ -549,6 +558,9 @@ Bool_t SimpleTrFit::evolve() {
     // Particle Status
     PhySt ppst(part_);
     ppst.arg().clear();
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
 
     // Matrix (Rs, Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
@@ -739,6 +751,9 @@ bool VirtualSimpleTrCooFit::Evaluate(const double* parameters, double* cost, dou
     ppst.arg().clear();
     ppst.set_state_with_uxy(parameters[0], parameters[1], part_.cz(), parameters[2], parameters[3], Numc::Compare(part_.uz()));
     ppst.set_eta(parameters[4]);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
     
     // Matrix (Rs, Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();

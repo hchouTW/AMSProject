@@ -23,7 +23,7 @@ all :
 	@cp -fa $(PWD)/src/fill.C $(TagetDir)/src/fill.C 2> /dev/null
 	@cp -fa $(PWD)/src/fit.C $(TagetDir)/src/fit.C 2> /dev/null
 	make $(TagetDir)/fill
-	make $(TagetDir)/fit
+	#make $(TagetDir)/fit
 
 $(TagetDir)/obj/fill.o : $(TagetDir)/src/fill.C
 	$(CXX) -c -o $@ $(FLGS) $< -MMD

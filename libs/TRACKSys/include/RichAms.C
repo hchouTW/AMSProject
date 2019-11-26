@@ -2,12 +2,10 @@
 #ifndef __TRACKLibs_RichAms_C__
 #define __TRACKLibs_RichAms_C__
 
-
 #include "Sys.h"
 #include "Math.h"
 #include "CherenkovMeas.h"
 #include "RichAms.h"
-
 
 namespace TrackSys {
 
@@ -92,7 +90,7 @@ RichAms::RichAms(AMSEventR* event, TrTrackR* trtk) : RichAms() {
     timer_.stop();
     if (!status_) clear();
 }
-
+        
 
 void RichAms::clear() {
     status_  = false;
@@ -217,6 +215,13 @@ RichObjAms RichAms::get_obj_by_fit(int zin) {
         obj.cld_cnt      = cld.cnt();
         obj.cld_nchi     = cld.nchi();
         obj.cld_misjudge = cld.misjudge();
+
+        for (auto&& hit : cld.hits()) {
+            obj.cldhit_beta.push_back(hit.beta());
+            obj.cldhit_npe.push_back(hit.npe());
+            obj.cldhit_cx.push_back(hit.cx());
+            obj.cldhit_cy.push_back(hit.cy());
+        }
     }
 
     if (fit.hits().size() != 0) {

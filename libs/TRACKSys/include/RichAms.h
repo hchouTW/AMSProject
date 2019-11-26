@@ -84,6 +84,11 @@ class RichObjAms {
             cld_nchi = 0;
             cld_misjudge = 0;
 
+            cldhit_beta.clear();
+            cldhit_npe.clear();
+            cldhit_cx.clear();
+            cldhit_cy.clear();
+
             nhit = 0;
             hit_chann.clear();
             hit_pmtid.clear();
@@ -158,6 +163,11 @@ class RichObjAms {
         float cld_cnt;
         float cld_nchi;
         float cld_misjudge;
+        
+        std::vector<float> cldhit_beta;
+        std::vector<float> cldhit_npe;
+        std::vector<float> cldhit_cx;
+        std::vector<float> cldhit_cy;
 
         short              nhit;
         std::vector<short> hit_chann;

@@ -310,7 +310,7 @@ void Hist::clear() {
 
 Hist * Hist::Head(const std::string& name, Bool_t show) {
 	if (name == "") return nullptr;
-	std::map<std::string, Hist*>::iterator search = hist_map_.find(name);
+    std::unordered_map<std::string, Hist*>::iterator search = hist_map_.find(name);
 	if (search == hist_map_.end()) {
 		if (show) MGSys::ShowError(STR("<< Hist::Head >> %s is not found.", name.c_str()));
 		return nullptr;

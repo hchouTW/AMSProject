@@ -32,6 +32,9 @@ PhyMuFit& PhyMuFit::operator=(const PhyMuFit& rhs) {
         dynamic_cast<TrFitPar&>(*this) = dynamic_cast<const TrFitPar&>(rhs);
         succ_ = rhs.succ_;
         part_ = rhs.part_;
+        ibta_ = rhs.ibta_;
+        mass_ = rhs.mass_;
+        sqrm_ = rhs.sqrm_;
         tsft_ = rhs.tsft_;
         
         args_ = rhs.args_;
@@ -54,6 +57,9 @@ void PhyMuFit::clear() {
     succ_   = false;
     part_.reset(info_);
     part_.arg().reset(sw_mscat_, sw_eloss_);
+    ibta_ = 0;
+    mass_ = 0;
+    sqrm_ = 0;
     tsft_ = 0;
     
     args_.clear();
@@ -111,6 +117,7 @@ Bool_t PhyMuFit::simpleScan(const TrFitPar& fitPar) {
     else {
         info_ = muscan.part().info();
         part_ = muscan.part();
+        ibta_ = muscan.ibta();
         tsft_ = muscan.tsft();
         args_ = muscan.args();
     }
@@ -125,7 +132,7 @@ Bool_t PhyMuFit::physicalFit() {
     Short_t DIMG     = (PhyJb::DIMG+1) + opt_tsft;
     
     // Gobal Parameters
-    std::vector<double> params_glb({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta(), part_.ibta() });
+    std::vector<double> params_glb({ part_.cx(), part_.cy(), part_.ux(), part_.uy(), part_.eta(), ibta_ });
     if (opt_tsft) { params_glb.push_back(tsft_); } // time shift
 
     // Local Parameters
@@ -167,17 +174,28 @@ Bool_t PhyMuFit::physicalFit() {
     //std::cerr << summary.FullReport() << std::endl;
    
     // Result (Global)
-    Double_t partcz = part_.cz();
-    Short_t  signuz = Numc::Compare(part_.uz());
-    Double_t igmbta = std::sqrt((params_glb.at(parIDibta) + Numc::ONE<>) * (params_glb.at(parIDibta) - Numc::ONE<>));
-    Double_t partmu = std::fabs(igmbta / params_glb.at(parIDeta));
-    if (Numc::Compare(partmu) <= 0) return false;
+    Double_t partcz  = part_.cz();
+    Short_t  signuz  = Numc::Compare(part_.uz());
+    Double_t paribta = params_glb.at(parIDibta);
+    Double_t parieta = Numc::ONE<> / params_glb.at(parIDeta);
+    Double_t sqrmu   = (parieta * (paribta + Numc::ONE<>)) * (parieta * (paribta - Numc::ONE<>));
+    Short_t  signmu  = (Numc::Compare(sqrmu) >= 0 ? 1 : -1);
+    Double_t partmu  = std::sqrt(std::fabs(sqrmu));
+    //if (Numc::Compare(partmu, EL_MU) <= 0) partmu = EL_MU;
+    if (Numc::Compare(partmu, LMTL_MU) <= 0) partmu = LMTL_MU; // testcode
+    
+    Double_t mass = signmu * (partmu * PartInfo::ATOMIC_MASS);
+    Double_t sqrm = signmu * ((partmu * PartInfo::ATOMIC_MASS) * (partmu * PartInfo::ATOMIC_MASS));
+    if (!Numc::Valid(sqrm)) return false;
 
     info_.reset(partmu);
     part_.reset(partmu);
     part_.set_state_with_uxy(params_glb.at(0), params_glb.at(1), partcz, params_glb.at(2), params_glb.at(3), signuz);
     part_.set_eta(params_glb.at(parIDeta));
-    
+    ibta_ = paribta;
+    mass_ = mass;
+    sqrm_ = sqrm;
+
     if (opt_tsft) { tsft_ = params_glb.at(parIDtsft); } // TOF Shift Time
 
     // Result (Local)
@@ -209,7 +227,13 @@ Bool_t PhyMuFit::evolve() {
 
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
+    HitStTOF::SetBaselineTime();
     HitStTOF::SetOffsetPathTime();
+    HitStTOF::SetRefPartPath();
+    HitStTOF::SetRefPartTime();
+    HitStTOF::SetRefMeasPath();
+    HitStTOF::SetRefMeasTime();
+    HitStTOF::SetRefOffsetTime();
     
     // time shift
     Double_t tsft = (opt_tsft ? tsft_ : Numc::ZERO<>);
@@ -220,6 +244,9 @@ Bool_t PhyMuFit::evolve() {
 
     // Particle Status
     PhySt ppst(part_);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
     
     // Matrix (Jb)
     Double_t         jbBB = Numc::ONE<>;
@@ -277,11 +304,17 @@ Bool_t PhyMuFit::evolve() {
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
+                HitStTOF::SetBaselineTime(firstHitTOF->orgt());
                 HitStTOF::SetOffsetPathTime(
                     ppst.path(), 
                     (ppst.time() - firstHitTOF->orgt()) + tsft, 
                     true
                 );
+                HitStTOF::SetRefPartPath(ppst.path());
+                HitStTOF::SetRefPartTime(ppst.time());
+                HitStTOF::SetRefMeasPath(0.0);
+                HitStTOF::SetRefMeasTime(firstHitTOF->orgt());
+                HitStTOF::SetRefOffsetTime(tsft);
                 resetTOF = false;
             }
         }
@@ -403,23 +436,36 @@ bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residual
     
     // Reset TOF Time and Path
     Bool_t resetTOF = true;
+    HitStTOF::SetBaselineTime();
     HitStTOF::SetOffsetPathTime();
+    HitStTOF::SetRefPartPath();
+    HitStTOF::SetRefPartTime();
+    HitStTOF::SetRefMeasPath();
+    HitStTOF::SetRefMeasTime();
+    HitStTOF::SetRefOffsetTime();
 
     // time shift
     Double_t tsft = (opt_tsft_ ? parameters[0][parIDtsft] : Numc::ZERO<>);
 
     // Particle Status
-    Double_t partcz = part_.cz();
-    Short_t  signuz = Numc::Compare(part_.uz());
-    Double_t igmbta = std::sqrt((parameters[0][parIDibta] + Numc::ONE<>) * (parameters[0][parIDibta] - Numc::ONE<>));
-    Double_t partmu = std::fabs(igmbta / parameters[0][parIDeta]);
-    if (Numc::Compare(partmu, EL_MU) <= 0) partmu = EL_MU;
+    Double_t partcz  = part_.cz();
+    Short_t  signuz  = Numc::Compare(part_.uz());
+    Double_t paribta = parameters[0][parIDibta];
+    Double_t parieta = Numc::ONE<> / parameters[0][parIDeta];
+    Double_t sqrmu   = (parieta * (paribta + Numc::ONE<>)) * (parieta * (paribta - Numc::ONE<>));
+    Double_t partmu  = std::sqrt(std::fabs(sqrmu));
+    //if (Numc::Compare(partmu, EL_MU) <= 0) partmu = EL_MU;
+    //if (Numc::Compare(partmu, LMTL_MU) <= 0) partmu = LMTL_MU; // testcode
+    if (Numc::Compare(partmu, LMTL_MU) <= 0 || sqrmu <= 0.0) partmu = LMTL_MU; // testcode
     
     PhySt ppst(part_);
     ppst.arg().clear();
     ppst.reset(partmu);
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], partcz, parameters[0][2], parameters[0][3], signuz);
     ppst.set_eta(parameters[0][parIDeta]);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
 
     // Interaction Local Parameters
     std::vector<PhyArg> args(nseg_, PhyArg(sw_mscat_, sw_eloss_));
@@ -498,15 +544,24 @@ bool VirtualPhyMuFit::Evaluate(double const *const *parameters, double *residual
         if (resetTOF && Hit<HitStTOF>::IsSame(hit)) { // set reference
             const HitStTOF* firstHitTOF = Hit<HitStTOF>::Cast(hit);
             if (firstHitTOF->st()) {
+                HitStTOF::SetBaselineTime(firstHitTOF->orgt());
                 HitStTOF::SetOffsetPathTime(
                     ppst.path(),
                     (ppst.time() - firstHitTOF->orgt()) + tsft,
                     true
                 );
+                HitStTOF::SetRefPartPath(ppst.path());
+                HitStTOF::SetRefPartTime(ppst.time());
+                HitStTOF::SetRefMeasPath(0.0);
+                HitStTOF::SetRefMeasTime(firstHitTOF->orgt());
+                HitStTOF::SetRefOffsetTime(tsft);
                 resetTOF = false;
             }
         }
         hit->cal(ppst);
+        if (Hit<HitStTRK>::IsSame(hit)) Hit<HitStTRK>::Cast(hit)->recal(ppst, paribta);
+        if (Hit<HitStTOF>::IsSame(hit)) Hit<HitStTOF>::Cast(hit)->recal(ppst, paribta);
+        if (Hit<HitStRICH>::IsSame(hit)) Hit<HitStRICH>::Cast(hit)->recal(ppst, paribta);
 
         // Update Jacb
         Double_t curJbBB = (ppst.ibta() / preIbta);

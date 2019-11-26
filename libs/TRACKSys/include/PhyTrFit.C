@@ -227,6 +227,9 @@ Bool_t PhyTrFit::evolve() {
     // Particle Status
     PhySt ppst(part_);
     
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
+    
     // Matrix (Jb)
     PhyJb::SMtxDGG&& jbGG = SMtxId();
     std::vector<PhyJb::SMtxDGL> jbGL(nseg_);
@@ -462,6 +465,9 @@ bool VirtualPhyTrFit::Evaluate(double const *const *parameters, double *residual
     ppst.arg().clear();
     ppst.set_state_with_uxy(parameters[0][0], parameters[0][1], part_.cz(), parameters[0][2], parameters[0][3], Numc::Compare(part_.uz()));
     ppst.set_eta(parameters[0][parIDeta]);
+    
+    // Check status
+    if (!Numc::Valid(ppst.mom()) || Numc::EqualToZero(ppst.mom())) return false;
 
     // Interaction Local Parameters
     std::vector<PhyArg> args(nseg_, PhyArg(sw_mscat_, sw_eloss_));

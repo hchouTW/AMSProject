@@ -1,10 +1,11 @@
 {
-	gInterpreter->AddIncludePath("${AMSSRC}/include");
-	gSystem->Load("${AMSLIB}/libntuple_slc6_PG_dynamic.so");
+	//gInterpreter->AddIncludePath("${AMSSRC}/include");
+    //gSystem->Load("/cvmfs/ams.cern.ch/Offline/vdev/lib/linuxx8664icc5.34/libntuple_slc6_PG_dynamic.so");
 
     Printf("Current Version    = %s", gROOT->GetVersion());
 	Printf("Build Architecture = %s", gSystem->GetBuildArch());
-    
+
+   /* 
     TF1 * f1gs = new TF1("f1gs", "TMath::Abs([0])*TMath::Exp(-0.5*(x-[2])*(x-[2])/[1]/[1])");
     f1gs->SetParameters(10., 10., 0.);
     f1gs->SetNpx(100000);
@@ -76,7 +77,7 @@
     flgnum3->SetParameters(3.23646e+04, 3.57952e-01, 1.06771e-03, 2.26404e+00, 7.93093e-01, 5.56454e-02, 7.50501e+00, 1.41060e+00, 6.29173e+00);
 
     if (std::atof(gROOT->GetVersion()) < 6.00) return;
-
+*/
 	//---------------//
 	//  User Define  //
 	//---------------//

@@ -1,3 +1,5 @@
 [user]
 	name = Hsin-Yi Chou
 	email = hchou@cern.ch
+[push]
+	default = current

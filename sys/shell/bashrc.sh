@@ -50,17 +50,17 @@ source ${AMSProj}/sw/tex/tex.sh
 source ${AMSProjLibs}/external/eigen3/bin/eigen3.sh 
 
 # Google Libs
-source ${AMSProjLibs}/external/google/bin/google.sh
+#source ${AMSProjLibs}/external/google/bin/google.sh
 
 # AMS Software
-source ${AMSProjLibs}/AMSLibs/bin/amslibs.sh
+#source ${AMSProjLibs}/AMSLibs/bin/amslibs.sh
 alias amsenv_root5icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5icc.sh"
 alias amsenv_root5gcc="source ${AMSProj}/sw/ROOT/setup_amsenv_root5gcc.sh"
 alias amsenv_root6icc="source ${AMSProj}/sw/ROOT/setup_amsenv_root6icc.sh"
 alias amsenv=amsenv_root5gcc
 
 # TRACKSys Software
-source ${AMSProjLibs}/TRACKSys/bin/TRACKSys.sh
+#source ${AMSProjLibs}/TRACKSys/bin/TRACKSys.sh
 
 # Makefile
 export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
@@ -69,7 +69,7 @@ export AMSMKfile=${AMSProj}/sw/ROOT/makefile.env
 alias root='root -l'
 
 # Castor Libs
-source ${AMSProjLibs}/external/castor/bin/castor.sh
+#source ${AMSProjLibs}/external/castor/bin/castor.sh
 
 # Local Job Command
 source ${AMSProjJobs}/LOCAL/local.sh

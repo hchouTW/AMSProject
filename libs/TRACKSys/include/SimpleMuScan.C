@@ -111,6 +111,7 @@ SimpleMuScan::SimpleMuScan(const TrFitPar& fitPar) {
     
     succ_ = true;
     part_ = trfit.part();
+    ibta_ = (trfit.part().ibta() / condMuObj.ibta()) * condMuObj.paribta();
     tsft_ = trfit.tsft();
     args_ = trfit.args();
     
@@ -161,17 +162,26 @@ SimpleMuScan::MuScanObj SimpleMuScan::scan(const TrFitPar& fitPar) {
     PhySt&& sttBta = btafit.interpolate_to_z(tagz);
     if (Numc::EqualToZero(sttTr .mom())) return MuScanObj();
     if (Numc::EqualToZero(sttBta.mom())) return MuScanObj();
+    Double_t init_ibta = btafit.part().ibta();
 
     Short_t  est_chrg = fitPar.info().chrg();
-    Double_t est_mass = (sttTr.mom() * sttBta.igb());
     Double_t est_qltr = qltr;
     Double_t est_qltb = qltb;
 
-    Double_t est_rig = sttTr.rig();
-    Double_t est_bta = sttBta.bta();
+    Double_t est_mom     = sttTr.mom();
+    Double_t est_paribta = (sttBta.ibta() / init_ibta) * btafit.ibta();
+    Double_t est_ibta    = ((est_paribta > LMTL_IBTA_APPROX_LIGHT) ? est_paribta : LMTL_IBTA_APPROX_LIGHT);
+    Double_t est_sqrm    = (est_mom * (est_paribta + Numc::ONE<>)) * (est_mom * (est_ibta - Numc::ONE<>));
+    if (!Numc::Valid(est_sqrm)) return MuScanObj();
+    
+    Double_t est_mass = std::sqrt(std::fabs(est_sqrm));
+    //if (Numc::Compare(est_mass, EL_MASS) <= 0) est_mass = EL_MASS;
+    if (Numc::Compare(est_mass, EL_MASS) <= 0 || est_sqrm <= 0.0) est_mass = EL_MASS; // testcode
+    
+    Short_t est_sign = (Numc::Compare(est_sqrm) >= 0 ? 1 : -1);
+    est_sqrm = est_sign * (est_mass * est_mass);
 
-    if (Numc::Compare(est_mass, EL_MASS) <= 0) est_mass = EL_MASS;
-    MuScanObj muObj(est_chrg, est_mass, est_qltr, est_qltb, est_rig, est_bta);
+    MuScanObj muObj(est_chrg, est_mass, est_qltr, est_qltb, est_mom, est_ibta, est_sqrm, est_paribta);
     return muObj;
 }
 

@@ -23,8 +23,8 @@
 #include "MGHist.h"
 #include "MGHist.C"
 
-//#include "MGFit.h"
-//#include "MGFit.C"
+#include "MGFit.h"
+#include "MGFit.C"
 
 
 namespace MGROOT {

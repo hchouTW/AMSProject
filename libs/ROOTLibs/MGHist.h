@@ -9,6 +9,8 @@
 #include <TObjArray.h>
 #include <THStack.h>
 
+#include <unordered_map>
+
 /******************/
 /****  MGROOT  ****/
 /******************/
@@ -172,12 +174,12 @@ class Hist {
 		static THStack * Collect(const std::string& name, const std::vector<Hist*>& list);
 
 	protected :
-		static Long64_t                     counter_;
-		static std::map<std::string, Hist*> hist_map_;
+		static Long64_t                               counter_;
+		static std::unordered_map<std::string, Hist*> hist_map_;
 };
 
-Long64_t                     Hist::counter_ = 0;
-std::map<std::string, Hist*> Hist::hist_map_;
+Long64_t                               Hist::counter_ = 0;
+std::unordered_map<std::string, Hist*> Hist::hist_map_;
 
 
 using HistList = std::vector<Hist*>;

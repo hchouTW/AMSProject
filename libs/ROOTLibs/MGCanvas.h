@@ -67,15 +67,15 @@ class Canvas {
 //---- Legend ----//
 class Legend {
     public :
-        Legend(const std::string& header = "", const PadWindow& window = PadWindow(0.15, 0.40, 0.6, 0.87)) : header_(header), legend_(nullptr) { legend_ = new TLegend(window.xl, window.yl, window.xu, window.yu); }
-        ~Legend() { header_ = ""; if (legend_) { legend_->Delete(); legend_ = nullptr; } }
+        Legend(const std::string& header = "", const PadWindow& window = PadWindow(0.15, 0.40, 0.6, 0.87)) : header_(header), legend_(nullptr) { legend_ = std::make_shared<TLegend>(window.xl, window.yl, window.xu, window.yu, header.c_str()); }
+        ~Legend() { header_ = ""; }
 
         void draw(Option_t* option = "brNDC") { if (legend_) legend_->Draw(option); }
 
-        inline TLegend* operator()() { return legend_; }
+        inline std::shared_ptr<TLegend>& operator()() { return legend_; }
 
     protected :
-        TLegend*    legend_;
+        std::shared_ptr<TLegend> legend_;
         std::string header_;
 };
 

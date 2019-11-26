@@ -161,6 +161,34 @@ void HitStTRK::cal(const PhySt& part) {
     set_dummy_y(part.cy());
 }
 
+void HitStTRK::recal(const PhySt& part, double ibta) {
+    if (!set_type(part.info())) return;
+    
+    chiq_ = Numc::ZERO<>;
+    nrmq_ = Numc::ZERO<>;
+    divq_.fill(Numc::ZERO<>);
+    if (side_q_ && pdf_q_ != nullptr) {
+        std::array<long double, 3>&& ion = pdf_q_->minimizer(q_*q_, part.ibta(), part.igb());
+        
+        // testcode
+        double x2 = ((part.ibta() - 1.0) / 0.02) * ((part.ibta() - 1.0) / 0.02);
+        double crr = (1.0 - std::exp(-0.5 * x2 * 2.0 * 2.0)) * 0.9 + 0.1;
+        ion[2] *= crr;
+        
+        chiq_    = ion[0];
+        nrmq_    = ion[1];
+        divq_[0] = ion[2];
+        divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divq_[2] = ion[2] * (part.bta() * part.mu()) * (part.eta() * part.eta());
+        
+        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1]) || !Numc::Valid(divq_[2])) {
+            chiq_ = Numc::ZERO<>;
+            nrmq_ = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
+        }
+    }
+}
+
 Bool_t HitStTRK::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_cx_ && pdf_cy_ && pdf_q_)) return true;
 
@@ -251,6 +279,11 @@ Bool_t   HitStTOF::USE_TSHF_   = false;
 Double_t HitStTOF::OFFSET_T_   = Numc::ZERO<>;
 Double_t HitStTOF::OFFSET_S_   = Numc::ZERO<>;
 Double_t HitStTOF::BASELINE_T_ = Numc::ZERO<>;
+Double_t HitStTOF::REF_PART_S_ = Numc::ZERO<>;
+Double_t HitStTOF::REF_PART_T_ = Numc::ZERO<>;
+Double_t HitStTOF::REF_MEAS_S_ = Numc::ZERO<>;
+Double_t HitStTOF::REF_MEAS_T_ = Numc::ZERO<>;
+Double_t HitStTOF::REF_OFFSET_T_ = Numc::ZERO<>;
 
 void HitStTOF::clear() {
     seqIDcx_ = -1;
@@ -297,13 +330,39 @@ void HitStTOF::cal(const PhySt& part) {
     nrmt_    = Numc::ZERO<>;
     divtsft_ = Numc::ZERO<>;
     divt_.fill(Numc::ZERO<>);
+    //if (side_t_ && pdf_t_ != nullptr) {
+    //    // 1/bta := (1+igb*igb)^(1/2)
+    //    // t     := (delta_S / bta)
+    //    // res_t := (meas_t - part_t)
+    //    tsft_ = orgt_ + OFFSET_T_; // update shift time
+    //    Double_t ds = std::fabs(part.path() - OFFSET_S_);
+    //    Double_t dt = tsft_ - part.time();
+    //    if (Numc::Compare(ds) >= 0) {
+    //        std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.ibta(), USE_TSHF_);
+    //        chit_    = minit[0];
+    //        nrmt_    = minit[1];
+    //        divtsft_ = minit[2];
+    //        Double_t divt = (Numc::NEG<> * minit[2] * ds); // d(t) / d(ibta)
+    //        divt_[0] = divt;
+    //        divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
+    //        divt_[2] = divt * (part.bta() * part.mu()) * (part.eta() * part.eta());
+
+    //        if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1]) || !Numc::Valid(divt_[2])) {
+    //            chit_    = Numc::ZERO<>;
+    //            nrmt_    = Numc::ZERO<>;
+    //            divtsft_ = Numc::ZERO<>;
+    //            divt_.fill(Numc::ZERO<>);
+    //        }
+    //    }
+    //}
+    
     if (side_t_ && pdf_t_ != nullptr) {
-        // 1/bta := (1+igb*igb)^(1/2)
-        // t     := (delta_S / bta)
+        double tpart = (part.time() - REF_PART_T_);
+        double tmeas = (orgt_ - REF_MEAS_T_) + REF_OFFSET_T_;
+        double dt    = tmeas - tpart;
+        double ds    = std::abs(part.path() - REF_PART_S_);
+        // t     := (delta_S * ibta)
         // res_t := (meas_t - part_t)
-        tsft_ = orgt_ + OFFSET_T_; // update shift time
-        Double_t ds = std::fabs(part.path() - OFFSET_S_);
-        Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
             std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.ibta(), USE_TSHF_);
             chit_    = minit[0];
@@ -313,7 +372,6 @@ void HitStTOF::cal(const PhySt& part) {
             divt_[0] = divt;
             divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
             divt_[2] = divt * (part.bta() * part.mu()) * (part.eta() * part.eta());
-
             if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1]) || !Numc::Valid(divt_[2])) {
                 chit_    = Numc::ZERO<>;
                 nrmt_    = Numc::ZERO<>;
@@ -345,23 +403,27 @@ void HitStTOF::cal(const PhySt& part) {
     set_dummy_y(part.cy());
 }
         
-void HitStTOF::recal_t(const PhySt& part, double bta) {
-    bool over_light_speed = (bta >= Numc::ONE<>);
+void HitStTOF::recal(const PhySt& part, double ibta) {
+    if (!set_type(part.info())) return;
+    constexpr Double_t LMTL_IBTA_APPROX_LIGHT = 1.00000000000001;
+    bool over_light_speed = (ibta <= LMTL_IBTA_APPROX_LIGHT); // testcode
+    
     chit_    = Numc::ZERO<>;
     nrmt_    = Numc::ZERO<>;
     divtsft_ = Numc::ZERO<>;
     divt_.fill(Numc::ZERO<>);
     if (side_t_ && pdf_t_ != nullptr) {
         // correct time when velocity > 1
-        Double_t crrt = (over_light_speed) ? (orgt_ - BASELINE_T_) * (bta - Numc::ONE<>) : Numc::ZERO<>;
-        // 1/bta := (1+igb*igb)^(1/2)
-        // t     := (delta_S / bta)
+        double tcrr  = (over_light_speed) ? ibta : Numc::ONE<>;
+        double tpart = (part.time() - REF_PART_T_) * tcrr;
+        double tmeas = (orgt_ - REF_MEAS_T_) + REF_OFFSET_T_;
+        double dt    = tmeas - tpart;
+        double ds    = std::abs(part.path() - REF_PART_S_);
+        // t     := (delta_S * ibta)
         // res_t := (meas_t - part_t)
-        tsft_ = (orgt_ + crrt) + OFFSET_T_; // update shift time
-        Double_t ds = std::fabs(part.path() - OFFSET_S_);
-        Double_t dt = tsft_ - part.time();
         if (Numc::Compare(ds) >= 0) {
             std::array<long double, 3> minit = pdf_t_->minimizer(dt, part.ibta(), USE_TSHF_);
+            
             chit_    = minit[0];
             nrmt_    = minit[1];
             divtsft_ = minit[2];
@@ -369,6 +431,12 @@ void HitStTOF::recal_t(const PhySt& part, double bta) {
             divt_[0] = divt;
             divt_[1] = divt * (part.bta() * part.eta()) * (part.mu() * part.mu());
             divt_[2] = divt * (part.bta() * part.mu()) * (part.eta() * part.eta());
+            
+            // testcode
+            double x2 = ((part.ibta() - 1.0) / 0.02) * ((part.ibta() - 1.0) / 0.02);
+            double crr = (1.0 - std::exp(-0.5 * x2 * 2.0 * 2.0)) * 0.9 + 0.1;
+            divt_[1] *= crr;
+            divt_[2] *= crr;
 
             if (!Numc::Valid(chit_) || !Numc::Valid(nrmt_) || !Numc::Valid(divtsft_) || !Numc::Valid(divt_[0]) || !Numc::Valid(divt_[1]) || !Numc::Valid(divt_[2])) {
                 chit_    = Numc::ZERO<>;
@@ -378,7 +446,32 @@ void HitStTOF::recal_t(const PhySt& part, double bta) {
             }
         }
     }
+    
+    chiq_ = Numc::ZERO<>;
+    nrmq_ = Numc::ZERO<>;
+    divq_.fill(Numc::ZERO<>);
+    if (side_q_ && pdf_q_ != nullptr) {
+        std::array<long double, 3>&& ion = pdf_q_->minimizer(q_*q_, part.ibta(), part.igb());
+
+        // testcode
+        double x2 = ((part.ibta() - 1.0) / 0.02) * ((part.ibta() - 1.0) / 0.02);
+        double crr = (1.0 - std::exp(-0.5 * x2 * 2.0 * 2.0)) * 0.9 + 0.1;
+        ion[2] *= crr;
+
+        chiq_    = ion[0];
+        nrmq_    = ion[1];
+        divq_[0] = ion[2];
+        divq_[1] = ion[2] * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divq_[2] = ion[2] * (part.bta() * part.mu()) * (part.eta() * part.eta());
+    
+        if (!Numc::Valid(chiq_) || !Numc::Valid(nrmq_) || !Numc::Valid(divq_[0]) || !Numc::Valid(divq_[1]) || !Numc::Valid(divq_[2])) {
+            chiq_ = Numc::ZERO<>;
+            nrmq_ = Numc::ZERO<>;
+            divq_.fill(Numc::ZERO<>);
+        }
+    }
 }
+
 
 Bool_t HitStTOF::set_type(const PartInfo& info) {
     if ((info.is_std() && type_ == info.type()) && (pdf_t_ && pdf_q_)) return true;
@@ -479,6 +572,44 @@ void HitStRICH::cal(const PhySt& part) {
         divib_[0] = divib;
         divib_[1] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
         divib_[2] = divib * (part.bta() * part.mu()) * (part.eta() * part.eta());
+        
+        if (!Numc::Valid(chiib_) || !Numc::Valid(nrmib_) || !Numc::Valid(divib_[0]) || !Numc::Valid(divib_[1]) || !Numc::Valid(divib_[2])) {
+            chiib_ = Numc::ZERO<>;
+            nrmib_ = Numc::ZERO<>;
+            divib_.fill(Numc::ZERO<>);
+        }
+    }
+    
+    set_dummy_x(part.cx());
+    set_dummy_y(part.cy());
+}
+
+void HitStRICH::recal(const PhySt& part, double ibta) {
+    if (!set_type(part.info())) return;
+    constexpr Double_t LMTL_IBTA_APPROX_LIGHT = 1.00000000000001;
+    bool over_light_speed = (ibta <= LMTL_IBTA_APPROX_LIGHT); // testcode
+
+    chiib_ = Numc::ZERO<>;
+    nrmib_ = Numc::ZERO<>;
+    divib_.fill(Numc::ZERO<>);
+    if (side_ib_ && pdf_ib_ != nullptr) {
+        // correct beta when velocity > 1
+        double bcrr = (over_light_speed) ? ibta : Numc::ONE<>;
+        // 1/bta := (1+igb*igb)^(1/2)
+        Double_t dib = ib_ - part.ibta() * bcrr;
+        std::array<long double, 3> miniib = pdf_ib_->minimizer(dib, part.ibta());
+        chiib_ = miniib[0];
+        nrmib_ = miniib[1];
+        Double_t divib = (Numc::NEG<> * miniib[2]);
+        divib_[0] = divib;
+        divib_[1] = divib * (part.bta() * part.eta()) * (part.mu() * part.mu());
+        divib_[2] = divib * (part.bta() * part.mu()) * (part.eta() * part.eta());
+            
+        // testcode
+        double x2 = ((part.ibta() - 1.0) / 0.001) * ((part.ibta() - 1.0) / 0.001);
+        double crr = (1.0 - std::exp(-0.5 * x2 * 2.0 * 2.0)) * 0.9 + 0.1;
+        divib_[1] *= crr;
+        divib_[2] *= crr;
         
         if (!Numc::Valid(chiib_) || !Numc::Valid(nrmib_) || !Numc::Valid(divib_[0]) || !Numc::Valid(divib_[1]) || !Numc::Valid(divib_[2])) {
             chiib_ = Numc::ZERO<>;

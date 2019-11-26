@@ -1464,7 +1464,9 @@ class HCBtaInfo : public TObject {
             
             std::fill_n(rig, 5, 0);
             std::fill_n(bta, 5, 0);
-            
+           
+            varIbta = 0;
+
             cpuTime = 0;
         }
     
@@ -1484,7 +1486,9 @@ class HCBtaInfo : public TObject {
         
         Float_t rig[5]; // z = 195, 0, -136, 115, -75
         Float_t bta[5]; // z = 195, 0, -136, 115, -75
-        
+   
+        Float_t varIbta; // ibta from fitting
+
         Float_t cpuTime; // [ms]
 
         ClassDef(HCBtaInfo, 2)
@@ -1530,7 +1534,11 @@ class HCMuInfo : public TObject {
             
             statusRh = false;
             std::fill_n(stateRh, 8, 0);
-           
+          
+            varIbta = 0;
+            varMass = 0;
+            varSqrm = 0;
+
             cpuTime = 0;
         }
 	
@@ -1567,6 +1575,10 @@ class HCMuInfo : public TObject {
         
         Bool_t  statusRh; // track at (z = 115.)
         Float_t stateRh[8];
+        
+        Float_t varIbta; // ibta from fitting
+        Float_t varMass; // mass from fitting
+        Float_t varSqrm; // mass^2 from fitting
 
         Float_t cpuTime; // [ms]
 
@@ -1581,79 +1593,77 @@ class HYC : public TObject {
 		~HYC() {}
 
 		void init() {
-            tktr = std::vector<HCTrInfo>(4);
+            prmTr.init();
+            
+            prmAll.init();
+            prmBta.init();
+            prmMass = 0;
+            
+            prmRhAll.init();
+            prmRhBta.init();
+            prmRhMass = 0;
+            
+            secTr.init();
+            
+            secAll.init();
+            secBta.init();
+            secMass = 0;
+            
+            secRhAll.init();
+            secRhBta.init();
+            secRhMass = 0;
+            
+            tktr = std::vector<HCTrInfo>(5);
             
             mutr.init();
-            
-            prmTrAll.init();
-            prmTr.init();
-            prmBta.init();
-            prmMass = 0.0;
-            
-            secTrAll.init();
-            secTr.init();
-            secBta.init();
-            secMass = 0.0;
+            mutrRh.init();
 
-            //trM1 = std::vector<HCTrInfo>(4);
-            //trM2 = std::vector<HCTrInfo>(4);
-            //
-            //trM1All = std::vector<HCTrInfo>(4);
-            //trM2All = std::vector<HCTrInfo>(4);
-         
-            //btaM1.init();
-            //btaM2.init();
-
-            //mutr.init();
-
-            //massM1 = 0.0;
-            //massM2 = 0.0;
+            // testcode
+            smpBta_status = 0;
+            smpBta_bta = 0;
+            smpBta_varIbta = 0;
 		}
 	
     public :
         // Two main particles (P/D or He4/He3)
+        // primary   : P or He4
+        // secondary : D or He3
+
+        // primary
+        HCTrInfo  prmTr;     // [Inn]
         
-        // Track Fit [Inn InnL1 InnL9 FullSpan] (P or He4)
+        HCTrInfo  prmAll;    // [Inn] no-RICH
+        HCBtaInfo prmBta;    // [Inn] no-RICH
+        Float_t   prmMass;   // [Inn] no-RICH
+        
+        HCTrInfo  prmRhAll;  // [Inn] RICH
+        HCBtaInfo prmRhBta;  // [Inn] RICH
+        Float_t   prmRhMass; // [Inn] RICH
+        
+        // secondary
+        HCTrInfo  secTr;     // [Inn]
+        
+        HCTrInfo  secAll;    // [Inn] no-RICH
+        HCBtaInfo secBta;    // [Inn] no-RICH
+        Float_t   secMass;   // [Inn] no-RICH
+        
+        HCTrInfo  secRhAll;  // [Inn] RICH
+        HCBtaInfo secRhBta;  // [Inn] RICH
+        Float_t   secRhMass; // [Inn] RICH
+
+        // Track Fit [Inn InnL1 InnL9 FullSpan MaxSpan] (primary)
         std::vector<HCTrInfo> tktr;
         
         // Mass Fit [Inn]
-        HCMuInfo mutr;
+        HCMuInfo mutr;   // no-RICH
+        HCMuInfo mutrRh; // RICH
 
-        // (P or He4)
-        HCTrInfo  prmTrAll;
-        HCTrInfo  prmTr;
-        HCBtaInfo prmBta;
-        Float_t   prmMass;
+        // testcode 
+        Bool_t smpBta_status;
+        Float_t smpBta_bta;
+        Float_t smpBta_varIbta;
 
-        // second (D or He3)
-        HCTrInfo  secTrAll;
-        HCTrInfo  secTr;
-        HCBtaInfo secBta;
-        Float_t   secMass;
-
-        // Two main particles (P/D or He4/He3)
-        // M1: P or He4
-        // M2: D or He3
-
-        // Track Fit [Inn InnL1 InnL9 FS]
-        //std::vector<HCTrInfo> trM1;
-        //std::vector<HCTrInfo> trM2;
-
-        //std::vector<HCTrInfo> trM1All;
-        //std::vector<HCTrInfo> trM2All;
-        
-        // Beta Fit [Inn]
-        //HCBtaInfo btaM1;
-        //HCBtaInfo btaM2;
-
-        // Mass Fit [Inn]
-        //HCMuInfo mutr;
-        
-        // Mass from Track&Beta Fit [Inn]
-        //Float_t massM1;
-        //Float_t massM2;
-
-	ClassDef(HYC, 5)
+	ClassDef(HYC, 6)
 };
 
 
