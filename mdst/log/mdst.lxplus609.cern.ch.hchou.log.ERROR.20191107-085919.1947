@@ -1,0 +1,15 @@
+Log file created at: 2019/11/07 08:59:19
+Running on machine: lxplus609.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E1107 08:59:19.345559  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 08:59:19.400256  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 08:59:19.447693  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 08:59:19.766376  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:00:10.214864  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:00:10.240888  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:02:28.490795  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:03:51.385481  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:03:51.481853  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:04:55.542809  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:04:55.599591  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.
+E1107 09:06:17.992095  1947 trust_region_minimizer.cc:72] Terminating: Residual and Jacobian evaluation failed.

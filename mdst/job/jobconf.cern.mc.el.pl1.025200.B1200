@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mdst
+PROJVERSION  =  19Nov03
+PROJTITLE    =  MC_EL_025200_B1200
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.el.pl1.025200.B1200
+EVENTTYPE    =  MC
+FILEPEREXE   =  5
+JOBREGION    =  PART
+EXESATID     =  0
+EXEENDID     =  3999
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  3
+CONFIRM    =  NONE

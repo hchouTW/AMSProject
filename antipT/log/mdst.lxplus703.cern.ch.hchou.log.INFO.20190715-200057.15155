@@ -1,0 +1,399 @@
+Log file created at: 2019/07/15 20:00:57
+Running on machine: lxplus703.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0715 20:00:57.163364 15155 mdst.C:92] 
+**----------------------    mdst args summary ----------------------**
+Type  : ISS
+Input : lst/flist.cern.iss.B1130.pass7
+Output: out/YiMdst.0002020.root
+Index of Group: 2020
+Size  of Group: 5
+List of ROOT Files: (size 5)
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Jul13/ISS_PART05/YiMdst.0032765.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Jul13/ISS_PART05/YiMdst.0032766.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Jul13/ISS_PART05/YiMdst.0032767.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Jul13/ISS_PART05/YiMdst.0032768.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Jul13/ISS_PART05/YiMdst.0032769.root
+**------------------------------------------------------------------**
+
+I0715 20:00:57.187929 15155 mdst.C:99] 
+**-------------------------**
+**    ana ntuple START     **
+**-------------------------**
+
+I0715 20:00:57.755964 15155 mdst.C:109] 
+ROOT files
+Totally Events : 87778
+
+I0715 20:00:57.769026 15155 analyzer.h:234] 
+****  Output Info ****
+File: out/YiMdst.0002020.root
+Tree: ana
+
+I0715 20:00:57.769048 15155 analyzer.C:10] 
+====  Set Environment ====
+I0715 20:00:58.093746 15155 MagFactoryAMS.C:108] MagFactoryAMS::Load() : Load the magnetic file mapping. (/eos/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin)
+I0715 20:00:58.102499 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL1)
+I0715 20:00:58.111950 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL2)
+I0715 20:00:58.117751 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL3)
+I0715 20:00:58.125483 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL4)
+I0715 20:00:58.133595 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL5)
+I0715 20:00:58.140650 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL6)
+I0715 20:00:58.149082 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL7)
+I0715 20:00:58.155335 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL8)
+I0715 20:00:58.159822 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRL9)
+I0715 20:00:58.409262 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TR34)
+I0715 20:00:58.652997 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TR56)
+I0715 20:00:58.874125 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TR78)
+I0715 20:00:58.886389 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS1)
+I0715 20:00:58.893852 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS2)
+I0715 20:00:58.900178 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS3)
+I0715 20:00:58.905627 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS4)
+I0715 20:00:58.910089 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS5)
+I0715 20:00:58.915246 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS6)
+I0715 20:00:58.921591 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS7)
+I0715 20:00:58.929900 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS8)
+I0715 20:00:58.935344 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRS9)
+I0715 20:00:58.967833 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02RAD)
+I0715 20:00:59.196923 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TRD)
+I0715 20:00:59.217304 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02SUPU)
+I0715 20:00:59.234302 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02SPIU)
+I0715 20:00:59.370770 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TOFU)
+I0715 20:00:59.506513 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02TOFL)
+I0715 20:00:59.557018 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02SPIL)
+I0715 20:00:59.575397 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02SUPL)
+I0715 20:00:59.582017 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02RICH)
+I0715 20:00:59.590211 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02PMT)
+I0715 20:00:59.597064 15155 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/user/h/hchou/ExternalLibs/DB/material/AMS02ECAL)
+I0715 20:00:59.607909 15155 analyzer.C:36] 
+**------------------------**
+**  Process Events START  **
+**------------------------**
+
+I0715 20:00:59.607975 15155 analyzer.C:52] 
+Info :: 0.000000 %
+        Passed / Processed : 0 / 0 / 87778
+        Passed Ratio       : 0.000000 %
+        Real Time          :      0.01 (second)
+        Processed Rate     :     0.00 (Hz)
+I0715 20:01:00.166405 15155 analyzer.C:52] 
+Info :: 1.999362 %
+        Passed / Processed : 1123 / 1755 / 87778
+        Passed Ratio       : 63.988604 %
+        Real Time          :      0.57 (second)
+        Processed Rate     :  3083.10 (Hz)
+I0715 20:01:00.479635 15155 analyzer.C:52] 
+Info :: 3.998724 %
+        Passed / Processed : 2329 / 3510 / 87778
+        Passed Ratio       : 66.353276 %
+        Real Time          :      0.88 (second)
+        Processed Rate     :  3977.46 (Hz)
+I0715 20:01:00.789994 15155 analyzer.C:52] 
+Info :: 5.998086 %
+        Passed / Processed : 3588 / 5265 / 87778
+        Passed Ratio       : 68.148148 %
+        Real Time          :      1.19 (second)
+        Processed Rate     :  4413.89 (Hz)
+I0715 20:01:01.140074 15155 analyzer.C:52] 
+Info :: 7.997448 %
+        Passed / Processed : 4824 / 7020 / 87778
+        Passed Ratio       : 68.717949 %
+        Real Time          :      1.54 (second)
+        Processed Rate     :  4549.93 (Hz)
+I0715 20:01:01.546541 15155 analyzer.C:52] 
+Info :: 9.996810 %
+        Passed / Processed : 5980 / 8775 / 87778
+        Passed Ratio       : 68.148148 %
+        Real Time          :      1.95 (second)
+        Processed Rate     :  4501.45 (Hz)
+I0715 20:01:01.859227 15155 analyzer.C:52] 
+Info :: 11.996172 %
+        Passed / Processed : 7116 / 10530 / 87778
+        Passed Ratio       : 67.578348 %
+        Real Time          :      2.26 (second)
+        Processed Rate     :  4655.08 (Hz)
+I0715 20:01:02.199661 15155 analyzer.C:52] 
+Info :: 13.995534 %
+        Passed / Processed : 7836 / 12285 / 87778
+        Passed Ratio       : 63.785104 %
+        Real Time          :      2.60 (second)
+        Processed Rate     :  4720.47 (Hz)
+I0715 20:01:02.512356 15155 analyzer.C:52] 
+Info :: 15.994896 %
+        Passed / Processed : 8984 / 14040 / 87778
+        Passed Ratio       : 63.988604 %
+        Real Time          :      2.92 (second)
+        Processed Rate     :  4816.15 (Hz)
+I0715 20:01:02.787744 15155 analyzer.C:52] 
+Info :: 17.994258 %
+        Passed / Processed : 10221 / 15795 / 87778
+        Passed Ratio       : 64.710351 %
+        Real Time          :      3.19 (second)
+        Processed Rate     :  4950.53 (Hz)
+I0715 20:01:03.220532 15155 analyzer.C:52] 
+Info :: 19.993620 %
+        Passed / Processed : 11410 / 17550 / 87778
+        Passed Ratio       : 65.014245 %
+        Real Time          :      3.62 (second)
+        Processed Rate     :  4843.68 (Hz)
+I0715 20:01:03.313649 15155 analyzer.C:52] 
+Info :: 21.992982 %
+        Passed / Processed : 12618 / 19305 / 87778
+        Passed Ratio       : 65.361305 %
+        Real Time          :      3.72 (second)
+        Processed Rate     :  5194.42 (Hz)
+I0715 20:01:03.972843 15155 analyzer.C:52] 
+Info :: 23.992344 %
+        Passed / Processed : 13800 / 21060 / 87778
+        Passed Ratio       : 65.527066 %
+        Real Time          :      4.38 (second)
+        Processed Rate     :  4812.96 (Hz)
+I0715 20:01:04.273021 15155 analyzer.C:52] 
+Info :: 25.991706 %
+        Passed / Processed : 14936 / 22815 / 87778
+        Passed Ratio       : 65.465702 %
+        Real Time          :      4.68 (second)
+        Processed Rate     :  4879.31 (Hz)
+I0715 20:01:04.528590 15155 analyzer.C:52] 
+Info :: 27.991068 %
+        Passed / Processed : 16123 / 24570 / 87778
+        Passed Ratio       : 65.620676 %
+        Real Time          :      4.93 (second)
+        Processed Rate     :  4982.33 (Hz)
+I0715 20:01:04.820245 15155 analyzer.C:52] 
+Info :: 29.990430 %
+        Passed / Processed : 17330 / 26325 / 87778
+        Passed Ratio       : 65.830959 %
+        Real Time          :      5.22 (second)
+        Processed Rate     :  5040.13 (Hz)
+I0715 20:01:05.159193 15155 analyzer.C:52] 
+Info :: 31.989792 %
+        Passed / Processed : 18468 / 28080 / 87778
+        Passed Ratio       : 65.769231 %
+        Real Time          :      5.56 (second)
+        Processed Rate     :  5048.51 (Hz)
+I0715 20:01:05.428604 15155 analyzer.C:52] 
+Info :: 33.989154 %
+        Passed / Processed : 19557 / 29835 / 87778
+        Passed Ratio       : 65.550528 %
+        Real Time          :      5.83 (second)
+        Processed Rate     :  5116.23 (Hz)
+I0715 20:01:05.740170 15155 analyzer.C:52] 
+Info :: 35.988516 %
+        Passed / Processed : 20744 / 31590 / 87778
+        Passed Ratio       : 65.666350 %
+        Real Time          :      6.14 (second)
+        Processed Rate     :  5142.44 (Hz)
+I0715 20:01:06.002113 15155 analyzer.C:52] 
+Info :: 37.987879 %
+        Passed / Processed : 21882 / 33345 / 87778
+        Passed Ratio       : 65.623032 %
+        Real Time          :      6.40 (second)
+        Processed Rate     :  5206.12 (Hz)
+I0715 20:01:06.268317 15155 analyzer.C:52] 
+Info :: 39.987241 %
+        Passed / Processed : 22959 / 35100 / 87778
+        Passed Ratio       : 65.410256 %
+        Real Time          :      6.67 (second)
+        Processed Rate     :  5261.49 (Hz)
+I0715 20:01:06.660528 15155 analyzer.C:52] 
+Info :: 41.986603 %
+        Passed / Processed : 24102 / 36855 / 87778
+        Passed Ratio       : 65.396825 %
+        Real Time          :      7.06 (second)
+        Processed Rate     :  5217.83 (Hz)
+I0715 20:01:06.751595 15155 analyzer.C:52] 
+Info :: 43.985965 %
+        Passed / Processed : 25285 / 38610 / 87778
+        Passed Ratio       : 65.488215 %
+        Real Time          :      7.15 (second)
+        Processed Rate     :  5396.65 (Hz)
+I0715 20:01:07.454872 15155 analyzer.C:52] 
+Info :: 45.985327 %
+        Passed / Processed : 26443 / 40365 / 87778
+        Passed Ratio       : 65.509724 %
+        Real Time          :      7.86 (second)
+        Processed Rate     :  5136.99 (Hz)
+I0715 20:01:07.808758 15155 analyzer.C:52] 
+Info :: 47.984689 %
+        Passed / Processed : 27597 / 42120 / 87778
+        Passed Ratio       : 65.519943 %
+        Real Time          :      8.21 (second)
+        Processed Rate     :  5129.34 (Hz)
+I0715 20:01:08.089154 15155 analyzer.C:52] 
+Info :: 49.984051 %
+        Passed / Processed : 28753 / 43875 / 87778
+        Passed Ratio       : 65.533903 %
+        Real Time          :      8.49 (second)
+        Processed Rate     :  5166.63 (Hz)
+I0715 20:01:08.429257 15155 analyzer.C:52] 
+Info :: 51.983413 %
+        Passed / Processed : 29915 / 45630 / 87778
+        Passed Ratio       : 65.559939 %
+        Real Time          :      8.83 (second)
+        Processed Rate     :  5166.38 (Hz)
+I0715 20:01:08.825136 15155 analyzer.C:52] 
+Info :: 53.982775 %
+        Passed / Processed : 31075 / 47385 / 87778
+        Passed Ratio       : 65.579825 %
+        Real Time          :      9.23 (second)
+        Processed Rate     :  5134.93 (Hz)
+I0715 20:01:09.128938 15155 analyzer.C:52] 
+Info :: 55.982137 %
+        Passed / Processed : 32318 / 49140 / 87778
+        Passed Ratio       : 65.767196 %
+        Real Time          :      9.53 (second)
+        Processed Rate     :  5155.38 (Hz)
+I0715 20:01:09.482975 15155 analyzer.C:52] 
+Info :: 57.981499 %
+        Passed / Processed : 33549 / 50895 / 87778
+        Passed Ratio       : 65.918067 %
+        Real Time          :      9.89 (second)
+        Processed Rate     :  5148.29 (Hz)
+I0715 20:01:09.776041 15155 analyzer.C:52] 
+Info :: 59.980861 %
+        Passed / Processed : 34611 / 52650 / 87778
+        Passed Ratio       : 65.737892 %
+        Real Time          :     10.18 (second)
+        Processed Rate     :  5172.47 (Hz)
+I0715 20:01:10.070785 15155 analyzer.C:52] 
+Info :: 61.980223 %
+        Passed / Processed : 35672 / 54405 / 87778
+        Passed Ratio       : 65.567503 %
+        Real Time          :     10.47 (second)
+        Processed Rate     :  5194.49 (Hz)
+I0715 20:01:10.413892 15155 analyzer.C:52] 
+Info :: 63.979585 %
+        Passed / Processed : 36829 / 56160 / 87778
+        Passed Ratio       : 65.578704 %
+        Real Time          :     10.82 (second)
+        Processed Rate     :  5191.95 (Hz)
+I0715 20:01:11.043608 15155 analyzer.C:52] 
+Info :: 65.978947 %
+        Passed / Processed : 38008 / 57915 / 87778
+        Passed Ratio       : 65.627212 %
+        Real Time          :     11.45 (second)
+        Processed Rate     :  5059.65 (Hz)
+I0715 20:01:11.365694 15155 analyzer.C:52] 
+Info :: 67.978309 %
+        Passed / Processed : 39174 / 59670 / 87778
+        Passed Ratio       : 65.651081 %
+        Real Time          :     11.77 (second)
+        Processed Rate     :  5070.30 (Hz)
+I0715 20:01:11.675921 15155 analyzer.C:52] 
+Info :: 69.977671 %
+        Passed / Processed : 40341 / 61425 / 87778
+        Passed Ratio       : 65.675214 %
+        Real Time          :     12.08 (second)
+        Processed Rate     :  5085.37 (Hz)
+I0715 20:01:12.012535 15155 analyzer.C:52] 
+Info :: 71.977033 %
+        Passed / Processed : 41475 / 63180 / 87778
+        Passed Ratio       : 65.645774 %
+        Real Time          :     12.42 (second)
+        Processed Rate     :  5088.85 (Hz)
+I0715 20:01:12.454099 15155 analyzer.C:52] 
+Info :: 73.976395 %
+        Passed / Processed : 42606 / 64935 / 87778
+        Passed Ratio       : 65.613306 %
+        Real Time          :     12.86 (second)
+        Processed Rate     :  5050.58 (Hz)
+I0715 20:01:12.805896 15155 analyzer.C:52] 
+Info :: 75.975757 %
+        Passed / Processed : 43839 / 66690 / 87778
+        Passed Ratio       : 65.735493 %
+        Real Time          :     13.21 (second)
+        Processed Rate     :  5048.94 (Hz)
+I0715 20:01:13.095216 15155 analyzer.C:52] 
+Info :: 77.975119 %
+        Passed / Processed : 45039 / 68445 / 87778
+        Passed Ratio       : 65.803200 %
+        Real Time          :     13.50 (second)
+        Processed Rate     :  5070.73 (Hz)
+I0715 20:01:13.468046 15155 analyzer.C:52] 
+Info :: 79.974481 %
+        Passed / Processed : 46176 / 70200 / 87778
+        Passed Ratio       : 65.777778 %
+        Real Time          :     13.87 (second)
+        Processed Rate     :  5060.96 (Hz)
+I0715 20:01:13.775272 15155 analyzer.C:52] 
+Info :: 81.973843 %
+        Passed / Processed : 46561 / 71955 / 87778
+        Passed Ratio       : 64.708498 %
+        Real Time          :     14.18 (second)
+        Processed Rate     :  5075.08 (Hz)
+I0715 20:01:14.443059 15155 analyzer.C:52] 
+Info :: 83.973205 %
+        Passed / Processed : 47755 / 73710 / 87778
+        Passed Ratio       : 64.787681 %
+        Real Time          :     14.85 (second)
+        Processed Rate     :  4965.02 (Hz)
+I0715 20:01:14.729813 15155 analyzer.C:52] 
+Info :: 85.972567 %
+        Passed / Processed : 48904 / 75465 / 87778
+        Passed Ratio       : 64.803551 %
+        Real Time          :     15.13 (second)
+        Processed Rate     :  4986.91 (Hz)
+I0715 20:01:14.999644 15155 analyzer.C:52] 
+Info :: 87.971929 %
+        Passed / Processed : 50097 / 77220 / 87778
+        Passed Ratio       : 64.875680 %
+        Real Time          :     15.40 (second)
+        Processed Rate     :  5013.48 (Hz)
+I0715 20:01:15.298301 15155 analyzer.C:52] 
+Info :: 89.971291 %
+        Passed / Processed : 51219 / 78975 / 87778
+        Passed Ratio       : 64.854701 %
+        Real Time          :     15.70 (second)
+        Processed Rate     :  5029.89 (Hz)
+I0715 20:01:15.673228 15155 analyzer.C:52] 
+Info :: 91.970653 %
+        Passed / Processed : 52355 / 80730 / 87778
+        Passed Ratio       : 64.851976 %
+        Real Time          :     16.08 (second)
+        Processed Rate     :  5021.75 (Hz)
+I0715 20:01:15.972409 15155 analyzer.C:52] 
+Info :: 93.970015 %
+        Passed / Processed : 53578 / 82485 / 87778
+        Passed Ratio       : 64.954840 %
+        Real Time          :     16.38 (second)
+        Processed Rate     :  5037.18 (Hz)
+I0715 20:01:16.281308 15155 analyzer.C:52] 
+Info :: 95.969377 %
+        Passed / Processed : 54794 / 84240 / 87778
+        Passed Ratio       : 65.045109 %
+        Real Time          :     16.68 (second)
+        Processed Rate     :  5049.10 (Hz)
+I0715 20:01:16.552423 15155 analyzer.C:52] 
+Info :: 97.968739 %
+        Passed / Processed : 55986 / 85995 / 87778
+        Passed Ratio       : 65.103785 %
+        Real Time          :     16.96 (second)
+        Processed Rate     :  5071.88 (Hz)
+I0715 20:01:16.815099 15155 analyzer.C:52] 
+Info :: 99.968101 %
+        Passed / Processed : 56896 / 87750 / 87778
+        Passed Ratio       : 64.838746 %
+        Real Time          :     17.22 (second)
+        Processed Rate     :  5096.44 (Hz)
+I0715 20:01:16.816747 15155 analyzer.C:74] 
+Info :: 100.000000 %
+        Passed / Processed : 56915 / 87778 / 87778
+        Passed Ratio       : 64.839709 %
+        Real Time          :     17.22 (second)
+        Processed Rate     :  5097.57 (Hz)
+I0715 20:01:16.816763 15155 analyzer.C:81] 
+**----------------------**
+**  Process Events END  **
+**----------------------**
+
+I0715 20:01:16.816864 15155 analyzer.C:86] ========================  Stopwatch  ==========================
+==  START TIME : Unix( 1563213659 )    Mon Jul 15 18:00:59 2019
+==  STOP  TIME : Unix( 1563213676 )    Mon Jul 15 18:01:16 2019
+==  Duration   : 0   HR 0  MIN 17.220   SEC (        17.219675)
+===============================================================
+I0715 20:01:16.881136 15155 mdst.C:130] 
+**-------------------------**
+**    ana ntuple END       **
+**-------------------------**
+

@@ -1,0 +1,4 @@
+Log file created at: 2019/07/15 19:58:03
+Running on machine: lxplus703.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0715 19:58:03.884196 11920 mdst.C:72] Group (20200, 17426) LIST_size (17426)

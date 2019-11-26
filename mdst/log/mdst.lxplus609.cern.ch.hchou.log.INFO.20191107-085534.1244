@@ -1,0 +1,851 @@
+Log file created at: 2019/11/07 08:55:34
+Running on machine: lxplus609.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1107 08:55:34.840217  1244 mdst.C:93] 
+**----------------------    mdst args summary ----------------------**
+Type  : MC
+Input : lst/flist.cern.mc.pr.l1o9.flux.2016000.B1220
+Output: out/YiMdst.0000221.root
+Index of Group: 221
+Size  of Group: 10
+List of ROOT Files: (size 10)
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740431.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740432.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740433.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740434.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740435.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740436.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740437.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740438.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740439.00000001.root
+FILE: root://eosams.cern.ch//eos/ams/MC/AMS02/2018/Pr.B1220/pr.pl1phpsa.l1o9.flux.2016000.4_00/1209740440.00000001.root
+**------------------------------------------------------------------**
+
+I1107 08:55:34.843866  1244 mdst.C:100] 
+**--------------------------**
+**    mdst ntuple START     **
+**--------------------------**
+
+I1107 08:55:36.567001  1244 mdst.C:116] 
+AMS ROOT files
+Status : 0
+Totally Events : 58010
+
+I1107 08:55:36.579458  1244 selector.h:290] 
+****  Output Info ****
+File: out/YiMdst.0000221.root
+Tree: mdst
+
+I1107 08:55:36.579485  1244 selector.C:8] 
+====  Set Environment ====
+I1107 08:55:37.525552  1244 MagFactoryAMS.C:108] MagFactoryAMS::Load() : Load the magnetic file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/magnetic/AMS02Mag.bin)
+I1107 08:55:37.542623  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL1)
+I1107 08:55:37.563069  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL2)
+I1107 08:55:37.582216  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL3)
+I1107 08:55:37.599936  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL4)
+I1107 08:55:37.619926  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL5)
+I1107 08:55:37.638231  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL6)
+I1107 08:55:37.651234  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL7)
+I1107 08:55:37.666023  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL8)
+I1107 08:55:37.678733  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRL9)
+I1107 08:55:38.012181  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TR34)
+I1107 08:55:38.374887  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TR56)
+I1107 08:55:39.030076  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TR78)
+I1107 08:55:39.049947  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS1)
+I1107 08:55:39.062955  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS2)
+I1107 08:55:39.080245  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS3)
+I1107 08:55:39.094019  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS4)
+I1107 08:55:39.107583  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS5)
+I1107 08:55:39.120172  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS6)
+I1107 08:55:39.134214  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS7)
+I1107 08:55:39.149807  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS8)
+I1107 08:55:39.164022  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRS9)
+I1107 08:55:39.198729  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02RAD)
+I1107 08:55:39.554107  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TRD)
+I1107 08:55:39.580222  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02SUPU)
+I1107 08:55:39.604651  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02SPIU)
+I1107 08:55:39.881011  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TOFU)
+I1107 08:55:40.156090  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02TOFL)
+I1107 08:55:40.179152  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02SPIL)
+I1107 08:55:40.211135  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02SUPL)
+I1107 08:55:40.228080  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02RICH)
+I1107 08:55:40.245394  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02PMT)
+I1107 08:55:40.259598  1244 MatFactoryAMS.C:224] MatFactoryAMS::Load() : Load the material file mapping. (/eos/ams/user/h/hchou/ExternalLibs/DB/material/AMS02ECAL)
+I1107 08:55:40.259641  1244 selector.C:71] 
+**------------------------**
+**  Process Events START  **
+**------------------------**
+
+I1107 08:55:40.259683  1244 selector.C:87] 
+Info :: 0.000000 %
+        Passed / Processed : 0 / 0 / 58010
+        Passed Ratio       : 0.000000 %
+        Real Time          :      0.00 (second)
+        Processed Rate     :     0.00 (Hz)
+W1107 08:55:48.334362  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.42056e-08.
+W1107 08:55:50.310011  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.43083e-05.
+W1107 08:55:50.600834  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34047e-07.
+W1107 08:55:50.605376  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.41294e-05.
+W1107 08:55:50.629791  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34047e-07.
+W1107 08:55:50.638641  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34047e-07.
+W1107 08:55:50.647264  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.35019e-07.
+W1107 08:55:50.655477  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.35019e-07.
+W1107 08:55:50.664605  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34835e-07.
+W1107 08:55:50.678580  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.69907e-07.
+W1107 08:55:50.693403  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.70199e-07.
+W1107 08:55:50.700845  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34835e-07.
+W1107 08:55:50.717339  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.69734e-07.
+W1107 08:55:50.745541  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.70105e-07.
+W1107 08:55:50.970069  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.53495e-07 too small with descent_direction_max_norm: 4.61171e-05.
+W1107 08:55:51.244063  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.15989e-07.
+W1107 08:55:51.272064  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.15989e-07.
+W1107 08:55:51.287597  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.15989e-07.
+W1107 08:55:51.302172  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.15989e-07.
+W1107 08:55:51.311939  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.17128e-07.
+W1107 08:55:51.326655  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.17128e-07.
+W1107 08:55:51.341548  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.17128e-07.
+W1107 08:55:51.355901  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.23344e-07.
+W1107 08:55:51.372586  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.83797e-07.
+W1107 08:55:51.395717  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.79918e-07.
+W1107 08:55:51.407708  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.23344e-07.
+W1107 08:55:51.425746  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.83797e-07.
+W1107 08:55:51.446218  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.81677e-07.
+W1107 08:55:51.458977  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.23344e-07.
+W1107 08:55:51.466223  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.15989e-07.
+W1107 08:55:51.473471  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.16068e-07.
+W1107 08:55:51.483148  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.16077e-07.
+W1107 08:55:51.640890  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.26914e-09.
+W1107 08:55:51.644074  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.30014e-06.
+W1107 08:55:51.651819  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.26914e-09.
+W1107 08:55:51.658038  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.26914e-09.
+W1107 08:55:51.664606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.26914e-09.
+W1107 08:55:51.668139  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28671e-09.
+W1107 08:55:51.675107  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28671e-09.
+W1107 08:55:51.682515  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28671e-09.
+W1107 08:55:51.688398  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.27626e-09.
+W1107 08:55:51.693737  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28518e-09.
+W1107 08:55:51.698382  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:51.703886  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:51.710337  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.27626e-09.
+W1107 08:55:51.718804  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28518e-09.
+W1107 08:55:51.724277  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:51.731003  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:51.738770  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.27626e-09.
+W1107 08:55:51.742537  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28518e-09.
+W1107 08:55:51.746026  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:51.751051  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.28349e-09.
+W1107 08:55:52.026849  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.99735e-08.
+W1107 08:55:52.032097  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.84541e-08.
+W1107 08:55:52.338868  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:52.339457  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53825e-06.
+W1107 08:55:52.351282  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.82599e-06.
+W1107 08:55:52.590975  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93197e-08.
+W1107 08:55:52.622581  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93197e-08.
+W1107 08:55:52.633854  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93197e-08.
+W1107 08:55:52.645164  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93197e-08.
+W1107 08:55:52.649425  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.94549e-08.
+W1107 08:55:52.660447  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.94549e-08.
+W1107 08:55:52.671422  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.94549e-08.
+W1107 08:55:52.676426  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.96664e-08.
+W1107 08:55:52.689499  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11729e-07.
+W1107 08:55:52.713088  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11914e-07.
+W1107 08:55:52.723320  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.96664e-08.
+W1107 08:55:52.741089  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.06363e-07.
+W1107 08:55:52.759215  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.06522e-07.
+W1107 08:55:52.770426  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.96664e-08.
+W1107 08:55:52.775341  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.92906e-08.
+W1107 08:55:52.780171  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93245e-08.
+W1107 08:55:52.794351  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.93296e-08.
+W1107 08:55:53.072754  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.29750e-06.
+W1107 08:55:53.085383  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.29750e-06.
+W1107 08:55:53.092816  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.29750e-06.
+W1107 08:55:53.099757  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.06161e-04 too small with descent_direction_max_norm: 8.28035e-06.
+W1107 08:55:53.106742  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.06161e-04 too small with descent_direction_max_norm: 8.28035e-06.
+W1107 08:55:53.114228  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.47227e-05 too small with descent_direction_max_norm: 8.24979e-06.
+W1107 08:55:53.120107  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30279e-06.
+W1107 08:55:53.125121  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30293e-06.
+W1107 08:55:53.130349  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30292e-06.
+W1107 08:55:53.135792  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.47227e-05 too small with descent_direction_max_norm: 8.24979e-06.
+W1107 08:55:53.141424  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30279e-06.
+W1107 08:55:53.146132  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30293e-06.
+W1107 08:55:53.151336  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.30292e-06.
+W1107 08:55:53.310704  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.31414e-05.
+W1107 08:55:53.588546  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.64533e-06.
+W1107 08:55:53.915454  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.23741e-08.
+W1107 08:55:54.233834  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60547e-07.
+W1107 08:55:54.238422  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.13743e-05.
+W1107 08:55:54.256420  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60547e-07.
+W1107 08:55:54.264375  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60547e-07.
+W1107 08:55:54.272049  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60547e-07.
+W1107 08:55:54.283593  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.61101e-07.
+W1107 08:55:54.294603  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.61101e-07.
+W1107 08:55:54.305583  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.61101e-07.
+W1107 08:55:54.312667  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.62084e-07.
+W1107 08:55:54.317143  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60589e-07.
+W1107 08:55:54.322103  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.327724  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.333590  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.62084e-07.
+W1107 08:55:54.337925  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60589e-07.
+W1107 08:55:54.342658  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.348067  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.354166  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.62084e-07.
+W1107 08:55:54.357610  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60589e-07.
+W1107 08:55:54.361289  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.365660  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60580e-07.
+W1107 08:55:54.571440  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.17883e-06.
+W1107 08:55:54.577240  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.49863e-06.
+W1107 08:55:54.582864  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.50161e-05.
+W1107 08:55:55.265987  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59307e-08.
+W1107 08:55:55.271337  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.69258e-07 too small with descent_direction_max_norm: 6.89922e-05.
+W1107 08:55:55.285401  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59307e-08.
+W1107 08:55:55.293481  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59307e-08.
+W1107 08:55:55.301450  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59307e-08.
+W1107 08:55:55.306924  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59502e-08.
+W1107 08:55:55.314579  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59502e-08.
+W1107 08:55:55.326835  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.59502e-08.
+W1107 08:55:55.334834  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.40902e-08.
+W1107 08:55:55.340662  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.63030e-08.
+W1107 08:55:55.346423  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.353906  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.360967  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.40902e-08.
+W1107 08:55:55.366675  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.63030e-08.
+W1107 08:55:55.372315  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.379606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.386546  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.40902e-08.
+W1107 08:55:55.390501  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.63030e-08.
+W1107 08:55:55.394615  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.402842  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.62989e-08.
+W1107 08:55:55.657156  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53049e-06.
+W1107 08:55:55.661455  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.90952e-06.
+W1107 08:55:55.672462  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53049e-06.
+W1107 08:55:55.677352  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53049e-06.
+W1107 08:55:55.682330  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53163e-06.
+W1107 08:55:55.694046  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53163e-06.
+W1107 08:55:55.705682  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53340e-06.
+W1107 08:55:55.709925  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53006e-06.
+W1107 08:55:55.713891  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53005e-06.
+W1107 08:55:55.718993  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53005e-06.
+W1107 08:55:55.724120  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53340e-06.
+W1107 08:55:55.728617  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53006e-06.
+W1107 08:55:55.732887  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53005e-06.
+W1107 08:55:55.737962  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.53005e-06.
+W1107 08:55:55.947412  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.14933e-04.
+W1107 08:55:56.426743  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.57353e-09 too small with descent_direction_max_norm: 4.18574e-05.
+W1107 08:55:56.441761  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.444742  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.502743  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.57353e-09 too small with descent_direction_max_norm: 4.18574e-05.
+W1107 08:55:56.550472  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.57353e-09 too small with descent_direction_max_norm: 4.18574e-05.
+W1107 08:55:56.610386  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.80161e-07 too small with descent_direction_max_norm: 1.16545e-04.
+W1107 08:55:56.656421  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.80161e-07 too small with descent_direction_max_norm: 1.16545e-04.
+W1107 08:55:56.713941  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.35451e-07 too small with descent_direction_max_norm: 1.18220e-04.
+W1107 08:55:56.753808  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.780310  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.809545  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.825129  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.35451e-07 too small with descent_direction_max_norm: 1.18220e-04.
+W1107 08:55:56.864302  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.887727  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:56.927924  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:55:57.289721  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.65469e-08.
+W1107 08:55:57.296542  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.90652e-07.
+W1107 08:55:57.318856  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.65469e-08.
+W1107 08:55:57.329406  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.65469e-08.
+W1107 08:55:57.339133  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.65469e-08.
+W1107 08:55:57.351925  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.58151e-08.
+W1107 08:55:57.363117  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.58151e-08.
+W1107 08:55:57.373858  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.58151e-08.
+W1107 08:55:57.384483  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.66464e-08.
+W1107 08:55:57.393118  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.25855e-08.
+W1107 08:55:57.410184  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.25344e-08.
+W1107 08:55:57.431404  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.66464e-08.
+W1107 08:55:57.443796  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.41258e-08.
+W1107 08:55:57.472098  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.41506e-08.
+W1107 08:55:57.487771  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.66464e-08.
+W1107 08:55:57.493741  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.61003e-08.
+W1107 08:55:57.511097  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.61005e-08.
+W1107 08:55:57.591338  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.16049e-07.
+W1107 08:55:57.603969  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.16049e-07.
+W1107 08:55:57.612165  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.16049e-07.
+W1107 08:55:57.621395  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.16049e-07.
+W1107 08:55:57.633123  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.19608e-07.
+W1107 08:55:57.641544  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.19608e-07.
+W1107 08:55:57.649960  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.19608e-07.
+W1107 08:55:57.662047  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.24569e-07.
+W1107 08:55:57.669003  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33983e-07.
+W1107 08:55:57.677374  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33951e-07.
+W1107 08:55:57.684406  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.24569e-07.
+W1107 08:55:57.692699  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.34598e-07.
+W1107 08:55:57.702668  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.34556e-07.
+W1107 08:55:57.709453  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.24569e-07.
+W1107 08:55:57.713742  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.15122e-07.
+W1107 08:55:57.718412  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.15104e-07.
+W1107 08:55:57.723304  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.15094e-07.
+W1107 08:55:57.946465  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01068e-06.
+W1107 08:55:57.949744  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.64719e-06.
+W1107 08:55:58.152283  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.89502e-06.
+W1107 08:55:58.180697  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.89502e-06.
+W1107 08:55:58.190656  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.89502e-06.
+W1107 08:55:58.200675  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.93152e-06.
+W1107 08:55:58.210629  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.93152e-06.
+W1107 08:55:58.220237  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.99156e-06.
+W1107 08:55:58.232596  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.61029e-06.
+W1107 08:55:58.254590  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.60767e-06.
+W1107 08:55:58.261713  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.99156e-06.
+W1107 08:55:58.275972  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.55935e-06.
+W1107 08:55:58.305356  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.55735e-06.
+W1107 08:55:58.389228  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.92138e-08.
+W1107 08:55:58.408350  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.92138e-08.
+W1107 08:55:58.416597  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.92138e-08.
+W1107 08:55:58.425483  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.92138e-08.
+W1107 08:55:58.433382  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.93742e-08.
+W1107 08:55:58.440917  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.93742e-08.
+W1107 08:55:58.448088  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.93742e-08.
+W1107 08:55:58.464567  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.31827e-08.
+W1107 08:55:58.470638  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.31969e-08.
+W1107 08:55:58.489732  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.25584e-08.
+W1107 08:55:58.505056  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.25701e-08.
+W1107 08:55:58.525091  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.13492e-08.
+W1107 08:55:58.529922  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.13536e-08.
+W1107 08:55:58.680851  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.22583e-06.
+W1107 08:55:59.129884  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20000e-09.
+W1107 08:55:59.441488  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.98625e-08.
+W1107 08:55:59.453652  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50470e-06.
+W1107 08:55:59.472460  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.98625e-08.
+W1107 08:55:59.488919  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.98625e-08.
+W1107 08:55:59.505105  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.98625e-08.
+W1107 08:55:59.517778  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.01595e-08.
+W1107 08:55:59.532279  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.01595e-08.
+W1107 08:55:59.546823  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.01595e-08.
+W1107 08:55:59.562994  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.04979e-08.
+W1107 08:55:59.576824  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.30311e-08.
+W1107 08:55:59.592651  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.27383e-08.
+W1107 08:55:59.600545  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.04979e-08.
+W1107 08:55:59.614866  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.33009e-08.
+W1107 08:55:59.631712  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.32008e-08.
+W1107 08:55:59.643373  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.04979e-08.
+W1107 08:55:59.653700  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.98625e-08.
+W1107 08:55:59.664438  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00293e-08.
+W1107 08:55:59.684736  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00290e-08.
+W1107 08:55:59.876231  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.21313e-08.
+W1107 08:55:59.880823  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.08526e-06.
+W1107 08:55:59.900913  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.21313e-08.
+W1107 08:55:59.910682  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.21313e-08.
+W1107 08:55:59.920972  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.00051e-08.
+W1107 08:55:59.929913  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.00051e-08.
+W1107 08:55:59.938743  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.10139e-08.
+W1107 08:55:59.945821  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.64880e-08.
+W1107 08:55:59.953486  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.64757e-08.
+W1107 08:55:59.960350  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.10139e-08.
+W1107 08:55:59.969059  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.68574e-08.
+W1107 08:55:59.982520  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.68408e-08.
+W1107 08:56:00.174155  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.62926e-06.
+W1107 08:56:00.834712  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84632e-08.
+W1107 08:56:00.839311  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.64008e-06.
+W1107 08:56:00.857887  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84632e-08.
+W1107 08:56:00.866448  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84632e-08.
+W1107 08:56:00.875084  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84632e-08.
+W1107 08:56:00.879716  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.85390e-08.
+W1107 08:56:00.888149  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.85390e-08.
+W1107 08:56:00.896100  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.85390e-08.
+W1107 08:56:00.903467  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.93312e-08.
+W1107 08:56:00.910156  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.40994e-08.
+W1107 08:56:00.919737  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.37991e-08.
+W1107 08:56:00.925318  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.93312e-08.
+W1107 08:56:00.932494  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.07665e-08.
+W1107 08:56:00.944629  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.07542e-08.
+W1107 08:56:00.951436  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.93312e-08.
+W1107 08:56:00.955878  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84529e-08.
+W1107 08:56:00.960417  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84287e-08.
+W1107 08:56:00.969066  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.84200e-08.
+W1107 08:56:01.123376  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51431e-06.
+W1107 08:56:01.126788  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.42339e-05.
+W1107 08:56:01.138501  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51431e-06.
+W1107 08:56:01.143677  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51431e-06.
+W1107 08:56:01.149052  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51431e-06.
+W1107 08:56:01.153538  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51367e-06.
+W1107 08:56:01.158978  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51367e-06.
+W1107 08:56:01.164606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51367e-06.
+W1107 08:56:01.168785  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51238e-06.
+W1107 08:56:01.172691  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51460e-06.
+W1107 08:56:01.176937  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51458e-06.
+W1107 08:56:01.182512  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51459e-06.
+W1107 08:56:01.188135  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51238e-06.
+W1107 08:56:01.192674  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51460e-06.
+W1107 08:56:01.197463  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51458e-06.
+W1107 08:56:01.203538  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51456e-06.
+W1107 08:56:01.209100  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51238e-06.
+W1107 08:56:01.212047  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51367e-06.
+W1107 08:56:01.215018  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51316e-06.
+W1107 08:56:01.219218  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.51317e-06.
+W1107 08:56:02.096122  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.04438e-08 too small with descent_direction_max_norm: 3.92224e-05.
+W1107 08:56:02.111667  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:02.114727  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:02.117269  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.79393e-08 too small with descent_direction_max_norm: 1.64932e-02.
+W1107 08:56:02.118405  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.20035e-08 too small with descent_direction_max_norm: 1.93307e-02.
+W1107 08:56:02.138600  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 6.99780e-12 too small with descent_direction_max_norm: 4.77946e-02.
+W1107 08:56:02.239023  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.30124e-10 too small with descent_direction_max_norm: 2.87244e-02.
+W1107 08:56:02.318392  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.04438e-08 too small with descent_direction_max_norm: 3.92224e-05.
+W1107 08:56:02.337862  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.04438e-08 too small with descent_direction_max_norm: 3.92224e-05.
+W1107 08:56:02.355307  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.356822  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.403441  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:02.501616  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:02.552012  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.556455  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.560802  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.565544  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.569655  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.572656  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.576190  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:02.593554  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.04161e-07 too small with descent_direction_max_norm: 5.80150e-03.
+W1107 08:56:02.644167  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.02653e-06.
+W1107 08:56:02.665885  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.01153e-06.
+W1107 08:56:02.699904  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.33985e-05.
+W1107 08:56:02.725126  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.04161e-07 too small with descent_direction_max_norm: 5.80150e-03.
+W1107 08:56:02.772786  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.02653e-06.
+W1107 08:56:02.789930  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.24171e-06.
+W1107 08:56:02.824422  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.88853e-07.
+W1107 08:56:02.987201  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53689e-07.
+W1107 08:56:02.996023  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.71819e-07.
+W1107 08:56:03.025326  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53689e-07.
+W1107 08:56:03.041687  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53689e-07.
+W1107 08:56:03.058596  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53689e-07.
+W1107 08:56:03.073634  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.54967e-07.
+W1107 08:56:03.090834  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.54967e-07.
+W1107 08:56:03.108006  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.54967e-07.
+W1107 08:56:03.127781  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.57228e-07.
+W1107 08:56:03.142668  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.78077e-07.
+W1107 08:56:03.158408  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.77953e-07.
+W1107 08:56:03.175318  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.57228e-07.
+W1107 08:56:03.198065  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.76885e-07.
+W1107 08:56:03.223500  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.74602e-07.
+W1107 08:56:03.238816  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.57228e-07.
+W1107 08:56:03.247620  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53402e-07.
+W1107 08:56:03.256011  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53404e-07.
+W1107 08:56:03.270367  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53404e-07.
+W1107 08:56:03.587323  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64014e-09.
+W1107 08:56:03.594837  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 3.63198e-06 too small with descent_direction_max_norm: 8.16394e-05.
+W1107 08:56:03.600204  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.29678e-07 too small with descent_direction_max_norm: 4.98078e-05.
+W1107 08:56:03.618922  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64014e-09.
+W1107 08:56:03.628875  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64014e-09.
+W1107 08:56:03.638952  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.76820e-09.
+W1107 08:56:03.645105  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.76820e-09.
+W1107 08:56:03.651499  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.36680e-09.
+W1107 08:56:03.656781  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.18362e-09.
+W1107 08:56:03.667346  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 9.18220e-09.
+W1107 08:56:03.674831  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.36680e-09.
+W1107 08:56:03.685546  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03600e-08.
+W1107 08:56:03.708555  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03532e-08.
+W1107 08:56:03.879225  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.68654e-08 too small with descent_direction_max_norm: 6.23703e-04.
+W1107 08:56:04.177917  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.10586e-07.
+W1107 08:56:04.182996  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.74996e-06.
+W1107 08:56:04.191337  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.10586e-07.
+W1107 08:56:04.203367  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.10586e-07.
+W1107 08:56:04.215941  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14342e-07.
+W1107 08:56:04.221745  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14342e-07.
+W1107 08:56:04.227839  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.21846e-07.
+W1107 08:56:04.233130  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04087e-07.
+W1107 08:56:04.241421  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04158e-07.
+W1107 08:56:04.247737  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04172e-07.
+W1107 08:56:04.255827  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.21846e-07.
+W1107 08:56:04.261515  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04087e-07.
+W1107 08:56:04.270337  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04158e-07.
+W1107 08:56:04.279390  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.04172e-07.
+W1107 08:56:04.497223  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55726e-07.
+W1107 08:56:04.502641  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.47557e-04.
+W1107 08:56:04.514125  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55726e-07.
+W1107 08:56:04.522519  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55726e-07.
+W1107 08:56:04.530696  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55726e-07.
+W1107 08:56:04.536409  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.59298e-07.
+W1107 08:56:04.543960  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.59298e-07.
+W1107 08:56:04.550973  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.59298e-07.
+W1107 08:56:04.556692  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.65205e-07.
+W1107 08:56:04.561640  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54597e-07.
+W1107 08:56:04.566510  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54573e-07.
+W1107 08:56:04.572940  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54569e-07.
+W1107 08:56:04.579180  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.65205e-07.
+W1107 08:56:04.584234  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54597e-07.
+W1107 08:56:04.589332  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54573e-07.
+W1107 08:56:04.595710  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.54569e-07.
+W1107 08:56:04.602056  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.65205e-07.
+W1107 08:56:04.606531  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55726e-07.
+W1107 08:56:04.610561  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55826e-07.
+W1107 08:56:04.623606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.55823e-07.
+W1107 08:56:04.783627  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33455e-04.
+W1107 08:56:04.818954  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33455e-04.
+W1107 08:56:04.863488  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33455e-04.
+W1107 08:56:04.920742  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.33455e-04.
+W1107 08:56:04.972005  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.59159e-03.
+W1107 08:56:05.031013  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.59159e-03.
+W1107 08:56:05.081318  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.59159e-03.
+W1107 08:56:05.134232  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:05.134649  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34461e-03.
+W1107 08:56:05.158761  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.81686e-04.
+W1107 08:56:05.203241  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.45231e-04.
+W1107 08:56:05.265563  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.53622e-04.
+W1107 08:56:05.326613  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:05.327031  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34461e-03.
+W1107 08:56:05.351176  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.81686e-04.
+W1107 08:56:05.395169  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.15664e-04.
+W1107 08:56:05.451571  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.11314e-04.
+W1107 08:56:05.515712  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:05.516114  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.34461e-03.
+W1107 08:56:05.541673  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.56006e-04.
+W1107 08:56:05.578860  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.49225e-04.
+W1107 08:56:05.616384  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.49225e-04.
+W1107 08:56:06.142798  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.41038e-07.
+W1107 08:56:06.448102  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.42932e-08.
+W1107 08:56:06.796864  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.72161e-07.
+W1107 08:56:06.842150  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05476e-07.
+W1107 08:56:06.851938  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05476e-07.
+W1107 08:56:06.860399  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05476e-07.
+W1107 08:56:06.863690  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05411e-07.
+W1107 08:56:06.892818  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05411e-07.
+W1107 08:56:06.912746  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.13882e-07.
+W1107 08:56:06.917237  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.05411e-07.
+W1107 08:56:07.124047  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.88008e-05.
+W1107 08:56:07.141454  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.01247e-03.
+W1107 08:56:07.196847  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.88008e-05.
+W1107 08:56:07.214141  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.88008e-05.
+W1107 08:56:07.231658  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.88008e-05.
+W1107 08:56:07.250030  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.96888e-05.
+W1107 08:56:07.262969  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.96888e-05.
+W1107 08:56:07.281241  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.96888e-05.
+W1107 08:56:07.294786  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.10949e-05.
+W1107 08:56:07.314115  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39348e-05.
+W1107 08:56:07.335458  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39544e-05.
+W1107 08:56:07.352690  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.10949e-05.
+W1107 08:56:07.374136  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39348e-05.
+W1107 08:56:07.399991  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39544e-05.
+W1107 08:56:07.420958  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.10949e-05.
+W1107 08:56:07.436859  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.88008e-05.
+W1107 08:56:07.453430  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.92225e-05.
+W1107 08:56:07.479853  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.92239e-05.
+W1107 08:56:07.587563  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30188e-08.
+W1107 08:56:07.605823  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30188e-08.
+W1107 08:56:07.621032  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30188e-08.
+W1107 08:56:07.639279  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30188e-08.
+W1107 08:56:07.656859  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.27860e-08.
+W1107 08:56:07.671746  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.27860e-08.
+W1107 08:56:07.686933  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.27860e-08.
+W1107 08:56:07.699025  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.28705e-08.
+W1107 08:56:07.710927  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30070e-08.
+W1107 08:56:07.716425  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:07.729718  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:07.741606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.28705e-08.
+W1107 08:56:07.753830  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30070e-08.
+W1107 08:56:07.760113  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:07.772262  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:07.788688  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.28705e-08.
+W1107 08:56:07.798781  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30070e-08.
+W1107 08:56:07.803100  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:07.817139  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.30069e-08.
+W1107 08:56:08.338449  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.80911e-06.
+W1107 08:56:08.344828  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.22894e-06.
+W1107 08:56:08.398357  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89109e-09.
+W1107 08:56:08.406589  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89092e-09.
+W1107 08:56:08.415350  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89092e-09.
+W1107 08:56:08.433825  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89109e-09.
+W1107 08:56:08.440842  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89092e-09.
+W1107 08:56:08.449038  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.89092e-09.
+W1107 08:56:08.617668  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.69231e-06.
+W1107 08:56:08.621997  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.37700e-07.
+W1107 08:56:08.635556  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.69231e-06.
+W1107 08:56:08.645145  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.69231e-06.
+W1107 08:56:08.656339  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.69231e-06.
+W1107 08:56:08.661448  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64957e-06.
+W1107 08:56:08.671392  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64957e-06.
+W1107 08:56:08.680500  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.64957e-06.
+W1107 08:56:08.692467  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.57587e-06.
+W1107 08:56:08.703270  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.08879e-06.
+W1107 08:56:08.719553  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.09102e-06.
+W1107 08:56:08.735100  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.57587e-06.
+W1107 08:56:08.745429  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.10252e-06.
+W1107 08:56:08.768879  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.10528e-06.
+W1107 08:56:08.793681  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.57587e-06.
+W1107 08:56:08.798547  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.69231e-06.
+W1107 08:56:08.802147  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.68315e-06.
+W1107 08:56:08.807531  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.68311e-06.
+W1107 08:56:09.085883  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.10100e-06.
+W1107 08:56:09.096112  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.42809e-06.
+W1107 08:56:09.102432  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.27410e-05.
+W1107 08:56:09.371611  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.64807e-05.
+W1107 08:56:09.848073  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00737e-07.
+W1107 08:56:09.858016  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.48104e-06 too small with descent_direction_max_norm: 7.53504e-05.
+W1107 08:56:09.866398  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.78209e-08.
+W1107 08:56:09.876945  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.86233e-07 too small with descent_direction_max_norm: 8.25728e-05.
+W1107 08:56:09.893738  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00737e-07.
+W1107 08:56:09.914294  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00737e-07.
+W1107 08:56:09.934993  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.00737e-07.
+W1107 08:56:09.953495  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:09.980072  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:10.006752  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:10.024859  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.27543e-07.
+W1107 08:56:10.035353  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:10.049226  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.11425e-07.
+W1107 08:56:10.062728  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.11388e-07.
+W1107 08:56:10.081837  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.27543e-07.
+W1107 08:56:10.092973  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:10.106895  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.11423e-07.
+W1107 08:56:10.120471  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.11386e-07.
+W1107 08:56:10.140561  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.27543e-07.
+W1107 08:56:10.149144  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.09794e-07.
+W1107 08:56:10.160233  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.12081e-07.
+W1107 08:56:10.180506  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.12087e-07.
+W1107 08:56:10.509104  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.18052e-07.
+W1107 08:56:10.516602  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 3).
+W1107 08:56:10.519209  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:10.519691  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.78061e-03.
+W1107 08:56:10.561892  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.18052e-07.
+W1107 08:56:10.576619  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.18052e-07.
+W1107 08:56:10.593312  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.18052e-07.
+W1107 08:56:10.603015  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20535e-07.
+W1107 08:56:10.618044  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20535e-07.
+W1107 08:56:10.633421  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20535e-07.
+W1107 08:56:10.641157  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.23699e-07.
+W1107 08:56:10.664826  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.63787e-07.
+W1107 08:56:10.697890  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.61877e-07.
+W1107 08:56:10.716007  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.23699e-07.
+W1107 08:56:10.736572  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.59904e-07.
+W1107 08:56:10.766939  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.59344e-07.
+W1107 08:56:10.784755  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.23699e-07.
+W1107 08:56:10.790189  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20535e-07.
+W1107 08:56:10.795414  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20536e-07.
+W1107 08:56:10.808260  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.20536e-07.
+W1107 08:56:10.969218  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03260e-07.
+W1107 08:56:10.986619  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03260e-07.
+W1107 08:56:10.991411  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03260e-07.
+W1107 08:56:10.996311  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03222e-07.
+W1107 08:56:11.000789  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03222e-07.
+W1107 08:56:11.005440  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03350e-07.
+W1107 08:56:11.008695  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03354e-07.
+W1107 08:56:11.012043  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03428e-07.
+W1107 08:56:11.023798  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03350e-07.
+W1107 08:56:11.027209  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03354e-07.
+W1107 08:56:11.030884  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.03428e-07.
+W1107 08:56:11.289618  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.68736e-06.
+W1107 08:56:12.097823  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.80252e-06 too small with descent_direction_max_norm: 2.32897e-04.
+W1107 08:56:12.098419  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.23860e-04.
+W1107 08:56:12.291173  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.50453e-06 too small with descent_direction_max_norm: 1.50362e-05.
+W1107 08:56:12.363126  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.50453e-06 too small with descent_direction_max_norm: 1.50362e-05.
+W1107 08:56:12.624600  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.10894e-06.
+W1107 08:56:13.057009  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.061014  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.13308e-04.
+W1107 08:56:13.071616  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.077121  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.082855  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.089195  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14477e-07.
+W1107 08:56:13.096493  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14477e-07.
+W1107 08:56:13.103529  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14477e-07.
+W1107 08:56:13.116432  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.80882e-07.
+W1107 08:56:13.123113  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.129947  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84428e-09.
+W1107 08:56:13.142899  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84434e-09.
+W1107 08:56:13.149451  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.80882e-07.
+W1107 08:56:13.154567  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84566e-09.
+W1107 08:56:13.161496  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84428e-09.
+W1107 08:56:13.174365  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84434e-09.
+W1107 08:56:13.179862  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.80882e-07.
+W1107 08:56:13.183284  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.83445e-09.
+W1107 08:56:13.186566  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.83535e-09.
+W1107 08:56:13.190338  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.83535e-09.
+W1107 08:56:13.388113  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.48351e-04.
+W1107 08:56:13.394454  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.46831e-09.
+W1107 08:56:13.617990  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.12319e-05 too small with descent_direction_max_norm: 1.07567e-05.
+W1107 08:56:13.624265  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 3.15874e-07 too small with descent_direction_max_norm: 7.40383e-05.
+W1107 08:56:13.642884  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.12319e-05 too small with descent_direction_max_norm: 1.07567e-05.
+W1107 08:56:13.653632  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.12319e-05 too small with descent_direction_max_norm: 1.07567e-05.
+W1107 08:56:13.664566  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.12319e-05 too small with descent_direction_max_norm: 1.07567e-05.
+W1107 08:56:13.677577  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.08869e-05 too small with descent_direction_max_norm: 1.07710e-05.
+W1107 08:56:13.693212  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.08869e-05 too small with descent_direction_max_norm: 1.07710e-05.
+W1107 08:56:13.711699  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.08869e-05 too small with descent_direction_max_norm: 1.07710e-05.
+W1107 08:56:13.718045  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.02536e-05 too small with descent_direction_max_norm: 1.07940e-05.
+W1107 08:56:13.725560  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.94503e-06 too small with descent_direction_max_norm: 1.08107e-05.
+W1107 08:56:13.737654  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.92312e-06 too small with descent_direction_max_norm: 1.08116e-05.
+W1107 08:56:13.750596  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.02536e-05 too small with descent_direction_max_norm: 1.07940e-05.
+W1107 08:56:13.759836  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.97333e-06 too small with descent_direction_max_norm: 1.08107e-05.
+W1107 08:56:13.772435  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.91619e-06 too small with descent_direction_max_norm: 1.08116e-05.
+W1107 08:56:13.781563  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.02536e-05 too small with descent_direction_max_norm: 1.07940e-05.
+W1107 08:56:13.783936  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.08869e-05 too small with descent_direction_max_norm: 1.07710e-05.
+W1107 08:56:13.788269  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.09272e-05 too small with descent_direction_max_norm: 1.07698e-05.
+W1107 08:56:13.798447  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.08976e-05 too small with descent_direction_max_norm: 1.07698e-05.
+W1107 08:56:14.438673  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.91767e-08.
+W1107 08:56:14.447368  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.84938e-06.
+W1107 08:56:14.452306  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.13731e-05.
+W1107 08:56:14.713834  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.66718e-07.
+W1107 08:56:14.906214  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.19039e-08.
+W1107 08:56:14.918951  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.19039e-08.
+W1107 08:56:14.964135  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.19039e-08.
+W1107 08:56:15.021014  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.34874e-05 too small with descent_direction_max_norm: 3.36603e-05.
+W1107 08:56:15.051136  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.34874e-05 too small with descent_direction_max_norm: 3.36603e-05.
+W1107 08:56:15.118813  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.96868e-05 too small with descent_direction_max_norm: 8.46311e-06.
+W1107 08:56:15.154605  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.15106e-05.
+W1107 08:56:15.163861  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11834e-05.
+W1107 08:56:15.175663  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11834e-05.
+W1107 08:56:15.189049  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.96868e-05 too small with descent_direction_max_norm: 8.46311e-06.
+W1107 08:56:15.223522  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.15106e-05.
+W1107 08:56:15.233039  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11834e-05.
+W1107 08:56:15.245302  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.11834e-05.
+W1107 08:56:15.451606  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.28430e-07.
+W1107 08:56:15.654951  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28831e-07.
+W1107 08:56:15.672811  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28831e-07.
+W1107 08:56:15.682334  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28831e-07.
+W1107 08:56:15.692131  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28831e-07.
+W1107 08:56:15.697373  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.27557e-07.
+W1107 08:56:15.706840  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.27557e-07.
+W1107 08:56:15.716418  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.27557e-07.
+W1107 08:56:15.734246  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.31997e-07.
+W1107 08:56:15.748931  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.81080e-07.
+W1107 08:56:15.764945  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.80916e-07.
+W1107 08:56:15.780787  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.31997e-07.
+W1107 08:56:15.790203  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.86491e-07.
+W1107 08:56:15.800663  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.87196e-07.
+W1107 08:56:15.808706  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.31997e-07.
+W1107 08:56:15.812165  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28353e-07.
+W1107 08:56:15.815595  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28355e-07.
+W1107 08:56:15.819958  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.28355e-07.
+W1107 08:56:16.032027  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50360e-06.
+W1107 08:56:16.036535  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.44816e-06 too small with descent_direction_max_norm: 2.70322e-05.
+W1107 08:56:16.058226  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50360e-06.
+W1107 08:56:16.066408  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50360e-06.
+W1107 08:56:16.074338  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50641e-06.
+W1107 08:56:16.081358  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.50641e-06.
+W1107 08:56:16.088552  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.51095e-06.
+W1107 08:56:16.094822  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.87953e-06.
+W1107 08:56:16.101219  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.87595e-06.
+W1107 08:56:16.107314  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.51095e-06.
+W1107 08:56:16.116215  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.84039e-06.
+W1107 08:56:16.131429  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.83775e-06.
+W1107 08:56:16.544390  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.96415e-07.
+W1107 08:56:16.553570  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.96415e-07.
+W1107 08:56:16.559226  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.96415e-07.
+W1107 08:56:16.564815  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.96415e-07.
+W1107 08:56:16.569156  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01270e-07.
+W1107 08:56:16.574309  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01270e-07.
+W1107 08:56:16.579329  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01270e-07.
+W1107 08:56:16.589509  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01923e-07.
+W1107 08:56:16.595022  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.03302e-07.
+W1107 08:56:16.602562  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.03286e-07.
+W1107 08:56:16.607079  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01923e-07.
+W1107 08:56:16.612350  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.03352e-07.
+W1107 08:56:16.618705  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.03334e-07.
+W1107 08:56:16.623304  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 4.01923e-07.
+W1107 08:56:16.626247  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.94303e-07.
+W1107 08:56:16.629796  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.94295e-07.
+W1107 08:56:16.633710  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.94295e-07.
+W1107 08:56:17.442943  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18064e-05.
+W1107 08:56:17.452091  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18064e-05.
+W1107 08:56:17.458626  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18064e-05.
+W1107 08:56:17.467180  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18064e-05.
+W1107 08:56:17.472566  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18348e-05.
+W1107 08:56:17.479586  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18348e-05.
+W1107 08:56:17.486526  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18348e-05.
+W1107 08:56:17.500121  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18811e-05.
+W1107 08:56:17.509385  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17963e-05.
+W1107 08:56:17.514631  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.521924  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.527981  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18811e-05.
+W1107 08:56:17.533844  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17963e-05.
+W1107 08:56:17.539165  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.546828  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.552994  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.18811e-05.
+W1107 08:56:17.558462  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17963e-05.
+W1107 08:56:17.563371  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.576213  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.17960e-05.
+W1107 08:56:17.667274  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.41681e-08 too small with descent_direction_max_norm: 4.28500e-04.
+W1107 08:56:17.716214  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.41681e-08 too small with descent_direction_max_norm: 4.28500e-04.
+W1107 08:56:17.758386  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:17.761813  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:17.800849  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 2.41681e-08 too small with descent_direction_max_norm: 4.28500e-04.
+W1107 08:56:17.844164  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:17.869024  1244 trust_region_minimizer.cc:729] Step failed to evaluate. Treating it as a step with infinite cost
+W1107 08:56:17.920467  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.023432  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.088493  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.111727  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.09215e-09 too small with descent_direction_max_norm: 1.48790e-02.
+W1107 08:56:18.177778  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.11662e-03.
+W1107 08:56:18.179608  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.11227e-06.
+W1107 08:56:18.210203  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.211211  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 3.10640e-08 too small with descent_direction_max_norm: 1.53905e-04.
+W1107 08:56:18.299264  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.300122  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.82659e-08 too small with descent_direction_max_norm: 1.79323e-04.
+W1107 08:56:18.340746  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.341856  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 5.09215e-09 too small with descent_direction_max_norm: 1.48790e-02.
+W1107 08:56:18.409487  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 8.11662e-03.
+W1107 08:56:18.410528  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.11227e-06.
+W1107 08:56:18.441659  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.443078  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 4.00485e-07 too small with descent_direction_max_norm: 1.75759e-04.
+W1107 08:56:18.552304  1244 line_search.cc:755] Line search failed: Wolfe zoom phase failed to find a point satisfying strong Wolfe conditions within specified max_num_iterations: 20, (num iterations taken for bracketing: 1).
+W1107 08:56:18.553997  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 7.23218e-08 too small with descent_direction_max_norm: 1.66153e-04.
+W1107 08:56:18.764150  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.38614e-06.
+W1107 08:56:18.794631  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.38614e-06.
+W1107 08:56:18.803155  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.38614e-06.
+W1107 08:56:18.811980  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.38799e-06.
+W1107 08:56:18.824620  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.38799e-06.
+W1107 08:56:18.832844  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39094e-06.
+W1107 08:56:18.840956  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.55923e-06.
+W1107 08:56:18.849400  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.55656e-06.
+W1107 08:56:18.856168  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.39094e-06.
+W1107 08:56:18.864897  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.56255e-06.
+W1107 08:56:18.874135  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.55988e-06.
+W1107 08:56:19.024238  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 2.20181e-05.
+W1107 08:56:19.690824  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.01324e-07.
+W1107 08:56:20.311584  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 1.40775e-07 too small with descent_direction_max_norm: 1.15686e-04.
+W1107 08:56:20.683455  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36867e-06.
+W1107 08:56:20.689759  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.46832e-06.
+W1107 08:56:20.712105  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36867e-06.
+W1107 08:56:20.719069  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36867e-06.
+W1107 08:56:20.726151  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36867e-06.
+W1107 08:56:20.739333  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.37644e-06.
+W1107 08:56:20.746841  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.37644e-06.
+W1107 08:56:20.754623  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.37644e-06.
+W1107 08:56:20.784260  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.38904e-06.
+W1107 08:56:20.792248  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36597e-06.
+W1107 08:56:20.798650  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:20.806531  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:20.813635  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.38904e-06.
+W1107 08:56:20.819922  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36597e-06.
+W1107 08:56:20.826002  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:20.832744  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:20.839825  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.38904e-06.
+W1107 08:56:20.844925  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36597e-06.
+W1107 08:56:20.849752  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:20.855015  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.36591e-06.
+W1107 08:56:21.098196  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.00838e-07.
+W1107 08:56:21.101784  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 3.21233e-07.
+W1107 08:56:21.107442  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.14509e-07.
+W1107 08:56:21.132367  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.00838e-07.
+W1107 08:56:21.140235  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.00838e-07.
+W1107 08:56:21.148558  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.01613e-07.
+W1107 08:56:21.156744  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.01613e-07.
+W1107 08:56:21.165781  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.02767e-07.
+W1107 08:56:21.176179  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.18951e-07.
+W1107 08:56:21.191365  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.19036e-07.
+W1107 08:56:21.197795  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.02767e-07.
+W1107 08:56:21.204946  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.21353e-07.
+W1107 08:56:21.214874  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.21454e-07.
+W1107 08:56:21.780128  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 3.05123e-07 too small with descent_direction_max_norm: 4.59311e-05.
+W1107 08:56:21.954074  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.99122e-08.
+W1107 08:56:22.211585  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.85573e-09.
+W1107 08:56:22.215864  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.23386e-07 too small with descent_direction_max_norm: 2.50423e-05.
+W1107 08:56:22.223799  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.85573e-09.
+W1107 08:56:22.229918  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.85573e-09.
+W1107 08:56:22.235850  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.56475e-09.
+W1107 08:56:22.242064  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 7.56475e-09.
+W1107 08:56:22.248448  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.97423e-09.
+W1107 08:56:22.252624  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61414e-09.
+W1107 08:56:22.256803  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61888e-09.
+W1107 08:56:22.261907  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61684e-09.
+W1107 08:56:22.267205  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.97423e-09.
+W1107 08:56:22.273802  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61414e-09.
+W1107 08:56:22.278478  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61888e-09.
+W1107 08:56:22.284317  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 5.61684e-09.
+W1107 08:56:22.943203  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.74607e-09.
+W1107 08:56:22.951263  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 6.30590e-06.
+W1107 08:56:22.965865  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 9.97343e-07 too small with descent_direction_max_norm: 1.06886e-04.
+W1107 08:56:22.971748  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.70750e-05.
+W1107 08:56:22.981076  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.74607e-09.
+W1107 08:56:22.999387  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.74607e-09.
+W1107 08:56:23.012399  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.74607e-09.
+W1107 08:56:23.030025  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.75050e-09.
+W1107 08:56:23.051365  1244 line_search.cc:767] Line search failed: Wolfe zoom bracket width: 0.00000e+00 too small with descent_direction_max_norm: 1.75050e-09.
+W1107 

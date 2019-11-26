@@ -1,6 +1,6 @@
 {
-	//gInterpreter->AddIncludePath("${AMSSRC}/include");
-    //gSystem->Load("/cvmfs/ams.cern.ch/Offline/vdev/lib/linuxx8664icc5.34/libntuple_slc6_PG_dynamic.so");
+	gInterpreter->AddIncludePath("${ROOTSYS}/include");
+    gSystem->Load("/cvmfs/ams.cern.ch/Offline/vdev/lib/linuxx8664icc5.34/libntuple_slc6_PG_dynamic.so");
 
     Printf("Current Version    = %s", gROOT->GetVersion());
 	Printf("Build Architecture = %s", gSystem->GetBuildArch());

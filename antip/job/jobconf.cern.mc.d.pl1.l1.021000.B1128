@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/antip
+PROJVERSION  =  19Nov03
+PROJTITLE    =  mcd12
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.d.pl1.l1.021000.B1128
+EVENTTYPE    =  MC
+FILEPEREXE   =  10
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

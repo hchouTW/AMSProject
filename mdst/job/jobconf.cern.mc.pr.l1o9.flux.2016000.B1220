@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mdst
+PROJVERSION  =  19Nov03
+PROJTITLE    =  MC_PR_L1o9_FLUX_2016000_B1220
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.pr.l1o9.flux.2016000.B1220 
+EVENTTYPE    =  MC
+FILEPEREXE   =  8
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  10
+CONFIRM    =  NONE
