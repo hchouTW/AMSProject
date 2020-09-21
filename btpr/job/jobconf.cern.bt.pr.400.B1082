@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  proj/btpr
+PROJVERSION  =  20Jun11
+PROJTITLE    =  btpr04
+PROJBIN      =  mdst_sel
+PROJFLIST    =  flist.cern.bt.pr.400.B1082
+EVENTTYPE    =  BT
+FILEPEREXE   =  1
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

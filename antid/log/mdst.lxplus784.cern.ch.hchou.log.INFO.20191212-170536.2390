@@ -1,0 +1,368 @@
+Log file created at: 2019/12/12 17:05:36
+Running on machine: lxplus784.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1212 17:05:36.079748  2390 mdst.C:92] 
+**----------------------    mdst args summary ----------------------**
+Type  : MC
+Input : lst/flist.cern.mc.pr.pl1.l1.021000.B1220
+Output: out/YiMdst.0000033.root
+Index of Group: 33
+Size  of Group: 5
+List of ROOT Files: (size 5)
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/MC_PR_021000_B1220/YiMdst.0000165.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/MC_PR_021000_B1220/YiMdst.0000166.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/MC_PR_021000_B1220/YiMdst.0000167.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/MC_PR_021000_B1220/YiMdst.0000168.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/MC_PR_021000_B1220/YiMdst.0000169.root
+**------------------------------------------------------------------**
+
+I1212 17:05:36.084697  2390 mdst.C:99] 
+**-------------------------**
+**    ana ntuple START     **
+**-------------------------**
+
+I1212 17:05:37.101027  2390 mdst.C:109] 
+ROOT files
+Totally Events : 54104
+
+I1212 17:05:37.293227  2390 analyzer.h:250] 
+****  Output Info ****
+File : out/YiMdst.0000033.root
+Tree : ana
+
+Clone: mdst
+
+I1212 17:05:37.293246  2390 analyzer.C:10] 
+====  Set Environment ====
+I1212 17:05:37.417584  2390 analyzer.C:36] 
+**------------------------**
+**  Process Events START  **
+**------------------------**
+
+I1212 17:05:37.417678  2390 analyzer.C:52] 
+Info :: 0.000000 %
+        Passed / Processed : 0 / 0 / 54104
+        Passed Ratio       : 0.000000 %
+        Real Time          :      0.12 (second)
+        Processed Rate     :     0.00 (Hz)
+I1212 17:05:38.236899  2390 analyzer.C:52] 
+Info :: 1.999852 %
+        Passed / Processed : 1034 / 1082 / 54104
+        Passed Ratio       : 95.563771 %
+        Real Time          :      0.94 (second)
+        Processed Rate     :  1146.70 (Hz)
+I1212 17:05:38.686408  2390 analyzer.C:52] 
+Info :: 3.999704 %
+        Passed / Processed : 2062 / 2164 / 54104
+        Passed Ratio       : 95.286506 %
+        Real Time          :      1.39 (second)
+        Processed Rate     :  1553.39 (Hz)
+I1212 17:05:39.212886  2390 analyzer.C:52] 
+Info :: 5.999556 %
+        Passed / Processed : 3088 / 3246 / 54104
+        Passed Ratio       : 95.132471 %
+        Real Time          :      1.92 (second)
+        Processed Rate     :  1691.01 (Hz)
+I1212 17:05:39.701071  2390 analyzer.C:52] 
+Info :: 7.999409 %
+        Passed / Processed : 4137 / 4328 / 54104
+        Passed Ratio       : 95.586876 %
+        Real Time          :      2.41 (second)
+        Processed Rate     :  1797.53 (Hz)
+I1212 17:05:40.162094  2390 analyzer.C:52] 
+Info :: 9.999261 %
+        Passed / Processed : 5180 / 5410 / 54104
+        Passed Ratio       : 95.748614 %
+        Real Time          :      2.87 (second)
+        Processed Rate     :  1885.83 (Hz)
+I1212 17:05:40.660456  2390 analyzer.C:52] 
+Info :: 11.999113 %
+        Passed / Processed : 6205 / 6492 / 54104
+        Passed Ratio       : 95.579174 %
+        Real Time          :      3.37 (second)
+        Processed Rate     :  1928.05 (Hz)
+I1212 17:05:41.119506  2390 analyzer.C:52] 
+Info :: 13.998965 %
+        Passed / Processed : 7246 / 7574 / 54104
+        Passed Ratio       : 95.669395 %
+        Real Time          :      3.83 (second)
+        Processed Rate     :  1979.52 (Hz)
+I1212 17:05:41.792528  2390 analyzer.C:52] 
+Info :: 15.998817 %
+        Passed / Processed : 8271 / 8656 / 54104
+        Passed Ratio       : 95.552218 %
+        Real Time          :      4.50 (second)
+        Processed Rate     :  1923.90 (Hz)
+I1212 17:05:42.270627  2390 analyzer.C:52] 
+Info :: 17.998669 %
+        Passed / Processed : 9298 / 9738 / 54104
+        Passed Ratio       : 95.481618 %
+        Real Time          :      4.98 (second)
+        Processed Rate     :  1956.49 (Hz)
+I1212 17:05:43.018857  2390 analyzer.C:52] 
+Info :: 19.998521 %
+        Passed / Processed : 10343 / 10820 / 54104
+        Passed Ratio       : 95.591497 %
+        Real Time          :      5.73 (second)
+        Processed Rate     :  1889.78 (Hz)
+I1212 17:05:43.226392  2390 analyzer.C:52] 
+Info :: 21.998374 %
+        Passed / Processed : 11382 / 11902 / 54104
+        Passed Ratio       : 95.630986 %
+        Real Time          :      5.93 (second)
+        Processed Rate     :  2006.04 (Hz)
+I1212 17:05:43.489734  2390 analyzer.C:52] 
+Info :: 23.998226 %
+        Passed / Processed : 12410 / 12984 / 54104
+        Passed Ratio       : 95.579174 %
+        Real Time          :      6.20 (second)
+        Processed Rate     :  2095.40 (Hz)
+I1212 17:05:43.784090  2390 analyzer.C:52] 
+Info :: 25.998078 %
+        Passed / Processed : 13445 / 14066 / 54104
+        Passed Ratio       : 95.585099 %
+        Real Time          :      6.49 (second)
+        Processed Rate     :  2167.07 (Hz)
+I1212 17:05:44.020179  2390 analyzer.C:52] 
+Info :: 27.997930 %
+        Passed / Processed : 14473 / 15148 / 54104
+        Passed Ratio       : 95.543966 %
+        Real Time          :      6.73 (second)
+        Processed Rate     :  2251.87 (Hz)
+I1212 17:05:44.277364  2390 analyzer.C:52] 
+Info :: 29.997782 %
+        Passed / Processed : 15511 / 16230 / 54104
+        Passed Ratio       : 95.569932 %
+        Real Time          :      6.98 (second)
+        Processed Rate     :  2323.87 (Hz)
+I1212 17:05:44.530867  2390 analyzer.C:52] 
+Info :: 31.997634 %
+        Passed / Processed : 16547 / 17312 / 54104
+        Passed Ratio       : 95.581100 %
+        Real Time          :      7.24 (second)
+        Processed Rate     :  2391.97 (Hz)
+I1212 17:05:44.759261  2390 analyzer.C:52] 
+Info :: 33.997486 %
+        Passed / Processed : 17582 / 18394 / 54104
+        Passed Ratio       : 95.585517 %
+        Real Time          :      7.47 (second)
+        Processed Rate     :  2463.72 (Hz)
+I1212 17:05:45.137251  2390 analyzer.C:52] 
+Info :: 35.997338 %
+        Passed / Processed : 18623 / 19476 / 54104
+        Passed Ratio       : 95.620251 %
+        Real Time          :      7.84 (second)
+        Processed Rate     :  2482.94 (Hz)
+I1212 17:05:45.407537  2390 analyzer.C:52] 
+Info :: 37.997191 %
+        Passed / Processed : 19654 / 20558 / 54104
+        Passed Ratio       : 95.602685 %
+        Real Time          :      8.11 (second)
+        Processed Rate     :  2533.58 (Hz)
+I1212 17:05:46.733940  2390 analyzer.C:52] 
+Info :: 39.997043 %
+        Passed / Processed : 20683 / 21640 / 54104
+        Passed Ratio       : 95.577634 %
+        Real Time          :      9.44 (second)
+        Processed Rate     :  2292.22 (Hz)
+I1212 17:05:46.911631  2390 analyzer.C:52] 
+Info :: 41.996895 %
+        Passed / Processed : 21731 / 22722 / 54104
+        Passed Ratio       : 95.638588 %
+        Real Time          :      9.62 (second)
+        Processed Rate     :  2362.38 (Hz)
+I1212 17:05:47.119629  2390 analyzer.C:52] 
+Info :: 43.996747 %
+        Passed / Processed : 22771 / 23804 / 54104
+        Passed Ratio       : 95.660393 %
+        Real Time          :      9.83 (second)
+        Processed Rate     :  2422.48 (Hz)
+I1212 17:05:47.366902  2390 analyzer.C:52] 
+Info :: 45.996599 %
+        Passed / Processed : 23817 / 24886 / 54104
+        Passed Ratio       : 95.704412 %
+        Real Time          :     10.07 (second)
+        Processed Rate     :  2470.42 (Hz)
+I1212 17:05:47.590775  2390 analyzer.C:52] 
+Info :: 47.996451 %
+        Passed / Processed : 24840 / 25968 / 54104
+        Passed Ratio       : 95.656192 %
+        Real Time          :     10.30 (second)
+        Processed Rate     :  2521.79 (Hz)
+I1212 17:05:47.810973  2390 analyzer.C:52] 
+Info :: 49.996303 %
+        Passed / Processed : 25865 / 27050 / 54104
+        Passed Ratio       : 95.619224 %
+        Real Time          :     10.52 (second)
+        Processed Rate     :  2571.87 (Hz)
+I1212 17:05:48.027737  2390 analyzer.C:52] 
+Info :: 51.996156 %
+        Passed / Processed : 26906 / 28132 / 54104
+        Passed Ratio       : 95.641974 %
+        Real Time          :     10.73 (second)
+        Processed Rate     :  2620.73 (Hz)
+I1212 17:05:48.214788  2390 analyzer.C:52] 
+Info :: 53.996008 %
+        Passed / Processed : 27941 / 29214 / 54104
+        Passed Ratio       : 95.642500 %
+        Real Time          :     10.92 (second)
+        Processed Rate     :  2674.92 (Hz)
+I1212 17:05:48.549345  2390 analyzer.C:52] 
+Info :: 55.995860 %
+        Passed / Processed : 28979 / 30296 / 54104
+        Passed Ratio       : 95.652891 %
+        Real Time          :     11.26 (second)
+        Processed Rate     :  2691.54 (Hz)
+I1212 17:05:48.764339  2390 analyzer.C:52] 
+Info :: 57.995712 %
+        Passed / Processed : 30013 / 31378 / 54104
+        Passed Ratio       : 95.649818 %
+        Real Time          :     11.47 (second)
+        Processed Rate     :  2735.42 (Hz)
+I1212 17:05:49.389020  2390 analyzer.C:52] 
+Info :: 59.995564 %
+        Passed / Processed : 31042 / 32460 / 54104
+        Passed Ratio       : 95.631547 %
+        Real Time          :     12.10 (second)
+        Processed Rate     :  2683.60 (Hz)
+I1212 17:05:49.588177  2390 analyzer.C:52] 
+Info :: 61.995416 %
+        Passed / Processed : 32068 / 33542 / 54104
+        Passed Ratio       : 95.605510 %
+        Real Time          :     12.29 (second)
+        Processed Rate     :  2728.13 (Hz)
+I1212 17:05:49.844234  2390 analyzer.C:52] 
+Info :: 63.995268 %
+        Passed / Processed : 33115 / 34624 / 54104
+        Passed Ratio       : 95.641751 %
+        Real Time          :     12.55 (second)
+        Processed Rate     :  2758.68 (Hz)
+I1212 17:05:50.113823  2390 analyzer.C:52] 
+Info :: 65.995121 %
+        Passed / Processed : 34153 / 35706 / 54104
+        Passed Ratio       : 95.650591 %
+        Real Time          :     12.82 (second)
+        Processed Rate     :  2785.07 (Hz)
+I1212 17:05:50.363358  2390 analyzer.C:52] 
+Info :: 67.994973 %
+        Passed / Processed : 35189 / 36788 / 54104
+        Passed Ratio       : 95.653474 %
+        Real Time          :     13.07 (second)
+        Processed Rate     :  2814.68 (Hz)
+I1212 17:05:50.633220  2390 analyzer.C:52] 
+Info :: 69.994825 %
+        Passed / Processed : 36224 / 37870 / 54104
+        Passed Ratio       : 95.653552 %
+        Real Time          :     13.34 (second)
+        Processed Rate     :  2838.85 (Hz)
+I1212 17:05:50.896315  2390 analyzer.C:52] 
+Info :: 71.994677 %
+        Passed / Processed : 37251 / 38952 / 54104
+        Passed Ratio       : 95.633087 %
+        Real Time          :     13.60 (second)
+        Processed Rate     :  2863.49 (Hz)
+I1212 17:05:51.151993  2390 analyzer.C:52] 
+Info :: 73.994529 %
+        Passed / Processed : 38285 / 40034 / 54104
+        Passed Ratio       : 95.631213 %
+        Real Time          :     13.86 (second)
+        Processed Rate     :  2888.73 (Hz)
+I1212 17:05:51.498103  2390 analyzer.C:52] 
+Info :: 75.994381 %
+        Passed / Processed : 39327 / 41116 / 54104
+        Passed Ratio       : 95.648896 %
+        Real Time          :     14.20 (second)
+        Processed Rate     :  2894.52 (Hz)
+I1212 17:05:51.739864  2390 analyzer.C:52] 
+Info :: 77.994233 %
+        Passed / Processed : 40367 / 42198 / 54104
+        Passed Ratio       : 95.660932 %
+        Real Time          :     14.45 (second)
+        Processed Rate     :  2920.97 (Hz)
+I1212 17:05:52.123000  2390 analyzer.C:52] 
+Info :: 79.994085 %
+        Passed / Processed : 41399 / 43280 / 54104
+        Passed Ratio       : 95.653882 %
+        Real Time          :     14.83 (second)
+        Processed Rate     :  2918.47 (Hz)
+I1212 17:05:53.157413  2390 analyzer.C:52] 
+Info :: 81.993938 %
+        Passed / Processed : 42427 / 44362 / 54104
+        Passed Ratio       : 95.638159 %
+        Real Time          :     15.86 (second)
+        Processed Rate     :  2796.38 (Hz)
+I1212 17:05:53.409356  2390 analyzer.C:52] 
+Info :: 83.993790 %
+        Passed / Processed : 43472 / 45444 / 54104
+        Passed Ratio       : 95.660593 %
+        Real Time          :     16.12 (second)
+        Processed Rate     :  2819.80 (Hz)
+I1212 17:05:53.779220  2390 analyzer.C:52] 
+Info :: 85.993642 %
+        Passed / Processed : 44518 / 46526 / 54104
+        Passed Ratio       : 95.684134 %
+        Real Time          :     16.49 (second)
+        Processed Rate     :  2822.17 (Hz)
+I1212 17:05:54.061820  2390 analyzer.C:52] 
+Info :: 87.993494 %
+        Passed / Processed : 45551 / 47608 / 54104
+        Passed Ratio       : 95.679298 %
+        Real Time          :     16.77 (second)
+        Processed Rate     :  2839.13 (Hz)
+I1212 17:05:54.348987  2390 analyzer.C:52] 
+Info :: 89.993346 %
+        Passed / Processed : 46590 / 48690 / 54104
+        Passed Ratio       : 95.686999 %
+        Real Time          :     17.06 (second)
+        Processed Rate     :  2854.83 (Hz)
+I1212 17:05:54.606392  2390 analyzer.C:52] 
+Info :: 91.993198 %
+        Passed / Processed : 47616 / 49772 / 54104
+        Passed Ratio       : 95.668247 %
+        Real Time          :     17.31 (second)
+        Processed Rate     :  2874.82 (Hz)
+I1212 17:05:54.939688  2390 analyzer.C:52] 
+Info :: 93.993050 %
+        Passed / Processed : 48666 / 50854 / 54104
+        Passed Ratio       : 95.697487 %
+        Real Time          :     17.65 (second)
+        Processed Rate     :  2881.84 (Hz)
+I1212 17:05:55.260407  2390 analyzer.C:52] 
+Info :: 95.992903 %
+        Passed / Processed : 49703 / 51936 / 54104
+        Passed Ratio       : 95.700478 %
+        Real Time          :     17.97 (second)
+        Processed Rate     :  2890.62 (Hz)
+I1212 17:05:55.510834  2390 analyzer.C:52] 
+Info :: 97.992755 %
+        Passed / Processed : 50742 / 53018 / 54104
+        Passed Ratio       : 95.707118 %
+        Real Time          :     18.22 (second)
+        Processed Rate     :  2910.28 (Hz)
+I1212 17:05:55.746325  2390 analyzer.C:52] 
+Info :: 99.992607 %
+        Passed / Processed : 51775 / 54100 / 54104
+        Passed Ratio       : 95.702403 %
+        Real Time          :     18.45 (second)
+        Processed Rate     :  2931.77 (Hz)
+I1212 17:05:55.746943  2390 analyzer.C:79] 
+Info :: 100.000000 %
+        Passed / Processed : 51778 / 54104 / 54104
+        Passed Ratio       : 95.700872 %
+        Real Time          :     18.45 (second)
+        Processed Rate     :  2931.89 (Hz)
+I1212 17:05:55.746961  2390 analyzer.C:86] 
+**----------------------**
+**  Process Events END  **
+**----------------------**
+
+I1212 17:05:55.747020  2390 analyzer.C:91] ========================  Stopwatch  ==========================
+==  START TIME : Unix( 1576166737 )    Thu Dec 12 16:05:37 2019
+==  STOP  TIME : Unix( 1576166755 )    Thu Dec 12 16:05:55 2019
+==  Duration   : 0   HR 0  MIN 18.454   SEC (        18.453710)
+===============================================================
+I1212 17:05:56.332108  2390 mdst.C:130] 
+**-------------------------**
+**    ana ntuple END       **
+**-------------------------**
+

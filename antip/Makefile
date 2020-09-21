@@ -31,15 +31,17 @@ CoreVersion=19Nov03
 CoreDir=${AMSCore}/subj/antip/${CoreVersion}
 
 all :
-	make ${ProjDir}/exe/mdst
-	make ${ProjDir}/exe/issprof
-	make ${ProjDir}/exe/physana_l
-	make ${ProjDir}/exe/physana_m
-	make ${ProjDir}/exe/physana_i
-	make ${ProjDir}/exe/physana_hl1
-	make ${ProjDir}/exe/physana_hl9
-	make ${ProjDir}/exe/physana_hfs
-	make ${ProjDir}/exe/physana_all
+	#make ${ProjDir}/exe/mdst
+	#make ${ProjDir}/exe/issprof
+	#make ${ProjDir}/exe/physana_l
+	#make ${ProjDir}/exe/physana_m
+	#make ${ProjDir}/exe/physana_i
+	#make ${ProjDir}/exe/physana_hl1
+	#make ${ProjDir}/exe/physana_hl9
+	#make ${ProjDir}/exe/physana_hfs
+	#make ${ProjDir}/exe/physana_all
+	make ${ProjDir}/exe/physana_time
+	#make ${ProjDir}/exe/physana_mes
 	@rm -rf ${CoreDir}
 	@mkdir -p ${CoreDir}
 	@mkdir -p ${CoreDir}/env
@@ -114,6 +116,20 @@ ${ProjDir}/obj/physana_all.o : ${ProjDir}/inc/physana_all.C
 -include ${ProjDir}/obj/physana_all.d
 
 ${ProjDir}/exe/physana_all : ${ProjDir}/obj/physana_all.o
+	$(LDP) -o $@ $+ $(LIBP)
+
+${ProjDir}/obj/physana_time.o : ${ProjDir}/inc/physana_time.C
+	$(CXX) -c -o $@ -g $< -MMD
+-include ${ProjDir}/obj/physana_time.d
+
+${ProjDir}/exe/physana_time : ${ProjDir}/obj/physana_time.o
+	$(LDP) -o $@ $+ $(LIBP)
+
+${ProjDir}/obj/physana_mes.o : ${ProjDir}/inc/physana_mes.C
+	$(CXX) -c -o $@ -g $< -MMD
+-include ${ProjDir}/obj/physana_mes.d
+
+${ProjDir}/exe/physana_mes : ${ProjDir}/obj/physana_mes.o
 	$(LDP) -o $@ $+ $(LIBP)
 
 clean :

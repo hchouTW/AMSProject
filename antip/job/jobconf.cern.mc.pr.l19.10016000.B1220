@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/antip
+PROJVERSION  =  19Nov03
+PROJTITLE    =  mcprL19_38
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.pr.l19.10016000.B1220
+EVENTTYPE    =  MC
+FILEPEREXE   =  30
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

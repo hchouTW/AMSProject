@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/trsys
+PROJVERSION  =  19Jul08
+PROJTITLE    =  test16_he
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.he4.pl1.l19.216000.B1200
+EVENTTYPE    =  MC
+FILEPEREXE   =  30
+JOBREGION    =  WHOLE
+EXESATID     =  100
+EXEENDID     =  499
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

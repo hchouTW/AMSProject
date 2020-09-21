@@ -93,6 +93,8 @@ class Axis {
 		inline Double_t min()   const { return binset_.min(); }
 		inline Double_t max()   const { return binset_.max(); }
 
+        inline void set_title(const std::string& title) { title_ = title; }
+
 		Double_t center(UInt_t ibin, AxisScale scl = AxisScale::kLinear) const;
 		Double_t center(UInt_t ibin, Double_t power) const;
 		inline Double_t width(UInt_t ibin) const { return binset_.width(ibin); }

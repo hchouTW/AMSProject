@@ -28,20 +28,20 @@ int main(int argc, char* argv[]) {
     using namespace MGROOT;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory(0);
-    std::string subv = "12";
+    std::string subv = "38";
     
     UInt_t cntev = 0;
     
     UInt_t cntpr = 0;
     TFile* fmcpr = TFile::Open(Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/mcpr%s/YiMdst.root", subv.c_str()));
-    TH1D*  hmcpr = (TH1D*)fmcpr->Get("hHl1_MC_cnt");
+    TH1D*  hmcpr = (TH1D*)fmcpr->Get("hHl1_cnt_MC_FLUX10");
     TTree* tmcpr = (TTree*)fmcpr->Get("ana");
     tmcpr->SetBranchAddress("event", &cntev);
     for (int it = 0; it < tmcpr->GetEntries(); ++it) { tmcpr->GetEntry(it); cntpr+=cntev; }
     
     UInt_t cntap = 0;
     TFile* fmcap = TFile::Open(Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/mcap%s/YiMdst.root", subv.c_str()));
-    TH1D*  hmcap = (TH1D*)fmcap->Get("hHl1_MC_cnt");
+    TH1D*  hmcap = (TH1D*)fmcap->Get("hHl1_cnt_MC_FLUX10");
     TTree* tmcap = (TTree*)fmcap->Get("ana");
     tmcap->SetBranchAddress("event", &cntev);
     for (int it = 0; it < tmcap->GetEntries(); ++it) { tmcap->GetEntry(it); cntap+=cntev; }
@@ -57,7 +57,8 @@ int main(int argc, char* argv[]) {
         haccp->SetBinError  (ib, 1.0/accp * error);
     }
     
-    Hist* hcc_cc = Hist::New("hHNl1_lchiy_lrvar_cc", (TH1*)TFile::Open(Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/mcprflux%s/YiMdst.root", subv.c_str()))->Get("hHNl1_lchiy_lrvar"));
+    //Hist* hcc_cc = Hist::New("hHNl1_lchiy_lrvar_cc", (TH1*)TFile::Open(Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/mcprflux%s/YiMdst.root", subv.c_str()))->Get("hHNl1_lchiy_lrvar_MC_FLUX27"));
+    Hist* hcc_cc = Hist::New("hHNl1_lchiy_lrvar_cc", (TH1*)TFile::Open(Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/mcprL1o9flux_%s/YiMdst.root", subv.c_str()))->Get("hHNl1_lchiy_lrvar_MC_FLUX27"));
 
     Hist::Load("YiMdst.root", Form("/eos/ams/user/h/hchou/AMSData/subj/antip/19Nov03/iss%s", subv.c_str()));
 

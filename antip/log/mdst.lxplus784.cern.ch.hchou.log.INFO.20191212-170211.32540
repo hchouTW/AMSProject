@@ -1,0 +1,45 @@
+Log file created at: 2019/12/12 17:02:11
+Running on machine: lxplus784.cern.ch
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1212 17:02:11.671941 32540 mdst.C:92] 
+**----------------------    mdst args summary ----------------------**
+Type  : ISS
+Input : lst/flist.cern.iss.B1130.pass7
+Output: out/YiMdst.0000033.root
+Index of Group: 33
+Size  of Group: 3
+List of ROOT Files: (size 3)
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/ISS_PART01/YiMdst.0000099.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/ISS_PART01/YiMdst.0000100.root
+FILE: root://eosams.cern.ch//eos/ams/user/h/hchou/AMSData/mdst/19Nov03/ISS_PART01/YiMdst.0000101.root
+**------------------------------------------------------------------**
+
+I1212 17:02:11.973975 32540 mdst.C:99] 
+**-------------------------**
+**    ana ntuple START     **
+**-------------------------**
+
+I1212 17:02:13.026468 32540 mdst.C:109] 
+ROOT files
+Totally Events : 11491
+
+I1212 17:02:13.151489 32540 analyzer.h:250] 
+****  Output Info ****
+File : out/YiMdst.0000033.root
+Tree : ana
+
+Clone: mdst
+
+I1212 17:02:13.151510 32540 analyzer.C:10] 
+====  Set Environment ====
+I1212 17:02:13.373786 32540 analyzer.C:36] 
+**------------------------**
+**  Process Events START  **
+**------------------------**
+
+I1212 17:02:13.373848 32540 analyzer.C:52] 
+Info :: 0.000000 %
+        Passed / Processed : 0 / 0 / 11491
+        Passed Ratio       : 0.000000 %
+        Real Time          :      0.22 (second)
+        Processed Rate     :     0.00 (Hz)

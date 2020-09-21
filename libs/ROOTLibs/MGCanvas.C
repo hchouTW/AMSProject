@@ -44,11 +44,11 @@ TVirtualPad * SetPadBorder(TCanvas * canvas, UInt_t idx, const PadBorder& border
 	pad->SetFillColor(border.color);
 	pad->SetFillStyle(1001);
 	
-	pad->Modified();
-    pad->Update();
-	
 	pad->SetBorderMode(border.mode);
 	pad->SetBorderSize(border.size);
+	
+    pad->Modified();
+    pad->Update();
 	
 	return pad;
 }
@@ -62,8 +62,22 @@ TVirtualPad * SetPadAxis(TCanvas * canvas, UInt_t idx, const PadAxis& axis) {
 	pad->SetLogx(axis.logx);
 	pad->SetLogy(axis.logy);
 	pad->SetLogz(axis.logz);
-    
+        
 	pad->Modified();
+	pad->Update();
+
+	return pad;
+}
+
+TVirtualPad * UpdatePad(TCanvas * canvas, UInt_t idx) {
+	if (canvas == nullptr) return nullptr;
+	TVirtualPad * pad = canvas->cd(idx);
+	if (pad == nullptr) return nullptr;
+    
+    pad->RedrawAxis("");
+    pad->RedrawAxis("G");
+	
+    pad->Modified();
 	pad->Update();
 
 	return pad;
@@ -73,11 +87,13 @@ TVirtualPad * SetPadAxis(TCanvas * canvas, UInt_t idx, const PadAxis& axis) {
 //---- Canvas  ----//
 void Canvas::create(const Window& window, const PadMargin& margin, const PadBorder& border) {
 	window_ = window;
+    margin_ = margin;
+    border_ = border;
 	
 	canvas_.cd(0);
 	canvas_.SetCanvasSize(window.width, window.height);
-	SetPadMargin(&canvas_, 0, margin);
 	SetPadBorder(&canvas_, 0, border);
+	SetPadMargin(&canvas_, 0, margin);
 	
 	canvas_.Modified(); 
 	canvas_.Update();
@@ -86,6 +102,8 @@ void Canvas::create(const Window& window, const PadMargin& margin, const PadBord
 
 void Canvas::create(UInt_t ndivx, UInt_t ndivy, const Window& window, const PadMargin& margin, const PadBorder& border) {
 	window_ = window;
+    margin_ = margin;
+    border_ = border;
 
 	UInt_t  npad = (ndivx<1?1:ndivx) * (ndivy<1?1:ndivy);
 	Float_t wmargin = 0.00;
@@ -96,8 +114,8 @@ void Canvas::create(UInt_t ndivx, UInt_t ndivy, const Window& window, const PadM
 	canvas_.Divide((ndivx<1?1:ndivx), (ndivy<1?1:ndivy), wmargin, hmargin, border.color);
 	
 	for (UInt_t it = 1; it <= npad; ++it) {
-		SetPadMargin(&canvas_, it, margin);
 		SetPadBorder(&canvas_, it, border);
+		SetPadMargin(&canvas_, it, margin);
 	}
 
 	canvas_.Modified(); 
@@ -106,15 +124,17 @@ void Canvas::create(UInt_t ndivx, UInt_t ndivy, const Window& window, const PadM
 
 
 //---- PdfEditor ----//
-PdfEditor::PdfEditor(const Window& window, const std::string& filename, const std::string& filepath) : exist_(false) {
+PdfEditor::PdfEditor(const Window& window, const std::string& filename, const std::string& filepath, const Type& type, const Mode& mode) : exist_(false) {
 	if (!MGSys::TestFile(filepath, 'd')) return;
+    file_type_ = TypeToStr(type);
+    file_mode_ = mode;
 	file_page_ = 0;
 	file_path_ = filepath;
 	file_name_ = (filename != "") ? filename : "PdfPainter";
 	canvas_.create(window);
 	canvas_.setNameTitle("START", "START");
 
-	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());	
+	std::string fullPathPDF = STR("%s/%s.%s", file_path_.c_str(), file_name_.c_str(), file_type_.c_str());	
 	COUT("\n\n**************** PdfEditor::OPEN    %-45s  ****************\n", fullPathPDF.c_str());
 	TextDraw(STR("<< START >>  %s  ", file_name_.c_str()));
 	canvas_.save(STR("%s(", fullPathPDF.c_str()));
@@ -151,7 +171,7 @@ void PdfEditor::close() {
 	canvas_.create(canvas_.window());
 	canvas_.setNameTitle("END", "END");
 	
-	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
+	std::string fullPathPDF = STR("%s/%s.%s", file_path_.c_str(), file_name_.c_str(), file_type_.c_str());
 	COUT("**************** PdfEditor::CLOSE   %-45s  ****************\n\n", fullPathPDF.c_str());
 	TextDraw(STR("<< END >>  %s  ", file_name_.c_str()));
 	canvas_.save(STR("%s)", fullPathPDF.c_str()));
@@ -165,8 +185,12 @@ void PdfEditor::close() {
 
 void PdfEditor::save() {
 	if (!exist_) return;
-	std::string fullPathPDF = STR("%s/%s.pdf", file_path_.c_str(), file_name_.c_str());
+	std::string fullPathPDF = STR("%s/%s.%s", file_path_.c_str(), file_name_.c_str(), file_type_.c_str());
 	canvas_.save(fullPathPDF);
+    if (Mode::kMergeAndAlone == file_mode_) {
+	    std::string alonePathPDF = STR("%s/%s__p%04d.%s", file_path_.c_str(), file_name_.c_str(), file_page_, file_type_.c_str());
+	    canvas_.save(alonePathPDF);
+    }
 	canvas_.clear();
 }
 

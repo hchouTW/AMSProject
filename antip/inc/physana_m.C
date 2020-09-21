@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     using namespace MGROOT;
     MGROOT::LoadDefaultEnvironment();
     Hist::AddDirectory(0);
-    std::string subv = "12";
+    std::string subv = "38";
     
     UInt_t cntev = 0;
     
@@ -173,6 +173,7 @@ int main(int argc, char* argv[]) {
 
         DataFit1D fit1D(Form("%3d", ir), { (TH1D*)((*vhsqrm_pr.at(ir))()), (TH1D*)((*vhsqrm_el.at(ir))()) }, (TH1D*)((*vhsqrm_neg.at(ir))()), (TH1D*)((*vhsqrm_pos.at(ir))()), true);
         ResultFit1D rlt1D = fit1D.result();
+
         if (rlt1D.ndof() == 0) continue;
         
         (*hPcnt)()->SetBinContent(ir, rlt1D.num_ref()); 

@@ -58,13 +58,13 @@ struct Text {
 
 inline void TextDraw(const std::string& text, const TextStyle& style = TextStyle(), const TextAlign& align = TextAlign());
 inline void TextDraw(const std::vector<Text>& text, const TextAlign& align = TextAlign(0.15, 0.85, 12));
-inline void TitleDraw(const std::string& text) { TextDraw(text, TextStyle(kBlack, 0.04), TextAlign(0.5, 0.95)); }
+inline void TitleDraw(const std::string& text) { TextDraw(text, TextStyle(kBlack, 0.04), TextAlign(0.5, 0.97)); }
 
 using TextList = std::vector<Text>;
 
 
 //---- Window ----//
-enum class WindowSize : Int_t { kSliceHR, kSliceMR, kSliceLR, kA4Vertical, kA4Horizon, kMac, kMovie };
+enum class WindowSize : Int_t { kSliceHR, kSliceMR, kSliceLR, kWideSliceHR, kWideSliceMR, kWideSliceLR, kNarrowSliceHR, kNarrowSliceMR, kNarrowSliceLR, kA4Vertical, kA4Horizon, kMac, kMovieHR, kMovieMR, kMovieLR };
 struct Window {
 	Window(UInt_t _width = 800, UInt_t _height = 600) : width(_width), height(_height) {}
 	Window(WindowSize size);

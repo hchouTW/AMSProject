@@ -542,14 +542,17 @@ do
     jobLogID=\$(printf \"ARGS:  JOB %07i    EXE %07i %07i\" \${jobID} \${exeSatID} \${exeEndID})
     echo \"\${jobLogID}\"
 done
+totalJobs=\`cat \${argsFile} | wc -l\`
 echo \"**********************************************************************\"
 echo \"***************************** CONDOR *********************************\"
 echo \"**********************************************************************\"
 echo \"\"
-echo \"TOTAL OF JOBS: \`cat \${argsFile} | wc -l\`\"
+echo \"TOTAL OF JOBS: \${totalJobs}\"
 echo \"\"
-echo \"COMD:  condor_submit \${submitSub}\"
-condor_submit \${submitSub}
+if (( \${totalJobs} != 0 )); then
+    echo \"COMD:  condor_submit \${submitSub}\"
+    condor_submit \${submitSub}
+fi
 echo \"\"
 echo \"**********************************************************************\"
 echo \"************************** SUBMIT FINISH *****************************\"

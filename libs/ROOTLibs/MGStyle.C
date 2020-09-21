@@ -62,13 +62,21 @@ void TextDraw(const std::vector<Text>& text, const TextAlign& align) {
 // Window
 Window::Window(WindowSize size) {
 	switch(size) {
-		case WindowSize::kSliceHR :    width = 2048; height = 1536; break;
-		case WindowSize::kSliceMR :    width = 1024; height =  768; break;
-		case WindowSize::kSliceLR :    width =  768; height =  576; break;
-		case WindowSize::kA4Vertical : width = 2480; height = 3508; break;
-		case WindowSize::kA4Horizon :  width = 3508; height = 2480; break;
-		case WindowSize::kMac :        width = 3840; height = 2400; break;
-		case WindowSize::kMovie :      width = 4200; height = 1800; break;
+		case WindowSize::kSliceHR :       width = 2048; height = 1536; break;
+		case WindowSize::kSliceMR :       width = 1024; height =  768; break;
+		case WindowSize::kSliceLR :       width =  768; height =  576; break;
+		case WindowSize::kWideSliceHR :   width = 2560; height = 1536; break;
+		case WindowSize::kWideSliceMR :   width = 1280; height =  768; break;
+		case WindowSize::kWideSliceLR :   width =  960; height =  576; break;
+		case WindowSize::kNarrowSliceHR : width = 1024; height = 1536; break;
+		case WindowSize::kNarrowSliceMR : width =  512; height =  768; break;
+		case WindowSize::kNarrowSliceLR : width =  384; height =  576; break;
+		case WindowSize::kA4Vertical :    width = 2480; height = 3508; break;
+		case WindowSize::kA4Horizon :     width = 3508; height = 2480; break;
+		case WindowSize::kMac :           width = 3840; height = 2400; break;
+		case WindowSize::kMovieHR :       width = 4200; height = 1800; break;
+		case WindowSize::kMovieMR :       width = 2100; height =  900; break;
+		case WindowSize::kMovieLR :       width = 1400; height =  600; break;
 		default : break;
 	}
 }

@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/adflux
+PROJVERSION  =  20Jan15
+PROJTITLE    =  iss66
+PROJBIN      =  mdst_ana
+PROJFLIST    =  flist.cern.proj.iss.pass7
+EVENTTYPE    =  ISS
+FILEPEREXE   =  8
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

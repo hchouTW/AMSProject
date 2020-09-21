@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  proj/chrg
+PROJVERSION  =  20Jul08
+PROJTITLE    =  mcfe01
+PROJBIN      =  mdst_sel
+PROJFLIST    =  flist.cern.mc.fe.B1220
+EVENTTYPE    =  MC
+FILEPEREXE   =  30
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

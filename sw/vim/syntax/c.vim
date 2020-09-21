@@ -11,7 +11,7 @@ if !exists("c_no_cern_root")
    syn keyword	cType		TH3 TH3C TH3D TH3F TH3I TH3S
    syn keyword	cType		TProfile TProfile2D TProfile3D
    syn keyword	cType		TF1 TF2 TF3
-   syn keyword	cType		TGraph TGraph2D TGraphErrors TGraphAsymmErros TMultiGraph
+   syn keyword	cType		TGraph TGraph2D TGraphErrors TGraphAsymmErrors TMultiGraph
    syn keyword	cType		THStack TCanvas TRandom TLimit TLatex
    syn keyword	cType		TNtuple TObject TTree TIter TKey TRandom2 TShape TPad TMacro
    syn keyword	cType       TString TLine TLegend TFile TDatime TRandom3 TMath
@@ -21,6 +21,7 @@ if !exists("c_no_cern_root")
    syn keyword	cType       TRotation TGenPhaseSpace TFeldmanCousins TRobustEstimator TRolke TQuaternion
    syn keyword	cType       TPostScript TSVG TPDF TImageDump THtml TColor TStyle TComplex TPRegexp
    syn keyword	cType       TObjArrayIter TMapIter TClass TEnv TGlobal TCint TROOT TDictionary TTime TTimer
+   syn keyword	cType       TMVA
    syn keyword	cType       Double_t Int_t Float_t Long_t Bool_t Byte_t
    syn keyword	cType      	Double32_t Float16_t Long64_t
    syn keyword	cType      	char_t Marker_t Color_t Size_t Width_t

@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mrun
+PROJVERSION  =  20May10
+PROJTITLE    =  MRUN_PATCH01
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.iss.B1130.pass7.patch01
+EVENTTYPE    =  ISS
+FILEPEREXE   =  50
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  3315
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  2
+CONFIRM    =  NONE

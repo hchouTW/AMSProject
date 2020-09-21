@@ -31,9 +31,13 @@ else
     set background=light
 endif
 let g:solarized_termcolors=256
-colorscheme solarized
+" colorscheme solarized
 syntax on " enable syntas processing
 
+""" vim 8.0
+" packadd! dracula
+" syntax enable
+" colorscheme dracula
 
 "" 120 Column Layout
 "set textwidth=120

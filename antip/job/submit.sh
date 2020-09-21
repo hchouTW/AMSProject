@@ -6,3 +6,5 @@ sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.0550.B1220
 sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.flux.1050.B1220 
 sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.flux.504000.B1220 
 sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.pl1.l1.021000.B1220 
+sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.l1o9.flux.2016000.B1220
+sh ${AMSProjJobs}/CERN/submit_condor.sh RUN jobconf.cern.mc.pr.l19.10016000.B1220

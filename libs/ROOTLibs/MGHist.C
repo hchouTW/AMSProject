@@ -320,7 +320,7 @@ Hist * Hist::Head(const std::string& name, Bool_t show) {
 
 
 void Hist::Delete(const std::string& name) {
-	Hist * hist = Hist::Head(name, false);
+	Hist* hist = Hist::Head(name, false);
 	Delete(hist);
 }
 
@@ -454,8 +454,8 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kX : 
 				{
 					const Axis& axis = hMom->axis().y();
-					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
-					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
+					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?             0 : isb);
+					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin()+1 : ieb);
 					std::string name = STR("%s__PROJX%05dTO%05d", hMom->name().c_str(), sb, eb);
 					TH1D * projHist = ((TH2D*)(*hMom)())->ProjectionX(name.c_str(), sb, eb);
 					hist = Hist::New(name, "", projHist);
@@ -465,8 +465,8 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kY :
 				{
 					const Axis& axis = hMom->axis().x();
-					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
-					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
+					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?             0 : isb);
+					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin()+1 : ieb);
 					std::string name = STR("%s__PROJY%05dTO%05d", hMom->name().c_str(), sb, eb);
 					TH1D * projHist = ((TH2D*)(*hMom)())->ProjectionY(name.c_str(), sb, eb);
 					hist = Hist::New(name, "", projHist);
@@ -481,15 +481,15 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kX :
 				{
 					const Axis& iaxis = hMom->axis().y();
-					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?            1 : isb);
-					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin() : ieb);
+					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?              0 : isb);
+					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin()+1 : ieb);
 					const Axis& jaxis = hMom->axis().z();
-					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
-					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
+					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?              0 : jsb);
+					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin()+1 : jeb);
 					std::string name = STR("%s__PROJY%05dTO%05d__PROJZ%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetYaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetZaxis()->SetRange(_jsb, _jeb);
-					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("X"));
+					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("eX"));
 					hist = Hist::New(name, "", projHist);
 					projHist->Delete();
 					(*hMom)()->GetYaxis()->UnZoom();
@@ -499,15 +499,15 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kY :
 				{
 					const Axis& iaxis = hMom->axis().z();
-					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?            1 : isb);
-					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin() : ieb);
+					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?              0 : isb);
+					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin()+1 : ieb);
 					const Axis& jaxis = hMom->axis().x();
-					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
-					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
+					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?              0 : jsb);
+					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin()+1 : jeb);
 					std::string name = STR("%s__PROJZ%05dTO%05d__PROJX%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetZaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetXaxis()->SetRange(_jsb, _jeb);
-					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("Y"));
+					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("eY"));
 					hist = Hist::New(name, "", projHist);
 					projHist->Delete();
 					(*hMom)()->GetZaxis()->UnZoom();
@@ -517,15 +517,15 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kZ :
 				{
 					const Axis& iaxis = hMom->axis().x();
-					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?            1 : isb);
-					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin() : ieb);
+					Int_t _isb = ((isb < 0 || isb > iaxis.nbin()+1) ?              0 : isb);
+					Int_t _ieb = ((ieb < 0 || ieb > iaxis.nbin()+1) ? iaxis.nbin()+1 : ieb);
 					const Axis& jaxis = hMom->axis().y();
-					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?            1 : jsb);
-					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin() : jeb);
+					Int_t _jsb = ((jsb < 0 || jsb > jaxis.nbin()+1) ?              0 : jsb);
+					Int_t _jeb = ((jeb < 0 || jeb > jaxis.nbin()+1) ? jaxis.nbin()+1 : jeb);
 					std::string name = STR("%s__PROJX%05dTO%05d__PROJY%05dTO%05d", hMom->name().c_str(), _isb, _ieb, _jsb, _jeb);
 					(*hMom)()->GetXaxis()->SetRange(_isb, _ieb);
 					(*hMom)()->GetYaxis()->SetRange(_jsb, _jeb);
-					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("Z"));
+					TH1D * projHist = (TH1D*)(((TH3D*)((*hMom)()))->Project3D("eZ"));
 					hist = Hist::New(name, "", projHist);
 					projHist->Delete();
 					(*hMom)()->GetXaxis()->UnZoom();
@@ -535,10 +535,10 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kYZ :
 			case HistProj::kZY :
 				{
-					std::string opt = ((proj == HistProj::kYZ) ? "YZ" : "ZY");
+					std::string opt = ((proj == HistProj::kYZ) ? "eYZ" : "eZY");
 					const Axis& axis = hMom->axis().x();
-					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
-					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
+					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?             0 : isb);
+					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin()+1 : ieb);
 					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetXaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));
@@ -550,10 +550,10 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kXZ :
 			case HistProj::kZX :
 				{
-					std::string opt = ((proj == HistProj::kXZ) ? "XZ" : "ZX");
+					std::string opt = ((proj == HistProj::kXZ) ? "eXZ" : "eZX");
 					const Axis& axis = hMom->axis().y();
-					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
-					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
+					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?             0 : isb);
+					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin()+1 : ieb);
 					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetYaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));
@@ -565,10 +565,10 @@ Hist * Hist::Project(const HistProj& proj, Hist * hMom, Int_t isb, Int_t ieb, In
 			case HistProj::kXY :
 			case HistProj::kYX :
 				{
-					std::string opt = ((proj == HistProj::kXY) ? "XY" : "YX");
+					std::string opt = ((proj == HistProj::kXY) ? "eXY" : "eYX");
 					const Axis& axis = hMom->axis().z();
-					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?           1 : isb);
-					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin() : ieb);
+					Int_t sb = ((isb < 0 || isb > axis.nbin()+1) ?             0 : isb);
+					Int_t eb = ((ieb < 0 || ieb > axis.nbin()+1) ? axis.nbin()+1 : ieb);
 					std::string name = STR("%s__PROJ%s%05dTO%05d", hMom->name().c_str(), opt.c_str(), sb, eb);
 					(*hMom)()->GetZaxis()->SetRange(sb, eb);
 					TH2D * projHist = (TH2D*)(((TH3D*)((*hMom)()))->Project3D(opt.c_str()));

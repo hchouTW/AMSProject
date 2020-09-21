@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  subj/adflux
+PROJVERSION  =  20Jan15
+PROJTITLE    =  mcap66
+PROJBIN      =  mdst_ana
+PROJFLIST    =  flist.cern.proj.mc.ap
+EVENTTYPE    =  MC
+FILEPEREXE   =  20
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

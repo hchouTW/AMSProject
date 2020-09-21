@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  subj/antip
 PROJVERSION  =  19Nov03
-PROJTITLE    =  mcprflux0150_12
+PROJTITLE    =  mcprflux0150_38
 PROJBIN      =  mdst
 PROJFLIST    =  flist.cern.mc.pr.flux.1050.B1220
 EVENTTYPE    =  MC

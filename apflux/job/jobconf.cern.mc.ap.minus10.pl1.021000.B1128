@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  proj/apflux
+PROJVERSION  =  20Jan15
+PROJTITLE    =  mcap_minus51
+PROJBIN      =  mdst_sel
+PROJFLIST    =  flist.cern.mc.ap.minus10.pl1.021000.B1128
+EVENTTYPE    =  MC
+FILEPEREXE   =  15
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  proj/apflux
+PROJVERSION  =  20Jan15
+PROJTITLE    =  iss27
+PROJBIN      =  mdst_sel
+PROJFLIST    =  flist.cern.iss.B1130.pass7
+EVENTTYPE    =  ISS
+FILEPEREXE   =  150
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

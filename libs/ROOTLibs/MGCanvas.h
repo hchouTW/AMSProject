@@ -19,7 +19,7 @@ struct PadWindow {
 inline TVirtualPad * SetPadWindow(TCanvas * canvas, UInt_t idx = 0, const PadWindow& window = PadWindow());
 
 struct PadMargin {
-	PadMargin(Double_t _top = 0.10, Double_t _bottom = 0.10, Double_t _left = 0.12, Double_t _right = 0.12) : top(_top), bottom(_bottom), left(_left), right(_right) {}
+	PadMargin(Double_t _top = 0.06, Double_t _bottom = 0.10, Double_t _left = 0.10, Double_t _right = 0.04) : top(_top), bottom(_bottom), left(_left), right(_right) {}
 	Double_t top, bottom;
 	Double_t left, right;
 };
@@ -38,22 +38,34 @@ struct PadAxis {
 };
 inline TVirtualPad * SetPadAxis(TCanvas * canvas, UInt_t idx = 0, const PadAxis& axis = PadAxis());
 
+inline TVirtualPad * UpdatePad(TCanvas * canvas, UInt_t idx = 0);
 
 //---- Canvas ----//
 class Canvas {
 	public :
-		Canvas(const std::string& name = "canvas", const std::string& title = "") { setNameTitle(name, title); }
+		Canvas(const std::string& name = "canvas", const std::string& title = "") { setNameTitle(name, title); margin_ = PadMargin(); border_ = PadBorder(); }
 		~Canvas() {}
 
 		void create(const Window& window = Window(WindowSize::kSliceMR), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 		void create(UInt_t ndivx, UInt_t ndivy, const Window& window = Window(WindowSize::kSliceMR), const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
 
-		TVirtualPad * cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return SetPadAxis(&canvas_, idx, axis); }
-		void save(const std::string& fullpath, Option_t* option = "") { canvas_.Modified(); canvas_.Update(); canvas_.SaveAs(fullpath.c_str(), option); }
-		void write(const std::string& name = "", Int_t option = 0, Int_t bufsize = 0) { canvas_.Modified(); canvas_.Update(); canvas_.Write(name.c_str(), option, bufsize); }
+		TVirtualPad* set(UInt_t idx = 0, const PadWindow& window = PadWindow(), const PadAxis& axis = PadAxis()) {
+            SetPadWindow(&canvas_, idx, window);
+            SetPadBorder(&canvas_, idx, border_);
+            SetPadMargin(&canvas_, idx, margin_);
+            SetPadAxis  (&canvas_, idx, axis);
+            TVirtualPad* pad = canvas_.cd(idx);
+            return pad;
+        }
+		TVirtualPad* cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return SetPadAxis(&canvas_, idx, axis); }
+		TVirtualPad* update(UInt_t idx) { return UpdatePad(&canvas_, idx); }
+		
+		void update() { for (int ic = 0; ic <= canvas_.GetNumber(); ++ic) UpdatePad(&canvas_, ic); canvas_.Modified(); canvas_.Update(); }
+        void save(const std::string& fullpath, Option_t* option = "") { update(); canvas_.SaveAs(fullpath.c_str(), option); }
+		void write(const std::string& name = "", Int_t option = 0, Int_t bufsize = 0) { update(); canvas_.Write(name.c_str(), option, bufsize); }
 		void clear(Option_t * option = "") { canvas_.Clear(option); canvas_.Modified(); canvas_.Update(); }
-		void update() { canvas_.Modified(); canvas_.Update(); }
-		void setNameTitle(const std::string& name, const std::string& title = "") { canvas_.SetName(name.c_str()); canvas_.SetTitle(title.c_str()); } 
+		
+        void setNameTitle(const std::string& name, const std::string& title = "") { canvas_.SetName(name.c_str()); canvas_.SetTitle(title.c_str()); } 
 		
 		inline TCanvas& operator()() { return canvas_; }
 		inline Window& window() { return window_; }
@@ -61,13 +73,21 @@ class Canvas {
 	protected :
 		TCanvas     canvas_;
 		Window      window_;
+        PadMargin   margin_;
+        PadBorder   border_;
 };
 
 
 //---- Legend ----//
 class Legend {
     public :
-        Legend(const std::string& header = "", const PadWindow& window = PadWindow(0.15, 0.40, 0.6, 0.87)) : header_(header), legend_(nullptr) { legend_ = std::make_shared<TLegend>(window.xl, window.yl, window.xu, window.yu, header.c_str()); }
+        Legend(const std::string& header = "", const TextStyle& style = TextStyle(kBlack, 18, 43), const PadWindow& window = PadWindow(0.15, 0.40, 0.6, 0.87)) : header_(header), legend_(nullptr) {
+            legend_ = std::make_shared<TLegend>(window.xl, window.yl, window.xu, window.yu, header.c_str());
+            legend_->SetTextColor(style.color);
+            legend_->SetTextSize(style.size);
+            legend_->SetTextFont(style.font);
+            legend_->SetFillColor(0);
+        }
         ~Legend() { header_ = ""; }
 
         void draw(Option_t* option = "brNDC") { if (legend_) legend_->Draw(option); }
@@ -77,17 +97,34 @@ class Legend {
     protected :
         std::shared_ptr<TLegend> legend_;
         std::string header_;
+        TextStyle   style_;
 };
 
 
 //---- PdfEditor ----//
 class PdfEditor {
+    public :
+        enum class Type {
+            kPS = 0, kEPS = 1, kPDF = 2
+        };
+
+        enum class Mode {
+            kMerge = 0, kMergeAndAlone = 1
+        };
+
+        static std::string TypeToStr(const Type& type) {
+            if (Type::kPS  == type) return std::string("ps");
+            if (Type::kEPS == type) return std::string("eps");
+            if (Type::kPDF == type) return std::string("pdf");
+        }
+
 	public :
-		PdfEditor(const Window& window = Window(WindowSize::kSliceMR), const std::string& filename = "", const std::string& filepath = ".");
+		PdfEditor(const Window& window = Window(WindowSize::kSliceMR), const std::string& filename = "", const std::string& filepath = ".", const Type& type = Type::kPDF, const Mode& mode = Mode::kMerge);
 		~PdfEditor() { close(); }
 
 		inline Bool_t exist() { return exist_; }
 
+		inline TVirtualPad * set(UInt_t idx = 0, const PadWindow& window = PadWindow(), const PadAxis& axis = PadAxis()) { return ((exist_) ? canvas_.set(idx, window, axis) : nullptr); }
 		inline TVirtualPad * cd(UInt_t idx = 0, const PadAxis& axis = PadAxis()) { return ((exist_) ? canvas_.cd(idx, axis) : nullptr); }
 		
 		inline void create(const std::string& title = "", const PadMargin& margin = PadMargin(), const PadBorder& border = PadBorder());
@@ -103,6 +140,8 @@ class PdfEditor {
 	protected :
 		Bool_t      exist_;
 		Canvas      canvas_;
+        std::string file_type_;
+        Mode        file_mode_;
 		std::string file_name_;
 		std::string file_path_;
 		UInt_t      file_page_;

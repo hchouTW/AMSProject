@@ -48,3 +48,5 @@
 *.out
 *.spl
 *.toc
+*.pdf
+*.eps

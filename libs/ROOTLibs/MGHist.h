@@ -151,7 +151,7 @@ class Hist {
         static Hist * New(const std::string& name, const std::string& title, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, title, axis, type)); }
         static Hist * New(const std::string& name, const HistAxis& axis, HistType type = HistType::kHist) { return (new Hist(name, axis, type)); }
 		
-		static void Delete(Hist* hist) { if (hist != nullptr) delete hist; hist = nullptr; }
+		static void Delete(Hist* hist) { if (hist != nullptr) { hist->clear(); delete hist; hist = nullptr; } }
 		static void Delete(Hist& hist) { hist.clear(); }
 		static void Delete(const std::string& name);
 		static void Delete(std::vector<Hist*>& histvec);
