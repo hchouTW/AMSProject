@@ -67,6 +67,7 @@ class CherenkovHit {
             status_ = false; chann_ = -1; pmtid_ = -1;
             cluster_ = -1;
             mode_ = -1; beta_ = -1.0;
+            type_ = 0;
             dbta_ = -1.0; rbtaA_ = -1.0; rbtaB_ = -1.0;
             npe_ = -1.0; 
             cx_ = 0.0; cy_ = 0.0;

@@ -125,7 +125,7 @@ bool CherenkovFit::check() {
     if (rfr_index_ <= 1.0) return false;
     if (width_bta_ <= 0.0) return false;
     if (bta_crr_   <= 0.0) return false;
-    lmtl_bta_ = (1.0 + WIDTH_CORE_COS) / rfr_index_ + width_bta_;
+    lmtl_bta_ = (1.0 + 0.75 * WIDTH_CORE_COS) / rfr_index_ + width_bta_;
     lmtu_bta_ = 1.0 + width_bta_ * 6.0;
     if (lmtl_bta_ <= 0.0 || lmtu_bta_ <= 0.0) return false;
     return true;

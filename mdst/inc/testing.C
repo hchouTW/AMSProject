@@ -21,7 +21,10 @@ int main(int argc, char* argv[]) {
     TFile* file = TFile::Open(path.c_str());
     if (file != nullptr && !file->IsZombie()) {
         TTree* tree = (TTree*)file->Get("mdst");
+        //TTree* treeZ1 = (TTree*)file->Get("mdstZ1");
+        //TTree* treeZ2 = (TTree*)file->Get("mdstZ2");
         if (tree != nullptr && !tree->IsZombie()) {
+        //if (treeZ1 != nullptr && treeZ2 != nullptr && !treeZ1->IsZombie() && !treeZ2->IsZombie()) {
             status = true;
             msg = "SUCCESS";
         }

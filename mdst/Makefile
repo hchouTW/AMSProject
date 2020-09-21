@@ -27,7 +27,7 @@ LIBS = $(shell root-config --libs) -fopenmp -lEG -lntuple_slc6_PG_dynamic -lmath
 ProjDir=${PWD}
 
 CoreVersion=vdev
-#CoreVersion=19Nov03
+#CoreVersion=20Jul08
 CoreDir=${AMSCore}/mdst/${CoreVersion}
 
 all :
@@ -56,6 +56,7 @@ ${ProjDir}/exe/testing : ${ProjDir}/obj/testing.o
 
 ${ProjDir}/obj/dict.C : ${ProjDir}/inc/ClassDef.h ${ProjDir}/inc/LinkDef.h
 	rootcint -f $@ -c -p $+
+	#rootcling -f $@ -c -p $+
 
 ${ProjDir}/lib/libClassDef.so : ${ProjDir}/obj/dict.C
 	$(CXX) -fPIC -shared $^ -o $@

@@ -1,7 +1,7 @@
 [PROJECT]
 PROJPATH     =  mdst
-PROJVERSION  =  19Nov03
-PROJTITLE    =  TEST2
+PROJVERSION  =  19Dec27
+PROJTITLE    =  TEST03
 PROJBIN      =  mdst
 PROJFLIST    =  flist.cern.iss.B1130.pass7
 EVENTTYPE    =  ISS

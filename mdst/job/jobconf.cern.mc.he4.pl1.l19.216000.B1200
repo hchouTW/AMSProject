@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  mdst
-PROJVERSION  =  19Nov03
+PROJVERSION  =  20Jan15
 PROJTITLE    =  MC_HE4_216000_B1200
 PROJBIN      =  mdst
 PROJFLIST    =  flist.cern.mc.he4.pl1.l19.216000.B1200

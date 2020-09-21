@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mdst
+PROJVERSION  =  20Jul08
+PROJTITLE    =  ISS_PART02
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.iss.B1130.pass7
+EVENTTYPE    =  ISS
+FILEPEREXE   =  2
+JOBREGION    =  PART
+EXESATID     =  10000
+EXEENDID     =  19999
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  5
+CONFIRM    =  NONE

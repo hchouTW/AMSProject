@@ -1,6 +1,6 @@
 [PROJECT]
 PROJPATH     =  mdst
-PROJVERSION  =  19Nov03
+PROJVERSION  =  19Dec29
 PROJTITLE    =  MC_PR_FLUX_1050_B1220
 PROJBIN      =  mdst
 PROJFLIST    =  flist.cern.mc.pr.flux.1050.B1220

@@ -90,14 +90,19 @@ void Selector::process_events() {
         
         AMSEventR* evt = amsch->GetEvent(ientry);
         if (evt == nullptr) continue;
+        //if (ientry>500) break; // testcode
 
         process_init();
         event = evt;
 
+        utime_pre = utime_cur;
+        utime_cur = event->UTime();
+
         if (!process_prefix()) continue;
+
         if (!process_data()) continue;
-        if (!process_sel()) continue;
-        if (!process_prd()) continue;
+        //if (!process_sel()) continue;
+        //if (!process_prd()) continue;
     
         tree->Fill();
         num_passed++;
@@ -155,10 +160,12 @@ bool Selector::process_prefix() {
     TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-    if (event->NTrTrack() != 1) return false;
+    //if (event->NTrTrack() != 1) return false;
+    if (event->NTrTrack() == 0) return false;
     
 	// ~3~ (Based on TrdTrack)
     //if (event->NTrdTrack() != 1) return false;
+    //if (event->NTrdTrack() == 0) return false;
 
 	// ~4~ (Based on Particle)
 	ParticleR   * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
@@ -168,13 +175,14 @@ bool Selector::process_prefix() {
 	if (partSIG == nullptr) return false;
 	if (trtkSIG == nullptr || btahSIG == nullptr) return false;
     //if (ecalSIG == nullptr) return false;
-
+    
 	// ~5~ (Based on BetaH)
-	//if (event->NBetaH() != 1) return false;
+	if (event->NBetaH() == 0) return false;
 	if (btahSIG->GetBetaPattern() != 4444) return false;
 
     double betah = btahSIG->GetBeta();
-    if (betah <= 0.1) return false; // keep down-going
+    if (betah <= 0.30) return false; // keep down-going
+    if (betah <= 0.95) return false; // keep down-going with high velocity
 
 	// ~6~ (Based on Track Hits)
 	const unsigned short TrPtL2  =   2; //  2
@@ -209,7 +217,7 @@ bool Selector::process_prefix() {
 		if (hasXY) numOfTrInX++;
 	}
 	if (numOfTrInX <= 2 || numOfTrInY <= 3) return false;
-    
+
     // Set Reference Pointer
     pParticle   = event->pParticle(0);
     pBetaH      = pParticle->pBetaH()     ;
@@ -221,51 +229,65 @@ bool Selector::process_prefix() {
 	
     // Beta Information
 	float beta = pBetaH->GetBeta();
+    
+    // TRD Track Information
+    //if (pTrdTrack == nullptr) return false;
 
     // Tracker Track Information
+    if (pTrTrack == nullptr) return false;
     int idMax = pTrTrack->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
     if (idMax < 0) pTrTrack->iTrTrackPar(1, 3, 23); // Rebuild coordinate align
     
     const int refit = 22;
     int   tkID = pTrTrack->iTrTrackPar(1, 3, refit);
-    float qin  = pTrTrack->GetInnerQH(2, beta, tkID);
+    //float qin  = pTrTrack->GetInnerQH(2, beta, tkID);
+    float QYJrms; int QYJpatt;
+    float qin = pTrTrack->GetInnerQYJ(QYJrms, QYJpatt, 2, beta, tkID);
     if (tkID < 0 || qin <= 0) return false;
 
     int   zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
     float mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
     tkID = pTrTrack->iTrTrackPar(1, 3, refit, mass, zin);
     if (tkID < 0) return false;
-   
+		
+    float ckin_rig = pTrTrack->GetRigidity(tkID, 1); // z = 0
+    //if (std::abs(ckin_rig) < 10) return false; // testcode
+
     data_zin  = zin;
     data_mass = mass;
     data_beta = beta;
 
     // preselection in particle charge
-    if (data_zin >= 3) return false;
+    //if (data_zin >= 3) return false;
     
     // Keep Q=1 particles
+    //if (data_zin != 1) return false;
     //if (CheckType(Type::ISS) && data_zin != 1) return false;
 
 	// ECAL Information
 	// pre-selection (ECAL)
-	const float lmtrECAL = 5; // 5 cm
+	const float lmtrECAL = 7; // 7 cm
 	if (pEcalShower != nullptr) {
 		AMSPoint EcalPnt(pEcalShower->CofG);
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(EcalPnt.z(), pnt, dir, tkID);
 		float drPnt = std::abs(pnt.x() - EcalPnt.x());
+        dist_tk_ecal = drPnt;
 		if (drPnt > lmtrECAL) { pEcalShower = nullptr; }
+        //if (dist_tk_ecal > lmtrECAL) return false;
 	}
 
 	// TRD Information
 	// pre-selection (TRD)
-	const float lmtrTRD = 5; // 5 cm
+	const float lmtrTRD = 7; // 7 cm
 	if (pTrdTrack != nullptr) {
 		AMSPoint TrdPnt(pTrdTrack->Coo);
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(TrdPnt.z(), pnt, dir, tkID);
 		float drPnt = std::abs(pnt.x() - TrdPnt.x());
+        dist_tk_td = drPnt;
 		if (drPnt > lmtrTRD) { pTrdTrack = nullptr; }
+        //if (dist_tk_td > lmtrTRD) return false;
 	}
 
 	if (pTrdHTrack != nullptr) {
@@ -273,7 +295,9 @@ bool Selector::process_prefix() {
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(TrdHPnt.z(), pnt, dir, tkID);
 		float drPnt = std::abs(pnt.x() - TrdHPnt.x());
+        dist_tk_tdh = drPnt;
 		if (drPnt > lmtrTRD) { pTrdHTrack == nullptr; }
+        //if (dist_tk_tdh > lmtrTRD) return false;
 	}
 
     return true;
@@ -289,23 +313,25 @@ bool Selector::process_data() {
     if (!process_trk() ) return false;
     if (!process_trd() ) return false;
     if (!process_ecal()) return false;
-    
+   
+    /*
     //if (!process_rich()) return false;
     //if (!process_trk_kf() ) return false;
     //if (!process_hyc() ) return false;
     
-    //TrSys::Part org_part(TrSys::PartList::kProton);
-    ////TrSys::Part org_part(TrSys::PartList::kDeuterium);
-    //org_part.set_location (0, 0, 200);
-    //org_part.set_direction(0, 0, -1);
-    //
-    //TrSys::Part st1(org_part);
-    //st1.set_mom(0.50);
-    //std::cerr << Form("BEFORE MOM %8.4f BETA %8.4f\n", st1.mom(), st1.bta());
-    //auto&& rlt1 = TrSys::Prop::DoPropToZ(-60, st1, TrSys::PropArgs(1, 1));
-    ////auto&& rlt1 = TrSys::Prop::DoProp(300, st1, TrSys::PropArgs(1, 1));
+    TrSys::Part org_part(TrSys::PartList::kElectron);
+    //TrSys::Part org_part(TrSys::PartList::kDeuterium);
+    org_part.set_location (0, 0, 158);
+    org_part.set_direction(0, 0, -1);
+    
+    TrSys::Part st1(org_part);
+    st1.set_rig(5.00);
+    std::cerr << Form("BEFORE MOM %8.4f BETA %8.4f\n", st1.mom(), st1.bta());
+    auto&& rlt1 = TrSys::Prop::DoPropToZ(55, st1, TrSys::PropArgs(1, 1, false, true));
+    //auto&& rlt1 = TrSys::Prop::DoProp(300, st1, TrSys::PropArgs(1, 1));
     //std::cerr << Form("AFTER  MOM %8.4f BETA %8.4f   LOC %8.2f %8.2f %8.2f\n", st1.mom(), st1.bta(), st1.lx(), st1.ly(), st1.lz());
-    //std::cerr << Form("STATUS %d\n\n", rlt1.status);
+    std::cerr << Form("STATUS %d\n\n", rlt1.status);
+    std::cerr << Form("RIG %14.8f\n\n", st1.rig());
 
     //TrSys::Part st2(org_part);
     //st2.set_mom(0.45);
@@ -332,7 +358,8 @@ bool Selector::process_data() {
     //std::cerr << Form("STATUS %d\n\n", rlt4.status);
 
     //exit(-1);
-    
+    */
+
     return true;
 }
 
@@ -340,15 +367,17 @@ bool Selector::process_prd() {
     if (!process_rich()) return false;
     
     // kalman
-    if (!process_trk_kf()) return false;
+    //if (!process_trk_kf()) return false;
     
     // HYC
-    if (!process_hyc()) return false;
+    //if (!process_hyc()) return false;
 
     return true;
 }
 
 bool Selector::process_sel() {
+    return true;
+
     // Scale events by geomagnetic cutoff (only positive rigidity)
     if (CheckType(Type::ISS)) {
         const float maximum_cutoff = 50.0;
@@ -367,8 +396,8 @@ bool Selector::process_sel() {
         if (max_cf > 0.0 && signr) {
             float rndm = RndmGenerator.Rndm();
             float wpar[2] = { 0.01, 0.99 };
-            if (data_zin > 1) wpar[0] = 0.1;
-            if (data_zin > 1) wpar[1] = 0.9;
+            if (data_zin > 1) wpar[0] = 0.05;
+            if (data_zin > 1) wpar[1] = 0.95;
 
             float norm  = ((max_rig / eft_cf) - 2.5) / 0.20;
             float thres = wpar[0] + wpar[1] * 0.5 * (1.0 + std::erf(norm));
@@ -391,6 +420,19 @@ bool Selector::process_list() {
     data_list.entry  = amsch->get_tree_entry();
     data_list.utime  = event->UTime();
     data_list.weight = 1.0;
+
+    data_list.header_error = event->fHeader.Error;
+    data_list.antimatter_sw_trigger = event->AntiMatteriSWTrigger();
+
+    // testcode
+    //if (CheckType(Type::ISS) && data_zin <= 2) {
+    //    float rndm = RndmGenerator.Rndm();
+    //    float thres = (data_zin == 1) ? 0.01 : 0.1;
+
+    //    if (rndm > thres) return false;
+    //    data_list.weight /= thres;
+    //}
+
     return true;
 }
 
@@ -484,6 +526,15 @@ bool Selector::process_g4mc() {
         data_g4mc.tk_dir[ilay][2] = dir[2];
         data_g4mc.tk_edep[ilay]   = edep;
 	}
+    
+    for (int it = 0; it < mcev_tk.size(); ++it) {
+        MCEventgR* mcev = mcev_tk.at(it);
+        if (mcev == nullptr) continue;
+
+        data_g4mc.tkL[it] = true;
+        data_g4mc.tkL_mom[it] = mcev->Momentum;
+        data_g4mc.tkL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
+    }
 		
     if (pBetaH != nullptr) {
         Bool_t  has[4]  = { false, false, false, false };
@@ -532,15 +583,77 @@ bool Selector::process_g4mc() {
         }
     }
     
-    for (UInt_t icls = 0; icls < event->NTrdMCCluster(); icls++) {
+    for (UInt_t icls = 0; icls < event->NTrdMCCluster(); ++icls) {
 	    TrdMCClusterR* cluster = event->pTrdMCCluster(icls);
 	    if (cluster->GtrkID != prm->trkID) continue;
         int il = cluster->Layer;
         data_g4mc.td[il]        = true;
         data_g4mc.td_mom[il]    = std::sqrt(cluster->Ekin * (cluster->Ekin + 2.0 * prm->Mass));
-        data_g4mc.td_loc[il][0] = cluster->Xgl[0];
-        data_g4mc.td_loc[il][1] = cluster->Xgl[1];
-        data_g4mc.td_loc[il][2] = cluster->Xgl[2];
+        //data_g4mc.td_loc[il][0] = cluster->Xgl[0];
+        //data_g4mc.td_loc[il][1] = cluster->Xgl[1];
+        //data_g4mc.td_loc[il][2] = cluster->Xgl[2];
+    }
+    
+    for (int it = 0; it < mcev_td.size(); ++it) {
+        MCEventgR* mcev = mcev_td.at(it);
+        if (mcev == nullptr) continue;
+
+        data_g4mc.tdL[it] = true;
+        data_g4mc.tdL_mom[it] = mcev->Momentum;
+        data_g4mc.tdL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
+        data_g4mc.tdL_loc[it][0] = mcev->Coo[0];
+        data_g4mc.tdL_loc[it][1] = mcev->Coo[1];
+        data_g4mc.tdL_loc[it][2] = mcev->Coo[2];
+        data_g4mc.tdL_dir[it][0] = mcev->Dir[0];
+        data_g4mc.tdL_dir[it][1] = mcev->Dir[1];
+        data_g4mc.tdL_dir[it][2] = mcev->Dir[2];
+    }
+
+    if (mcev_rh.at(0) != nullptr) {
+        MCEventgR* mcev = mcev_rh.at(0);
+
+        data_g4mc.rh = true;
+        data_g4mc.rh_mom = mcev->Momentum;
+        data_g4mc.rh_beta = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
+        data_g4mc.rh_loc[0] = mcev->Coo[0];
+        data_g4mc.rh_loc[1] = mcev->Coo[1];
+        data_g4mc.rh_loc[2] = mcev->Coo[2];
+        data_g4mc.rh_dir[0] = mcev->Dir[0];
+        data_g4mc.rh_dir[1] = mcev->Dir[1];
+        data_g4mc.rh_dir[2] = mcev->Dir[2];
+    }
+    for (UInt_t icls = 0; icls < event->NRichMCCluster(); ++icls) {
+        RichMCClusterR* cls = event->pRichMCCluster(icls);
+        if (cls == nullptr) continue;
+
+        RichHitR* hit = (cls->fRichHit >= 0) ? event->pRichHit(cls->fRichHit) : nullptr;
+        if (hit == nullptr) continue;
+        
+        if (cls->Origin[2] < -80.0) continue;
+        bool is_prim  = (cls->GtrkID == prm->trkID);
+        bool is_noise = (cls->Id == -666);
+        bool is_photo = (cls->Id == 50);
+        
+        int type = -1;
+        if (is_prim)  type = 0;
+        if (is_photo) type = 1;
+        if (is_noise) type = 2;
+        if (type < 0) continue;
+        data_g4mc.rh_hit_type[type]++;
+    }
+   
+    for (int it = 0; it < mcev_ec.size(); ++it) {
+        MCEventgR* mcev = mcev_ec.at(it);
+        if (mcev == nullptr) continue;
+
+        data_g4mc.ec[it] = true;
+        data_g4mc.ec_mom[it] = mcev->Momentum;
+        data_g4mc.ec_loc[it][0] = mcev->Coo[0];
+        data_g4mc.ec_loc[it][1] = mcev->Coo[1];
+        data_g4mc.ec_loc[it][2] = mcev->Coo[2];
+        data_g4mc.ec_dir[it][0] = mcev->Dir[0];
+        data_g4mc.ec_dir[it][1] = mcev->Dir[1];
+        data_g4mc.ec_dir[it][2] = mcev->Dir[2];
     }
 
     return true;
@@ -554,9 +667,9 @@ bool Selector::process_rti() {
     AMSSetupR::RTI rti;
 	event->GetRTI(rti);
 	
-    data_rti.flag      = (event->GetRTIStat() == 0 && event->IsBadRun("") == 0 && rti.good == 0);
-	data_rti.zenith    = rti.zenith;
-	data_rti.live_time = rti.lf * rti.nev / (rti.nev + rti.nerr);
+    data_rti.flag     = rti.good;
+	data_rti.zenith   = rti.zenith;
+	data_rti.livetime = rti.lf * rti.nev / (rti.nev + rti.nerr);
 
     // good second
 	bool good_second = true;
@@ -578,17 +691,30 @@ bool Selector::process_rti() {
 	data_rti.GAT[1]  = rti.glong * TMath::DegToRad();
 
     // geomagnetic cuttof
-    Float_t cf_Stormer[4] = { 0. };
-    Float_t cf_IGRF[4] = { 0. };
+    Float_t mincf_Stoermer[4] = { 0. };
+    Float_t maxcf_Stoermer[4] = { 0. };
+    Float_t mincf_IGRF[4] = { 0. };
+    Float_t maxcf_IGRF[4] = { 0. };
     for (int i = 0; i < 4; i++) {
-		cf_Stormer[i] = (std::fabs(rti.cf[i][0]) > std::fabs(rti.cf[i][1])) ?
+		mincf_Stoermer[i] = (std::fabs(rti.cf[i][0]) < std::fabs(rti.cf[i][1])) ?
 			std::fabs(rti.cf[i][0]) : std::fabs(rti.cf[i][1]);
-		cf_IGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
+		maxcf_Stoermer[i] = (std::fabs(rti.cf[i][0]) > std::fabs(rti.cf[i][1])) ?
+			std::fabs(rti.cf[i][0]) : std::fabs(rti.cf[i][1]);
+		mincf_IGRF[i] = (std::fabs(rti.cfi[i][0]) < std::fabs(rti.cfi[i][1])) ?
 			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
+		maxcf_IGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
+			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
+
+        data_rti.Stoermer[i][0] = std::fabs(rti.cf[i][0]);
+        data_rti.Stoermer[i][1] = std::fabs(rti.cf[i][1]);
+        data_rti.IGRF[i][0] = std::fabs(rti.cfi[i][0]);
+        data_rti.IGRF[i][1] = std::fabs(rti.cfi[i][1]);
 	}
-    data_rti.max_Stormer = (*std::max_element(cf_Stormer, cf_Stormer+4));
-    data_rti.max_IGRF    = (*std::max_element(cf_IGRF,    cf_IGRF+4));
-	
+    data_rti.min_Stoermer = (*std::min_element(mincf_Stoermer, mincf_Stoermer+4));
+    data_rti.max_Stoermer = (*std::max_element(maxcf_Stoermer, maxcf_Stoermer+4));
+    data_rti.min_IGRF = (*std::min_element(mincf_IGRF, mincf_IGRF+4));
+    data_rti.max_IGRF = (*std::max_element(maxcf_IGRF, maxcf_IGRF+4));
+
     // |PG-MD| < 35e-4 (L1), 45e-4 (L9) [cm]
 	AMSPoint pn1, pn9, pd1, pd9;
 	event->GetRTIdL1L9(0, pn1, pd1, event->UTime(), 60);
@@ -647,6 +773,10 @@ bool Selector::process_trg() {
     data_trg.logic = logic;
     data_trg.physics = physics;
 
+    bool ubsbit = ((data_trg.bit&2) == 2);
+    bool phybit = ((data_trg.bit&8) == 8);
+    //if (!ubsbit && !phybit) return false;
+
     return true;
 }
 
@@ -676,7 +806,7 @@ bool Selector::process_acc() {
             data_acc.num_cls = count;
         }
 	}
-    if (data_acc.num_cls != 0) return false;
+    //if (data_acc.num_cls != 0) return false;
 
     return true;
 }
@@ -696,20 +826,31 @@ bool Selector::process_tof() {
                    ((pBetaH->pEcalShower()) ? 4 : 0);
 	data_tof.patt = 0;
 	data_tof.beta = pBetaH->GetBeta();
+    data_tof.mass = pBetaH->GetMass();
 
     if (CheckType(Type::MC)) data_tof.mc_beta = pBetaH->GetMCBeta();
+    data_tof.is_tk_match = pBetaH->IsTkTofMatch();
 
     data_tof.nchi_t = pBetaH->GetNormChi2T();
 	data_tof.nchi_c = pBetaH->GetNormChi2C();
 	
-    int nlay = 0;
+    int Qall_nlay = 0;
 	float Qall_RMS = 0;
-	data_tof.Qall = pBetaH->GetQ(nlay, Qall_RMS);
-  
-    float Zprob = 0;
-    short Zall = pBetaH->GetZ(nlay, Zprob, 0);
-    data_tof.Zall = Zall;
-
+	data_tof.Qall = pBetaH->GetQ(Qall_nlay, Qall_RMS);
+	data_tof.Qall_nlay = Qall_nlay;
+   
+    int Zall_nlay = 0;
+    float Zall_prob = 0;
+    data_tof.Zall = pBetaH->GetZ(Zall_nlay, Zall_prob, 0);
+    
+    int Qup_nlay = 0;
+	float Qup_RMS = 0;
+	data_tof.Qup = pBetaH->GetQ(Qup_nlay, Qup_RMS, 2, TofClusterHR::DefaultQOptIonW, 1100);
+    
+    int Qlw_nlay = 0;
+	float Qlw_RMS = 0;
+	data_tof.Qlw = pBetaH->GetQ(Qlw_nlay, Qlw_RMS, 2, TofClusterHR::DefaultQOptIonW, 11);
+    
     Float_t minT = 0.;
     Float_t btaT[4] = { 0. };
 	for (int il = 0; il < 4; ++il) {
@@ -723,6 +864,7 @@ bool Selector::process_tof() {
         data_tof.loc[il][2] = cls->Coo[2];
         data_tof.T[il]      = pBetaH->GetTime(il);
 		data_tof.Q[il]      = pBetaH->GetQL(il, 2, qopt);
+        data_tof.QL[il]     = pBetaH->GetQL(il);
 		data_tof.patt += pattIdx[il];
         minT = std::min(minT, data_tof.T[il]);
         btaT[il] = data_tof.T[il];
@@ -738,7 +880,7 @@ bool Selector::process_tof() {
 		for (int it = 0; it < pBetaH->NTofClusterH(); ++it)
 			betaHClsId.at(pBetaH->pTofClusterH(it)->Layer) = pBetaH->iTofClusterH(it);
 	}
-	
+
     const double ChrgLimit = 0.875;
 	short nearHitNm[4] = { 0, 0, 0, 0 };
 	const double TimeOfOneM = 3.335640e+00; // (speed of light)
@@ -756,15 +898,15 @@ bool Selector::process_tof() {
 	}
 
     bool noiseALL  = (data_tof.num_extcls[0] > 0 && data_tof.num_extcls[1] > 0 && data_tof.num_extcls[2] > 0 && data_tof.num_extcls[3] > 0);
-    bool noiseUTOF = (data_tof.num_extcls[0] > 0 && data_tof.num_extcls[1] > 0) && (data_tof.num_extcls[0] + data_tof.num_extcls[1] >= 3);
-    bool noiseLTOF = (data_tof.num_extcls[2] > 0 && data_tof.num_extcls[3] > 0) && (data_tof.num_extcls[2] + data_tof.num_extcls[3] >= 3);
+    bool noiseUTOF = (data_tof.num_extcls[0] > 0 && data_tof.num_extcls[1] > 0) && (data_tof.num_extcls[0] + data_tof.num_extcls[1] >= 4);
+    bool noiseLTOF = (data_tof.num_extcls[2] > 0 && data_tof.num_extcls[3] > 0) && (data_tof.num_extcls[2] + data_tof.num_extcls[3] >= 4);
     data_tof.extcls_noise = noiseALL * 1 + noiseUTOF * 2 + noiseLTOF * 4;
     
     int ncls[4] = {0};
 	data_tof.num_in_time_cls = event->GetNTofClustersInTime(pBetaH, ncls);
 
     if (!data_tof.status) return false;
-    if (data_tof.patt != 15) return false;
+    //if (data_tof.patt != 15) return false;
     //if (data_tof.extcls_noise > 0) return false;
     //if (data_tof.num_in_time_cls > 4) return false;
 
@@ -808,10 +950,21 @@ bool Selector::process_trk() {
 	data_trk.pattXY = bitPattXY;
 
     // Qrecon: Hu Liu
-    data_trk.QIn = pTrTrack->GetInnerQH(2, data_beta, fitidInn);
-	data_trk.QL2 = (isL2>0) ? pTrTrack->GetLayerJQH(2, 2, data_beta, fitidInn) : 0.0;
-	data_trk.QL1 = (isL1>0) ? pTrTrack->GetLayerJQH(1, 2, data_beta, fitidInn) : 0.0;
-	data_trk.QL9 = (isL9>0) ? pTrTrack->GetLayerJQH(9, 2, data_beta, fitidInn) : 0.0;
+    //data_trk.QIn = pTrTrack->GetInnerQH(2, data_beta, fitidInn);
+	//data_trk.QL2 = (isL2>0) ? pTrTrack->GetLayerJQH(2, 2, data_beta, fitidInn) : 0.0;
+	//data_trk.QL1 = (isL1>0) ? pTrTrack->GetLayerJQH(1, 2, data_beta, fitidInn) : 0.0;
+	//data_trk.QL9 = (isL9>0) ? pTrTrack->GetLayerJQH(9, 2, data_beta, fitidInn) : 0.0;
+    
+    float xxxrms;
+    int xxxpatt;
+    data_trk.QIn = pTrTrack->GetInnerQYJ(xxxrms, xxxpatt, 2, data_beta, fitidInn);
+	data_trk.QL2 = (isL2>0) ? pTrTrack->GetLayerQYJ(2, 2, data_beta, fitidInn) : 0.0;
+	data_trk.QL1 = (isL1>0) ? pTrTrack->GetLayerQYJ(1, 2, data_beta, fitidInn) : 0.0;
+	data_trk.QL9 = (isL9>0) ? pTrTrack->GetLayerQYJ(9, 2, data_beta, fitidInn) : 0.0;
+    
+    // Qrecon: Hu Liu
+    data_trk.QIn_yj = data_trk.QIn;
+    data_trk.QIn_hl = pTrTrack->GetInnerQH(2, data_beta, fitidInn);
 
     double qinmin = 0.0;
     for (int il = 2; il <= 7; ++il) {
@@ -823,11 +976,22 @@ bool Selector::process_trk() {
     }
     data_trk.QInMin = qinmin;
    
-    const float NoiseQ = 0.70;
-    if (data_trk.QInMin > 0.0 && data_trk.QInMin < NoiseQ) return false;
-    if (data_trk.QL2 > 0.0 && data_trk.QL2 < NoiseQ) return false;
-    //if (data_trk.QL1 > 0.0 && data_trk.QL1 < NoiseQ) return false;
-    //if (data_trk.QL9 > 0.0 && data_trk.QL9 < NoiseQ) return false;
+    const float NoiseQIn = 0.70;
+    const float NoiseQL1 = 0.65;
+    const float NoiseQL9 = 0.70;
+    if (data_trk.QInMin > 0.0 && data_trk.QInMin < NoiseQIn) return false;
+    if (data_trk.QL2 > 0.0 && data_trk.QL2 < NoiseQIn) return false;
+    if (data_trk.QL1 > 0.0 && data_trk.QL1 < NoiseQL1) return false;
+    if (data_trk.QL9 > 0.0 && data_trk.QL9 < NoiseQL9) return false;
+
+    float sendx[9] = { 0.0 };
+    float sendy[9] = { 0.0 };
+    if (event->GetTrSensorDistance(pTrTrack, sendx, sendy) == 0) {
+        for (int il = 0; il < 9; ++il) {
+            if (sendx[il] >= 0.0) data_trk.sen[il][0] = sendx[il];
+            if (sendy[il] >= 0.0) data_trk.sen[il][1] = sendy[il];
+        }
+    }
 
     std::array<std::pair<TrClusterR*, TrClusterR*>, 9> trhits;
     trhits.fill({nullptr, nullptr});
@@ -872,6 +1036,9 @@ bool Selector::process_trk() {
         if (yj_xchrg  <= 0.0) yj_xchrg  = 0.0;
         if (yj_ychrg  <= 0.0) yj_ychrg  = 0.0;
         if (yj_xychrg <= 0.0) yj_xychrg = 0.0;
+            
+        float sn10 = event->GetTrackerRawSignalRatio(ilay+1, 10, pTrTrack);
+        float feet = event->GetTkFeetDist(ilay+1, pTrTrack);
 
         data_trk.lay[ilay] = (xcls != nullptr) + (ycls != nullptr) * 2;
 
@@ -891,7 +1058,19 @@ bool Selector::process_trk() {
         data_trk.chrg_yj[ilay][0] = yj_xchrg;
         data_trk.chrg_yj[ilay][1] = yj_ychrg;
         data_trk.chrg_yj[ilay][2] = yj_xychrg;
+        
+        data_trk.sn10[ilay] = sn10;
+        data_trk.feet[ilay] = feet;
 	} // for loop - layer
+
+    int num_inn_x = 0;
+    int num_inn_y = 0;
+    for (int il = 2; il <= 7; ++il) {
+        num_inn_x += ((data_trk.lay[il] % 2) == 1);
+        num_inn_y += ((data_trk.lay[il] / 2) == 1);
+    }
+    data_trk.num_inn_x = num_inn_x;
+    data_trk.num_inn_y = num_inn_y;
 
     // External hits
     std::array<int, 9> ext_min_nhit; ext_min_nhit.fill(0);
@@ -912,8 +1091,8 @@ bool Selector::process_trk() {
         
         double chrgJ = hit->GetQYJ(2);
         double chrgH = hit->GetQH(2);
-        if (chrgJ < (NoiseQ + 0.05)) continue;
-        if (chrgH < (NoiseQ + 0.05)) continue;
+        if (chrgJ < NoiseQIn) continue;
+        if (chrgH < NoiseQIn) continue;
         
         int ilay = hit->GetLayerJ() - 1;
 		int tkid = hit->GetTkId();
@@ -965,7 +1144,8 @@ bool Selector::process_trk() {
         data_trk.ck_ndof[patt][1] = pTrTrack->GetNdofY(fitid);
 		data_trk.ck_nchi[patt][0] = pTrTrack->GetNormChisqX(fitid);
 		data_trk.ck_nchi[patt][1] = pTrTrack->GetNormChisqY(fitid);
-		data_trk.ck_rig[patt] = pTrTrack->GetRigidity(fitid, 1); // z = 0
+		data_trk.ck_rig[patt]     = pTrTrack->GetRigidity(fitid, 1); // z = 0
+		data_trk.ck_crr_rig[patt] = pTrTrack->GetCorrectedRigidity(fitid, 3, 1); // z = 0, 7years new rigidity-scale
    
         if (_patt[patt] == 3) {
             AMSPoint pnt; AMSDir dir;
@@ -1018,6 +1198,8 @@ bool Selector::process_trk_kf() {
 		data_trk.kf_nchi[patt][1] = pTrTrack->GetNormChisqY(fitid);
 		data_trk.kf_cen_rig[patt] = pTrTrack->GetRigidity(fitid, 1); // z = 0
 		data_trk.kf_top_rig[patt] = pTrTrack->GetRigidity(fitid, 0); // z = 195
+		data_trk.kf_cen_crr_rig[patt] = pTrTrack->GetCorrectedRigidity(fitid, 3, 1); // z = 0, 7years new rigidity-scale
+		data_trk.kf_top_crr_rig[patt] = pTrTrack->GetCorrectedRigidity(fitid, 3, 0); // z = 0, 7years new rigidity-scale
 
         const int ustate = 0; // KALMAN
         if (_patt[patt] == 3) {
@@ -1086,47 +1268,11 @@ bool Selector::process_trd() {
 		data_trd.state[3] = trd_dir[0];
 		data_trd.state[4] = trd_dir[1];
 		data_trd.state[5] = trd_dir[2];
-
-        int extra_nseg = 0;
-        int extra_nhit = 0;
-        std::vector<TrdSegmentR*> trd_segs;
-        for (int is = 0; is < pTrdTrack->NTrdSegment(); ++is) {
-            TrdSegmentR* seg = pTrdTrack->pTrdSegment(is);
-            trd_segs.push_back(seg);
-        }
-        for (int is = 0; is < event->NTrdSegment(); ++is) {
-            TrdSegmentR* seg = event->pTrdSegment(is);
-            if (seg->NTrdCluster() <= 2) continue;
-
-            bool is_trd_seg = false;
-            for (auto&& trd_seg : trd_segs) { if (trd_seg == seg) is_trd_seg = true; }
-            if (is_trd_seg) continue;
-            
-            double trd_tr = (seg->Orientation == 0) ? data_trd.state[4]/data_trd.state[5] : data_trd.state[3]/data_trd.state[5];
-            double trd_r0 = (seg->Orientation == 0) ? data_trd.state[1]-trd_tr*data_trd.state[2] : data_trd.state[0]-trd_tr*data_trd.state[2];
-            double seg_tr = (seg->Orientation == 0) ? -seg->FitPar[0] : seg->FitPar[0];
-            double seg_r0 = (seg->Orientation == 0) ? -seg->FitPar[1] : seg->FitPar[1];
-           
-            double vtx_r = (trd_tr * seg_r0 - seg_tr * trd_r0) / (trd_tr - seg_tr);
-            double vtx_z = (seg_r0 - trd_r0) / (trd_tr - seg_tr);
-            if (!std::isfinite(vtx_r)) continue;
-            if (!std::isfinite(vtx_z)) continue;
-           
-            double dr = 0.0;
-            if      (vtx_z > 180.0) dr = std::abs((trd_r0 + trd_tr * 180.0) - (seg_r0 + seg_tr * 180.0));
-            else if (vtx_z <  50.0) dr = std::abs((trd_r0 + trd_tr *  50.0) - (seg_r0 + seg_tr *  50.0));
-            if (!std::isfinite(dr)) continue;
-            if (dr > 3.0) continue;
-       
-            extra_nhit += seg->NTrdCluster();
-            extra_nseg++;
-        }
-
-        data_trd.num_extra_seg = extra_nseg;
-        data_trd.num_extra_hit = extra_nhit;
+        data_trd.Qall = pTrdTrack->Q;
+        data_trd.Qall_crr = pTrdTrack->Q / 1.2;
     }
 
-    int num_seg_vtx[2] = { 0, 0 };
+    int num_seg_vtx[4][2] = { {0,0}, {0,0}, {0,0}, {0,0} };
     for (int is = 0; is < event->NTrdSegment(); ++is) {
     for (int js = is+1; js < event->NTrdSegment(); ++js) {
         TrdSegmentR* iseg = event->pTrdSegment(is);
@@ -1150,8 +1296,8 @@ bool Selector::process_trd() {
         if (!std::isfinite(vtx_z)) continue;
 
         double dr = 0.0;
-        if      (vtx_z > 180.0) dr = std::abs((iseg_r0 + iseg_tr * 180.0) - (jseg_r0 + jseg_tr * 180.0));
-        else if (vtx_z <  50.0) dr = std::abs((iseg_r0 + iseg_tr *  50.0) - (jseg_r0 + jseg_tr *  50.0));
+        if      (vtx_z > 200.0) dr = std::abs((iseg_r0 + iseg_tr * 200.0) - (jseg_r0 + jseg_tr * 200.0));
+        else if (vtx_z <  40.0) dr = std::abs((iseg_r0 + iseg_tr *  40.0) - (jseg_r0 + jseg_tr *  40.0));
         if (!std::isfinite(dr)) continue;
         if (dr > 3.0) continue;
 
@@ -1174,11 +1320,15 @@ bool Selector::process_trd() {
 
         bool env = (vtx_z > imax || vtx_z < imin) && (vtx_z > jmax || vtx_z < jmin);
 
-        num_seg_vtx[jseg->Orientation]++;
+        int zseg = static_cast<int>((vtx_z - 40.0) / 40.0);
+        if (zseg < 0) zseg = 0;
+        if (zseg > 3) zseg = 3;
+        num_seg_vtx[zseg][jseg->Orientation]++;
     }}
-    data_trd.num_vtx[0] = num_seg_vtx[0];
-    data_trd.num_vtx[1] = num_seg_vtx[1];
-
+    for (int iz = 0; iz < 4; ++iz) {
+        data_trd.num_vtx[iz][0] = num_seg_vtx[iz][0];
+        data_trd.num_vtx[iz][1] = num_seg_vtx[iz][1];
+    }
 
 	const float threshold = 15; //ADC above which will be taken into account in Likelihood Calculation,  15 ADC is the recommended value for the moment.
 
@@ -1238,6 +1388,69 @@ bool Selector::process_trd() {
                 data_trd.tdHit_lz .push_back(hlz[il]);
                 data_trd.num_tdHit++;
             }
+
+            double tdHitQ_sum = 0.0;
+            for (int ih = 0; ih < data_trd.tdHit_amp.size(); ++ih) {
+                tdHitQ_sum += data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih);
+            }
+            double tdHitQ = (data_trd.tdHit_amp.size() == 0) ? 0.0 : std::sqrt(tdHitQ_sum / static_cast<double>(data_trd.tdHit_amp.size()));
+            data_trd.tdHitQ = tdHitQ;
+
+            const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
+            std::vector<std::tuple<double, double, int>> hzq;
+            for (int ih = 0; ih < data_trd.num_tdHit; ++ih) {
+                hzq.push_back(std::make_tuple(data_trd.tdHit_lz.at(ih), data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih), data_trd.tdHit_lay.at(ih)));
+            }
+
+            int hzq_cntl = 0;
+            int hzq_cntu = 0;
+            bool is_reach_condition_1st = (hzq.size() <= 2);
+            while (!is_reach_condition_1st) {
+                if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
+                double nseed = static_cast<double>(hzq.size() - 1);
+                double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
+
+                std::vector<std::pair<double, int>> cand_noise;
+                for (int it = 0; it < hzq.size(); ++it) {
+                    double qavg = 0.0;
+                    double qsgm = qsgm_std * width;
+                    for (int ih = 0; ih < hzq.size(); ++ih) {
+                        if (it == ih) continue;
+                        qavg += std::get<1>(hzq.at(ih));
+                    }
+                    qavg /= static_cast<double>(hzq.size() - 1);
+                    double res = (std::get<1>(hzq.at(it)) - qavg) / qsgm;
+                    cand_noise.push_back(std::make_pair(res, it));
+                }
+                std::sort(cand_noise.begin(), cand_noise.end());
+                std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
+                
+                if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
+                else {
+                    if (cand.first < 0) hzq_cntl++;
+                    if (cand.first > 0) hzq_cntu++;
+                    hzq.erase(hzq.begin() + cand.second);
+                }
+            }
+
+            if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
+            if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
+           
+            double tdQv = 0.0;
+            data_trd.num_tdQ = hzq.size();
+            data_trd.num_tdQl = hzq_cntl;
+            data_trd.num_tdQu = hzq_cntu;
+            for (auto&& hit : hzq) {
+                data_trd.tdQl.push_back(std::get<2>(hit));
+                data_trd.tdQz.push_back(std::get<0>(hit));
+                data_trd.tdQq.push_back(std::sqrt(std::get<1>(hit)));
+                tdQv += data_trd.tdQq.back() * data_trd.tdQq.back();
+                
+                double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tdQl.back()]) ? data_g4mc.td_mom[data_trd.tdQl.back()]/data_g4mc.prm_mass : 0.0;
+                data_trd.tdQgb.push_back(gbta);
+            }
+            data_trd.tdQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tdQv / static_cast<double>(hzq.size()));
+            data_trd.tdQv_crr = data_trd.tdQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
         }
 	}
 	
@@ -1296,11 +1509,73 @@ bool Selector::process_trd() {
                 data_trd.tkHit_lz .push_back(hlz[il]);
                 data_trd.num_tkHit++;
             }
+            
+            double tkHitQ_sum = 0.0;
+            for (int ih = 0; ih < data_trd.tkHit_amp.size(); ++ih) {
+                tkHitQ_sum += data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih);
+            }
+            double tkHitQ = (data_trd.tkHit_amp.size() == 0) ? 0.0 : std::sqrt(tkHitQ_sum / static_cast<double>(data_trd.tkHit_amp.size()));
+            data_trd.tkHitQ = tkHitQ;
+
+            const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
+            std::vector<std::tuple<double, double, int>> hzq;
+            for (int ih = 0; ih < data_trd.num_tkHit; ++ih) {
+                hzq.push_back(std::make_tuple(data_trd.tkHit_lz.at(ih), data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih), data_trd.tkHit_lay.at(ih)));
+            }
+
+            int hzq_cntl = 0;
+            int hzq_cntu = 0;
+            bool is_reach_condition_1st = (hzq.size() <= 2);
+            while (!is_reach_condition_1st) {
+                if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
+                double nseed = static_cast<double>(hzq.size() - 1);
+                double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
+
+                std::vector<std::pair<double, int>> cand_noise;
+                for (int it = 0; it < hzq.size(); ++it) {
+                    double qavg = 0.0;
+                    double qsgm = qsgm_std * width;
+                    for (int jh = 0; jh < hzq.size(); ++jh) {
+                        if (it == jh) continue;
+                        qavg += std::get<1>(hzq.at(jh));
+                    }
+                    qavg /= static_cast<double>(hzq.size() - 1);
+                    double res = std::abs(std::get<1>(hzq.at(it)) - qavg) / qsgm;
+                    cand_noise.push_back(std::make_pair(res, it));
+                }
+                std::sort(cand_noise.begin(), cand_noise.end());
+                std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
+                
+                if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
+                else {
+                    if (cand.first < 0) hzq_cntl++;
+                    if (cand.first > 0) hzq_cntu++;
+                    hzq.erase(hzq.begin() + cand.second);
+                }
+            }
+
+            if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
+            if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
+            
+            double tkQv = 0.0;
+            data_trd.num_tkQ = hzq.size();
+            data_trd.num_tkQl = hzq_cntl;
+            data_trd.num_tkQu = hzq_cntu;
+            for (auto&& hit : hzq) {
+                data_trd.tkQl.push_back(std::get<2>(hit));
+                data_trd.tkQz.push_back(std::get<0>(hit));
+                data_trd.tkQq.push_back(std::sqrt(std::get<1>(hit)));
+                tkQv += data_trd.tkQq.back() * data_trd.tkQq.back();
+
+                double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tkQl.back()]) ? data_g4mc.td_mom[data_trd.tkQl.back()]/data_g4mc.prm_mass : 0.0;
+                data_trd.tkQgb.push_back(gbta);
+            } 
+            data_trd.tkQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tkQv / static_cast<double>(hzq.size()));
+            data_trd.tkQv_crr = data_trd.tkQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
         }
 	}
 
-    //if (!data_trd.status) return false;
-    if (!data_trd.tdLLR_status && !data_trd.tkLLR_status) return false;
+    //if (!data_trd.tdLLR_status && !data_trd.tkLLR_status) return false;
 
     return true;
 }
@@ -1421,26 +1696,28 @@ bool Selector::process_rich() {
         data_rich.self_trace  = ray_trace.trace();
     }
 
-    for (auto&& hit : rich.hits()) {
-        if (!hit.status()) continue;
-        data_rich.hit_chann .push_back(hit.chann());
-        data_rich.hit_type  .push_back(hit.type());
-        data_rich.hit_dbeta .push_back(hit.dbeta());
-        data_rich.hit_rbetaA.push_back(hit.rbetaA());
-        data_rich.hit_rbetaB.push_back(hit.rbetaB());
-        data_rich.hit_npe   .push_back(hit.npe());
-        data_rich.hit_lx    .push_back(hit.cx());
-        data_rich.hit_ly    .push_back(hit.cy());
-        data_rich.num_hit++;
-    }
+    //for (auto&& hit : rich.hits()) {
+    //    if (!hit.status()) continue;
+    //    data_rich.hit_chann .push_back(hit.chann());
+    //    data_rich.hit_type  .push_back(hit.type());
+    //    data_rich.hit_dbeta .push_back(hit.dbeta());
+    //    data_rich.hit_rbetaA.push_back(hit.rbetaA());
+    //    data_rich.hit_rbetaB.push_back(hit.rbetaB());
+    //    data_rich.hit_npe   .push_back(hit.npe());
+    //    data_rich.hit_lx    .push_back(hit.cx());
+    //    data_rich.hit_ly    .push_back(hit.cy());
+    //    data_rich.num_hit++;
+    //}
  
     if (rich.status() && rich.kind() != 0) {
         std::vector<CherenkovHit> hits;
         for (auto&& hit : rich.hits()) {
-            hits.push_back(CherenkovHit(hit.chann(), hit.chann()/16, hit.dbeta(), hit.rbetaA(), hit.rbetaB(), hit.npe(), hit.cx(), hit.cy()));
+            CherenkovHit chhit(hit.chann(), hit.chann()/16, hit.dbeta(), hit.rbetaA(), hit.rbetaB(), hit.npe(), hit.cx(), hit.cy());
+            if (!chhit.status()) continue;
+            hits.push_back(chhit);
         }
     
-        CherenkovFit chfit(hits, { rich.pmtp()[0], rich.pmtp()[1] }, rich.index(), CherenkovFit::AGL_BETA_WIDTH, rich.beta_crr());
+        CherenkovFit chfit(hits, { rich.pmtp()[0], rich.pmtp()[1] }, rich.index(), (rich.kind() == 1) ? CherenkovFit::AGL_BETA_WIDTH : CherenkovFit::NAF_BETA_WIDTH, rich.beta_crr());
         if (chfit.status()) {
             data_rich.self_num_stone = chfit.stns().size();
             data_rich.self_num_cloud = chfit.clds().size();
@@ -1520,6 +1797,99 @@ bool Selector::process_rich() {
             }
         }
     }
+   
+    /*
+    if (rich.status() && rich.kind() != 0) {
+        std::vector<ChHit> hits;
+        for (auto&& hit : rich.hits()) {
+            ChHit chhit(hit.chann(), hit.chann()/16, hit.dbeta(), hit.rbetaA(), hit.rbetaB(), hit.npe(), hit.cx(), hit.cy());
+            if (!chhit.status()) continue;
+            hits.push_back(chhit);
+        }
+
+        Stopwatch sw; sw.start();
+        ChFit chfit(hits, { rich.pmtp()[0], rich.pmtp()[1] }, rich.index(), (rich.kind() == 1) ? ChFit::AGL_BETA_WIDTH : ChFit::NAF_BETA_WIDTH, rich.beta_crr());
+        sw.stop();
+        
+        if (chfit.status()) {
+            data_rich.new_status = true;
+            data_rich.new_num_stone = chfit.stns().size();
+            data_rich.new_num_cloud = chfit.clds().size();
+            data_rich.new_num_ghost = chfit.ghts().size();
+            
+            data_rich.new_nhit_total = chfit.nhit_total();
+            data_rich.new_nhit_stone = chfit.nhit_stone();
+            data_rich.new_nhit_cloud = chfit.nhit_cloud();
+            data_rich.new_nhit_ghost = chfit.nhit_ghost();
+            data_rich.new_nhit_other_inn = chfit.nhit_other_inn();
+            data_rich.new_nhit_other_out = chfit.nhit_other_out();
+            
+            data_rich.new_npe_total = chfit.npe_total();
+            data_rich.new_npe_stone = chfit.npe_stone();
+            data_rich.new_npe_cloud = chfit.npe_cloud();
+            data_rich.new_npe_ghost = chfit.npe_ghost();
+            data_rich.new_npe_other_inn = chfit.npe_other_inn();
+            data_rich.new_npe_other_out = chfit.npe_other_out();
+
+            if (chfit.stns().size() > 0) {
+                const ChStone& stn = chfit.stns().at(0);
+                data_rich.new_stn_status = stn.status();
+                data_rich.new_stn_nhit   = stn.nhit();
+                data_rich.new_stn_npmt   = stn.npmt();
+                data_rich.new_stn_lx     = stn.lx();
+                data_rich.new_stn_ly     = stn.ly();
+                data_rich.new_stn_npe    = stn.npe();
+                data_rich.new_stn_dist   = stn.dist();
+            }
+            if (chfit.clds().size() > 0) {
+                const ChCloud& cld = chfit.clds().at(0);
+                data_rich.new_cld_status = cld.status();
+                data_rich.new_cld_nhit   = cld.nhit();
+                data_rich.new_cld_npmt   = cld.npmt();
+                data_rich.new_cld_nhit_dir = cld.nhit_dir();
+                data_rich.new_cld_nhit_rfl = cld.nhit_rfl();
+                data_rich.new_cld_nhit_ght = cld.nhit_ght();
+                data_rich.new_cld_beta   = cld.beta();
+                data_rich.new_cld_cbta   = cld.cbta();
+                data_rich.new_cld_nchi   = cld.nchi();
+                data_rich.new_cld_npe    = cld.npe();
+
+                for (auto&& cldhit : cld.hits()) {
+                    data_rich.new_cldhit_chann.push_back(cldhit.chann());
+                    data_rich.new_cldhit_beta .push_back(cldhit.beta() );
+                    data_rich.new_cldhit_npe  .push_back(cldhit.npe()  );
+                    data_rich.new_cldhit_lx   .push_back(cldhit.lx()   );
+                    data_rich.new_cldhit_ly   .push_back(cldhit.ly()   );
+                }
+            }
+        }
+
+        //testcode
+        //if (chfit.status() && chfit.clds().size() > 1) {
+        //    std::cerr << Form("\n============ RICH  ================= N(%d %d) S(%d %d) B(%14.8f %14.8f)   TIME %14.8f\n", 
+        //            data_rich.num_ring, 
+        //            data_rich.self_num_cloud, 
+        //            data_rich.status, 
+        //            data_rich.self_cld_status, 
+        //            data_rich.beta, 
+        //            data_rich.self_cld_cbta,
+        //            sw.time() * 1.0e+3);
+        //    std::cerr << Form("NEW RICH STONE %d CLOUD %d GHOST %d\n", chfit.stns().size(), chfit.clds().size(), chfit.ghts().size());
+
+        //    for (auto&& stn : chfit.stns()) {
+        //        std::cerr << Form("STONE LOC %14.8f %14.8f (%14.8f) NCHI %14.8f NPE %14.8f\n", stn.lx(), stn.ly(), stn.dist(), stn.nchi(), stn.npe());
+        //    }
+        //    for (auto&& cld : chfit.clds()) {
+        //        std::cerr << Form("CLOUD BTA %14.8f %14.8f NCHI %14.8f NPE %14.8f NHIT %d %d %d\n", cld.beta(), cld.cbta(), cld.nchi(), cld.npe(), cld.nhit_dir(), cld.nhit_rfl(), cld.nhit_ght());
+        //        std::cerr << Form("HIT ");
+        //        for (auto&& hit : cld.hits()) {
+        //            std::cerr << Form("%d ", hit.chann());
+        //        }
+        //        std::cerr << std::endl;
+        //    }
+        //}
+    }
+    */
 
     return true;
 }
@@ -1593,6 +1963,28 @@ bool Selector::process_hyc() {
         data_hyc.geom_ndof_y[ip] = geom_fit.ndof_y();
         data_hyc.geom_nchi_x[ip] = geom_fit.nchi_x();
         data_hyc.geom_nchi_y[ip] = geom_fit.nchi_y();
+        data_hyc.geom_nchi_lx[ip]  = geom_fit.nchi_lx();
+        data_hyc.geom_nchi_ly[ip]  = geom_fit.nchi_ly();
+        data_hyc.geom_nchi_tau[ip] = geom_fit.nchi_tau();
+        data_hyc.geom_nchi_rho[ip] = geom_fit.nchi_rho();
+        
+        double max_norm_lx = 0.0;
+        double max_norm_ly = 0.0;
+        for (auto&& hit : geom_fit.hits()) {
+            if (hit.slx()) max_norm_lx = std::max(max_norm_lx, std::abs(hit.nlx()));
+            if (hit.sly()) max_norm_ly = std::max(max_norm_ly, std::abs(hit.nly()));
+        }
+        data_hyc.geom_max_norm_lx[ip] = max_norm_lx;
+        data_hyc.geom_max_norm_ly[ip] = max_norm_ly;
+
+        double max_norm_tau = 0;
+        double max_norm_rho = 0;
+        for (auto&& arg : geom_fit.args()) {
+            max_norm_tau = std::max(max_norm_tau, std::sqrt(arg.tauu * arg.tauu + arg.taul * arg.taul));
+            max_norm_rho = std::max(max_norm_rho, std::sqrt(arg.rhou * arg.rhou + arg.rhol * arg.rhol));
+        }
+        data_hyc.geom_max_norm_tau[ip] = max_norm_tau;
+        data_hyc.geom_max_norm_rho[ip] = max_norm_rho;
         
         data_hyc.geom_cen_loc[ip][0] = part_inn.lx();
         data_hyc.geom_cen_loc[ip][1] = part_inn.ly();
@@ -1601,6 +1993,7 @@ bool Selector::process_hyc() {
         data_hyc.geom_cen_dir[ip][1] = part_inn.uy();
         data_hyc.geom_cen_dir[ip][2] = part_inn.uz();
         data_hyc.geom_cen_rig[ip]    = part_inn.rig();
+        data_hyc.geom_cen_crr_rig[ip] = event->GetCorrectedRigidity(data_hyc.geom_cen_rig[ip], 0, 3, 2); // PG+CIEMAT, 7years new rigidity-scale(QY) 
         
         data_hyc.geom_top_loc[ip][0] = part_top.lx();
         data_hyc.geom_top_loc[ip][1] = part_top.ly();
@@ -1609,15 +2002,18 @@ bool Selector::process_hyc() {
         data_hyc.geom_top_dir[ip][1] = part_top.uy();
         data_hyc.geom_top_dir[ip][2] = part_top.uz();
         data_hyc.geom_top_rig[ip]    = part_top.rig();
-        
+        data_hyc.geom_top_crr_rig[ip] = event->GetCorrectedRigidity(data_hyc.geom_top_rig[ip], 0, 3, 2); // PG+CIEMAT, 7years new rigidity-scale(QY) 
+
         sw.stop();
         data_hyc.geom_cpu_time[ip] = sw.time();
     } 
-    
-    const int vel_npatt = 3;
+    //if (!data_hyc.geom_status[0]) return false;
+
+    const int vel_npatt = 4;
     for (int ip = 0; ip < vel_npatt; ++ip) {
         if (!cand_vel_part.is_dynamic()) continue;
-        if (ip == (vel_npatt - 1) && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 2 && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 3 && ams_rich.get_num_hit_with_b() == 0) continue;
         Stopwatch sw; sw.start();
 
         std::vector<TrSys::TofHit>     tof_hits  = std::vector<TrSys::TofHit>();
@@ -1633,6 +2029,10 @@ bool Selector::process_hyc() {
                 trk_hits = ams_trk.get_hits_with_q(TrSys::Tracker::Pattern::kInn);
                 break;
             case 2 :
+                rich_hits = ams_rich.get_hits_with_b();
+                break;
+            case 3 :
+                tof_hits  = ams_tof.get_hits_with_t();
                 rich_hits = ams_rich.get_hits_with_b();
                 break;
             default :
@@ -1667,15 +2067,16 @@ bool Selector::process_hyc() {
         data_hyc.vel_top_dir[ip][1] = std::get<0>(part_top).uy();
         data_hyc.vel_top_dir[ip][2] = std::get<0>(part_top).uz();
         data_hyc.vel_top_bta[ip]    = 1.0 / std::get<1>(part_top);
-        
+      
         sw.stop();
         data_hyc.vel_cpu_time[ip] = sw.time();
     }
     
-    const int phys_npatt = 3;
+    const int phys_npatt = 4;
     for (int ipart = 0; ipart < 2; ++ipart) {
     for (int ip = 0; ip < phys_npatt; ++ip) {
-        if (ip == (phys_npatt - 1) && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 2 && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 3 && ams_rich.get_num_hit_with_b() == 0) continue;
         Stopwatch sw; sw.start();
         
         std::vector<TrSys::TrackerHit> trk_hits  = std::vector<TrSys::TrackerHit>();
@@ -1684,7 +2085,7 @@ bool Selector::process_hyc() {
         
         switch (ip) {
             case 0 :
-                trk_hits = ams_trk.get_hits_with_lq(TrSys::Tracker::Pattern::kInn);
+                trk_hits = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
                 tof_hits = ams_tof.get_hits_with_t();
                 break;
             case 1 :
@@ -1693,6 +2094,11 @@ bool Selector::process_hyc() {
                 break;
             case 2 :
                 trk_hits  = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
+                rich_hits = ams_rich.get_hits_with_b();
+                break;
+            case 3 :
+                trk_hits  = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
+                tof_hits  = ams_tof.get_hits_with_t();
                 rich_hits = ams_rich.get_hits_with_b();
                 break;
             default :
@@ -1739,9 +2145,10 @@ bool Selector::process_hyc() {
         data_hyc.phys_cpu_time[ipart][ip] = sw.time();
     }}
    
-    const int mutr_npatt = 3;
+    const int mutr_npatt = 4;
     for (int ip = 0; ip < mutr_npatt; ++ip) {
-        if (ip == (mutr_npatt - 1) && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 2 && ams_rich.get_num_hit_with_b() == 0) continue;
+        if (ip == 3 && ams_rich.get_num_hit_with_b() == 0) continue;
         Stopwatch sw; sw.start();
 
         std::vector<TrSys::TrackerHit> trk_hits  = std::vector<TrSys::TrackerHit>();
@@ -1750,7 +2157,7 @@ bool Selector::process_hyc() {
         
         switch (ip) {
             case 0 :
-                trk_hits = ams_trk.get_hits_with_lq(TrSys::Tracker::Pattern::kInn);
+                trk_hits = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
                 tof_hits = ams_tof.get_hits_with_t();
                 break;
             case 1 :
@@ -1759,6 +2166,11 @@ bool Selector::process_hyc() {
                 break;
             case 2 :
                 trk_hits  = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
+                rich_hits = ams_rich.get_hits_with_b();
+                break;
+            case 3 :
+                trk_hits  = ams_trk.get_hits_with_l(TrSys::Tracker::Pattern::kInn);
+                tof_hits  = ams_tof.get_hits_with_t();
                 rich_hits = ams_rich.get_hits_with_b();
                 break;
             default :
@@ -1807,6 +2219,83 @@ bool Selector::process_hyc() {
         
         sw.stop();
         data_hyc.mutr_cpu_time[ip] = sw.time();
+    }
+
+
+    // Cutoff
+    if (CheckType(Type::ISS) && data_hyc.geom_status[0]) {
+        AMSDir dir(double(data_hyc.geom_top_dir[0][0]), double(data_hyc.geom_top_dir[0][1]), double(data_hyc.geom_top_dir[0][2]));
+        data_hyc.TOI_theta = dir.gettheta();
+        data_hyc.TOI_phi   = dir.getphi();
+
+        bool opt_Stoermer = true;
+        if (opt_Stoermer) {
+            double rcutp = 0;
+            double rcutn = 0;
+            int rltp = event->GetStoermerCutoff(rcutp,  1, dir);
+            int rltn = event->GetStoermerCutoff(rcutn, -1, dir);
+            if (rltp >= 0 && rltn >= 0) {
+                double min_rcut_ev = std::min(std::abs(rcutp), std::abs(rcutn));
+                double max_rcut_ev = std::max(std::abs(rcutp), std::abs(rcutn));
+                data_hyc.min_Stoermer = min_rcut_ev;
+                data_hyc.max_Stoermer = max_rcut_ev;
+            }
+        }
+       
+        bool opt_IGRF = true;
+        if (opt_IGRF) {
+            double rcutp = 0;
+            double rcutn = 0;
+            int rltp = event->GetIGRFCutoff(rcutp,  1, dir);
+            int rltn = event->GetIGRFCutoff(rcutn, -1, dir);
+            if (rltp >= 0 && rltn >= 0) {
+                double min_rcut_ev = std::min(std::abs(rcutp), std::abs(rcutn));
+                double max_rcut_ev = std::max(std::abs(rcutp), std::abs(rcutn));
+                data_hyc.min_IGRF = min_rcut_ev;
+                data_hyc.max_IGRF = max_rcut_ev;
+            }
+        }
+    }
+    
+    if (data_hyc.geom_status[0]) {
+        int Qup_nlay = 0;
+	    float Qup_RMS = 0;
+	    float Qup = pBetaH->GetQ(Qup_nlay, Qup_RMS, 2, TofClusterHR::DefaultQOptIonW, 1100, 0, data_hyc.geom_cen_rig[0]);
+        
+        int Qlw_nlay = 0;
+	    float Qlw_RMS = 0;
+	    float Qlw = pBetaH->GetQ(Qlw_nlay, Qlw_RMS, 2, TofClusterHR::DefaultQOptIonW, 11, 0, data_hyc.geom_cen_rig[0]);
+
+        data_hyc.tfQup = Qup;
+        data_hyc.tfQlw = Qlw;
+    }
+
+    // TrMass
+    if (true) {
+        int TrM_ntktd = TrMass::GetNtrdSegTrk(event);
+        
+        float TrM_min_prob[9] = {0};
+        float TrM_max_prob[9] = {0};
+        float TrM_hit_prob[9] = {0};
+        float TrM_npick = TrMass::GetNpick(event, pTrTrack, 1, TrM_min_prob, TrM_max_prob, TrM_hit_prob);
+
+        double TrM_beta_tf     = TrMass::GetBeta(event,   1, pTrTrack);
+        double TrM_beta_tftk   = TrMass::GetBeta(event,  11, pTrTrack);
+        double TrM_beta_tftktd = TrMass::GetBeta(event, 111, pTrTrack);
+
+        float TrM_beta = 0;
+        float TrM_mqlv[TrMass::MQL_Nv] = {0};
+        double TrM_mql  = TrMass::GetMQL(event, pTrTrack);
+        int    TrM_nvar = TrMass::GetMQLv(event, TrM_mqlv, TrM_beta, pTrTrack, 0);
+        double TrM_prob = TrMass::GetProb(TrM_mql, TrM_beta);
+        
+        data_hyc.trM_ntdseg = TrM_ntktd;
+        data_hyc.trM_npick  = TrM_npick;
+        data_hyc.trM_bta[0] = TrM_beta_tf;
+        data_hyc.trM_bta[1] = TrM_beta_tftk;
+        data_hyc.trM_bta[2] = TrM_beta_tftktd;
+        data_hyc.trM_mql    = TrM_mql;
+        data_hyc.trM_prb    = TrM_prob;
     }
 
     return true;

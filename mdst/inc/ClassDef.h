@@ -27,6 +27,9 @@ class LIST : public TObject {
             entry  = 0;
             utime  = 0;
             weight = 1;
+
+            header_error = 0;
+            antimatter_sw_trigger = false;
 		}
 
 	public :
@@ -37,7 +40,10 @@ class LIST : public TObject {
         UInt_t  utime;
         Float_t weight;
 
-	ClassDef(LIST, 1)
+        UInt_t header_error;
+        Bool_t antimatter_sw_trigger; // true, reweight = 5  false, reweight = 1
+
+	ClassDef(LIST, 2)
 };
 
 
@@ -61,6 +67,10 @@ class G4MC : public TObject {
             std::fill_n(tk_dir[0], 9*3, 0);
             std::fill_n(tk_edep, 9, 0);
             
+            std::fill_n(tkL, 9, false);
+            std::fill_n(tkL_mom, 9, 0);
+            std::fill_n(tkL_beta, 9, 0);
+            
             std::fill_n(tf, 4, false);
             std::fill_n(tf_beta, 4, 0);
             std::fill_n(tf_time, 4, 0);
@@ -68,7 +78,25 @@ class G4MC : public TObject {
             
             std::fill_n(td, 20, false);
             std::fill_n(td_mom, 20, 0);
-            std::fill_n(td_loc[0], 20*3, 0);
+            //std::fill_n(td_loc[0], 20*3, 0);
+            
+            std::fill_n(tdL, 2, false);
+            std::fill_n(tdL_mom, 2, 0);
+            std::fill_n(tdL_beta, 2, 0);
+            std::fill_n(tdL_loc[0], 2*3, 0);
+            std::fill_n(tdL_dir[0], 2*3, 0);
+            
+            rh = false;
+            rh_mom = 0;
+            rh_beta = 0;
+            std::fill_n(rh_loc, 3, 0);
+            std::fill_n(rh_dir, 3, 0);
+            std::fill_n(rh_hit_type, 3, 0);
+            
+            std::fill_n(ec, 2, false);
+            std::fill_n(ec_mom, 2, 0);
+            std::fill_n(ec_loc[0], 2*3, 0);
+            std::fill_n(ec_dir[0], 2*3, 0);
 		}
 
 	public :
@@ -85,6 +113,10 @@ class G4MC : public TObject {
         Float_t tk_dir[9][3];
         Float_t tk_edep[9];
         
+        Bool_t  tkL[9];
+        Float_t tkL_mom[9];
+        Float_t tkL_beta[9];
+        
         Bool_t  tf[4];
         Float_t tf_beta[4];
         Float_t tf_time[4];
@@ -92,9 +124,27 @@ class G4MC : public TObject {
         
         Bool_t  td[20];
         Float_t td_mom[20];
-        Float_t td_loc[20][3];
+        //Float_t td_loc[20][3];
+        
+        Bool_t  tdL[2];
+        Float_t tdL_mom[2];
+        Float_t tdL_beta[2];
+        Float_t tdL_loc[2][3];
+        Float_t tdL_dir[2][3];
+        
+        Bool_t  rh;
+        Float_t rh_mom;
+        Float_t rh_beta;
+        Float_t rh_loc[3];
+        Float_t rh_dir[3];
+        Short_t rh_hit_type[3]; // 0, prm  1, photo  2, noise
 
-	ClassDef(G4MC, 1)
+        Bool_t  ec[2];
+        Float_t ec_mom[2];
+        Float_t ec_loc[2][3];
+        Float_t ec_dir[2][3];
+
+	ClassDef(G4MC, 2)
 };
 
 
@@ -108,13 +158,18 @@ class RTI : public TObject {
 			flag = true;
             good = true;
 			zenith = 0;
-            live_time = 0;
+            livetime = 0;
 
             std::fill_n(GTOD, 3, 0);
             std::fill_n(GM, 2, 0);
             std::fill_n(GAT, 2, 0);
 
-            max_Stormer = 0;
+            std::fill_n(Stoermer[0], 4*2, 0);
+            std::fill_n(IGRF[0], 4*2, 0);
+            
+            min_Stoermer = 0;
+            max_Stoermer = 0;
+            min_IGRF = 0;
             max_IGRF = 0;
             
             std::fill_n(tk_align[0], 2*2, 0);
@@ -128,13 +183,18 @@ class RTI : public TObject {
         Bool_t  flag;
         Bool_t  good;
 		Float_t zenith;         // ams zenith (z-axis) angle [degrees]
-		Float_t live_time;      // fraction of "non-busy" time
+		Float_t livetime;       // fraction of "non-busy" time
 		
         Float_t GTOD[3];        // earth coordinate [m, rad] (radius, theta, phi)
 		Float_t GM[2];          // geomagnetic [rad] (latitude, longitude)
 		Float_t GAT[2];         // ams pointing galatic [rad] (latitude, longitude)
         
-        Float_t max_Stormer;    // Stormer max cutoff [GV]
+        Float_t Stoermer[4][2]; // Stoermer cutoff [GV]
+        Float_t IGRF[4][2];     // IGRF cutoff [GV]
+
+        Float_t min_Stoermer;   // Stoermer min cutoff [GV]
+        Float_t max_Stoermer;   // Stoermer max cutoff [GV]
+        Float_t min_IGRF;       // IGRF min cutoff [GV]
         Float_t max_IGRF;       // IGRF max cutoff [GV]
 
 		Float_t tk_align[2][2]; // L1 x,y L9 x,y
@@ -203,19 +263,26 @@ class TOF : public TObject {
             bit = 0;
             patt = 0;
             beta = 0;
+            mass = 0;
    
             mc_beta = 0;
+            is_tk_match = false;
 
             nchi_t = 0;
             nchi_c = 0;
-            
+        
+            Qall_nlay = 0;
             Qall = 0;
             Zall = 0;
+            
+            Qup = 0;
+            Qlw = 0;
 
             std::fill_n(lay, 4, false);
             std::fill_n(loc[0], 4*3, 0);
             std::fill_n(T, 4, 0);
             std::fill_n(Q, 4, 0);
+            std::fill_n(QL, 4, 0);
 
             std::fill_n(num_extcls, 4, 0);
             extcls_noise = 0;
@@ -231,19 +298,26 @@ class TOF : public TObject {
         Short_t bit;
         Short_t patt;
         Float_t beta;
+        Float_t mass;
         
         Float_t mc_beta;
+        Bool_t  is_tk_match;
 
         Float_t nchi_t;
         Float_t nchi_c;
 
+        Short_t Qall_nlay;
         Float_t Qall;
         Short_t Zall;
+        
+        Float_t Qup;
+        Float_t Qlw;
 
         Bool_t  lay[4];
         Float_t loc[4][3];
         Float_t T[4];
         Float_t Q[4];
+        Float_t QL[4];
 		
         // extern clusters
 		Short_t num_extcls[4];
@@ -264,19 +338,28 @@ class TRK : public TObject {
 		void init() {
             patt = 0;
 			pattXY = 0;
-			
+		
+            num_inn_x = 0;
+            num_inn_y = 0;
+
             QInMin = 0;
             QIn = 0;
 			QL2 = 0;
 			QL1 = 0;
 			QL9 = 0;
             
+            QIn_hl = 0;
+            QIn_yj = 0;
+            
             std::fill_n(lay, 9, 0);
             std::fill_n(strip[0], 9*2, 0);
-            std::fill_n(eta[0], 9*2, 0);
+            std::fill_n(sen[0], 9*2, -1.0);
+            std::fill_n(eta[0], 9*2, -1.0);
             std::fill_n(loc[0], 9*3, 0);
             std::fill_n(chrg_hl[0], 9*3, 0);
             std::fill_n(chrg_yj[0], 9*3, 0);
+            std::fill_n(sn10, 9, -1);
+            std::fill_n(feet, 9, -1);
 
             std::fill_n(ext_num_hit, 9, 0);
             std::fill_n(ext_chrg_hl, 9, 0);
@@ -286,6 +369,7 @@ class TRK : public TObject {
             std::fill_n(ck_ndof[0], 4*2, 0);
             std::fill_n(ck_nchi[0], 4*2, 0);
             std::fill_n(ck_rig, 4, 0);
+            std::fill_n(ck_crr_rig, 4, 0);
             std::fill_n(ck_cen_state, 6, 0);
             std::fill_n(ck_top_state, 6, 0);
             
@@ -296,6 +380,8 @@ class TRK : public TObject {
             std::fill_n(kf_nchi[0], 4*2, 0);
             std::fill_n(kf_cen_rig, 4, 0);
             std::fill_n(kf_top_rig, 4, 0);
+            std::fill_n(kf_cen_crr_rig, 4, 0);
+            std::fill_n(kf_top_crr_rig, 4, 0);
             std::fill_n(kf_cen_state, 6, 0);
             std::fill_n(kf_top_state, 6, 0);
             
@@ -314,20 +400,29 @@ class TRK : public TObject {
 		Short_t patt;
 		Short_t pattXY;
 
+        Short_t num_inn_x;
+        Short_t num_inn_y;
+
 		// Track Charge
 		Float_t QInMin;
 		Float_t QIn;
 		Float_t QL1;
 		Float_t QL2;
 		Float_t QL9;
+		
+        Float_t QIn_hl;
+        Float_t QIn_yj;
         
         // Track Hits
         Short_t  lay[9]; // 0:no, 1:x, 2:y, 3:xy
         Short_t  strip[9][2];
+        Float_t  sen[9][2];
         Float_t  eta[9][2];
         Double_t loc[9][3];
         Float_t  chrg_hl[9][3];
         Float_t  chrg_yj[9][3];
+        Float_t  sn10[9];
+        Float_t  feet[9];
         
         // Track External Hits
         Short_t ext_num_hit[9];
@@ -339,6 +434,7 @@ class TRK : public TObject {
         Short_t ck_ndof[4][2];
         Float_t ck_nchi[4][2];
         Float_t ck_rig[4];
+        Float_t ck_crr_rig[4];
         Float_t ck_cen_state[6]; // [Inn]
         Float_t ck_top_state[6]; // [Inn]
         
@@ -349,6 +445,8 @@ class TRK : public TObject {
         Float_t kf_nchi[4][2];
         Float_t kf_cen_rig[4];
         Float_t kf_top_rig[4];
+        Float_t kf_cen_crr_rig[4];
+        Float_t kf_top_crr_rig[4];
         Float_t kf_cen_state[6]; // [Inn]
         Float_t kf_top_state[6]; // [Inn]
         
@@ -374,10 +472,10 @@ class TRD : public TObject {
 
             status = false;
             std::fill_n(state, 6, 0);
+            Qall = 0;
+            Qall_crr = 0;
 
-            num_extra_seg = 0;
-            num_extra_hit = 0;
-            std::fill_n(num_vtx, 2, 0);
+            std::fill_n(num_vtx[0], 4*2, 0);
 
             tdLLR_status = false;
             tdLLR_num_hit = 0;
@@ -393,6 +491,17 @@ class TRD : public TObject {
             tdHit_len.clear();
             tdHit_amp.clear();
             tdHit_lz.clear();
+            tdHitQ = 0;
+
+            num_tdQ = 0;
+            num_tdQl = 0;
+            num_tdQu = 0;
+            tdQl.clear();
+            tdQz.clear();
+            tdQq.clear();
+            tdQgb.clear();
+            tdQv = 0;
+            tdQv_crr = 0;
             
             tkLLR_status = false;
             tkLLR_num_hit = 0;
@@ -408,6 +517,17 @@ class TRD : public TObject {
             tkHit_len.clear();
             tkHit_amp.clear();
             tkHit_lz.clear();
+            tkHitQ = 0;
+            
+            num_tkQ = 0;
+            num_tkQl = 0;
+            num_tkQu = 0;
+            tkQl.clear();
+            tkQz.clear();
+            tkQq.clear();
+            tkQgb.clear();
+            tkQv = 0;
+            tkQv_crr = 0;
 		}
 
 	public :
@@ -422,10 +542,10 @@ class TRD : public TObject {
         // TrdTrack or TrdHTrack (first TrdH, second Trd)
 		Bool_t  status;
 		Float_t state[6]; // coo, dir
-        
-        Short_t num_extra_seg;
-        Short_t num_extra_hit;
-        Short_t num_vtx[2];
+        Float_t Qall;
+        Float_t Qall_crr;
+
+        Short_t num_vtx[4][2]; // 40~80, 80~120, 120~160, 160~200
 
         Bool_t  tdLLR_status;
         Short_t tdLLR_num_hit;
@@ -441,7 +561,18 @@ class TRD : public TObject {
         std::vector<Float_t> tdHit_len;
         std::vector<Float_t> tdHit_amp;
         std::vector<Float_t> tdHit_lz;
-
+        Float_t tdHitQ;
+        
+        Short_t num_tdQ;
+        Short_t num_tdQl;
+        Short_t num_tdQu;
+        std::vector<Short_t> tdQl;
+        std::vector<Float_t> tdQz;
+        std::vector<Float_t> tdQq;
+        std::vector<Float_t> tdQgb;
+        Float_t tdQv;
+        Float_t tdQv_crr;
+        
         Bool_t  tkLLR_status;
         Short_t tkLLR_num_hit;
         Float_t tkLLR_ep;
@@ -456,9 +587,19 @@ class TRD : public TObject {
         std::vector<Float_t> tkHit_len;
         std::vector<Float_t> tkHit_amp;
         std::vector<Float_t> tkHit_lz;
+        Float_t tkHitQ;
 
+        Short_t num_tkQ;
+        Short_t num_tkQl;
+        Short_t num_tkQu;
+        std::vector<Short_t> tkQl;
+        std::vector<Float_t> tkQz;
+        std::vector<Float_t> tkQq;
+        std::vector<Float_t> tkQgb;
+        Float_t tkQv;
+        Float_t tkQv_crr;
 
-	ClassDef(TRD, 1)
+	ClassDef(TRD, 3)
 };
 
 
@@ -501,7 +642,7 @@ class ECAL : public TObject {
         std::vector<Short_t> hit_idx;  // plane * NCell + cell
         std::vector<Float_t> hit_edep;
 
-	ClassDef(ECAL, 1)
+	ClassDef(ECAL, 3)
 };
 
 
@@ -609,15 +750,62 @@ class RICH : public TObject {
             self_cldhit_lx.clear();
             self_cldhit_ly.clear();
             
-            num_hit = 0;
-            hit_chann.clear();
-            hit_type.clear();
-            hit_dbeta.clear();
-            hit_rbetaA.clear();
-            hit_rbetaB.clear();
-            hit_npe.clear();
-            hit_lx.clear();
-            hit_ly.clear();
+            //num_hit = 0;
+            //hit_chann.clear();
+            //hit_type.clear();
+            //hit_dbeta.clear();
+            //hit_rbetaA.clear();
+            //hit_rbetaB.clear();
+            //hit_npe.clear();
+            //hit_lx.clear();
+            //hit_ly.clear();
+            
+            // NEW
+            /*
+            new_status = false;
+            new_num_stone = 0;
+            new_num_cloud = 0;
+            new_num_ghost = 0;
+
+            new_nhit_total = 0;
+            new_nhit_stone = 0;
+            new_nhit_cloud = 0;
+            new_nhit_ghost = 0;
+            new_nhit_other_inn = 0;
+            new_nhit_other_out = 0;
+
+            new_npe_total = 0;
+            new_npe_stone = 0;
+            new_npe_cloud = 0;
+            new_npe_ghost = 0;
+            new_npe_other_inn = 0;
+            new_npe_other_out = 0;
+
+            new_stn_status = false;
+            new_stn_nhit = 0;
+            new_stn_npmt = 0;
+            new_stn_lx = 0;
+            new_stn_ly = 0;
+            new_stn_npe = 0;
+            new_stn_dist = 0;
+            
+            new_cld_status = false;
+            new_cld_nhit = 0;
+            new_cld_npmt = 0;
+            new_cld_nhit_dir = 0;
+            new_cld_nhit_rfl = 0;
+            new_cld_nhit_ght = 0;
+            new_cld_beta = 0;
+            new_cld_cbta = 0;
+            new_cld_nchi = 0;
+            new_cld_npe  = 0;
+        
+            new_cldhit_chann.clear();
+            new_cldhit_beta.clear();
+            new_cldhit_npe.clear();
+            new_cldhit_lx.clear();
+            new_cldhit_ly.clear();
+            */
 		}
 
 	public :
@@ -720,17 +908,64 @@ class RICH : public TObject {
         std::vector<Float_t>  self_cldhit_ly;
 
         // Hit Information
-        Short_t num_hit;
-        std::vector<Short_t> hit_chann;
-        std::vector<Short_t> hit_type;
-        std::vector<Float_t> hit_dbeta;
-        std::vector<Float_t> hit_rbetaA;
-        std::vector<Float_t> hit_rbetaB;
-        std::vector<Float_t> hit_npe;
-        std::vector<Float_t> hit_lx;
-        std::vector<Float_t> hit_ly;
+        //Short_t num_hit;
+        //std::vector<Short_t> hit_chann;
+        //std::vector<Short_t> hit_type;
+        //std::vector<Float_t> hit_dbeta;
+        //std::vector<Float_t> hit_rbetaA;
+        //std::vector<Float_t> hit_rbetaB;
+        //std::vector<Float_t> hit_npe;
+        //std::vector<Float_t> hit_lx;
+        //std::vector<Float_t> hit_ly;
 
-    ClassDef(RICH, 1)
+        // NEW
+        /*
+        Bool_t  new_status;
+        Short_t new_num_stone;
+        Short_t new_num_cloud;
+        Short_t new_num_ghost;
+        
+        Short_t new_nhit_total;
+        Short_t new_nhit_stone;
+        Short_t new_nhit_cloud;
+        Short_t new_nhit_ghost;
+        Short_t new_nhit_other_inn;
+        Short_t new_nhit_other_out;
+
+        Float_t new_npe_total;
+        Float_t new_npe_stone;
+        Float_t new_npe_cloud;
+        Float_t new_npe_ghost;
+        Float_t new_npe_other_inn;
+        Float_t new_npe_other_out;
+
+        Bool_t  new_stn_status;
+        Short_t new_stn_nhit;
+        Short_t new_stn_npmt;
+        Float_t new_stn_lx;
+        Float_t new_stn_ly;
+        Float_t new_stn_npe;
+        Float_t new_stn_dist;
+        
+        Bool_t  new_cld_status;
+        Short_t new_cld_nhit;
+        Short_t new_cld_npmt;
+        Short_t new_cld_nhit_dir;
+        Short_t new_cld_nhit_rfl;
+        Short_t new_cld_nhit_ght;
+        Float_t new_cld_beta;
+        Float_t new_cld_cbta;
+        Float_t new_cld_nchi;
+        Float_t new_cld_npe;
+        
+        std::vector<Short_t>  new_cldhit_chann;
+        std::vector<Double_t> new_cldhit_beta;
+        std::vector<Float_t>  new_cldhit_npe;
+        std::vector<Float_t>  new_cldhit_lx;
+        std::vector<Float_t>  new_cldhit_ly;
+        */
+
+    ClassDef(RICH, 2)
 };
 
 
@@ -749,73 +984,101 @@ class HYC : public TObject {
             std::fill_n(geom_ndof_y, 4, 0);
             std::fill_n(geom_nchi_x, 4, 0);
             std::fill_n(geom_nchi_y, 4, 0);
+            std::fill_n(geom_nchi_lx, 4, 0);
+            std::fill_n(geom_nchi_ly, 4, 0);
+            std::fill_n(geom_nchi_tau, 4, 0);
+            std::fill_n(geom_nchi_rho, 4, 0);
+            
+            std::fill_n(geom_max_norm_lx, 4, 0);
+            std::fill_n(geom_max_norm_ly, 4, 0);
+            std::fill_n(geom_max_norm_tau, 4, 0);
+            std::fill_n(geom_max_norm_rho, 4, 0);
             
             std::fill_n(geom_cen_loc[0], 4*3, 0);
             std::fill_n(geom_cen_dir[0], 4*3, 0);
             std::fill_n(geom_cen_rig, 4, 0);
+            std::fill_n(geom_cen_crr_rig, 4, 0);
             
             std::fill_n(geom_top_loc[0], 4*3, 0);
             std::fill_n(geom_top_dir[0], 4*3, 0);
             std::fill_n(geom_top_rig, 4, 0);
+            std::fill_n(geom_top_crr_rig, 4, 0);
             
             std::fill_n(geom_cpu_time, 4, 0);
             
-            std::fill_n(vel_status, 3, false);
-            std::fill_n(vel_ndof, 3, 0);
-            std::fill_n(vel_nchi, 3, 0);
+            std::fill_n(vel_status, 4, false);
+            std::fill_n(vel_ndof, 4, 0);
+            std::fill_n(vel_nchi, 4, 0);
             
-            std::fill_n(vel_cen_loc[0], 3*3, 0);
-            std::fill_n(vel_cen_dir[0], 3*3, 0);
-            std::fill_n(vel_cen_bta, 3, 0);
+            std::fill_n(vel_cen_loc[0], 4*3, 0);
+            std::fill_n(vel_cen_dir[0], 4*3, 0);
+            std::fill_n(vel_cen_bta, 4, 0);
             
-            std::fill_n(vel_top_loc[0], 3*3, 0);
-            std::fill_n(vel_top_dir[0], 3*3, 0);
-            std::fill_n(vel_top_bta, 3, 0);
+            std::fill_n(vel_top_loc[0], 4*3, 0);
+            std::fill_n(vel_top_dir[0], 4*3, 0);
+            std::fill_n(vel_top_bta, 4, 0);
             
-            std::fill_n(vel_cpu_time, 3, 0);
+            std::fill_n(vel_cpu_time, 4, 0);
             
-            std::fill_n(phys_status[0], 2*3, false);
-            std::fill_n(phys_ndof_x[0], 2*3, 0);
-            std::fill_n(phys_ndof_y[0], 2*3, 0);
-            std::fill_n(phys_ndof_b[0], 2*3, 0);
-            std::fill_n(phys_nchi_x[0], 2*3, 0);
-            std::fill_n(phys_nchi_y[0], 2*3, 0);
-            std::fill_n(phys_nchi_b[0], 2*3, 0);
+            std::fill_n(phys_status[0], 2*4, false);
+            std::fill_n(phys_ndof_x[0], 2*4, 0);
+            std::fill_n(phys_ndof_y[0], 2*4, 0);
+            std::fill_n(phys_ndof_b[0], 2*4, 0);
+            std::fill_n(phys_nchi_x[0], 2*4, 0);
+            std::fill_n(phys_nchi_y[0], 2*4, 0);
+            std::fill_n(phys_nchi_b[0], 2*4, 0);
             
-            std::fill_n(phys_cen_loc[0][0], 2*3*3, 0);
-            std::fill_n(phys_cen_dir[0][0], 2*3*3, 0);
-            std::fill_n(phys_cen_rig[0], 2*3, 0);
-            std::fill_n(phys_cen_bta[0], 2*3, 0);
+            std::fill_n(phys_cen_loc[0][0], 2*4*3, 0);
+            std::fill_n(phys_cen_dir[0][0], 2*4*3, 0);
+            std::fill_n(phys_cen_rig[0], 2*4, 0);
+            std::fill_n(phys_cen_bta[0], 2*4, 0);
             
-            std::fill_n(phys_top_loc[0][0], 2*3*3, 0);
-            std::fill_n(phys_top_dir[0][0], 2*3*3, 0);
-            std::fill_n(phys_top_rig[0], 2*3, 0);
-            std::fill_n(phys_top_bta[0], 2*3, 0);
+            std::fill_n(phys_top_loc[0][0], 2*4*3, 0);
+            std::fill_n(phys_top_dir[0][0], 2*4*3, 0);
+            std::fill_n(phys_top_rig[0], 2*4, 0);
+            std::fill_n(phys_top_bta[0], 2*4, 0);
             
-            std::fill_n(phys_cpu_time[0], 2*3, 0);
+            std::fill_n(phys_cpu_time[0], 2*4, 0);
             
-            std::fill_n(mutr_status, 3, false);
-            std::fill_n(mutr_ndof_x, 3, 0);
-            std::fill_n(mutr_ndof_y, 3, 0);
-            std::fill_n(mutr_ndof_b, 3, 0);
-            std::fill_n(mutr_nchi_x, 3, 0);
-            std::fill_n(mutr_nchi_y, 3, 0);
-            std::fill_n(mutr_nchi_b, 3, 0);
+            std::fill_n(mutr_status, 4, false);
+            std::fill_n(mutr_ndof_x, 4, 0);
+            std::fill_n(mutr_ndof_y, 4, 0);
+            std::fill_n(mutr_ndof_b, 4, 0);
+            std::fill_n(mutr_nchi_x, 4, 0);
+            std::fill_n(mutr_nchi_y, 4, 0);
+            std::fill_n(mutr_nchi_b, 4, 0);
             
-            std::fill_n(mutr_mass, 3, 0);
-            std::fill_n(mutr_sqrm, 3, 0);
+            std::fill_n(mutr_mass, 4, 0);
+            std::fill_n(mutr_sqrm, 4, 0);
             
-            std::fill_n(mutr_cen_loc[0], 3*3, 0);
-            std::fill_n(mutr_cen_dir[0], 3*3, 0);
-            std::fill_n(mutr_cen_rig, 3, 0);
-            std::fill_n(mutr_cen_bta, 3, 0);
+            std::fill_n(mutr_cen_loc[0], 4*3, 0);
+            std::fill_n(mutr_cen_dir[0], 4*3, 0);
+            std::fill_n(mutr_cen_rig, 4, 0);
+            std::fill_n(mutr_cen_bta, 4, 0);
             
-            std::fill_n(mutr_top_loc[0], 3*3, 0);
-            std::fill_n(mutr_top_dir[0], 3*3, 0);
-            std::fill_n(mutr_top_rig, 3, 0);
-            std::fill_n(mutr_top_bta, 3, 0);
+            std::fill_n(mutr_top_loc[0], 4*3, 0);
+            std::fill_n(mutr_top_dir[0], 4*3, 0);
+            std::fill_n(mutr_top_rig, 4, 0);
+            std::fill_n(mutr_top_bta, 4, 0);
             
-            std::fill_n(mutr_cpu_time, 3, 0);
+            std::fill_n(mutr_cpu_time, 4, 0);
+
+            TOI_theta = 0.0;
+            TOI_phi   = 0.0;
+
+            min_Stoermer = -1.0;
+            max_Stoermer = -1.0;
+            min_IGRF = -1.0;
+            max_IGRF = -1.0;
+            
+            tfQup = 0;
+            tfQlw = 0;
+
+            trM_ntdseg = 0;
+            trM_npick = -1;
+            std::fill_n(trM_bta, 3, 0);
+            trM_mql = -99;
+            trM_prb = -99;
         }
 
     public :
@@ -830,84 +1093,114 @@ class HYC : public TObject {
         Short_t geom_ndof_y[4];
         Float_t geom_nchi_x[4];
         Float_t geom_nchi_y[4];
+        Float_t geom_nchi_lx[4];
+        Float_t geom_nchi_ly[4];
+        Float_t geom_nchi_tau[4];
+        Float_t geom_nchi_rho[4];
+        
+        Float_t geom_max_norm_lx[4];
+        Float_t geom_max_norm_ly[4];
+        Float_t geom_max_norm_tau[4];
+        Float_t geom_max_norm_rho[4];
         
         Float_t geom_cen_loc[4][3];
         Float_t geom_cen_dir[4][3];
         Float_t geom_cen_rig[4];
+        Float_t geom_cen_crr_rig[4];
 
         Float_t geom_top_loc[4][3];
         Float_t geom_top_dir[4][3];
         Float_t geom_top_rig[4];
-
+        Float_t geom_top_crr_rig[4];
+        
         Float_t geom_cpu_time[4];
 
         // Velocity Fitting
         // time, time-chrg, cherenkov
-        Bool_t  vel_status[3];
-        Short_t vel_ndof[3];
-        Float_t vel_nchi[3];
+        Bool_t  vel_status[4];
+        Short_t vel_ndof[4];
+        Float_t vel_nchi[4];
         
-        Float_t vel_cen_loc[3][3];
-        Float_t vel_cen_dir[3][3];
-        Float_t vel_cen_bta[3];
+        Float_t vel_cen_loc[4][3];
+        Float_t vel_cen_dir[4][3];
+        Float_t vel_cen_bta[4];
         
-        Float_t vel_top_loc[3][3];
-        Float_t vel_top_dir[3][3];
-        Float_t vel_top_bta[3];
+        Float_t vel_top_loc[4][3];
+        Float_t vel_top_dir[4][3];
+        Float_t vel_top_bta[4];
         
-        Float_t vel_cpu_time[3];
+        Float_t vel_cpu_time[4];
         
         // Phys Fitting
         // particle type (prm, sec)
         // inn-time-chrg, inn-cherenkov
         // state (lx ly lz ux uy uz rig beta)
-        Bool_t  phys_status[2][3];
-        Short_t phys_ndof_x[2][3];
-        Short_t phys_ndof_y[2][3];
-        Short_t phys_ndof_b[2][3];
-        Float_t phys_nchi_x[2][3];
-        Float_t phys_nchi_y[2][3];
-        Float_t phys_nchi_b[2][3];
+        Bool_t  phys_status[2][4];
+        Short_t phys_ndof_x[2][4];
+        Short_t phys_ndof_y[2][4];
+        Short_t phys_ndof_b[2][4];
+        Float_t phys_nchi_x[2][4];
+        Float_t phys_nchi_y[2][4];
+        Float_t phys_nchi_b[2][4];
 
-        Float_t phys_cen_loc[2][3][3];
-        Float_t phys_cen_dir[2][3][3];
-        Float_t phys_cen_rig[2][3];
-        Float_t phys_cen_bta[2][3];
+        Float_t phys_cen_loc[2][4][3];
+        Float_t phys_cen_dir[2][4][3];
+        Float_t phys_cen_rig[2][4];
+        Float_t phys_cen_bta[2][4];
 
-        Float_t phys_top_loc[2][3][3];
-        Float_t phys_top_dir[2][3][3];
-        Float_t phys_top_rig[2][3];
-        Float_t phys_top_bta[2][3];
+        Float_t phys_top_loc[2][4][3];
+        Float_t phys_top_dir[2][4][3];
+        Float_t phys_top_rig[2][4];
+        Float_t phys_top_bta[2][4];
         
-        Float_t phys_cpu_time[2][3];
+        Float_t phys_cpu_time[2][4];
 
         // Mass Fitting
         // inn-time-chrg, inn-cherenkov
         // state (lx ly lz ux uy uz rig beta)
-        Bool_t  mutr_status[3];
-        Short_t mutr_ndof_x[3];
-        Short_t mutr_ndof_y[3];
-        Short_t mutr_ndof_b[3];
-        Float_t mutr_nchi_x[3];
-        Float_t mutr_nchi_y[3];
-        Float_t mutr_nchi_b[3];
+        Bool_t  mutr_status[4];
+        Short_t mutr_ndof_x[4];
+        Short_t mutr_ndof_y[4];
+        Short_t mutr_ndof_b[4];
+        Float_t mutr_nchi_x[4];
+        Float_t mutr_nchi_y[4];
+        Float_t mutr_nchi_b[4];
         
-        Float_t mutr_sqrm[3];
-        Float_t mutr_mass[3];
+        Float_t mutr_sqrm[4];
+        Float_t mutr_mass[4];
         
-        Float_t mutr_cen_loc[3][3];
-        Float_t mutr_cen_dir[3][3];
-        Float_t mutr_cen_rig[3];
-        Float_t mutr_cen_bta[3];
+        Float_t mutr_cen_loc[4][3];
+        Float_t mutr_cen_dir[4][3];
+        Float_t mutr_cen_rig[4];
+        Float_t mutr_cen_bta[4];
         
-        Float_t mutr_top_loc[3][3];
-        Float_t mutr_top_dir[3][3];
-        Float_t mutr_top_rig[3];
-        Float_t mutr_top_bta[3];
+        Float_t mutr_top_loc[4][3];
+        Float_t mutr_top_dir[4][3];
+        Float_t mutr_top_rig[4];
+        Float_t mutr_top_bta[4];
         
-        Float_t mutr_cpu_time[3];
+        Float_t mutr_cpu_time[4];
 
-    ClassDef(HYC, 1)
+        // Others
+        Float_t TOI_theta;
+        Float_t TOI_phi;
+        Float_t min_Stoermer;
+        Float_t max_Stoermer;
+        Float_t min_IGRF;
+        Float_t max_IGRF;
+        Float_t tfQup;
+        Float_t tfQlw;
+
+        // TrMass
+        Short_t trM_ntdseg;
+        Float_t trM_npick;
+
+        Float_t trM_bta[3]; // tf, tk, td
+        Float_t trM_mql;
+        Float_t trM_prb;
+
+
+    ClassDef(HYC, 2)
 };
 
 

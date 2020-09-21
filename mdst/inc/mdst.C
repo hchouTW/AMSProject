@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     FLAGS_log_dir = "log";
+    FLAGS_minloglevel = 3;
+    FLAGS_stop_logging_if_full_disk = true;
     google::InitGoogleLogging(argv[0]);
 
     // Type
@@ -117,7 +119,6 @@ int main(int argc, char** argv) {
 
     if (ams_chain.GetEntries() == 0) std::cerr << Format("Don't have event\n");
     LOG_IF(ERROR, ams_chain.GetEntries() == 0) << Format("Don't have event");
-
 
     if      (type == "ISS") Selector::SetType(Selector::Type::ISS);
     else if (type == "BT" ) Selector::SetType(Selector::Type::BT);

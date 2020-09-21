@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mdst
+PROJVERSION  =  20Jun11
+PROJTITLE    =  BT_PR_400_TESTO1
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.bt.pr.400.B1082
+EVENTTYPE    =  BT
+FILEPEREXE   =  1
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  81
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  1
+CONFIRM    =  NONE

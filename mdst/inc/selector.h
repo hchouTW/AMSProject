@@ -40,6 +40,7 @@
 #include <GeoMagTrace.h>
 #include <TrReconQ.h>
 #include <MagField.h>
+#include <TrMass.h>
 
 #include "EcalHadron/EcalHadron.h"
 #include "EcalHadron/EcalHadron.C"
@@ -49,6 +50,9 @@
 
 #include "AmsRich/CherenkovMeas.h"
 #include "AmsRich/CherenkovMeas.C"
+
+#include "AmsRich/ChSearch.h"
+#include "AmsRich/ChSearch.C"
 
 #include "TrSys.h"
 
@@ -162,9 +166,15 @@ class Selector {
         TrdHTrackR*  pTrdHTrack;
         EcalShowerR* pEcalShower;
         RichRingR*   pRichRing;
+
+        double dist_tk_td;
+        double dist_tk_tdh;
+        double dist_tk_ecal;
         
         TFile* file;
         TTree* tree;
+        //TTree* treeZ1;
+        //TTree* treeZ2;
         
         int    data_zin;
         double data_mass;
@@ -181,6 +191,9 @@ class Selector {
         ECAL data_ecal;
         RICH data_rich;
         HYC  data_hyc;
+
+        UInt_t utime_pre;
+        UInt_t utime_cur;
 
     public :
         Selector(AMSChain* ams) { init(); amsch = ams; }
@@ -227,8 +240,13 @@ void Selector::init() {
 
     file = nullptr;
     tree = nullptr;
+    //treeZ1 = nullptr;
+    //treeZ2 = nullptr;
 
     process_init();
+
+    utime_pre = 0;
+    utime_cur = 0;
 }
 
 void Selector::process_init() {
@@ -241,7 +259,11 @@ void Selector::process_init() {
     pEcalShower = nullptr;
     pRichRing   = nullptr;
 
-    data_zin  = 1;
+    dist_tk_td   = 0.0;
+    dist_tk_tdh  = 0.0;
+    dist_tk_ecal = 0.0;
+
+    data_zin  = 1.0;
     data_mass = TrFit::Mproton;
     data_beta = 1.0;
 
@@ -268,7 +290,7 @@ void Selector::set_output(const std::string& outpath) {
         file = nullptr;
         return;
     }
-
+    
     tree = new TTree("mdst", "data");
     tree->Branch("list", &data_list);
     if (CheckType(Type::MC )) tree->Branch("g4mc", &data_g4mc);
@@ -285,7 +307,9 @@ void Selector::set_output(const std::string& outpath) {
     std::string statement;
     statement += Format("\n****  Output Info ****\n");
     statement += Format("File: %s\n", outpath.c_str());
-    statement += Format("Tree: %s\n\n", tree->GetName());
+    statement += Format("TreeZ1: %s\n\n", tree->GetName());
+    //statement += Format("TreeZ1: %s\n\n", treeZ1->GetName());
+    //statement += Format("TreeZ2: %s\n\n", treeZ2->GetName());
     std::cout << statement;
     LOG(INFO) << statement;
 }
@@ -293,15 +317,19 @@ void Selector::set_output(const std::string& outpath) {
 
 void Selector::write() {
     if (tree == nullptr || file == nullptr) return;
+    //if (treeZ1 == nullptr || treeZ2 == nullptr || file == nullptr) return;
     file->cd();
     file->Write();
 }
 
 void Selector::close() {
     if (tree == nullptr || file == nullptr) return;
+    //if (treeZ1 == nullptr || treeZ2 == nullptr || file == nullptr) return;
     file->Close();
     file = nullptr;
     tree = nullptr;
+    //treeZ1 = nullptr;
+    //treeZ2 = nullptr;
 }
 
 #endif // __Selector_H__

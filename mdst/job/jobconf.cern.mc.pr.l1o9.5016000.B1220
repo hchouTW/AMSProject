@@ -1,0 +1,17 @@
+[PROJECT]
+PROJPATH     =  mdst
+PROJVERSION  =  20Jun23
+PROJTITLE    =  MC_PR_L1o9_5016000_B1220_v2
+PROJBIN      =  mdst
+PROJFLIST    =  flist.cern.mc.pr.l1o9.5016000.B1220
+EVENTTYPE    =  MC
+FILEPEREXE   =  20
+JOBREGION    =  WHOLE
+EXESATID     =  0
+EXEENDID     =  1199
+
+[QUEUE]
+QUEUE      =  tomorrow
+STORAGE    =  EOS
+EXEPERJOB  =  4
+CONFIRM    =  NONE
