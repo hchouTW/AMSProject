@@ -6,6 +6,8 @@
  * Description   : 
  * *******************************************************/
 
+#pragma link C++ class RUNENV;
+#pragma link C++ class DECENV;
 #pragma link C++ class LIST;
 #pragma link C++ class G4MC;
 #pragma link C++ class RTI;

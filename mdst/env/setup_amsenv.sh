@@ -9,9 +9,9 @@ export GDBINFO=1
 export VERBOSE=1
 
 #### CERN CVMFS %% GCC Compiler
-#GCCTag=4.9.3
+GCCTag=4.9.3
 #GCCTag=5.3.0
-GCCTag=6.4.0
+#GCCTag=6.4.0
 #GCCTag=8.2.0
 GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-slc6
 #GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-centos7
@@ -23,7 +23,7 @@ source ${GCCDir}/setup.sh
 #source ${CLANGDir}/setup.sh
 
 #### CERN CVMFS %% INTEL Compiler
-ICCTag=18
+ICCTag=19
 ICCDir=/cvmfs/projects.cern.ch/intelsw/psxe/linux
 ICCLux=${ICCDir}/x86_64/20${ICCTag}/compilers_and_libraries/linux
 source ${ICCDir}/${ICCTag}-all-setup.sh intel64 &> /dev/null

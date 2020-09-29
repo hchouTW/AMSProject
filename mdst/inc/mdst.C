@@ -27,11 +27,11 @@ static bool ValidateType(const char* flagname, const std::string& type) {
 }
 
 static bool ValidateInpath(const char* flagname, const std::string& inpath) {
-    return (std::system((Format("test -f \"%s\"", inpath.c_str())).c_str()) == 0);
+    return (std::system((Fmt("test -f \"%s\"", inpath.c_str())).c_str()) == 0);
 }
 
 static bool ValidateOutpath(const char* flagname, const std::string& outpath) {
-    return (std::system((Format("test -d \"%s\"", outpath.c_str())).c_str()) == 0);
+    return (std::system((Fmt("test -d \"%s\"", outpath.c_str())).c_str()) == 0);
 }
 
 //static const bool type_dummy = gflags::RegisterFlagValidator(&FLAGS_type, &ValidateType);
@@ -43,8 +43,8 @@ static const bool type_outpath = google::RegisterFlagValidator(&FLAGS_outpath, &
     
 
 int main(int argc, char** argv) {
-    std::string usage = Format("This program is used to produce mdst ntuple.");
-    usage += Format("\nUsage: bin/mdst -type=ISS -inpath=lst/flist.cern.iss.B1130.pass7 -outpath=out -gindex=0 -gsize=1\n");
+    std::string usage = Fmt("This program is used to produce mdst ntuple.");
+    usage += Fmt("\nUsage: bin/mdst -type=ISS -inpath=lst/flist.cern.iss.B1130.pass7 -outpath=out -gindex=0 -gsize=1\n");
 
     //gflags::SetVersionString("0.0.1");
     //gflags::SetUsageMessage(usage);
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
     // List
     std::vector<std::string>&& list = ReadListFile(FLAGS_inpath);
-    LOG_IF(ERROR, FLAGS_gsize > list.size()) << Format("Size of Group (FLAGS_gsize %ld, LIST_size %ld)", FLAGS_gsize, list.size());
+    LOG_IF(ERROR, FLAGS_gsize > list.size()) << Fmt("Size of Group (FLAGS_gsize %ld, LIST_size %ld)", FLAGS_gsize, list.size());
    
     unsigned long gindex = FLAGS_gindex;
     unsigned long gsize = (FLAGS_gsize == 0) ? list.size() : FLAGS_gsize;
@@ -72,32 +72,32 @@ int main(int argc, char** argv) {
     unsigned long gend  = (gindex + 1) * gsize;
     if (gend > list.size()) gend = list.size();
 
-    LOG_IF(ERROR, gbeg >= list.size()) << Format("Group (%ld, %ld) LIST_size (%ld)", gbeg, gend, list.size());
+    LOG_IF(ERROR, gbeg >= list.size()) << Fmt("Group (%ld, %ld) LIST_size (%ld)", gbeg, gend, list.size());
 
     std::vector<std::string> sublist = std::vector<std::string>(list.cbegin() + gbeg, list.cbegin() + gend);
-    LOG_IF(ERROR, sublist.size() == 0) << Format("Size of List %ld", sublist.size());
+    LOG_IF(ERROR, sublist.size() == 0) << Fmt("Size of List %ld", sublist.size());
 
     // Output
-    std::string outpath = Format("%s/YiMdst.%07ld.root", FLAGS_outpath.c_str(), gindex);
+    std::string outpath = Fmt("%s/YiMdst.%07ld.root", FLAGS_outpath.c_str(), gindex);
    
     std::string args_summary;
-    args_summary += Format("\n**----------------------    mdst args summary ----------------------**\n");
-    args_summary += Format("Type  : %s\n", type.c_str());
-    args_summary += Format("Input : %s\n", FLAGS_inpath.c_str());
-    args_summary += Format("Output: %s\n", outpath.c_str());
-    args_summary += Format("Index of Group: %ld\n", gindex);
-    args_summary += Format("Size  of Group: %ld\n", gsize);
-    args_summary += Format("List of ROOT Files: (size %ld)\n", (gend - gbeg));
-    for (auto&& file : sublist) args_summary += Format("FILE: %s\n", file.c_str());
-    args_summary += Format("**------------------------------------------------------------------**\n\n");
+    args_summary += Fmt("\n**----------------------    mdst args summary ----------------------**\n");
+    args_summary += Fmt("Type  : %s\n", type.c_str());
+    args_summary += Fmt("Input : %s\n", FLAGS_inpath.c_str());
+    args_summary += Fmt("Output: %s\n", outpath.c_str());
+    args_summary += Fmt("Index of Group: %ld\n", gindex);
+    args_summary += Fmt("Size  of Group: %ld\n", gsize);
+    args_summary += Fmt("List of ROOT Files: (size %ld)\n", (gend - gbeg));
+    for (auto&& file : sublist) args_summary += Fmt("FILE: %s\n", file.c_str());
+    args_summary += Fmt("**------------------------------------------------------------------**\n\n");
    
     std::cout << args_summary;
     LOG(INFO) << args_summary;
 
     std::string statement_start;
-    statement_start += Format("\n**--------------------------**\n");
-    statement_start += Format("**    mdst ntuple START     **\n");
-    statement_start += Format("**--------------------------**\n\n");
+    statement_start += Fmt("\n**--------------------------**\n");
+    statement_start += Fmt("**    mdst ntuple START     **\n");
+    statement_start += Fmt("**--------------------------**\n\n");
     std::cout << statement_start;
     LOG(INFO) << statement_start;
 
@@ -106,19 +106,19 @@ int main(int argc, char** argv) {
 	unsigned int timeout = 10;
 	AMSChain ams_chain("AMSRoot");
 	int chain_status = ams_chain.AddFromFile(FLAGS_inpath.c_str(), gbeg, gend, stagedonly, timeout);
-	if (chain_status == -1) std::cerr << Format("ROOT files cannot be opend!");
-    LOG_IF(ERROR, chain_status == -1) << Format("ROOT files cannot be opend!");
+	if (chain_status == -1) std::cerr << Fmt("ROOT files cannot be opend!");
+    LOG_IF(ERROR, chain_status == -1) << Fmt("ROOT files cannot be opend!");
 
 	std::string chain_statement;
-    chain_statement += Format("\nAMS ROOT files\n");
-    chain_statement += Format("Status : %d\n", chain_status);
-	chain_statement += Format("Totally Events : %ld\n\n", ams_chain.GetEntries());
+    chain_statement += Fmt("\nAMS ROOT files\n");
+    chain_statement += Fmt("Status : %d\n", chain_status);
+	chain_statement += Fmt("Totally Events : %ld\n\n", ams_chain.GetEntries());
 
     std::cout << chain_statement;
     LOG(INFO) << chain_statement;
 
-    if (ams_chain.GetEntries() == 0) std::cerr << Format("Don't have event\n");
-    LOG_IF(ERROR, ams_chain.GetEntries() == 0) << Format("Don't have event");
+    if (ams_chain.GetEntries() == 0) std::cerr << Fmt("Don't have event\n");
+    LOG_IF(ERROR, ams_chain.GetEntries() == 0) << Fmt("Don't have event");
 
     if      (type == "ISS") Selector::SetType(Selector::Type::ISS);
     else if (type == "BT" ) Selector::SetType(Selector::Type::BT);
@@ -132,9 +132,9 @@ int main(int argc, char** argv) {
     selector.close();
 
     std::string statement_end;
-    statement_end += Format("\n**--------------------------**\n");
-    statement_end += Format("**    mdst ntuple END       **\n");
-    statement_end += Format("**--------------------------**\n\n");
+    statement_end += Fmt("\n**--------------------------**\n");
+    statement_end += Fmt("**    mdst ntuple END       **\n");
+    statement_end += Fmt("**--------------------------**\n\n");
     std::cout << statement_end;
     LOG(INFO) << statement_end;
     

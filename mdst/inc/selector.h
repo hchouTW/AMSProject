@@ -64,7 +64,7 @@
 
 
 template<typename... Args>
-inline std::string Format(const std::string& fmt, Args... args) {
+inline std::string Fmt(const std::string& fmt, Args... args) {
 	std::vector<char> buf(1+std::snprintf(nullptr, 0, fmt.c_str(), args...));
 	std::snprintf(buf.data(), buf.size(), fmt.c_str(), args...);
 	std::string&& str = std::string(buf.begin(), buf.end());
@@ -110,11 +110,11 @@ class Stopwatch {
             std::string outstr;
             std::time_t utime1 = Clock::to_time_t(times_.first);
             std::time_t utime2 = Clock::to_time_t(times_.second);
-            outstr += Format("========================  Stopwatch  ==========================\n");
-            outstr += Format("==  START TIME : Unix( %ld )    %s", utime1, std::asctime(std::gmtime(&utime1)));
-            outstr += Format("==  STOP  TIME : Unix( %ld )    %s", utime2, std::asctime(std::gmtime(&utime2)));
-            outstr += Format("==  Duration   : %-3d HR %-2d MIN %6.3f   SEC (%17.6f)\n", hours.count(), minutes.count(), seconds.count(), time);
-            outstr += Format("===============================================================\n");
+            outstr += Fmt("========================  Stopwatch  ==========================\n");
+            outstr += Fmt("==  START TIME : Unix( %ld )    %s", utime1, std::asctime(std::gmtime(&utime1)));
+            outstr += Fmt("==  STOP  TIME : Unix( %ld )    %s", utime2, std::asctime(std::gmtime(&utime2)));
+            outstr += Fmt("==  Duration   : %-3d HR %-2d MIN %6.3f   SEC (%17.6f)\n", hours.count(), minutes.count(), seconds.count(), time);
+            outstr += Fmt("===============================================================\n");
             return outstr;
         }
 
@@ -124,7 +124,7 @@ class Stopwatch {
 
 
 inline std::vector<std::string> ReadListFile(const std::string& path) {
-    if (std::system((Format("test -f \"%s\"", path.c_str())).c_str()) != 0) return std::vector<std::string>();
+    if (std::system((Fmt("test -f \"%s\"", path.c_str())).c_str()) != 0) return std::vector<std::string>();
 	
     std::fstream fstr;
 	fstr.open(path, std::ios::in);
@@ -173,12 +173,18 @@ class Selector {
         
         TFile* file;
         TTree* tree;
-        //TTree* treeZ1;
-        //TTree* treeZ2;
+        
+        TTree* tree_runenv;
+        RUNENV data_runenv;
+        
+        TTree* tree_decenv;
+        DECENV data_decenv;
         
         int    data_zin;
+        double data_rin;
         double data_mass;
         double data_beta;
+        double data_msqr;
 
         LIST data_list;
         G4MC data_g4mc;
@@ -191,9 +197,6 @@ class Selector {
         ECAL data_ecal;
         RICH data_rich;
         HYC  data_hyc;
-
-        UInt_t utime_pre;
-        UInt_t utime_cur;
 
     public :
         Selector(AMSChain* ams) { init(); amsch = ams; }
@@ -211,6 +214,8 @@ class Selector {
 
         inline void process_init();
        
+        bool process_runenv();
+        bool process_decenv(UInt_t beg_event = 0, UInt_t end_event = 0);
         bool process_prefix();
         bool process_data();
         bool process_prd();
@@ -227,8 +232,6 @@ class Selector {
         bool process_ecal();
         bool process_rich();
         bool process_hyc();
-        
-        bool process_trk_kf();
 };
 
 Selector::Type Selector::kType = Selector::Type::ISS;
@@ -240,13 +243,11 @@ void Selector::init() {
 
     file = nullptr;
     tree = nullptr;
-    //treeZ1 = nullptr;
-    //treeZ2 = nullptr;
+    
+    tree_runenv = nullptr;
+    tree_decenv = nullptr;
 
     process_init();
-
-    utime_pre = 0;
-    utime_cur = 0;
 }
 
 void Selector::process_init() {
@@ -264,8 +265,13 @@ void Selector::process_init() {
     dist_tk_ecal = 0.0;
 
     data_zin  = 1.0;
+    data_rin  = 0.0;
     data_mass = TrFit::Mproton;
     data_beta = 1.0;
+    data_msqr = 0.0;
+
+    data_runenv.init();
+    data_decenv.init();
 
     data_list.init();
     data_g4mc.init();
@@ -285,31 +291,35 @@ void Selector::set_output(const std::string& outpath) {
     file = new TFile(outpath.c_str(), "RECREATE");
 
     if (file->IsZombie()) {
-        std::cerr << Format("Error opening file: %s\n", outpath.c_str());
-        LOG(FATAL) << Format("Error opening file: %s", outpath.c_str());
+        std::cerr << Fmt("Error opening file: %s\n", outpath.c_str());
+        LOG(FATAL) << Fmt("Error opening file: %s", outpath.c_str());
         file = nullptr;
         return;
     }
     
-    tree = new TTree("mdst", "data");
+    tree_runenv = new TTree("runenv", "runenv");
+    tree_runenv->Branch("runenv", &data_runenv);
+    
+    tree_decenv = new TTree("decenv", "decenv");
+    tree_decenv->Branch("decenv", &data_decenv);
+    
+    tree = new TTree("mdst", "mdst");
     tree->Branch("list", &data_list);
-    if (CheckType(Type::MC )) tree->Branch("g4mc", &data_g4mc);
-    if (CheckType(Type::ISS)) tree->Branch("rti" , &data_rti );
-    tree->Branch("trg" , &data_trg );
-    tree->Branch("acc" , &data_acc );
-    tree->Branch("tof" , &data_tof );
+    //if (CheckType(Type::MC )) tree->Branch("g4mc", &data_g4mc);
+    //if (CheckType(Type::ISS)) tree->Branch("rti" , &data_rti );
+    //tree->Branch("trg" , &data_trg );
+    //tree->Branch("acc" , &data_acc );
+    //tree->Branch("tof" , &data_tof );
     tree->Branch("trk" , &data_trk );
-    tree->Branch("trd" , &data_trd );
-    tree->Branch("ecal", &data_ecal);
-    tree->Branch("rich", &data_rich);
-    tree->Branch("hyc" , &data_hyc );
+    //tree->Branch("trd" , &data_trd );
+    //tree->Branch("ecal", &data_ecal);
+    //tree->Branch("rich", &data_rich);
+    //tree->Branch("hyc" , &data_hyc );
     
     std::string statement;
-    statement += Format("\n****  Output Info ****\n");
-    statement += Format("File: %s\n", outpath.c_str());
-    statement += Format("TreeZ1: %s\n\n", tree->GetName());
-    //statement += Format("TreeZ1: %s\n\n", treeZ1->GetName());
-    //statement += Format("TreeZ2: %s\n\n", treeZ2->GetName());
+    statement += Fmt("\n****  Output Info ****\n");
+    statement += Fmt("File: %s\n", outpath.c_str());
+    statement += Fmt("Tree: %s\n\n", tree->GetName());
     std::cout << statement;
     LOG(INFO) << statement;
 }
@@ -317,19 +327,17 @@ void Selector::set_output(const std::string& outpath) {
 
 void Selector::write() {
     if (tree == nullptr || file == nullptr) return;
-    //if (treeZ1 == nullptr || treeZ2 == nullptr || file == nullptr) return;
     file->cd();
     file->Write();
 }
 
 void Selector::close() {
     if (tree == nullptr || file == nullptr) return;
-    //if (treeZ1 == nullptr || treeZ2 == nullptr || file == nullptr) return;
     file->Close();
     file = nullptr;
     tree = nullptr;
-    //treeZ1 = nullptr;
-    //treeZ2 = nullptr;
+    tree_runenv = nullptr;
+    tree_decenv = nullptr;
 }
 
 #endif // __Selector_H__

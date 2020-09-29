@@ -9,12 +9,12 @@ export GDBINFO=1
 export VERBOSE=1
 
 #### CERN CVMFS %% GCC Compiler
-GCCTag=4.9.3
+#GCCTag=4.9.3
 #GCCTag=6.4.0
 #GCCTag=8.2.0
-#GCCTag=9.2.0
-GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-slc6
-#GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-centos7
+GCCTag=9.2.0
+#GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-slc6
+GCCDir=/cvmfs/sft.cern.ch/lcg/contrib/gcc/${GCCTag}/x86_64-centos7
 source ${GCCDir}/setup.sh
 
 #### CERN CVMFS && CLANG Compiler
@@ -48,6 +48,7 @@ export INTELLIB=${ICCLux}/lib/intel64
 export Offline=/cvmfs/ams.cern.ch/Offline
 
 #### CERN CVMFS %% AMS ROOT Environment
+#ROOTVersion=root6-04-08-icc16
 ROOTVersion=root6-14-04-icc19
 ROOTDir=${Offline}/root/Linux/${ROOTVersion}
 export ROOTSYS=${ROOTDir}
@@ -58,7 +59,8 @@ export LD_LIBRARY_PATH=${ROOTDir}/lib:${LD_LIBRARY_PATH}
 export CPLUS_INCLUDE_PATH=${ROOTDir}/include:${CPLUS_INCLUDE_PATH}
 
 #### AFS %% AMS Event Display
-AMSArch=linuxx8664icc5.34
+#AMSArch=linuxx8664icc6.04
+AMSArch=linuxx8664icc6.14
 export AMSGeoDir=${Offline}/vdev/display/
 alias amsedc="${Offline}/vdev/exe/${AMSArch}/amsedcPG"
 alias amsedd="${Offline}/vdev/exe/${AMSArch}/amseddPG"

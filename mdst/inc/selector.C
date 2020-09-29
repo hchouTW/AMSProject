@@ -4,8 +4,8 @@
 #include "selector.h"
 
 void Selector::set_environment() {
-    std::cout << Format("\n====  Set Environment ====\n");
-    LOG(INFO) << Format("\n====  Set Environment ====\n");
+    std::cout << Fmt("\n====  Set Environment ====\n");
+    LOG(INFO) << Fmt("\n====  Set Environment ====\n");
 
 	if (!CheckType(Type::ISS)) AMSSetupR::SlowControlR::ReadFromExternalFile = false;
 	if (CheckType(Type::MC))   AMSSetupR::LoadISSMC = false;
@@ -52,8 +52,8 @@ void Selector::set_environment() {
     if (!TrSys::PhysEnv::IMagStatus()) TrSys::PhysEnv::ReadMagAMS("/afs/cern.ch/work/h/hchou/public/ExternalLibs/DB/magnetic/AMS02Mag.bin");
     if (!TrSys::PhysEnv::IMatStatus()) TrSys::PhysEnv::ReadMatAMS("/afs/cern.ch/work/h/hchou/public/ExternalLibs/DB/material");
 
-    LOG_IF(ERROR, !TrSys::PhysEnv::IMagStatus()) << Format("NO MAG DATABASE.");
-    LOG_IF(ERROR, !TrSys::PhysEnv::IMatStatus()) << Format("NO MAT DATABASE.");
+    LOG_IF(ERROR, !TrSys::PhysEnv::IMagStatus()) << Fmt("NO MAG DATABASE.");
+    LOG_IF(ERROR, !TrSys::PhysEnv::IMatStatus()) << Fmt("NO MAT DATABASE.");
     if (!TrSys::PhysEnv::IMagStatus() || !TrSys::PhysEnv::IMatStatus()) exit(-1);
 }
 
@@ -64,64 +64,95 @@ void Selector::process_events() {
     Stopwatch stopwatch;
 
     std::string statement_start;
-    statement_start += Format("\n**------------------------**\n");
-	statement_start += Format("**  Process Events START  **\n");
-	statement_start += Format("**------------------------**\n\n");
+    statement_start += Fmt("\n**------------------------**\n");
+	statement_start += Fmt("**  Process Events START  **\n");
+	statement_start += Fmt("**------------------------**\n\n");
     std::cout << statement_start;
     LOG(INFO) << statement_start;
+
+    UInt_t beg_event_in_sec = 0;
+    UInt_t end_event_in_sec = 0;
 
     long num_passed = 0;
 	long num_processed = 0;
     long loop_entries = amsch->GetEntries();
 	long print_rate =  loop_entries / 50;
 	for (long ientry = 0; ientry < loop_entries; ++ientry) {
+        bool is_first_one_entry_of_files = (ientry == 0);
+        bool is_last_one_entry_of_files  = ((ientry + 1) == loop_entries);
 		if (num_processed%print_rate == 0) {
             stopwatch.stop();
             std::string statement_mid;
-            statement_mid += Format("\nInfo :: %lf %\n"                              , 100. * float(num_processed) / float(loop_entries));
-			statement_mid += Format("        Passed / Processed : %ld / %ld / %ld\n" , num_passed, num_processed, loop_entries);
-			statement_mid += Format("        Passed Ratio       : %lf %\n"           , ((num_processed == 0) ? 0. : (100. * float(num_passed) / float(num_processed))));
-			statement_mid += Format("        Real Time          : %9.2f (second)\n"  , stopwatch.time());
-			statement_mid += Format("        Processed Rate     : %8.2f (Hz)\n"      , num_processed / stopwatch.time());
+            statement_mid += Fmt("\nInfo :: %lf %\n"                              , 100. * float(num_processed) / float(loop_entries));
+			statement_mid += Fmt("        Passed / Processed : %ld / %ld / %ld\n" , num_passed, num_processed, loop_entries);
+			statement_mid += Fmt("        Passed Ratio       : %lf %\n"           , ((num_processed == 0) ? 0. : (100. * float(num_passed) / float(num_processed))));
+			statement_mid += Fmt("        Real Time          : %9.2f (second)\n"  , stopwatch.time());
+			statement_mid += Fmt("        Processed Rate     : %8.2f (Hz)\n"      , num_processed / stopwatch.time());
             std::cout << statement_mid;
             LOG(INFO) << statement_mid;
         }
         num_processed++;
         
-        AMSEventR* evt = amsch->GetEvent(ientry);
-        if (evt == nullptr) continue;
-        //if (ientry>500) break; // testcode
-
+        //if (ientry>10000) break; // testcode
         process_init();
-        event = evt;
+        
+        AMSEventR* prev_evt = (is_first_one_entry_of_files ? amsch->GetEvent(ientry) : amsch->GetEvent(ientry-1));
+        if (prev_evt == nullptr) continue;
+        UInt_t prev_ut = prev_evt->UTime();
+        UInt_t prev_ev = prev_evt->Event();
+        
+        AMSEventR* next_evt = (is_last_one_entry_of_files ? amsch->GetEvent(ientry) : amsch->GetEvent(ientry+1));
+        if (next_evt == nullptr) continue;
+        UInt_t next_ut = next_evt->UTime();
+        UInt_t next_ev = next_evt->Event();
 
-        utime_pre = utime_cur;
-        utime_cur = event->UTime();
+        AMSEventR* current_evt = amsch->GetEvent(ientry);
+        if (current_evt == nullptr) continue;
+        UInt_t current_ut = current_evt->UTime();
+        UInt_t current_ev = current_evt->Event();
+
+        bool is_first_one_entry_of_sec = ((current_ut != prev_ut) || is_first_one_entry_of_files);
+        bool is_last_one_entry_of_sec  = ((current_ut != next_ut) || is_last_one_entry_of_files);
+
+        current_evt->RecordRTIRun();
+        event = current_evt;
+    
+        beg_event_in_sec = is_first_one_entry_of_sec ? current_ev : beg_event_in_sec;
+        end_event_in_sec = is_last_one_entry_of_sec  ? current_ev : end_event_in_sec;
+
+        if (is_last_one_entry_of_sec) {
+            process_decenv(beg_event_in_sec, end_event_in_sec); 
+            tree_decenv->Fill();
+
+            beg_event_in_sec = 0;
+            end_event_in_sec = 0;
+        }
 
         if (!process_prefix()) continue;
 
         if (!process_data()) continue;
-        //if (!process_sel()) continue;
-        //if (!process_prd()) continue;
+        if (!process_sel()) continue;
+        if (!process_prd()) continue;
     
         tree->Fill();
         num_passed++;
     }
+    process_runenv(); 
     
     stopwatch.stop();
     std::string statement_fin;
-    statement_fin += Format("\nInfo :: %lf %\n"                              , 100. * float(num_processed) / float(loop_entries));
-	statement_fin += Format("        Passed / Processed : %ld / %ld / %ld\n" , num_passed, num_processed, loop_entries);
-	statement_fin += Format("        Passed Ratio       : %lf %\n"           , ((num_processed == 0) ? 0. : (100. * float(num_passed) / float(num_processed))));
-	statement_fin += Format("        Real Time          : %9.2f (second)\n"  , stopwatch.time());
-	statement_fin += Format("        Processed Rate     : %8.2f (Hz)\n"      , num_processed / stopwatch.time());
+    statement_fin += Fmt("\nInfo :: %lf %\n"                              , 100. * float(num_processed) / float(loop_entries));
+	statement_fin += Fmt("        Passed / Processed : %ld / %ld / %ld\n" , num_passed, num_processed, loop_entries);
+	statement_fin += Fmt("        Passed Ratio       : %lf %\n"           , ((num_processed == 0) ? 0. : (100. * float(num_passed) / float(num_processed))));
+	statement_fin += Fmt("        Real Time          : %9.2f (second)\n"  , stopwatch.time());
+	statement_fin += Fmt("        Processed Rate     : %8.2f (Hz)\n"      , num_processed / stopwatch.time());
     std::cout << statement_fin;
     LOG(INFO) << statement_fin;
     
     std::string statement_end;
-    statement_end += Format("\n**----------------------**\n");
-	statement_end += Format("**  Process Events END  **\n");
-	statement_end += Format("**----------------------**\n\n");
+    statement_end += Fmt("\n**----------------------**\n");
+	statement_end += Fmt("**  Process Events END  **\n");
+	statement_end += Fmt("**----------------------**\n\n");
     std::cout << statement_end;
     LOG(INFO) << statement_end;
 
@@ -135,17 +166,16 @@ void Selector::process_events() {
 bool Selector::process_prefix() {
     // Resolution tuning (by Qi Yan)
 	if (CheckType(Type::ISS) || CheckType(Type::BT)) {
-        TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
-        TRFITFFKEY.Zshift = 2; // Enable the dZ correction
+        //TrLinearEtaDB::SetLinearCluster(); // Enable new Eta uniformity(Z=1-26 and above)
+        //TRFITFFKEY.Zshift = 2; // Enable the dZ correction
     }
     else if (CheckType(Type::MC)) {
         event->SetDefaultMCTuningParameters();
         TrExtAlignDB::SmearExtAlign(); // MC Smear Ext-Layer
-        TRCLFFKEY.UseSensorAlign = 0;
-        TRCLFFKEY.ClusterCofGOpt = 1;
-        TRFITFFKEY.Zshift = -1; // Disable the dZ correction
+        //TRCLFFKEY.UseSensorAlign = 0;
+        //TRCLFFKEY.ClusterCofGOpt = 1;
+        //TRFITFFKEY.Zshift = -1; // Disable the dZ correction
 	}
-    TRFITFFKEY.ErcHeY = 0;
     
     if (CheckType(Type::MC)) {
         MCEventgR* primaryMC = event->GetPrimaryMC();
@@ -160,12 +190,11 @@ bool Selector::process_prefix() {
     TofRecH::BuildOpt = 0; // normal
 
 	// ~2~ (Based on TrTrack)
-    //if (event->NTrTrack() != 1) return false;
-    if (event->NTrTrack() == 0) return false;
+    if (event->NTrTrack() != 1) return false;
+    //if (event->NTrTrack() == 0) return false;
     
 	// ~3~ (Based on TrdTrack)
     //if (event->NTrdTrack() != 1) return false;
-    //if (event->NTrdTrack() == 0) return false;
 
 	// ~4~ (Based on Particle)
 	ParticleR   * partSIG = (event->NParticle() > 0) ? event->pParticle(0) : nullptr;
@@ -182,7 +211,6 @@ bool Selector::process_prefix() {
 
     double betah = btahSIG->GetBeta();
     if (betah <= 0.30) return false; // keep down-going
-    if (betah <= 0.95) return false; // keep down-going with high velocity
 
 	// ~6~ (Based on Track Hits)
 	const unsigned short TrPtL2  =   2; //  2
@@ -202,11 +230,11 @@ bool Selector::process_prefix() {
 	                    (trBitPattXYJ&TrPtL56) > 0 && 
 					    (trBitPattXYJ&TrPtL78) > 0);
 	if (!isTrInner) return false;
-	if (!isTrInnerXY) return false;
+	//if (!isTrInnerXY) return false;
 	
     bool hasTrL2   = ((trBitPattJ&TrPtL2)  > 0); 
     bool hasTrL1o9 = ((trBitPattJ&TrPtL19) > 0); 
-    if (!hasTrL2 && !hasTrL1o9) return false;
+    //if (!hasTrL2 && !hasTrL1o9) return false;
 	
 	Int_t numOfTrInX = 0;
 	Int_t numOfTrInY = 0;
@@ -234,28 +262,41 @@ bool Selector::process_prefix() {
     //if (pTrdTrack == nullptr) return false;
 
     // Tracker Track Information
+    int force_refit = 3;
     if (pTrTrack == nullptr) return false;
-    int idMax = pTrTrack->iTrTrackPar(1, 0, 23); // Rebuild coordinate align
-    if (idMax < 0) pTrTrack->iTrTrackPar(1, 3, 23); // Rebuild coordinate align
+    int idMax = pTrTrack->iTrTrackPar(1, 0, force_refit); // Rebuild coordinate align
+    if (idMax < 0) pTrTrack->iTrTrackPar(1, 3, force_refit); // Rebuild coordinate align
     
-    const int refit = 22;
+    const int refit = 2;
     int   tkID = pTrTrack->iTrTrackPar(1, 3, refit);
-    //float qin  = pTrTrack->GetInnerQH(2, beta, tkID);
+    if (tkID < 0) return false;
+    
     float QYJrms; int QYJpatt;
     float qin = pTrTrack->GetInnerQYJ(QYJrms, QYJpatt, 2, beta, tkID);
-    if (tkID < 0 || qin <= 0) return false;
-
+    if (qin <= 0) return false;
+    
     int   zin  = (qin <= 1.0) ? 1 : std::lrint(qin);
     float mass = (zin <    2) ? TrFit::Mproton : (0.5 * (TrFit::Mhelium) * zin);
     tkID = pTrTrack->iTrTrackPar(1, 3, refit, mass, zin);
     if (tkID < 0) return false;
-		
-    float ckin_rig = pTrTrack->GetRigidity(tkID, 1); // z = 0
-    //if (std::abs(ckin_rig) < 10) return false; // testcode
 
+    // Particle Mass^2
+    float rin  = pTrTrack->GetRigidity(tkID, 1); // Inner Rigidity at Z=0
+    //float ibta = (pRichRing) ? std::max(1.0/pRichRing->getBeta(), 1.0/beta) : 1.0/beta;
+    float ibta = 1.0/beta;
+    float msqr = (rin * (ibta - 1.0)) * (rin * (ibta + 1.0)); // mass^2 = R^2 (1/beta^2 - 1)
+    float merr = (0.15 * 0.15) + (0.02 * 0.02) * std::pow(rin, 4.0);
     data_zin  = zin;
+    data_rin  = rin;
     data_mass = mass;
     data_beta = beta;
+    data_msqr = msqr;
+    
+    // testcode
+    //if (rin < 0 && msqr < (0.7 - merr)) return false;
+    //if (rin > 0 && msqr < (2.0 - merr)) return false;
+    //if (rin < 0 && msqr < 0.7) return false;
+    if (std::abs(rin) < 30.0 && rin < 0) return false;
 
     // preselection in particle charge
     //if (data_zin >= 3) return false;
@@ -271,10 +312,11 @@ bool Selector::process_prefix() {
 		AMSPoint EcalPnt(pEcalShower->CofG);
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(EcalPnt.z(), pnt, dir, tkID);
-		float drPnt = std::abs(pnt.x() - EcalPnt.x());
-        dist_tk_ecal = drPnt;
+		float drPntx = std::abs(pnt.x() - EcalPnt.x());
+		float drPnty = std::abs(pnt.y() - EcalPnt.y());
+        float drPnt  = std::hypot(drPntx, drPnty);
 		if (drPnt > lmtrECAL) { pEcalShower = nullptr; }
-        //if (dist_tk_ecal > lmtrECAL) return false;
+        dist_tk_ecal = drPnt;
 	}
 
 	// TRD Information
@@ -284,20 +326,22 @@ bool Selector::process_prefix() {
 		AMSPoint TrdPnt(pTrdTrack->Coo);
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(TrdPnt.z(), pnt, dir, tkID);
-		float drPnt = std::abs(pnt.x() - TrdPnt.x());
-        dist_tk_td = drPnt;
+		float drPntx = std::abs(pnt.x() - TrdPnt.x());
+		float drPnty = std::abs(pnt.y() - TrdPnt.y());
+        float drPnt  = std::hypot(drPntx, drPnty);
 		if (drPnt > lmtrTRD) { pTrdTrack = nullptr; }
-        //if (dist_tk_td > lmtrTRD) return false;
+        dist_tk_td = drPnt;
 	}
 
 	if (pTrdHTrack != nullptr) {
 		AMSPoint TrdHPnt(pTrdHTrack->Coo);
 		AMSPoint pnt; AMSDir dir;
 		pTrTrack->Interpolate(TrdHPnt.z(), pnt, dir, tkID);
-		float drPnt = std::abs(pnt.x() - TrdHPnt.x());
-        dist_tk_tdh = drPnt;
+		float drPntx = std::abs(pnt.x() - TrdHPnt.x());
+		float drPnty = std::abs(pnt.y() - TrdHPnt.y());
+        float drPnt  = std::hypot(drPntx, drPnty);
 		if (drPnt > lmtrTRD) { pTrdHTrack == nullptr; }
-        //if (dist_tk_tdh > lmtrTRD) return false;
+        dist_tk_tdh = drPnt;
 	}
 
     return true;
@@ -305,18 +349,17 @@ bool Selector::process_prefix() {
 
 bool Selector::process_data() {
     if (!process_list()) return false;
-    if (!process_g4mc()) return false;
-    if (!process_rti() ) return false;
-    if (!process_trg() ) return false;
+    //if (!process_g4mc()) return false;
+    //if (!process_rti() ) return false;
+    //if (!process_trg() ) return false;
     if (!process_acc() ) return false;
     if (!process_tof() ) return false;
     if (!process_trk() ) return false;
-    if (!process_trd() ) return false;
-    if (!process_ecal()) return false;
+    //if (!process_trd() ) return false;
+    //if (!process_ecal()) return false;
+    //if (!process_rich()) return false;
    
     /*
-    //if (!process_rich()) return false;
-    //if (!process_trk_kf() ) return false;
     //if (!process_hyc() ) return false;
     
     TrSys::Part org_part(TrSys::PartList::kElectron);
@@ -364,16 +407,118 @@ bool Selector::process_data() {
 }
 
 bool Selector::process_prd() {
-    if (!process_rich()) return false;
-    
-    // kalman
-    //if (!process_trk_kf()) return false;
+    //if (!process_rich()) return false;
     
     // HYC
     //if (!process_hyc()) return false;
 
     return true;
 }
+
+bool Selector::process_runenv() {
+    if (file == nullptr) return false;
+
+    TString ntuple_path = file->GetName();
+    TString ntuple_file = ntuple_path.Contains('/') ? ntuple_path(ntuple_path.Last('/') + 1, ntuple_path.Length()) : ntuple_path;
+
+    for (auto&& runlists : AMSEventR::fRunList) {
+        AMSSetupR::RunI& runI = runlists.second;
+        data_runenv.init();
+
+        data_runenv.run = runI.run;
+        data_runenv.beg_time = runI.bt;
+        data_runenv.end_time = runI.et;
+        data_runenv.beg_event = runI.begev;
+        data_runenv.end_event = runI.endev;
+        
+        for (auto&& name : runI.fname) data_runenv.AMSfiles.push_back(name);
+        data_runenv.MDSTfile = std::string(ntuple_file.Data());
+
+        tree_runenv->Fill();
+    }
+    
+    return true;
+}
+
+bool Selector::process_decenv(UInt_t beg_event, UInt_t end_event) {
+    data_decenv.AMSfile = amsch->GetFile()->GetName();
+
+    data_decenv.run   = event->Run();
+    data_decenv.utime = event->UTime();
+    
+    data_decenv.beg_event = beg_event;
+    data_decenv.end_event = end_event;
+    
+    if (!CheckType(Type::ISS)) return true;
+	
+    AMSSetupR* setup = AMSSetupR::gethead();
+	
+    AMSSetupR::RTI rti;
+	event->GetRTI(rti);
+	
+    data_decenv.flag     = rti.good;
+	data_decenv.zenith   = rti.zenith;
+	data_decenv.livetime = rti.lf * rti.nev / (rti.nev + rti.nerr);
+
+    // good second
+	bool good_second = true;
+	if ((rti.ntrig/rti.nev) < 0.98 ||
+			rti.nerr < 0 || (rti.nerr/rti.nev) > 0.1 ||
+			(rti.npart/rti.ntrig) < (0.07/1600*rti.ntrig) || (rti.npart/rti.ntrig) > 0.25 ||
+			rti.npart <= 0 || rti.nev > 1800)
+		good_second = false;
+	else
+		good_second = true;
+	data_decenv.good = good_second;
+	
+    data_decenv.GTOD[0] = rti.r;
+	data_decenv.GTOD[1] = rti.theta;
+	data_decenv.GTOD[2] = rti.phi;
+	data_decenv.GM[0]   = rti.getthetam();
+	data_decenv.GM[1]   = rti.getphim();
+	data_decenv.GAT[0]  = rti.glat * TMath::DegToRad();
+	data_decenv.GAT[1]  = rti.glong * TMath::DegToRad();
+
+    // geomagnetic cuttof
+    Float_t mincf_Stoermer[4] = { 0. };
+    Float_t maxcf_Stoermer[4] = { 0. };
+    Float_t mincf_IGRF[4] = { 0. };
+    Float_t maxcf_IGRF[4] = { 0. };
+    for (int i = 0; i < 4; i++) {
+		mincf_Stoermer[i] = (std::fabs(rti.cf[i][0]) < std::fabs(rti.cf[i][1])) ?
+			std::fabs(rti.cf[i][0]) : std::fabs(rti.cf[i][1]);
+		maxcf_Stoermer[i] = (std::fabs(rti.cf[i][0]) > std::fabs(rti.cf[i][1])) ?
+			std::fabs(rti.cf[i][0]) : std::fabs(rti.cf[i][1]);
+		mincf_IGRF[i] = (std::fabs(rti.cfi[i][0]) < std::fabs(rti.cfi[i][1])) ?
+			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
+		maxcf_IGRF[i] = (std::fabs(rti.cfi[i][0]) > std::fabs(rti.cfi[i][1])) ?
+			std::fabs(rti.cfi[i][0]) : std::fabs(rti.cfi[i][1]);
+        
+        data_decenv.Stoermer[i][0] = std::fabs(rti.cf[i][0]);
+        data_decenv.Stoermer[i][1] = std::fabs(rti.cf[i][1]);
+        data_decenv.IGRF[i][0] = std::fabs(rti.cfi[i][0]);
+        data_decenv.IGRF[i][1] = std::fabs(rti.cfi[i][1]);
+    }
+    
+    data_decenv.min_Stoermer = (*std::min_element(mincf_Stoermer, mincf_Stoermer+4));
+    data_decenv.max_Stoermer = (*std::max_element(maxcf_Stoermer, maxcf_Stoermer+4));
+    data_decenv.min_IGRF = (*std::min_element(mincf_IGRF, mincf_IGRF+4));
+    data_decenv.max_IGRF = (*std::max_element(maxcf_IGRF, maxcf_IGRF+4));
+
+    // |PG-MD| < 35e-4 (L1), 45e-4 (L9) [cm]
+	AMSPoint pn1, pn9, pd1, pd9;
+	event->GetRTIdL1L9(0, pn1, pd1, event->UTime(), 60);
+	event->GetRTIdL1L9(1, pn9, pd9, event->UTime(), 60);
+	data_decenv.tk_align[0][0] = pd1.x();
+	data_decenv.tk_align[0][1] = pd1.y();
+	data_decenv.tk_align[1][0] = pd9.x();
+	data_decenv.tk_align[1][1] = pd9.y();
+	
+    data_decenv.is_in_SAA = rti.IsInSAA();
+
+    return true;
+}
+
 
 bool Selector::process_sel() {
     return true;
@@ -414,24 +559,21 @@ bool Selector::process_sel() {
 }
 
 bool Selector::process_list() {
-    data_list.file   = amsch->GetCurrentFile()->GetName();
+    TString ntuple_path = file->GetName();
+    TString ntuple_file = ntuple_path.Contains('/') ? ntuple_path(ntuple_path.Last('/') + 1, ntuple_path.Length()) : ntuple_path;
+    
+    data_list.AMSfile = amsch->GetFile()->GetName();
+    
     data_list.run    = event->Run();
     data_list.event  = event->Event();
-    data_list.entry  = amsch->get_tree_entry();
     data_list.utime  = event->UTime();
     data_list.weight = 1.0;
 
     data_list.header_error = event->fHeader.Error;
     data_list.antimatter_sw_trigger = event->AntiMatteriSWTrigger();
 
-    // testcode
-    //if (CheckType(Type::ISS) && data_zin <= 2) {
-    //    float rndm = RndmGenerator.Rndm();
-    //    float thres = (data_zin == 1) ? 0.01 : 0.1;
-
-    //    if (rndm > thres) return false;
-    //    data_list.weight /= thres;
-    //}
+    data_list.MDSTfile  = std::string(ntuple_file.Data());
+    data_list.MDSTentry = tree->GetEntries();
 
     return true;
 }
@@ -527,14 +669,14 @@ bool Selector::process_g4mc() {
         data_g4mc.tk_edep[ilay]   = edep;
 	}
     
-    for (int it = 0; it < mcev_tk.size(); ++it) {
-        MCEventgR* mcev = mcev_tk.at(it);
-        if (mcev == nullptr) continue;
+    //for (int it = 0; it < mcev_tk.size(); ++it) {
+    //    MCEventgR* mcev = mcev_tk.at(it);
+    //    if (mcev == nullptr) continue;
 
-        data_g4mc.tkL[it] = true;
-        data_g4mc.tkL_mom[it] = mcev->Momentum;
-        data_g4mc.tkL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
-    }
+    //    data_g4mc.tkL[it] = true;
+    //    data_g4mc.tkL_mom[it] = mcev->Momentum;
+    //    data_g4mc.tkL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
+    //}
 		
     if (pBetaH != nullptr) {
         Bool_t  has[4]  = { false, false, false, false };
@@ -583,16 +725,16 @@ bool Selector::process_g4mc() {
         }
     }
     
-    for (UInt_t icls = 0; icls < event->NTrdMCCluster(); ++icls) {
-	    TrdMCClusterR* cluster = event->pTrdMCCluster(icls);
-	    if (cluster->GtrkID != prm->trkID) continue;
-        int il = cluster->Layer;
-        data_g4mc.td[il]        = true;
-        data_g4mc.td_mom[il]    = std::sqrt(cluster->Ekin * (cluster->Ekin + 2.0 * prm->Mass));
-        //data_g4mc.td_loc[il][0] = cluster->Xgl[0];
-        //data_g4mc.td_loc[il][1] = cluster->Xgl[1];
-        //data_g4mc.td_loc[il][2] = cluster->Xgl[2];
-    }
+    //for (UInt_t icls = 0; icls < event->NTrdMCCluster(); ++icls) {
+	//    TrdMCClusterR* cluster = event->pTrdMCCluster(icls);
+	//    if (cluster->GtrkID != prm->trkID) continue;
+    //    int il = cluster->Layer;
+    //    data_g4mc.td[il]        = true;
+    //    data_g4mc.td_mom[il]    = std::sqrt(cluster->Ekin * (cluster->Ekin + 2.0 * prm->Mass));
+    //    data_g4mc.td_loc[il][0] = cluster->Xgl[0];
+    //    data_g4mc.td_loc[il][1] = cluster->Xgl[1];
+    //    data_g4mc.td_loc[il][2] = cluster->Xgl[2];
+    //}
     
     for (int it = 0; it < mcev_td.size(); ++it) {
         MCEventgR* mcev = mcev_td.at(it);
@@ -600,7 +742,7 @@ bool Selector::process_g4mc() {
 
         data_g4mc.tdL[it] = true;
         data_g4mc.tdL_mom[it] = mcev->Momentum;
-        data_g4mc.tdL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
+        //data_g4mc.tdL_beta[it] = 1.0 / std::sqrt((mcev->Mass/mcev->Momentum) * (mcev->Mass/mcev->Momentum) + 1.0);
         data_g4mc.tdL_loc[it][0] = mcev->Coo[0];
         data_g4mc.tdL_loc[it][1] = mcev->Coo[1];
         data_g4mc.tdL_loc[it][2] = mcev->Coo[2];
@@ -622,25 +764,25 @@ bool Selector::process_g4mc() {
         data_g4mc.rh_dir[1] = mcev->Dir[1];
         data_g4mc.rh_dir[2] = mcev->Dir[2];
     }
-    for (UInt_t icls = 0; icls < event->NRichMCCluster(); ++icls) {
-        RichMCClusterR* cls = event->pRichMCCluster(icls);
-        if (cls == nullptr) continue;
+    //for (UInt_t icls = 0; icls < event->NRichMCCluster(); ++icls) {
+    //    RichMCClusterR* cls = event->pRichMCCluster(icls);
+    //    if (cls == nullptr) continue;
 
-        RichHitR* hit = (cls->fRichHit >= 0) ? event->pRichHit(cls->fRichHit) : nullptr;
-        if (hit == nullptr) continue;
-        
-        if (cls->Origin[2] < -80.0) continue;
-        bool is_prim  = (cls->GtrkID == prm->trkID);
-        bool is_noise = (cls->Id == -666);
-        bool is_photo = (cls->Id == 50);
-        
-        int type = -1;
-        if (is_prim)  type = 0;
-        if (is_photo) type = 1;
-        if (is_noise) type = 2;
-        if (type < 0) continue;
-        data_g4mc.rh_hit_type[type]++;
-    }
+    //    RichHitR* hit = (cls->fRichHit >= 0) ? event->pRichHit(cls->fRichHit) : nullptr;
+    //    if (hit == nullptr) continue;
+    //    
+    //    if (cls->Origin[2] < -80.0) continue;
+    //    bool is_prim  = (cls->GtrkID == prm->trkID);
+    //    bool is_noise = (cls->Id == -666);
+    //    bool is_photo = (cls->Id == 50);
+    //    
+    //    int type = -1;
+    //    if (is_prim)  type = 0;
+    //    if (is_photo) type = 1;
+    //    if (is_noise) type = 2;
+    //    if (type < 0) continue;
+    //    data_g4mc.rh_hit_type[type]++;
+    //}
    
     for (int it = 0; it < mcev_ec.size(); ++it) {
         MCEventgR* mcev = mcev_ec.at(it);
@@ -669,6 +811,7 @@ bool Selector::process_rti() {
 	
     data_rti.flag     = rti.good;
 	data_rti.zenith   = rti.zenith;
+    data_rti.sunbeta  = rti.getbetasun();
 	data_rti.livetime = rti.lf * rti.nev / (rti.nev + rti.nerr);
 
     // good second
@@ -775,7 +918,7 @@ bool Selector::process_trg() {
 
     bool ubsbit = ((data_trg.bit&2) == 2);
     bool phybit = ((data_trg.bit&8) == 8);
-    //if (!ubsbit && !phybit) return false;
+    if (!ubsbit && !phybit) return false;
 
     return true;
 }
@@ -792,7 +935,7 @@ bool Selector::process_acc() {
 		}
 		if (time.size() != 0) {
 		    std::sort(time.begin(), time.end());
-		    double timeRange[2] = { (time.front() - 5. * TimeOfOneM), (time.back()  + 10. * TimeOfOneM) };
+		    double timeRange[2] = { (time.front() - 3. * TimeOfOneM), (time.back()  + 5. * TimeOfOneM) };
 		    double minTimeOfTOF = time.front();
 
             int count = 0;
@@ -906,7 +1049,7 @@ bool Selector::process_tof() {
 	data_tof.num_in_time_cls = event->GetNTofClustersInTime(pBetaH, ncls);
 
     if (!data_tof.status) return false;
-    //if (data_tof.patt != 15) return false;
+    if (data_tof.patt != 15) return false;
     //if (data_tof.extcls_noise > 0) return false;
     //if (data_tof.num_in_time_cls > 4) return false;
 
@@ -916,8 +1059,9 @@ bool Selector::process_tof() {
 
 bool Selector::process_trk() {
     data_trk.num_track = event->NTrTrack();
-    
-    int fitidInn = (pTrTrack != nullptr) ? pTrTrack->iTrTrackPar(1, 3, 21, data_mass, data_zin) : -1;
+   
+    int refit = 2;
+    int fitidInn = (pTrTrack != nullptr) ? pTrTrack->iTrTrackPar(1, 3, refit, data_mass, data_zin) : -1;
     if (pTrTrack == nullptr || fitidInn < 0) return true;
 
 	const unsigned short _hasL1  =   1;
@@ -949,50 +1093,23 @@ bool Selector::process_trk() {
 	data_trk.patt   = bitPatt; 
 	data_trk.pattXY = bitPattXY;
 
-    // Qrecon: Hu Liu
-    //data_trk.QIn = pTrTrack->GetInnerQH(2, data_beta, fitidInn);
-	//data_trk.QL2 = (isL2>0) ? pTrTrack->GetLayerJQH(2, 2, data_beta, fitidInn) : 0.0;
-	//data_trk.QL1 = (isL1>0) ? pTrTrack->GetLayerJQH(1, 2, data_beta, fitidInn) : 0.0;
-	//data_trk.QL9 = (isL9>0) ? pTrTrack->GetLayerJQH(9, 2, data_beta, fitidInn) : 0.0;
-    
-    float xxxrms;
-    int xxxpatt;
-    data_trk.QIn = pTrTrack->GetInnerQYJ(xxxrms, xxxpatt, 2, data_beta, fitidInn);
+    float yjrms; int yjpatt;
+    data_trk.QIn = pTrTrack->GetInnerQYJ(yjrms, yjpatt, 2, data_beta, fitidInn);
 	data_trk.QL2 = (isL2>0) ? pTrTrack->GetLayerQYJ(2, 2, data_beta, fitidInn) : 0.0;
 	data_trk.QL1 = (isL1>0) ? pTrTrack->GetLayerQYJ(1, 2, data_beta, fitidInn) : 0.0;
 	data_trk.QL9 = (isL9>0) ? pTrTrack->GetLayerQYJ(9, 2, data_beta, fitidInn) : 0.0;
-    
-    // Qrecon: Hu Liu
-    data_trk.QIn_yj = data_trk.QIn;
-    data_trk.QIn_hl = pTrTrack->GetInnerQH(2, data_beta, fitidInn);
-
-    double qinmin = 0.0;
-    for (int il = 2; il <= 7; ++il) {
-        if ((bitPattJ&(1<<il)) == 0) continue;
-        double ql = pTrTrack->GetLayerJQH(il+1, 2, data_beta, fitidInn);
-        if (ql <= 0.) continue;
-        if (qinmin <= 0.) qinmin = ql;
-        else              qinmin = std::min(qinmin, ql);
-    }
-    data_trk.QInMin = qinmin;
-   
-    const float NoiseQIn = 0.70;
-    const float NoiseQL1 = 0.65;
-    const float NoiseQL9 = 0.70;
-    if (data_trk.QInMin > 0.0 && data_trk.QInMin < NoiseQIn) return false;
-    if (data_trk.QL2 > 0.0 && data_trk.QL2 < NoiseQIn) return false;
-    if (data_trk.QL1 > 0.0 && data_trk.QL1 < NoiseQL1) return false;
-    if (data_trk.QL9 > 0.0 && data_trk.QL9 < NoiseQL9) return false;
 
     float sendx[9] = { 0.0 };
     float sendy[9] = { 0.0 };
     if (event->GetTrSensorDistance(pTrTrack, sendx, sendy) == 0) {
         for (int il = 0; il < 9; ++il) {
-            if (sendx[il] >= 0.0) data_trk.sen[il][0] = sendx[il];
-            if (sendy[il] >= 0.0) data_trk.sen[il][1] = sendy[il];
+            if (sendx[il] >= 0.0) data_trk.dist_to_sen[il][0] = sendx[il];
+            if (sendy[il] >= 0.0) data_trk.dist_to_sen[il][1] = sendy[il];
         }
     }
 
+    int kNstrip = 3;
+    int kAdcCorrOpt = TrClusterR::kAsym | TrClusterR::kAngle | TrClusterR::kGain | TrClusterR::kPStrip;
     std::array<std::pair<TrClusterR*, TrClusterR*>, 9> trhits;
     trhits.fill({nullptr, nullptr});
 	for (int ilay = 0; ilay < 9; ++ilay) {
@@ -1003,64 +1120,141 @@ bool Selector::process_trk() {
 		int tkid = recHit->GetTkId();
 		int mult = recHit->GetResolvedMultiplicity(); //  -1 resolved multiplicty coordinates
 		                                              // > 0 requested multiplicty coordinates
-        //AMSPoint coo = (ilay==0 || ilay==8) ? (pTrTrack->GetHitCooLJ(ilay+1, 0) + pTrTrack->GetHitCooLJ(ilay+1, 1))*0.5 : pTrTrack->GetHitCooLJ(ilay+1); // (CIEMAT+PG)/2
-        AMSPoint coo = TrTrackR::FitCoo[ilay]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
-	
-        TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
-		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
-        bool xside = (xcls != nullptr);
-        bool yside = (ycls != nullptr);
-	
-        trhits[ilay].first  = xcls;
-        trhits[ilay].second = ycls;
-
-		TkSens tksens(coo, CheckType(Type::MC));
-		int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
-
-        int xstrip = (xcls == nullptr || !tksens.LadFound() || tksens.GetStripX() < 0) ? -1.0 : tksens.GetStripX();
-        int ystrip = (ycls == nullptr || !tksens.LadFound() || tksens.GetStripY() < 0) ? -1.0 : tksens.GetStripY();
-        double xeta = (xcls == nullptr || !tksens.LadFound() || std::fabs(tksens.GetImpactPointX()) > 0.5) ? -1.0 : tksens.GetImpactPointX();
-        double yeta = (ycls == nullptr || !tksens.LadFound() || std::fabs(tksens.GetImpactPointY()) > 0.5) ? -1.0 : tksens.GetImpactPointY();
-
-        // Qrecon: Hu Liu
-        float hl_xchrg  = (!xside) ? -1.0 : pTrTrack->GetLayerJQH(ilay+1, 0, 1, fitidInn);
-		float hl_ychrg  = (!yside) ? -1.0 : pTrTrack->GetLayerJQH(ilay+1, 1, 1, fitidInn);
-		float hl_xychrg = (!xside || !yside) ? -1.0 : pTrTrack->GetLayerJQH(ilay+1, 2, 1, fitidInn);
-        if (hl_xchrg  <= 0.0) hl_xchrg  = 0.0;
-        if (hl_ychrg  <= 0.0) hl_ychrg  = 0.0;
-        if (hl_xychrg <= 0.0) hl_xychrg = 0.0;
-
-        float yj_xchrg  = (!xside) ? -1.0 : pTrTrack->GetLayerQYJ(ilay+1, 0, 1, fitidInn);
-		float yj_ychrg  = (!yside) ? -1.0 : pTrTrack->GetLayerQYJ(ilay+1, 1, 1, fitidInn);
-		float yj_xychrg = (!xside || !yside) ? -1.0 : pTrTrack->GetLayerQYJ(ilay+1, 2, 1, fitidInn);
-        if (yj_xchrg  <= 0.0) yj_xchrg  = 0.0;
-        if (yj_ychrg  <= 0.0) yj_ychrg  = 0.0;
-        if (yj_xychrg <= 0.0) yj_xychrg = 0.0;
-            
-        float sn10 = event->GetTrackerRawSignalRatio(ilay+1, 10, pTrTrack);
-        float feet = event->GetTkFeetDist(ilay+1, pTrTrack);
-
-        data_trk.lay[ilay] = (xcls != nullptr) + (ycls != nullptr) * 2;
-
-        data_trk.strip[ilay][0] = xstrip;
-        data_trk.strip[ilay][1] = ystrip;
-        data_trk.eta[ilay][0] = xeta;
-        data_trk.eta[ilay][1] = yeta;
-
+        //AMSPoint coo = TrTrackR::FitCoo[ilay]; // (CIEMAT+PG)/2 after TrTrackR maxspan refit 23
+        AMSPoint coo = TrTrackR::FitCoo[ilay]; // PG after TrTrackR maxspan refit 3
+        
         data_trk.loc[ilay][0] = coo[0];
         data_trk.loc[ilay][1] = coo[1];
         data_trk.loc[ilay][2] = coo[2];
-
-        data_trk.chrg_hl[ilay][0] = hl_xchrg;
-        data_trk.chrg_hl[ilay][1] = hl_ychrg;
-        data_trk.chrg_hl[ilay][2] = hl_xychrg;
+	
+        TrClusterR* xcls = (recHit->GetXClusterIndex() >= 0 && recHit->GetXCluster()) ? recHit->GetXCluster() : nullptr;
+		TrClusterR* ycls = (recHit->GetYClusterIndex() >= 0 && recHit->GetYCluster()) ? recHit->GetYCluster() : nullptr;
+        trhits[ilay].first  = xcls;
+        trhits[ilay].second = ycls;
         
-        data_trk.chrg_yj[ilay][0] = yj_xchrg;
-        data_trk.chrg_yj[ilay][1] = yj_ychrg;
-        data_trk.chrg_yj[ilay][2] = yj_xychrg;
+        data_trk.lay[ilay]  = (xcls != nullptr) + (ycls != nullptr) * 2;
+        data_trk.tkid[ilay] = tkid;
+        data_trk.mult[ilay] = mult;
+	
+        data_trk.slope[ilay][0] = xcls ? xcls->GetDxDz() : -2.0;
+        data_trk.slope[ilay][1] = ycls ? ycls->GetDyDz() : -2.0;
         
+        float sn10 = event->GetTrackerRawSignalRatio(ilay+1, 10, pTrTrack);
+        float feet = event->GetTkFeetDist(ilay+1, pTrTrack);
         data_trk.sn10[ilay] = sn10;
         data_trk.feet[ilay] = feet;
+        
+        float xchrg  = (!xcls) ? 0.0 : pTrTrack->GetLayerQYJ(ilay+1, 0, 1, fitidInn);
+		float ychrg  = (!ycls) ? 0.0 : pTrTrack->GetLayerQYJ(ilay+1, 1, 1, fitidInn);
+		float xychrg = (!xcls || !ycls) ? 0.0 : pTrTrack->GetLayerQYJ(ilay+1, 2, 1, fitidInn);
+        data_trk.chrg[ilay][0] = xchrg;
+        data_trk.chrg[ilay][1] = ychrg;
+        data_trk.chrg[ilay][2] = xychrg;
+       
+        if (xcls != nullptr) {
+            int xidxl = 0, xidxr = 0;
+            int xidxc = xcls->GetSeedIndex();
+            xcls->GetBoundsSymm(xidxl, xidxr, kNstrip);
+            data_trk.adr[ilay][0] = xcls->GetSeedAddress();
+            data_trk.eta[ilay][0] = xcls->GetLinearCofG(TrClusterR::DefaultUsedStrips, mult, TrClusterR::DefaultBestResidualOpt);
+            data_trk.cog[ilay][0] = xcls->GetCofG();
+
+            data_trk.sigx[ilay][1] = xcls->GetSignal(xidxc, kAdcCorrOpt);
+            if (xidxl == xidxc - 1) data_trk.sigx[ilay][0] = xcls->GetSignal(xidxl, kAdcCorrOpt);
+            if (xidxr == xidxc + 1) data_trk.sigx[ilay][2] = xcls->GetSignal(xidxr, kAdcCorrOpt);
+
+            if (data_trk.sigx[ilay][0] < 0.0) data_trk.sigx[ilay][0] = 0.0;
+            if (data_trk.sigx[ilay][1] < 0.0) data_trk.sigx[ilay][1] = 0.0;
+            if (data_trk.sigx[ilay][2] < 0.0) data_trk.sigx[ilay][2] = 0.0;
+
+            float* sigx = data_trk.sigx[ilay];
+            data_trk.nst[ilay][0] = (sigx[0] > 0) + (sigx[1] > 0) + (sigx[2] > 0);
+
+            if (data_trk.nst[ilay][0] == 1) data_trk.val[ilay][0] = 0.0;
+            if (data_trk.nst[ilay][0] >  1) {
+                float ttl_sigx = sigx[0] + sigx[1] + sigx[2];
+                float wgt_sigx = (sigx[0] > sigx[2]) ? -sigx[0] : sigx[2];
+                data_trk.val[ilay][0] = (wgt_sigx / ttl_sigx);
+            }
+        }
+
+        if (ycls != nullptr) {
+            int yidxl = 0, yidxr = 0;
+            int yidxc = ycls->GetSeedIndex();
+            ycls->GetBoundsSymm(yidxl, yidxr, kNstrip);
+            data_trk.adr[ilay][1] = ycls->GetSeedAddress();
+            data_trk.eta[ilay][1] = ycls->GetLinearCofG(TrClusterR::DefaultUsedStrips, mult, TrClusterR::DefaultBestResidualOpt);
+            data_trk.cog[ilay][1] = ycls->GetCofG();
+
+            data_trk.sigy[ilay][1] = ycls->GetSignal(yidxc, kAdcCorrOpt);
+            if (yidxl == yidxc - 1) data_trk.sigy[ilay][0] = ycls->GetSignal(yidxl, kAdcCorrOpt);
+            if (yidxr == yidxc + 1) data_trk.sigy[ilay][2] = ycls->GetSignal(yidxr, kAdcCorrOpt);
+
+            if (data_trk.sigy[ilay][0] < 0.0) data_trk.sigy[ilay][0] = 0.0;
+            if (data_trk.sigy[ilay][1] < 0.0) data_trk.sigy[ilay][1] = 0.0;
+            if (data_trk.sigy[ilay][2] < 0.0) data_trk.sigy[ilay][2] = 0.0;
+            
+            float* sigy = data_trk.sigy[ilay];
+            data_trk.nst[ilay][1] = (sigy[0] > 0) + (sigy[1] > 0) + (sigy[2] > 0);
+            
+            if (data_trk.nst[ilay][1] == 1) data_trk.val[ilay][1] = 0.0;
+            if (data_trk.nst[ilay][1] >  1) {
+                float ttl_sigy = sigy[0] + sigy[1] + sigy[2];
+                float wgt_sigy = (sigy[0] > sigy[2]) ? -sigy[0] : sigy[2];
+                data_trk.val[ilay][1] = (wgt_sigy / ttl_sigy);
+            }
+        }
+
+        //float xloc = TkCoo::GetLocalCoo(data_trk.tkid[ilay], abs(data_trk.adr[ilay][0] + data_trk.eta[ilay][0]), data_trk.mult[ilay]);
+        //float yloc = TkCoo::GetLocalCoo(data_trk.tkid[ilay], abs(data_trk.adr[ilay][1] + data_trk.eta[ilay][1]), data_trk.mult[ilay]);
+        //
+        //float xloc2 = TkCoo::GetLocalCoo(data_trk.tkid[ilay], abs(data_trk.adr[ilay][0] + data_trk.cog[ilay][0]), data_trk.mult[ilay]);
+        //float yloc2 = TkCoo::GetLocalCoo(data_trk.tkid[ilay], abs(data_trk.adr[ilay][1] + data_trk.cog[ilay][1]), data_trk.mult[ilay]);
+
+        //AMSPoint pnt1 = TkCoo::GetGlobalA(data_trk.tkid[ilay], xloc, yloc);
+        //AMSPoint pnt2 = TkCoo::GetGlobalA(data_trk.tkid[ilay], xloc2, yloc2);
+
+        //if (xcls && ycls) std::cerr << Form("L%dX  %14.8f A %14.8f B %14.8f\n", ilay+1, coo[0], 1.0e4 * (pnt1[0]-pnt2[0]), 1.0e4 * (pnt2[0]-coo[0]));
+        //if (xcls && ycls) std::cerr << Form("L%dY  %14.8f A %14.8f B %14.8f\n", ilay+1, coo[1], 1.0e4 * (pnt1[1]-pnt2[1]), 1.0e4 * (pnt2[1]-coo[1]));
+        //if (xcls && ycls) std::cerr << Form("L%dZ  %14.8f A %14.8f B %14.8f\n", ilay+1, coo[2], 1.0e4 * (pnt1[2]-pnt2[2]), 1.0e4 * (pnt2[2]-coo[2]));
+
+        //float xshf = 1.0e4 * (coo[0] - pnt1[0]) / 208.0;
+        //float yshf = 1.0e4 * (coo[1] - pnt1[1]) / 110.0;
+        //float ref_xeta = xcls ? xshf + data_trk.eta[ilay][0] : -2;
+        //float ref_yeta = ycls ? yshf + data_trk.eta[ilay][1] : -2;
+        //
+        //for (int i = 0; i <= 3; ++i) {
+        //    if (ref_xeta < -0.5) ref_xeta = ref_xeta - 1.0;
+        //    if (ref_xeta >  0.5) ref_xeta = 2.0 - ref_xeta;
+        //    if (ref_yeta < -0.5) ref_yeta = ref_yeta - 1.0;
+        //    if (ref_yeta >  0.5) ref_yeta = 2.0 - ref_yeta;
+        //}
+        //data_trk.ref[ilay][0] = ref_xeta;
+        //data_trk.ref[ilay][1] = ref_yeta;
+
+        //AMSPoint tkloc = coo;
+        //AMSDir   tkdir(data_trk.slope[ilay][0], data_trk.slope[ilay][1], -1);
+		//TkSens tksens(data_trk.tkid[ilay], tkloc, tkdir, CheckType(Type::MC));
+		//int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
+
+        //AMSPoint tkloc = coo;
+        //AMSDir   tkdir(data_trk.slope[ilay][0], data_trk.slope[ilay][1], -1);
+		//TkSens tksens(data_trk.tkid[ilay], tkloc, tkdir, CheckType(Type::MC));
+		//int sens = (tksens.LadFound()) ? tksens.GetSensor() : -1;
+
+        //int xstrip = (xcls == nullptr || !tksens.LadFound() || tksens.GetStripX() < 0) ? -1.0 : tksens.GetStripX();
+        //int ystrip = (ycls == nullptr || !tksens.LadFound() || tksens.GetStripY() < 0) ? -1.0 : tksens.GetStripY();
+        //double xeta = (xcls == nullptr || !tksens.LadFound() || std::fabs(tksens.GetImpactPointX()) > 0.5) ? -1.0 : tksens.GetImpactPointX();
+        //double yeta = (ycls == nullptr || !tksens.LadFound() || std::fabs(tksens.GetImpactPointY()) > 0.5) ? -1.0 : tksens.GetImpactPointY();
+
+        //std::cerr << Form("%d ETA Y %14.8f %14.8f %14.8f\n", ilay+1, data_trk.eta[ilay][1], yeta, data_trk.eta[ilay][1] - yeta);
+
+        //data_trk.strip[ilay][0] = xstrip;
+        //data_trk.strip[ilay][1] = ystrip;
+        //data_trk.eta[ilay][0] = xeta;
+        //data_trk.eta[ilay][1] = yeta;
+        //
+        
 	} // for loop - layer
 
     int num_inn_x = 0;
@@ -1072,67 +1266,13 @@ bool Selector::process_trk() {
     data_trk.num_inn_x = num_inn_x;
     data_trk.num_inn_y = num_inn_y;
 
-    // External hits
-    std::array<int, 9> ext_min_nhit; ext_min_nhit.fill(0);
-    std::array<int, 9> ext_max_nhit; ext_max_nhit.fill(0);
-    std::array<double, 9> ext_maxq_hl; ext_maxq_hl.fill(0);
-    std::array<double, 9> ext_maxq_yj; ext_maxq_yj.fill(0);
-    std::map<int, std::vector<std::array<int, 3>>> ext_hit_idx;
-    for (int ih = 0; ih < event->NTrRecHit(); ++ih) {
-        TrRecHitR* hit = event->pTrRecHit(ih);
-        if (hit == nullptr) continue;
-        if (hit->GetXCluster() == nullptr) continue;
-        if (hit->GetYCluster() == nullptr) continue;
-        
-        int xidx = hit->GetXClusterIndex();
-        int yidx = hit->GetYClusterIndex();
-        
-        AMSPoint coo = hit->GetCoord(-1, 2);
-        
-        double chrgJ = hit->GetQYJ(2);
-        double chrgH = hit->GetQH(2);
-        if (chrgJ < NoiseQIn) continue;
-        if (chrgH < NoiseQIn) continue;
-        
-        int ilay = hit->GetLayerJ() - 1;
-		int tkid = hit->GetTkId();
-        if (data_trk.lay[ilay]%2==1 && hit->GetXCluster() == trhits[ilay].first ) continue;
-        if (data_trk.lay[ilay]/2==1 && hit->GetYCluster() == trhits[ilay].second) continue;
-
-        ext_maxq_yj[ilay] = std::max(ext_maxq_yj[ilay], chrgJ);
-        ext_maxq_hl[ilay] = std::max(ext_maxq_hl[ilay], chrgH);
-
-        ext_hit_idx[tkid].push_back({ilay, xidx, yidx});
-    }
-
-    for (auto&& hits : ext_hit_idx) {
-        int ilay = -1;
-        std::set<int> xcls;
-        std::set<int> ycls;
-        for (auto&& hit : hits.second) {
-            ilay = hit[0];
-            xcls.insert(hit[1]);
-            ycls.insert(hit[2]);
-        }
-        int min_nhit = std::min(xcls.size(), ycls.size());
-        int max_nhit = std::max(xcls.size(), ycls.size());
-        ext_min_nhit[ilay] += min_nhit;
-        ext_max_nhit[ilay] += max_nhit;
-    }
-
-    for (int il = 0; il < 9; ++il) {
-        data_trk.ext_num_hit[il] = ext_min_nhit[il];
-        data_trk.ext_chrg_hl[il] = ext_maxq_hl[il];
-        data_trk.ext_chrg_yj[il] = ext_maxq_yj[il];
-    }
-
     // Track Pattern
 	const short _npatt = 4;
 	const short _patt[_npatt] = { 3, 5, 6, 7 };
 
     // Choutko
     Bool_t ckSwOpt = true;
-    Int_t ckRefit = 22; // check fit in recEv
+    Int_t ckRefit = 2; // check fit in recEv
 	for (int patt = 0; patt < _npatt && ckSwOpt; ++patt) {
         Stopwatch sw; sw.start();
 
@@ -1171,19 +1311,10 @@ bool Selector::process_trk() {
         sw.stop();
         data_trk.ck_cpu_time[patt] = sw.time();
     }
-    
-    return true;
-}
-
-bool Selector::process_trk_kf() {
-    int fitidInn = (pTrTrack != nullptr) ? pTrTrack->iTrTrackPar(1, 3, 21, data_mass, data_zin) : -1;
-    if (pTrTrack == nullptr || fitidInn < 0) return true;
-	
-    const short _npatt = 4;
-	const short _patt[_npatt] = { 3, 5, 6, 7 };
-    
+   
+    // Kalman Fitter
     Bool_t kfSwOpt = true;
-    Int_t kfRefit = 22; // check fit in recEv
+    Int_t kfRefit = 2; // check fit in recEv
 	for (int patt = 0; patt < _npatt && kfSwOpt; ++patt) {
         Stopwatch sw; sw.start();
         
@@ -1360,103 +1491,109 @@ bool Selector::process_trd() {
             AMSPoint trdKP0 (data_trd.state[0], data_trd.state[1], data_trd.state[2]);
             AMSDir   trdKDir(data_trd.state[3], data_trd.state[4], data_trd.state[5]);
 
-            bool   hlay[20] = { false };
-            double hlen[20] = { 0.0 };
-            double hamp[20] = { 0.0 };
-            double hlz[20]  = { 0.0 };
+            std::array<std::vector<double>, 20> hlen;
+            std::array<std::vector<double>, 20> hamp;
+            std::array<std::vector<double>, 20> hlx ;
+            std::array<std::vector<double>, 20> hly ;
+            std::array<std::vector<double>, 20> hlz ;
             for (int ih = 0; ih < nhit; ih++) {
 			    TrdKHit* hit = trdkcls->GetHit(ih);
                 
                 short  lay = hit->TRDHit_Layer;
                 double amp = 0.01 * hit->TRDHit_Amp;
                 double len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
-                double lz  = hit->TRDHit_z;
-                if (len <= 0.05) continue;
-                if (amp <= 0.01) continue;
+                //if (len <= 0.05) continue;
+                //if (amp <= 0.01) continue;
 
-                hlay[lay] = true;
-                hlen[lay] = len;
-                hamp[lay] = amp;
-                hlz [lay] = lz;
+                hlen[lay].push_back(len);
+                hamp[lay].push_back(amp);
+                hlx [lay].push_back(hit->TRDHit_x);
+                hly [lay].push_back(hit->TRDHit_y);
+                hlz [lay].push_back(hit->TRDHit_z);
             }
 
             for (int il = 0; il < 20; ++il) {
-                if (!hlay[il]) continue;
-                data_trd.tdHit_lay.push_back(il);
-                data_trd.tdHit_len.push_back(hlen[il]);
-                data_trd.tdHit_amp.push_back(hamp[il]);
-                data_trd.tdHit_lz .push_back(hlz[il]);
-                data_trd.num_tdHit++;
-            }
-
-            double tdHitQ_sum = 0.0;
-            for (int ih = 0; ih < data_trd.tdHit_amp.size(); ++ih) {
-                tdHitQ_sum += data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih);
-            }
-            double tdHitQ = (data_trd.tdHit_amp.size() == 0) ? 0.0 : std::sqrt(tdHitQ_sum / static_cast<double>(data_trd.tdHit_amp.size()));
-            data_trd.tdHitQ = tdHitQ;
-
-            const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
-            std::vector<std::tuple<double, double, int>> hzq;
-            for (int ih = 0; ih < data_trd.num_tdHit; ++ih) {
-                hzq.push_back(std::make_tuple(data_trd.tdHit_lz.at(ih), data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih), data_trd.tdHit_lay.at(ih)));
-            }
-
-            int hzq_cntl = 0;
-            int hzq_cntu = 0;
-            bool is_reach_condition_1st = (hzq.size() <= 2);
-            while (!is_reach_condition_1st) {
-                if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
-                double nseed = static_cast<double>(hzq.size() - 1);
-                double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
-
-                std::vector<std::pair<double, int>> cand_noise;
-                for (int it = 0; it < hzq.size(); ++it) {
-                    double qavg = 0.0;
-                    double qsgm = qsgm_std * width;
-                    for (int ih = 0; ih < hzq.size(); ++ih) {
-                        if (it == ih) continue;
-                        qavg += std::get<1>(hzq.at(ih));
-                    }
-                    qavg /= static_cast<double>(hzq.size() - 1);
-                    double res = (std::get<1>(hzq.at(it)) - qavg) / qsgm;
-                    cand_noise.push_back(std::make_pair(res, it));
-                }
-                std::sort(cand_noise.begin(), cand_noise.end());
-                std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
-                
-                if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
-                else {
-                    if (cand.first < 0) hzq_cntl++;
-                    if (cand.first > 0) hzq_cntu++;
-                    hzq.erase(hzq.begin() + cand.second);
+                for (int ih = 0; ih < hlen[il].size(); ++ih) {
+                    data_trd.tdHit_lay.push_back(il);
+                    data_trd.tdHit_len.push_back(hlen[il].at(ih));
+                    data_trd.tdHit_amp.push_back(hamp[il].at(ih));
+                    data_trd.tdHit_lx .push_back(hlx[il].at(ih));
+                    data_trd.tdHit_ly .push_back(hly[il].at(ih));
+                    data_trd.tdHit_lz .push_back(hlz[il].at(ih));
+                    data_trd.tdHit_nh++;
+                    if (ih == 0) data_trd.tdHit_nl++;
                 }
             }
 
-            if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
-            if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
+            //double tdHitQ_sum = 0.0;
+            //for (int ih = 0; ih < data_trd.tdHit_amp.size(); ++ih) {
+            //    tdHitQ_sum += data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih);
+            //}
+            //double tdHitQ = (data_trd.tdHit_amp.size() == 0) ? 0.0 : std::sqrt(tdHitQ_sum / static_cast<double>(data_trd.tdHit_amp.size()));
+            //data_trd.tdHitQ = tdHitQ;
+
+            //const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
+            //std::vector<std::tuple<double, double, int>> hzq;
+            //for (int ih = 0; ih < data_trd.num_tdHit; ++ih) {
+            //    hzq.push_back(std::make_tuple(data_trd.tdHit_lz.at(ih), data_trd.tdHit_amp.at(ih) / data_trd.tdHit_len.at(ih), data_trd.tdHit_lay.at(ih)));
+            //}
+
+            //int hzq_cntl = 0;
+            //int hzq_cntu = 0;
+            //bool is_reach_condition_1st = (hzq.size() <= 2);
+            //while (!is_reach_condition_1st) {
+            //    if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
+            //    double nseed = static_cast<double>(hzq.size() - 1);
+            //    double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
+
+            //    std::vector<std::pair<double, int>> cand_noise;
+            //    for (int it = 0; it < hzq.size(); ++it) {
+            //        double qavg = 0.0;
+            //        double qsgm = qsgm_std * width;
+            //        for (int ih = 0; ih < hzq.size(); ++ih) {
+            //            if (it == ih) continue;
+            //            qavg += std::get<1>(hzq.at(ih));
+            //        }
+            //        qavg /= static_cast<double>(hzq.size() - 1);
+            //        double res = (std::get<1>(hzq.at(it)) - qavg) / qsgm;
+            //        cand_noise.push_back(std::make_pair(res, it));
+            //    }
+            //    std::sort(cand_noise.begin(), cand_noise.end());
+            //    std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
+            //    
+            //    if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
+            //    else {
+            //        if (cand.first < 0) hzq_cntl++;
+            //        if (cand.first > 0) hzq_cntu++;
+            //        hzq.erase(hzq.begin() + cand.second);
+            //    }
+            //}
+
+            //if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
+            //if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
            
-            double tdQv = 0.0;
-            data_trd.num_tdQ = hzq.size();
-            data_trd.num_tdQl = hzq_cntl;
-            data_trd.num_tdQu = hzq_cntu;
-            for (auto&& hit : hzq) {
-                data_trd.tdQl.push_back(std::get<2>(hit));
-                data_trd.tdQz.push_back(std::get<0>(hit));
-                data_trd.tdQq.push_back(std::sqrt(std::get<1>(hit)));
-                tdQv += data_trd.tdQq.back() * data_trd.tdQq.back();
-                
-                double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tdQl.back()]) ? data_g4mc.td_mom[data_trd.tdQl.back()]/data_g4mc.prm_mass : 0.0;
-                data_trd.tdQgb.push_back(gbta);
-            }
-            data_trd.tdQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tdQv / static_cast<double>(hzq.size()));
-            data_trd.tdQv_crr = data_trd.tdQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
+            //double tdQv = 0.0;
+            //data_trd.num_tdQ = hzq.size();
+            //data_trd.num_tdQl = hzq_cntl;
+            //data_trd.num_tdQu = hzq_cntu;
+            //for (auto&& hit : hzq) {
+            //    data_trd.tdQl.push_back(std::get<2>(hit));
+            //    data_trd.tdQz.push_back(std::get<0>(hit));
+            //    data_trd.tdQq.push_back(std::sqrt(std::get<1>(hit)));
+            //    tdQv += data_trd.tdQq.back() * data_trd.tdQq.back();
+            //    
+            //    //double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tdQl.back()]) ? data_g4mc.td_mom[data_trd.tdQl.back()]/data_g4mc.prm_mass : 0.0;
+            //    //data_trd.tdQgb.push_back(gbta);
+            //}
+            //data_trd.tdQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tdQv / static_cast<double>(hzq.size()));
+            //data_trd.tdQv_crr = data_trd.tdQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
         }
 	}
 	
     if (pTrTrack != nullptr) {
         TrdKCluster* trdkcls = TrdKCluster::gethead();
-		int fitid_max = pTrTrack->iTrTrackPar(1, 0, 21, data_mass, data_zin);
+        int refit = 2;
+		int fitid_max = pTrTrack->iTrTrackPar(1, 0, refit, data_mass, data_zin);
 		if (fitid_max >= 0) trdkcls->SetTrTrack(pTrTrack, fitid_max);
         
         // parameters from TrdKCluster
@@ -1481,97 +1618,102 @@ bool Selector::process_trd() {
             AMSPoint trdKP0  = trdkcls->GetPropogated_TrTrack_P0();
             AMSDir   trdKDir = trdkcls->GetPropogated_TrTrack_Dir();
 
-            bool   hlay[20] = { false };
-            double hlen[20] = { 0.0 };
-            double hamp[20] = { 0.0 };
-            double hlz[20]  = { 0.0 };
+            std::array<std::vector<double>, 20> hlen;
+            std::array<std::vector<double>, 20> hamp;
+            std::array<std::vector<double>, 20> hlx ;
+            std::array<std::vector<double>, 20> hly ;
+            std::array<std::vector<double>, 20> hlz ;
             for (int ih = 0; ih < nhit; ih++) {
                 TrdKHit* hit = trdkcls->GetHit(ih);
 
                 short  lay = hit->TRDHit_Layer;
                 double amp = 0.01 * hit->TRDHit_Amp;
                 double len = hit->Tube_Track_3DLength_New(&trdKP0, &trdKDir);
-                double lz  = hit->TRDHit_z;
-                if (len <= 0.05) continue;
-                if (amp <= 0.01) continue;
-
-                hlay[lay] = true;
-                hlen[lay] = len;
-                hamp[lay] = amp;
-                hlz [lay] = lz;
+                //if (len <= 0.05) continue;
+                //if (amp <= 0.01) continue;
+                
+                hlen[lay].push_back(len);
+                hamp[lay].push_back(amp);
+                hlx [lay].push_back(hit->TRDHit_x);
+                hly [lay].push_back(hit->TRDHit_y);
+                hlz [lay].push_back(hit->TRDHit_z);
             }
 
             for (int il = 0; il < 20; ++il) {
-                if (!hlay[il]) continue;
-                data_trd.tkHit_lay.push_back(il);
-                data_trd.tkHit_len.push_back(hlen[il]);
-                data_trd.tkHit_amp.push_back(hamp[il]);
-                data_trd.tkHit_lz .push_back(hlz[il]);
-                data_trd.num_tkHit++;
-            }
-            
-            double tkHitQ_sum = 0.0;
-            for (int ih = 0; ih < data_trd.tkHit_amp.size(); ++ih) {
-                tkHitQ_sum += data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih);
-            }
-            double tkHitQ = (data_trd.tkHit_amp.size() == 0) ? 0.0 : std::sqrt(tkHitQ_sum / static_cast<double>(data_trd.tkHit_amp.size()));
-            data_trd.tkHitQ = tkHitQ;
-
-            const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
-            std::vector<std::tuple<double, double, int>> hzq;
-            for (int ih = 0; ih < data_trd.num_tkHit; ++ih) {
-                hzq.push_back(std::make_tuple(data_trd.tkHit_lz.at(ih), data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih), data_trd.tkHit_lay.at(ih)));
-            }
-
-            int hzq_cntl = 0;
-            int hzq_cntu = 0;
-            bool is_reach_condition_1st = (hzq.size() <= 2);
-            while (!is_reach_condition_1st) {
-                if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
-                double nseed = static_cast<double>(hzq.size() - 1);
-                double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
-
-                std::vector<std::pair<double, int>> cand_noise;
-                for (int it = 0; it < hzq.size(); ++it) {
-                    double qavg = 0.0;
-                    double qsgm = qsgm_std * width;
-                    for (int jh = 0; jh < hzq.size(); ++jh) {
-                        if (it == jh) continue;
-                        qavg += std::get<1>(hzq.at(jh));
-                    }
-                    qavg /= static_cast<double>(hzq.size() - 1);
-                    double res = std::abs(std::get<1>(hzq.at(it)) - qavg) / qsgm;
-                    cand_noise.push_back(std::make_pair(res, it));
-                }
-                std::sort(cand_noise.begin(), cand_noise.end());
-                std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
-                
-                if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
-                else {
-                    if (cand.first < 0) hzq_cntl++;
-                    if (cand.first > 0) hzq_cntu++;
-                    hzq.erase(hzq.begin() + cand.second);
+                for (int ih = 0; ih < hlen[il].size(); ++ih) {
+                    data_trd.tkHit_lay.push_back(il);
+                    data_trd.tkHit_len.push_back(hlen[il].at(ih));
+                    data_trd.tkHit_amp.push_back(hamp[il].at(ih));
+                    data_trd.tkHit_lx .push_back(hlx[il].at(ih));
+                    data_trd.tkHit_ly .push_back(hly[il].at(ih));
+                    data_trd.tkHit_lz .push_back(hlz[il].at(ih));
+                    data_trd.tkHit_nh++;
+                    if (ih == 0) data_trd.tkHit_nl++;
                 }
             }
-
-            if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
-            if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
             
-            double tkQv = 0.0;
-            data_trd.num_tkQ = hzq.size();
-            data_trd.num_tkQl = hzq_cntl;
-            data_trd.num_tkQu = hzq_cntu;
-            for (auto&& hit : hzq) {
-                data_trd.tkQl.push_back(std::get<2>(hit));
-                data_trd.tkQz.push_back(std::get<0>(hit));
-                data_trd.tkQq.push_back(std::sqrt(std::get<1>(hit)));
-                tkQv += data_trd.tkQq.back() * data_trd.tkQq.back();
+            //double tkHitQ_sum = 0.0;
+            //for (int ih = 0; ih < data_trd.tkHit_amp.size(); ++ih) {
+            //    tkHitQ_sum += data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih);
+            //}
+            //double tkHitQ = (data_trd.tkHit_amp.size() == 0) ? 0.0 : std::sqrt(tkHitQ_sum / static_cast<double>(data_trd.tkHit_amp.size()));
+            //data_trd.tkHitQ = tkHitQ;
 
-                double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tkQl.back()]) ? data_g4mc.td_mom[data_trd.tkQl.back()]/data_g4mc.prm_mass : 0.0;
-                data_trd.tkQgb.push_back(gbta);
-            } 
-            data_trd.tkQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tkQv / static_cast<double>(hzq.size()));
-            data_trd.tkQv_crr = data_trd.tkQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
+            //const double qsgm_std = (data_zin * data_zin) * ((data_beta > 0) ? (0.60 * std::pow(data_beta, -0.75)) : 0.60);
+            //std::vector<std::tuple<double, double, int>> hzq;
+            //for (int ih = 0; ih < data_trd.num_tkHit; ++ih) {
+            //    hzq.push_back(std::make_tuple(data_trd.tkHit_lz.at(ih), data_trd.tkHit_amp.at(ih) / data_trd.tkHit_len.at(ih), data_trd.tkHit_lay.at(ih)));
+            //}
+
+            //int hzq_cntl = 0;
+            //int hzq_cntu = 0;
+            //bool is_reach_condition_1st = (hzq.size() <= 2);
+            //while (!is_reach_condition_1st) {
+            //    if (hzq.size() <= 2) { is_reach_condition_1st = true; break; }
+            //    double nseed = static_cast<double>(hzq.size() - 1);
+            //    double width = std::sqrt((2.75 * 2.75) * (1.0 + 1.0 / nseed) + 2.0 * std::log(nseed)); // 3-sigma
+
+            //    std::vector<std::pair<double, int>> cand_noise;
+            //    for (int it = 0; it < hzq.size(); ++it) {
+            //        double qavg = 0.0;
+            //        double qsgm = qsgm_std * width;
+            //        for (int jh = 0; jh < hzq.size(); ++jh) {
+            //            if (it == jh) continue;
+            //            qavg += std::get<1>(hzq.at(jh));
+            //        }
+            //        qavg /= static_cast<double>(hzq.size() - 1);
+            //        double res = std::abs(std::get<1>(hzq.at(it)) - qavg) / qsgm;
+            //        cand_noise.push_back(std::make_pair(res, it));
+            //    }
+            //    std::sort(cand_noise.begin(), cand_noise.end());
+            //    std::pair<double, int>& cand = (std::abs(std::get<0>(cand_noise.front())) > std::abs(std::get<0>(cand_noise.back()))) ? cand_noise.front() : cand_noise.back();
+            //    
+            //    if (std::abs(cand.first) < 1.0) is_reach_condition_1st = true;
+            //    else {
+            //        if (cand.first < 0) hzq_cntl++;
+            //        if (cand.first > 0) hzq_cntu++;
+            //        hzq.erase(hzq.begin() + cand.second);
+            //    }
+            //}
+
+            //if (hzq.size() > 0) std::sort(hzq.begin(), hzq.end());
+            //if (hzq.size() > 0) std::reverse(hzq.begin(), hzq.end());
+            //
+            //double tkQv = 0.0;
+            //data_trd.num_tkQ = hzq.size();
+            //data_trd.num_tkQl = hzq_cntl;
+            //data_trd.num_tkQu = hzq_cntu;
+            //for (auto&& hit : hzq) {
+            //    data_trd.tkQl.push_back(std::get<2>(hit));
+            //    data_trd.tkQz.push_back(std::get<0>(hit));
+            //    data_trd.tkQq.push_back(std::sqrt(std::get<1>(hit)));
+            //    tkQv += data_trd.tkQq.back() * data_trd.tkQq.back();
+
+            //    //double gbta = (CheckType(Type::MC) && data_g4mc.td[data_trd.tkQl.back()]) ? data_g4mc.td_mom[data_trd.tkQl.back()]/data_g4mc.prm_mass : 0.0;
+            //    //data_trd.tkQgb.push_back(gbta);
+            //} 
+            //data_trd.tkQv = (hzq.size() == 0) ? 0.0 : std::sqrt(tkQv / static_cast<double>(hzq.size()));
+            //data_trd.tkQv_crr = data_trd.tkQv * ((data_beta > 0) ? 0.943 / (9.63454e-01 * std::erfc(3.03807e+00 * data_beta * data_beta * data_beta) + 1.28178e+00) : 1.0);
         }
 	}
 
@@ -1724,21 +1866,21 @@ bool Selector::process_rich() {
             data_rich.self_num_tumor = chfit.tmrs().size();
             data_rich.self_num_ghost = chfit.gsts().size();
 
-            data_rich.self_nhit_total = chfit.nhit_total();
-            data_rich.self_nhit_stone = chfit.nhit_stone();
-            data_rich.self_nhit_cloud = chfit.nhit_cloud();
-            data_rich.self_nhit_tumor = chfit.nhit_tumor();
-            data_rich.self_nhit_ghost = chfit.nhit_ghost();
-            data_rich.self_nhit_other = chfit.nhit_other();
+            //data_rich.self_nhit_total = chfit.nhit_total();
+            //data_rich.self_nhit_stone = chfit.nhit_stone();
+            //data_rich.self_nhit_cloud = chfit.nhit_cloud();
+            //data_rich.self_nhit_tumor = chfit.nhit_tumor();
+            //data_rich.self_nhit_ghost = chfit.nhit_ghost();
+            //data_rich.self_nhit_other = chfit.nhit_other();
             data_rich.self_nhit_other_inn = chfit.nhit_other_inn();
             data_rich.self_nhit_other_out = chfit.nhit_other_out();
             
-            data_rich.self_npe_total = chfit.npe_total();
-            data_rich.self_npe_stone = chfit.npe_stone();
-            data_rich.self_npe_cloud = chfit.npe_cloud();
-            data_rich.self_npe_tumor = chfit.npe_tumor();
-            data_rich.self_npe_ghost = chfit.npe_ghost();
-            data_rich.self_npe_other = chfit.npe_other();
+            //data_rich.self_npe_total = chfit.npe_total();
+            //data_rich.self_npe_stone = chfit.npe_stone();
+            //data_rich.self_npe_cloud = chfit.npe_cloud();
+            //data_rich.self_npe_tumor = chfit.npe_tumor();
+            //data_rich.self_npe_ghost = chfit.npe_ghost();
+            //data_rich.self_npe_other = chfit.npe_other();
             data_rich.self_npe_other_inn = chfit.npe_other_inn();
             data_rich.self_npe_other_out = chfit.npe_other_out();
 
@@ -1797,99 +1939,6 @@ bool Selector::process_rich() {
             }
         }
     }
-   
-    /*
-    if (rich.status() && rich.kind() != 0) {
-        std::vector<ChHit> hits;
-        for (auto&& hit : rich.hits()) {
-            ChHit chhit(hit.chann(), hit.chann()/16, hit.dbeta(), hit.rbetaA(), hit.rbetaB(), hit.npe(), hit.cx(), hit.cy());
-            if (!chhit.status()) continue;
-            hits.push_back(chhit);
-        }
-
-        Stopwatch sw; sw.start();
-        ChFit chfit(hits, { rich.pmtp()[0], rich.pmtp()[1] }, rich.index(), (rich.kind() == 1) ? ChFit::AGL_BETA_WIDTH : ChFit::NAF_BETA_WIDTH, rich.beta_crr());
-        sw.stop();
-        
-        if (chfit.status()) {
-            data_rich.new_status = true;
-            data_rich.new_num_stone = chfit.stns().size();
-            data_rich.new_num_cloud = chfit.clds().size();
-            data_rich.new_num_ghost = chfit.ghts().size();
-            
-            data_rich.new_nhit_total = chfit.nhit_total();
-            data_rich.new_nhit_stone = chfit.nhit_stone();
-            data_rich.new_nhit_cloud = chfit.nhit_cloud();
-            data_rich.new_nhit_ghost = chfit.nhit_ghost();
-            data_rich.new_nhit_other_inn = chfit.nhit_other_inn();
-            data_rich.new_nhit_other_out = chfit.nhit_other_out();
-            
-            data_rich.new_npe_total = chfit.npe_total();
-            data_rich.new_npe_stone = chfit.npe_stone();
-            data_rich.new_npe_cloud = chfit.npe_cloud();
-            data_rich.new_npe_ghost = chfit.npe_ghost();
-            data_rich.new_npe_other_inn = chfit.npe_other_inn();
-            data_rich.new_npe_other_out = chfit.npe_other_out();
-
-            if (chfit.stns().size() > 0) {
-                const ChStone& stn = chfit.stns().at(0);
-                data_rich.new_stn_status = stn.status();
-                data_rich.new_stn_nhit   = stn.nhit();
-                data_rich.new_stn_npmt   = stn.npmt();
-                data_rich.new_stn_lx     = stn.lx();
-                data_rich.new_stn_ly     = stn.ly();
-                data_rich.new_stn_npe    = stn.npe();
-                data_rich.new_stn_dist   = stn.dist();
-            }
-            if (chfit.clds().size() > 0) {
-                const ChCloud& cld = chfit.clds().at(0);
-                data_rich.new_cld_status = cld.status();
-                data_rich.new_cld_nhit   = cld.nhit();
-                data_rich.new_cld_npmt   = cld.npmt();
-                data_rich.new_cld_nhit_dir = cld.nhit_dir();
-                data_rich.new_cld_nhit_rfl = cld.nhit_rfl();
-                data_rich.new_cld_nhit_ght = cld.nhit_ght();
-                data_rich.new_cld_beta   = cld.beta();
-                data_rich.new_cld_cbta   = cld.cbta();
-                data_rich.new_cld_nchi   = cld.nchi();
-                data_rich.new_cld_npe    = cld.npe();
-
-                for (auto&& cldhit : cld.hits()) {
-                    data_rich.new_cldhit_chann.push_back(cldhit.chann());
-                    data_rich.new_cldhit_beta .push_back(cldhit.beta() );
-                    data_rich.new_cldhit_npe  .push_back(cldhit.npe()  );
-                    data_rich.new_cldhit_lx   .push_back(cldhit.lx()   );
-                    data_rich.new_cldhit_ly   .push_back(cldhit.ly()   );
-                }
-            }
-        }
-
-        //testcode
-        //if (chfit.status() && chfit.clds().size() > 1) {
-        //    std::cerr << Form("\n============ RICH  ================= N(%d %d) S(%d %d) B(%14.8f %14.8f)   TIME %14.8f\n", 
-        //            data_rich.num_ring, 
-        //            data_rich.self_num_cloud, 
-        //            data_rich.status, 
-        //            data_rich.self_cld_status, 
-        //            data_rich.beta, 
-        //            data_rich.self_cld_cbta,
-        //            sw.time() * 1.0e+3);
-        //    std::cerr << Form("NEW RICH STONE %d CLOUD %d GHOST %d\n", chfit.stns().size(), chfit.clds().size(), chfit.ghts().size());
-
-        //    for (auto&& stn : chfit.stns()) {
-        //        std::cerr << Form("STONE LOC %14.8f %14.8f (%14.8f) NCHI %14.8f NPE %14.8f\n", stn.lx(), stn.ly(), stn.dist(), stn.nchi(), stn.npe());
-        //    }
-        //    for (auto&& cld : chfit.clds()) {
-        //        std::cerr << Form("CLOUD BTA %14.8f %14.8f NCHI %14.8f NPE %14.8f NHIT %d %d %d\n", cld.beta(), cld.cbta(), cld.nchi(), cld.npe(), cld.nhit_dir(), cld.nhit_rfl(), cld.nhit_ght());
-        //        std::cerr << Form("HIT ");
-        //        for (auto&& hit : cld.hits()) {
-        //            std::cerr << Form("%d ", hit.chann());
-        //        }
-        //        std::cerr << std::endl;
-        //    }
-        //}
-    }
-    */
 
     return true;
 }
@@ -1908,7 +1957,7 @@ bool Selector::process_hyc() {
         if (data_trk.lay[il] == 0) continue;
         TrSys::TrackerHit hit(il+1, data_trk.lay[il]%2==1, data_trk.lay[il]/2==1, 
             { data_trk.loc[il][0], data_trk.loc[il][1], data_trk.loc[il][2] }, 
-            { data_trk.chrg_yj[il][0], data_trk.chrg_yj[il][1], data_trk.chrg_yj[il][2] }
+            { data_trk.chrg[il][0], data_trk.chrg[il][1], data_trk.chrg[il][2] }
         );
         ams_trk.add_hit(hit);
     }

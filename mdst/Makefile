@@ -27,7 +27,7 @@ LIBS = $(shell root-config --libs) -fopenmp -lEG -lntuple_slc6_PG_dynamic -lmath
 ProjDir=${PWD}
 
 CoreVersion=vdev
-#CoreVersion=20Jul08
+CoreVersion=20Sep24
 CoreDir=${AMSCore}/mdst/${CoreVersion}
 
 all :

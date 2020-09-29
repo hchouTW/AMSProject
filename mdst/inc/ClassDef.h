@@ -13,6 +13,104 @@
 #include <TObject.h>
 #include <TString.h>
 
+// RUNENV
+class RUNENV : public TObject {
+	public :
+		RUNENV() { init(); }
+		~RUNENV() {}
+
+		void init() {
+            run = 0;
+            beg_time = 0;
+            end_time = 0;
+            beg_event = 0;
+            end_event = 0;
+
+            AMSfiles.clear();
+            MDSTfile = "";
+        }
+    
+    public :
+		UInt_t  run;
+        UInt_t  beg_time;
+        UInt_t  end_time;
+        UInt_t  beg_event;
+        UInt_t  end_event;
+        
+        std::vector<std::string> AMSfiles;
+        std::string MDSTfile;
+    
+    ClassDef(RUNENV, 1)
+};
+
+// DECENV
+class DECENV : public TObject {
+	public :
+		DECENV() { init(); }
+		~DECENV() {}
+
+		void init() {
+            AMSfile = "";
+
+			run    = 0;
+			utime  = 0;
+			
+            beg_event = 0;
+            end_event = 0;
+			
+            flag = true;
+            good = true;
+			zenith = 0;
+            livetime = 0;
+
+            std::fill_n(GTOD, 3, 0);
+            std::fill_n(GM, 2, 0);
+            std::fill_n(GAT, 2, 0);
+
+            std::fill_n(Stoermer[0], 4*2, 0);
+            std::fill_n(IGRF[0], 4*2, 0);
+            
+            min_Stoermer = 0;
+            max_Stoermer = 0;
+            min_IGRF = 0;
+            max_IGRF = 0;
+            
+            std::fill_n(tk_align[0], 2*2, 0);
+            
+            is_in_SAA = false;
+		}
+
+    public :
+        std::string AMSfile;
+
+		UInt_t  run;
+        UInt_t  utime;
+        UInt_t  beg_event;
+        UInt_t  end_event;
+
+        Bool_t  flag;
+        Bool_t  good;
+		Float_t zenith;         // ams zenith (z-axis) angle [degrees]
+		Float_t livetime;       // fraction of "non-busy" time
+		
+        Float_t GTOD[3];        // earth coordinate [m, rad] (radius, theta, phi)
+		Float_t GM[2];          // geomagnetic [rad] (latitude, longitude)
+		Float_t GAT[2];         // ams pointing galatic [rad] (latitude, longitude)
+        
+        Float_t Stoermer[4][2]; // Stoermer cutoff [GV]
+        Float_t IGRF[4][2];     // IGRF cutoff [GV]
+
+        Float_t min_Stoermer;   // Stoermer min cutoff [GV]
+        Float_t max_Stoermer;   // Stoermer max cutoff [GV]
+        Float_t min_IGRF;       // IGRF min cutoff [GV]
+        Float_t max_IGRF;       // IGRF max cutoff [GV]
+
+		Float_t tk_align[2][2]; // L1 x,y L9 x,y
+        
+        Bool_t  is_in_SAA;      // true, if ams in south atlantic anomaly
+	
+    ClassDef(DECENV, 1)
+};
 
 // LIST
 class LIST : public TObject {
@@ -21,29 +119,35 @@ class LIST : public TObject {
 		~LIST() {}
 
 		void init() {
-            file   = "";
-			run    = 0;
+            AMSfile = "";
+			
+            run    = 0;
 			event  = 0;
-            entry  = 0;
             utime  = 0;
             weight = 1;
 
             header_error = 0;
             antimatter_sw_trigger = false;
+
+            MDSTfile = "";
+            MDSTentry = 0;
 		}
 
 	public :
-        TString file;
-		UInt_t  run;
+        std::string AMSfile;
+		
+        UInt_t  run;
 		UInt_t  event;
-        UInt_t  entry;
         UInt_t  utime;
         Float_t weight;
 
         UInt_t header_error;
         Bool_t antimatter_sw_trigger; // true, reweight = 5  false, reweight = 1
 
-	ClassDef(LIST, 2)
+        std::string MDSTfile;
+        UInt_t      MDSTentry;
+
+	ClassDef(LIST, 3)
 };
 
 
@@ -67,22 +171,22 @@ class G4MC : public TObject {
             std::fill_n(tk_dir[0], 9*3, 0);
             std::fill_n(tk_edep, 9, 0);
             
-            std::fill_n(tkL, 9, false);
-            std::fill_n(tkL_mom, 9, 0);
-            std::fill_n(tkL_beta, 9, 0);
+            //std::fill_n(tkL, 9, false);
+            //std::fill_n(tkL_mom, 9, 0);
+            //std::fill_n(tkL_beta, 9, 0);
             
             std::fill_n(tf, 4, false);
             std::fill_n(tf_beta, 4, 0);
             std::fill_n(tf_time, 4, 0);
             std::fill_n(tf_loc[0], 4*3, 0);
             
-            std::fill_n(td, 20, false);
-            std::fill_n(td_mom, 20, 0);
+            //std::fill_n(td, 20, false);
+            //std::fill_n(td_mom, 20, 0);
             //std::fill_n(td_loc[0], 20*3, 0);
             
             std::fill_n(tdL, 2, false);
             std::fill_n(tdL_mom, 2, 0);
-            std::fill_n(tdL_beta, 2, 0);
+            //std::fill_n(tdL_beta, 2, 0);
             std::fill_n(tdL_loc[0], 2*3, 0);
             std::fill_n(tdL_dir[0], 2*3, 0);
             
@@ -91,7 +195,7 @@ class G4MC : public TObject {
             rh_beta = 0;
             std::fill_n(rh_loc, 3, 0);
             std::fill_n(rh_dir, 3, 0);
-            std::fill_n(rh_hit_type, 3, 0);
+            //std::fill_n(rh_hit_type, 3, 0);
             
             std::fill_n(ec, 2, false);
             std::fill_n(ec_mom, 2, 0);
@@ -113,22 +217,22 @@ class G4MC : public TObject {
         Float_t tk_dir[9][3];
         Float_t tk_edep[9];
         
-        Bool_t  tkL[9];
-        Float_t tkL_mom[9];
-        Float_t tkL_beta[9];
+        //Bool_t  tkL[9];
+        //Float_t tkL_mom[9];
+        //Float_t tkL_beta[9];
         
         Bool_t  tf[4];
         Float_t tf_beta[4];
         Float_t tf_time[4];
         Float_t tf_loc[4][3];
         
-        Bool_t  td[20];
-        Float_t td_mom[20];
+        //Bool_t  td[20];
+        //Float_t td_mom[20];
         //Float_t td_loc[20][3];
         
         Bool_t  tdL[2];
         Float_t tdL_mom[2];
-        Float_t tdL_beta[2];
+        //Float_t tdL_beta[2];
         Float_t tdL_loc[2][3];
         Float_t tdL_dir[2][3];
         
@@ -137,7 +241,7 @@ class G4MC : public TObject {
         Float_t rh_beta;
         Float_t rh_loc[3];
         Float_t rh_dir[3];
-        Short_t rh_hit_type[3]; // 0, prm  1, photo  2, noise
+        //Short_t rh_hit_type[3]; // 0, prm  1, photo  2, noise
 
         Bool_t  ec[2];
         Float_t ec_mom[2];
@@ -158,6 +262,7 @@ class RTI : public TObject {
 			flag = true;
             good = true;
 			zenith = 0;
+            sunbeta = 0;
             livetime = 0;
 
             std::fill_n(GTOD, 3, 0);
@@ -183,6 +288,7 @@ class RTI : public TObject {
         Bool_t  flag;
         Bool_t  good;
 		Float_t zenith;         // ams zenith (z-axis) angle [degrees]
+		Float_t sunbeta;        // sun beta angle [degrees]
 		Float_t livetime;       // fraction of "non-busy" time
 		
         Float_t GTOD[3];        // earth coordinate [m, rad] (radius, theta, phi)
@@ -342,28 +448,31 @@ class TRK : public TObject {
             num_inn_x = 0;
             num_inn_y = 0;
 
-            QInMin = 0;
             QIn = 0;
 			QL2 = 0;
 			QL1 = 0;
 			QL9 = 0;
             
-            QIn_hl = 0;
-            QIn_yj = 0;
+            std::fill_n(dist_to_sen[0], 9*2, -1.0);
             
-            std::fill_n(lay, 9, 0);
-            std::fill_n(strip[0], 9*2, 0);
-            std::fill_n(sen[0], 9*2, -1.0);
-            std::fill_n(eta[0], 9*2, -1.0);
-            std::fill_n(loc[0], 9*3, 0);
-            std::fill_n(chrg_hl[0], 9*3, 0);
-            std::fill_n(chrg_yj[0], 9*3, 0);
             std::fill_n(sn10, 9, -1);
             std::fill_n(feet, 9, -1);
-
-            std::fill_n(ext_num_hit, 9, 0);
-            std::fill_n(ext_chrg_hl, 9, 0);
-            std::fill_n(ext_chrg_yj, 9, 0);
+            
+            std::fill_n(slope[0], 9*2, -2);
+            
+            std::fill_n(lay, 9, 0);
+            std::fill_n(tkid, 9, 0);
+            std::fill_n(mult, 9, 0);
+            std::fill_n(adr[0], 9*2, 0);
+            std::fill_n(nst[0], 9*2, 0);
+            std::fill_n(ref[0], 9*2, -2.0);
+            std::fill_n(eta[0], 9*2, -2.0);
+            std::fill_n(cog[0], 9*2, -2.0);
+            std::fill_n(val[0], 9*2, -2.0);
+            std::fill_n(sigx[0], 9*3, 0);
+            std::fill_n(sigy[0], 9*3, 0);
+            std::fill_n(loc[0], 9*3, 0);
+            std::fill_n(chrg[0], 9*3, 0);
 
             std::fill_n(ck_status, 4, false);
             std::fill_n(ck_ndof[0], 4*2, 0);
@@ -404,31 +513,34 @@ class TRK : public TObject {
         Short_t num_inn_y;
 
 		// Track Charge
-		Float_t QInMin;
 		Float_t QIn;
 		Float_t QL1;
 		Float_t QL2;
 		Float_t QL9;
-		
-        Float_t QIn_hl;
-        Float_t QIn_yj;
         
-        // Track Hits
-        Short_t  lay[9]; // 0:no, 1:x, 2:y, 3:xy
-        Short_t  strip[9][2];
-        Float_t  sen[9][2];
-        Float_t  eta[9][2];
-        Double_t loc[9][3];
-        Float_t  chrg_hl[9][3];
-        Float_t  chrg_yj[9][3];
+        // distance to sensor
+        Float_t  dist_to_sen[9][2];
+        
         Float_t  sn10[9];
         Float_t  feet[9];
         
-        // Track External Hits
-        Short_t ext_num_hit[9];
-        Float_t ext_chrg_hl[9];
-        Float_t ext_chrg_yj[9];
-
+        Float_t  slope[9][2];
+		
+        // Track Hits
+        Short_t  lay[9]; // 0:no, 1:x, 2:y, 3:xy
+        Short_t  tkid[9];
+        Short_t  mult[9];
+        Short_t  adr[9][2];
+        Short_t  nst[9][2];
+        Float_t  ref[9][2];
+        Float_t  eta[9][2];
+        Float_t  cog[9][2];
+        Float_t  val[9][2];
+        Float_t  sigx[9][3];
+        Float_t  sigy[9][3];
+        Double_t loc[9][3];
+        Float_t  chrg[9][3];
+        
         // Choutko [Inn InnL1 InnL9 FS]
         Bool_t  ck_status[4];
         Short_t ck_ndof[4][2];
@@ -452,7 +564,7 @@ class TRK : public TObject {
         
         Float_t kf_cpu_time[4];
 
-	ClassDef(TRK, 1)
+	ClassDef(TRK, 2)
 };
 
 // TRD
@@ -486,22 +598,25 @@ class TRD : public TObject {
             tdLL_pr = 0;
             tdLL_he = 0;
             
-            num_tdHit = 0;
+            tdHit_nh = 0;
+            tdHit_nl = 0;
             tdHit_lay.clear();
             tdHit_len.clear();
             tdHit_amp.clear();
+            tdHit_lx.clear();
+            tdHit_ly.clear();
             tdHit_lz.clear();
-            tdHitQ = 0;
+            //tdHitQ = 0;
 
-            num_tdQ = 0;
-            num_tdQl = 0;
-            num_tdQu = 0;
-            tdQl.clear();
-            tdQz.clear();
-            tdQq.clear();
-            tdQgb.clear();
-            tdQv = 0;
-            tdQv_crr = 0;
+            //num_tdQ = 0;
+            //num_tdQl = 0;
+            //num_tdQu = 0;
+            //tdQl.clear();
+            //tdQz.clear();
+            //tdQq.clear();
+            //tdQgb.clear();
+            //tdQv = 0;
+            //tdQv_crr = 0;
             
             tkLLR_status = false;
             tkLLR_num_hit = 0;
@@ -512,22 +627,25 @@ class TRD : public TObject {
             tkLL_pr = 0;
             tkLL_he = 0;
             
-            num_tkHit = 0;
+            tkHit_nh = 0;
+            tkHit_nl = 0;
             tkHit_lay.clear();
             tkHit_len.clear();
             tkHit_amp.clear();
+            tkHit_lx.clear();
+            tkHit_ly.clear();
             tkHit_lz.clear();
-            tkHitQ = 0;
+            //tkHitQ = 0;
             
-            num_tkQ = 0;
-            num_tkQl = 0;
-            num_tkQu = 0;
-            tkQl.clear();
-            tkQz.clear();
-            tkQq.clear();
-            tkQgb.clear();
-            tkQv = 0;
-            tkQv_crr = 0;
+            //num_tkQ = 0;
+            //num_tkQl = 0;
+            //num_tkQu = 0;
+            //tkQl.clear();
+            //tkQz.clear();
+            //tkQq.clear();
+            //tkQgb.clear();
+            //tkQv = 0;
+            //tkQv_crr = 0;
 		}
 
 	public :
@@ -556,22 +674,25 @@ class TRD : public TObject {
         Float_t tdLL_pr;
         Float_t tdLL_he;
         
-        Short_t num_tdHit;
+        Short_t tdHit_nh;
+        Short_t tdHit_nl;
         std::vector<Short_t> tdHit_lay;
         std::vector<Float_t> tdHit_len;
         std::vector<Float_t> tdHit_amp;
+        std::vector<Float_t> tdHit_lx;
+        std::vector<Float_t> tdHit_ly;
         std::vector<Float_t> tdHit_lz;
-        Float_t tdHitQ;
+        //Float_t tdHitQ;
         
-        Short_t num_tdQ;
-        Short_t num_tdQl;
-        Short_t num_tdQu;
-        std::vector<Short_t> tdQl;
-        std::vector<Float_t> tdQz;
-        std::vector<Float_t> tdQq;
-        std::vector<Float_t> tdQgb;
-        Float_t tdQv;
-        Float_t tdQv_crr;
+        //Short_t num_tdQ;
+        //Short_t num_tdQl;
+        //Short_t num_tdQu;
+        //std::vector<Short_t> tdQl;
+        //std::vector<Float_t> tdQz;
+        //std::vector<Float_t> tdQq;
+        //std::vector<Float_t> tdQgb;
+        //Float_t tdQv;
+        //Float_t tdQv_crr;
         
         Bool_t  tkLLR_status;
         Short_t tkLLR_num_hit;
@@ -582,24 +703,27 @@ class TRD : public TObject {
         Float_t tkLL_pr;
         Float_t tkLL_he;
         
-        Short_t num_tkHit;
+        Short_t tkHit_nh;
+        Short_t tkHit_nl;
         std::vector<Short_t> tkHit_lay;
         std::vector<Float_t> tkHit_len;
         std::vector<Float_t> tkHit_amp;
+        std::vector<Float_t> tkHit_lx;
+        std::vector<Float_t> tkHit_ly;
         std::vector<Float_t> tkHit_lz;
-        Float_t tkHitQ;
+        //Float_t tkHitQ;
 
-        Short_t num_tkQ;
-        Short_t num_tkQl;
-        Short_t num_tkQu;
-        std::vector<Short_t> tkQl;
-        std::vector<Float_t> tkQz;
-        std::vector<Float_t> tkQq;
-        std::vector<Float_t> tkQgb;
-        Float_t tkQv;
-        Float_t tkQv_crr;
+        //Short_t num_tkQ;
+        //Short_t num_tkQl;
+        //Short_t num_tkQu;
+        //std::vector<Short_t> tkQl;
+        //std::vector<Float_t> tkQz;
+        //std::vector<Float_t> tkQq;
+        //std::vector<Float_t> tkQgb;
+        //Float_t tkQv;
+        //Float_t tkQv_crr;
 
-	ClassDef(TRD, 3)
+	ClassDef(TRD, 4)
 };
 
 
@@ -702,21 +826,21 @@ class RICH : public TObject {
             self_num_tumor = 0;
             self_num_ghost = 0;
             
-            self_nhit_total = 0;
-            self_nhit_stone = 0;
-            self_nhit_cloud = 0;
-            self_nhit_tumor = 0;
-            self_nhit_ghost = 0;
-            self_nhit_other = 0;
+            //self_nhit_total = 0;
+            //self_nhit_stone = 0;
+            //self_nhit_cloud = 0;
+            //self_nhit_tumor = 0;
+            //self_nhit_ghost = 0;
+            //self_nhit_other = 0;
             self_nhit_other_inn = 0;
             self_nhit_other_out = 0;
             
-            self_npe_total = 0.0;
-            self_npe_stone = 0.0;
-            self_npe_cloud = 0.0;
-            self_npe_tumor = 0.0;
-            self_npe_ghost = 0.0;
-            self_npe_other = 0.0;
+            //self_npe_total = 0.0;
+            //self_npe_stone = 0.0;
+            //self_npe_cloud = 0.0;
+            //self_npe_tumor = 0.0;
+            //self_npe_ghost = 0.0;
+            //self_npe_other = 0.0;
             self_npe_other_inn = 0.0;
             self_npe_other_out = 0.0;
             
@@ -759,53 +883,6 @@ class RICH : public TObject {
             //hit_npe.clear();
             //hit_lx.clear();
             //hit_ly.clear();
-            
-            // NEW
-            /*
-            new_status = false;
-            new_num_stone = 0;
-            new_num_cloud = 0;
-            new_num_ghost = 0;
-
-            new_nhit_total = 0;
-            new_nhit_stone = 0;
-            new_nhit_cloud = 0;
-            new_nhit_ghost = 0;
-            new_nhit_other_inn = 0;
-            new_nhit_other_out = 0;
-
-            new_npe_total = 0;
-            new_npe_stone = 0;
-            new_npe_cloud = 0;
-            new_npe_ghost = 0;
-            new_npe_other_inn = 0;
-            new_npe_other_out = 0;
-
-            new_stn_status = false;
-            new_stn_nhit = 0;
-            new_stn_npmt = 0;
-            new_stn_lx = 0;
-            new_stn_ly = 0;
-            new_stn_npe = 0;
-            new_stn_dist = 0;
-            
-            new_cld_status = false;
-            new_cld_nhit = 0;
-            new_cld_npmt = 0;
-            new_cld_nhit_dir = 0;
-            new_cld_nhit_rfl = 0;
-            new_cld_nhit_ght = 0;
-            new_cld_beta = 0;
-            new_cld_cbta = 0;
-            new_cld_nchi = 0;
-            new_cld_npe  = 0;
-        
-            new_cldhit_chann.clear();
-            new_cldhit_beta.clear();
-            new_cldhit_npe.clear();
-            new_cldhit_lx.clear();
-            new_cldhit_ly.clear();
-            */
 		}
 
 	public :
@@ -859,21 +936,21 @@ class RICH : public TObject {
         Short_t self_num_tumor;
         Short_t self_num_ghost;
 
-        Short_t self_nhit_total;
-        Short_t self_nhit_stone;
-        Short_t self_nhit_cloud;
-        Short_t self_nhit_tumor;
-        Short_t self_nhit_ghost;
-        Short_t self_nhit_other;
+        //Short_t self_nhit_total;
+        //Short_t self_nhit_stone;
+        //Short_t self_nhit_cloud;
+        //Short_t self_nhit_tumor;
+        //Short_t self_nhit_ghost;
+        //Short_t self_nhit_other;
         Short_t self_nhit_other_inn;
         Short_t self_nhit_other_out;
 
-        Float_t self_npe_total;
-        Float_t self_npe_stone;
-        Float_t self_npe_cloud;
-        Float_t self_npe_tumor;
-        Float_t self_npe_ghost;
-        Float_t self_npe_other;
+        //Float_t self_npe_total;
+        //Float_t self_npe_stone;
+        //Float_t self_npe_cloud;
+        //Float_t self_npe_tumor;
+        //Float_t self_npe_ghost;
+        //Float_t self_npe_other;
         Float_t self_npe_other_inn;
         Float_t self_npe_other_out;
 
@@ -917,53 +994,6 @@ class RICH : public TObject {
         //std::vector<Float_t> hit_npe;
         //std::vector<Float_t> hit_lx;
         //std::vector<Float_t> hit_ly;
-
-        // NEW
-        /*
-        Bool_t  new_status;
-        Short_t new_num_stone;
-        Short_t new_num_cloud;
-        Short_t new_num_ghost;
-        
-        Short_t new_nhit_total;
-        Short_t new_nhit_stone;
-        Short_t new_nhit_cloud;
-        Short_t new_nhit_ghost;
-        Short_t new_nhit_other_inn;
-        Short_t new_nhit_other_out;
-
-        Float_t new_npe_total;
-        Float_t new_npe_stone;
-        Float_t new_npe_cloud;
-        Float_t new_npe_ghost;
-        Float_t new_npe_other_inn;
-        Float_t new_npe_other_out;
-
-        Bool_t  new_stn_status;
-        Short_t new_stn_nhit;
-        Short_t new_stn_npmt;
-        Float_t new_stn_lx;
-        Float_t new_stn_ly;
-        Float_t new_stn_npe;
-        Float_t new_stn_dist;
-        
-        Bool_t  new_cld_status;
-        Short_t new_cld_nhit;
-        Short_t new_cld_npmt;
-        Short_t new_cld_nhit_dir;
-        Short_t new_cld_nhit_rfl;
-        Short_t new_cld_nhit_ght;
-        Float_t new_cld_beta;
-        Float_t new_cld_cbta;
-        Float_t new_cld_nchi;
-        Float_t new_cld_npe;
-        
-        std::vector<Short_t>  new_cldhit_chann;
-        std::vector<Double_t> new_cldhit_beta;
-        std::vector<Float_t>  new_cldhit_npe;
-        std::vector<Float_t>  new_cldhit_lx;
-        std::vector<Float_t>  new_cldhit_ly;
-        */
 
     ClassDef(RICH, 2)
 };
